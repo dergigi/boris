@@ -13,6 +13,13 @@ interface BookmarkData {
   tags?: string[][]
 }
 
+interface ApplesauceBookmarks {
+  notes?: BookmarkData[]
+  articles?: BookmarkData[]
+  hashtags?: BookmarkData[]
+  urls?: BookmarkData[]
+}
+
 const processBookmarks = (
   bookmarks: unknown,
   activeAccount: ActiveAccount,
@@ -32,6 +39,40 @@ const processBookmarks = (
     type: 'event' as const,
     isPrivate
   }))
+}
+
+const processApplesauceBookmarks = (
+  bookmarks: unknown,
+  activeAccount: ActiveAccount,
+  isPrivate: boolean
+): IndividualBookmark[] => {
+  if (!bookmarks) return []
+  
+  // Handle applesauce structure: {notes: [], articles: [], hashtags: [], urls: []}
+  if (typeof bookmarks === 'object' && bookmarks !== null && !Array.isArray(bookmarks)) {
+    const applesauceBookmarks = bookmarks as ApplesauceBookmarks
+    const allItems: BookmarkData[] = []
+    
+    if (applesauceBookmarks.notes) allItems.push(...applesauceBookmarks.notes)
+    if (applesauceBookmarks.articles) allItems.push(...applesauceBookmarks.articles)
+    if (applesauceBookmarks.hashtags) allItems.push(...applesauceBookmarks.hashtags)
+    if (applesauceBookmarks.urls) allItems.push(...applesauceBookmarks.urls)
+    
+    return allItems.map((bookmark: BookmarkData) => ({
+      id: bookmark.id || `${isPrivate ? 'private' : 'public'}-${Date.now()}`,
+      content: bookmark.content || '',
+      created_at: bookmark.created_at || Date.now(),
+      pubkey: activeAccount.pubkey,
+      kind: bookmark.kind || 30001,
+      tags: bookmark.tags || [],
+      parsedContent: bookmark.content ? getParsedContent(bookmark.content) as ParsedContent : undefined,
+      type: 'event' as const,
+      isPrivate
+    }))
+  }
+  
+  // Fallback to original processing for arrays
+  return processBookmarks(bookmarks, activeAccount, isPrivate)
 }
 
 export const fetchBookmarks = async (
@@ -74,8 +115,9 @@ export const fetchBookmarks = async (
     console.log('Private bookmarks:', privateBookmarks)
     
     // Process bookmarks using DRY helper function
-    const publicItems = processBookmarks(publicBookmarks, activeAccount, false)
-    const privateItems = processBookmarks(privateBookmarks, activeAccount, true)
+    // Handle the structure that applesauce returns: {notes: [], articles: [], hashtags: [], urls: []}
+    const publicItems = processApplesauceBookmarks(publicBookmarks, activeAccount, false)
+    const privateItems = processApplesauceBookmarks(privateBookmarks, activeAccount, true)
     const allBookmarks = [...publicItems, ...privateItems]
     
     console.log('Total bookmarks found:', allBookmarks.length)
