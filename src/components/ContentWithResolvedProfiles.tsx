@@ -11,17 +11,19 @@ const ContentWithResolvedProfiles: React.FC<Props> = ({ content }) => {
   const matches = extractNprofilePubkeys(content)
   const decoded = matches
     .map((m) => {
-      try { return decode(m) } catch { return undefined }
+      try { return decode(m) } catch { return undefined as undefined }
     })
-    .filter(Boolean)
+    .filter((v): v is ReturnType<typeof decode> => Boolean(v))
 
-  const lookups = decoded.map((res) => getPubkeyFromDecodeResult(res as any)).filter(Boolean) as string[]
+  const lookups = decoded
+    .map((res) => getPubkeyFromDecodeResult(res))
+    .filter((v): v is string => typeof v === 'string')
 
   const profiles = lookups.map((pubkey) => ({ pubkey, profile: useEventModel(Models.ProfileModel, [pubkey]) }))
 
   let rendered = content
   matches.forEach((m, i) => {
-    const pk = getPubkeyFromDecodeResult(decoded[i] as any)
+    const pk = getPubkeyFromDecodeResult(decoded[i])
     const found = profiles.find((p) => p.pubkey === pk)
     const name = found?.profile?.name || found?.profile?.display_name || found?.profile?.nip05 || `${pk?.slice(0,8)}...`
     if (name) rendered = rendered.replace(m, `@${name}`)
