@@ -12,13 +12,6 @@ function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
   const [accountManager, setAccountManager] = useState<AccountManager | null>(null)
   const [relayPool, setRelayPool] = useState<RelayPool | null>(null)
-  const [addressLoader, setAddressLoader] = useState<((params: { kind: number; pubkey: string; relays?: string[] }) => {
-    subscribe: (observer: {
-      next: (event: NostrEvent) => void;
-      error: (error: unknown) => void;
-      complete: () => void;
-    }) => { unsubscribe: () => void };
-  }) | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
@@ -42,25 +35,12 @@ function App() {
     console.log('Created relay group with', relayUrls.length, 'relays')
     console.log('Relay URLs:', relayUrls)
     
-    // Create address loader using the pool directly
-    // The pool will handle relay connections and the address loader will use the group
-    const loader = Loaders.createAddressLoader(pool, {
-      eventStore: store,
-      bufferTime: 1000,
-      followRelayHints: true,
-      extraRelays: relayUrls
-    })
-    
-    console.log('Created address loader:', loader)
-    console.log('Address loader type:', typeof loader)
-    
     setEventStore(store)
     setAccountManager(accounts)
     setRelayPool(pool)
-    setAddressLoader(loader)
   }, [])
 
-  if (!eventStore || !accountManager || !relayPool || !addressLoader) {
+  if (!eventStore || !accountManager || !relayPool) {
     return <div>Loading...</div>
   }
 
@@ -77,7 +57,7 @@ function App() {
             <Login onLogin={() => setIsAuthenticated(true)} />
           ) : (
             <Bookmarks 
-              addressLoader={addressLoader}
+              relayPool={relayPool}
               onLogout={() => setIsAuthenticated(false)} 
             />
           )}

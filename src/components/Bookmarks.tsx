@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
+import { RelayPool } from 'applesauce-relay'
 import { getParsedContent } from 'applesauce-content/text'
 import { NostrEvent } from 'nostr-tools'
 
@@ -33,17 +34,11 @@ interface Bookmark {
 }
 
 interface BookmarksProps {
-  addressLoader: ((params: { kind: number; pubkey: string; relays?: string[] }) => {
-    subscribe: (observer: {
-      next: (event: NostrEvent) => void;
-      error: (error: unknown) => void;
-      complete: () => void;
-    }) => { unsubscribe: () => void };
-  }) | null
+  relayPool: RelayPool | null
   onLogout: () => void
 }
 
-const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
+const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [loading, setLoading] = useState(true)
   const activeAccount = Hooks.useActiveAccount()
@@ -53,39 +48,36 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
 
   useEffect(() => {
     console.log('Bookmarks useEffect triggered')
-    console.log('addressLoader:', !!addressLoader)
-    console.log('addressLoader type:', typeof addressLoader)
-    console.log('addressLoader value:', addressLoader)
+    console.log('relayPool:', !!relayPool)
     console.log('activeAccount:', !!activeAccount)
-    if (addressLoader && activeAccount) {
+    if (relayPool && activeAccount) {
       console.log('Starting to fetch bookmarks...')
       fetchBookmarks()
     } else {
       console.log('Not fetching bookmarks - missing dependencies')
     }
-  }, [addressLoader, activeAccount])
+  }, [relayPool, activeAccount])
 
   const fetchBookmarks = async () => {
-    if (!addressLoader || !activeAccount) return
+    if (!relayPool || !activeAccount) return
 
     try {
       setLoading(true)
       console.log('Fetching bookmarks for pubkey:', activeAccount.pubkey)
       console.log('Starting bookmark fetch for:', activeAccount.pubkey.slice(0, 8) + '...')
       
-      // Use applesauce address loader to fetch bookmark lists (kind 10003)
-      // This is the proper way according to NIP-51 and applesauce documentation
+      // Use applesauce relay pool to query for bookmark events (kind 10003)
+      // This follows the proper applesauce pattern from the documentation
       const bookmarkList: Bookmark[] = []
       
-      // Configure addressLoader with specific query parameters
-      console.log('Configuring addressLoader with kind: 10003, pubkey:', activeAccount.pubkey)
-      const queryObservable = addressLoader({
-        kind: 10003,
-        pubkey: activeAccount.pubkey
-      })
+      // Create a filter for bookmark events (kind 10003) for the specific pubkey
+      const filter = {
+        kinds: [10003],
+        authors: [activeAccount.pubkey]
+      }
       
-      console.log('Subscribing to configured query Observable')
-      const subscription = queryObservable.subscribe({
+      console.log('Querying relay pool with filter:', filter)
+      const subscription = relayPool.query(filter).subscribe({
         next: (event: NostrEvent) => {
           console.log('Received bookmark event:', event)
           const bookmarkData = parseBookmarkEvent(event)
