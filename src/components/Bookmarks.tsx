@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react'
 import { EventStoreContext, Hooks } from 'applesauce-react'
 import { NostrEvent } from 'nostr-tools'
+import { takeUntil, timer } from 'rxjs'
 
 interface Bookmark {
   id: string
@@ -33,30 +34,51 @@ const Bookmarks: React.FC<BookmarksProps> = ({ onLogout }) => {
     try {
       setLoading(true)
       
-      // Fetch bookmarks according to NIP-51
-      // Kind 10003: bookmark lists
-      // Kind 30003: parameterized replaceable events (bookmark lists with d-tag)
-      const events = eventStore.getByFilters([
+      // Subscribe to bookmark events from relays
+      // According to NIP-51, we need kind 10003 events (bookmark lists)
+      const events: NostrEvent[] = []
+      
+      const subscription = eventStore.filters([
         {
-          kinds: [10003, 30003],
+          kinds: [10003],
           authors: [activeAccount.pubkey]
         }
-      ])
-
-      const bookmarkList: Bookmark[] = []
-      
-      for (const event of events) {
-        // Parse bookmark data from event content and tags
-        const bookmarkData = parseBookmarkEvent(event)
-        if (bookmarkData) {
-          bookmarkList.push(bookmarkData)
+      ]).pipe(
+        takeUntil(timer(5000)) // Wait up to 5 seconds for events
+      ).subscribe({
+        next: (event) => {
+          events.push(event)
+        },
+        error: (error) => {
+          console.error('Error fetching bookmarks:', error)
+        },
+        complete: () => {
+          // Process collected events
+          const bookmarkList: Bookmark[] = []
+          
+          for (const event of events) {
+            const bookmarkData = parseBookmarkEvent(event)
+            if (bookmarkData) {
+              bookmarkList.push(bookmarkData)
+            }
+          }
+          
+          setBookmarks(bookmarkList)
+          setLoading(false)
         }
-      }
+      })
 
-      setBookmarks(bookmarkList)
+      // Clean up subscription after timeout
+      setTimeout(() => {
+        subscription.unsubscribe()
+        if (events.length === 0) {
+          setBookmarks([])
+          setLoading(false)
+        }
+      }, 5000)
+
     } catch (error) {
       console.error('Failed to fetch bookmarks:', error)
-    } finally {
       setLoading(false)
     }
   }
