@@ -5,7 +5,7 @@ import { Models } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
 import { completeOnEose } from 'applesauce-relay'
 import { getParsedContent } from 'applesauce-content/text'
-import { NostrEvent, Filter } from 'nostr-tools'
+import { Filter } from 'nostr-tools'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
 
 interface ParsedNode {
