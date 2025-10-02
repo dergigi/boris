@@ -25,7 +25,6 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index }) =
       <div className="bookmark-header">
         <span className="bookmark-type">
           <FontAwesomeIcon icon={bookmark.isPrivate ? faLock : faGlobe} className={`bookmark-visibility ${bookmark.isPrivate ? 'private' : 'public'}`} />
-          <span className="bookmark-type-label">{bookmark.type}</span>
         </span>
         <span className="bookmark-id">
           {short(bookmark.id)}
