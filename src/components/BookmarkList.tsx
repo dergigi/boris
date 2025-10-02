@@ -69,7 +69,16 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
               <h3>{bookmark.title}</h3>
               {bookmark.bookmarkCount && (
                 <p className="bookmark-count">
-                  {bookmark.bookmarkCount} bookmarks in this list
+                  {bookmark.bookmarkCount} bookmarks in{' '}
+                  <a 
+                    href={`https://search.dergigi.com/e/${bookmark.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="event-link"
+                  >
+                    this list
+                  </a>
+                  :
                 </p>
               )}
               {bookmark.urlReferences && bookmark.urlReferences.length > 0 && (
@@ -84,7 +93,18 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
               )}
               {bookmark.individualBookmarks && bookmark.individualBookmarks.length > 0 && (
                 <div className="individual-bookmarks">
-                  <h4>Individual Bookmarks ({bookmark.individualBookmarks.length}):</h4>
+                  <h4>
+                    {bookmark.individualBookmarks.length} bookmarks in{' '}
+                    <a 
+                      href={`https://search.dergigi.com/e/${bookmark.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="event-link"
+                    >
+                      this list
+                    </a>
+                    :
+                  </h4>
                   <div className="bookmarks-grid">
                     {bookmark.individualBookmarks.map((individualBookmark, index) => 
                       <BookmarkItem key={index} bookmark={individualBookmark} index={index} onSelectUrl={onSelectUrl} />

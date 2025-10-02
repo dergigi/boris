@@ -173,6 +173,16 @@ body {
   margin: 0.5rem 0;
 }
 
+.event-link {
+  color: #8ab4f8;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.event-link:hover {
+  text-decoration: underline;
+}
+
 .bookmark-urls {
   margin: 1rem 0;
 }
