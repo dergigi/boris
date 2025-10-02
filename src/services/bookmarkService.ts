@@ -143,10 +143,30 @@ export const fetchBookmarks = async (
           if (bookmarkListEvent.content && activeAccount.signer) {
             try {
               console.log('Decrypting private bookmarks...')
-              const decryptedContent = await activeAccount.signer.nip44_decrypt(
-                bookmarkListEvent.content,
-                activeAccount.pubkey
-              )
+              console.log('Signer methods:', Object.getOwnPropertyNames(activeAccount.signer))
+              console.log('Signer prototype methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(activeAccount.signer)))
+              
+              // Try different possible method names
+              let decryptedContent = null
+              if (typeof activeAccount.signer.nip44_decrypt === 'function') {
+                decryptedContent = await activeAccount.signer.nip44_decrypt(
+                  bookmarkListEvent.content,
+                  activeAccount.pubkey
+                )
+              } else if (typeof activeAccount.signer.decrypt === 'function') {
+                decryptedContent = await activeAccount.signer.decrypt(
+                  bookmarkListEvent.content,
+                  activeAccount.pubkey
+                )
+              } else if (typeof activeAccount.signer.nip44Decrypt === 'function') {
+                decryptedContent = await activeAccount.signer.nip44Decrypt(
+                  bookmarkListEvent.content,
+                  activeAccount.pubkey
+                )
+              } else {
+                console.log('No suitable decrypt method found on signer')
+                throw new Error('No suitable decrypt method found on signer')
+              }
               
               console.log('Decrypted content:', decryptedContent)
               
