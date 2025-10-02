@@ -144,8 +144,7 @@ export const fetchBookmarks = async (
       try {
         const hasHidden = Helpers.hasHiddenTags(evt)
         const locked = Helpers.isHiddenTagsLocked(evt)
-        const hasCiphertext = typeof evt.content === 'string' && isEncryptedContent(evt.content)
-        if (hasHidden && locked && hasCiphertext && signerCandidate) {
+        if (hasHidden && locked && signerCandidate) {
           try {
             await Helpers.unlockHiddenTags(evt, signerCandidate)
           } catch {
@@ -172,19 +171,18 @@ export const fetchBookmarks = async (
         idToEvent = new Map(events.map((e: any) => [e.id, e]))
       } catch {}
     }
-    const hydrateItems = (items: IndividualBookmark[]): IndividualBookmark[] =>
-      items.map(item => {
-        const ev = idToEvent.get(item.id)
-        if (!ev) return item
-        return {
-          ...item,
-          content: ev.content || item.content || '',
-          created_at: ev.created_at || item.created_at,
-          kind: ev.kind || item.kind,
-          tags: ev.tags || item.tags,
-          parsedContent: ev.content ? getParsedContent(ev.content) as ParsedContent : item.parsedContent
-        }
-      })
+    const hydrateItems = (items: IndividualBookmark[]): IndividualBookmark[] => items.map(item => {
+      const ev = idToEvent.get(item.id)
+      if (!ev) return item
+      return {
+        ...item,
+        content: ev.content || item.content || '',
+        created_at: ev.created_at || item.created_at,
+        kind: ev.kind || item.kind,
+        tags: ev.tags || item.tags,
+        parsedContent: ev.content ? getParsedContent(ev.content) as ParsedContent : item.parsedContent
+      }
+    })
     const allBookmarks = [...hydrateItems(publicItemsAll), ...hydrateItems(privateItemsAll)]
     
     const bookmark: Bookmark = {
