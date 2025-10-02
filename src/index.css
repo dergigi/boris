@@ -179,6 +179,8 @@ body {
   background: #2a2a2a;
   color: #ddd;
   cursor: pointer;
+  min-width: 44px; /* mobile tap target */
+  min-height: 44px; /* mobile tap target */
 }
 
 .icon-button:hover { background: #333; }
