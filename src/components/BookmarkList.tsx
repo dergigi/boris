@@ -1,9 +1,10 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faChevronRight, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 import { Bookmark, ActiveAccount } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
+import IconButton from './IconButton'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -56,9 +57,13 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
           >
             <FontAwesomeIcon icon={faChevronLeft} />
           </button>
-          <button onClick={onLogout} className="logout-button">
-            Logout
-          </button>
+          <IconButton
+            icon={faRightFromBracket}
+            onClick={onLogout}
+            title="Logout"
+            ariaLabel="Logout"
+            variant="ghost"
+          />
         </div>
       </div>
       
