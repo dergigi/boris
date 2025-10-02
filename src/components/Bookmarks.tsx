@@ -3,8 +3,10 @@ import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
+import { completeOnEose } from 'applesauce-relay'
 import { getParsedContent } from 'applesauce-content/text'
-import { NostrEvent } from 'nostr-tools'
+import { NostrEvent, Filter } from 'nostr-tools'
+import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
 
 interface ParsedNode {
   type: string
@@ -66,46 +68,48 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       console.log('Fetching bookmarks for pubkey:', activeAccount.pubkey)
       console.log('Starting bookmark fetch for:', activeAccount.pubkey.slice(0, 8) + '...')
       
-      // Use applesauce relay pool to query for bookmark events (kind 10003)
+      // Use applesauce relay pool to fetch bookmark events (kind 10003)
       // This follows the proper applesauce pattern from the documentation
-      const bookmarkList: Bookmark[] = []
       
       // Create a filter for bookmark events (kind 10003) for the specific pubkey
-      const filter = {
+      const filter: Filter = {
         kinds: [10003],
         authors: [activeAccount.pubkey]
       }
       
+      // Get relay URLs from the pool
+      const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
       console.log('Querying relay pool with filter:', filter)
-      const subscription = relayPool.query(filter).subscribe({
-        next: (event: NostrEvent) => {
-          console.log('Received bookmark event:', event)
-          const bookmarkData = parseBookmarkEvent(event)
-          if (bookmarkData) {
-            bookmarkList.push(bookmarkData)
-            console.log('Parsed bookmark:', bookmarkData)
-          }
-        },
-        error: (error: unknown) => {
-          console.error('Error fetching bookmarks:', error)
-          setLoading(false)
-        },
-        complete: () => {
-          console.log('Bookmark fetch complete. Found:', bookmarkList.length, 'bookmarks')
-          setBookmarks(bookmarkList)
-          setLoading(false)
-        }
-      })
+      console.log('Using relays:', relayUrls)
       
-      // Set timeout to prevent hanging
-      setTimeout(() => {
-        console.log('Bookmark fetch timeout. Found:', bookmarkList.length, 'bookmarks')
-        subscription.unsubscribe()
-        if (bookmarkList.length === 0) {
-          setBookmarks([])
-          setLoading(false)
+      // Use the proper applesauce pattern with req() method
+      const events = await lastValueFrom(
+        relayPool.req(relayUrls, filter).pipe(
+          // Complete when EOSE is received
+          completeOnEose(),
+          // Timeout after 10 seconds
+          takeUntil(timer(10000)),
+          // Collect all events into an array
+          toArray(),
+        )
+      )
+      
+      console.log('Received events:', events.length)
+      
+      // Parse the events into bookmarks
+      const bookmarkList: Bookmark[] = []
+      for (const event of events) {
+        console.log('Processing bookmark event:', event)
+        const bookmarkData = parseBookmarkEvent(event)
+        if (bookmarkData) {
+          bookmarkList.push(bookmarkData)
+          console.log('Parsed bookmark:', bookmarkData)
         }
-      }, 10000) // Increased timeout to 10 seconds
+      }
+      
+      console.log('Bookmark fetch complete. Found:', bookmarkList.length, 'bookmarks')
+      setBookmarks(bookmarkList)
+      setLoading(false)
 
     } catch (error) {
       console.error('Failed to fetch bookmarks:', error)
