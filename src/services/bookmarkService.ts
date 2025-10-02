@@ -19,10 +19,10 @@ interface ApplesauceBookmarks {
   urls?: BookmarkData[]
 }
 
-interface AccountWithExtension { pubkey: string; signer?: unknown; [key: string]: unknown }
+interface AccountWithExtension { pubkey: string; signer?: unknown; nip04?: unknown; nip44?: unknown; [key: string]: unknown }
 
 function isAccountWithExtension(account: unknown): account is AccountWithExtension {
-  return typeof account === 'object' && account !== null && 'pubkey' in account
+  return typeof account === 'object' && account !== null && 'pubkey' in account && typeof (account as any).pubkey === 'string'
 }
 
 function isEncryptedContent(content: string | undefined): boolean {
@@ -139,7 +139,26 @@ export const fetchBookmarks = async (
     }
     // Aggregate across events
     const maybeAccount = activeAccount as AccountWithExtension
-    const signerCandidate = typeof maybeAccount?.signEvent === 'function' ? maybeAccount : maybeAccount?.signer
+    console.log('🔐 Account object:', {
+      hasSignEvent: typeof maybeAccount?.signEvent === 'function',
+      hasSigner: !!maybeAccount?.signer,
+      accountType: typeof maybeAccount,
+      accountKeys: maybeAccount ? Object.keys(maybeAccount) : []
+    })
+
+    // For ExtensionAccount, we need a signer with nip04/nip44 for decrypting hidden content
+    // The ExtensionAccount itself has nip04/nip44 getters that proxy to the signer
+    let signerCandidate: any = maybeAccount
+    if (signerCandidate && !(signerCandidate as any).nip04 && !(signerCandidate as any).nip44 && maybeAccount?.signer) {
+      // Fallback to the raw signer if account doesn't have nip04/nip44
+      signerCandidate = maybeAccount.signer
+    }
+
+    console.log('🔑 Signer candidate:', !!signerCandidate, typeof signerCandidate)
+    if (signerCandidate) {
+      console.log('🔑 Signer has nip04:', !!(signerCandidate as any).nip04)
+      console.log('🔑 Signer has nip44:', !!(signerCandidate as any).nip44)
+    }
     const publicItemsAll: IndividualBookmark[] = []
     const privateItemsAll: IndividualBookmark[] = []
     let newestCreatedAt = 0
@@ -154,19 +173,35 @@ export const fetchBookmarks = async (
       publicItemsAll.push(...processApplesauceBookmarks(pub, activeAccount, false))
       // hidden
       try {
+        console.log('🔒 Event has hidden tags:', Helpers.hasHiddenTags(evt))
+        console.log('🔒 Hidden tags locked:', Helpers.isHiddenTagsLocked(evt))
+        console.log('🔒 Signer candidate available:', !!signerCandidate)
+        console.log('🔒 Signer candidate type:', typeof signerCandidate)
+
         if (Helpers.hasHiddenTags(evt) && Helpers.isHiddenTagsLocked(evt) && signerCandidate) {
           try {
-            await Helpers.unlockHiddenTags(evt, signerCandidate)
+            console.log('🔓 Attempting to unlock hidden tags with signer...')
+            await Helpers.unlockHiddenTags(evt, signerCandidate as any)
+            console.log('✅ Successfully unlocked hidden tags')
           } catch (error) {
-            console.warn('Failed to unlock with default method, trying NIP-44:', error)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await Helpers.unlockHiddenTags(evt, signerCandidate as any, 'nip44' as any)
+            console.warn('❌ Failed to unlock with default method, trying NIP-44:', error)
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              await Helpers.unlockHiddenTags(evt, signerCandidate as any, 'nip44' as any)
+              console.log('✅ Successfully unlocked hidden tags with NIP-44')
+            } catch (nip44Error) {
+              console.error('❌ Failed to unlock with NIP-44:', nip44Error)
+            }
           }
         }
+
         const priv = Helpers.getHiddenBookmarks(evt)
-        privateItemsAll.push(...processApplesauceBookmarks(priv, activeAccount, true))
+        console.log('🔍 Hidden bookmarks found:', priv ? Object.keys(priv).map(k => `${k}: ${priv[k as keyof typeof priv]?.length || 0}`).join(', ') : 'none')
+        if (priv) {
+          privateItemsAll.push(...processApplesauceBookmarks(priv, activeAccount, true))
+        }
       } catch (error) {
-        console.warn('Failed to process hidden bookmarks for event:', evt.id, error)
+        console.warn('❌ Failed to process hidden bookmarks for event:', evt.id, error)
       }
     }
 
