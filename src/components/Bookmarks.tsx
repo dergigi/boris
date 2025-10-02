@@ -80,15 +80,15 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       return
     }
 
+    // Set a timeout to ensure loading state gets reset
+    const timeoutId = setTimeout(() => {
+      console.log('⏰ Timeout reached, resetting loading state')
+      setLoading(false)
+    }, 15000) // 15 second timeout
+
     try {
       setLoading(true)
       console.log('🚀 NEW VERSION: Fetching bookmark list for pubkey:', activeAccount.pubkey)
-      
-      // Set a timeout to ensure loading state gets reset
-      const timeoutId = setTimeout(() => {
-        console.log('⏰ Timeout reached, resetting loading state')
-        setLoading(false)
-      }, 15000) // 15 second timeout
       
       // Get relay URLs from the pool
       const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
