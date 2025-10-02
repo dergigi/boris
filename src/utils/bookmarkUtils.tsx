@@ -1,13 +1,14 @@
 import React from 'react'
 import { ParsedContent, ParsedNode } from '../types/bookmarks'
-import { ContentWithResolvedProfiles } from '../components/ContentWithResolvedProfiles'
+import ResolvedMention from '../components/ResolvedMention'
+// Note: ContentWithResolvedProfiles is imported by components directly to keep this file component-only for fast refresh
 
 export const formatDate = (timestamp: number) => {
   return new Date(timestamp * 1000).toLocaleDateString()
 }
 
 // Component to render content with resolved nprofile names
-export { default as ContentWithResolvedProfiles } from '../components/ContentWithResolvedProfiles'
+// Intentionally no exports except components and render helpers
 
 // Component to render parsed content using applesauce-content
 export const renderParsedContent = (parsedContent: ParsedContent) => {
@@ -21,17 +22,7 @@ export const renderParsedContent = (parsedContent: ParsedContent) => {
     }
     
     if (node.type === 'mention') {
-      return (
-        <a 
-          key={index}
-          href={`nostr:${node.encoded}`}
-          className="nostr-mention"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {node.encoded}
-        </a>
-      )
+      return <ResolvedMention key={index} encoded={node.encoded} />
     }
     
     if (node.type === 'link') {
