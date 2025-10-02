@@ -62,7 +62,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
 
   // Map kind numbers to FontAwesome icons
   const getKindIcon = (kind: number) => {
-    const iconMap: Record<number, any> = {
+    const iconMap: Record<number, import('@fortawesome/fontawesome-svg-core').IconDefinition> = {
       0: faCircleUser,
       1: faFeather,
       6: faRetweet,
