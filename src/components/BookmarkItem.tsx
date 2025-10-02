@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faLock, faGlobe, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { IndividualBookmark } from '../types/bookmarks'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
 
@@ -10,6 +10,12 @@ interface BookmarkItemProps {
 }
 
 export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index }) => {
+  const copy = async (text: string) => {
+    try { await navigator.clipboard.writeText(text) } catch {}
+  }
+
+  const short = (v: string) => `${v.slice(0, 8)}...${v.slice(-8)}`
+
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
       <div className="bookmark-header">
@@ -17,7 +23,12 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index }) =
           <FontAwesomeIcon icon={bookmark.isPrivate ? faLock : faGlobe} className={`bookmark-visibility ${bookmark.isPrivate ? 'private' : 'public'}`} />
           <span className="bookmark-type-label">{bookmark.type}</span>
         </span>
-        <span className="bookmark-id">{bookmark.id.slice(0, 8)}...{bookmark.id.slice(-8)}</span>
+        <span className="bookmark-id">
+          {short(bookmark.id)}
+          <button className="copy-btn" onClick={() => copy(bookmark.id)} title="Copy event id">
+            <FontAwesomeIcon icon={faCopy} />
+          </button>
+        </span>
         <span className="bookmark-date">{formatDate(bookmark.created_at)}</span>
       </div>
       
@@ -33,7 +44,12 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index }) =
       
       <div className="bookmark-meta">
         <span>Kind: {bookmark.kind}</span>
-        <span>Author: {bookmark.pubkey.slice(0, 8)}...{bookmark.pubkey.slice(-8)}</span>
+        <span>
+          Author: {short(bookmark.pubkey)}
+          <button className="copy-btn" onClick={() => copy(bookmark.pubkey)} title="Copy author pubkey">
+            <FontAwesomeIcon icon={faCopy} />
+          </button>
+        </span>
       </div>
     </div>
   )
