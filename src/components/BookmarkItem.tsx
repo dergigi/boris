@@ -1,32 +1,13 @@
 import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { 
-  faBookmark, 
-  faUserLock, 
-  faCircleUser,
-  faFeather,
-  faRetweet,
-  faHeart,
-  faImage,
-  faVideo,
-  faFile,
-  faLaptopCode,
-  faCodePullRequest,
-  faBug,
-  faExclamationTriangle,
-  faBolt,
-  faCloudBolt,
-  faHighlighter,
-  faNewspaper,
-  faEyeSlash,
-  faThumbtack
-} from '@fortawesome/free-solid-svg-icons'
+import { faBookmark, faUserLock } from '@fortawesome/free-solid-svg-icons'
 import { faChevronDown, faChevronUp, faBookOpen } from '@fortawesome/free-solid-svg-icons'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { npubEncode, neventEncode } from 'nostr-tools/nip19'
 import { IndividualBookmark } from '../types/bookmarks'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
+import { getKindIcon } from './kindIcon'
 import ContentWithResolvedProfiles from './ContentWithResolvedProfiles'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 
@@ -63,31 +44,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     return short(bookmark.pubkey) // fallback to short pubkey
   }
 
-  // Map kind numbers to FontAwesome icons
-  const getKindIcon = (kind: number) => {
-    const iconMap: Record<number, import('@fortawesome/fontawesome-svg-core').IconDefinition> = {
-      0: faCircleUser,
-      1: faFeather,
-      6: faRetweet,
-      7: faHeart,
-      20: faImage,
-      21: faVideo,
-      22: faVideo,
-      1063: faFile,
-      1337: faLaptopCode,
-      1617: faCodePullRequest,
-      1621: faBug,
-      1984: faExclamationTriangle,
-      9735: faBolt,
-      9321: faCloudBolt,
-      9802: faHighlighter,
-      30023: faNewspaper,
-      10000: faEyeSlash,
-      10001: faThumbtack,
-      10003: faBookmark
-    }
-    return iconMap[kind] || faFile // fallback to file icon
-  }
+  // use helper from kindIcon.ts
 
   const handleReadNow = (event: React.MouseEvent<HTMLButtonElement>) => {
     if (!hasUrls) return
