@@ -44,6 +44,8 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   // Extract URLs from bookmark content
   const extractedUrls = extractUrlsFromContent(bookmark.content)
   const hasUrls = extractedUrls.length > 0
+  const contentLength = (bookmark.content || '').length
+  const shouldTruncate = !expanded && contentLength > 210
 
   // Resolve author profile using applesauce
   const authorProfile = useEventModel(Models.ProfileModel, [bookmark.pubkey])
@@ -139,21 +141,24 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       
       {bookmark.parsedContent ? (
         <div className="bookmark-content">
-          {renderParsedContent(bookmark.parsedContent)}
+          {shouldTruncate && bookmark.content
+            ? <ContentWithResolvedProfiles content={`${bookmark.content.slice(0, 210).trimEnd()}…`} />
+            : renderParsedContent(bookmark.parsedContent)}
         </div>
       ) : bookmark.content && (
-        <>
-          <ContentWithResolvedProfiles content={(expanded || bookmark.content.length <= 210) ? bookmark.content : `${bookmark.content.slice(0, 210).trimEnd()}…`} />
-          {bookmark.content.length > 210 && (
-            <button
-              className="expand-toggle"
-              onClick={() => setExpanded(v => !v)}
-              aria-label={expanded ? 'Collapse' : 'Expand'}
-            >
-              <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} />
-            </button>
-          )}
-        </>
+        <div className="bookmark-content">
+          <ContentWithResolvedProfiles content={shouldTruncate ? `${bookmark.content.slice(0, 210).trimEnd()}…` : bookmark.content} />
+        </div>
+      )}
+
+      {contentLength > 210 && (
+        <button
+          className="expand-toggle"
+          onClick={() => setExpanded(v => !v)}
+          aria-label={expanded ? 'Collapse' : 'Expand'}
+        >
+          <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} />
+        </button>
       )}
       
       <div className="bookmark-meta">
