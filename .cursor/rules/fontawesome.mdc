@@ -1,0 +1,6 @@
+---
+description: when creating or modifying UI elements, especially related to icons and buttons
+alwaysApply: false
+---
+
+We use FontAwesome. If you can use a fa-icon (instead of text) use a fa-icon.
