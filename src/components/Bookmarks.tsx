@@ -246,12 +246,13 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       // Get the title from content or use a default
       const title = event.content || `Bookmark List (${eventTags.length + articleTags.length + urlTags.length} items)`
       
-      // Fetch individual bookmarks
+      // For now, skip individual bookmark fetching to test basic functionality
+      // TODO: Re-enable individual bookmark fetching once basic flow works
       const eventIds = eventTags.map(tag => tag[1])
       const articleIds = articleTags.map(tag => tag[1])
-      console.log('Fetching individual bookmarks for eventIds:', eventIds.length, 'articleIds:', articleIds.length)
-      const individualBookmarks = await fetchIndividualBookmarks(eventIds, articleIds)
-      console.log('Fetched individual bookmarks:', individualBookmarks.length)
+      console.log('Would fetch individual bookmarks for eventIds:', eventIds.length, 'articleIds:', articleIds.length)
+      const individualBookmarks: IndividualBookmark[] = [] // Temporarily disabled
+      console.log('Individual bookmarks disabled for now:', individualBookmarks.length)
       
       return {
         id: event.id,
