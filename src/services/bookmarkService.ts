@@ -114,10 +114,22 @@ export const fetchBookmarks = async (
     
     const bookmarkListEvent = bookmarkListEvents[0]
     console.log('Found bookmark list event:', bookmarkListEvent.id)
+    console.log('Bookmark list content:', bookmarkListEvent.content)
+    console.log('Bookmark list tags:', bookmarkListEvent.tags)
     
     // Use applesauce helpers to get public bookmarks
     const publicBookmarks = Helpers.getPublicBookmarks(bookmarkListEvent)
     console.log('Public bookmarks:', publicBookmarks)
+    
+    // Check if there's encrypted content that needs decryption
+    const hasEncryptedContent = bookmarkListEvent.content && 
+      (bookmarkListEvent.content.includes('?iv=') || 
+       bookmarkListEvent.content.includes('?version=') ||
+       bookmarkListEvent.content.startsWith('nip44:') ||
+       bookmarkListEvent.content.startsWith('nip04:'))
+    
+    console.log('Has encrypted content:', hasEncryptedContent)
+    console.log('Content preview:', bookmarkListEvent.content?.substring(0, 100))
     
     // Try to get private bookmarks - this should trigger browser extension if needed
     let privateBookmarks = null
