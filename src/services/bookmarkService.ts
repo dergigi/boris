@@ -31,6 +31,16 @@ function isAccountWithExtension(account: unknown): account is AccountWithExtensi
   return typeof account === 'object' && account !== null && 'pubkey' in account
 }
 
+function isEncryptedContent(content: string | undefined): boolean {
+  if (!content) return false
+  return (
+    content.startsWith('nip44:') ||
+    content.startsWith('nip04:') ||
+    content.includes('?iv=') ||
+    content.includes('?version=')
+  )
+}
+
 const processApplesauceBookmarks = (
   bookmarks: unknown,
   activeAccount: ActiveAccount,
@@ -125,7 +135,7 @@ export const fetchBookmarks = async (
     let allTags: string[][] = []
     for (const evt of bookmarkListEvents) {
       newestCreatedAt = Math.max(newestCreatedAt, evt.created_at || 0)
-      if (!latestContent && evt.content) latestContent = evt.content
+      if (!latestContent && evt.content && !isEncryptedContent(evt.content)) latestContent = evt.content
       if (Array.isArray(evt.tags)) allTags = allTags.concat(evt.tags)
       // public
       const pub = Helpers.getPublicBookmarks(evt)
