@@ -251,8 +251,40 @@ export const fetchBookmarks = async (
             console.log('📄 Content to decrypt:', evt.content.slice(0, 100) + '...')
 
             // Try direct decryption using the signer's nip04 capabilities
-            const decryptedContent = await (signerCandidate as any).nip04?.decrypt(evt.pubkey, evt.content)
-            console.log('✅ Successfully decrypted content manually')
+            console.log('🔐 Calling nip04.decrypt with:', {
+              pubkey: evt.pubkey,
+              contentLength: evt.content.length,
+              contentPrefix: evt.content.slice(0, 20) + '...',
+              signerType: typeof signerCandidate
+            })
+
+            let decryptedContent
+            try {
+              decryptedContent = await (signerCandidate as any).nip04?.decrypt(evt.pubkey, evt.content)
+              console.log('✅ Successfully decrypted content manually:', decryptedContent.slice(0, 100) + '...')
+            } catch (decryptError) {
+              console.warn('❌ Browser extension decryption failed:', decryptError)
+
+              // Try alternative content formatting (maybe it needs to be a string)
+              try {
+                console.log('🔄 Trying alternative content format...')
+                const contentStr = String(evt.content)
+                decryptedContent = await (signerCandidate as any).nip04?.decrypt(evt.pubkey, contentStr)
+                console.log('✅ Successfully decrypted with string format:', decryptedContent.slice(0, 100) + '...')
+              } catch (secondError) {
+                console.warn('❌ Second decryption attempt also failed:', secondError)
+
+                // Check if the error contains the actual response from the extension
+                if (decryptError?.message?.includes('result:')) {
+                  const resultMatch = decryptError.message.match(/result:\s*(\{.*\})/)
+                  if (resultMatch) {
+                    const extensionResult = JSON.parse(resultMatch[1])
+                    console.warn('❌ Extension returned:', extensionResult)
+                  }
+                }
+                throw decryptError
+              }
+            }
 
             // Parse the decrypted content as JSON (should be array of tags)
             try {
@@ -268,6 +300,11 @@ export const fetchBookmarks = async (
             }
           } catch (error) {
             console.warn('❌ Failed manual decryption:', error)
+            console.warn('❌ Error details:', {
+              message: error?.message,
+              stack: error?.stack,
+              name: error?.name
+            })
           }
         }
 
