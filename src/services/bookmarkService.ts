@@ -97,12 +97,12 @@ export const fetchBookmarks = async (
     // Get relay URLs from the pool
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
     
-    // Fetch bookmark list
+    // Fetch ALL bookmark list events (not just 1) to find private bookmarks
     const bookmarkListEvents = await lastValueFrom(
       relayPool.req(relayUrls, {
         kinds: [10003],
         authors: [activeAccount.pubkey],
-        limit: 1
+        limit: 10 // Fetch more events to find private bookmarks
       }).pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
     )
     
@@ -112,21 +112,46 @@ export const fetchBookmarks = async (
       return
     }
     
-    const bookmarkListEvent = bookmarkListEvents[0]
-    console.log('Found bookmark list event:', bookmarkListEvent.id)
+    console.log(`Found ${bookmarkListEvents.length} bookmark list events`)
+    
+    // Check all bookmark list events for encrypted content
+    let bookmarkListEvent = null
+    let hasEncryptedContent = false
+    
+    for (let i = 0; i < bookmarkListEvents.length; i++) {
+      const event = bookmarkListEvents[i]
+      console.log(`Event ${i}: ${event.id}`)
+      console.log(`  Content: ${event.content}`)
+      console.log(`  Tags: ${event.tags.length} tags`)
+      
+      // Check if this event has encrypted content
+      const isEncrypted = event.content && 
+        (event.content.includes('?iv=') || 
+         event.content.includes('?version=') ||
+         event.content.startsWith('nip44:') ||
+         event.content.startsWith('nip04:'))
+      
+      if (isEncrypted) {
+        console.log(`  🎯 FOUND ENCRYPTED CONTENT in event ${i}!`)
+        bookmarkListEvent = event
+        hasEncryptedContent = true
+        break
+      }
+    }
+    
+    // If no encrypted content found, use the first event
+    if (!bookmarkListEvent) {
+      bookmarkListEvent = bookmarkListEvents[0]
+      console.log('No encrypted content found, using first event')
+    }
+    
+    console.log('Selected bookmark list event:', bookmarkListEvent.id)
     console.log('Bookmark list content:', bookmarkListEvent.content)
     console.log('Bookmark list tags:', bookmarkListEvent.tags)
     
     // Use applesauce helpers to get public bookmarks
     const publicBookmarks = Helpers.getPublicBookmarks(bookmarkListEvent)
     console.log('Public bookmarks:', publicBookmarks)
-    
-    // Check if there's encrypted content that needs decryption
-    const hasEncryptedContent = bookmarkListEvent.content && 
-      (bookmarkListEvent.content.includes('?iv=') || 
-       bookmarkListEvent.content.includes('?version=') ||
-       bookmarkListEvent.content.startsWith('nip44:') ||
-       bookmarkListEvent.content.startsWith('nip04:'))
     
     console.log('Has encrypted content:', hasEncryptedContent)
     console.log('Content preview:', bookmarkListEvent.content?.substring(0, 100))
