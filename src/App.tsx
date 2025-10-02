@@ -21,9 +21,10 @@ function App() {
     // Define relay URLs for bookmark fetching
     const relayUrls = [
       'wss://relay.damus.io',
-      'wss://nos.lol', 
+      'wss://nos.lol',
       'wss://relay.snort.social',
-      'wss://relay.nostr.band'
+      'wss://relay.nostr.band',
+      'wss://relay.dergigi.com'
     ]
     
     // Create a relay group for better event deduplication and management
