@@ -43,7 +43,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
     <div className="bookmarks-container">
       <div className="bookmarks-header">
         <div>
-          <h2>Your Bookmarks ({bookmarks.length})</h2>
           {activeAccount && (
             <p className="user-info">Logged in as: {formatUserDisplay()}</p>
           )}
