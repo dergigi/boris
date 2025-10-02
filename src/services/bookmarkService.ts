@@ -13,6 +13,27 @@ interface BookmarkData {
   tags?: string[][]
 }
 
+const processBookmarks = (
+  bookmarks: unknown,
+  activeAccount: ActiveAccount,
+  isPrivate: boolean
+): IndividualBookmark[] => {
+  if (!bookmarks) return []
+  
+  const bookmarkArray = Array.isArray(bookmarks) ? bookmarks : [bookmarks]
+  return bookmarkArray.map((bookmark: BookmarkData) => ({
+    id: bookmark.id || `${isPrivate ? 'private' : 'public'}-${Date.now()}`,
+    content: bookmark.content || '',
+    created_at: bookmark.created_at || Date.now(),
+    pubkey: activeAccount.pubkey,
+    kind: bookmark.kind || 30001,
+    tags: bookmark.tags || [],
+    parsedContent: bookmark.content ? getParsedContent(bookmark.content) as ParsedContent : undefined,
+    type: 'event' as const,
+    isPrivate
+  }))
+}
+
 export const fetchBookmarks = async (
   relayPool: RelayPool,
   activeAccount: ActiveAccount,
@@ -52,42 +73,10 @@ export const fetchBookmarks = async (
     console.log('Public bookmarks:', publicBookmarks)
     console.log('Private bookmarks:', privateBookmarks)
     
-    // Convert to our format
-    const allBookmarks: IndividualBookmark[] = []
-    
-    // Add public bookmarks
-    if (publicBookmarks) {
-      const publicArray = Array.isArray(publicBookmarks) ? publicBookmarks : [publicBookmarks]
-      const publicItems = publicArray.map((bookmark: BookmarkData) => ({
-        id: bookmark.id || `public-${Date.now()}`,
-        content: bookmark.content || '',
-        created_at: bookmark.created_at || Date.now(),
-        pubkey: activeAccount.pubkey,
-        kind: bookmark.kind || 30001,
-        tags: bookmark.tags || [],
-        parsedContent: bookmark.content ? getParsedContent(bookmark.content) as ParsedContent : undefined,
-        type: 'event' as const,
-        isPrivate: false
-      }))
-      allBookmarks.push(...publicItems)
-    }
-    
-    // Add private bookmarks
-    if (privateBookmarks) {
-      const privateArray = Array.isArray(privateBookmarks) ? privateBookmarks : [privateBookmarks]
-      const privateItems = privateArray.map((bookmark: BookmarkData) => ({
-        id: bookmark.id || `private-${Date.now()}`,
-        content: bookmark.content || '',
-        created_at: bookmark.created_at || Date.now(),
-        pubkey: activeAccount.pubkey,
-        kind: bookmark.kind || 30001,
-        tags: bookmark.tags || [],
-        parsedContent: bookmark.content ? getParsedContent(bookmark.content) as ParsedContent : undefined,
-        type: 'event' as const,
-        isPrivate: true
-      }))
-      allBookmarks.push(...privateItems)
-    }
+    // Process bookmarks using DRY helper function
+    const publicItems = processBookmarks(publicBookmarks, activeAccount, false)
+    const privateItems = processBookmarks(privateBookmarks, activeAccount, true)
+    const allBookmarks = [...publicItems, ...privateItems]
     
     console.log('Total bookmarks found:', allBookmarks.length)
     
@@ -101,7 +90,7 @@ export const fetchBookmarks = async (
       bookmarkCount: allBookmarks.length,
       eventReferences: bookmarkListEvent.tags.filter(tag => tag[0] === 'e').map(tag => tag[1]),
       individualBookmarks: allBookmarks,
-      isPrivate: privateBookmarks && (Array.isArray(privateBookmarks) ? privateBookmarks.length > 0 : true),
+      isPrivate: privateItems.length > 0,
       encryptedContent: undefined
     }
     
