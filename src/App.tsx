@@ -31,7 +31,8 @@ function App() {
     const relayUrls = [
       'wss://relay.damus.io',
       'wss://nos.lol', 
-      'wss://relay.snort.social'
+      'wss://relay.snort.social',
+      'wss://relay.nostr.band'
     ]
     
     // Connect to relays
