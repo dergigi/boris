@@ -257,6 +257,47 @@ body {
   margin: 0 auto;
 }
 
+/* Two-pane layout */
+.two-pane {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.pane.sidebar {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+
+.pane.main {
+  min-height: 60vh;
+}
+
+.content-panel {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.content-panel.empty {
+  color: #888;
+}
+
+.content-title {
+  margin: 0 0 1rem 0;
+}
+
+.content-html {
+  color: #ddd;
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 .bookmark-item {
   background: #1a1a1a;
   padding: 1.5rem;
