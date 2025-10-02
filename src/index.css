@@ -501,6 +501,18 @@ body {
   word-break: break-word;
 }
 
+.expand-toggle {
+  margin-top: 0.25rem;
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+}
+
+.expand-toggle:hover {
+  color: #bbb;
+}
+
 .individual-bookmark .bookmark-meta {
   display: flex;
   gap: 1rem;

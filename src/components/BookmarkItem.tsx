@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { 
   faBookmark, 
@@ -21,6 +21,7 @@ import {
   faEyeSlash,
   faThumbtack
 } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { IndividualBookmark } from '../types/bookmarks'
@@ -35,6 +36,7 @@ interface BookmarkItemProps {
 }
 
 export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onSelectUrl }) => {
+  const [expanded, setExpanded] = useState(false)
   // removed copy-to-clipboard buttons
 
   const short = (v: string) => `${v.slice(0, 8)}...${v.slice(-8)}`
@@ -133,7 +135,18 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
           {renderParsedContent(bookmark.parsedContent)}
         </div>
       ) : bookmark.content && (
-        <ContentWithResolvedProfiles content={bookmark.content} />
+        <>
+          <ContentWithResolvedProfiles content={(expanded || bookmark.content.length <= 210) ? bookmark.content : `${bookmark.content.slice(0, 210).trimEnd()}…`} />
+          {bookmark.content.length > 210 && (
+            <button
+              className="expand-toggle"
+              onClick={() => setExpanded(v => !v)}
+              aria-label={expanded ? 'Collapse' : 'Expand'}
+            >
+              <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} />
+            </button>
+          )}
+        </>
       )}
       
       <div className="bookmark-meta">
