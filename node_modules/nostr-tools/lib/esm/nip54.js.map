@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../nip54.ts"],
+  "sourcesContent": ["export function normalizeIdentifier(name: string): string {\n  // Trim and lowercase\n  name = name.trim().toLowerCase()\n\n  // Normalize Unicode to NFKC form\n  name = name.normalize('NFKC')\n\n  // Convert to array of characters and map each one\n  return Array.from(name)\n    .map(char => {\n      // Check if character is letter or number using Unicode ranges\n      if (/\\p{Letter}/u.test(char) || /\\p{Number}/u.test(char)) {\n        return char\n      }\n\n      return '-'\n    })\n    .join('')\n}\n"],
+  "mappings": ";AAAO,SAAS,oBAAoB,MAAsB;AAExD,SAAO,KAAK,KAAK,EAAE,YAAY;AAG/B,SAAO,KAAK,UAAU,MAAM;AAG5B,SAAO,MAAM,KAAK,IAAI,EACnB,IAAI,UAAQ;AAEX,QAAI,cAAc,KAAK,IAAI,KAAK,cAAc,KAAK,IAAI,GAAG;AACxD,aAAO;AAAA,IACT;AAEA,WAAO;AAAA,EACT,CAAC,EACA,KAAK,EAAE;AACZ;",
+  "names": []
+}
