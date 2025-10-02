@@ -280,6 +280,7 @@ body {
   border: 1px solid #333;
   border-radius: 12px;
   padding: 1rem;
+  text-align: left;
 }
 
 .content-panel.empty {
@@ -301,6 +302,29 @@ body {
 .content-markdown {
   color: #ddd;
   line-height: 1.7;
+}
+
+/* Ensure content is left-aligned even if source markup uses center */
+.content-panel .content-html *,
+.content-panel .content-markdown * {
+  text-align: left !important;
+}
+
+.content-panel center,
+.content-panel [align="center"] {
+  text-align: left !important;
+}
+
+/* Tame images from external content */
+.content-panel .content-html img,
+.content-panel .content-markdown img {
+  max-width: 100%;
+  max-height: 70vh;
+  height: auto;
+  width: auto;
+  display: block;
+  margin: 0.75rem 0;
+  border-radius: 6px;
 }
 
 .content-markdown h1,
