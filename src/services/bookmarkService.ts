@@ -5,45 +5,12 @@ import { Helpers } from 'applesauce-core'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
 import { Bookmark, IndividualBookmark, ParsedContent, ActiveAccount } from '../types/bookmarks'
 
-const isEncrypted = (content: string): boolean => 
-  content.includes(':') && /^[A-Za-z0-9+/=:]+$/.test(content)
-
-interface HiddenBookmarkData {
+interface BookmarkData {
   id?: string
   content?: string
   created_at?: number
   kind?: number
   tags?: string[][]
-}
-
-const fetchEvent = async (relayPool: RelayPool, relayUrls: string[], eventId: string): Promise<IndividualBookmark | null> => {
-  try {
-    const events = await lastValueFrom(
-      relayPool.req(relayUrls, { ids: [eventId] }).pipe(
-        completeOnEose(),
-        takeUntil(timer(5000)),
-        toArray(),
-      )
-    )
-    
-    if (events.length === 0) return null
-    
-    const event = events[0]
-    return {
-      id: event.id,
-      content: event.content,
-      created_at: event.created_at,
-      pubkey: event.pubkey,
-      kind: event.kind,
-      tags: event.tags,
-      parsedContent: event.content ? getParsedContent(event.content) as ParsedContent : undefined,
-      type: 'event',
-      isPrivate: false
-    }
-  } catch (error) {
-    console.error('Error fetching event:', eventId, error)
-    return null
-  }
 }
 
 export const fetchBookmarks = async (
@@ -55,6 +22,9 @@ export const fetchBookmarks = async (
 ) => {
   try {
     setLoading(true)
+    console.log('🚀 Using applesauce bookmark helpers for pubkey:', activeAccount.pubkey)
+    
+    // Get relay URLs from the pool
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
     
     // Fetch bookmark list
@@ -73,57 +43,53 @@ export const fetchBookmarks = async (
     }
     
     const bookmarkListEvent = bookmarkListEvents[0]
-    const eventIds = bookmarkListEvent.tags.filter(tag => tag[0] === 'e').map(tag => tag[1])
+    console.log('Found bookmark list event:', bookmarkListEvent.id)
     
-    // Fetch individual bookmarks
-    const individualBookmarks = await Promise.all(
-      eventIds.map(eventId => fetchEvent(relayPool, relayUrls, eventId))
-    )
+    // Use applesauce helpers to get all bookmarks (public and private)
+    const publicBookmarks = Helpers.getPublicBookmarks(bookmarkListEvent)
+    const privateBookmarks = Helpers.getHiddenBookmarks(bookmarkListEvent)
     
-    const validBookmarks = individualBookmarks.filter(Boolean) as IndividualBookmark[]
+    console.log('Public bookmarks:', publicBookmarks)
+    console.log('Private bookmarks:', privateBookmarks)
     
-    // Fetch private bookmarks using getHiddenBookmarks
-    let privateBookmarks: IndividualBookmark[] = []
-    try {
-      const hiddenBookmarks = Helpers.getHiddenBookmarks(bookmarkListEvent)
-      if (hiddenBookmarks && Array.isArray(hiddenBookmarks)) {
-        privateBookmarks = hiddenBookmarks.map((bookmark: HiddenBookmarkData) => ({
-          id: bookmark.id || `private-${Date.now()}`,
-          content: bookmark.content || '',
-          created_at: bookmark.created_at || Date.now(),
-          pubkey: activeAccount.pubkey,
-          kind: bookmark.kind || 30001,
-          tags: bookmark.tags || [],
-          parsedContent: bookmark.content ? getParsedContent(bookmark.content) as ParsedContent : undefined,
-          type: 'event' as const,
-          isPrivate: true
-        }))
-        console.log('Fetched private bookmarks:', privateBookmarks.length)
-      } else if (hiddenBookmarks) {
-        // Handle case where hiddenBookmarks is an object with bookmarks property
-        const bookmarksArray = (hiddenBookmarks as { bookmarks?: HiddenBookmarkData[] }).bookmarks || []
-        if (Array.isArray(bookmarksArray)) {
-          privateBookmarks = bookmarksArray.map((bookmark: HiddenBookmarkData) => ({
-            id: bookmark.id || `private-${Date.now()}`,
-            content: bookmark.content || '',
-            created_at: bookmark.created_at || Date.now(),
-            pubkey: activeAccount.pubkey,
-            kind: bookmark.kind || 30001,
-            tags: bookmark.tags || [],
-            parsedContent: bookmark.content ? getParsedContent(bookmark.content) as ParsedContent : undefined,
-            type: 'event' as const,
-            isPrivate: true
-          }))
-          console.log('Fetched private bookmarks from object:', privateBookmarks.length)
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching private bookmarks:', error)
+    // Convert to our format
+    const allBookmarks: IndividualBookmark[] = []
+    
+    // Add public bookmarks
+    if (publicBookmarks) {
+      const publicArray = Array.isArray(publicBookmarks) ? publicBookmarks : [publicBookmarks]
+      const publicItems = publicArray.map((bookmark: BookmarkData) => ({
+        id: bookmark.id || `public-${Date.now()}`,
+        content: bookmark.content || '',
+        created_at: bookmark.created_at || Date.now(),
+        pubkey: activeAccount.pubkey,
+        kind: bookmark.kind || 30001,
+        tags: bookmark.tags || [],
+        parsedContent: bookmark.content ? getParsedContent(bookmark.content) as ParsedContent : undefined,
+        type: 'event' as const,
+        isPrivate: false
+      }))
+      allBookmarks.push(...publicItems)
     }
     
-    // Combine public and private bookmarks
-    const allBookmarks = [...validBookmarks, ...privateBookmarks]
-    const hasPrivateContent = privateBookmarks.length > 0 || isEncrypted(bookmarkListEvent.content)
+    // Add private bookmarks
+    if (privateBookmarks) {
+      const privateArray = Array.isArray(privateBookmarks) ? privateBookmarks : [privateBookmarks]
+      const privateItems = privateArray.map((bookmark: BookmarkData) => ({
+        id: bookmark.id || `private-${Date.now()}`,
+        content: bookmark.content || '',
+        created_at: bookmark.created_at || Date.now(),
+        pubkey: activeAccount.pubkey,
+        kind: bookmark.kind || 30001,
+        tags: bookmark.tags || [],
+        parsedContent: bookmark.content ? getParsedContent(bookmark.content) as ParsedContent : undefined,
+        type: 'event' as const,
+        isPrivate: true
+      }))
+      allBookmarks.push(...privateItems)
+    }
+    
+    console.log('Total bookmarks found:', allBookmarks.length)
     
     const bookmark: Bookmark = {
       id: bookmarkListEvent.id,
@@ -133,10 +99,10 @@ export const fetchBookmarks = async (
       created_at: bookmarkListEvent.created_at,
       tags: bookmarkListEvent.tags,
       bookmarkCount: allBookmarks.length,
-      eventReferences: eventIds,
+      eventReferences: bookmarkListEvent.tags.filter(tag => tag[0] === 'e').map(tag => tag[1]),
       individualBookmarks: allBookmarks,
-      isPrivate: hasPrivateContent,
-      encryptedContent: isEncrypted(bookmarkListEvent.content) ? bookmarkListEvent.content : undefined
+      isPrivate: privateBookmarks && (Array.isArray(privateBookmarks) ? privateBookmarks.length > 0 : true),
+      encryptedContent: undefined
     }
     
     setBookmarks([bookmark])
