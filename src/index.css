@@ -569,6 +569,10 @@ body {
   color: #646cff;
 }
 
+.kind-icon-link {
+  text-decoration: none;
+}
+
 .read-now {
   margin-top: 0.75rem;
   display: flex;

@@ -24,7 +24,7 @@ import {
 import { faChevronDown, faChevronUp, faBookOpen } from '@fortawesome/free-solid-svg-icons'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
-import { npubEncode } from 'nostr-tools/nip19'
+import { npubEncode, neventEncode } from 'nostr-tools/nip19'
 import { IndividualBookmark } from '../types/bookmarks'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from './ContentWithResolvedProfiles'
@@ -52,6 +52,8 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   // Resolve author profile using applesauce
   const authorProfile = useEventModel(Models.ProfileModel, [bookmark.pubkey])
   const authorNpub = npubEncode(bookmark.pubkey)
+  const isHexId = /^[0-9a-f]{64}$/i.test(bookmark.id)
+  const eventNevent = isHexId ? neventEncode({ id: bookmark.id }) : undefined
   
   // Get display name for author
   const getAuthorDisplayName = () => {
@@ -174,9 +176,23 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       )}
       
       <div className="bookmark-meta">
-        <span className="kind-icon">
-          <FontAwesomeIcon icon={getKindIcon(bookmark.kind)} />
-        </span>
+        {eventNevent ? (
+          <a
+            href={`https://search.dergigi.com/e/${eventNevent}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="kind-icon-link"
+            title="Open event in search"
+          >
+            <span className="kind-icon">
+              <FontAwesomeIcon icon={getKindIcon(bookmark.kind)} />
+            </span>
+          </a>
+        ) : (
+          <span className="kind-icon">
+            <FontAwesomeIcon icon={getKindIcon(bookmark.kind)} />
+          </span>
+        )}
         <span>
           <a
             href={`https://search.dergigi.com/p/${authorNpub}`}
