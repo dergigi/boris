@@ -31,28 +31,6 @@ function isAccountWithExtension(account: unknown): account is AccountWithExtensi
   return typeof account === 'object' && account !== null && 'pubkey' in account
 }
 
-
-const processBookmarks = (
-  bookmarks: unknown,
-  activeAccount: ActiveAccount,
-  isPrivate: boolean
-): IndividualBookmark[] => {
-  if (!bookmarks) return []
-  
-  const bookmarkArray = Array.isArray(bookmarks) ? bookmarks : [bookmarks]
-  return bookmarkArray.map((bookmark: BookmarkData) => ({
-    id: bookmark.id || `${isPrivate ? 'private' : 'public'}-${Date.now()}`,
-    content: bookmark.content || '',
-    created_at: bookmark.created_at || Date.now(),
-    pubkey: activeAccount.pubkey,
-    kind: bookmark.kind || 30001,
-    tags: bookmark.tags || [],
-    parsedContent: bookmark.content ? getParsedContent(bookmark.content) as ParsedContent : undefined,
-    type: 'event' as const,
-    isPrivate
-  }))
-}
-
 const processApplesauceBookmarks = (
   bookmarks: unknown,
   activeAccount: ActiveAccount,
@@ -83,8 +61,19 @@ const processApplesauceBookmarks = (
     }))
   }
   
-  // Fallback to original processing for arrays
-  return processBookmarks(bookmarks, activeAccount, isPrivate)
+  // Fallback: map array-like bookmarks
+  const bookmarkArray = Array.isArray(bookmarks) ? bookmarks : [bookmarks]
+  return bookmarkArray.map((bookmark: BookmarkData) => ({
+    id: bookmark.id || `${isPrivate ? 'private' : 'public'}-${Date.now()}`,
+    content: bookmark.content || '',
+    created_at: bookmark.created_at || Date.now(),
+    pubkey: activeAccount.pubkey,
+    kind: bookmark.kind || 30001,
+    tags: bookmark.tags || [],
+    parsedContent: bookmark.content ? getParsedContent(bookmark.content) as ParsedContent : undefined,
+    type: 'event' as const,
+    isPrivate
+  }))
 }
 
 
@@ -132,7 +121,6 @@ export const fetchBookmarks = async (
     for (let i = 0; i < bookmarkListEvents.length; i++) {
       const event = bookmarkListEvents[i]
       console.log(`Event ${i}: ${event.id}`)
-      console.log(`  Content: ${event.content}`)
       console.log(`  Tags: ${event.tags.length} tags`)
       
       // Check if this event has encrypted content
@@ -156,23 +144,22 @@ export const fetchBookmarks = async (
     }
     
     console.log('Selected bookmark list event:', bookmarkListEvent.id)
-    console.log('Bookmark list content:', bookmarkListEvent.content)
-    console.log('Bookmark list tags:', bookmarkListEvent.tags)
     
     // Use applesauce helpers to get public bookmarks
     const publicBookmarks = Helpers.getPublicBookmarks(bookmarkListEvent)
     console.log('Public bookmarks:', publicBookmarks)
     
-    console.log('Content preview:', bookmarkListEvent.content?.substring(0, 100))
-    
     // Try to get private bookmarks - this should trigger browser extension if needed
     let privateBookmarks = null
     try {
       console.log('Attempting to get hidden bookmarks...')
-      console.log('Active account signer:', !!activeAccount.signer)
-      console.log('Signer type:', typeof activeAccount.signer)
-      
-      // This should trigger the browser extension if encrypted content exists
+      const locked = Helpers.isHiddenTagsLocked(bookmarkListEvent)
+      console.log('Hidden tags locked:', locked)
+      const maybeAccount = activeAccount as any
+      const signerCandidate = typeof maybeAccount?.signEvent === 'function' ? maybeAccount : maybeAccount?.signer
+      if (locked && signerCandidate) {
+        await Helpers.unlockHiddenTags(bookmarkListEvent, signerCandidate)
+      }
       privateBookmarks = Helpers.getHiddenBookmarks(bookmarkListEvent)
       console.log('Private bookmarks result:', privateBookmarks)
     } catch (error) {
