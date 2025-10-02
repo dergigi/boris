@@ -131,4 +131,14 @@ export function dedupeBookmarksById(bookmarks: IndividualBookmark[]): Individual
   return result
 }
 
+export function extractUrlsFromContent(content: string): string[] {
+  if (!content) return []
+  // Basic URL regex covering http(s) schemes
+  const urlRegex = /https?:\/\/[\w.-]+(?:\/[\w\-._~:/?#[\]@!$&'()*+,;=%]*)?/gi
+  const matches = content.match(urlRegex)
+  if (!matches) return []
+  // Normalize by trimming trailing punctuation
+  return Array.from(new Set(matches.map(u => u.replace(/[),.;]+$/, ''))))
+}
+
 

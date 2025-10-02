@@ -9,7 +9,8 @@ import {
   isHexId,
   hasNip04Decrypt,
   hasNip44Decrypt,
-  dedupeBookmarksById
+  dedupeBookmarksById,
+  extractUrlsFromContent
 } from './bookmarkHelpers'
 import { Bookmark } from '../types/bookmarks'
 import { collectBookmarksFromEvents } from './bookmarkProcessing.ts'
@@ -113,7 +114,14 @@ export const fetchBookmarks = async (
     ])
 
     // Sort individual bookmarks by timestamp (newest first)
-    const sortedBookmarks = allBookmarks.sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
+    const enriched = allBookmarks.map(b => ({
+      ...b,
+      tags: b.tags || [],
+      content: b.content || ''
+    }))
+    const sortedBookmarks = enriched
+      .map(b => ({ ...b, urlReferences: extractUrlsFromContent(b.content) }))
+      .sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
 
     const bookmark: Bookmark = {
       id: `${activeAccount.pubkey}-bookmarks`,
