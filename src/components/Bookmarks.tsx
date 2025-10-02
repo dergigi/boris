@@ -20,6 +20,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [selectedUrl, setSelectedUrl] = useState<string | undefined>(undefined)
   const [readerLoading, setReaderLoading] = useState(false)
   const [readerContent, setReaderContent] = useState<ReadableContent | undefined>(undefined)
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
   
@@ -114,7 +115,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   }
 
   return (
-    <div className="two-pane">
+    <div className={`two-pane ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
       <div className="pane sidebar">
         <BookmarkList 
           bookmarks={bookmarks}
@@ -122,6 +123,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           onLogout={onLogout}
           formatUserDisplay={formatUserDisplay}
           onSelectUrl={handleSelectUrl}
+          isCollapsed={isCollapsed}
+          onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
         />
       </div>
       <div className="pane main">

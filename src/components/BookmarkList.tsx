@@ -1,4 +1,6 @@
 import React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { Bookmark, ActiveAccount } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
@@ -9,6 +11,8 @@ interface BookmarkListProps {
   onLogout: () => void
   formatUserDisplay: () => string
   onSelectUrl?: (url: string) => void
+  isCollapsed: boolean
+  onToggleCollapse: () => void
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({ 
@@ -16,8 +20,25 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   activeAccount, 
   onLogout, 
   formatUserDisplay,
-  onSelectUrl
+  onSelectUrl,
+  isCollapsed,
+  onToggleCollapse
 }) => {
+  if (isCollapsed) {
+    return (
+      <div className="bookmarks-container collapsed">
+        <button 
+          onClick={onToggleCollapse}
+          className="toggle-sidebar-btn"
+          title="Expand bookmarks sidebar"
+          aria-label="Expand bookmarks sidebar"
+        >
+          <FontAwesomeIcon icon={faChevronRight} />
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="bookmarks-container">
       <div className="bookmarks-header">
@@ -27,9 +48,19 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
             <p className="user-info">Logged in as: {formatUserDisplay()}</p>
           )}
         </div>
-        <button onClick={onLogout} className="logout-button">
-          Logout
-        </button>
+        <div className="header-actions">
+          <button 
+            onClick={onToggleCollapse}
+            className="toggle-sidebar-btn"
+            title="Collapse bookmarks sidebar"
+            aria-label="Collapse bookmarks sidebar"
+          >
+            <FontAwesomeIcon icon={faChevronLeft} />
+          </button>
+          <button onClick={onLogout} className="logout-button">
+            Logout
+          </button>
+        </div>
       </div>
       
       {bookmarks.length === 0 ? (

@@ -115,6 +115,43 @@ body {
   color: #fff;
 }
 
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.toggle-sidebar-btn {
+  background: #2a2a2a;
+  color: #ddd;
+  border: 1px solid #444;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.toggle-sidebar-btn:hover {
+  background: #333;
+  color: #fff;
+}
+
+.toggle-sidebar-btn:active {
+  transform: translateY(1px);
+}
+
+.bookmarks-container.collapsed {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 1rem;
+}
+
 .user-info {
   margin: 0.5rem 0 0 0;
   color: #888;
@@ -307,6 +344,11 @@ body {
   grid-template-columns: 360px 1fr;
   gap: 1rem;
   align-items: start;
+  transition: grid-template-columns 0.3s ease;
+}
+
+.two-pane.sidebar-collapsed {
+  grid-template-columns: 60px 1fr;
 }
 
 .pane.sidebar {
