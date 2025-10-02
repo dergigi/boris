@@ -90,8 +90,23 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         authors: [activeAccount.pubkey]
       }
       
+      // Also try a broader filter to see if we can get any events
+      const testFilter: Filter = {
+        authors: [activeAccount.pubkey],
+        limit: 5
+      }
+      
+      console.log('Testing with broader filter first...')
+      const testEvents = await lastValueFrom(
+        relayPool.req(relayUrls, testFilter).pipe(
+          completeOnEose(),
+          takeUntil(timer(5000)),
+          toArray(),
+        )
+      )
+      console.log('Test events found:', testEvents.length, 'kinds:', testEvents.map(e => e.kind))
+      
       // Get relay URLs from the pool
-      const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
       console.log('Querying relay pool with filter:', filter)
       console.log('Using relays:', relayUrls)
       
