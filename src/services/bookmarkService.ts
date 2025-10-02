@@ -98,14 +98,16 @@ export const fetchBookmarks = async (
     // Get relay URLs from the pool
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
     
-    // Fetch ALL bookmark list events (not just 1) to find private bookmarks
-    const bookmarkListEvents = await lastValueFrom(
+    // Fetch bookmark lists (10003) and bookmarksets (30001)
+    const rawEvents = await lastValueFrom(
       relayPool.req(relayUrls, {
-        kinds: [10003],
+        kinds: [10003, 30001],
         authors: [activeAccount.pubkey],
-        limit: 10 // Fetch more events to find private bookmarks
+        limit: 50
       }).pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
     )
+    // Deduplicate by id
+    const bookmarkListEvents = Array.from(new Map(rawEvents.map((e: any) => [e.id, e])).values())
     
     if (bookmarkListEvents.length === 0) {
       setBookmarks([])
@@ -113,82 +115,48 @@ export const fetchBookmarks = async (
       return
     }
     
-    console.log(`Found ${bookmarkListEvents.length} bookmark list events`)
-    
-    // Check all bookmark list events for encrypted content
-    let bookmarkListEvent = null
-    
-    for (let i = 0; i < bookmarkListEvents.length; i++) {
-      const event = bookmarkListEvents[i]
-      console.log(`Event ${i}: ${event.id}`)
-      console.log(`  Tags: ${event.tags.length} tags`)
-      
-      // Check if this event has encrypted content
-      const isEncrypted = event.content && 
-        (event.content.includes('?iv=') || 
-         event.content.includes('?version=') ||
-         event.content.startsWith('nip44:') ||
-         event.content.startsWith('nip04:'))
-      
-      if (isEncrypted) {
-        console.log(`  🎯 FOUND ENCRYPTED CONTENT in event ${i}!`)
-        bookmarkListEvent = event
-        break
+    // Aggregate across all events
+    const maybeAccount = activeAccount as any
+    const signerCandidate = typeof maybeAccount?.signEvent === 'function' ? maybeAccount : maybeAccount?.signer
+    const publicItemsAll: IndividualBookmark[] = []
+    const privateItemsAll: IndividualBookmark[] = []
+    let newestCreatedAt = 0
+    let latestContent = ''
+    let allTags: string[][] = []
+    for (const evt of bookmarkListEvents) {
+      newestCreatedAt = Math.max(newestCreatedAt, evt.created_at || 0)
+      if (!latestContent && evt.content) latestContent = evt.content
+      if (Array.isArray(evt.tags)) allTags = allTags.concat(evt.tags)
+      // public
+      const pub = Helpers.getPublicBookmarks(evt)
+      publicItemsAll.push(...processApplesauceBookmarks(pub, activeAccount, false))
+      // hidden
+      try {
+        const hasHidden = Helpers.hasHiddenTags(evt)
+        const locked = Helpers.isHiddenTagsLocked(evt)
+        const hasCiphertext = typeof evt.content === 'string' && evt.content.length > 0
+        if (hasHidden && locked && hasCiphertext && signerCandidate) {
+          await Helpers.unlockHiddenTags(evt, signerCandidate)
+        }
+        const priv = Helpers.getHiddenBookmarks(evt)
+        privateItemsAll.push(...processApplesauceBookmarks(priv, activeAccount, true))
+      } catch {
+        // ignore per-event failures
       }
     }
-    
-    // If no encrypted content found, use the first event
-    if (!bookmarkListEvent) {
-      bookmarkListEvent = bookmarkListEvents[0]
-      console.log('No encrypted content found, using first event')
-    }
-    
-    console.log('Selected bookmark list event:', bookmarkListEvent.id)
-    
-    // Use applesauce helpers to get public bookmarks
-    const publicBookmarks = Helpers.getPublicBookmarks(bookmarkListEvent)
-    console.log('Public bookmarks:', publicBookmarks)
-    
-    // Try to get private bookmarks - unlock hidden tags if locked and present
-    let privateBookmarks = null
-    try {
-      console.log('Attempting to get hidden bookmarks...')
-      const hasHidden = Helpers.hasHiddenTags(bookmarkListEvent)
-      const locked = Helpers.isHiddenTagsLocked(bookmarkListEvent)
-      console.log('Has hidden tags:', hasHidden, 'Hidden tags locked:', locked)
-      const maybeAccount = activeAccount as any
-      const signerCandidate = typeof maybeAccount?.signEvent === 'function' ? maybeAccount : maybeAccount?.signer
-      const hasCiphertext = typeof bookmarkListEvent.content === 'string' && bookmarkListEvent.content.length > 0
-      if (hasHidden && locked && hasCiphertext && signerCandidate) {
-        await Helpers.unlockHiddenTags(bookmarkListEvent, signerCandidate)
-      }
-      privateBookmarks = Helpers.getHiddenBookmarks(bookmarkListEvent)
-      console.log('Private bookmarks result:', privateBookmarks)
-    } catch (error) {
-      console.log('Failed to get private bookmarks:', error)
-      privateBookmarks = null
-    }
-    
-    
-    // Process bookmarks using DRY helper function
-    // Handle the structure that applesauce returns: {notes: [], articles: [], hashtags: [], urls: []}
-    const publicItems = processApplesauceBookmarks(publicBookmarks, activeAccount, false)
-    const privateItems = processApplesauceBookmarks(privateBookmarks, activeAccount, true)
-    const allBookmarks = [...publicItems, ...privateItems]
-    
-    console.log('Total bookmarks found:', allBookmarks.length)
+    const allBookmarks = [...publicItemsAll, ...privateItemsAll]
     
     const bookmark: Bookmark = {
-      id: bookmarkListEvent.id,
-      title: bookmarkListEvent.content || `Bookmark List (${allBookmarks.length} items)`,
+      id: `${activeAccount.pubkey}-bookmarks`,
+      title: `Bookmarks (${allBookmarks.length})`,
       url: '',
-      content: bookmarkListEvent.content,
-      created_at: bookmarkListEvent.created_at,
-      tags: bookmarkListEvent.tags,
+      content: latestContent,
+      created_at: newestCreatedAt || Date.now(),
+      tags: allTags,
       bookmarkCount: allBookmarks.length,
-      eventReferences: bookmarkListEvent.tags.filter(tag => tag[0] === 'e').map(tag => tag[1]),
+      eventReferences: allTags.filter(tag => tag[0] === 'e').map(tag => tag[1]),
       individualBookmarks: allBookmarks,
-      isPrivate: privateItems.length > 0,
+      isPrivate: privateItemsAll.length > 0,
       encryptedContent: undefined
     }
     
