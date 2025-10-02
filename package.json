@@ -43,7 +43,8 @@
     ],
     "ignorePatterns": [
       "dist",
-      ".eslintrc.cjs"
+      ".eslintrc.cjs",
+      "applesauce"
     ],
     "parser": "@typescript-eslint/parser",
     "plugins": [
