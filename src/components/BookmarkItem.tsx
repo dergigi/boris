@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock, faGlobe, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { IndividualBookmark } from '../types/bookmarks'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
+import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 
 interface BookmarkItemProps {
   bookmark: IndividualBookmark
@@ -19,6 +20,9 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index }) =
   }
 
   const short = (v: string) => `${v.slice(0, 8)}...${v.slice(-8)}`
+  
+  // Extract URLs from bookmark content
+  const extractedUrls = extractUrlsFromContent(bookmark.content)
 
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
@@ -34,6 +38,17 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index }) =
         </span>
         <span className="bookmark-date">{formatDate(bookmark.created_at)}</span>
       </div>
+      
+      {extractedUrls.length > 0 && (
+        <div className="bookmark-urls">
+          <h4>URLs:</h4>
+          {extractedUrls.map((url, urlIndex) => (
+            <a key={urlIndex} href={url} target="_blank" rel="noopener noreferrer" className="bookmark-url">
+              {url}
+            </a>
+          ))}
+        </div>
+      )}
       
       {bookmark.parsedContent ? (
         <div className="bookmark-content">
