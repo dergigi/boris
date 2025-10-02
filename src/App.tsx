@@ -3,6 +3,7 @@ import { EventStoreProvider, AccountsProvider } from 'applesauce-react'
 import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
 import { RelayPool } from 'applesauce-relay'
+import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Login from './components/Login'
 import Bookmarks from './components/Bookmarks'
 
@@ -37,6 +38,11 @@ function App() {
     console.log('Created relay group with', relayUrls.length, 'relays')
     console.log('Relay URLs:', relayUrls)
     
+    // Attach address/replaceable loaders so ProfileModel can fetch profiles
+    const addressLoader = createAddressLoader(pool, { eventStore: store })
+    store.addressableLoader = addressLoader
+    store.replaceableLoader = addressLoader
+
     setEventStore(store)
     setAccountManager(accounts)
     setRelayPool(pool)
