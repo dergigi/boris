@@ -90,7 +90,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   return (
     <BookmarkList 
       bookmarks={bookmarks}
-      activeAccount={activeAccount as any}
+      activeAccount={activeAccount || null}
       onLogout={onLogout}
       formatUserDisplay={formatUserDisplay}
     />
