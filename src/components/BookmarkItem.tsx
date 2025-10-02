@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock, faBookmark, faUserLock, faCopy } from '@fortawesome/free-solid-svg-icons'
+import { faBookmark, faUserLock, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { IndividualBookmark } from '../types/bookmarks'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
