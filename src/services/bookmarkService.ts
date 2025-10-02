@@ -1,5 +1,4 @@
-import { RelayPool } from 'applesauce-relay'
-import { completeOnEose } from 'applesauce-relay'
+import { RelayPool, completeOnEose } from 'applesauce-relay'
 import { getParsedContent } from 'applesauce-content/text'
 import { Helpers } from 'applesauce-core'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
@@ -20,13 +19,8 @@ interface ApplesauceBookmarks {
   urls?: BookmarkData[]
 }
 
-interface AccountWithExtension {
-  pubkey: string
-  signer?: unknown
-  [key: string]: unknown // Allow any properties from the full account object
-}
+interface AccountWithExtension { pubkey: string; signer?: unknown; [key: string]: unknown }
 
-// Type guard to check if an object has the required properties
 function isAccountWithExtension(account: unknown): account is AccountWithExtension {
   return typeof account === 'object' && account !== null && 'pubkey' in account
 }
@@ -34,11 +28,33 @@ function isAccountWithExtension(account: unknown): account is AccountWithExtensi
 function isEncryptedContent(content: string | undefined): boolean {
   if (!content) return false
   return (
-    content.startsWith('nip44:') ||
-    content.startsWith('nip04:') ||
-    content.includes('?iv=') ||
-    content.includes('?version=')
+    content.startsWith('nip44:') || content.startsWith('nip04:') || content.includes('?iv=') || content.includes('?version=')
   )
+}
+
+function isHexId(id: unknown): id is string {
+  return typeof id === 'string' && /^[0-9a-f]{64}$/i.test(id)
+}
+
+function dedupeNip51Events(events: any[]): any[] {
+  const byId = new Map<string, any>()
+  for (const e of events) { if (e?.id && !byId.has(e.id)) byId.set(e.id, e) }
+  const unique = Array.from(byId.values())
+  const latest10003 = unique
+    .filter(e => e.kind === 10003)
+    .sort((a, b) => (b.created_at || 0) - (a.created_at || 0))[0]
+  const byD = new Map<string, any>()
+  for (const e of unique) {
+    if (e.kind !== 30001) continue
+    const d = (e.tags || []).find((t: string[]) => t[0] === 'd')?.[1] || ''
+    const prev = byD.get(d)
+    if (!prev || (e.created_at || 0) > (prev.created_at || 0)) byD.set(d, e)
+  }
+  const sets30001 = Array.from(byD.values())
+  const out: any[] = []
+  if (latest10003) out.push(latest10003)
+  out.push(...sets30001)
+  return out
 }
 
 const processApplesauceBookmarks = (
@@ -48,16 +64,13 @@ const processApplesauceBookmarks = (
 ): IndividualBookmark[] => {
   if (!bookmarks) return []
   
-  // Handle applesauce structure: {notes: [], articles: [], hashtags: [], urls: []}
   if (typeof bookmarks === 'object' && bookmarks !== null && !Array.isArray(bookmarks)) {
     const applesauceBookmarks = bookmarks as ApplesauceBookmarks
     const allItems: BookmarkData[] = []
-    
     if (applesauceBookmarks.notes) allItems.push(...applesauceBookmarks.notes)
     if (applesauceBookmarks.articles) allItems.push(...applesauceBookmarks.articles)
     if (applesauceBookmarks.hashtags) allItems.push(...applesauceBookmarks.hashtags)
     if (applesauceBookmarks.urls) allItems.push(...applesauceBookmarks.urls)
-    
     return allItems.map((bookmark: BookmarkData) => ({
       id: bookmark.id || `${isPrivate ? 'private' : 'public'}-${Date.now()}`,
       content: bookmark.content || '',
@@ -70,7 +83,6 @@ const processApplesauceBookmarks = (
       isPrivate
     }))
   }
-  
   // Fallback: map array-like bookmarks
   const bookmarkArray = Array.isArray(bookmarks) ? bookmarks : [bookmarks]
   return bookmarkArray.map((bookmark: BookmarkData) => ({
@@ -98,34 +110,24 @@ export const fetchBookmarks = async (
   try {
     setLoading(true)
     
-    // Type check the account object
     if (!isAccountWithExtension(activeAccount)) {
       throw new Error('Invalid account object provided')
     }
-    
-    console.log('🚀 Using applesauce bookmark helpers for pubkey:', activeAccount.pubkey)
-    
     // Get relay URLs from the pool
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-    
-    // Fetch bookmark lists (10003) and bookmarksets (30001)
+    // Fetch bookmark list (10003 latest) and bookmarksets (30001 latest per d)
     const rawEvents = await lastValueFrom(
-      relayPool.req(relayUrls, {
-        kinds: [10003, 30001],
-        authors: [activeAccount.pubkey],
-        limit: 50
-      }).pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
+      relayPool
+        .req(relayUrls, { kinds: [10003, 30001], authors: [activeAccount.pubkey] })
+        .pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
     )
-    // Deduplicate by id
-    const bookmarkListEvents = Array.from(new Map(rawEvents.map((e: any) => [e.id, e])).values())
-    
+    const bookmarkListEvents = dedupeNip51Events(rawEvents)
     if (bookmarkListEvents.length === 0) {
       setBookmarks([])
       setLoading(false)
       return
     }
-    
-    // Aggregate across all events
+    // Aggregate across events
     const maybeAccount = activeAccount as any
     const signerCandidate = typeof maybeAccount?.signEvent === 'function' ? maybeAccount : maybeAccount?.signer
     const publicItemsAll: IndividualBookmark[] = []
@@ -134,9 +136,6 @@ export const fetchBookmarks = async (
     let latestContent = ''
     let allTags: string[][] = []
     for (const evt of bookmarkListEvents) {
-      const hasHiddenBefore = Helpers.hasHiddenTags(evt)
-      const lockedBefore = Helpers.isHiddenTagsLocked(evt)
-      console.log('[bookmarks] evt', evt.id, 'kind', evt.kind, 'hidden?', hasHiddenBefore, 'locked?', lockedBefore)
       newestCreatedAt = Math.max(newestCreatedAt, evt.created_at || 0)
       if (!latestContent && evt.content && !isEncryptedContent(evt.content)) latestContent = evt.content
       if (Array.isArray(evt.tags)) allTags = allTags.concat(evt.tags)
@@ -145,31 +144,22 @@ export const fetchBookmarks = async (
       publicItemsAll.push(...processApplesauceBookmarks(pub, activeAccount, false))
       // hidden
       try {
-        const hasHidden = Helpers.hasHiddenTags(evt)
-        const locked = Helpers.isHiddenTagsLocked(evt)
-        if (hasHidden && locked && signerCandidate) {
-          console.log('[bookmarks] unlocking hidden tags for', evt.id)
+        if (Helpers.hasHiddenTags(evt) && Helpers.isHiddenTagsLocked(evt) && signerCandidate) {
           try {
             await Helpers.unlockHiddenTags(evt, signerCandidate)
           } catch {
-            // Fallback to nip44 if default fails
             await Helpers.unlockHiddenTags(evt, signerCandidate as any, 'nip44' as any)
           }
         }
-        const lockedAfter = Helpers.isHiddenTagsLocked(evt)
         const priv = Helpers.getHiddenBookmarks(evt)
-        console.log('[bookmarks] unlocked?', !lockedAfter, 'private items present?', !!priv && (
-          (priv as any).notes?.length || (priv as any).articles?.length || (priv as any).hashtags?.length || (priv as any).urls?.length
-        ))
         privateItemsAll.push(...processApplesauceBookmarks(priv, activeAccount, true))
       } catch {
         // ignore per-event failures
       }
     }
 
-    // Hydrate note pointers (ids) into full events so content renders
     const allItems = [...publicItemsAll, ...privateItemsAll]
-    const noteIds = Array.from(new Set(allItems.map(i => i.id).filter(Boolean)))
+    const noteIds = Array.from(new Set(allItems.map(i => i.id).filter(isHexId)))
     let idToEvent: Map<string, any> = new Map()
     if (noteIds.length > 0) {
       try {
