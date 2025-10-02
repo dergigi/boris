@@ -184,6 +184,9 @@ body {
 .parsed-content {
   margin: 1rem 0;
   line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .nostr-mention {
@@ -194,6 +197,9 @@ body {
   padding: 0.2rem 0.4rem;
   border-radius: 3px;
   font-size: 0.9rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .nostr-mention:hover {
@@ -204,7 +210,9 @@ body {
 .nostr-link {
   color: #007bff;
   text-decoration: none;
-  word-break: break-all;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .nostr-link:hover {
@@ -286,6 +294,9 @@ body {
   color: #ccc;
   margin: 0.5rem 0;
   line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .bookmark-meta {
@@ -318,6 +329,10 @@ body {
   border: 1px solid #444;
   transition: all 0.2s ease;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  overflow: hidden;
 }
 
 .individual-bookmark:hover {
@@ -363,6 +378,9 @@ body {
   margin: 0.75rem 0;
   color: #ccc;
   line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .individual-bookmark .bookmark-meta {
