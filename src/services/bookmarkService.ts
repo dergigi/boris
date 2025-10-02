@@ -149,15 +149,17 @@ export const fetchBookmarks = async (
     const publicBookmarks = Helpers.getPublicBookmarks(bookmarkListEvent)
     console.log('Public bookmarks:', publicBookmarks)
     
-    // Try to get private bookmarks - this should trigger browser extension if needed
+    // Try to get private bookmarks - unlock hidden tags if locked and present
     let privateBookmarks = null
     try {
       console.log('Attempting to get hidden bookmarks...')
+      const hasHidden = Helpers.hasHiddenTags(bookmarkListEvent)
       const locked = Helpers.isHiddenTagsLocked(bookmarkListEvent)
-      console.log('Hidden tags locked:', locked)
+      console.log('Has hidden tags:', hasHidden, 'Hidden tags locked:', locked)
       const maybeAccount = activeAccount as any
       const signerCandidate = typeof maybeAccount?.signEvent === 'function' ? maybeAccount : maybeAccount?.signer
-      if (locked && signerCandidate) {
+      const hasCiphertext = typeof bookmarkListEvent.content === 'string' && bookmarkListEvent.content.length > 0
+      if (hasHidden && locked && hasCiphertext && signerCandidate) {
         await Helpers.unlockHiddenTags(bookmarkListEvent, signerCandidate)
       }
       privateBookmarks = Helpers.getHiddenBookmarks(bookmarkListEvent)
