@@ -144,9 +144,14 @@ export const fetchBookmarks = async (
       try {
         const hasHidden = Helpers.hasHiddenTags(evt)
         const locked = Helpers.isHiddenTagsLocked(evt)
-        const hasCiphertext = typeof evt.content === 'string' && evt.content.length > 0
+        const hasCiphertext = typeof evt.content === 'string' && isEncryptedContent(evt.content)
         if (hasHidden && locked && hasCiphertext && signerCandidate) {
-          await Helpers.unlockHiddenTags(evt, signerCandidate)
+          try {
+            await Helpers.unlockHiddenTags(evt, signerCandidate)
+          } catch {
+            // Fallback to nip44 if default fails
+            await Helpers.unlockHiddenTags(evt, signerCandidate as any, 'nip44' as any)
+          }
         }
         const priv = Helpers.getHiddenBookmarks(evt)
         privateItemsAll.push(...processApplesauceBookmarks(priv, activeAccount, true))
@@ -154,7 +159,33 @@ export const fetchBookmarks = async (
         // ignore per-event failures
       }
     }
-    const allBookmarks = [...publicItemsAll, ...privateItemsAll]
+
+    // Hydrate note pointers (ids) into full events so content renders
+    const allItems = [...publicItemsAll, ...privateItemsAll]
+    const noteIds = Array.from(new Set(allItems.map(i => i.id).filter(Boolean)))
+    let idToEvent: Map<string, any> = new Map()
+    if (noteIds.length > 0) {
+      try {
+        const events = await lastValueFrom(
+          relayPool.req(relayUrls, { ids: noteIds }).pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
+        )
+        idToEvent = new Map(events.map((e: any) => [e.id, e]))
+      } catch {}
+    }
+    const hydrateItems = (items: IndividualBookmark[]): IndividualBookmark[] =>
+      items.map(item => {
+        const ev = idToEvent.get(item.id)
+        if (!ev) return item
+        return {
+          ...item,
+          content: ev.content || item.content || '',
+          created_at: ev.created_at || item.created_at,
+          kind: ev.kind || item.kind,
+          tags: ev.tags || item.tags,
+          parsedContent: ev.content ? getParsedContent(ev.content) as ParsedContent : item.parsedContent
+        }
+      })
+    const allBookmarks = [...hydrateItems(publicItemsAll), ...hydrateItems(privateItemsAll)]
     
     const bookmark: Bookmark = {
       id: `${activeAccount.pubkey}-bookmarks`,
