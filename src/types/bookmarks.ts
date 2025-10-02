@@ -40,4 +40,5 @@ export interface IndividualBookmark {
 
 export interface ActiveAccount {
   pubkey: string
+  signer?: any // SimpleSigner from applesauce
 }
