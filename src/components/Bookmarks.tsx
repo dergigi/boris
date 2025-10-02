@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Hooks } from 'applesauce-react'
 import { NostrEvent } from 'nostr-tools'
 
@@ -12,7 +12,13 @@ interface Bookmark {
 }
 
 interface BookmarksProps {
-  addressLoader: any
+  addressLoader: ((params: { kind: number; pubkey: string; relays?: string[] }) => {
+    subscribe: (observer: {
+      next: (event: NostrEvent) => void;
+      error: (error: unknown) => void;
+      complete: () => void;
+    }) => { unsubscribe: () => void };
+  }) | null
   onLogout: () => void
 }
 
@@ -49,7 +55,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
             bookmarkList.push(bookmarkData)
           }
         },
-        error: (error: any) => {
+            error: (error: unknown) => {
           console.error('Error fetching bookmarks:', error)
           setLoading(false)
         },

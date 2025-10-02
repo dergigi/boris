@@ -4,6 +4,7 @@ import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
 import { RelayPool } from 'applesauce-relay'
 import { Loaders } from 'applesauce-loaders'
+import { NostrEvent } from 'nostr-tools'
 import Login from './components/Login'
 import Bookmarks from './components/Bookmarks'
 
@@ -11,7 +12,13 @@ function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
   const [accountManager, setAccountManager] = useState<AccountManager | null>(null)
   const [relayPool, setRelayPool] = useState<RelayPool | null>(null)
-  const [addressLoader, setAddressLoader] = useState<any>(null)
+  const [addressLoader, setAddressLoader] = useState<((params: { kind: number; pubkey: string; relays?: string[] }) => {
+    subscribe: (observer: {
+      next: (event: NostrEvent) => void;
+      error: (error: unknown) => void;
+      complete: () => void;
+    }) => { unsubscribe: () => void };
+  }) | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
