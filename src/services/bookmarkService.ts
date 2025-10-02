@@ -2,6 +2,8 @@ import { RelayPool, completeOnEose } from 'applesauce-relay'
 import { getParsedContent } from 'applesauce-content/text'
 import { Helpers } from 'applesauce-core'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+// Import the bookmark hidden symbol for caching
+const BookmarkHiddenSymbol = Symbol.for("bookmark-hidden")
 import { Bookmark, IndividualBookmark, ParsedContent, ActiveAccount } from '../types/bookmarks'
 
 interface BookmarkData {
@@ -246,17 +248,23 @@ export const fetchBookmarks = async (
         else if (evt.content && evt.content.length > 0 && signerCandidate) {
           try {
             console.log('🔓 Attempting manual decryption for event with unrecognized kind...')
-            // Try to manually decrypt using applesauce's unlockHiddenContent function
-            // We'll temporarily mark the event as supporting hidden content
-            const originalKind = evt.kind
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ;(evt as any).kind = 10003 // Temporarily change to recognized kind
+            console.log('📄 Content to decrypt:', evt.content.slice(0, 100) + '...')
+
+            // Try direct decryption using the signer's nip04 capabilities
+            const decryptedContent = await (signerCandidate as any).nip04?.decrypt(evt.pubkey, evt.content)
+            console.log('✅ Successfully decrypted content manually')
+
+            // Parse the decrypted content as JSON (should be array of tags)
             try {
-              await Helpers.unlockHiddenContent(evt, signerCandidate as any)
-              console.log('✅ Successfully decrypted unrecognized event')
-            } finally {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              ;(evt as any).kind = originalKind // Restore original kind
+              const hiddenTags = JSON.parse(decryptedContent)
+              console.log('📋 Decrypted hidden tags:', hiddenTags.length, 'tags')
+
+              // Set the cached value on the event so getHiddenBookmarks can find it
+              Reflect.set(evt, BookmarkHiddenSymbol, hiddenTags)
+              Reflect.set(evt, 'EncryptedContentSymbol', decryptedContent)
+
+            } catch (parseError) {
+              console.warn('❌ Failed to parse decrypted content as JSON:', parseError)
             }
           } catch (error) {
             console.warn('❌ Failed manual decryption:', error)
