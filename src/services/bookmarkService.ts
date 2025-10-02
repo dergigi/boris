@@ -116,7 +116,6 @@ export const fetchBookmarks = async (
     
     // Check all bookmark list events for encrypted content
     let bookmarkListEvent = null
-    let hasEncryptedContent = false
     
     for (let i = 0; i < bookmarkListEvents.length; i++) {
       const event = bookmarkListEvents[i]
@@ -134,7 +133,6 @@ export const fetchBookmarks = async (
       if (isEncrypted) {
         console.log(`  🎯 FOUND ENCRYPTED CONTENT in event ${i}!`)
         bookmarkListEvent = event
-        hasEncryptedContent = true
         break
       }
     }
@@ -153,7 +151,6 @@ export const fetchBookmarks = async (
     const publicBookmarks = Helpers.getPublicBookmarks(bookmarkListEvent)
     console.log('Public bookmarks:', publicBookmarks)
     
-    console.log('Has encrypted content:', hasEncryptedContent)
     console.log('Content preview:', bookmarkListEvent.content?.substring(0, 100))
     
     // Try to get private bookmarks - this should trigger browser extension if needed
