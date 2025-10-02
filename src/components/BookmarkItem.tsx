@@ -3,7 +3,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { 
   faBookmark, 
   faUserLock, 
-  faCopy,
   faCircleUser,
   faFeather,
   faRetweet,
@@ -25,7 +24,8 @@ import {
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { IndividualBookmark } from '../types/bookmarks'
-import { formatDate, renderParsedContent, ContentWithResolvedProfiles } from '../utils/bookmarkUtils'
+import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
+import ContentWithResolvedProfiles from './ContentWithResolvedProfiles'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 
 interface BookmarkItemProps {
@@ -35,13 +35,7 @@ interface BookmarkItemProps {
 }
 
 export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onSelectUrl }) => {
-  const copy = async (text: string) => {
-    try { 
-      await navigator.clipboard.writeText(text) 
-    } catch (error) {
-      console.warn('Failed to copy to clipboard:', error)
-    }
-  }
+  // removed copy-to-clipboard buttons
 
   const short = (v: string) => `${v.slice(0, 8)}...${v.slice(-8)}`
   
@@ -112,9 +106,6 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
         </span>
         <span className="bookmark-id">
           {short(bookmark.id)}
-          <button className="copy-btn" onClick={() => copy(bookmark.id)} title="Copy event id">
-            <FontAwesomeIcon icon={faCopy} />
-          </button>
         </span>
         <span className="bookmark-date">{formatDate(bookmark.created_at)}</span>
       </div>
@@ -151,9 +142,6 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
         </span>
         <span>
           Author: {getAuthorDisplayName()}
-          <button className="copy-btn" onClick={() => copy(bookmark.pubkey)} title="Copy author pubkey">
-            <FontAwesomeIcon icon={faCopy} />
-          </button>
         </span>
       </div>
 
