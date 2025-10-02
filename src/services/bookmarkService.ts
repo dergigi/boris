@@ -160,6 +160,10 @@ export const fetchBookmarks = async (
     let privateBookmarks = null
     try {
       console.log('Attempting to get hidden bookmarks...')
+      console.log('Active account signer:', !!activeAccount.signer)
+      console.log('Signer type:', typeof activeAccount.signer)
+      
+      // This should trigger the browser extension if encrypted content exists
       privateBookmarks = Helpers.getHiddenBookmarks(bookmarkListEvent)
       console.log('Private bookmarks result:', privateBookmarks)
     } catch (error) {
