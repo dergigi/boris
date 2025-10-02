@@ -9,9 +9,12 @@ interface BookmarkItemProps {
 
 export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index }) => {
   return (
-    <div key={`${bookmark.id}-${index}`} className="individual-bookmark">
+    <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
       <div className="bookmark-header">
-        <span className="bookmark-type">{bookmark.type}</span>
+        <span className="bookmark-type">
+          {bookmark.type}
+          {bookmark.isPrivate && <span className="private-indicator">🔒</span>}
+        </span>
         <span className="bookmark-id">{bookmark.id.slice(0, 8)}...{bookmark.id.slice(-8)}</span>
         <span className="bookmark-date">{formatDate(bookmark.created_at)}</span>
       </div>

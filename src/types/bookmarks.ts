@@ -24,6 +24,8 @@ export interface Bookmark {
   urlReferences?: string[]
   parsedContent?: ParsedContent
   individualBookmarks?: IndividualBookmark[]
+  isPrivate?: boolean
+  encryptedContent?: string
 }
 
 export interface IndividualBookmark {
@@ -36,9 +38,10 @@ export interface IndividualBookmark {
   parsedContent?: ParsedContent
   author?: string
   type: 'event' | 'article'
+  isPrivate?: boolean
+  encryptedContent?: string
 }
 
 export interface ActiveAccount {
   pubkey: string
-  signer?: any // SimpleSigner from applesauce
 }
