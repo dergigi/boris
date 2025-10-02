@@ -94,6 +94,7 @@ export function hydrateItems(
     if (!ev) return item
     return {
       ...item,
+      pubkey: ev.pubkey || item.pubkey,
       content: ev.content || item.content || '',
       created_at: ev.created_at || item.created_at,
       kind: ev.kind || item.kind,
