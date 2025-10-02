@@ -142,7 +142,13 @@ export const fetchBookmarks = async (
         .req(relayUrls, { kinds: [10003, 30003], authors: [activeAccount.pubkey] })
         .pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
     )
+    console.log('📊 Raw events fetched:', rawEvents.length, 'events')
+    rawEvents.forEach((evt, i) => {
+      console.log(`  Event ${i}: kind=${evt.kind}, id=${evt.id?.slice(0, 8)}, dTag=${evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] || 'none'}`)
+    })
+
     const bookmarkListEvents = dedupeNip51Events(rawEvents)
+    console.log('📋 After deduplication:', bookmarkListEvents.length, 'bookmark events')
     if (bookmarkListEvents.length === 0) {
       setBookmarks([])
       setLoading(false)
@@ -183,7 +189,9 @@ export const fetchBookmarks = async (
         contentPreview: evt.content?.slice(0, 50) + (evt.content?.length > 50 ? '...' : ''),
         tagsCount: evt.tags?.length || 0,
         hasHiddenContent: Helpers.hasHiddenContent(evt),
-        canHaveHiddenTags: Helpers.canHaveHiddenTags(evt.kind)
+        canHaveHiddenTags: Helpers.canHaveHiddenTags(evt.kind),
+        dTag: evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] || 'none',
+        firstFewTags: evt.tags?.slice(0, 3).map((t: string[]) => `${t[0]}:${t[1]?.slice(0, 8)}`).join(', ') || 'none'
       })
 
       newestCreatedAt = Math.max(newestCreatedAt, evt.created_at || 0)
