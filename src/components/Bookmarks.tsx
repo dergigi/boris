@@ -6,6 +6,8 @@ import { RelayPool } from 'applesauce-relay'
 import { Bookmark } from '../types/bookmarks'
 import { BookmarkList } from './BookmarkList'
 import { fetchBookmarks } from '../services/bookmarkService'
+import ContentPanel from './ContentPanel'
+import { fetchReadableContent, ReadableContent } from '../services/readerService'
 
 interface BookmarksProps {
   relayPool: RelayPool | null
@@ -15,6 +17,9 @@ interface BookmarksProps {
 const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedUrl, setSelectedUrl] = useState<string | undefined>(undefined)
+  const [readerLoading, setReaderLoading] = useState(false)
+  const [readerContent, setReaderContent] = useState<ReadableContent | undefined>(undefined)
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
   
@@ -49,6 +54,20 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     // Get the full account object with extension capabilities
     const fullAccount = accountManager.getActive()
     await fetchBookmarks(relayPool, fullAccount || activeAccount, setBookmarks, setLoading, timeoutId)
+  }
+
+  const handleSelectUrl = async (url: string) => {
+    setSelectedUrl(url)
+    setReaderLoading(true)
+    setReaderContent(undefined)
+    try {
+      const content = await fetchReadableContent(url)
+      setReaderContent(content)
+    } catch (err) {
+      console.warn('Failed to fetch readable content:', err)
+    } finally {
+      setReaderLoading(false)
+    }
   }
 
 
@@ -91,12 +110,25 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   }
 
   return (
-    <BookmarkList 
-      bookmarks={bookmarks}
-      activeAccount={activeAccount || null}
-      onLogout={onLogout}
-      formatUserDisplay={formatUserDisplay}
-    />
+    <div className="two-pane">
+      <div className="pane sidebar">
+        <BookmarkList 
+          bookmarks={bookmarks}
+          activeAccount={activeAccount || null}
+          onLogout={onLogout}
+          formatUserDisplay={formatUserDisplay}
+          onSelectUrl={handleSelectUrl}
+        />
+      </div>
+      <div className="pane main">
+        <ContentPanel 
+          loading={readerLoading}
+          title={readerContent?.title}
+          html={readerContent?.html}
+          selectedUrl={selectedUrl}
+        />
+      </div>
+    </div>
   )
 }
 
