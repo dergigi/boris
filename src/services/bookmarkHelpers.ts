@@ -60,7 +60,7 @@ export const processApplesauceBookmarks = (
     return allItems.map((bookmark: BookmarkData) => ({
       id: bookmark.id || `${isPrivate ? 'private' : 'public'}-${Date.now()}`,
       content: bookmark.content || '',
-      created_at: bookmark.created_at || Date.now(),
+      created_at: bookmark.created_at || Math.floor(Date.now() / 1000),
       pubkey: activeAccount.pubkey,
       kind: bookmark.kind || 30001,
       tags: bookmark.tags || [],
@@ -74,7 +74,7 @@ export const processApplesauceBookmarks = (
   return bookmarkArray.map((bookmark: BookmarkData) => ({
     id: bookmark.id || `${isPrivate ? 'private' : 'public'}-${Date.now()}`,
     content: bookmark.content || '',
-    created_at: bookmark.created_at || Date.now(),
+    created_at: bookmark.created_at || Math.floor(Date.now() / 1000),
     pubkey: activeAccount.pubkey,
     kind: bookmark.kind || 30001,
     tags: bookmark.tags || [],

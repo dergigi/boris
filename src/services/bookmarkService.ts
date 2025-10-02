@@ -120,7 +120,7 @@ export const fetchBookmarks = async (
       title: `Bookmarks (${sortedBookmarks.length})`,
       url: '',
       content: latestContent,
-      created_at: newestCreatedAt || Date.now(),
+      created_at: newestCreatedAt || Math.floor(Date.now() / 1000),
       tags: allTags,
       bookmarkCount: sortedBookmarks.length,
       eventReferences: allTags.filter((tag: string[]) => tag[0] === 'e').map((tag: string[]) => tag[1]),
