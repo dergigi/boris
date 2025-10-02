@@ -517,6 +517,20 @@ body {
   font-family: monospace;
 }
 
+.kind-icon {
+  background: #1a1a1a;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.kind-icon svg {
+  font-size: 0.9rem;
+  color: #646cff;
+}
+
 .read-now {
   margin-top: 0.75rem;
   display: flex;

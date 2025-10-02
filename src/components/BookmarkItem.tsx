@@ -1,6 +1,27 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookmark, faUserLock, faCopy } from '@fortawesome/free-solid-svg-icons'
+import { 
+  faBookmark, 
+  faUserLock, 
+  faCopy,
+  faCircleUser,
+  faFeather,
+  faRetweet,
+  faHeart,
+  faImage,
+  faVideo,
+  faFile,
+  faLaptopCode,
+  faCodePullRequest,
+  faBug,
+  faExclamationTriangle,
+  faBolt,
+  faCloudBolt,
+  faHighlighter,
+  faNewspaper,
+  faEyeSlash,
+  faThumbtack
+} from '@fortawesome/free-solid-svg-icons'
 import { IndividualBookmark } from '../types/bookmarks'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
@@ -25,6 +46,32 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   // Extract URLs from bookmark content
   const extractedUrls = extractUrlsFromContent(bookmark.content)
   const hasUrls = extractedUrls.length > 0
+
+  // Map kind numbers to FontAwesome icons
+  const getKindIcon = (kind: number) => {
+    const iconMap: Record<number, any> = {
+      0: faCircleUser,
+      1: faFeather,
+      6: faRetweet,
+      7: faHeart,
+      20: faImage,
+      21: faVideo,
+      22: faVideo,
+      1063: faFile,
+      1337: faLaptopCode,
+      1617: faCodePullRequest,
+      1621: faBug,
+      1984: faExclamationTriangle,
+      9735: faBolt,
+      9321: faCloudBolt,
+      9802: faHighlighter,
+      30023: faNewspaper,
+      10000: faEyeSlash,
+      10001: faThumbtack,
+      10003: faBookmark
+    }
+    return iconMap[kind] || faFile // fallback to file icon
+  }
 
   const handleReadNow = (event: React.MouseEvent<HTMLButtonElement>) => {
     if (!hasUrls) return
@@ -88,7 +135,9 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       )}
       
       <div className="bookmark-meta">
-        <span>Kind: {bookmark.kind}</span>
+        <span className="kind-icon">
+          <FontAwesomeIcon icon={getKindIcon(bookmark.kind)} />
+        </span>
         <span>
           Author: {short(bookmark.pubkey)}
           <button className="copy-btn" onClick={() => copy(bookmark.pubkey)} title="Copy author pubkey">
