@@ -63,11 +63,6 @@ function App() {
     <EventStoreProvider eventStore={eventStore}>
       <AccountsProvider manager={accountManager}>
         <div className="app">
-          <header>
-            <h1>Markr</h1>
-            <p>A minimal nostr bookmark client</p>
-          </header>
-          
           {!isAuthenticated ? (
             <Login onLogin={() => setIsAuthenticated(true)} />
           ) : (
