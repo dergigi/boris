@@ -119,6 +119,14 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       
       console.log('Unique events after deduplication:', uniqueEvents.length)
       
+      // If no events found, set empty bookmarks and stop loading
+      if (uniqueEvents.length === 0) {
+        console.log('No bookmark events found')
+        setBookmarks([])
+        setLoading(false)
+        return
+      }
+      
       // Parse the events into bookmarks
       const bookmarkList: Bookmark[] = []
       for (const event of uniqueEvents) {
@@ -142,6 +150,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
 
   const fetchIndividualBookmarks = async (eventIds: string[], articleIds: string[]): Promise<IndividualBookmark[]> => {
     if (!relayPool || (eventIds.length === 0 && articleIds.length === 0)) {
+      console.log('No individual bookmarks to fetch')
       return []
     }
 
@@ -175,14 +184,16 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       
       // Fetch events for each filter
       for (const filter of eventFilters) {
+        console.log('Fetching with filter:', filter)
         const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
         const events = await lastValueFrom(
           relayPool.req(relayUrls, filter).pipe(
             completeOnEose(),
-            takeUntil(timer(10000)),
+            takeUntil(timer(5000)), // Reduced timeout to 5 seconds
             toArray(),
           )
         )
+        console.log('Fetched events for filter:', events.length)
         allEvents.push(...events)
       }
       
@@ -238,7 +249,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       // Fetch individual bookmarks
       const eventIds = eventTags.map(tag => tag[1])
       const articleIds = articleTags.map(tag => tag[1])
+      console.log('Fetching individual bookmarks for eventIds:', eventIds.length, 'articleIds:', articleIds.length)
       const individualBookmarks = await fetchIndividualBookmarks(eventIds, articleIds)
+      console.log('Fetched individual bookmarks:', individualBookmarks.length)
       
       return {
         id: event.id,
