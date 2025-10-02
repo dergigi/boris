@@ -113,9 +113,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
             <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
           )}
         </span>
-        <span className="bookmark-id">
-          {short(bookmark.id)}
-        </span>
+        
         <span className="bookmark-date">{formatDate(bookmark.created_at)}</span>
       </div>
       
