@@ -17,7 +17,7 @@ const IconButton: React.FC<IconButtonProps> = ({
   title,
   ariaLabel,
   variant = 'ghost',
-  size = 44
+  size = 33
 }) => {
   return (
     <button
