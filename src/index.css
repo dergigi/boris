@@ -420,13 +420,11 @@ body {
   background: #1a1a1a;
   padding: 1.5rem;
   border-radius: 12px;
-  border: 1px solid #333;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .bookmark-item:hover {
-  border-color: #646cff;
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
@@ -485,7 +483,6 @@ body {
   background: #2a2a2a;
   padding: 1.25rem;
   border-radius: 8px;
-  border: 1px solid #444;
   transition: all 0.2s ease;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   word-wrap: break-word;
@@ -495,7 +492,6 @@ body {
 }
 
 .individual-bookmark:hover {
-  border-color: #646cff;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
@@ -626,13 +622,11 @@ body {
 
 /* Private Bookmark Styles */
 .private-bookmark {
-  border-left: 4px solid #ff6b6b;
-  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+  background: #2a2a2a;
 }
 
 .private-bookmark:hover {
-  border-color: #ff6b6b;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .private-indicator {
