@@ -10,6 +10,9 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@fortawesome/react-fontawesome": "^3.0.2",
     "applesauce-accounts": "^3.1.0",
     "applesauce-content": "^4.0.0",
     "applesauce-core": "^3.1.0",

@@ -1,4 +1,6 @@
 import React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faLock, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { IndividualBookmark } from '../types/bookmarks'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
 
@@ -12,8 +14,8 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index }) =
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
       <div className="bookmark-header">
         <span className="bookmark-type">
-          {bookmark.type}
-          {bookmark.isPrivate && <span className="private-indicator">🔒</span>}
+          <FontAwesomeIcon icon={bookmark.isPrivate ? faLock : faGlobe} className={`bookmark-visibility ${bookmark.isPrivate ? 'private' : 'public'}`} />
+          <span className="bookmark-type-label">{bookmark.type}</span>
         </span>
         <span className="bookmark-id">{bookmark.id.slice(0, 8)}...{bookmark.id.slice(-8)}</span>
         <span className="bookmark-date">{formatDate(bookmark.created_at)}</span>
