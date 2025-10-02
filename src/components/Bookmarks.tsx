@@ -52,8 +52,14 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
   const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
 
   useEffect(() => {
+    console.log('Bookmarks useEffect triggered')
+    console.log('addressLoader:', !!addressLoader)
+    console.log('activeAccount:', !!activeAccount)
     if (addressLoader && activeAccount) {
+      console.log('Starting to fetch bookmarks...')
       fetchBookmarks()
+    } else {
+      console.log('Not fetching bookmarks - missing dependencies')
     }
   }, [addressLoader, activeAccount])
 
@@ -63,6 +69,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
     try {
       setLoading(true)
       console.log('Fetching bookmarks for pubkey:', activeAccount.pubkey)
+      alert('Starting bookmark fetch for: ' + activeAccount.pubkey.slice(0, 8) + '...')
       
       // Use applesauce address loader to fetch bookmark lists (kind 10003)
       // This is the proper way according to NIP-51 and applesauce documentation

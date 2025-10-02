@@ -40,6 +40,7 @@ function App() {
     // Note: We could use pool.group(relayUrls) for direct requests in the future
     pool.group(relayUrls)
     console.log('Created relay group with', relayUrls.length, 'relays')
+    console.log('Relay URLs:', relayUrls)
     
     // Create address loader using the pool directly
     // The pool will handle relay connections and the address loader will use the group
