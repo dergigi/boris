@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBookmark, faUserLock } from '@fortawesome/free-solid-svg-icons'
-import { faChevronDown, faChevronUp, faBookOpen } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faChevronUp, faBookOpen, faPlay, faEye } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -11,6 +11,7 @@ import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
 import { getKindIcon } from './kindIcon'
 import ContentWithResolvedProfiles from './ContentWithResolvedProfiles'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
+import { classifyUrl } from '../utils/helpers'
 
 interface BookmarkItemProps {
   bookmark: IndividualBookmark
@@ -47,6 +48,19 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
 
   // use helper from kindIcon.ts
 
+  const getIconForUrlType = (url: string) => {
+    const classification = classifyUrl(url)
+    switch (classification.type) {
+      case 'youtube':
+      case 'video':
+        return faPlay
+      case 'image':
+        return faEye
+      default:
+        return faBookOpen
+    }
+  }
+
   const handleReadNow = (event: React.MouseEvent<HTMLButtonElement>) => {
     if (!hasUrls) return
     const firstUrl = extractedUrls[0]
@@ -57,6 +71,9 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       window.open(firstUrl, '_blank')
     }
   }
+
+  // Get classification for the first URL (for the main button)
+  const firstUrlClassification = hasUrls ? classifyUrl(extractedUrls[0]) : null
 
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
@@ -78,26 +95,29 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       {extractedUrls.length > 0 && (
         <div className="bookmark-urls">
           <h4>URLs:</h4>
-          {(urlsExpanded ? extractedUrls : extractedUrls.slice(0, 3)).map((url, urlIndex) => (
-            <div key={urlIndex} className="url-row">
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bookmark-url"
-              >
-                {url}
-              </a>
-              <IconButton
-                icon={faBookOpen}
-                ariaLabel="Read now"
-                title="Read now"
-                variant="success"
-                size={36}
-                onClick={(e) => { e.preventDefault(); onSelectUrl?.(url) }}
-              />
-            </div>
-          ))}
+          {(urlsExpanded ? extractedUrls : extractedUrls.slice(0, 3)).map((url, urlIndex) => {
+            const classification = classifyUrl(url)
+            return (
+              <div key={urlIndex} className="url-row">
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bookmark-url"
+                >
+                  {url}
+                </a>
+                <IconButton
+                  icon={getIconForUrlType(url)}
+                  ariaLabel={classification.buttonText}
+                  title={classification.buttonText}
+                  variant="success"
+                  size={36}
+                  onClick={(e) => { e.preventDefault(); onSelectUrl?.(url) }}
+                />
+              </div>
+            )
+          })}
           {extractedUrls.length > 3 && (
             <button
               className="expand-toggle"
@@ -165,10 +185,10 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
         </span>
       </div>
 
-      {hasUrls && (
+      {hasUrls && firstUrlClassification && (
         <div className="read-now">
           <button className="read-now-button" onClick={handleReadNow}>
-            READ NOW
+            {firstUrlClassification.buttonText}
           </button>
         </div>
       )}
