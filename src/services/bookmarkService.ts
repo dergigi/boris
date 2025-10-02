@@ -225,6 +225,7 @@ export const fetchBookmarks = async (
         console.log('🔒 Signer candidate type:', typeof signerCandidate)
         console.log('🔒 Event kind supports hidden tags:', Helpers.canHaveHiddenTags(evt.kind))
 
+        // Try to unlock hidden content using applesauce's standard approach first
         if (Helpers.hasHiddenTags(evt) && Helpers.isHiddenTagsLocked(evt) && signerCandidate) {
           try {
             console.log('🔓 Attempting to unlock hidden tags with signer...')
@@ -239,6 +240,26 @@ export const fetchBookmarks = async (
             } catch (nip44Error) {
               console.error('❌ Failed to unlock with NIP-44:', nip44Error)
             }
+          }
+        }
+        // For events that have content but aren't recognized as supporting hidden tags (like kind 30001)
+        else if (evt.content && evt.content.length > 0 && signerCandidate) {
+          try {
+            console.log('🔓 Attempting manual decryption for event with unrecognized kind...')
+            // Try to manually decrypt using applesauce's unlockHiddenContent function
+            // We'll temporarily mark the event as supporting hidden content
+            const originalKind = evt.kind
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ;(evt as any).kind = 10003 // Temporarily change to recognized kind
+            try {
+              await Helpers.unlockHiddenContent(evt, signerCandidate as any)
+              console.log('✅ Successfully decrypted unrecognized event')
+            } finally {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              ;(evt as any).kind = originalKind // Restore original kind
+            }
+          } catch (error) {
+            console.warn('❌ Failed manual decryption:', error)
           }
         }
 
