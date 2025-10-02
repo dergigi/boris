@@ -278,17 +278,20 @@ export const fetchBookmarks = async (
       }
     })
     const allBookmarks = [...hydrateItems(publicItemsAll), ...hydrateItems(privateItemsAll)]
-    
+
+    // Sort individual bookmarks by timestamp (newest first)
+    const sortedBookmarks = allBookmarks.sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
+
     const bookmark: Bookmark = {
       id: `${activeAccount.pubkey}-bookmarks`,
-      title: `Bookmarks (${allBookmarks.length})`,
+      title: `Bookmarks (${sortedBookmarks.length})`,
       url: '',
       content: latestContent,
       created_at: newestCreatedAt || Date.now(),
       tags: allTags,
-      bookmarkCount: allBookmarks.length,
+      bookmarkCount: sortedBookmarks.length,
       eventReferences: allTags.filter(tag => tag[0] === 'e').map(tag => tag[1]),
-      individualBookmarks: allBookmarks,
+      individualBookmarks: sortedBookmarks,
       isPrivate: privateItemsAll.length > 0,
       encryptedContent: undefined
     }
