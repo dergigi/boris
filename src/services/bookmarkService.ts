@@ -127,6 +127,9 @@ export const fetchBookmarks = async (
     console.log('Has encrypted content:', bookmarkListEvent.content && bookmarkListEvent.content.includes(':'))
     console.log('Account type:', typeof activeAccount)
     console.log('Account has decrypt method:', typeof activeAccount.decrypt)
+    console.log('Account signer:', activeAccount.signer)
+    console.log('Account signer type:', typeof activeAccount.signer)
+    console.log('Account signer decrypt method:', typeof activeAccount.signer?.decrypt)
     
     
     // Process bookmarks using DRY helper function
