@@ -20,6 +20,12 @@ interface ApplesauceBookmarks {
   urls?: BookmarkData[]
 }
 
+interface AccountWithExtension {
+  pubkey: string
+  [key: string]: unknown // Allow other properties from the full account object
+}
+
+
 const processBookmarks = (
   bookmarks: unknown,
   activeAccount: ActiveAccount,
@@ -75,9 +81,10 @@ const processApplesauceBookmarks = (
   return processBookmarks(bookmarks, activeAccount, isPrivate)
 }
 
+
 export const fetchBookmarks = async (
   relayPool: RelayPool,
-  activeAccount: ActiveAccount,
+  activeAccount: AccountWithExtension, // Full account object with extension capabilities
   setBookmarks: (bookmarks: Bookmark[]) => void,
   setLoading: (loading: boolean) => void,
   timeoutId: number
@@ -113,6 +120,14 @@ export const fetchBookmarks = async (
     
     console.log('Public bookmarks:', publicBookmarks)
     console.log('Private bookmarks:', privateBookmarks)
+    
+    // Debug the bookmark list event content
+    console.log('Bookmark list content:', bookmarkListEvent.content)
+    console.log('Bookmark list content type:', typeof bookmarkListEvent.content)
+    console.log('Has encrypted content:', bookmarkListEvent.content && bookmarkListEvent.content.includes(':'))
+    console.log('Account type:', typeof activeAccount)
+    console.log('Account has decrypt method:', typeof activeAccount.decrypt)
+    
     
     // Process bookmarks using DRY helper function
     // Handle the structure that applesauce returns: {notes: [], articles: [], hashtags: [], urls: []}

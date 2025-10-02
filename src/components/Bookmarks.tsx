@@ -16,6 +16,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [loading, setLoading] = useState(true)
   const activeAccount = Hooks.useActiveAccount()
+  const accountManager = Hooks.useAccountManager()
   
   // Use ProfileModel to get user profile information
   const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
@@ -45,7 +46,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       setLoading(false)
     }, 15000) // 15 second timeout
 
-    await fetchBookmarks(relayPool, activeAccount, setBookmarks, setLoading, timeoutId)
+    // Get the full account object with extension capabilities
+    const fullAccount = accountManager.getActive()
+    await fetchBookmarks(relayPool, fullAccount || activeAccount, setBookmarks, setLoading, timeoutId)
   }
 
 
