@@ -11,7 +11,11 @@ interface BookmarkItemProps {
 
 export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index }) => {
   const copy = async (text: string) => {
-    try { await navigator.clipboard.writeText(text) } catch {}
+    try { 
+      await navigator.clipboard.writeText(text) 
+    } catch (error) {
+      console.warn('Failed to copy to clipboard:', error)
+    }
   }
 
   const short = (v: string) => `${v.slice(0, 8)}...${v.slice(-8)}`

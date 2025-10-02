@@ -36,14 +36,24 @@ function isHexId(id: unknown): id is string {
   return typeof id === 'string' && /^[0-9a-f]{64}$/i.test(id)
 }
 
-function dedupeNip51Events(events: any[]): any[] {
-  const byId = new Map<string, any>()
+interface NostrEvent {
+  id: string
+  kind: number
+  created_at: number
+  tags: string[][]
+  content: string
+  pubkey: string
+  sig: string
+}
+
+function dedupeNip51Events(events: NostrEvent[]): NostrEvent[] {
+  const byId = new Map<string, NostrEvent>()
   for (const e of events) { if (e?.id && !byId.has(e.id)) byId.set(e.id, e) }
   const unique = Array.from(byId.values())
   const latest10003 = unique
     .filter(e => e.kind === 10003)
     .sort((a, b) => (b.created_at || 0) - (a.created_at || 0))[0]
-  const byD = new Map<string, any>()
+  const byD = new Map<string, NostrEvent>()
   for (const e of unique) {
     if (e.kind !== 30001) continue
     const d = (e.tags || []).find((t: string[]) => t[0] === 'd')?.[1] || ''
@@ -51,7 +61,7 @@ function dedupeNip51Events(events: any[]): any[] {
     if (!prev || (e.created_at || 0) > (prev.created_at || 0)) byD.set(d, e)
   }
   const sets30001 = Array.from(byD.values())
-  const out: any[] = []
+  const out: NostrEvent[] = []
   if (latest10003) out.push(latest10003)
   out.push(...sets30001)
   return out
@@ -128,7 +138,7 @@ export const fetchBookmarks = async (
       return
     }
     // Aggregate across events
-    const maybeAccount = activeAccount as any
+    const maybeAccount = activeAccount as AccountWithExtension
     const signerCandidate = typeof maybeAccount?.signEvent === 'function' ? maybeAccount : maybeAccount?.signer
     const publicItemsAll: IndividualBookmark[] = []
     const privateItemsAll: IndividualBookmark[] = []
@@ -147,27 +157,31 @@ export const fetchBookmarks = async (
         if (Helpers.hasHiddenTags(evt) && Helpers.isHiddenTagsLocked(evt) && signerCandidate) {
           try {
             await Helpers.unlockHiddenTags(evt, signerCandidate)
-          } catch {
+          } catch (error) {
+            console.warn('Failed to unlock with default method, trying NIP-44:', error)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await Helpers.unlockHiddenTags(evt, signerCandidate as any, 'nip44' as any)
           }
         }
         const priv = Helpers.getHiddenBookmarks(evt)
         privateItemsAll.push(...processApplesauceBookmarks(priv, activeAccount, true))
-      } catch {
-        // ignore per-event failures
+      } catch (error) {
+        console.warn('Failed to process hidden bookmarks for event:', evt.id, error)
       }
     }
 
     const allItems = [...publicItemsAll, ...privateItemsAll]
     const noteIds = Array.from(new Set(allItems.map(i => i.id).filter(isHexId)))
-    let idToEvent: Map<string, any> = new Map()
+    let idToEvent: Map<string, NostrEvent> = new Map()
     if (noteIds.length > 0) {
       try {
         const events = await lastValueFrom(
           relayPool.req(relayUrls, { ids: noteIds }).pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
         )
-        idToEvent = new Map(events.map((e: any) => [e.id, e]))
-      } catch {}
+        idToEvent = new Map(events.map((e: NostrEvent) => [e.id, e]))
+      } catch (error) {
+        console.warn('Failed to fetch events for hydration:', error)
+      }
     }
     const hydrateItems = (items: IndividualBookmark[]): IndividualBookmark[] => items.map(item => {
       const ev = idToEvent.get(item.id)
