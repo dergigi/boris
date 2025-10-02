@@ -21,7 +21,7 @@ import {
   faEyeSlash,
   faThumbtack
 } from '@fortawesome/free-solid-svg-icons'
-import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faChevronUp, faBookOpen } from '@fortawesome/free-solid-svg-icons'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { IndividualBookmark } from '../types/bookmarks'
@@ -116,16 +116,23 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
         <div className="bookmark-urls">
           <h4>URLs:</h4>
           {extractedUrls.map((url, urlIndex) => (
-            <a
-              key={urlIndex}
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bookmark-url"
-              onClick={(e) => { if (onSelectUrl) { e.preventDefault(); onSelectUrl(url) } }}
-            >
-              {url}
-            </a>
+            <div key={urlIndex} className="url-row">
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bookmark-url"
+              >
+                {url}
+              </a>
+              <button
+                className="read-inline-btn"
+                title="Read now"
+                onClick={(e) => { e.preventDefault(); onSelectUrl?.(url) }}
+              >
+                <FontAwesomeIcon icon={faBookOpen} />
+              </button>
+            </div>
           ))}
         </div>
       )}

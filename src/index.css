@@ -150,6 +150,25 @@ body {
   text-decoration: underline;
 }
 
+.url-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.read-inline-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.read-inline-btn:hover {
+  background: #218838;
+}
+
 .bookmark-events {
   margin: 1rem 0;
 }
