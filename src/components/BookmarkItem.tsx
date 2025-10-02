@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBookmark, faUserLock } from '@fortawesome/free-solid-svg-icons'
 import { faChevronDown, faChevronUp, faBookOpen } from '@fortawesome/free-solid-svg-icons'
+import IconButton from './IconButton'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { npubEncode, neventEncode } from 'nostr-tools/nip19'
@@ -87,23 +88,24 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
               >
                 {url}
               </a>
-              <button
-                className="read-inline-btn"
+              <IconButton
+                icon={faBookOpen}
+                ariaLabel="Read now"
                 title="Read now"
+                variant="success"
+                size={36}
                 onClick={(e) => { e.preventDefault(); onSelectUrl?.(url) }}
-              >
-                <FontAwesomeIcon icon={faBookOpen} />
-              </button>
+              />
             </div>
           ))}
           {extractedUrls.length > 3 && (
-            <button
-              className="expand-toggle"
+            <IconButton
+              icon={urlsExpanded ? faChevronUp : faChevronDown}
+              ariaLabel={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
+              title={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
               onClick={() => setUrlsExpanded(v => !v)}
-              aria-label={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
-            >
-              <FontAwesomeIcon icon={urlsExpanded ? faChevronUp : faChevronDown} />
-            </button>
+              size={32}
+            />
           )}
         </div>
       )}
@@ -121,13 +123,13 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       )}
 
       {contentLength > 210 && (
-        <button
-          className="expand-toggle"
+        <IconButton
+          icon={expanded ? faChevronUp : faChevronDown}
+          ariaLabel={expanded ? 'Collapse' : 'Expand'}
+          title={expanded ? 'Collapse' : 'Expand'}
           onClick={() => setExpanded(v => !v)}
-          aria-label={expanded ? 'Collapse' : 'Expand'}
-        >
-          <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} />
-        </button>
+          size={32}
+        />
       )}
       
       <div className="bookmark-meta">
