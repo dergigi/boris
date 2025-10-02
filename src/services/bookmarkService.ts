@@ -182,6 +182,9 @@ export const fetchBookmarks = async (
     let latestContent = ''
     let allTags: string[][] = []
     for (const evt of bookmarkListEvents) {
+      const dTag = evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] || 'none'
+      const firstFewTags = evt.tags?.slice(0, 3).map((t: string[]) => `${t[0]}:${t[1]?.slice(0, 8)}`).join(', ') || 'none'
+
       console.log('📋 Processing bookmark event:', {
         id: evt.id?.slice(0, 8),
         kind: evt.kind,
@@ -190,8 +193,8 @@ export const fetchBookmarks = async (
         tagsCount: evt.tags?.length || 0,
         hasHiddenContent: Helpers.hasHiddenContent(evt),
         canHaveHiddenTags: Helpers.canHaveHiddenTags(evt.kind),
-        dTag: evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] || 'none',
-        firstFewTags: evt.tags?.slice(0, 3).map((t: string[]) => `${t[0]}:${t[1]?.slice(0, 8)}`).join(', ') || 'none'
+        dTag: dTag,
+        firstFewTags: firstFewTags
       })
 
       newestCreatedAt = Math.max(newestCreatedAt, evt.created_at || 0)
