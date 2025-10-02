@@ -22,7 +22,13 @@ interface ApplesauceBookmarks {
 
 interface AccountWithExtension {
   pubkey: string
-  [key: string]: unknown // Allow other properties from the full account object
+  signer?: unknown
+  [key: string]: unknown // Allow any properties from the full account object
+}
+
+// Type guard to check if an object has the required properties
+function isAccountWithExtension(account: unknown): account is AccountWithExtension {
+  return typeof account === 'object' && account !== null && 'pubkey' in account
 }
 
 
@@ -85,13 +91,19 @@ const processApplesauceBookmarks = (
 
 export const fetchBookmarks = async (
   relayPool: RelayPool,
-  activeAccount: AccountWithExtension, // Full account object with extension capabilities
+  activeAccount: unknown, // Full account object with extension capabilities
   setBookmarks: (bookmarks: Bookmark[]) => void,
   setLoading: (loading: boolean) => void,
   timeoutId: number
 ) => {
   try {
     setLoading(true)
+    
+    // Type check the account object
+    if (!isAccountWithExtension(activeAccount)) {
+      throw new Error('Invalid account object provided')
+    }
+    
     console.log('🚀 Using applesauce bookmark helpers for pubkey:', activeAccount.pubkey)
     
     // Get relay URLs from the pool
