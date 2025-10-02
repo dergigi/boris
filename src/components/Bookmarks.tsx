@@ -33,13 +33,13 @@ interface Bookmark {
 }
 
 interface BookmarksProps {
-  addressLoader: ((params: { kind: number; pubkey: string; relays?: string[] }) => {
+  addressLoader: {
     subscribe: (observer: {
       next: (event: NostrEvent) => void;
       error: (error: unknown) => void;
       complete: () => void;
     }) => { unsubscribe: () => void };
-  }) | null
+  } | null
   onLogout: () => void
 }
 
@@ -73,76 +73,36 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
       console.log('Fetching bookmarks for pubkey:', activeAccount.pubkey)
       console.log('Starting bookmark fetch for:', activeAccount.pubkey.slice(0, 8) + '...')
       
-      // Debug the addressLoader
-      console.log('addressLoader in fetchBookmarks:', addressLoader)
-      console.log('addressLoader type in fetchBookmarks:', typeof addressLoader)
-      console.log('addressLoader is function:', typeof addressLoader === 'function')
-      
       // Use applesauce address loader to fetch bookmark lists (kind 10003)
       // This is the proper way according to NIP-51 and applesauce documentation
       const bookmarkList: Bookmark[] = []
       
-      // Set timeout to prevent hanging
-      let subscription: { unsubscribe: () => void } | null = null
-      
-      // Check if addressLoader is a function or an Observable
-      if (typeof addressLoader === 'function') {
-        // Use address loader with relay group for optimal performance
-        // This follows applesauce-relay documentation for relay groups
-        subscription = addressLoader({
-          kind: 10003, // Bookmark list according to NIP-51
-          pubkey: activeAccount.pubkey,
-          // Relay group automatically handles multiple relays and deduplication
-          // No need to specify individual relays - the group manages this
-        }).subscribe({
-          next: (event: NostrEvent) => {
-            console.log('Received bookmark event:', event)
-            const bookmarkData = parseBookmarkEvent(event)
-            if (bookmarkData) {
-              bookmarkList.push(bookmarkData)
-              console.log('Parsed bookmark:', bookmarkData)
-            }
-          },
-          error: (error: unknown) => {
-            console.error('Error fetching bookmarks:', error)
-            setLoading(false)
-          },
-          complete: () => {
-            console.log('Bookmark fetch complete. Found:', bookmarkList.length, 'bookmarks')
-            setBookmarks(bookmarkList)
-            setLoading(false)
+      // addressLoader is always an Observable, subscribe to it directly
+      console.log('Subscribing to addressLoader Observable')
+      const subscription = addressLoader.subscribe({
+        next: (event: NostrEvent) => {
+          console.log('Received bookmark event:', event)
+          const bookmarkData = parseBookmarkEvent(event)
+          if (bookmarkData) {
+            bookmarkList.push(bookmarkData)
+            console.log('Parsed bookmark:', bookmarkData)
           }
-        })
-      } else {
-        // If addressLoader is an Observable, subscribe to it directly
-        console.log('addressLoader is an Observable, subscribing directly')
-        subscription = addressLoader.subscribe({
-          next: (event: NostrEvent) => {
-            console.log('Received bookmark event:', event)
-            const bookmarkData = parseBookmarkEvent(event)
-            if (bookmarkData) {
-              bookmarkList.push(bookmarkData)
-              console.log('Parsed bookmark:', bookmarkData)
-            }
-          },
-          error: (error: unknown) => {
-            console.error('Error fetching bookmarks:', error)
-            setLoading(false)
-          },
-          complete: () => {
-            console.log('Bookmark fetch complete. Found:', bookmarkList.length, 'bookmarks')
-            setBookmarks(bookmarkList)
-            setLoading(false)
-          }
-        })
-      }
+        },
+        error: (error: unknown) => {
+          console.error('Error fetching bookmarks:', error)
+          setLoading(false)
+        },
+        complete: () => {
+          console.log('Bookmark fetch complete. Found:', bookmarkList.length, 'bookmarks')
+          setBookmarks(bookmarkList)
+          setLoading(false)
+        }
+      })
       
       // Set timeout to prevent hanging
       setTimeout(() => {
         console.log('Bookmark fetch timeout. Found:', bookmarkList.length, 'bookmarks')
-        if (subscription) {
-          subscription.unsubscribe()
-        }
+        subscription.unsubscribe()
         if (bookmarkList.length === 0) {
           setBookmarks([])
           setLoading(false)
