@@ -58,10 +58,10 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     } else {
       console.log('Not fetching bookmarks - missing dependencies')
     }
-  }, [relayPool, activeAccount])
+  }, [relayPool, activeAccount?.pubkey]) // Only depend on pubkey, not the entire activeAccount object
 
   const fetchBookmarks = async () => {
-    if (!relayPool || !activeAccount) return
+    if (!relayPool || !activeAccount || loading) return // Prevent multiple simultaneous fetches
 
     try {
       setLoading(true)
@@ -96,9 +96,19 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       
       console.log('Received events:', events.length)
       
+      // Deduplicate events by ID to prevent duplicates from multiple relays
+      const uniqueEvents = events.reduce((acc, event) => {
+        if (!acc.find(e => e.id === event.id)) {
+          acc.push(event)
+        }
+        return acc
+      }, [] as NostrEvent[])
+      
+      console.log('Unique events after deduplication:', uniqueEvents.length)
+      
       // Parse the events into bookmarks
       const bookmarkList: Bookmark[] = []
-      for (const event of events) {
+      for (const event of uniqueEvents) {
         console.log('Processing bookmark event:', event)
         const bookmarkData = parseBookmarkEvent(event)
         if (bookmarkData) {
@@ -277,8 +287,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         </div>
       ) : (
         <div className="bookmarks-list">
-          {bookmarks.map((bookmark) => (
-            <div key={bookmark.id} className="bookmark-item">
+          {bookmarks.map((bookmark, index) => (
+            <div key={`${bookmark.id}-${index}`} className="bookmark-item">
               <h3>{bookmark.title}</h3>
               {bookmark.bookmarkCount && (
                 <p className="bookmark-count">
