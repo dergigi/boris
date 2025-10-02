@@ -47,18 +47,18 @@ function dedupeNip51Events(events: NostrEvent[]): NostrEvent[] {
   for (const e of events) { if (e?.id && !byId.has(e.id)) byId.set(e.id, e) }
   const unique = Array.from(byId.values())
 
-  // Get the latest bookmark list (30001) - default bookmark list without 'd' tag
+  // Get the latest bookmark list (10003) - default bookmark list without 'd' tag
   const bookmarkLists = unique
-    .filter(e => e.kind === 30001)
+    .filter(e => e.kind === 10003)
     .sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
   const latestBookmarkList = bookmarkLists.find(list =>
     !list.tags?.some((t: string[]) => t[0] === 'd')
   )
 
-  // Group bookmark sets (30003) and named bookmark lists (30001 with 'd' tag) by their 'd' identifier
+  // Group bookmark sets (30003) and named bookmark lists (10003 with 'd' tag) by their 'd' identifier
   const byD = new Map<string, NostrEvent>()
   for (const e of unique) {
-    if (e.kind === 30001 || e.kind === 30003) {
+    if (e.kind === 10003 || e.kind === 30003) {
       const d = (e.tags || []).find((t: string[]) => t[0] === 'd')?.[1] || ''
       const prev = byD.get(d)
       if (!prev || (e.created_at || 0) > (prev.created_at || 0)) byD.set(d, e)
@@ -135,11 +135,11 @@ export const fetchBookmarks = async (
     }
     // Get relay URLs from the pool
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-    // Fetch bookmark lists (30001) and bookmark sets (30003) - NIP-51 standards
+    // Fetch bookmark lists (10003) and bookmark sets (30003) - NIP-51 standards
     console.log('🔍 Fetching bookmark events from relays:', relayUrls)
     const rawEvents = await lastValueFrom(
       relayPool
-        .req(relayUrls, { kinds: [30001, 30003], authors: [activeAccount.pubkey] })
+        .req(relayUrls, { kinds: [10003, 30003], authors: [activeAccount.pubkey] })
         .pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
     )
     const bookmarkListEvents = dedupeNip51Events(rawEvents)
