@@ -1,6 +1,7 @@
 import { RelayPool } from 'applesauce-relay'
 import { completeOnEose } from 'applesauce-relay'
 import { getParsedContent } from 'applesauce-content/text'
+import { unlockHiddenContent, getHiddenContent, isHiddenContentLocked } from 'applesauce-core/helpers/hidden-content'
 import { Filter } from 'nostr-tools'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
 import { Bookmark, IndividualBookmark, ParsedContent, ActiveAccount } from '../types/bookmarks'
@@ -143,32 +144,21 @@ export const fetchBookmarks = async (
           if (bookmarkListEvent.content && activeAccount.signer) {
             try {
               console.log('Decrypting private bookmarks...')
-              console.log('Signer methods:', Object.getOwnPropertyNames(activeAccount.signer))
-              console.log('Signer prototype methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(activeAccount.signer)))
               
-              // Try different possible method names
-              let decryptedContent = null
-              if (typeof activeAccount.signer.nip44_decrypt === 'function') {
-                decryptedContent = await activeAccount.signer.nip44_decrypt(
-                  bookmarkListEvent.content,
-                  activeAccount.pubkey
-                )
-              } else if (typeof activeAccount.signer.decrypt === 'function') {
-                decryptedContent = await activeAccount.signer.decrypt(
-                  bookmarkListEvent.content,
-                  activeAccount.pubkey
-                )
-              } else if (typeof activeAccount.signer.nip44Decrypt === 'function') {
-                decryptedContent = await activeAccount.signer.nip44Decrypt(
-                  bookmarkListEvent.content,
-                  activeAccount.pubkey
-                )
-              } else {
-                console.log('No suitable decrypt method found on signer')
-                throw new Error('No suitable decrypt method found on signer')
+              // Check if content is locked (encrypted)
+              if (isHiddenContentLocked(bookmarkListEvent)) {
+                console.log('Content is encrypted, attempting to unlock...')
+                await unlockHiddenContent(bookmarkListEvent, activeAccount.signer, 'nip44')
               }
               
+              // Get the decrypted content using applesauce helper
+              const decryptedContent = getHiddenContent(bookmarkListEvent)
               console.log('Decrypted content:', decryptedContent)
+              
+              if (!decryptedContent) {
+                console.log('No decrypted content available')
+                throw new Error('Failed to decrypt content')
+              }
               
               // Parse the decrypted JSON content
               const privateTags = JSON.parse(decryptedContent)
