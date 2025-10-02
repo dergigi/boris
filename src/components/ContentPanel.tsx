@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 
 interface ContentPanelProps {
   loading: boolean
@@ -22,7 +24,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({ loading, title, html, markd
   if (loading) {
     return (
       <div className="content-panel loading">
-        <p>Loading content…</p>
+        <div className="loading-spinner">
+          <FontAwesomeIcon icon={faSpinner} spin />
+          <span>Loading content…</span>
+        </div>
       </div>
     )
   }

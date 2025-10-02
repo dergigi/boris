@@ -287,6 +287,17 @@ body {
   color: #888;
 }
 
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #888;
+}
+
+.loading-spinner svg {
+  font-size: 1.2rem;
+}
+
 .content-title {
   margin: 0 0 1rem 0;
 }
