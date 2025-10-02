@@ -134,6 +134,9 @@ export const fetchBookmarks = async (
     let latestContent = ''
     let allTags: string[][] = []
     for (const evt of bookmarkListEvents) {
+      const hasHiddenBefore = Helpers.hasHiddenTags(evt)
+      const lockedBefore = Helpers.isHiddenTagsLocked(evt)
+      console.log('[bookmarks] evt', evt.id, 'kind', evt.kind, 'hidden?', hasHiddenBefore, 'locked?', lockedBefore)
       newestCreatedAt = Math.max(newestCreatedAt, evt.created_at || 0)
       if (!latestContent && evt.content && !isEncryptedContent(evt.content)) latestContent = evt.content
       if (Array.isArray(evt.tags)) allTags = allTags.concat(evt.tags)
@@ -145,6 +148,7 @@ export const fetchBookmarks = async (
         const hasHidden = Helpers.hasHiddenTags(evt)
         const locked = Helpers.isHiddenTagsLocked(evt)
         if (hasHidden && locked && signerCandidate) {
+          console.log('[bookmarks] unlocking hidden tags for', evt.id)
           try {
             await Helpers.unlockHiddenTags(evt, signerCandidate)
           } catch {
@@ -152,7 +156,11 @@ export const fetchBookmarks = async (
             await Helpers.unlockHiddenTags(evt, signerCandidate as any, 'nip44' as any)
           }
         }
+        const lockedAfter = Helpers.isHiddenTagsLocked(evt)
         const priv = Helpers.getHiddenBookmarks(evt)
+        console.log('[bookmarks] unlocked?', !lockedAfter, 'private items present?', !!priv && (
+          (priv as any).notes?.length || (priv as any).articles?.length || (priv as any).hashtags?.length || (priv as any).urls?.length
+        ))
         privateItemsAll.push(...processApplesauceBookmarks(priv, activeAccount, true))
       } catch {
         // ignore per-event failures
