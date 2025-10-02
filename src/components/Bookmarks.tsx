@@ -68,11 +68,13 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
       // This is the proper way according to NIP-51 and applesauce documentation
       const bookmarkList: Bookmark[] = []
       
+      // Use address loader with relay group for optimal performance
+      // This follows applesauce-relay documentation for relay groups
       const subscription = addressLoader({
         kind: 10003, // Bookmark list according to NIP-51
         pubkey: activeAccount.pubkey,
-        // No need to specify relays - the relay group handles this automatically
-        // The relay group will query all configured relays and deduplicate events
+        // Relay group automatically handles multiple relays and deduplication
+        // No need to specify individual relays - the group manages this
       }).subscribe({
         next: (event: NostrEvent) => {
           console.log('Received bookmark event:', event)

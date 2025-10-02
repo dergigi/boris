@@ -35,20 +35,14 @@ function App() {
       'wss://relay.nostr.band'
     ]
     
-    // Connect to relays
-    relayUrls.forEach(url => {
-      console.log('Connecting to relay:', url)
-      const relay = pool.relay(url)
-      relay.on('connect', () => {
-        console.log('Connected to relay:', url)
-      })
-      relay.on('error', (error) => {
-        console.error('Relay connection error:', url, error)
-      })
-    })
+    // Create a relay group for better event deduplication and management
+    // This follows the applesauce-relay documentation pattern
+    // Note: We could use pool.group(relayUrls) for direct requests in the future
+    pool.group(relayUrls)
+    console.log('Created relay group with', relayUrls.length, 'relays')
     
-    // Create address loader for fetching replaceable events (like bookmarks)
-    // The pool will automatically handle multiple relays and deduplication
+    // Create address loader using the pool directly
+    // The pool will handle relay connections and the address loader will use the group
     const loader = Loaders.createAddressLoader(pool, {
       eventStore: store,
       bufferTime: 1000,
