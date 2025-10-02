@@ -548,6 +548,13 @@ body {
   font-family: monospace;
 }
 
+.author-link {
+  color: #8ab4f8;
+  text-decoration: none;
+}
+
+.author-link:hover { text-decoration: underline; }
+
 .kind-icon {
   background: #1a1a1a;
   padding: 0.25rem 0.5rem;
