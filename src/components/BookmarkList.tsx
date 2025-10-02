@@ -8,13 +8,15 @@ interface BookmarkListProps {
   activeAccount: ActiveAccount | null
   onLogout: () => void
   formatUserDisplay: () => string
+  onSelectUrl?: (url: string) => void
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({ 
   bookmarks, 
   activeAccount, 
   onLogout, 
-  formatUserDisplay 
+  formatUserDisplay,
+  onSelectUrl
 }) => {
   return (
     <div className="bookmarks-container">
@@ -60,7 +62,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
                   <h4>Individual Bookmarks ({bookmark.individualBookmarks.length}):</h4>
                   <div className="bookmarks-grid">
                     {bookmark.individualBookmarks.map((individualBookmark, index) => 
-                      <BookmarkItem key={index} bookmark={individualBookmark} index={index} />
+                      <BookmarkItem key={index} bookmark={individualBookmark} index={index} onSelectUrl={onSelectUrl} />
                     )}
                   </div>
                 </div>
