@@ -33,13 +33,13 @@ interface Bookmark {
 }
 
 interface BookmarksProps {
-  addressLoader: {
+  addressLoader: ((params: { kind: number; pubkey: string; relays?: string[] }) => {
     subscribe: (observer: {
       next: (event: NostrEvent) => void;
       error: (error: unknown) => void;
       complete: () => void;
     }) => { unsubscribe: () => void };
-  } | null
+  }) | null
   onLogout: () => void
 }
 
@@ -77,9 +77,15 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
       // This is the proper way according to NIP-51 and applesauce documentation
       const bookmarkList: Bookmark[] = []
       
-      // addressLoader is always an Observable, subscribe to it directly
-      console.log('Subscribing to addressLoader Observable')
-      const subscription = addressLoader.subscribe({
+      // Configure addressLoader with specific query parameters
+      console.log('Configuring addressLoader with kind: 10003, pubkey:', activeAccount.pubkey)
+      const queryObservable = addressLoader({
+        kind: 10003,
+        pubkey: activeAccount.pubkey
+      })
+      
+      console.log('Subscribing to configured query Observable')
+      const subscription = queryObservable.subscribe({
         next: (event: NostrEvent) => {
           console.log('Received bookmark event:', event)
           const bookmarkData = parseBookmarkEvent(event)
