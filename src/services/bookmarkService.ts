@@ -24,7 +24,7 @@ interface ApplesauceBookmarks {
 interface AccountWithExtension { pubkey: string; signer?: unknown; nip04?: unknown; nip44?: unknown; [key: string]: unknown }
 
 function isAccountWithExtension(account: unknown): account is AccountWithExtension {
-  return typeof account === 'object' && account !== null && 'pubkey' in account && typeof (account as any).pubkey === 'string'
+  return typeof account === 'object' && account !== null && 'pubkey' in account && typeof (account as { pubkey?: unknown }).pubkey === 'string'
 }
 
 // Note: Using applesauce's built-in hidden content detection instead of custom logic
@@ -42,6 +42,22 @@ interface NostrEvent {
   content: string
   pubkey: string
   sig: string
+}
+
+// Helper types and guards to avoid using `any` for signer-related behavior
+type UnlockHiddenTagsFn = typeof Helpers.unlockHiddenTags
+type UnlockSigner = Parameters<UnlockHiddenTagsFn>[1]
+type UnlockMode = Parameters<UnlockHiddenTagsFn>[2]
+type DecryptFn = (pubkey: string, content: string) => Promise<string>
+
+function hasNip44Decrypt(obj: unknown): obj is { nip44: { decrypt: DecryptFn } } {
+  const nip44 = (obj as { nip44?: unknown })?.nip44 as { decrypt?: unknown } | undefined
+  return typeof nip44?.decrypt === 'function'
+}
+
+function hasNip04Decrypt(obj: unknown): obj is { nip04: { decrypt: DecryptFn } } {
+  const nip04 = (obj as { nip04?: unknown })?.nip04 as { decrypt?: unknown } | undefined
+  return typeof nip04?.decrypt === 'function'
 }
 
 function dedupeNip51Events(events: NostrEvent[]): NostrEvent[] {
@@ -181,16 +197,18 @@ export const fetchBookmarks = async (
 
     // For ExtensionAccount, we need a signer with nip04/nip44 for decrypting hidden content
     // The ExtensionAccount itself has nip04/nip44 getters that proxy to the signer
-    let signerCandidate: any = maybeAccount
-    if (signerCandidate && !(signerCandidate as any).nip04 && !(signerCandidate as any).nip44 && maybeAccount?.signer) {
+    let signerCandidate: unknown = maybeAccount
+    const hasNip04Prop = (signerCandidate as { nip04?: unknown })?.nip04 !== undefined
+    const hasNip44Prop = (signerCandidate as { nip44?: unknown })?.nip44 !== undefined
+    if (signerCandidate && !hasNip04Prop && !hasNip44Prop && maybeAccount?.signer) {
       // Fallback to the raw signer if account doesn't have nip04/nip44
       signerCandidate = maybeAccount.signer
     }
 
     console.log('🔑 Signer candidate:', !!signerCandidate, typeof signerCandidate)
     if (signerCandidate) {
-      console.log('🔑 Signer has nip04:', !!(signerCandidate as any).nip04)
-      console.log('🔑 Signer has nip44:', !!(signerCandidate as any).nip44)
+      console.log('🔑 Signer has nip04:', hasNip04Decrypt(signerCandidate))
+      console.log('🔑 Signer has nip44:', hasNip44Decrypt(signerCandidate))
     }
     const publicItemsAll: IndividualBookmark[] = []
     const privateItemsAll: IndividualBookmark[] = []
@@ -231,13 +249,12 @@ export const fetchBookmarks = async (
         if (Helpers.hasHiddenTags(evt) && Helpers.isHiddenTagsLocked(evt) && signerCandidate) {
           try {
             console.log('🔓 Attempting to unlock hidden tags with signer...')
-            await Helpers.unlockHiddenTags(evt, signerCandidate as any)
+            await Helpers.unlockHiddenTags(evt, signerCandidate as unknown as UnlockSigner)
             console.log('✅ Successfully unlocked hidden tags')
           } catch (error) {
             console.warn('❌ Failed to unlock with default method, trying NIP-44:', error)
             try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await Helpers.unlockHiddenTags(evt, signerCandidate as any, 'nip44' as any)
+              await Helpers.unlockHiddenTags(evt, signerCandidate as unknown as UnlockSigner, 'nip44' as unknown as UnlockMode)
               console.log('✅ Successfully unlocked hidden tags with NIP-44')
             } catch (nip44Error) {
               console.error('❌ Failed to unlock with NIP-44:', nip44Error)
@@ -252,9 +269,9 @@ export const fetchBookmarks = async (
           // Try NIP-44 first (common for bookmark lists), then fall back to NIP-04
           let decryptedContent: string | undefined
           try {
-            if ((signerCandidate as any).nip44?.decrypt) {
+            if (hasNip44Decrypt(signerCandidate)) {
               console.log('🧪 Trying NIP-44 decryption...')
-              decryptedContent = await (signerCandidate as any).nip44.decrypt(evt.pubkey, evt.content)
+              decryptedContent = await (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(evt.pubkey, evt.content)
             }
           } catch (nip44Err) {
             console.warn('❌ NIP-44 manual decryption failed, will try NIP-04:', nip44Err)
@@ -262,9 +279,9 @@ export const fetchBookmarks = async (
 
           if (!decryptedContent) {
             try {
-              if ((signerCandidate as any).nip04?.decrypt) {
+              if (hasNip04Decrypt(signerCandidate)) {
                 console.log('🧪 Trying NIP-04 decryption...')
-                decryptedContent = await (signerCandidate as any).nip04.decrypt(evt.pubkey, evt.content)
+                decryptedContent = await (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(evt.pubkey, evt.content)
               }
             } catch (nip04Err) {
               console.warn('❌ NIP-04 manual decryption failed:', nip04Err)
@@ -279,7 +296,7 @@ export const fetchBookmarks = async (
               console.log('📋 Decrypted hidden tags:', hiddenTags.length, 'tags')
 
               // Turn tags into Bookmarks using applesauce helper, then add to private list immediately
-              const manualPrivate = Helpers.parseBookmarkTags(hiddenTags as any)
+              const manualPrivate = Helpers.parseBookmarkTags(hiddenTags)
               privateItemsAll.push(...processApplesauceBookmarks(manualPrivate, activeAccount, true))
 
               // Cache on event for any downstream consumers/debugging
