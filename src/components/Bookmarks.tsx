@@ -12,31 +12,26 @@ interface Bookmark {
 }
 
 interface BookmarksProps {
+  userPublicKey: string | null
   onLogout: () => void
 }
 
-const Bookmarks: React.FC<BookmarksProps> = ({ onLogout }) => {
+const Bookmarks: React.FC<BookmarksProps> = ({ userPublicKey, onLogout }) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [loading, setLoading] = useState(true)
   const eventStore = useContext(EventStoreContext)
 
   useEffect(() => {
-    if (eventStore) {
+    if (eventStore && userPublicKey) {
       fetchBookmarks()
     }
-  }, [eventStore])
+  }, [eventStore, userPublicKey])
 
   const fetchBookmarks = async () => {
-    if (!eventStore) return
+    if (!eventStore || !userPublicKey) return
 
     try {
       setLoading(true)
-      
-      // Get public key from nostr extension
-      const publicKey = await window.nostr?.getPublicKey()
-      if (!publicKey) {
-        throw new Error('No public key available')
-      }
       
       // Fetch bookmarks according to NIP-51
       // Kind 10003: bookmark lists
@@ -44,7 +39,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ onLogout }) => {
       const events = eventStore.getByFilters([
         {
           kinds: [10003, 30003],
-          authors: [publicKey]
+          authors: [userPublicKey]
         }
       ])
 
@@ -109,11 +104,20 @@ const Bookmarks: React.FC<BookmarksProps> = ({ onLogout }) => {
     return new Date(timestamp * 1000).toLocaleDateString()
   }
 
+  const formatPublicKey = (publicKey: string) => {
+    return `${publicKey.slice(0, 8)}...${publicKey.slice(-8)}`
+  }
+
   if (loading) {
     return (
       <div className="bookmarks-container">
         <div className="bookmarks-header">
-          <h2>Your Bookmarks</h2>
+          <div>
+            <h2>Your Bookmarks</h2>
+            {userPublicKey && (
+              <p className="user-info">Logged in as: {formatPublicKey(userPublicKey)}</p>
+            )}
+          </div>
           <button onClick={onLogout} className="logout-button">
             Logout
           </button>
@@ -126,7 +130,12 @@ const Bookmarks: React.FC<BookmarksProps> = ({ onLogout }) => {
   return (
     <div className="bookmarks-container">
       <div className="bookmarks-header">
-        <h2>Your Bookmarks ({bookmarks.length})</h2>
+        <div>
+          <h2>Your Bookmarks ({bookmarks.length})</h2>
+          {userPublicKey && (
+            <p className="user-info">Logged in as: {formatPublicKey(userPublicKey)}</p>
+          )}
+        </div>
         <button onClick={onLogout} className="logout-button">
           Logout
         </button>

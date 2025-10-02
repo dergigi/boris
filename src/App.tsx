@@ -7,6 +7,7 @@ import Bookmarks from './components/Bookmarks'
 function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userPublicKey, setUserPublicKey] = useState<string | null>(null)
 
   useEffect(() => {
     // Initialize event store
@@ -27,9 +28,18 @@ function App() {
         </header>
         
         {!isAuthenticated ? (
-          <Login onLogin={() => setIsAuthenticated(true)} />
+          <Login onLogin={(publicKey) => {
+            setIsAuthenticated(true)
+            setUserPublicKey(publicKey)
+          }} />
         ) : (
-          <Bookmarks onLogout={() => setIsAuthenticated(false)} />
+          <Bookmarks 
+            userPublicKey={userPublicKey}
+            onLogout={() => {
+              setIsAuthenticated(false)
+              setUserPublicKey(null)
+            }} 
+          />
         )}
       </div>
     </EventStoreProvider>

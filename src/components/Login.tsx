@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 interface LoginProps {
-  onLogin: () => void
+  onLogin: (publicKey: string) => void
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -20,7 +20,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       const publicKey = await window.nostr.getPublicKey()
       
       if (publicKey) {
-        onLogin()
+        onLogin(publicKey)
       } else {
         throw new Error('Failed to get public key')
       }

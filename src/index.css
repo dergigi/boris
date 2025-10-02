@@ -100,15 +100,26 @@ body {
 .bookmarks-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #333;
 }
 
+.bookmarks-header > div {
+  flex: 1;
+}
+
 .bookmarks-header h2 {
   margin: 0;
   color: #fff;
+}
+
+.user-info {
+  margin: 0.5rem 0 0 0;
+  color: #888;
+  font-size: 0.9rem;
+  font-family: monospace;
 }
 
 .logout-button {
@@ -209,6 +220,10 @@ body {
   }
   
   .bookmark-content {
+    color: #666;
+  }
+  
+  .user-info {
     color: #666;
   }
 }
