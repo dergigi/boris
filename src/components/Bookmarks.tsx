@@ -3,20 +3,17 @@ import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
-import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 import { Bookmark } from '../types/bookmarks'
 import { BookmarkList } from './BookmarkList'
 import { fetchBookmarks } from '../services/bookmarkService'
 import ContentPanel from './ContentPanel'
 import { fetchReadableContent, ReadableContent } from '../services/readerService'
-import IconButton from './IconButton'
 
 interface BookmarksProps {
   relayPool: RelayPool | null
-  onLogout: () => void
 }
 
-const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
+const Bookmarks: React.FC<BookmarksProps> = ({ relayPool }) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedUrl, setSelectedUrl] = useState<string | undefined>(undefined)
@@ -106,13 +103,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
               <p className="user-info">Logged in as: {formatUserDisplay()}</p>
             )}
           </div>
-          <IconButton
-            icon={faRightFromBracket}
-            onClick={onLogout}
-            title="Logout"
-            ariaLabel="Logout"
-            variant="ghost"
-          />
         </div>
         <div className="loading">Loading bookmarks...</div>
       </div>
@@ -125,7 +115,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         <BookmarkList 
           bookmarks={bookmarks}
           activeAccount={activeAccount || null}
-          onLogout={onLogout}
           formatUserDisplay={formatUserDisplay}
           onSelectUrl={handleSelectUrl}
           isCollapsed={isCollapsed}

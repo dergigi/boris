@@ -28,6 +28,14 @@ body {
 
 .app {
   text-align: center;
+  position: relative;
+}
+
+.app-header {
+  position: fixed;
+  top: 1rem;
+  right: 2rem;
+  z-index: 1000;
 }
 
 .app header {
