@@ -115,12 +115,20 @@ export const fetchBookmarks = async (
     const bookmarkListEvent = bookmarkListEvents[0]
     console.log('Found bookmark list event:', bookmarkListEvent.id)
     
-    // Use applesauce helpers to get all bookmarks (public and private)
+    // Use applesauce helpers to get public bookmarks
     const publicBookmarks = Helpers.getPublicBookmarks(bookmarkListEvent)
-    const privateBookmarks = Helpers.getHiddenBookmarks(bookmarkListEvent)
-    
     console.log('Public bookmarks:', publicBookmarks)
-    console.log('Private bookmarks:', privateBookmarks)
+    
+    // Try to get private bookmarks - this should trigger browser extension if needed
+    let privateBookmarks = null
+    try {
+      console.log('Attempting to get hidden bookmarks...')
+      privateBookmarks = Helpers.getHiddenBookmarks(bookmarkListEvent)
+      console.log('Private bookmarks result:', privateBookmarks)
+    } catch (error) {
+      console.log('Failed to get private bookmarks:', error)
+      privateBookmarks = null
+    }
     
     
     // Process bookmarks using DRY helper function
