@@ -70,6 +70,34 @@ src/
 └── index.css          # Global styles
 ```
 
+### Private (hidden) bookmarks (Amethyst-style)
+
+We support Amethyst-style private (hidden) bookmark lists alongside public ones (NIP‑51):
+
+- **Detection and unlock**
+  - Use `Helpers.hasHiddenTags(evt)` and `Helpers.isHiddenTagsLocked(evt)` to detect hidden tags.
+  - First try `Helpers.unlockHiddenTags(evt, signer)`; if that fails, try with `'nip44'`.
+  - For events with encrypted `content` that aren’t recognized as supporting hidden tags (e.g. kind 30001), manually decrypt:
+    - Prefer `signer.nip44.decrypt(evt.pubkey, evt.content)`, fallback to `signer.nip04.decrypt(evt.pubkey, evt.content)`.
+
+- **Parsing and rendering**
+  - Decrypted `content` is JSON `string[][]` (tags). Convert with `Helpers.parseBookmarkTags(hiddenTags)`.
+  - Map to `IndividualBookmark[]` via our `processApplesauceBookmarks(..., isPrivate=true)` and append to the private list so they render immediately alongside public items.
+
+- **Caching for downstream helpers**
+  - Cache manual results on the event with `BookmarkHiddenSymbol` and also store the decrypted blob under `EncryptedContentSymbol` to aid debugging and hydration.
+
+- **Structure**
+  - `src/services/bookmarkService.ts`: orchestrates fetching, hydration, and assembling the final bookmark payload.
+  - `src/services/bookmarkProcessing.ts`: decryption/collection pipeline (unlock, manual decrypt, parse, merge).
+  - `src/services/bookmarkHelpers.ts`: shared types, guards, mapping, hydration, and symbols.
+  - `src/services/bookmarkEvents.ts`: event type and de‑duplication for NIP‑51 lists/sets.
+
+- **Notes**
+  - We avoid `any` via narrow type guards for `nip44`/`nip04` decrypt functions.
+  - Files are kept small and DRY per project rules.
+  - Built on applesauce helpers (`Helpers.getPublicBookmarks`, `Helpers.getHiddenBookmarks`, etc.). See applesauce docs: https://hzrd149.github.io/applesauce/typedoc/modules.html
+
 ### Building for Production
 
 ```bash
