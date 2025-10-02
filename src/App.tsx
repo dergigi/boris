@@ -20,17 +20,20 @@ function App() {
     const accounts = new AccountManager()
     const pool = new RelayPool()
     
-    // Connect to some popular nostr relays
-    pool.relay('wss://relay.damus.io')
-    pool.relay('wss://nos.lol')
-    pool.relay('wss://relay.snort.social')
+    // Define relay URLs for bookmark fetching
+    const relayUrls = [
+      'wss://relay.damus.io',
+      'wss://nos.lol', 
+      'wss://relay.snort.social'
+    ]
     
     // Create address loader for fetching replaceable events (like bookmarks)
+    // The pool will automatically handle multiple relays and deduplication
     const loader = Loaders.createAddressLoader(pool, {
       eventStore: store,
       bufferTime: 1000,
       followRelayHints: true,
-      extraRelays: ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.snort.social']
+      extraRelays: relayUrls
     })
     
     setEventStore(store)

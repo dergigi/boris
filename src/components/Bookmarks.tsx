@@ -40,7 +40,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
       const subscription = addressLoader({
         kind: 10003, // Bookmark list according to NIP-51
         pubkey: activeAccount.pubkey,
-        relays: ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.snort.social']
+        // No need to specify relays - the relay group handles this automatically
+        // The relay group will query all configured relays and deduplicate events
       }).subscribe({
         next: (event: NostrEvent) => {
           const bookmarkData = parseBookmarkEvent(event)
