@@ -9,6 +9,9 @@ interface IconButtonProps {
   ariaLabel?: string
   variant?: 'primary' | 'success' | 'ghost'
   size?: number
+  href?: string
+  target?: string
+  rel?: string
 }
 
 const IconButton: React.FC<IconButtonProps> = ({
@@ -17,15 +20,35 @@ const IconButton: React.FC<IconButtonProps> = ({
   title,
   ariaLabel,
   variant = 'ghost',
-  size = 44
+  size = 44,
+  href,
+  target,
+  rel
 }) => {
+  const commonProps = {
+    className: `icon-button ${variant}`,
+    title,
+    'aria-label': ariaLabel || title,
+    style: { width: size, height: size }
+  } as const
+
+  if (href) {
+    return (
+      <a
+        {...(commonProps as any)}
+        href={href}
+        target={target || '_blank'}
+        rel={rel || 'noopener noreferrer'}
+      >
+        <FontAwesomeIcon icon={icon} />
+      </a>
+    )
+  }
+
   return (
     <button
-      className={`icon-button ${variant}`}
+      {...(commonProps as any)}
       onClick={onClick}
-      title={title}
-      aria-label={ariaLabel || title}
-      style={{ width: size, height: size }}
     >
       <FontAwesomeIcon icon={icon} />
     </button>

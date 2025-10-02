@@ -134,21 +134,22 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       
       <div className="bookmark-meta">
         {eventNevent ? (
-          <a
-            href={`https://search.dergigi.com/e/${eventNevent}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="kind-icon-link"
+          <IconButton
+            icon={getKindIcon(bookmark.kind)}
+            ariaLabel="Open event in search"
             title="Open event in search"
-          >
-            <span className="kind-icon">
-              <FontAwesomeIcon icon={getKindIcon(bookmark.kind)} />
-            </span>
-          </a>
+            href={`https://search.dergigi.com/e/${eventNevent}`}
+            variant="ghost"
+            size={32}
+          />
         ) : (
-          <span className="kind-icon">
-            <FontAwesomeIcon icon={getKindIcon(bookmark.kind)} />
-          </span>
+          <IconButton
+            icon={getKindIcon(bookmark.kind)}
+            ariaLabel="Event kind"
+            title="Event kind"
+            variant="ghost"
+            size={32}
+          />
         )}
         <span>
           <a
