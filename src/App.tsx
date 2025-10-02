@@ -3,8 +3,6 @@ import { EventStoreProvider, AccountsProvider } from 'applesauce-react'
 import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
 import { RelayPool } from 'applesauce-relay'
-import { Loaders } from 'applesauce-loaders'
-import { NostrEvent } from 'nostr-tools'
 import Login from './components/Login'
 import Bookmarks from './components/Bookmarks'
 
