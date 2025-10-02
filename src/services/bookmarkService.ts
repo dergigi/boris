@@ -140,7 +140,7 @@ export const fetchBookmarks = async (
     const rawEvents = await lastValueFrom(
       relayPool
         .req(relayUrls, { kinds: [10003, 30003, 30001], authors: [activeAccount.pubkey] })
-        .pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
+        .pipe(completeOnEose(), takeUntil(timer(20000)), toArray())
     )
     console.log('📊 Raw events fetched:', rawEvents.length, 'events')
 
