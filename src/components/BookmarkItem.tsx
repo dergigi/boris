@@ -22,6 +22,8 @@ import {
   faEyeSlash,
   faThumbtack
 } from '@fortawesome/free-solid-svg-icons'
+import { useEventModel } from 'applesauce-react/hooks'
+import { Models } from 'applesauce-core'
 import { IndividualBookmark } from '../types/bookmarks'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
@@ -46,6 +48,17 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   // Extract URLs from bookmark content
   const extractedUrls = extractUrlsFromContent(bookmark.content)
   const hasUrls = extractedUrls.length > 0
+
+  // Resolve author profile using applesauce
+  const authorProfile = useEventModel(Models.ProfileModel, [bookmark.pubkey])
+  
+  // Get display name for author
+  const getAuthorDisplayName = () => {
+    if (authorProfile?.name) return authorProfile.name
+    if (authorProfile?.display_name) return authorProfile.display_name
+    if (authorProfile?.nip05) return authorProfile.nip05
+    return short(bookmark.pubkey) // fallback to short pubkey
+  }
 
   // Map kind numbers to FontAwesome icons
   const getKindIcon = (kind: number) => {
@@ -139,7 +152,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
           <FontAwesomeIcon icon={getKindIcon(bookmark.kind)} />
         </span>
         <span>
-          Author: {short(bookmark.pubkey)}
+          Author: {getAuthorDisplayName()}
           <button className="copy-btn" onClick={() => copy(bookmark.pubkey)} title="Copy author pubkey">
             <FontAwesomeIcon icon={faCopy} />
           </button>
