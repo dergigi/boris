@@ -298,6 +298,45 @@ body {
   word-break: break-word;
 }
 
+.content-markdown {
+  color: #ddd;
+  line-height: 1.7;
+}
+
+.content-markdown h1,
+.content-markdown h2,
+.content-markdown h3,
+.content-markdown h4 {
+  margin-top: 1.2rem;
+}
+
+.content-markdown p {
+  margin: 0.5rem 0;
+}
+
+.content-markdown a {
+  color: #8ab4f8;
+  text-decoration: none;
+}
+
+.content-markdown a:hover { text-decoration: underline; }
+
+.content-markdown pre,
+.content-markdown code {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+}
+
+.content-markdown pre {
+  padding: 0.75rem;
+  overflow: auto;
+}
+
+.content-markdown code {
+  padding: 0.1rem 0.3rem;
+}
+
 .bookmark-item {
   background: #1a1a1a;
   padding: 1.5rem;

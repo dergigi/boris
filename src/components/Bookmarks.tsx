@@ -125,6 +125,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           loading={readerLoading}
           title={readerContent?.title}
           html={readerContent?.html}
+          markdown={readerContent?.markdown}
           selectedUrl={selectedUrl}
         />
       </div>

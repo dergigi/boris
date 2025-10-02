@@ -1,13 +1,16 @@
 import React from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface ContentPanelProps {
   loading: boolean
   title?: string
   html?: string
+  markdown?: string
   selectedUrl?: string
 }
 
-const ContentPanel: React.FC<ContentPanelProps> = ({ loading, title, html, selectedUrl }) => {
+const ContentPanel: React.FC<ContentPanelProps> = ({ loading, title, html, markdown, selectedUrl }) => {
   if (!selectedUrl) {
     return (
       <div className="content-panel empty">
@@ -27,7 +30,13 @@ const ContentPanel: React.FC<ContentPanelProps> = ({ loading, title, html, selec
   return (
     <div className="content-panel">
       {title && <h2 className="content-title">{title}</h2>}
-      {html ? (
+      {markdown ? (
+        <div className="content-markdown">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {markdown}
+          </ReactMarkdown>
+        </div>
+      ) : html ? (
         <div className="content-html" dangerouslySetInnerHTML={{ __html: html }} />
       ) : (
         <div className="content-panel empty">
