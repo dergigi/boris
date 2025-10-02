@@ -394,7 +394,6 @@ body {
 
 .private-indicator {
   margin-left: 0.5rem;
-  font-size: 0.9rem;
   color: #ff6b6b;
 }
 
@@ -454,12 +453,6 @@ body {
   }
   
   .private-bookmark {
-    border-left-color: #ff6b6b;
     background: linear-gradient(135deg, #f5f5f5 0%, #e9ecef 100%);
-  }
-  
-  .private-bookmark:hover {
-    border-color: #ff6b6b;
-    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
   }
 }
