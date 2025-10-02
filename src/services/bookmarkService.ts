@@ -8,7 +8,8 @@ import {
   isAccountWithExtension,
   isHexId,
   hasNip04Decrypt,
-  hasNip44Decrypt
+  hasNip44Decrypt,
+  dedupeBookmarksById
 } from './bookmarkHelpers'
 import { Bookmark } from '../types/bookmarks'
 import { collectBookmarksFromEvents } from './bookmarkProcessing.ts'
@@ -106,10 +107,10 @@ export const fetchBookmarks = async (
         console.warn('Failed to fetch events for hydration:', error)
       }
     }
-    const allBookmarks = [
+    const allBookmarks = dedupeBookmarksById([
       ...hydrateItems(publicItemsAll, idToEvent),
       ...hydrateItems(privateItemsAll, idToEvent)
-    ]
+    ])
 
     // Sort individual bookmarks by timestamp (newest first)
     const sortedBookmarks = allBookmarks.sort((a, b) => (b.created_at || 0) - (a.created_at || 0))

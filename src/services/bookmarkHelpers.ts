@@ -119,4 +119,16 @@ export function hasNip04Decrypt(obj: unknown): obj is { nip04: { decrypt: Decryp
   return typeof nip04?.decrypt === 'function'
 }
 
+export function dedupeBookmarksById(bookmarks: IndividualBookmark[]): IndividualBookmark[] {
+  const seen = new Set<string>()
+  const result: IndividualBookmark[] = []
+  for (const b of bookmarks) {
+    if (!seen.has(b.id)) {
+      seen.add(b.id)
+      result.push(b)
+    }
+  }
+  return result
+}
+
 
