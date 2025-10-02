@@ -69,7 +69,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
     try {
       setLoading(true)
       console.log('Fetching bookmarks for pubkey:', activeAccount.pubkey)
-      alert('Starting bookmark fetch for: ' + activeAccount.pubkey.slice(0, 8) + '...')
+      console.log('Starting bookmark fetch for:', activeAccount.pubkey.slice(0, 8) + '...')
       
       // Use applesauce address loader to fetch bookmark lists (kind 10003)
       // This is the proper way according to NIP-51 and applesauce documentation
