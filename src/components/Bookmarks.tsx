@@ -54,6 +54,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
   useEffect(() => {
     console.log('Bookmarks useEffect triggered')
     console.log('addressLoader:', !!addressLoader)
+    console.log('addressLoader type:', typeof addressLoader)
+    console.log('addressLoader value:', addressLoader)
     console.log('activeAccount:', !!activeAccount)
     if (addressLoader && activeAccount) {
       console.log('Starting to fetch bookmarks...')

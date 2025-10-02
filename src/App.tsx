@@ -51,6 +51,9 @@ function App() {
       extraRelays: relayUrls
     })
     
+    console.log('Created address loader:', loader)
+    console.log('Address loader type:', typeof loader)
+    
     setEventStore(store)
     setAccountManager(accounts)
     setRelayPool(pool)
