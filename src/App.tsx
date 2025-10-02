@@ -3,6 +3,7 @@ import { EventStoreProvider, AccountsProvider } from 'applesauce-react'
 import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
 import { RelayPool } from 'applesauce-relay'
+import { Loaders } from 'applesauce-loaders'
 import Login from './components/Login'
 import Bookmarks from './components/Bookmarks'
 
@@ -10,6 +11,7 @@ function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
   const [accountManager, setAccountManager] = useState<AccountManager | null>(null)
   const [relayPool, setRelayPool] = useState<RelayPool | null>(null)
+  const [addressLoader, setAddressLoader] = useState<any>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
@@ -23,12 +25,21 @@ function App() {
     pool.relay('wss://nos.lol')
     pool.relay('wss://relay.snort.social')
     
+    // Create address loader for fetching replaceable events (like bookmarks)
+    const loader = Loaders.createAddressLoader(pool, {
+      eventStore: store,
+      bufferTime: 1000,
+      followRelayHints: true,
+      extraRelays: ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.snort.social']
+    })
+    
     setEventStore(store)
     setAccountManager(accounts)
     setRelayPool(pool)
+    setAddressLoader(loader)
   }, [])
 
-  if (!eventStore || !accountManager || !relayPool) {
+  if (!eventStore || !accountManager || !relayPool || !addressLoader) {
     return <div>Loading...</div>
   }
 
@@ -44,7 +55,10 @@ function App() {
           {!isAuthenticated ? (
             <Login onLogin={() => setIsAuthenticated(true)} />
           ) : (
-            <Bookmarks onLogout={() => setIsAuthenticated(false)} />
+            <Bookmarks 
+              addressLoader={addressLoader}
+              onLogout={() => setIsAuthenticated(false)} 
+            />
           )}
         </div>
       </AccountsProvider>

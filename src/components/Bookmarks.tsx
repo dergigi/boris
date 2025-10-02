@@ -1,7 +1,6 @@
-import { useState, useEffect, useContext } from 'react'
-import { EventStoreContext, Hooks } from 'applesauce-react'
+import { useState, useEffect } from 'react'
+import { Hooks } from 'applesauce-react'
 import { NostrEvent } from 'nostr-tools'
-import { takeUntil, timer } from 'rxjs'
 
 interface Bookmark {
   id: string
@@ -13,65 +12,56 @@ interface Bookmark {
 }
 
 interface BookmarksProps {
+  addressLoader: any
   onLogout: () => void
 }
 
-const Bookmarks: React.FC<BookmarksProps> = ({ onLogout }) => {
+const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [loading, setLoading] = useState(true)
-  const eventStore = useContext(EventStoreContext)
   const activeAccount = Hooks.useActiveAccount()
 
   useEffect(() => {
-    if (eventStore && activeAccount) {
+    if (addressLoader && activeAccount) {
       fetchBookmarks()
     }
-  }, [eventStore, activeAccount])
+  }, [addressLoader, activeAccount])
 
   const fetchBookmarks = async () => {
-    if (!eventStore || !activeAccount) return
+    if (!addressLoader || !activeAccount) return
 
     try {
       setLoading(true)
       
-      // Subscribe to bookmark events from relays
-      // According to NIP-51, we need kind 10003 events (bookmark lists)
-      const events: NostrEvent[] = []
+      // Use applesauce address loader to fetch bookmark lists (kind 10003)
+      // This is the proper way according to NIP-51 and applesauce documentation
+      const bookmarkList: Bookmark[] = []
       
-      const subscription = eventStore.filters([
-        {
-          kinds: [10003],
-          authors: [activeAccount.pubkey]
-        }
-      ]).pipe(
-        takeUntil(timer(5000)) // Wait up to 5 seconds for events
-      ).subscribe({
-        next: (event) => {
-          events.push(event)
+      const subscription = addressLoader({
+        kind: 10003, // Bookmark list according to NIP-51
+        pubkey: activeAccount.pubkey,
+        relays: ['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.snort.social']
+      }).subscribe({
+        next: (event: NostrEvent) => {
+          const bookmarkData = parseBookmarkEvent(event)
+          if (bookmarkData) {
+            bookmarkList.push(bookmarkData)
+          }
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error fetching bookmarks:', error)
+          setLoading(false)
         },
         complete: () => {
-          // Process collected events
-          const bookmarkList: Bookmark[] = []
-          
-          for (const event of events) {
-            const bookmarkData = parseBookmarkEvent(event)
-            if (bookmarkData) {
-              bookmarkList.push(bookmarkData)
-            }
-          }
-          
           setBookmarks(bookmarkList)
           setLoading(false)
         }
       })
 
-      // Clean up subscription after timeout
+      // Set timeout to prevent hanging
       setTimeout(() => {
         subscription.unsubscribe()
-        if (events.length === 0) {
+        if (bookmarkList.length === 0) {
           setBookmarks([])
           setLoading(false)
         }
