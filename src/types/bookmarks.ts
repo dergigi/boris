@@ -40,6 +40,8 @@ export interface IndividualBookmark {
   type: 'event' | 'article'
   isPrivate?: boolean
   encryptedContent?: string
+  // When the item was added to the bookmark list (synthetic, for sorting)
+  added_at?: number
 }
 
 export interface ActiveAccount {

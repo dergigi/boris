@@ -113,7 +113,8 @@ export const fetchBookmarks = async (
       ...hydrateItems(privateItemsAll, idToEvent)
     ])
 
-    // Sort individual bookmarks by timestamp (newest first)
+    // Sort individual bookmarks by "added" timestamp first (most recently added first),
+    // falling back to event created_at when unknown.
     const enriched = allBookmarks.map(b => ({
       ...b,
       tags: b.tags || [],
@@ -121,7 +122,7 @@ export const fetchBookmarks = async (
     }))
     const sortedBookmarks = enriched
       .map(b => ({ ...b, urlReferences: extractUrlsFromContent(b.content) }))
-      .sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
+      .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
 
     const bookmark: Bookmark = {
       id: `${activeAccount.pubkey}-bookmarks`,

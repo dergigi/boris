@@ -66,7 +66,8 @@ export const processApplesauceBookmarks = (
       tags: bookmark.tags || [],
       parsedContent: bookmark.content ? (getParsedContent(bookmark.content) as ParsedContent) : undefined,
       type: 'event' as const,
-      isPrivate
+      isPrivate,
+      added_at: Math.floor(Date.now() / 1000)
     }))
   }
 
@@ -80,7 +81,8 @@ export const processApplesauceBookmarks = (
     tags: bookmark.tags || [],
     parsedContent: bookmark.content ? (getParsedContent(bookmark.content) as ParsedContent) : undefined,
     type: 'event' as const,
-    isPrivate
+    isPrivate,
+    added_at: Math.floor(Date.now() / 1000)
   }))
 }
 
