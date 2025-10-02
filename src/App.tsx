@@ -4,10 +4,9 @@ import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
 import { RelayPool } from 'applesauce-relay'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
-import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 import Login from './components/Login'
 import Bookmarks from './components/Bookmarks'
-import IconButton from './components/IconButton'
+import UserHeader from './components/UserHeader'
 
 function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
@@ -66,15 +65,7 @@ function App() {
       <AccountsProvider manager={accountManager}>
         <div className="app">
           {isAuthenticated && (
-            <div className="app-header">
-              <IconButton
-                icon={faRightFromBracket}
-                onClick={() => setIsAuthenticated(false)}
-                title="Logout"
-                ariaLabel="Logout"
-                variant="ghost"
-              />
-            </div>
+            <UserHeader onLogout={() => setIsAuthenticated(false)} />
           )}
           {!isAuthenticated ? (
             <Login onLogin={() => setIsAuthenticated(true)} />

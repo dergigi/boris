@@ -1,14 +1,12 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
-import { Bookmark, ActiveAccount } from '../types/bookmarks'
+import { Bookmark } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
-  activeAccount: ActiveAccount | null
-  formatUserDisplay: () => string
   onSelectUrl?: (url: string) => void
   isCollapsed: boolean
   onToggleCollapse: () => void
@@ -16,8 +14,6 @@ interface BookmarkListProps {
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({ 
   bookmarks, 
-  activeAccount, 
-  formatUserDisplay,
   onSelectUrl,
   isCollapsed,
   onToggleCollapse
@@ -40,21 +36,14 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   return (
     <div className="bookmarks-container">
       <div className="bookmarks-header">
-        <div>
-          {activeAccount && (
-            <p className="user-info">Logged in as: {formatUserDisplay()}</p>
-          )}
-        </div>
-        <div className="header-actions">
-          <button 
-            onClick={onToggleCollapse}
-            className="toggle-sidebar-btn"
-            title="Collapse bookmarks sidebar"
-            aria-label="Collapse bookmarks sidebar"
-          >
-            <FontAwesomeIcon icon={faChevronLeft} />
-          </button>
-        </div>
+        <button 
+          onClick={onToggleCollapse}
+          className="toggle-sidebar-btn"
+          title="Collapse bookmarks sidebar"
+          aria-label="Collapse bookmarks sidebar"
+        >
+          <FontAwesomeIcon icon={faChevronLeft} />
+        </button>
       </div>
       
       {bookmarks.length === 0 ? (

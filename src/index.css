@@ -36,6 +36,13 @@ body {
   top: 1rem;
   right: 2rem;
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-header .user-info {
+  margin: 0;
 }
 
 .app header {
@@ -107,26 +114,11 @@ body {
 
 .bookmarks-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 1rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #333;
-}
-
-.bookmarks-header > div {
-  flex: 1;
-}
-
-.bookmarks-header h2 {
-  margin: 0;
-  color: #fff;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
 }
 
 .toggle-sidebar-btn {

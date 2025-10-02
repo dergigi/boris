@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { Hooks } from 'applesauce-react'
-import { useEventModel } from 'applesauce-react/hooks'
-import { Models } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
 import { Bookmark } from '../types/bookmarks'
 import { BookmarkList } from './BookmarkList'
@@ -22,9 +20,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
-  
-  // Use ProfileModel to get user profile information
-  const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
 
   useEffect(() => {
     console.log('Bookmarks useEffect triggered')
@@ -72,38 +67,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool }) => {
 
 
 
-  const formatUserDisplay = () => {
-    if (!activeAccount) return 'Unknown User'
-
-    // Debug profile loading
-    console.log('Profile data:', profile)
-    console.log('Active account pubkey:', activeAccount.pubkey)
-
-    // Use profile data from ProfileModel if available
-    if (profile?.name) {
-      return profile.name
-    }
-    if (profile?.display_name) {
-      return profile.display_name
-    }
-    if (profile?.nip05) {
-      return profile.nip05
-    }
-
-    // Fallback to formatted public key to avoid sticky loading text
-    return `${activeAccount.pubkey.slice(0, 8)}...${activeAccount.pubkey.slice(-8)}`
-  }
-
   if (loading) {
     return (
       <div className="bookmarks-container">
-        <div className="bookmarks-header">
-          <div>
-            {activeAccount && (
-              <p className="user-info">Logged in as: {formatUserDisplay()}</p>
-            )}
-          </div>
-        </div>
         <div className="loading">Loading bookmarks...</div>
       </div>
     )
@@ -114,8 +80,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool }) => {
       <div className="pane sidebar">
         <BookmarkList 
           bookmarks={bookmarks}
-          activeAccount={activeAccount || null}
-          formatUserDisplay={formatUserDisplay}
           onSelectUrl={handleSelectUrl}
           isCollapsed={isCollapsed}
           onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
