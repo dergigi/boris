@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "applesauce-accounts": "^3.1.0",
+    "applesauce-content": "^4.0.0",
     "applesauce-core": "^3.1.0",
     "applesauce-loaders": "^3.1.0",
     "applesauce-react": "^3.1.0",
@@ -33,19 +34,35 @@
   },
   "eslintConfig": {
     "root": true,
-    "env": { "browser": true, "es2020": true },
+    "env": {
+      "browser": true,
+      "es2020": true
+    },
     "extends": [
       "eslint:recommended"
     ],
-    "ignorePatterns": ["dist", ".eslintrc.cjs"],
+    "ignorePatterns": [
+      "dist",
+      ".eslintrc.cjs"
+    ],
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint", "react-refresh"],
+    "plugins": [
+      "@typescript-eslint",
+      "react-refresh"
+    ],
     "rules": {
       "react-refresh/only-export-components": [
         "warn",
-        { "allowConstantExport": true }
+        {
+          "allowConstantExport": true
+        }
       ],
-      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_"
+        }
+      ],
       "@typescript-eslint/no-explicit-any": "warn",
       "prefer-const": "error",
       "no-var": "error"

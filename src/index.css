@@ -181,6 +181,36 @@ body {
   font-size: 0.8rem;
 }
 
+.parsed-content {
+  margin: 1rem 0;
+  line-height: 1.6;
+}
+
+.nostr-mention {
+  color: #007bff;
+  text-decoration: none;
+  font-family: monospace;
+  background: #f8f9fa;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.9rem;
+}
+
+.nostr-mention:hover {
+  background: #e9ecef;
+  text-decoration: underline;
+}
+
+.nostr-link {
+  color: #007bff;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.nostr-link:hover {
+  text-decoration: underline;
+}
+
 .logout-button {
   background: #dc3545;
   color: white;

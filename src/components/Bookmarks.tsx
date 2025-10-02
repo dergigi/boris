@@ -2,7 +2,21 @@ import React, { useState, useEffect } from 'react'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
+import { getParsedContent } from 'applesauce-content/text'
 import { NostrEvent } from 'nostr-tools'
+
+interface ParsedNode {
+  type: string
+  value?: string
+  url?: string
+  encoded?: string
+  children?: ParsedNode[]
+}
+
+interface ParsedContent {
+  type: string
+  children: ParsedNode[]
+}
 
 interface Bookmark {
   id: string
@@ -15,6 +29,7 @@ interface Bookmark {
   eventReferences?: string[]
   articleReferences?: string[]
   urlReferences?: string[]
+  parsedContent?: ParsedContent
 }
 
 interface BookmarksProps {
@@ -100,6 +115,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
       const articleTags = event.tags.filter((tag: string[]) => tag[0] === 'a')
       const urlTags = event.tags.filter((tag: string[]) => tag[0] === 'r')
       
+      // Use applesauce-content to parse the content properly
+      const parsedContent = event.content ? getParsedContent(event.content) as ParsedContent : undefined
+      
       // Get the title from content or use a default
       const title = event.content || `Bookmark List (${eventTags.length + articleTags.length + urlTags.length} items)`
       
@@ -110,6 +128,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
         content: event.content,
         created_at: event.created_at,
         tags: event.tags,
+        parsedContent: parsedContent,
         // Add metadata about the bookmark list
         bookmarkCount: eventTags.length + articleTags.length + urlTags.length,
         eventReferences: eventTags.map(tag => tag[1]),
@@ -124,6 +143,67 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString()
+  }
+
+  // Component to render parsed content using applesauce-content
+  const renderParsedContent = (parsedContent: ParsedContent) => {
+    if (!parsedContent || !parsedContent.children) {
+      return null
+    }
+
+    const renderNode = (node: ParsedNode, index: number): React.ReactNode => {
+      if (node.type === 'text') {
+        return <span key={index}>{node.value}</span>
+      }
+      
+      if (node.type === 'mention') {
+        return (
+          <a 
+            key={index}
+            href={`nostr:${node.encoded}`}
+            className="nostr-mention"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {node.encoded}
+          </a>
+        )
+      }
+      
+      if (node.type === 'link') {
+        return (
+          <a 
+            key={index}
+            href={node.url}
+            className="nostr-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {node.url}
+          </a>
+        )
+      }
+      
+      if (node.children) {
+        return (
+          <span key={index}>
+            {node.children.map((child: ParsedNode, childIndex: number) => 
+              renderNode(child, childIndex)
+            )}
+          </span>
+        )
+      }
+      
+      return null
+    }
+
+    return (
+      <div className="parsed-content">
+        {parsedContent.children.map((node: ParsedNode, index: number) => 
+          renderNode(node, index)
+        )}
+      </div>
+    )
   }
 
   const formatUserDisplay = () => {
@@ -217,7 +297,11 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
                   </div>
                 </div>
               )}
-              {bookmark.content && (
+              {bookmark.parsedContent ? (
+                <div className="bookmark-content">
+                  {renderParsedContent(bookmark.parsedContent)}
+                </div>
+              ) : bookmark.content && (
                 <p className="bookmark-content">{bookmark.content}</p>
               )}
               <div className="bookmark-meta">
