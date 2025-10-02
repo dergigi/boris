@@ -10,6 +10,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "applesauce-accounts": "^3.1.0",
     "applesauce-core": "^3.1.0",
     "applesauce-react": "^3.1.0",
     "nostr-tools": "^2.4.0",
