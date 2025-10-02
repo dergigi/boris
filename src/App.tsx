@@ -34,6 +34,18 @@ function App() {
       'wss://relay.snort.social'
     ]
     
+    // Connect to relays
+    relayUrls.forEach(url => {
+      console.log('Connecting to relay:', url)
+      const relay = pool.relay(url)
+      relay.on('connect', () => {
+        console.log('Connected to relay:', url)
+      })
+      relay.on('error', (error) => {
+        console.error('Relay connection error:', url, error)
+      })
+    })
+    
     // Create address loader for fetching replaceable events (like bookmarks)
     // The pool will automatically handle multiple relays and deduplication
     const loader = Loaders.createAddressLoader(pool, {

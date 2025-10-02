@@ -62,6 +62,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
 
     try {
       setLoading(true)
+      console.log('Fetching bookmarks for pubkey:', activeAccount.pubkey)
       
       // Use applesauce address loader to fetch bookmark lists (kind 10003)
       // This is the proper way according to NIP-51 and applesauce documentation
@@ -74,16 +75,19 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
         // The relay group will query all configured relays and deduplicate events
       }).subscribe({
         next: (event: NostrEvent) => {
+          console.log('Received bookmark event:', event)
           const bookmarkData = parseBookmarkEvent(event)
           if (bookmarkData) {
             bookmarkList.push(bookmarkData)
+            console.log('Parsed bookmark:', bookmarkData)
           }
         },
-            error: (error: unknown) => {
+        error: (error: unknown) => {
           console.error('Error fetching bookmarks:', error)
           setLoading(false)
         },
         complete: () => {
+          console.log('Bookmark fetch complete. Found:', bookmarkList.length, 'bookmarks')
           setBookmarks(bookmarkList)
           setLoading(false)
         }
@@ -91,12 +95,13 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
 
       // Set timeout to prevent hanging
       setTimeout(() => {
+        console.log('Bookmark fetch timeout. Found:', bookmarkList.length, 'bookmarks')
         subscription.unsubscribe()
         if (bookmarkList.length === 0) {
           setBookmarks([])
           setLoading(false)
         }
-      }, 5000)
+      }, 10000) // Increased timeout to 10 seconds
 
     } catch (error) {
       console.error('Failed to fetch bookmarks:', error)
