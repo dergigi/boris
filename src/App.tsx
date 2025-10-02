@@ -22,7 +22,6 @@ function App() {
     const relayUrls = [
       'wss://relay.damus.io',
       'wss://nos.lol',
-      'wss://relay.snort.social',
       'wss://relay.nostr.band',
       'wss://relay.dergigi.com',
       'wss://wot.dergigi.com'

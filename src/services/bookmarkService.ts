@@ -25,12 +25,8 @@ function isAccountWithExtension(account: unknown): account is AccountWithExtensi
   return typeof account === 'object' && account !== null && 'pubkey' in account && typeof (account as any).pubkey === 'string'
 }
 
-function isEncryptedContent(content: string | undefined): boolean {
-  if (!content) return false
-  return (
-    content.startsWith('nip44:') || content.startsWith('nip04:') || content.includes('?iv=') || content.includes('?version=')
-  )
-}
+// Note: Using applesauce's built-in hidden content detection instead of custom logic
+// Encrypted content detection is handled by applesauce's hasHiddenContent() function
 
 function isHexId(id: unknown): id is string {
   return typeof id === 'string' && /^[0-9a-f]{64}$/i.test(id)
@@ -186,11 +182,12 @@ export const fetchBookmarks = async (
         contentLength: evt.content?.length || 0,
         contentPreview: evt.content?.slice(0, 50) + (evt.content?.length > 50 ? '...' : ''),
         tagsCount: evt.tags?.length || 0,
-        isEncrypted: isEncryptedContent(evt.content)
+        hasHiddenContent: Helpers.hasHiddenContent(evt),
+        canHaveHiddenTags: Helpers.canHaveHiddenTags(evt.kind)
       })
 
       newestCreatedAt = Math.max(newestCreatedAt, evt.created_at || 0)
-      if (!latestContent && evt.content && !isEncryptedContent(evt.content)) latestContent = evt.content
+      if (!latestContent && evt.content && !Helpers.hasHiddenContent(evt)) latestContent = evt.content
       if (Array.isArray(evt.tags)) allTags = allTags.concat(evt.tags)
       // public
       const pub = Helpers.getPublicBookmarks(evt)
@@ -201,6 +198,7 @@ export const fetchBookmarks = async (
         console.log('🔒 Hidden tags locked:', Helpers.isHiddenTagsLocked(evt))
         console.log('🔒 Signer candidate available:', !!signerCandidate)
         console.log('🔒 Signer candidate type:', typeof signerCandidate)
+        console.log('🔒 Event kind supports hidden tags:', Helpers.canHaveHiddenTags(evt.kind))
 
         if (Helpers.hasHiddenTags(evt) && Helpers.isHiddenTagsLocked(evt) && signerCandidate) {
           try {
