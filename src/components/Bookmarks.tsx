@@ -33,6 +33,19 @@ interface Bookmark {
   articleReferences?: string[]
   urlReferences?: string[]
   parsedContent?: ParsedContent
+  individualBookmarks?: IndividualBookmark[]
+}
+
+interface IndividualBookmark {
+  id: string
+  content: string
+  created_at: number
+  pubkey: string
+  kind: number
+  tags: string[][]
+  parsedContent?: ParsedContent
+  author?: string
+  type: 'event' | 'article'
 }
 
 interface BookmarksProps {
@@ -110,7 +123,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       const bookmarkList: Bookmark[] = []
       for (const event of uniqueEvents) {
         console.log('Processing bookmark event:', event)
-        const bookmarkData = parseBookmarkEvent(event)
+        const bookmarkData = await parseBookmarkEvent(event)
         if (bookmarkData) {
           bookmarkList.push(bookmarkData)
           console.log('Parsed bookmark:', bookmarkData)
@@ -127,7 +140,85 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
   }
 
-  const parseBookmarkEvent = (event: NostrEvent): Bookmark | null => {
+  const fetchIndividualBookmarks = async (eventIds: string[], articleIds: string[]): Promise<IndividualBookmark[]> => {
+    if (!relayPool || (eventIds.length === 0 && articleIds.length === 0)) {
+      return []
+    }
+
+    try {
+      const allIds = [...eventIds, ...articleIds]
+      console.log('Fetching individual bookmarks for IDs:', allIds.length)
+      
+      // Create filters for both event IDs and article IDs
+      const eventFilters: Filter[] = []
+      
+      if (eventIds.length > 0) {
+        eventFilters.push({
+          ids: eventIds
+        })
+      }
+      
+      if (articleIds.length > 0) {
+        // For article IDs, we need to parse the kind and pubkey from the 'a' tag
+        const articleFilters = articleIds.map(articleId => {
+          const [kind, pubkey, identifier] = articleId.split(':')
+          return {
+            kinds: [parseInt(kind)],
+            authors: [pubkey],
+            '#d': [identifier]
+          }
+        })
+        eventFilters.push(...articleFilters)
+      }
+      
+      const allEvents: NostrEvent[] = []
+      
+      // Fetch events for each filter
+      for (const filter of eventFilters) {
+        const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+        const events = await lastValueFrom(
+          relayPool.req(relayUrls, filter).pipe(
+            completeOnEose(),
+            takeUntil(timer(10000)),
+            toArray(),
+          )
+        )
+        allEvents.push(...events)
+      }
+      
+      // Deduplicate events
+      const uniqueEvents = allEvents.reduce((acc, event) => {
+        if (!acc.find(e => e.id === event.id)) {
+          acc.push(event)
+        }
+        return acc
+      }, [] as NostrEvent[])
+      
+      console.log('Fetched individual bookmarks:', uniqueEvents.length)
+      
+      // Convert to IndividualBookmark format
+      return uniqueEvents.map(event => {
+        const parsedContent = event.content ? getParsedContent(event.content) as ParsedContent : undefined
+        const isArticle = articleIds.includes(event.id) || event.tags.some(tag => tag[0] === 'a')
+        
+        return {
+          id: event.id,
+          content: event.content,
+          created_at: event.created_at,
+          pubkey: event.pubkey,
+          kind: event.kind,
+          tags: event.tags,
+          parsedContent: parsedContent,
+          type: isArticle ? 'article' : 'event'
+        }
+      })
+    } catch (error) {
+      console.error('Error fetching individual bookmarks:', error)
+      return []
+    }
+  }
+
+  const parseBookmarkEvent = async (event: NostrEvent): Promise<Bookmark | null> => {
     try {
       // According to NIP-51, bookmark lists (kind 10003) contain:
       // - "e" tags for event references (the actual bookmarks)
@@ -144,6 +235,11 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       // Get the title from content or use a default
       const title = event.content || `Bookmark List (${eventTags.length + articleTags.length + urlTags.length} items)`
       
+      // Fetch individual bookmarks
+      const eventIds = eventTags.map(tag => tag[1])
+      const articleIds = articleTags.map(tag => tag[1])
+      const individualBookmarks = await fetchIndividualBookmarks(eventIds, articleIds)
+      
       return {
         id: event.id,
         title: title,
@@ -154,9 +250,10 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         parsedContent: parsedContent,
         // Add metadata about the bookmark list
         bookmarkCount: eventTags.length + articleTags.length + urlTags.length,
-        eventReferences: eventTags.map(tag => tag[1]),
-        articleReferences: articleTags.map(tag => tag[1]),
-        urlReferences: urlTags.map(tag => tag[1])
+        eventReferences: eventIds,
+        articleReferences: articleIds,
+        urlReferences: urlTags.map(tag => tag[1]),
+        individualBookmarks: individualBookmarks
       }
     } catch (error) {
       console.error('Error parsing bookmark event:', error)
@@ -225,6 +322,34 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         {parsedContent.children.map((node: ParsedNode, index: number) => 
           renderNode(node, index)
         )}
+      </div>
+    )
+  }
+
+  // Component to render individual bookmarks
+  const renderIndividualBookmark = (bookmark: IndividualBookmark, index: number) => {
+    return (
+      <div key={`${bookmark.id}-${index}`} className="individual-bookmark">
+        <div className="bookmark-header">
+          <span className="bookmark-type">{bookmark.type}</span>
+          <span className="bookmark-id">{bookmark.id.slice(0, 8)}...{bookmark.id.slice(-8)}</span>
+          <span className="bookmark-date">{formatDate(bookmark.created_at)}</span>
+        </div>
+        
+        {bookmark.parsedContent ? (
+          <div className="bookmark-content">
+            {renderParsedContent(bookmark.parsedContent)}
+          </div>
+        ) : bookmark.content && (
+          <div className="bookmark-content">
+            <p>{bookmark.content}</p>
+          </div>
+        )}
+        
+        <div className="bookmark-meta">
+          <span>Kind: {bookmark.kind}</span>
+          <span>Author: {bookmark.pubkey.slice(0, 8)}...{bookmark.pubkey.slice(-8)}</span>
+        </div>
       </div>
     )
   }
@@ -305,7 +430,17 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
                   ))}
                 </div>
               )}
-              {bookmark.eventReferences && bookmark.eventReferences.length > 0 && (
+              {bookmark.individualBookmarks && bookmark.individualBookmarks.length > 0 && (
+                <div className="individual-bookmarks">
+                  <h4>Individual Bookmarks ({bookmark.individualBookmarks.length}):</h4>
+                  <div className="bookmarks-grid">
+                    {bookmark.individualBookmarks.map((individualBookmark, index) => 
+                      renderIndividualBookmark(individualBookmark, index)
+                    )}
+                  </div>
+                </div>
+              )}
+              {bookmark.eventReferences && bookmark.eventReferences.length > 0 && bookmark.individualBookmarks?.length === 0 && (
                 <div className="bookmark-events">
                   <h4>Event References ({bookmark.eventReferences.length}):</h4>
                   <div className="event-ids">
