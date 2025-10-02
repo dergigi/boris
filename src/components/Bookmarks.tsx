@@ -78,7 +78,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
 
     try {
       setLoading(true)
-      console.log('Fetching bookmark list for pubkey:', activeAccount.pubkey)
+      console.log('🚀 NEW VERSION: Fetching bookmark list for pubkey:', activeAccount.pubkey)
       
       // Get relay URLs from the pool
       const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
