@@ -90,12 +90,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       return profile.nip05
     }
 
-    // Show loading state while profile is being fetched
-    if (profile === undefined) {
-      return 'Loading profile...'
-    }
-
-    // Fallback to formatted public key
+    // Fallback to formatted public key to avoid sticky loading text
     return `${activeAccount.pubkey.slice(0, 8)}...${activeAccount.pubkey.slice(-8)}`
   }
 

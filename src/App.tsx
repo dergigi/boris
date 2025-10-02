@@ -39,7 +39,14 @@ function App() {
     console.log('Relay URLs:', relayUrls)
     
     // Attach address/replaceable loaders so ProfileModel can fetch profiles
-    const addressLoader = createAddressLoader(pool, { eventStore: store })
+    const addressLoader = createAddressLoader(pool, {
+      eventStore: store,
+      lookupRelays: [
+        'wss://purplepag.es',
+        'wss://relay.primal.net',
+        'wss://relay.nostr.band'
+      ]
+    })
     store.addressableLoader = addressLoader
     store.replaceableLoader = addressLoader
 
