@@ -74,7 +74,11 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   }, [relayPool, activeAccount?.pubkey]) // Only depend on pubkey, not the entire activeAccount object
 
   const fetchBookmarks = async () => {
-    if (!relayPool || !activeAccount || loading) return
+    console.log('🔍 fetchBookmarks called, loading:', loading)
+    if (!relayPool || !activeAccount || loading) {
+      console.log('🔍 fetchBookmarks early return - relayPool:', !!relayPool, 'activeAccount:', !!activeAccount, 'loading:', loading)
+      return
+    }
 
     try {
       setLoading(true)
