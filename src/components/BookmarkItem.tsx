@@ -99,13 +99,14 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
             </div>
           ))}
           {extractedUrls.length > 3 && (
-            <IconButton
-              icon={urlsExpanded ? faChevronUp : faChevronDown}
-              ariaLabel={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
-              title={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
+            <button
+              className="expand-toggle"
               onClick={() => setUrlsExpanded(v => !v)}
-              size={32}
-            />
+              aria-label={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
+              title={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
+            >
+              <FontAwesomeIcon icon={urlsExpanded ? faChevronUp : faChevronDown} />
+            </button>
           )}
         </div>
       )}
@@ -123,33 +124,33 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       )}
 
       {contentLength > 210 && (
-        <IconButton
-          icon={expanded ? faChevronUp : faChevronDown}
-          ariaLabel={expanded ? 'Collapse' : 'Expand'}
-          title={expanded ? 'Collapse' : 'Expand'}
+        <button
+          className="expand-toggle"
           onClick={() => setExpanded(v => !v)}
-          size={32}
-        />
+          aria-label={expanded ? 'Collapse' : 'Expand'}
+          title={expanded ? 'Collapse' : 'Expand'}
+        >
+          <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} />
+        </button>
       )}
       
       <div className="bookmark-meta">
         {eventNevent ? (
-          <IconButton
-            icon={getKindIcon(bookmark.kind)}
-            ariaLabel="Open event in search"
-            title="Open event in search"
+          <a
             href={`https://search.dergigi.com/e/${eventNevent}`}
-            variant="ghost"
-            size={32}
-          />
+            target="_blank"
+            rel="noopener noreferrer"
+            className="kind-icon-link"
+            title="Open event in search"
+          >
+            <span className="kind-icon">
+              <FontAwesomeIcon icon={getKindIcon(bookmark.kind)} />
+            </span>
+          </a>
         ) : (
-          <IconButton
-            icon={getKindIcon(bookmark.kind)}
-            ariaLabel="Event kind"
-            title="Event kind"
-            variant="ghost"
-            size={32}
-          />
+          <span className="kind-icon">
+            <FontAwesomeIcon icon={getKindIcon(bookmark.kind)} />
+          </span>
         )}
         <span>
           <a

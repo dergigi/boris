@@ -542,11 +542,16 @@ body {
 }
 
 .expand-toggle {
-  margin-top: 0.25rem;
+  margin: 0.25rem 0;
   background: transparent;
   border: none;
   color: #888;
   cursor: pointer;
+  width: 100%;
+  height: 22px; /* half of default icon button */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .expand-toggle:hover {
