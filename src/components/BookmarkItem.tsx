@@ -141,7 +141,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
           <FontAwesomeIcon icon={getKindIcon(bookmark.kind)} />
         </span>
         <span>
-          Author: {getAuthorDisplayName()}
+          by: {getAuthorDisplayName()}
         </span>
       </div>
 
