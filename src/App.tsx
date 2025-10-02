@@ -8,6 +8,7 @@ function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userPublicKey, setUserPublicKey] = useState<string | null>(null)
+  const [userProfile, setUserProfile] = useState<{name?: string, username?: string, nip05?: string} | null>(null)
 
   useEffect(() => {
     // Initialize event store
@@ -28,16 +29,19 @@ function App() {
         </header>
         
         {!isAuthenticated ? (
-          <Login onLogin={(publicKey) => {
+          <Login onLogin={(publicKey, profile) => {
             setIsAuthenticated(true)
             setUserPublicKey(publicKey)
+            setUserProfile(profile)
           }} />
         ) : (
           <Bookmarks 
             userPublicKey={userPublicKey}
+            userProfile={userProfile}
             onLogout={() => {
               setIsAuthenticated(false)
               setUserPublicKey(null)
+              setUserProfile(null)
             }} 
           />
         )}

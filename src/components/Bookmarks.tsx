@@ -11,12 +11,19 @@ interface Bookmark {
   tags: string[][]
 }
 
+interface UserProfile {
+  name?: string
+  username?: string
+  nip05?: string
+}
+
 interface BookmarksProps {
   userPublicKey: string | null
+  userProfile: UserProfile | null
   onLogout: () => void
 }
 
-const Bookmarks: React.FC<BookmarksProps> = ({ userPublicKey, onLogout }) => {
+const Bookmarks: React.FC<BookmarksProps> = ({ userPublicKey, userProfile, onLogout }) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [loading, setLoading] = useState(true)
   const eventStore = useContext(EventStoreContext)
@@ -104,8 +111,23 @@ const Bookmarks: React.FC<BookmarksProps> = ({ userPublicKey, onLogout }) => {
     return new Date(timestamp * 1000).toLocaleDateString()
   }
 
-  const formatPublicKey = (publicKey: string) => {
-    return `${publicKey.slice(0, 8)}...${publicKey.slice(-8)}`
+  const formatUserDisplay = (profile: UserProfile | null, publicKey: string | null) => {
+    if (!profile || (!profile.name && !profile.username && !profile.nip05)) {
+      return publicKey ? `${publicKey.slice(0, 8)}...${publicKey.slice(-8)}` : 'Unknown User'
+    }
+    
+    // Priority: NIP-05 > name > username
+    if (profile.nip05) {
+      return profile.nip05
+    }
+    if (profile.name) {
+      return profile.name
+    }
+    if (profile.username) {
+      return `@${profile.username}`
+    }
+    
+    return publicKey ? `${publicKey.slice(0, 8)}...${publicKey.slice(-8)}` : 'Unknown User'
   }
 
   if (loading) {
@@ -115,7 +137,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ userPublicKey, onLogout }) => {
           <div>
             <h2>Your Bookmarks</h2>
             {userPublicKey && (
-              <p className="user-info">Logged in as: {formatPublicKey(userPublicKey)}</p>
+              <p className="user-info">Logged in as: {formatUserDisplay(userProfile, userPublicKey)}</p>
             )}
           </div>
           <button onClick={onLogout} className="logout-button">
@@ -133,7 +155,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ userPublicKey, onLogout }) => {
         <div>
           <h2>Your Bookmarks ({bookmarks.length})</h2>
           {userPublicKey && (
-            <p className="user-info">Logged in as: {formatPublicKey(userPublicKey)}</p>
+            <p className="user-info">Logged in as: {formatUserDisplay(userProfile, userPublicKey)}</p>
           )}
         </div>
         <button onClick={onLogout} className="logout-button">
