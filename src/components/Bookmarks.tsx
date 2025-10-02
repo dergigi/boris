@@ -75,6 +75,10 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const formatUserDisplay = () => {
     if (!activeAccount) return 'Unknown User'
 
+    // Debug profile loading
+    console.log('Profile data:', profile)
+    console.log('Active account pubkey:', activeAccount.pubkey)
+
     // Use profile data from ProfileModel if available
     if (profile?.name) {
       return profile.name
@@ -84,6 +88,11 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
     if (profile?.nip05) {
       return profile.nip05
+    }
+
+    // Show loading state while profile is being fetched
+    if (profile === undefined) {
+      return 'Loading profile...'
     }
 
     // Fallback to formatted public key
