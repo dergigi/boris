@@ -24,6 +24,18 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   
   // Extract URLs from bookmark content
   const extractedUrls = extractUrlsFromContent(bookmark.content)
+  const hasUrls = extractedUrls.length > 0
+
+  const handleReadNow = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (!hasUrls) return
+    const firstUrl = extractedUrls[0]
+    if (onSelectUrl) {
+      event.preventDefault()
+      onSelectUrl(firstUrl)
+    } else {
+      window.open(firstUrl, '_blank')
+    }
+  }
 
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
@@ -84,6 +96,14 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
           </button>
         </span>
       </div>
+
+      {hasUrls && (
+        <div className="read-now">
+          <button className="read-now-button" onClick={handleReadNow}>
+            READ NOW
+          </button>
+        </div>
+      )}
     </div>
   )
 }

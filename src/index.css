@@ -443,6 +443,32 @@ body {
   font-family: monospace;
 }
 
+.read-now {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.read-now-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.read-now-button:hover {
+  background: #218838;
+}
+
+.read-now-button:active {
+  transform: translateY(1px);
+}
+
 /* Private Bookmark Styles */
 .private-bookmark {
   border-left: 4px solid #ff6b6b;
