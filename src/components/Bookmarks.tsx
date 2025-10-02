@@ -74,87 +74,112 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   }, [relayPool, activeAccount?.pubkey]) // Only depend on pubkey, not the entire activeAccount object
 
   const fetchBookmarks = async () => {
-    if (!relayPool || !activeAccount || loading) return // Prevent multiple simultaneous fetches
+    if (!relayPool || !activeAccount || loading) return
 
     try {
       setLoading(true)
-      console.log('Fetching bookmarks for pubkey:', activeAccount.pubkey)
-      console.log('Starting bookmark fetch for:', activeAccount.pubkey.slice(0, 8) + '...')
-      
-      // Use applesauce relay pool to fetch bookmark events (kind 10003)
-      // This follows the proper applesauce pattern from the documentation
-      
-      // Create a filter for bookmark events (kind 10003) for the specific pubkey
-      const filter: Filter = {
-        kinds: [10003],
-        authors: [activeAccount.pubkey]
-      }
-      
-      // Also try a broader filter to see if we can get any events
-      const testFilter: Filter = {
-        authors: [activeAccount.pubkey],
-        limit: 5
-      }
-      
-      console.log('Testing with broader filter first...')
-      const testEvents = await lastValueFrom(
-        relayPool.req(relayUrls, testFilter).pipe(
-          completeOnEose(),
-          takeUntil(timer(5000)),
-          toArray(),
-        )
-      )
-      console.log('Test events found:', testEvents.length, 'kinds:', testEvents.map(e => e.kind))
+      console.log('Fetching bookmark list for pubkey:', activeAccount.pubkey)
       
       // Get relay URLs from the pool
-      console.log('Querying relay pool with filter:', filter)
-      console.log('Using relays:', relayUrls)
+      const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
       
-      // Use the proper applesauce pattern with req() method
-      const events = await lastValueFrom(
-        relayPool.req(relayUrls, filter).pipe(
-          // Complete when EOSE is received
+      // Step 1: Fetch the bookmark list event (kind 10003)
+      const bookmarkListFilter: Filter = {
+        kinds: [10003],
+        authors: [activeAccount.pubkey],
+        limit: 1 // Just get the most recent bookmark list
+      }
+      
+      console.log('Fetching bookmark list with filter:', bookmarkListFilter)
+      const bookmarkListEvents = await lastValueFrom(
+        relayPool.req(relayUrls, bookmarkListFilter).pipe(
           completeOnEose(),
-          // Timeout after 10 seconds
           takeUntil(timer(10000)),
-          // Collect all events into an array
           toArray(),
         )
       )
       
-      console.log('Received events:', events.length)
+      console.log('Found bookmark list events:', bookmarkListEvents.length)
       
-      // Deduplicate events by ID to prevent duplicates from multiple relays
-      const uniqueEvents = events.reduce((acc, event) => {
-        if (!acc.find(e => e.id === event.id)) {
-          acc.push(event)
-        }
-        return acc
-      }, [] as NostrEvent[])
-      
-      console.log('Unique events after deduplication:', uniqueEvents.length)
-      
-      // If no events found, set empty bookmarks and stop loading
-      if (uniqueEvents.length === 0) {
-        console.log('No bookmark events found')
+      if (bookmarkListEvents.length === 0) {
+        console.log('No bookmark list found')
         setBookmarks([])
         setLoading(false)
         return
       }
       
-      // Parse the events into bookmarks
-      const bookmarkList: Bookmark[] = []
-      for (const event of uniqueEvents) {
-        console.log('Processing bookmark event:', event)
-        const bookmarkData = await parseBookmarkEvent(event)
-        if (bookmarkData) {
-          bookmarkList.push(bookmarkData)
-          console.log('Parsed bookmark:', bookmarkData)
+      // Step 2: Extract event IDs from the bookmark list
+      const bookmarkListEvent = bookmarkListEvents[0]
+      const eventTags = bookmarkListEvent.tags.filter(tag => tag[0] === 'e')
+      const eventIds = eventTags.map(tag => tag[1])
+      
+      console.log('Found event IDs in bookmark list:', eventIds.length, eventIds)
+      
+      if (eventIds.length === 0) {
+        console.log('No event references found in bookmark list')
+        setBookmarks([])
+        setLoading(false)
+        return
+      }
+      
+      // Step 3: Fetch each individual event
+      console.log('Fetching individual events...')
+      const individualBookmarks: IndividualBookmark[] = []
+      
+      for (const eventId of eventIds) {
+        try {
+          console.log('Fetching event:', eventId)
+          const eventFilter: Filter = {
+            ids: [eventId]
+          }
+          
+          const events = await lastValueFrom(
+            relayPool.req(relayUrls, eventFilter).pipe(
+              completeOnEose(),
+              takeUntil(timer(5000)),
+              toArray(),
+            )
+          )
+          
+          if (events.length > 0) {
+            const event = events[0]
+            const parsedContent = event.content ? getParsedContent(event.content) as ParsedContent : undefined
+            
+            individualBookmarks.push({
+              id: event.id,
+              content: event.content,
+              created_at: event.created_at,
+              pubkey: event.pubkey,
+              kind: event.kind,
+              tags: event.tags,
+              parsedContent: parsedContent,
+              type: 'event'
+            })
+            console.log('Successfully fetched event:', event.id)
+          } else {
+            console.log('Event not found:', eventId)
+          }
+        } catch (error) {
+          console.error('Error fetching event:', eventId, error)
         }
       }
       
-      console.log('Bookmark fetch complete. Found:', bookmarkList.length, 'bookmarks')
-      setBookmarks(bookmarkList)
+      console.log('Fetched individual bookmarks:', individualBookmarks.length)
+      
+      // Create a single bookmark entry with all individual bookmarks
+      const bookmark: Bookmark = {
+        id: bookmarkListEvent.id,
+        title: bookmarkListEvent.content || `Bookmark List (${individualBookmarks.length} items)`,
+        url: '',
+        content: bookmarkListEvent.content,
+        created_at: bookmarkListEvent.created_at,
+        tags: bookmarkListEvent.tags,
+        bookmarkCount: individualBookmarks.length,
+        eventReferences: eventIds,
+        individualBookmarks: individualBookmarks
+      }
+      
+      setBookmarks([bookmark])
       setLoading(false)
 
     } catch (error) {
@@ -163,132 +188,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
   }
 
-  const fetchIndividualBookmarks = async (eventIds: string[], articleIds: string[]): Promise<IndividualBookmark[]> => {
-    if (!relayPool || (eventIds.length === 0 && articleIds.length === 0)) {
-      console.log('No individual bookmarks to fetch')
-      return []
-    }
-
-    try {
-      const allIds = [...eventIds, ...articleIds]
-      console.log('Fetching individual bookmarks for IDs:', allIds.length)
-      
-      // Create filters for both event IDs and article IDs
-      const eventFilters: Filter[] = []
-      
-      if (eventIds.length > 0) {
-        eventFilters.push({
-          ids: eventIds
-        })
-      }
-      
-      if (articleIds.length > 0) {
-        // For article IDs, we need to parse the kind and pubkey from the 'a' tag
-        const articleFilters = articleIds.map(articleId => {
-          const [kind, pubkey, identifier] = articleId.split(':')
-          return {
-            kinds: [parseInt(kind)],
-            authors: [pubkey],
-            '#d': [identifier]
-          }
-        })
-        eventFilters.push(...articleFilters)
-      }
-      
-      const allEvents: NostrEvent[] = []
-      
-      // Fetch events for each filter
-      for (const filter of eventFilters) {
-        console.log('Fetching with filter:', filter)
-        const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-        const events = await lastValueFrom(
-          relayPool.req(relayUrls, filter).pipe(
-            completeOnEose(),
-            takeUntil(timer(5000)), // Reduced timeout to 5 seconds
-            toArray(),
-          )
-        )
-        console.log('Fetched events for filter:', events.length)
-        allEvents.push(...events)
-      }
-      
-      // Deduplicate events
-      const uniqueEvents = allEvents.reduce((acc, event) => {
-        if (!acc.find(e => e.id === event.id)) {
-          acc.push(event)
-        }
-        return acc
-      }, [] as NostrEvent[])
-      
-      console.log('Fetched individual bookmarks:', uniqueEvents.length)
-      
-      // Convert to IndividualBookmark format
-      return uniqueEvents.map(event => {
-        const parsedContent = event.content ? getParsedContent(event.content) as ParsedContent : undefined
-        const isArticle = articleIds.includes(event.id) || event.tags.some(tag => tag[0] === 'a')
-        
-        return {
-          id: event.id,
-          content: event.content,
-          created_at: event.created_at,
-          pubkey: event.pubkey,
-          kind: event.kind,
-          tags: event.tags,
-          parsedContent: parsedContent,
-          type: isArticle ? 'article' : 'event'
-        }
-      })
-    } catch (error) {
-      console.error('Error fetching individual bookmarks:', error)
-      return []
-    }
-  }
-
-  const parseBookmarkEvent = async (event: NostrEvent): Promise<Bookmark | null> => {
-    try {
-      // According to NIP-51, bookmark lists (kind 10003) contain:
-      // - "e" tags for event references (the actual bookmarks)
-      // - "a" tags for article references
-      // - "r" tags for URL references
-      
-      const eventTags = event.tags.filter((tag: string[]) => tag[0] === 'e')
-      const articleTags = event.tags.filter((tag: string[]) => tag[0] === 'a')
-      const urlTags = event.tags.filter((tag: string[]) => tag[0] === 'r')
-      
-      // Use applesauce-content to parse the content properly
-      const parsedContent = event.content ? getParsedContent(event.content) as ParsedContent : undefined
-      
-      // Get the title from content or use a default
-      const title = event.content || `Bookmark List (${eventTags.length + articleTags.length + urlTags.length} items)`
-      
-      // For now, skip individual bookmark fetching to test basic functionality
-      // TODO: Re-enable individual bookmark fetching once basic flow works
-      const eventIds = eventTags.map(tag => tag[1])
-      const articleIds = articleTags.map(tag => tag[1])
-      console.log('Would fetch individual bookmarks for eventIds:', eventIds.length, 'articleIds:', articleIds.length)
-      const individualBookmarks: IndividualBookmark[] = [] // Temporarily disabled
-      console.log('Individual bookmarks disabled for now:', individualBookmarks.length)
-      
-      return {
-        id: event.id,
-        title: title,
-        url: '', // Bookmark lists don't have a single URL
-        content: event.content,
-        created_at: event.created_at,
-        tags: event.tags,
-        parsedContent: parsedContent,
-        // Add metadata about the bookmark list
-        bookmarkCount: eventTags.length + articleTags.length + urlTags.length,
-        eventReferences: eventIds,
-        articleReferences: articleIds,
-        urlReferences: urlTags.map(tag => tag[1]),
-        individualBookmarks: individualBookmarks
-      }
-    } catch (error) {
-      console.error('Error parsing bookmark event:', error)
-      return null
-    }
-  }
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString()
