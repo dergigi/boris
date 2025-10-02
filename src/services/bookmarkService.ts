@@ -275,10 +275,15 @@ export const fetchBookmarks = async (
             console.log('✅ Successfully decrypted content manually')
             // Parse the decrypted content as JSON (should be array of tags)
             try {
-              const hiddenTags = JSON.parse(decryptedContent)
+              const hiddenTags = JSON.parse(decryptedContent) as string[][]
               console.log('📋 Decrypted hidden tags:', hiddenTags.length, 'tags')
-              // Cache so applesauce can read hidden tags downstream
-              Reflect.set(evt, BookmarkHiddenSymbol, hiddenTags)
+
+              // Turn tags into Bookmarks using applesauce helper, then add to private list immediately
+              const manualPrivate = Helpers.parseBookmarkTags(hiddenTags as any)
+              privateItemsAll.push(...processApplesauceBookmarks(manualPrivate, activeAccount, true))
+
+              // Cache on event for any downstream consumers/debugging
+              Reflect.set(evt, BookmarkHiddenSymbol, manualPrivate)
               Reflect.set(evt, 'EncryptedContentSymbol', decryptedContent)
               if (!latestContent) { latestContent = decryptedContent }
             } catch (parseError) {
