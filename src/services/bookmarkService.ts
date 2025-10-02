@@ -82,6 +82,7 @@ const processApplesauceBookmarks = (
 }
 
 
+
 export const fetchBookmarks = async (
   relayPool: RelayPool,
   activeAccount: AccountWithExtension, // Full account object with extension capabilities
@@ -120,16 +121,6 @@ export const fetchBookmarks = async (
     
     console.log('Public bookmarks:', publicBookmarks)
     console.log('Private bookmarks:', privateBookmarks)
-    
-    // Debug the bookmark list event content
-    console.log('Bookmark list content:', bookmarkListEvent.content)
-    console.log('Bookmark list content type:', typeof bookmarkListEvent.content)
-    console.log('Has encrypted content:', bookmarkListEvent.content && bookmarkListEvent.content.includes(':'))
-    console.log('Account type:', typeof activeAccount)
-    console.log('Account has decrypt method:', typeof activeAccount.decrypt)
-    console.log('Account signer:', activeAccount.signer)
-    console.log('Account signer type:', typeof activeAccount.signer)
-    console.log('Account signer decrypt method:', typeof activeAccount.signer?.decrypt)
     
     
     // Process bookmarks using DRY helper function
