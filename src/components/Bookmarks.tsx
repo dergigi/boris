@@ -11,6 +11,10 @@ interface Bookmark {
   content: string
   created_at: number
   tags: string[][]
+  bookmarkCount?: number
+  eventReferences?: string[]
+  articleReferences?: string[]
+  urlReferences?: string[]
 }
 
 interface BookmarksProps {
@@ -87,37 +91,31 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
 
   const parseBookmarkEvent = (event: NostrEvent): Bookmark | null => {
     try {
-      // Parse the event content as JSON (bookmark list)
-      const content = JSON.parse(event.content || '{}')
+      // According to NIP-51, bookmark lists (kind 10003) contain:
+      // - "e" tags for event references (the actual bookmarks)
+      // - "a" tags for article references
+      // - "r" tags for URL references
       
-      if (content.bookmarks && Array.isArray(content.bookmarks)) {
-        // Handle bookmark list format
-        return {
-          id: event.id,
-          title: content.name || 'Untitled Bookmark List',
-          url: '',
-          content: event.content,
-          created_at: event.created_at,
-          tags: event.tags
-        }
-      }
-
-      // Handle individual bookmark entries
-      const urlTag = event.tags.find((tag: string[]) => tag[0] === 'r' && tag[1])
-      const titleTag = event.tags.find((tag: string[]) => tag[0] === 'title' && tag[1])
+      const eventTags = event.tags.filter((tag: string[]) => tag[0] === 'e')
+      const articleTags = event.tags.filter((tag: string[]) => tag[0] === 'a')
+      const urlTags = event.tags.filter((tag: string[]) => tag[0] === 'r')
       
-      if (urlTag) {
-        return {
-          id: event.id,
-          title: titleTag?.[1] || 'Untitled',
-          url: urlTag[1],
-          content: event.content,
-          created_at: event.created_at,
-          tags: event.tags
-        }
+      // Get the title from content or use a default
+      const title = event.content || `Bookmark List (${eventTags.length + articleTags.length + urlTags.length} items)`
+      
+      return {
+        id: event.id,
+        title: title,
+        url: '', // Bookmark lists don't have a single URL
+        content: event.content,
+        created_at: event.created_at,
+        tags: event.tags,
+        // Add metadata about the bookmark list
+        bookmarkCount: eventTags.length + articleTags.length + urlTags.length,
+        eventReferences: eventTags.map(tag => tag[1]),
+        articleReferences: articleTags.map(tag => tag[1]),
+        urlReferences: urlTags.map(tag => tag[1])
       }
-
-      return null
     } catch (error) {
       console.error('Error parsing bookmark event:', error)
       return null
@@ -189,21 +187,41 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
           {bookmarks.map((bookmark) => (
             <div key={bookmark.id} className="bookmark-item">
               <h3>{bookmark.title}</h3>
-              {bookmark.url && (
-                <a 
-                  href={bookmark.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="bookmark-url"
-                >
-                  {bookmark.url}
-                </a>
+              {bookmark.bookmarkCount && (
+                <p className="bookmark-count">
+                  {bookmark.bookmarkCount} bookmarks in this list
+                </p>
+              )}
+              {bookmark.urlReferences && bookmark.urlReferences.length > 0 && (
+                <div className="bookmark-urls">
+                  <h4>URLs:</h4>
+                  {bookmark.urlReferences.map((url, index) => (
+                    <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="bookmark-url">
+                      {url}
+                    </a>
+                  ))}
+                </div>
+              )}
+              {bookmark.eventReferences && bookmark.eventReferences.length > 0 && (
+                <div className="bookmark-events">
+                  <h4>Event References ({bookmark.eventReferences.length}):</h4>
+                  <div className="event-ids">
+                    {bookmark.eventReferences.slice(0, 3).map((eventId, index) => (
+                      <span key={index} className="event-id">
+                        {eventId.slice(0, 8)}...{eventId.slice(-8)}
+                      </span>
+                    ))}
+                    {bookmark.eventReferences.length > 3 && (
+                      <span className="more-events">... and {bookmark.eventReferences.length - 3} more</span>
+                    )}
+                  </div>
+                </div>
               )}
               {bookmark.content && (
                 <p className="bookmark-content">{bookmark.content}</p>
               )}
               <div className="bookmark-meta">
-                <span>Added: {formatDate(bookmark.created_at)}</span>
+                <span>Created: {formatDate(bookmark.created_at)}</span>
               </div>
             </div>
           ))}

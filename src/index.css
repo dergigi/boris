@@ -122,6 +122,65 @@ body {
   font-family: monospace;
 }
 
+.bookmark-count {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+
+.bookmark-urls {
+  margin: 1rem 0;
+}
+
+.bookmark-urls h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.bookmark-url {
+  display: block;
+  margin: 0.25rem 0;
+  color: #007bff;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.bookmark-url:hover {
+  text-decoration: underline;
+}
+
+.bookmark-events {
+  margin: 1rem 0;
+}
+
+.bookmark-events h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.event-ids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.event-id {
+  background: #f5f5f5;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.more-events {
+  color: #999;
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
 .logout-button {
   background: #dc3545;
   color: white;
