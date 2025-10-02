@@ -8,9 +8,10 @@ import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 interface BookmarkItemProps {
   bookmark: IndividualBookmark
   index: number
+  onSelectUrl?: (url: string) => void
 }
 
-export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index }) => {
+export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onSelectUrl }) => {
   const copy = async (text: string) => {
     try { 
       await navigator.clipboard.writeText(text) 
@@ -50,7 +51,14 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index }) =
         <div className="bookmark-urls">
           <h4>URLs:</h4>
           {extractedUrls.map((url, urlIndex) => (
-            <a key={urlIndex} href={url} target="_blank" rel="noopener noreferrer" className="bookmark-url">
+            <a
+              key={urlIndex}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bookmark-url"
+              onClick={(e) => { if (onSelectUrl) { e.preventDefault(); onSelectUrl(url) } }}
+            >
               {url}
             </a>
           ))}
