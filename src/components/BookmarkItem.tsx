@@ -25,7 +25,7 @@ import {
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { IndividualBookmark } from '../types/bookmarks'
-import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
+import { formatDate, renderParsedContent, ContentWithResolvedProfiles } from '../utils/bookmarkUtils'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 
 interface BookmarkItemProps {
@@ -142,9 +142,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
           {renderParsedContent(bookmark.parsedContent)}
         </div>
       ) : bookmark.content && (
-        <div className="bookmark-content">
-          <p>{bookmark.content}</p>
-        </div>
+        <ContentWithResolvedProfiles content={bookmark.content} />
       )}
       
       <div className="bookmark-meta">
