@@ -24,7 +24,8 @@ function App() {
       'wss://nos.lol',
       'wss://relay.snort.social',
       'wss://relay.nostr.band',
-      'wss://relay.dergigi.com'
+      'wss://relay.dergigi.com',
+      'wss://wot.dergigi.com'
     ]
     
     // Create a relay group for better event deduplication and management
