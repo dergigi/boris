@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Hooks } from 'applesauce-react'
+import { useEventModel } from 'applesauce-react/hooks'
+import { Models } from 'applesauce-core'
 import { NostrEvent } from 'nostr-tools'
 
 interface Bookmark {
@@ -26,6 +28,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [loading, setLoading] = useState(true)
   const activeAccount = Hooks.useActiveAccount()
+  
+  // Use ProfileModel to get user profile information
+  const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
 
   useEffect(() => {
     if (addressLoader && activeAccount) {
@@ -125,9 +130,19 @@ const Bookmarks: React.FC<BookmarksProps> = ({ addressLoader, onLogout }) => {
 
   const formatUserDisplay = () => {
     if (!activeAccount) return 'Unknown User'
-    
-    // For now, just show the formatted public key
-    // TODO: Implement profile fetching through applesauce system
+
+    // Use profile data from ProfileModel if available
+    if (profile?.name) {
+      return profile.name
+    }
+    if (profile?.display_name) {
+      return profile.display_name
+    }
+    if (profile?.nip05) {
+      return profile.nip05
+    }
+
+    // Fallback to formatted public key
     return `${activeAccount.pubkey.slice(0, 8)}...${activeAccount.pubkey.slice(-8)}`
   }
 
