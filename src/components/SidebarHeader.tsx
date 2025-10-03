@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faRightFromBracket, faUser } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faUser } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -37,7 +37,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
         title="Collapse bookmarks sidebar"
         aria-label="Collapse bookmarks sidebar"
       >
-        <FontAwesomeIcon icon={faChevronLeft} />
+        <FontAwesomeIcon icon={faChevronRight} />
       </button>
       <div className="profile-avatar" title={getUserDisplayName()}>
         {profileImage ? (
