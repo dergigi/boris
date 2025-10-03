@@ -1,10 +1,8 @@
-import RelativeTime from 'relative-time'
-
-const relativeTime = new RelativeTime()
+import { formatDistanceToNow } from 'date-fns'
 
 export const formatDate = (timestamp: number): string => {
   const date = new Date(timestamp * 1000)
-  return relativeTime.from(date)
+  return formatDistanceToNow(date, { addSuffix: true })
 }
 
 // Extract pubkeys from nprofile strings in content
