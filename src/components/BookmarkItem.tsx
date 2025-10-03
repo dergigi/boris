@@ -79,9 +79,20 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
 
   // Compact view rendering
   if (viewMode === 'compact') {
+    const handleCompactClick = () => {
+      if (hasUrls && onSelectUrl) {
+        onSelectUrl(extractedUrls[0])
+      }
+    }
+
     return (
       <div key={`${bookmark.id}-${index}`} className={`individual-bookmark compact ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
-        <div className="compact-row">
+        <div 
+          className={`compact-row ${hasUrls ? 'clickable' : ''}`}
+          onClick={handleCompactClick}
+          role={hasUrls ? 'button' : undefined}
+          tabIndex={hasUrls ? 0 : undefined}
+        >
           <span className="bookmark-type-compact">
             {bookmark.isPrivate ? (
               <>
@@ -101,7 +112,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
           {hasUrls && (
             <button
               className="compact-read-btn"
-              onClick={(e) => { e.preventDefault(); onSelectUrl?.(extractedUrls[0]) }}
+              onClick={(e) => { e.stopPropagation(); onSelectUrl?.(extractedUrls[0]) }}
               title={firstUrlClassification?.buttonText}
             >
               <FontAwesomeIcon icon={getIconForUrlType(extractedUrls[0])} />

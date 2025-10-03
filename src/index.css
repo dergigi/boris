@@ -643,6 +643,14 @@ body {
   height: 28px;
 }
 
+.compact-row.clickable {
+  cursor: pointer;
+}
+
+.compact-row.clickable:active {
+  opacity: 0.8;
+}
+
 .bookmark-type-compact {
   display: flex;
   align-items: center;
