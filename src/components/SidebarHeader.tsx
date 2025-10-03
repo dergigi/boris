@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faRightFromBracket, faUser } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -15,21 +15,19 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
   const activeAccount = Hooks.useActiveAccount()
   const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
 
-  const formatUserDisplay = () => {
+  const getProfileImage = () => {
+    return profile?.picture || null
+  }
+
+  const getUserDisplayName = () => {
     if (!activeAccount) return 'Unknown User'
-
-    if (profile?.name) {
-      return profile.name
-    }
-    if (profile?.display_name) {
-      return profile.display_name
-    }
-    if (profile?.nip05) {
-      return profile.nip05
-    }
-
+    if (profile?.name) return profile.name
+    if (profile?.display_name) return profile.display_name
+    if (profile?.nip05) return profile.nip05
     return `${activeAccount.pubkey.slice(0, 8)}...${activeAccount.pubkey.slice(-8)}`
   }
+
+  const profileImage = getProfileImage()
 
   return (
     <div className="sidebar-header-bar">
@@ -41,7 +39,13 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
       >
         <FontAwesomeIcon icon={faChevronLeft} />
       </button>
-      <p className="user-info">Logged in as: {formatUserDisplay()}</p>
+      <div className="profile-avatar" title={getUserDisplayName()}>
+        {profileImage ? (
+          <img src={profileImage} alt={getUserDisplayName()} />
+        ) : (
+          <FontAwesomeIcon icon={faUser} />
+        )}
+      </div>
       <IconButton
         icon={faRightFromBracket}
         onClick={onLogout}
