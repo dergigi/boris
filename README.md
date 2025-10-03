@@ -4,9 +4,16 @@ A minimal nostr client for bookmark management, built with [applesauce](https://
 
 ## Features
 
-- **Nostr Authentication**: Connect using your nostr account
+- **Nostr Authentication**: Connect using your nostr account via browser extension
 - **Bookmark Display**: View your nostr bookmarks as per [NIP-51](https://github.com/nostr-protocol/nips/blob/master/51.md)
-- **Minimal UI**: Clean, simple interface focused on bookmark management
+- **Content Classification**: Automatically detect and classify URLs (articles, videos, YouTube, images)
+- **Reader Mode**: View article content inline with readable formatting
+- **Collapsible Sidebar**: Expand/collapse bookmark list for focused reading
+- **Profile Integration**: Display user profile images using applesauce ProfileModel
+- **Relative Timestamps**: Human-friendly time display (e.g., "2 hours ago")
+- **Event Links**: Quick access to view bookmarks on search.dergigi.com
+- **Private Bookmarks**: Support for Amethyst-style hidden/encrypted bookmarks
+- **Minimal UI**: Clean, modern interface focused on bookmark management
 
 ## Getting Started
 
@@ -63,11 +70,32 @@ yarn dev
 ```
 src/
 ├── components/
-│   ├── Login.tsx      # Authentication component
-│   └── Bookmarks.tsx  # Bookmark display component
-├── App.tsx            # Main application component
-├── main.tsx           # Application entry point
-└── index.css          # Global styles
+│   ├── Login.tsx                        # Authentication component
+│   ├── Bookmarks.tsx                    # Main bookmarks view with layout
+│   ├── BookmarkList.tsx                 # Bookmark list sidebar
+│   ├── BookmarkItem.tsx                 # Individual bookmark card
+│   ├── SidebarHeader.tsx                # Header bar with collapse, profile, logout
+│   ├── ContentPanel.tsx                 # Content viewer panel
+│   ├── IconButton.tsx                   # Reusable icon button component
+│   ├── ContentWithResolvedProfiles.tsx  # Profile mention resolver
+│   ├── ResolvedMention.tsx              # Nostr mention component
+│   └── kindIcon.ts                      # Kind-specific icon mapping
+├── services/
+│   ├── bookmarkService.ts               # Main bookmark fetching orchestration
+│   ├── bookmarkProcessing.ts            # Decryption and processing pipeline
+│   ├── bookmarkHelpers.ts               # Shared types, guards, and utilities
+│   ├── bookmarkEvents.ts                # Event type handling and deduplication
+│   └── readerService.ts                 # Content extraction via reader API
+├── types/
+│   ├── bookmarks.ts                     # Bookmark type definitions
+│   ├── nostr.d.ts                       # Nostr type augmentations
+│   └── relative-time.d.ts               # relative-time package types
+├── utils/
+│   ├── bookmarkUtils.tsx                # Bookmark rendering utilities
+│   └── helpers.ts                       # General helper functions
+├── App.tsx                              # Main application component
+├── main.tsx                             # Application entry point
+└── index.css                            # Global styles
 ```
 
 ### Private (hidden) bookmarks (Amethyst-style)
@@ -108,15 +136,42 @@ pnpm build
 yarn build
 ```
 
+## TODO
+
+### High Priority
+- [ ] **Mobile Responsive Design**: Optimize sidebar and content panel for mobile devices
+- [ ] **Keyboard Shortcuts**: Add keyboard navigation (collapse sidebar, navigate bookmarks)
+- [ ] **Search & Filter**: Add ability to search bookmarks by title, URL, or content
+- [ ] **Error Handling**: Improve error states and retry logic for failed fetches
+- [ ] **Loading States**: Better skeleton screens and loading indicators
+
+### Medium Priority
+- [ ] **Bookmark Creation**: Add ability to create new bookmarks
+- [ ] **Bookmark Editing**: Edit existing bookmark metadata and tags
+- [ ] **Bookmark Deletion**: Remove bookmarks from lists
+- [ ] **Sorting Options**: Sort by date, title, kind, or custom order
+- [ ] **Bulk Actions**: Select and perform actions on multiple bookmarks
+- [ ] **Video Embeds**: Inline YouTube and video playback for video bookmarks
+
+### Nice to Have
+- [ ] **Dark/Light Mode Toggle**: User preference for color scheme
+- [ ] **Export Functionality**: Export bookmarks as JSON, CSV, or HTML
+- [ ] **Import Bookmarks**: Import from browser bookmarks or other formats
+- [ ] **Tags & Categories**: Better organization with custom tags
+- [ ] **Bookmark Collections**: Create and manage custom bookmark collections
+- [ ] **Offline Support**: Cache bookmarks for offline viewing
+- [ ] **Share Bookmarks**: Generate shareable links to bookmark lists
+- [ ] **Performance Optimization**: Virtual scrolling for large bookmark lists
+- [ ] **Browser Extension**: Quick bookmark saving from any page
+
 ## Contributing
 
-This is a minimal MVP. Future enhancements could include:
+Contributions are welcome! Please feel free to submit a Pull Request. Make sure to:
 
-- Bookmark creation and editing
-- Bookmark organization and tagging
-- Search functionality
-- Export capabilities
-- Mobile-responsive design improvements
+- Follow the existing code style
+- Keep files under 210 lines
+- Use conventional commits
+- Run linter and type checks before submitting
 
 ## License
 
