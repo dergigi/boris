@@ -1,5 +1,7 @@
 declare module 'relative-time' {
-  function relativeTime(date: Date): string
-  export default relativeTime
+  class RelativeTime {
+    from(date: Date): string
+  }
+  export default RelativeTime
 }
 

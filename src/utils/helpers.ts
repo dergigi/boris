@@ -1,8 +1,10 @@
-import relativeTime from 'relative-time'
+import RelativeTime from 'relative-time'
+
+const relativeTime = new RelativeTime()
 
 export const formatDate = (timestamp: number): string => {
   const date = new Date(timestamp * 1000)
-  return relativeTime(date)
+  return relativeTime.from(date)
 }
 
 // Extract pubkeys from nprofile strings in content
