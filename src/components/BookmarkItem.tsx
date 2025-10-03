@@ -12,7 +12,7 @@ import ContentWithResolvedProfiles from './ContentWithResolvedProfiles'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { classifyUrl } from '../utils/helpers'
 import { ViewMode } from './Bookmarks'
-import { getPreviewImage } from '../utils/imagePreview'
+import { getPreviewImage, fetchOgImage } from '../utils/imagePreview'
 
 interface BookmarkItemProps {
   bookmark: IndividualBookmark
@@ -24,6 +24,7 @@ interface BookmarkItemProps {
 export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onSelectUrl, viewMode = 'cards' }) => {
   const [expanded, setExpanded] = useState(false)
   const [urlsExpanded, setUrlsExpanded] = useState(false)
+  const [ogImage, setOgImage] = useState<string | null>(null)
   // removed copy-to-clipboard buttons
 
   const short = (v: string) => `${v.slice(0, 8)}...${v.slice(-8)}`
@@ -126,7 +127,15 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   // Large preview view rendering
   if (viewMode === 'large') {
     const firstUrl = hasUrls ? extractedUrls[0] : null
-    const previewImage = firstUrl ? getPreviewImage(firstUrl, firstUrlClassification?.type || '') : null
+    const instantPreview = firstUrl ? getPreviewImage(firstUrl, firstUrlClassification?.type || '') : null
+    const previewImage = instantPreview || ogImage
+    
+    // Fetch OG image for non-YouTube URLs
+    React.useEffect(() => {
+      if (firstUrl && !instantPreview && !ogImage) {
+        fetchOgImage(firstUrl).then(setOgImage)
+      }
+    }, [firstUrl, instantPreview, ogImage])
     
     return (
       <div key={`${bookmark.id}-${index}`} className={`individual-bookmark large ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
