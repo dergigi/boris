@@ -1,6 +1,6 @@
 {
   "name": "markr",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A minimal nostr client for bookmark management",
   "type": "module",
   "scripts": {
