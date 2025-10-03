@@ -32,6 +32,16 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   // Extract URLs from bookmark content
   const extractedUrls = extractUrlsFromContent(bookmark.content)
   const hasUrls = extractedUrls.length > 0
+  const firstUrl = hasUrls ? extractedUrls[0] : null
+  const firstUrlClassification = firstUrl ? classifyUrl(firstUrl) : null
+  
+  // Fetch OG image for large view (hook must be at top level)
+  const instantPreview = firstUrl ? getPreviewImage(firstUrl, firstUrlClassification?.type || '') : null
+  React.useEffect(() => {
+    if (viewMode === 'large' && firstUrl && !instantPreview && !ogImage) {
+      fetchOgImage(firstUrl).then(setOgImage)
+    }
+  }, [viewMode, firstUrl, instantPreview, ogImage])
   const contentLength = (bookmark.content || '').length
   const shouldTruncate = !expanded && contentLength > 210
 
@@ -74,9 +84,6 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       window.open(firstUrl, '_blank')
     }
   }
-
-  // Get classification for the first URL (for the main button)
-  const firstUrlClassification = hasUrls ? classifyUrl(extractedUrls[0]) : null
 
   // Compact view rendering
   if (viewMode === 'compact') {
@@ -126,16 +133,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
 
   // Large preview view rendering
   if (viewMode === 'large') {
-    const firstUrl = hasUrls ? extractedUrls[0] : null
-    const instantPreview = firstUrl ? getPreviewImage(firstUrl, firstUrlClassification?.type || '') : null
     const previewImage = instantPreview || ogImage
-    
-    // Fetch OG image for non-YouTube URLs
-    React.useEffect(() => {
-      if (firstUrl && !instantPreview && !ogImage) {
-        fetchOgImage(firstUrl).then(setOgImage)
-      }
-    }, [firstUrl, instantPreview, ogImage])
     
     return (
       <div key={`${bookmark.id}-${index}`} className={`individual-bookmark large ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
