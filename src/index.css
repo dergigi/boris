@@ -623,7 +623,7 @@ body {
 
 /* Compact view styles */
 .individual-bookmark.compact {
-  padding: 0.5rem 0.75rem;
+  padding: 0.4rem 0.75rem;
   background: transparent;
   border-bottom: 1px solid #333;
   border-radius: 0;
@@ -636,10 +636,11 @@ body {
   box-shadow: none;
 }
 
-.compact-header {
+.compact-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.75rem;
+  height: 28px;
 }
 
 .bookmark-type-compact {
@@ -647,51 +648,42 @@ body {
   align-items: center;
   gap: 0.25rem;
   color: #646cff;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   flex-shrink: 0;
-  padding-top: 0.25rem;
-}
-
-.compact-content {
-  flex: 1;
-  min-width: 0;
 }
 
 .compact-text {
+  flex: 1;
+  min-width: 0;
   color: #ccc;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.compact-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: space-between;
-}
-
 .bookmark-date-compact {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #666;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .compact-read-btn {
   background: #28a745;
   color: white;
   border: none;
-  padding: 0.25rem 0.5rem;
+  padding: 0;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  height: 24px;
+  width: 26px;
+  height: 22px;
+  flex-shrink: 0;
   transition: background-color 0.2s ease;
 }
 

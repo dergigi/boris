@@ -81,7 +81,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   if (viewMode === 'compact') {
     return (
       <div key={`${bookmark.id}-${index}`} className={`individual-bookmark compact ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
-        <div className="compact-header">
+        <div className="compact-row">
           <span className="bookmark-type-compact">
             {bookmark.isPrivate ? (
               <>
@@ -92,25 +92,21 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
               <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
             )}
           </span>
-          <div className="compact-content">
-            {bookmark.content && (
-              <div className="compact-text">
-                <ContentWithResolvedProfiles content={bookmark.content.slice(0, 100) + (bookmark.content.length > 100 ? '…' : '')} />
-              </div>
-            )}
-            <div className="compact-meta">
-              <span className="bookmark-date-compact">{formatDate(bookmark.created_at)}</span>
-              {hasUrls && (
-                <button
-                  className="compact-read-btn"
-                  onClick={(e) => { e.preventDefault(); onSelectUrl?.(extractedUrls[0]) }}
-                  title={firstUrlClassification?.buttonText}
-                >
-                  <FontAwesomeIcon icon={getIconForUrlType(extractedUrls[0])} />
-                </button>
-              )}
+          {bookmark.content && (
+            <div className="compact-text">
+              <ContentWithResolvedProfiles content={bookmark.content.slice(0, 60) + (bookmark.content.length > 60 ? '…' : '')} />
             </div>
-          </div>
+          )}
+          <span className="bookmark-date-compact">{formatDate(bookmark.created_at)}</span>
+          {hasUrls && (
+            <button
+              className="compact-read-btn"
+              onClick={(e) => { e.preventDefault(); onSelectUrl?.(extractedUrls[0]) }}
+              title={firstUrlClassification?.buttonText}
+            >
+              <FontAwesomeIcon icon={getIconForUrlType(extractedUrls[0])} />
+            </button>
+          )}
         </div>
       </div>
     )
