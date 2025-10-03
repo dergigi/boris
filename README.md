@@ -1,4 +1,4 @@
-# Markr
+# Boris
 
 A minimal nostr client for bookmark management, built with [applesauce](https://github.com/hzrd149/applesauce).
 
@@ -27,7 +27,7 @@ A minimal nostr client for bookmark management, built with [applesauce](https://
 1. Clone the repository:
 ```bash
 git clone <your-repo-url>
-cd markr
+cd boris
 ```
 
 2. Install dependencies:
