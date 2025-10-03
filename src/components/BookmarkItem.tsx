@@ -8,7 +8,6 @@ import { Models } from 'applesauce-core'
 import { npubEncode, neventEncode } from 'nostr-tools/nip19'
 import { IndividualBookmark } from '../types/bookmarks'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
-import { getKindIcon } from './kindIcon'
 import ContentWithResolvedProfiles from './ContentWithResolvedProfiles'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { classifyUrl } from '../utils/helpers'
@@ -138,13 +137,24 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
           )}
         </span>
         
-        <span className="bookmark-date">{formatDate(bookmark.created_at)}</span>
+        {eventNevent ? (
+          <a
+            href={`https://search.dergigi.com/e/${eventNevent}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bookmark-date-link"
+            title="Open event in search"
+          >
+            {formatDate(bookmark.created_at)}
+          </a>
+        ) : (
+          <span className="bookmark-date">{formatDate(bookmark.created_at)}</span>
+        )}
       </div>
       
       {extractedUrls.length > 0 && (
         <div className="bookmark-urls">
-          <h4>URLs:</h4>
-          {(urlsExpanded ? extractedUrls : extractedUrls.slice(0, 3)).map((url, urlIndex) => {
+          {(urlsExpanded ? extractedUrls : extractedUrls.slice(0, 1)).map((url, urlIndex) => {
             const classification = classifyUrl(url)
             return (
               <div key={urlIndex} className="url-row">
@@ -160,20 +170,20 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
                   ariaLabel={classification.buttonText}
                   title={classification.buttonText}
                   variant="success"
-                  size={36}
+                  size={32}
                   onClick={(e) => { e.preventDefault(); onSelectUrl?.(url) }}
                 />
               </div>
             )
           })}
-          {extractedUrls.length > 3 && (
+          {extractedUrls.length > 1 && (
             <button
-              className="expand-toggle"
+              className="expand-toggle-urls"
               onClick={() => setUrlsExpanded(v => !v)}
               aria-label={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
               title={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
             >
-              <FontAwesomeIcon icon={urlsExpanded ? faChevronUp : faChevronDown} />
+              {urlsExpanded ? `Hide ${extractedUrls.length - 1} more` : `Show ${extractedUrls.length - 1} more`}
             </button>
           )}
         </div>
@@ -202,44 +212,24 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
         </button>
       )}
       
-      <div className="bookmark-meta">
-        {eventNevent ? (
-          <a
-            href={`https://search.dergigi.com/e/${eventNevent}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="kind-icon-link"
-            title="Open event in search"
-          >
-            <span className="kind-icon">
-              <FontAwesomeIcon icon={getKindIcon(bookmark.kind)} />
-            </span>
-          </a>
-        ) : (
-          <span className="kind-icon">
-            <FontAwesomeIcon icon={getKindIcon(bookmark.kind)} />
-          </span>
-        )}
-        <span>
+      <div className="bookmark-footer">
+        <div className="bookmark-meta-minimal">
           <a
             href={`https://search.dergigi.com/p/${authorNpub}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="author-link"
+            className="author-link-minimal"
             title="Open author in search"
           >
-            by: {getAuthorDisplayName()}
+            {getAuthorDisplayName()}
           </a>
-        </span>
-      </div>
-
-      {hasUrls && firstUrlClassification && (
-        <div className="read-now">
-          <button className="read-now-button" onClick={handleReadNow}>
+        </div>
+        {hasUrls && firstUrlClassification && (
+          <button className="read-now-button-minimal" onClick={handleReadNow}>
             {firstUrlClassification.buttonText}
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
