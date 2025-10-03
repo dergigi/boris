@@ -6,7 +6,6 @@ import { RelayPool } from 'applesauce-relay'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Login from './components/Login'
 import Bookmarks from './components/Bookmarks'
-import UserHeader from './components/UserHeader'
 
 function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
@@ -64,13 +63,13 @@ function App() {
     <EventStoreProvider eventStore={eventStore}>
       <AccountsProvider manager={accountManager}>
         <div className="app">
-          {isAuthenticated && (
-            <UserHeader onLogout={() => setIsAuthenticated(false)} />
-          )}
           {!isAuthenticated ? (
             <Login onLogin={() => setIsAuthenticated(true)} />
           ) : (
-            <Bookmarks relayPool={relayPool} />
+            <Bookmarks 
+              relayPool={relayPool}
+              onLogout={() => setIsAuthenticated(false)}
+            />
           )}
         </div>
       </AccountsProvider>

@@ -1,15 +1,17 @@
 import React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
-import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 
-interface UserHeaderProps {
+interface SidebarHeaderProps {
+  onToggleCollapse: () => void
   onLogout: () => void
 }
 
-const UserHeader: React.FC<UserHeaderProps> = ({ onLogout }) => {
+const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout }) => {
   const activeAccount = Hooks.useActiveAccount()
   const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
 
@@ -30,7 +32,15 @@ const UserHeader: React.FC<UserHeaderProps> = ({ onLogout }) => {
   }
 
   return (
-    <div className="app-header">
+    <div className="sidebar-header-bar">
+      <button 
+        onClick={onToggleCollapse}
+        className="toggle-sidebar-btn"
+        title="Collapse bookmarks sidebar"
+        aria-label="Collapse bookmarks sidebar"
+      >
+        <FontAwesomeIcon icon={faChevronLeft} />
+      </button>
       <p className="user-info">Logged in as: {formatUserDisplay()}</p>
       <IconButton
         icon={faRightFromBracket}
@@ -43,5 +53,5 @@ const UserHeader: React.FC<UserHeaderProps> = ({ onLogout }) => {
   )
 }
 
-export default UserHeader
+export default SidebarHeader
 

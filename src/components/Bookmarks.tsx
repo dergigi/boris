@@ -9,9 +9,10 @@ import { fetchReadableContent, ReadableContent } from '../services/readerService
 
 interface BookmarksProps {
   relayPool: RelayPool | null
+  onLogout: () => void
 }
 
-const Bookmarks: React.FC<BookmarksProps> = ({ relayPool }) => {
+const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedUrl, setSelectedUrl] = useState<string | undefined>(undefined)
@@ -83,6 +84,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool }) => {
           onSelectUrl={handleSelectUrl}
           isCollapsed={isCollapsed}
           onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+          onLogout={onLogout}
         />
       </div>
       <div className="pane main">

@@ -31,20 +31,6 @@ body {
   position: relative;
 }
 
-.app-header {
-  position: fixed;
-  top: 1rem;
-  right: 2rem;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.app-header .user-info {
-  margin: 0;
-}
-
 .app header {
   margin-bottom: 2rem;
 }
@@ -112,18 +98,32 @@ body {
   text-align: left;
 }
 
-.bookmarks-header {
+.sidebar-header-bar {
   display: flex;
-  justify-content: flex-start;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
   margin-bottom: 1rem;
 }
 
-.toggle-sidebar-btn {
-  background: #2a2a2a;
+.sidebar-header-bar .user-info {
+  flex: 1;
+  margin: 0;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-header-bar .toggle-sidebar-btn {
+  background: transparent;
   color: #ddd;
   border: 1px solid #444;
-  padding: 0.5rem 0.75rem;
+  padding: 0.4rem;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -132,14 +132,15 @@ body {
   justify-content: center;
   min-width: 33px;
   min-height: 33px;
+  flex-shrink: 0;
 }
 
-.toggle-sidebar-btn:hover {
-  background: #333;
+.sidebar-header-bar .toggle-sidebar-btn:hover {
+  background: #2a2a2a;
   color: #fff;
 }
 
-.toggle-sidebar-btn:active {
+.sidebar-header-bar .toggle-sidebar-btn:active {
   transform: translateY(1px);
 }
 

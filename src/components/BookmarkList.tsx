@@ -1,22 +1,25 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { Bookmark } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
+import SidebarHeader from './SidebarHeader'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
   onSelectUrl?: (url: string) => void
   isCollapsed: boolean
   onToggleCollapse: () => void
+  onLogout: () => void
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({ 
   bookmarks, 
   onSelectUrl,
   isCollapsed,
-  onToggleCollapse
+  onToggleCollapse,
+  onLogout
 }) => {
   if (isCollapsed) {
     return (
@@ -35,16 +38,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
 
   return (
     <div className="bookmarks-container">
-      <div className="bookmarks-header">
-        <button 
-          onClick={onToggleCollapse}
-          className="toggle-sidebar-btn"
-          title="Collapse bookmarks sidebar"
-          aria-label="Collapse bookmarks sidebar"
-        >
-          <FontAwesomeIcon icon={faChevronLeft} />
-        </button>
-      </div>
+      <SidebarHeader onToggleCollapse={onToggleCollapse} onLogout={onLogout} />
       
       {bookmarks.length === 0 ? (
         <div className="empty-state">
