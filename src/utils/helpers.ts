@@ -1,10 +1,3 @@
-import { formatDistanceToNow } from 'date-fns'
-
-export const formatDate = (timestamp: number): string => {
-  const date = new Date(timestamp * 1000)
-  return formatDistanceToNow(date, { addSuffix: true })
-}
-
 // Extract pubkeys from nprofile strings in content
 export const extractNprofilePubkeys = (content: string): string[] => {
   const nprofileRegex = /nprofile1[a-z0-9]+/gi
