@@ -403,7 +403,7 @@ body {
   display: grid;
   grid-template-columns: 360px 1fr;
   gap: 1rem;
-  align-items: start;
+  height: calc(100vh - 4rem);
   transition: grid-template-columns 0.3s ease;
 }
 
@@ -412,13 +412,13 @@ body {
 }
 
 .pane.sidebar {
-  position: sticky;
-  top: 1rem;
-  align-self: start;
+  overflow-y: auto;
+  height: 100%;
 }
 
 .pane.main {
-  min-height: 60vh;
+  overflow-y: auto;
+  height: 100%;
 }
 
 .reader {
