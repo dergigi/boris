@@ -30,7 +30,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2>Welcome to Markr</h2>
+        <h2>Welcome to Boris</h2>
         <p>Connect your nostr account to view your bookmarks</p>
         <button 
           onClick={handleLogin} 
