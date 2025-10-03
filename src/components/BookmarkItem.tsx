@@ -122,7 +122,62 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     )
   }
 
-  // Card/Large view rendering (existing)
+  // Large preview view rendering
+  if (viewMode === 'large') {
+    return (
+      <div key={`${bookmark.id}-${index}`} className={`individual-bookmark large ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
+        {hasUrls && (
+          <div className="large-preview-image" onClick={() => onSelectUrl?.(extractedUrls[0])}>
+            {/* Placeholder for future image preview */}
+            <div className="preview-placeholder">
+              <FontAwesomeIcon icon={getIconForUrlType(extractedUrls[0])} />
+            </div>
+          </div>
+        )}
+        
+        <div className="large-content">
+          {bookmark.content && (
+            <div className="large-text">
+              <ContentWithResolvedProfiles content={bookmark.content} />
+            </div>
+          )}
+          
+          <div className="large-footer">
+            <span className="large-author">
+              <a
+                href={`https://search.dergigi.com/p/${authorNpub}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="author-link-minimal"
+              >
+                {getAuthorDisplayName()}
+              </a>
+            </span>
+            
+            {eventNevent && (
+              <a
+                href={`https://search.dergigi.com/e/${eventNevent}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bookmark-date-link"
+              >
+                {formatDate(bookmark.created_at)}
+              </a>
+            )}
+            
+            {hasUrls && firstUrlClassification && (
+              <button className="large-read-button" onClick={handleReadNow}>
+                <FontAwesomeIcon icon={getIconForUrlType(extractedUrls[0])} />
+                {firstUrlClassification.buttonText}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Card view rendering (default)
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
       <div className="bookmark-header">

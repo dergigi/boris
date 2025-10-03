@@ -598,6 +598,10 @@ body {
   gap: 0.5rem;
 }
 
+.bookmarks-grid.bookmarks-large {
+  gap: 1.5rem;
+}
+
 .individual-bookmark {
   background: #2a2a2a;
   padding: 1.25rem;
@@ -820,6 +824,84 @@ body {
 
 .expand-toggle-urls:hover {
   color: #8088ff;
+}
+
+/* Large preview view styles */
+.individual-bookmark.large {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.large-preview-image {
+  width: 100%;
+  height: 180px;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-bottom: 1px solid #333;
+}
+
+.large-preview-image:hover {
+  background: #222;
+}
+
+.preview-placeholder {
+  font-size: 3rem;
+  color: #444;
+}
+
+.large-content {
+  padding: 1.25rem;
+}
+
+.large-text {
+  color: #ccc;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.large-footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: #888;
+  padding-top: 0.75rem;
+  border-top: 1px solid #333;
+}
+
+.large-author {
+  flex: 1;
+}
+
+.large-read-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.large-read-button:hover {
+  background: #218838;
 }
 
 /* Private Bookmark Styles */
