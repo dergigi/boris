@@ -12,6 +12,7 @@ import ContentWithResolvedProfiles from './ContentWithResolvedProfiles'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { classifyUrl } from '../utils/helpers'
 import { ViewMode } from './Bookmarks'
+import { getPreviewImage } from '../utils/imagePreview'
 
 interface BookmarkItemProps {
   bookmark: IndividualBookmark
@@ -124,14 +125,22 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
 
   // Large preview view rendering
   if (viewMode === 'large') {
+    const firstUrl = hasUrls ? extractedUrls[0] : null
+    const previewImage = firstUrl ? getPreviewImage(firstUrl, firstUrlClassification?.type || '') : null
+    
     return (
       <div key={`${bookmark.id}-${index}`} className={`individual-bookmark large ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
         {hasUrls && (
-          <div className="large-preview-image" onClick={() => onSelectUrl?.(extractedUrls[0])}>
-            {/* Placeholder for future image preview */}
-            <div className="preview-placeholder">
-              <FontAwesomeIcon icon={getIconForUrlType(extractedUrls[0])} />
-            </div>
+          <div 
+            className="large-preview-image" 
+            onClick={() => onSelectUrl?.(extractedUrls[0])}
+            style={previewImage ? { backgroundImage: `url(${previewImage})` } : undefined}
+          >
+            {!previewImage && (
+              <div className="preview-placeholder">
+                <FontAwesomeIcon icon={getIconForUrlType(extractedUrls[0])} />
+              </div>
+            )}
           </div>
         )}
         
