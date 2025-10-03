@@ -1,10 +1,12 @@
 import React from 'react'
+import relativeTime from 'relative-time'
 import { ParsedContent, ParsedNode } from '../types/bookmarks'
 import ResolvedMention from '../components/ResolvedMention'
 // Note: ContentWithResolvedProfiles is imported by components directly to keep this file component-only for fast refresh
 
 export const formatDate = (timestamp: number) => {
-  return new Date(timestamp * 1000).toLocaleDateString()
+  const date = new Date(timestamp * 1000)
+  return relativeTime(date)
 }
 
 // Component to render content with resolved nprofile names
