@@ -15,15 +15,15 @@ interface ContentPanelProps {
 const ContentPanel: React.FC<ContentPanelProps> = ({ loading, title, html, markdown, selectedUrl }) => {
   if (!selectedUrl) {
     return (
-      <div className="content-panel empty">
-        <p>Select a bookmark to preview its content.</p>
+      <div className="reader empty">
+        <p>Select a bookmark to read its content.</p>
       </div>
     )
   }
 
   if (loading) {
     return (
-      <div className="content-panel loading">
+      <div className="reader loading">
         <div className="loading-spinner">
           <FontAwesomeIcon icon={faSpinner} spin />
           <span>Loading content…</span>
@@ -33,18 +33,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({ loading, title, html, markd
   }
 
   return (
-    <div className="content-panel">
-      {title && <h2 className="content-title">{title}</h2>}
+    <div className="reader">
+      {title && <h2 className="reader-title">{title}</h2>}
       {markdown ? (
-        <div className="content-markdown">
+        <div className="reader-markdown">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {markdown}
           </ReactMarkdown>
         </div>
       ) : html ? (
-        <div className="content-html" dangerouslySetInnerHTML={{ __html: html }} />
+        <div className="reader-html" dangerouslySetInnerHTML={{ __html: html }} />
       ) : (
-        <div className="content-panel empty">
+        <div className="reader empty">
           <p>No readable content found for this URL.</p>
         </div>
       )}

@@ -99,14 +99,13 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
             const classification = classifyUrl(url)
             return (
               <div key={urlIndex} className="url-row">
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
                   className="bookmark-url"
+                  onClick={() => onSelectUrl?.(url)}
+                  title="Open in reader"
                 >
                   {url}
-                </a>
+                </button>
                 <IconButton
                   icon={getIconForUrlType(url)}
                   ariaLabel={classification.buttonText}
