@@ -7,6 +7,8 @@ import { fetchBookmarks } from '../services/bookmarkService'
 import ContentPanel from './ContentPanel'
 import { fetchReadableContent, ReadableContent } from '../services/readerService'
 
+export type ViewMode = 'compact' | 'cards' | 'large'
+
 interface BookmarksProps {
   relayPool: RelayPool | null
   onLogout: () => void
@@ -19,6 +21,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [readerLoading, setReaderLoading] = useState(false)
   const [readerContent, setReaderContent] = useState<ReadableContent | undefined>(undefined)
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
 
@@ -85,6 +88,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           isCollapsed={isCollapsed}
           onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
           onLogout={onLogout}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
       </div>
       <div className="pane main">

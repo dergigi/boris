@@ -12,14 +12,16 @@ import { getKindIcon } from './kindIcon'
 import ContentWithResolvedProfiles from './ContentWithResolvedProfiles'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { classifyUrl } from '../utils/helpers'
+import { ViewMode } from './Bookmarks'
 
 interface BookmarkItemProps {
   bookmark: IndividualBookmark
   index: number
   onSelectUrl?: (url: string) => void
+  viewMode?: ViewMode
 }
 
-export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onSelectUrl }) => {
+export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onSelectUrl, viewMode = 'cards' }) => {
   const [expanded, setExpanded] = useState(false)
   const [urlsExpanded, setUrlsExpanded] = useState(false)
   // removed copy-to-clipboard buttons
@@ -75,6 +77,46 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   // Get classification for the first URL (for the main button)
   const firstUrlClassification = hasUrls ? classifyUrl(extractedUrls[0]) : null
 
+  // Compact view rendering
+  if (viewMode === 'compact') {
+    return (
+      <div key={`${bookmark.id}-${index}`} className={`individual-bookmark compact ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
+        <div className="compact-header">
+          <span className="bookmark-type-compact">
+            {bookmark.isPrivate ? (
+              <>
+                <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
+                <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />
+              </>
+            ) : (
+              <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
+            )}
+          </span>
+          <div className="compact-content">
+            {bookmark.content && (
+              <div className="compact-text">
+                <ContentWithResolvedProfiles content={bookmark.content.slice(0, 100) + (bookmark.content.length > 100 ? '…' : '')} />
+              </div>
+            )}
+            <div className="compact-meta">
+              <span className="bookmark-date-compact">{formatDate(bookmark.created_at)}</span>
+              {hasUrls && (
+                <button
+                  className="compact-read-btn"
+                  onClick={(e) => { e.preventDefault(); onSelectUrl?.(extractedUrls[0]) }}
+                  title={firstUrlClassification?.buttonText}
+                >
+                  <FontAwesomeIcon icon={getIconForUrlType(extractedUrls[0])} />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Card/Large view rendering (existing)
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
       <div className="bookmark-header">

@@ -5,6 +5,7 @@ import { Bookmark } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
 import SidebarHeader from './SidebarHeader'
+import { ViewMode } from './Bookmarks'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -12,6 +13,8 @@ interface BookmarkListProps {
   isCollapsed: boolean
   onToggleCollapse: () => void
   onLogout: () => void
+  viewMode: ViewMode
+  onViewModeChange: (mode: ViewMode) => void
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({ 
@@ -19,7 +22,9 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   onSelectUrl,
   isCollapsed,
   onToggleCollapse,
-  onLogout
+  onLogout,
+  viewMode,
+  onViewModeChange
 }) => {
   if (isCollapsed) {
     return (
@@ -38,7 +43,12 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
 
   return (
     <div className="bookmarks-container">
-      <SidebarHeader onToggleCollapse={onToggleCollapse} onLogout={onLogout} />
+      <SidebarHeader 
+        onToggleCollapse={onToggleCollapse} 
+        onLogout={onLogout}
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
+      />
       
       {bookmarks.length === 0 ? (
         <div className="empty-state">
@@ -75,9 +85,15 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
               )}
               {bookmark.individualBookmarks && bookmark.individualBookmarks.length > 0 && (
                 <div className="individual-bookmarks">
-                  <div className="bookmarks-grid">
+                  <div className={`bookmarks-grid bookmarks-${viewMode}`}>
                     {bookmark.individualBookmarks.map((individualBookmark, index) => 
-                      <BookmarkItem key={index} bookmark={individualBookmark} index={index} onSelectUrl={onSelectUrl} />
+                      <BookmarkItem 
+                        key={index} 
+                        bookmark={individualBookmark} 
+                        index={index} 
+                        onSelectUrl={onSelectUrl}
+                        viewMode={viewMode}
+                      />
                     )}
                   </div>
                 </div>
