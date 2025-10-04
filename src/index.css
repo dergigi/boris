@@ -1299,8 +1299,8 @@ body {
 
 /* Inline content highlights */
 .content-highlight {
-  background: rgba(255, 235, 59, 0.3);
-  border-bottom: 2px solid #646cff;
+  background: transparent;
+  border-bottom: 2px solid #ffd700;
   padding: 0.125rem 0;
   cursor: help;
   transition: all 0.2s ease;
@@ -1308,8 +1308,8 @@ body {
 }
 
 .content-highlight:hover {
-  background: rgba(255, 235, 59, 0.5);
-  border-bottom-color: #535bf2;
+  background: rgba(255, 215, 0, 0.15);
+  border-bottom-color: #ffed4e;
 }
 
 .reader-html .content-highlight,
@@ -1321,11 +1321,13 @@ body {
 /* Ensure highlights work in both light and dark mode */
 @media (prefers-color-scheme: light) {
   .content-highlight {
-    background: rgba(255, 235, 59, 0.4);
+    background: transparent;
+    border-bottom-color: #d4af37;
   }
   
   .content-highlight:hover {
-    background: rgba(255, 235, 59, 0.6);
+    background: rgba(212, 175, 55, 0.15);
+    border-bottom-color: #ffd700;
   }
   
   .highlight-indicator {
