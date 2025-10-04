@@ -25,9 +25,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 }) => {
   // Filter highlights relevant to the current URL
   const relevantHighlights = useMemo(() => {
-    if (!selectedUrl || highlights.length === 0) return []
+    if (!selectedUrl || highlights.length === 0) {
+      console.log('🔍 No highlights to filter:', { selectedUrl, highlightsCount: highlights.length })
+      return []
+    }
     
-    return highlights.filter(h => {
+    const filtered = highlights.filter(h => {
       // Match by URL reference
       if (h.urlReference && selectedUrl.includes(h.urlReference)) return true
       if (h.urlReference && h.urlReference.includes(selectedUrl)) return true
@@ -41,12 +44,31 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       
       return normalizedSelected === normalizedRef
     })
+    
+    console.log('🔍 Filtered highlights:', {
+      selectedUrl,
+      totalHighlights: highlights.length,
+      relevantHighlights: filtered.length,
+      highlights: filtered.map(h => ({
+        id: h.id.slice(0, 8),
+        urlRef: h.urlReference,
+        content: h.content.slice(0, 50)
+      }))
+    })
+    
+    return filtered
   }, [selectedUrl, highlights])
 
   // Apply highlights to content
   const highlightedHTML = useMemo(() => {
-    if (!html || relevantHighlights.length === 0) return html
-    return applyHighlightsToHTML(html, relevantHighlights)
+    if (!html || relevantHighlights.length === 0) {
+      console.log('🔍 No HTML highlighting:', { hasHtml: !!html, highlightsCount: relevantHighlights.length })
+      return html
+    }
+    console.log('🔍 Applying highlights to HTML:', { htmlLength: html.length, highlightsCount: relevantHighlights.length })
+    const result = applyHighlightsToHTML(html, relevantHighlights)
+    console.log('🔍 HTML highlighting result:', { originalLength: html.length, modifiedLength: result.length, changed: html !== result })
+    return result
   }, [html, relevantHighlights])
 
   const highlightedMarkdown = useMemo(() => {

@@ -97,38 +97,88 @@ export function applyHighlightsToText(
 }
 
 /**
- * Apply highlights to HTML content by injecting mark tags
+ * Apply highlights to HTML content by injecting mark tags using DOM manipulation
  */
 export function applyHighlightsToHTML(
   html: string,
   highlights: Highlight[]
 ): string {
-  // Extract text content from HTML for matching
+  if (!html || highlights.length === 0) return html
+  
+  // Create a temporary DOM element to work with
   const tempDiv = document.createElement('div')
   tempDiv.innerHTML = html
-  const textContent = tempDiv.textContent || ''
   
-  const matches = findHighlightMatches(textContent, highlights)
+  console.log('🔍 applyHighlightsToHTML:', {
+    htmlLength: html.length,
+    highlightsCount: highlights.length,
+    highlightTexts: highlights.map(h => h.content.slice(0, 50))
+  })
   
-  if (matches.length === 0) {
-    return html
+  // Process each highlight
+  for (const highlight of highlights) {
+    const searchText = highlight.content.trim()
+    if (!searchText) continue
+    
+    console.log('🔍 Processing highlight:', searchText.slice(0, 50))
+    
+    // Walk through all text nodes and replace matches
+    const walker = document.createTreeWalker(
+      tempDiv,
+      NodeFilter.SHOW_TEXT,
+      null
+    )
+    
+    const textNodes: Text[] = []
+    let node: Node | null
+    while ((node = walker.nextNode())) {
+      textNodes.push(node as Text)
+    }
+    
+    // Process text nodes
+    for (const textNode of textNodes) {
+      const text = textNode.textContent || ''
+      const index = text.indexOf(searchText)
+      
+      if (index !== -1) {
+        console.log('✅ Found match in text node:', text.slice(0, 50))
+        
+        // Split the text node and insert the mark element
+        const before = text.substring(0, index)
+        const match = text.substring(index, index + searchText.length)
+        const after = text.substring(index + searchText.length)
+        
+        const mark = document.createElement('mark')
+        mark.className = 'content-highlight'
+        mark.setAttribute('data-highlight-id', highlight.id)
+        mark.setAttribute('title', `Highlighted ${new Date(highlight.created_at * 1000).toLocaleDateString()}`)
+        mark.textContent = match
+        
+        const parent = textNode.parentNode
+        if (parent) {
+          if (before) {
+            parent.insertBefore(document.createTextNode(before), textNode)
+          }
+          parent.insertBefore(mark, textNode)
+          if (after) {
+            textNode.textContent = after
+          } else {
+            parent.removeChild(textNode)
+          }
+        }
+        
+        // Only highlight the first occurrence
+        break
+      }
+    }
   }
   
-  // For HTML, we'll wrap the highlight text with mark tags
-  let modifiedHTML = html
+  const result = tempDiv.innerHTML
+  console.log('🔍 HTML highlighting complete:', {
+    originalLength: html.length,
+    modifiedLength: result.length,
+    changed: html !== result
+  })
   
-  // Process matches in reverse order to maintain indices
-  for (let i = matches.length - 1; i >= 0; i--) {
-    const match = matches[i]
-    const searchText = match.highlight.content.trim()
-    
-    // Simple approach: replace text occurrences with marked version
-    // This is a basic implementation - a more robust solution would use DOM manipulation
-    const markTag = `<mark class="content-highlight" data-highlight-id="${match.highlight.id}" title="Highlighted ${new Date(match.highlight.created_at * 1000).toLocaleDateString()}">${searchText}</mark>`
-    
-    // Only replace the first occurrence to avoid duplicates
-    modifiedHTML = modifiedHTML.replace(searchText, markTag)
-  }
-  
-  return modifiedHTML
+  return result
 }
