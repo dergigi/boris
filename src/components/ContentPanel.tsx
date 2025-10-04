@@ -30,19 +30,41 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       return []
     }
     
+    // Normalize URLs for comparison (remove trailing slashes, protocols, www, query params, fragments)
+    const normalizeUrl = (url: string) => {
+      try {
+        const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
+        // Get just the hostname + pathname, remove trailing slash
+        return `${urlObj.hostname.replace(/^www\./, '')}${urlObj.pathname}`.replace(/\/$/, '').toLowerCase()
+      } catch {
+        // Fallback for invalid URLs
+        return url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '').toLowerCase()
+      }
+    }
+    
+    const normalizedSelected = normalizeUrl(selectedUrl)
+    console.log('🔍 Normalized selected URL:', normalizedSelected)
+    
     const filtered = highlights.filter(h => {
-      // Match by URL reference
-      if (h.urlReference && selectedUrl.includes(h.urlReference)) return true
-      if (h.urlReference && h.urlReference.includes(selectedUrl)) return true
+      if (!h.urlReference) {
+        console.log('⚠️ Highlight has no URL reference:', h.id.slice(0, 8))
+        return false
+      }
       
-      // Normalize URLs for comparison (remove trailing slashes, protocols)
-      const normalizeUrl = (url: string) => 
-        url.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
+      const normalizedRef = normalizeUrl(h.urlReference)
+      const matches = normalizedSelected === normalizedRef || 
+                     normalizedSelected.includes(normalizedRef) ||
+                     normalizedRef.includes(normalizedSelected)
       
-      const normalizedSelected = normalizeUrl(selectedUrl)
-      const normalizedRef = h.urlReference ? normalizeUrl(h.urlReference) : ''
+      console.log('🔍 URL comparison:', {
+        highlightId: h.id.slice(0, 8),
+        originalRef: h.urlReference,
+        normalizedRef,
+        normalizedSelected,
+        matches
+      })
       
-      return normalizedSelected === normalizedRef
+      return matches
     })
     
     console.log('🔍 Filtered highlights:', {

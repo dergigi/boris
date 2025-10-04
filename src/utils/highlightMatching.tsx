@@ -122,6 +122,10 @@ export function applyHighlightsToHTML(
     
     console.log('🔍 Processing highlight:', searchText.slice(0, 50))
     
+    // Normalize whitespace for more flexible matching
+    const normalizeWhitespace = (str: string) => str.replace(/\s+/g, ' ').trim()
+    const normalizedSearch = normalizeWhitespace(searchText)
+    
     // Walk through all text nodes and replace matches
     const walker = document.createTreeWalker(
       tempDiv,
@@ -135,13 +139,16 @@ export function applyHighlightsToHTML(
       textNodes.push(node as Text)
     }
     
-    // Process text nodes
+    // Try exact match first, then normalized match
+    let found = false
+    
+    // First pass: exact match
     for (const textNode of textNodes) {
       const text = textNode.textContent || ''
       const index = text.indexOf(searchText)
       
       if (index !== -1) {
-        console.log('✅ Found match in text node:', text.slice(0, 50))
+        console.log('✅ Found exact match in text node:', text.slice(Math.max(0, index - 20), index + 50))
         
         // Split the text node and insert the mark element
         const before = text.substring(0, index)
@@ -167,8 +174,59 @@ export function applyHighlightsToHTML(
           }
         }
         
-        // Only highlight the first occurrence
+        found = true
         break
+      }
+    }
+    
+    // Second pass: normalized whitespace match
+    if (!found) {
+      for (const textNode of textNodes) {
+        const text = textNode.textContent || ''
+        const normalizedText = normalizeWhitespace(text)
+        const index = normalizedText.indexOf(normalizedSearch)
+        
+        if (index !== -1) {
+          console.log('✅ Found normalized match in text node:', text.slice(0, 50))
+          
+          // Find the actual position in the original text
+          let actualIndex = 0
+          let normalizedIndex = 0
+          
+          for (let i = 0; i < text.length && normalizedIndex < index; i++) {
+            if (!/\s/.test(text[i]) || (i > 0 && !/\s/.test(text[i-1]))) {
+              normalizedIndex++
+            }
+            actualIndex = i + 1
+          }
+          
+          // Approximate the length in the original text
+          const actualLength = searchText.length
+          const match = text.substring(actualIndex, actualIndex + actualLength)
+          const before = text.substring(0, actualIndex)
+          const after = text.substring(actualIndex + actualLength)
+          
+          const mark = document.createElement('mark')
+          mark.className = 'content-highlight'
+          mark.setAttribute('data-highlight-id', highlight.id)
+          mark.setAttribute('title', `Highlighted ${new Date(highlight.created_at * 1000).toLocaleDateString()}`)
+          mark.textContent = match
+          
+          const parent = textNode.parentNode
+          if (parent) {
+            if (before) {
+              parent.insertBefore(document.createTextNode(before), textNode)
+            }
+            parent.insertBefore(mark, textNode)
+            if (after) {
+              textNode.textContent = after
+            } else {
+              parent.removeChild(textNode)
+            }
+          }
+          
+          break
+        }
       }
     }
   }
