@@ -1,16 +1,16 @@
 import { RelayPool, completeOnEose } from 'applesauce-relay'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+import { NostrEvent } from 'nostr-tools'
+import {
+  getHighlightText,
+  getHighlightContext,
+  getHighlightComment,
+  getHighlightSourceEventPointer,
+  getHighlightSourceAddressPointer,
+  getHighlightSourceUrl,
+  getHighlightAttributions
+} from 'applesauce-core/helpers'
 import { Highlight } from '../types/highlights'
-
-interface NostrEvent {
-  id: string
-  pubkey: string
-  created_at: number
-  kind: number
-  tags: string[][]
-  content: string
-  sig: string
-}
 
 /**
  * Deduplicate highlight events by ID
@@ -51,22 +51,33 @@ export const fetchHighlights = async (
     console.log('📊 Unique highlight events after deduplication:', uniqueEvents.length)
     
     const highlights: Highlight[] = uniqueEvents.map((event: NostrEvent) => {
-      // Extract relevant tags
-      const eventRef = event.tags.find(t => t[0] === 'e' || t[0] === 'a')?.[1]
-      const urlRef = event.tags.find(t => t[0] === 'r')?.[1]
-      const authorTag = event.tags.find(t => t[0] === 'p' && t[3] === 'author')
-      const contextTag = event.tags.find(t => t[0] === 'context')
+      // Use applesauce helpers to extract highlight data
+      const highlightText = getHighlightText(event)
+      const context = getHighlightContext(event)
+      const comment = getHighlightComment(event)
+      const sourceEventPointer = getHighlightSourceEventPointer(event)
+      const sourceAddressPointer = getHighlightSourceAddressPointer(event)
+      const sourceUrl = getHighlightSourceUrl(event)
+      const attributions = getHighlightAttributions(event)
+      
+      // Get author from attributions
+      const author = attributions.find(a => a.role === 'author')?.pubkey
+      
+      // Get event reference (prefer event pointer, fallback to address pointer)
+      const eventReference = sourceEventPointer?.id || 
+        (sourceAddressPointer ? `${sourceAddressPointer.kind}:${sourceAddressPointer.pubkey}:${sourceAddressPointer.identifier}` : undefined)
       
       return {
         id: event.id,
         pubkey: event.pubkey,
         created_at: event.created_at,
-        content: event.content,
+        content: highlightText,
         tags: event.tags,
-        eventReference: eventRef,
-        urlReference: urlRef,
-        author: authorTag?.[1],
-        context: contextTag?.[1]
+        eventReference,
+        urlReference: sourceUrl,
+        author,
+        context,
+        comment
       }
     })
     

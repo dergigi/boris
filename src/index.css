@@ -1229,6 +1229,17 @@ body {
   font-size: 0.95rem;
 }
 
+.highlight-comment {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(100, 108, 255, 0.1);
+  border-left: 3px solid #646cff;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #ddd;
+  line-height: 1.5;
+}
+
 .highlight-context {
   margin-top: 0.5rem;
 }

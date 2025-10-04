@@ -37,6 +37,12 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
           {highlight.content}
         </blockquote>
         
+        {highlight.comment && (
+          <div className="highlight-comment">
+            {highlight.comment}
+          </div>
+        )}
+        
         {highlight.context && (
           <details className="highlight-context">
             <summary>Show context</summary>

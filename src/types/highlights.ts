@@ -10,5 +10,6 @@ export interface Highlight {
   urlReference?: string // 'r' tag
   author?: string // 'p' tag with 'author' role
   context?: string // surrounding text context
+  comment?: string // optional comment about the highlight
 }
 
