@@ -14,6 +14,7 @@ interface ContentPanelProps {
   selectedUrl?: string
   highlights?: Highlight[]
   showUnderlines?: boolean
+  onHighlightClick?: (highlightId: string) => void
 }
 
 const ContentPanel: React.FC<ContentPanelProps> = ({ 
@@ -23,7 +24,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   markdown, 
   selectedUrl,
   highlights = [],
-  showUnderlines = true
+  showUnderlines = true,
+  onHighlightClick
 }) => {
   const contentRef = useRef<HTMLDivElement>(null)
   
@@ -136,13 +138,27 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       if (originalHTML !== highlightedHTML) {
         console.log('✅ Applied highlights to DOM')
         contentRef.current.innerHTML = highlightedHTML
+        
+        // Add click handlers to all highlight marks
+        if (onHighlightClick) {
+          const marks = contentRef.current.querySelectorAll('mark.content-highlight')
+          marks.forEach(mark => {
+            const highlightId = mark.getAttribute('data-highlight-id')
+            if (highlightId) {
+              mark.addEventListener('click', () => {
+                onHighlightClick(highlightId)
+              })
+              ;(mark as HTMLElement).style.cursor = 'pointer'
+            }
+          })
+        }
       } else {
         console.log('⚠️ No changes made to DOM')
       }
     })
     
     return () => cancelAnimationFrame(rafId)
-  }, [relevantHighlights, html, markdown, showUnderlines])
+  }, [relevantHighlights, html, markdown, showUnderlines, onHighlightClick])
 
   const highlightedMarkdown = useMemo(() => {
     if (!markdown || relevantHighlights.length === 0) return markdown

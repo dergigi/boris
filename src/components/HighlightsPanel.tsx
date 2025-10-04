@@ -12,6 +12,7 @@ interface HighlightsPanelProps {
   onSelectUrl?: (url: string) => void
   selectedUrl?: string
   onToggleUnderlines?: (show: boolean) => void
+  selectedHighlightId?: string
 }
 
 export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
@@ -21,7 +22,8 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   onToggleCollapse,
   onSelectUrl,
   selectedUrl,
-  onToggleUnderlines
+  onToggleUnderlines,
+  selectedHighlightId
 }) => {
   const [showUnderlines, setShowUnderlines] = useState(true)
   
@@ -121,6 +123,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
               key={highlight.id}
               highlight={highlight}
               onSelectUrl={onSelectUrl}
+              isSelected={highlight.id === selectedHighlightId}
             />
           ))}
         </div>

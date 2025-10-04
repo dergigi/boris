@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuoteLeft, faLink, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
@@ -7,9 +7,17 @@ import { formatDistanceToNow } from 'date-fns'
 interface HighlightItemProps {
   highlight: Highlight
   onSelectUrl?: (url: string) => void
+  isSelected?: boolean
 }
 
-export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelectUrl }) => {
+export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelectUrl, isSelected }) => {
+  const itemRef = useRef<HTMLDivElement>(null)
+  
+  useEffect(() => {
+    if (isSelected && itemRef.current) {
+      itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [isSelected])
   const handleLinkClick = (url: string, e: React.MouseEvent) => {
     if (onSelectUrl) {
       e.preventDefault()
@@ -27,7 +35,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
   const sourceLink = getSourceLink()
   
   return (
-    <div className="highlight-item">
+    <div ref={itemRef} className={`highlight-item ${isSelected ? 'selected' : ''}`} data-highlight-id={highlight.id}>
       <div className="highlight-quote-icon">
         <FontAwesomeIcon icon={faQuoteLeft} />
       </div>

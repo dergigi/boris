@@ -1214,6 +1214,12 @@ body {
   border-color: #646cff;
 }
 
+.highlight-item.selected {
+  border-color: #646cff;
+  background: #252525;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3);
+}
+
 .highlight-quote-icon {
   color: #646cff;
   font-size: 1.2rem;
