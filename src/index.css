@@ -1079,8 +1079,8 @@ body {
 .highlights-container.collapsed {
   display: flex;
   align-items: flex-start;
-  justify-content: center;
-  padding-top: 1rem;
+  justify-content: flex-start;
+  padding: 0.75rem 0 0 0;
   background: transparent;
   border: none;
 }

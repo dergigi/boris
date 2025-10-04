@@ -66,7 +66,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           title="Expand highlights panel"
           aria-label="Expand highlights panel"
         >
-          <FontAwesomeIcon icon={faChevronLeft} />
+          <FontAwesomeIcon icon={faChevronLeft} rotation={180} />
         </button>
       </div>
     )
