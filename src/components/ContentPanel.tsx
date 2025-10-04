@@ -87,18 +87,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Apply highlights after DOM is rendered
   useEffect(() => {
-    console.log('🔍 useEffect triggered:', {
-      hasContentRef: !!contentRef.current,
-      relevantHighlightsCount: relevantHighlights.length,
-      hasHtml: !!html,
-      showUnderlines
-    })
-    
-    if (!contentRef.current || relevantHighlights.length === 0 || !showUnderlines) {
+    // Skip if no HTML content or underlines are hidden
+    if (!html || !showUnderlines) {
       console.log('⚠️ Skipping highlight application:', {
-        reason: !contentRef.current ? 'no contentRef' : 
-                !showUnderlines ? 'underlines hidden' :
-                'no relevant highlights'
+        reason: !html ? 'no html' : 'underlines hidden'
       })
       
       // If underlines are hidden, remove any existing highlights
@@ -114,14 +106,25 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       return
     }
     
-    console.log('🔍 Applying highlights to rendered DOM:', {
-      highlightsCount: relevantHighlights.length,
+    // Skip if no relevant highlights
+    if (relevantHighlights.length === 0) {
+      console.log('⚠️ No relevant highlights to apply')
+      return
+    }
+    
+    console.log('🔍 Scheduling highlight application:', {
+      relevantHighlightsCount: relevantHighlights.length,
       highlights: relevantHighlights.map(h => h.content.slice(0, 50))
     })
     
-    // Small delay to ensure DOM is fully rendered
-    const timer = setTimeout(() => {
-      if (!contentRef.current) return
+    // Use requestAnimationFrame to ensure DOM is fully rendered
+    const rafId = requestAnimationFrame(() => {
+      if (!contentRef.current) {
+        console.log('⚠️ contentRef not available after RAF')
+        return
+      }
+      
+      console.log('🔍 Applying highlights to rendered DOM')
       
       const originalHTML = contentRef.current.innerHTML
       const highlightedHTML = applyHighlightsToHTML(originalHTML, relevantHighlights)
@@ -132,9 +135,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       } else {
         console.log('⚠️ No changes made to DOM')
       }
-    }, 100)
+    })
     
-    return () => clearTimeout(timer)
+    return () => cancelAnimationFrame(rafId)
   }, [relevantHighlights, html, showUnderlines])
 
   const highlightedMarkdown = useMemo(() => {
