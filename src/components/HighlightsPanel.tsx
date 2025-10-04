@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faChevronLeft, faHighlighter, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faChevronLeft, faHighlighter, faEye, faEyeSlash, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 
@@ -13,6 +13,7 @@ interface HighlightsPanelProps {
   selectedUrl?: string
   onToggleUnderlines?: (show: boolean) => void
   selectedHighlightId?: string
+  onRefresh?: () => void
 }
 
 export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
@@ -23,7 +24,8 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   onSelectUrl,
   selectedUrl,
   onToggleUnderlines,
-  selectedHighlightId
+  selectedHighlightId,
+  onRefresh
 }) => {
   const [showUnderlines, setShowUnderlines] = useState(true)
   
@@ -81,6 +83,17 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           {!loading && <span className="count">({filteredHighlights.length})</span>}
         </div>
         <div className="highlights-actions">
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="refresh-highlights-btn"
+              title="Refresh highlights"
+              aria-label="Refresh highlights"
+              disabled={loading}
+            >
+              <FontAwesomeIcon icon={faRotate} spin={loading} />
+            </button>
+          )}
           {filteredHighlights.length > 0 && (
             <button
               onClick={handleToggleUnderlines}

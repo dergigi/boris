@@ -139,6 +139,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           selectedUrl={selectedUrl}
           onToggleUnderlines={setShowUnderlines}
           selectedHighlightId={selectedHighlightId}
+          onRefresh={handleFetchHighlights}
         />
       </div>
     </div>
