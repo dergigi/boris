@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faHighlighter } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faChevronLeft, faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 
@@ -28,7 +28,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           title="Expand highlights panel"
           aria-label="Expand highlights panel"
         >
-          <FontAwesomeIcon icon={faChevronRight} />
+          <FontAwesomeIcon icon={faChevronLeft} />
         </button>
       </div>
     )
@@ -48,7 +48,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           title="Collapse highlights panel"
           aria-label="Collapse highlights panel"
         >
-          <FontAwesomeIcon icon={faChevronRight} />
+          <FontAwesomeIcon icon={faChevronRight} rotation={180} />
         </button>
       </div>
 
