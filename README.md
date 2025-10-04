@@ -13,6 +13,8 @@ A minimal nostr client for bookmark management, built with [applesauce](https://
 - **Relative Timestamps**: Human-friendly time display (e.g., "2 hours ago")
 - **Event Links**: Quick access to view bookmarks on search.dergigi.com
 - **Private Bookmarks**: Support for Amethyst-style hidden/encrypted bookmarks
+- **Highlights Panel**: View and manage your NIP-84 highlights in a dedicated collapsible panel
+- **Three-Pane Layout**: Bookmarks sidebar, content viewer, and highlights panel working together
 - **Minimal UI**: Clean, modern interface focused on bookmark management
 
 ## Getting Started
@@ -53,8 +55,10 @@ yarn dev
 ## Usage
 
 1. **Connect**: Click "Connect with Nostr" to authenticate using your nostr account
-2. **View Bookmarks**: Once connected, you'll see all your nostr bookmarks
-3. **Navigate**: Click on bookmark URLs to open them in a new tab
+2. **View Bookmarks**: Once connected, you'll see all your nostr bookmarks in the left sidebar
+3. **View Highlights**: Your NIP-84 highlights appear in the right panel
+4. **Navigate**: Click on bookmark URLs to view content in the center panel
+5. **Collapse Panels**: Use the collapse buttons to hide/show sidebars for focused viewing
 
 ## Technical Details
 
@@ -76,6 +80,8 @@ src/
 │   ├── BookmarkItem.tsx                 # Individual bookmark card
 │   ├── SidebarHeader.tsx                # Header bar with collapse, profile, logout
 │   ├── ContentPanel.tsx                 # Content viewer panel
+│   ├── HighlightsPanel.tsx              # Highlights sidebar panel (NIP-84)
+│   ├── HighlightItem.tsx                # Individual highlight display
 │   ├── IconButton.tsx                   # Reusable icon button component
 │   ├── ContentWithResolvedProfiles.tsx  # Profile mention resolver
 │   ├── ResolvedMention.tsx              # Nostr mention component
@@ -85,9 +91,11 @@ src/
 │   ├── bookmarkProcessing.ts            # Decryption and processing pipeline
 │   ├── bookmarkHelpers.ts               # Shared types, guards, and utilities
 │   ├── bookmarkEvents.ts                # Event type handling and deduplication
+│   ├── highlightService.ts              # Highlight fetching (NIP-84)
 │   └── readerService.ts                 # Content extraction via reader API
 ├── types/
 │   ├── bookmarks.ts                     # Bookmark type definitions
+│   ├── highlights.ts                    # Highlight type definitions (NIP-84)
 │   ├── nostr.d.ts                       # Nostr type augmentations
 │   └── relative-time.d.ts               # relative-time package types
 ├── utils/

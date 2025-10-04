@@ -404,7 +404,7 @@ body {
   margin: 0 auto;
 }
 
-/* Two-pane layout */
+/* Two-pane layout (legacy support) */
 .two-pane {
   display: grid;
   grid-template-columns: 360px 1fr;
@@ -417,12 +417,38 @@ body {
   grid-template-columns: 60px 1fr;
 }
 
+/* Three-pane layout */
+.three-pane {
+  display: grid;
+  grid-template-columns: 360px 1fr 360px;
+  gap: 1rem;
+  height: calc(100vh - 4rem);
+  transition: grid-template-columns 0.3s ease;
+}
+
+.three-pane.sidebar-collapsed {
+  grid-template-columns: 60px 1fr 360px;
+}
+
+.three-pane.highlights-collapsed {
+  grid-template-columns: 360px 1fr 60px;
+}
+
+.three-pane.sidebar-collapsed.highlights-collapsed {
+  grid-template-columns: 60px 1fr 60px;
+}
+
 .pane.sidebar {
   overflow-y: auto;
   height: 100%;
 }
 
 .pane.main {
+  overflow-y: auto;
+  height: 100%;
+}
+
+.pane.highlights {
   overflow-y: auto;
   height: 100%;
 }
@@ -988,4 +1014,222 @@ body {
   .private-bookmark {
     background: linear-gradient(135deg, #f5f5f5 0%, #e9ecef 100%);
   }
+  
+  .highlights-container {
+    background: #f5f5f5;
+    border-color: #ddd;
+  }
+  
+  .highlights-header {
+    background: #fff;
+    border-color: #ddd;
+  }
+  
+  .highlight-item {
+    background: #fff;
+    border-color: #ddd;
+  }
+  
+  .highlight-quote-icon {
+    color: #646cff;
+  }
+  
+  .highlight-text {
+    color: #213547;
+  }
+}
+
+/* Highlights Panel Styles */
+.highlights-container {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.highlights-container.collapsed {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 1rem;
+}
+
+.highlights-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #333;
+  background: #1e1e1e;
+  border-radius: 12px 12px 0 0;
+}
+
+.highlights-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.highlights-title h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.highlights-title .count {
+  color: #888;
+  font-size: 0.875rem;
+}
+
+.toggle-highlights-btn {
+  background: transparent;
+  color: #ddd;
+  border: 1px solid #444;
+  padding: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.toggle-highlights-btn:hover {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+.toggle-highlights-btn:active {
+  transform: translateY(1px);
+}
+
+.highlights-loading,
+.highlights-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  color: #888;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+.highlights-empty svg {
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+.empty-hint {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+.highlights-list {
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.highlight-item {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  transition: border-color 0.2s ease;
+}
+
+.highlight-item:hover {
+  border-color: #646cff;
+}
+
+.highlight-quote-icon {
+  color: #646cff;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.highlight-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.highlight-text {
+  margin: 0;
+  padding: 0;
+  font-style: italic;
+  color: #ddd;
+  line-height: 1.6;
+  border-left: none;
+  font-size: 0.95rem;
+}
+
+.highlight-context {
+  margin-top: 0.5rem;
+}
+
+.highlight-context summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #888;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.highlight-context summary:hover {
+  color: #aaa;
+}
+
+.context-text {
+  margin: 0.5rem 0 0 0;
+  padding: 0.75rem;
+  background: #252525;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+.highlight-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #888;
+  flex-wrap: wrap;
+}
+
+.highlight-time {
+  color: #888;
+}
+
+.highlight-source {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: #646cff;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.highlight-source:hover {
+  color: #535bf2;
+  text-decoration: underline;
+}
+
+.highlight-source svg {
+  font-size: 0.875rem;
 }
