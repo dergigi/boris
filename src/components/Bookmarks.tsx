@@ -132,6 +132,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           isCollapsed={isHighlightsCollapsed}
           onToggleCollapse={() => setIsHighlightsCollapsed(!isHighlightsCollapsed)}
           onSelectUrl={handleSelectUrl}
+          selectedUrl={selectedUrl}
         />
       </div>
     </div>

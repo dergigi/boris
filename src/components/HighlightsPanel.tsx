@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight, faChevronLeft, faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
@@ -10,6 +10,7 @@ interface HighlightsPanelProps {
   isCollapsed: boolean
   onToggleCollapse: () => void
   onSelectUrl?: (url: string) => void
+  selectedUrl?: string
 }
 
 export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
@@ -17,8 +18,33 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   loading,
   isCollapsed,
   onToggleCollapse,
-  onSelectUrl
+  onSelectUrl,
+  selectedUrl
 }) => {
+  // Filter highlights to show only those relevant to the current URL
+  const filteredHighlights = useMemo(() => {
+    if (!selectedUrl) return highlights
+    
+    const normalizeUrl = (url: string) => {
+      try {
+        const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
+        return `${urlObj.hostname.replace(/^www\./, '')}${urlObj.pathname}`.replace(/\/$/, '').toLowerCase()
+      } catch {
+        return url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '').toLowerCase()
+      }
+    }
+    
+    const normalizedSelected = normalizeUrl(selectedUrl)
+    
+    return highlights.filter(h => {
+      if (!h.urlReference) return false
+      const normalizedRef = normalizeUrl(h.urlReference)
+      return normalizedSelected === normalizedRef || 
+             normalizedSelected.includes(normalizedRef) ||
+             normalizedRef.includes(normalizedSelected)
+    })
+  }, [highlights, selectedUrl])
+  
   if (isCollapsed) {
     return (
       <div className="highlights-container collapsed">
@@ -40,7 +66,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
         <div className="highlights-title">
           <FontAwesomeIcon icon={faHighlighter} />
           <h3>Highlights</h3>
-          {!loading && <span className="count">({highlights.length})</span>}
+          {!loading && <span className="count">({filteredHighlights.length})</span>}
         </div>
         <button
           onClick={onToggleCollapse}
@@ -56,17 +82,19 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
         <div className="highlights-loading">
           <p>Loading highlights...</p>
         </div>
-      ) : highlights.length === 0 ? (
+      ) : filteredHighlights.length === 0 ? (
         <div className="highlights-empty">
           <FontAwesomeIcon icon={faHighlighter} size="2x" />
-          <p>No highlights found.</p>
+          <p>No highlights for this article.</p>
           <p className="empty-hint">
-            Create highlights using a Nostr client that supports NIP-84.
+            {selectedUrl 
+              ? 'Create highlights for this article using a Nostr client that supports NIP-84.'
+              : 'Select an article to view its highlights.'}
           </p>
         </div>
       ) : (
         <div className="highlights-list">
-          {highlights.map((highlight) => (
+          {filteredHighlights.map((highlight) => (
             <HighlightItem
               key={highlight.id}
               highlight={highlight}
