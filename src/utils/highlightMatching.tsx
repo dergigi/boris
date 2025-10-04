@@ -25,10 +25,8 @@ export function findHighlightMatches(
     let startIndex = 0
     
     // Find all occurrences of this highlight in the content
-    while (true) {
-      const index = content.indexOf(searchText, startIndex)
-      if (index === -1) break
-      
+    let index = content.indexOf(searchText, startIndex)
+    while (index !== -1) {
       matches.push({
         highlight,
         startIndex: index,
@@ -36,6 +34,7 @@ export function findHighlightMatches(
       })
       
       startIndex = index + searchText.length
+      index = content.indexOf(searchText, startIndex)
     }
   }
   
@@ -110,7 +109,7 @@ function createMarkElement(highlight: Highlight, matchText: string): HTMLElement
 }
 
 // Helper to replace text node with mark element
-function replaceTextWithMark(textNode: Text, before: string, match: string, after: string, mark: HTMLElement) {
+function replaceTextWithMark(textNode: Text, before: string, after: string, mark: HTMLElement) {
   const parent = textNode.parentNode
   if (!parent) return
   
@@ -157,7 +156,7 @@ function tryMarkInTextNodes(
     const after = text.substring(actualIndex + searchText.length)
     const mark = createMarkElement(highlight, match)
     
-    replaceTextWithMark(textNode, before, match, after, mark)
+    replaceTextWithMark(textNode, before, after, mark)
     return true
   }
   

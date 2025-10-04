@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner, faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
-import { applyHighlightsToText, applyHighlightsToHTML } from '../utils/highlightMatching'
+import { applyHighlightsToHTML } from '../utils/highlightMatching'
 
 interface ContentPanelProps {
   loading: boolean
