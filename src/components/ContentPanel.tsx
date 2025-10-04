@@ -85,7 +85,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Apply highlights after DOM is rendered
   useEffect(() => {
-    if (!contentRef.current || relevantHighlights.length === 0) return
+    console.log('🔍 useEffect triggered:', {
+      hasContentRef: !!contentRef.current,
+      relevantHighlightsCount: relevantHighlights.length,
+      hasHtml: !!html
+    })
+    
+    if (!contentRef.current || relevantHighlights.length === 0) {
+      console.log('⚠️ Skipping highlight application:', {
+        reason: !contentRef.current ? 'no contentRef' : 'no relevant highlights'
+      })
+      return
+    }
     
     console.log('🔍 Applying highlights to rendered DOM:', {
       highlightsCount: relevantHighlights.length,
