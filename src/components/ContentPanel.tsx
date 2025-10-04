@@ -87,10 +87,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Apply highlights after DOM is rendered
   useEffect(() => {
-    // Skip if no HTML content or underlines are hidden
-    if (!html || !showUnderlines) {
+    // Skip if no content or underlines are hidden
+    if ((!html && !markdown) || !showUnderlines) {
       console.log('⚠️ Skipping highlight application:', {
-        reason: !html ? 'no html' : 'underlines hidden'
+        reason: (!html && !markdown) ? 'no content' : 'underlines hidden',
+        hasHtml: !!html,
+        hasMarkdown: !!markdown
       })
       
       // If underlines are hidden, remove any existing highlights
@@ -114,7 +116,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     
     console.log('🔍 Scheduling highlight application:', {
       relevantHighlightsCount: relevantHighlights.length,
-      highlights: relevantHighlights.map(h => h.content.slice(0, 50))
+      highlights: relevantHighlights.map(h => h.content.slice(0, 50)),
+      hasHtml: !!html,
+      hasMarkdown: !!markdown
     })
     
     // Use requestAnimationFrame to ensure DOM is fully rendered
@@ -138,7 +142,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     })
     
     return () => cancelAnimationFrame(rafId)
-  }, [relevantHighlights, html, showUnderlines])
+  }, [relevantHighlights, html, markdown, showUnderlines])
 
   const highlightedMarkdown = useMemo(() => {
     if (!markdown || relevantHighlights.length === 0) return markdown
@@ -181,7 +185,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         </div>
       )}
       {markdown ? (
-        <div className="reader-markdown">
+        <div ref={contentRef} className="reader-markdown">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {highlightedMarkdown}
           </ReactMarkdown>
