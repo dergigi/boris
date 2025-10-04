@@ -1312,19 +1312,20 @@ body {
   font-size: 0.875rem;
 }
 
-/* Inline content highlights */
+/* Inline content highlights - fluorescent marker style */
 .content-highlight {
-  background: transparent;
-  border-bottom: 2px solid #ffd700;
-  padding: 0.125rem 0;
-  cursor: help;
+  background: rgba(255, 255, 0, 0.35);
+  padding: 0.125rem 0.25rem;
+  cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(255, 255, 0, 0.2);
 }
 
 .content-highlight:hover {
-  background: rgba(255, 215, 0, 0.15);
-  border-bottom-color: #ffed4e;
+  background: rgba(255, 255, 0, 0.5);
+  box-shadow: 0 0 12px rgba(255, 255, 0, 0.3);
 }
 
 .reader-html .content-highlight,
@@ -1336,13 +1337,13 @@ body {
 /* Ensure highlights work in both light and dark mode */
 @media (prefers-color-scheme: light) {
   .content-highlight {
-    background: transparent;
-    border-bottom-color: #d4af37;
+    background: rgba(255, 255, 0, 0.4);
+    box-shadow: 0 0 6px rgba(255, 255, 0, 0.15);
   }
   
   .content-highlight:hover {
-    background: rgba(212, 175, 55, 0.15);
-    border-bottom-color: #ffd700;
+    background: rgba(255, 255, 0, 0.55);
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.25);
   }
   
   .highlight-indicator {
