@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -23,6 +23,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   selectedUrl,
   highlights = []
 }) => {
+  const contentRef = useRef<HTMLDivElement>(null)
+  
   // Filter highlights relevant to the current URL
   const relevantHighlights = useMemo(() => {
     if (!selectedUrl || highlights.length === 0) {
@@ -81,17 +83,32 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     return filtered
   }, [selectedUrl, highlights])
 
-  // Apply highlights to content
-  const highlightedHTML = useMemo(() => {
-    if (!html || relevantHighlights.length === 0) {
-      console.log('🔍 No HTML highlighting:', { hasHtml: !!html, highlightsCount: relevantHighlights.length })
-      return html
-    }
-    console.log('🔍 Applying highlights to HTML:', { htmlLength: html.length, highlightsCount: relevantHighlights.length })
-    const result = applyHighlightsToHTML(html, relevantHighlights)
-    console.log('🔍 HTML highlighting result:', { originalLength: html.length, modifiedLength: result.length, changed: html !== result })
-    return result
-  }, [html, relevantHighlights])
+  // Apply highlights after DOM is rendered
+  useEffect(() => {
+    if (!contentRef.current || relevantHighlights.length === 0) return
+    
+    console.log('🔍 Applying highlights to rendered DOM:', {
+      highlightsCount: relevantHighlights.length,
+      highlights: relevantHighlights.map(h => h.content.slice(0, 50))
+    })
+    
+    // Small delay to ensure DOM is fully rendered
+    const timer = setTimeout(() => {
+      if (!contentRef.current) return
+      
+      const originalHTML = contentRef.current.innerHTML
+      const highlightedHTML = applyHighlightsToHTML(originalHTML, relevantHighlights)
+      
+      if (originalHTML !== highlightedHTML) {
+        console.log('✅ Applied highlights to DOM')
+        contentRef.current.innerHTML = highlightedHTML
+      } else {
+        console.log('⚠️ No changes made to DOM')
+      }
+    }, 100)
+    
+    return () => clearTimeout(timer)
+  }, [relevantHighlights, html])
 
   const highlightedMarkdown = useMemo(() => {
     if (!markdown || relevantHighlights.length === 0) return markdown
@@ -139,8 +156,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             {highlightedMarkdown}
           </ReactMarkdown>
         </div>
-      ) : highlightedHTML ? (
-        <div className="reader-html" dangerouslySetInnerHTML={{ __html: highlightedHTML }} />
+      ) : html ? (
+        <div ref={contentRef} className="reader-html" dangerouslySetInnerHTML={{ __html: html }} />
       ) : (
         <div className="reader empty">
           <p>No readable content found for this URL.</p>
