@@ -96,16 +96,80 @@ export function applyHighlightsToText(
   return <>{result}</>
 }
 
+// Helper to normalize whitespace for flexible matching
+const normalizeWhitespace = (str: string) => str.replace(/\s+/g, ' ').trim()
+
+// Helper to create a mark element for a highlight
+function createMarkElement(highlight: Highlight, matchText: string): HTMLElement {
+  const mark = document.createElement('mark')
+  mark.className = 'content-highlight'
+  mark.setAttribute('data-highlight-id', highlight.id)
+  mark.setAttribute('title', `Highlighted ${new Date(highlight.created_at * 1000).toLocaleDateString()}`)
+  mark.textContent = matchText
+  return mark
+}
+
+// Helper to replace text node with mark element
+function replaceTextWithMark(textNode: Text, before: string, match: string, after: string, mark: HTMLElement) {
+  const parent = textNode.parentNode
+  if (!parent) return
+  
+  if (before) parent.insertBefore(document.createTextNode(before), textNode)
+  parent.insertBefore(mark, textNode)
+  if (after) {
+    textNode.textContent = after
+  } else {
+    parent.removeChild(textNode)
+  }
+}
+
+// Helper to find and mark text in nodes
+function tryMarkInTextNodes(
+  textNodes: Text[],
+  searchText: string,
+  highlight: Highlight,
+  useNormalized: boolean
+): boolean {
+  const normalizedSearch = normalizeWhitespace(searchText)
+  
+  for (const textNode of textNodes) {
+    const text = textNode.textContent || ''
+    const searchIn = useNormalized ? normalizeWhitespace(text) : text
+    const searchFor = useNormalized ? normalizedSearch : searchText
+    const index = searchIn.indexOf(searchFor)
+    
+    if (index === -1) continue
+    
+    console.log(`✅ Found ${useNormalized ? 'normalized' : 'exact'} match:`, text.slice(0, 50))
+    
+    let actualIndex = index
+    if (useNormalized) {
+      // Map normalized index back to original text
+      let normalizedIdx = 0
+      for (let i = 0; i < text.length && normalizedIdx < index; i++) {
+        if (!/\s/.test(text[i]) || (i > 0 && !/\s/.test(text[i-1]))) normalizedIdx++
+        actualIndex = i + 1
+      }
+    }
+    
+    const before = text.substring(0, actualIndex)
+    const match = text.substring(actualIndex, actualIndex + searchText.length)
+    const after = text.substring(actualIndex + searchText.length)
+    const mark = createMarkElement(highlight, match)
+    
+    replaceTextWithMark(textNode, before, match, after, mark)
+    return true
+  }
+  
+  return false
+}
+
 /**
  * Apply highlights to HTML content by injecting mark tags using DOM manipulation
  */
-export function applyHighlightsToHTML(
-  html: string,
-  highlights: Highlight[]
-): string {
+export function applyHighlightsToHTML(html: string, highlights: Highlight[]): string {
   if (!html || highlights.length === 0) return html
   
-  // Create a temporary DOM element to work with
   const tempDiv = document.createElement('div')
   tempDiv.innerHTML = html
   
@@ -115,120 +179,23 @@ export function applyHighlightsToHTML(
     highlightTexts: highlights.map(h => h.content.slice(0, 50))
   })
   
-  // Process each highlight
   for (const highlight of highlights) {
     const searchText = highlight.content.trim()
     if (!searchText) continue
     
     console.log('🔍 Processing highlight:', searchText.slice(0, 50))
     
-    // Normalize whitespace for more flexible matching
-    const normalizeWhitespace = (str: string) => str.replace(/\s+/g, ' ').trim()
-    const normalizedSearch = normalizeWhitespace(searchText)
-    
-    // Walk through all text nodes and replace matches
-    const walker = document.createTreeWalker(
-      tempDiv,
-      NodeFilter.SHOW_TEXT,
-      null
-    )
-    
+    // Collect all text nodes
+    const walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, null)
     const textNodes: Text[] = []
     let node: Node | null
-    while ((node = walker.nextNode())) {
-      textNodes.push(node as Text)
-    }
+    while ((node = walker.nextNode())) textNodes.push(node as Text)
     
     // Try exact match first, then normalized match
-    let found = false
+    const found = tryMarkInTextNodes(textNodes, searchText, highlight, false) ||
+                  tryMarkInTextNodes(textNodes, searchText, highlight, true)
     
-    // First pass: exact match
-    for (const textNode of textNodes) {
-      const text = textNode.textContent || ''
-      const index = text.indexOf(searchText)
-      
-      if (index !== -1) {
-        console.log('✅ Found exact match in text node:', text.slice(Math.max(0, index - 20), index + 50))
-        
-        // Split the text node and insert the mark element
-        const before = text.substring(0, index)
-        const match = text.substring(index, index + searchText.length)
-        const after = text.substring(index + searchText.length)
-        
-        const mark = document.createElement('mark')
-        mark.className = 'content-highlight'
-        mark.setAttribute('data-highlight-id', highlight.id)
-        mark.setAttribute('title', `Highlighted ${new Date(highlight.created_at * 1000).toLocaleDateString()}`)
-        mark.textContent = match
-        
-        const parent = textNode.parentNode
-        if (parent) {
-          if (before) {
-            parent.insertBefore(document.createTextNode(before), textNode)
-          }
-          parent.insertBefore(mark, textNode)
-          if (after) {
-            textNode.textContent = after
-          } else {
-            parent.removeChild(textNode)
-          }
-        }
-        
-        found = true
-        break
-      }
-    }
-    
-    // Second pass: normalized whitespace match
-    if (!found) {
-      for (const textNode of textNodes) {
-        const text = textNode.textContent || ''
-        const normalizedText = normalizeWhitespace(text)
-        const index = normalizedText.indexOf(normalizedSearch)
-        
-        if (index !== -1) {
-          console.log('✅ Found normalized match in text node:', text.slice(0, 50))
-          
-          // Find the actual position in the original text
-          let actualIndex = 0
-          let normalizedIndex = 0
-          
-          for (let i = 0; i < text.length && normalizedIndex < index; i++) {
-            if (!/\s/.test(text[i]) || (i > 0 && !/\s/.test(text[i-1]))) {
-              normalizedIndex++
-            }
-            actualIndex = i + 1
-          }
-          
-          // Approximate the length in the original text
-          const actualLength = searchText.length
-          const match = text.substring(actualIndex, actualIndex + actualLength)
-          const before = text.substring(0, actualIndex)
-          const after = text.substring(actualIndex + actualLength)
-          
-          const mark = document.createElement('mark')
-          mark.className = 'content-highlight'
-          mark.setAttribute('data-highlight-id', highlight.id)
-          mark.setAttribute('title', `Highlighted ${new Date(highlight.created_at * 1000).toLocaleDateString()}`)
-          mark.textContent = match
-          
-          const parent = textNode.parentNode
-          if (parent) {
-            if (before) {
-              parent.insertBefore(document.createTextNode(before), textNode)
-            }
-            parent.insertBefore(mark, textNode)
-            if (after) {
-              textNode.textContent = after
-            } else {
-              parent.removeChild(textNode)
-            }
-          }
-          
-          break
-        }
-      }
-    }
+    if (!found) console.log('⚠️ No match found for highlight')
   }
   
   const result = tempDiv.innerHTML
