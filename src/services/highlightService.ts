@@ -12,6 +12,23 @@ interface NostrEvent {
   sig: string
 }
 
+/**
+ * Deduplicate highlight events by ID
+ * Since highlights can come from multiple relays, we need to ensure
+ * we only show each unique highlight once
+ */
+function dedupeHighlights(events: NostrEvent[]): NostrEvent[] {
+  const byId = new Map<string, NostrEvent>()
+  
+  for (const event of events) {
+    if (event?.id && !byId.has(event.id)) {
+      byId.set(event.id, event)
+    }
+  }
+  
+  return Array.from(byId.values())
+}
+
 export const fetchHighlights = async (
   relayPool: RelayPool,
   pubkey: string
@@ -29,7 +46,11 @@ export const fetchHighlights = async (
     
     console.log('📊 Raw highlight events fetched:', rawEvents.length)
     
-    const highlights: Highlight[] = rawEvents.map((event: NostrEvent) => {
+    // Deduplicate events by ID
+    const uniqueEvents = dedupeHighlights(rawEvents)
+    console.log('📊 Unique highlight events after deduplication:', uniqueEvents.length)
+    
+    const highlights: Highlight[] = uniqueEvents.map((event: NostrEvent) => {
       // Extract relevant tags
       const eventRef = event.tags.find(t => t[0] === 'e' || t[0] === 'a')?.[1]
       const urlRef = event.tags.find(t => t[0] === 'r')?.[1]
