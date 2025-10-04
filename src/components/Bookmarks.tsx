@@ -28,6 +28,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isHighlightsCollapsed, setIsHighlightsCollapsed] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
+  const [showUnderlines, setShowUnderlines] = useState(true)
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
 
@@ -123,6 +124,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           markdown={readerContent?.markdown}
           selectedUrl={selectedUrl}
           highlights={highlights}
+          showUnderlines={showUnderlines}
         />
       </div>
       <div className="pane highlights">
@@ -133,6 +135,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           onToggleCollapse={() => setIsHighlightsCollapsed(!isHighlightsCollapsed)}
           onSelectUrl={handleSelectUrl}
           selectedUrl={selectedUrl}
+          onToggleUnderlines={setShowUnderlines}
         />
       </div>
     </div>

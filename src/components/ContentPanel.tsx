@@ -13,6 +13,7 @@ interface ContentPanelProps {
   markdown?: string
   selectedUrl?: string
   highlights?: Highlight[]
+  showUnderlines?: boolean
 }
 
 const ContentPanel: React.FC<ContentPanelProps> = ({ 
@@ -21,7 +22,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   html, 
   markdown, 
   selectedUrl,
-  highlights = []
+  highlights = [],
+  showUnderlines = true
 }) => {
   const contentRef = useRef<HTMLDivElement>(null)
   
@@ -88,13 +90,27 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     console.log('🔍 useEffect triggered:', {
       hasContentRef: !!contentRef.current,
       relevantHighlightsCount: relevantHighlights.length,
-      hasHtml: !!html
+      hasHtml: !!html,
+      showUnderlines
     })
     
-    if (!contentRef.current || relevantHighlights.length === 0) {
+    if (!contentRef.current || relevantHighlights.length === 0 || !showUnderlines) {
       console.log('⚠️ Skipping highlight application:', {
-        reason: !contentRef.current ? 'no contentRef' : 'no relevant highlights'
+        reason: !contentRef.current ? 'no contentRef' : 
+                !showUnderlines ? 'underlines hidden' :
+                'no relevant highlights'
       })
+      
+      // If underlines are hidden, remove any existing highlights
+      if (!showUnderlines && contentRef.current) {
+        const marks = contentRef.current.querySelectorAll('mark.content-highlight')
+        marks.forEach(mark => {
+          const text = mark.textContent || ''
+          const textNode = document.createTextNode(text)
+          mark.parentNode?.replaceChild(textNode, mark)
+        })
+      }
+      
       return
     }
     
@@ -119,7 +135,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }, 100)
     
     return () => clearTimeout(timer)
-  }, [relevantHighlights, html])
+  }, [relevantHighlights, html, showUnderlines])
 
   const highlightedMarkdown = useMemo(() => {
     if (!markdown || relevantHighlights.length === 0) return markdown

@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faChevronLeft, faHighlighter } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faChevronLeft, faHighlighter, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 
@@ -11,6 +11,7 @@ interface HighlightsPanelProps {
   onToggleCollapse: () => void
   onSelectUrl?: (url: string) => void
   selectedUrl?: string
+  onToggleUnderlines?: (show: boolean) => void
 }
 
 export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
@@ -19,8 +20,17 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   isCollapsed,
   onToggleCollapse,
   onSelectUrl,
-  selectedUrl
+  selectedUrl,
+  onToggleUnderlines
 }) => {
+  const [showUnderlines, setShowUnderlines] = useState(true)
+  
+  const handleToggleUnderlines = () => {
+    const newValue = !showUnderlines
+    setShowUnderlines(newValue)
+    onToggleUnderlines?.(newValue)
+  }
+  
   // Filter highlights to show only those relevant to the current URL
   const filteredHighlights = useMemo(() => {
     if (!selectedUrl) return highlights
@@ -68,14 +78,26 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           <h3>Highlights</h3>
           {!loading && <span className="count">({filteredHighlights.length})</span>}
         </div>
-        <button
-          onClick={onToggleCollapse}
-          className="toggle-highlights-btn"
-          title="Collapse highlights panel"
-          aria-label="Collapse highlights panel"
-        >
-          <FontAwesomeIcon icon={faChevronRight} rotation={180} />
-        </button>
+        <div className="highlights-actions">
+          {filteredHighlights.length > 0 && (
+            <button
+              onClick={handleToggleUnderlines}
+              className="toggle-underlines-btn"
+              title={showUnderlines ? 'Hide underlines' : 'Show underlines'}
+              aria-label={showUnderlines ? 'Hide underlines' : 'Show underlines'}
+            >
+              <FontAwesomeIcon icon={showUnderlines ? faEye : faEyeSlash} />
+            </button>
+          )}
+          <button
+            onClick={onToggleCollapse}
+            className="toggle-highlights-btn"
+            title="Collapse highlights panel"
+            aria-label="Collapse highlights panel"
+          >
+            <FontAwesomeIcon icon={faChevronRight} rotation={180} />
+          </button>
+        </div>
       </div>
 
       {loading ? (

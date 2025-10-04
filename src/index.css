@@ -1136,6 +1136,13 @@ body {
   font-size: 0.875rem;
 }
 
+.highlights-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle-underlines-btn,
 .toggle-highlights-btn {
   background: transparent;
   color: #ddd;
@@ -1151,11 +1158,13 @@ body {
   transition: all 0.2s ease;
 }
 
+.toggle-underlines-btn:hover,
 .toggle-highlights-btn:hover {
   background: #2a2a2a;
   color: #fff;
 }
 
+.toggle-underlines-btn:active,
 .toggle-highlights-btn:active {
   transform: translateY(1px);
 }
