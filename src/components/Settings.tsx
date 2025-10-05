@@ -38,6 +38,19 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
 
         <div className="settings-content">
           <div className="setting-group">
+            <label htmlFor="collapseOnArticleOpen" className="checkbox-label">
+              <input
+                id="collapseOnArticleOpen"
+                type="checkbox"
+                checked={localSettings.collapseOnArticleOpen !== false}
+                onChange={(e) => setLocalSettings({ ...localSettings, collapseOnArticleOpen: e.target.checked })}
+                className="setting-checkbox"
+              />
+              <span>Collapse bookmark bar when opening an article</span>
+            </label>
+          </div>
+
+          <div className="setting-group">
             <label htmlFor="defaultViewMode">Default View Mode</label>
             <select
               id="defaultViewMode"

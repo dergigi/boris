@@ -9,6 +9,7 @@ import { Account } from 'applesauce-accounts'
 const SETTINGS_IDENTIFIER = 'com.dergigi.boris.user-settings'
 
 export interface UserSettings {
+  collapseOnArticleOpen?: boolean
   defaultViewMode?: 'compact' | 'cards' | 'large'
   showUnderlines?: boolean
   sidebarCollapsed?: boolean
