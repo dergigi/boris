@@ -797,8 +797,8 @@ body {
 }
 
 .compact-read-btn {
-  background: #28a745;
-  color: white;
+  background: transparent;
+  color: #888;
   border: none;
   padding: 0;
   border-radius: 4px;
@@ -811,11 +811,11 @@ body {
   height: 22px;
   flex-shrink: 0;
   margin-left: auto;
-  transition: background-color 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .compact-read-btn:hover {
-  background: #218838;
+  color: #ccc;
 }
 
 .compact-read-btn:active {
