@@ -12,7 +12,7 @@ import ContentPanel from './ContentPanel'
 import { HighlightsPanel } from './HighlightsPanel'
 import { fetchReadableContent, ReadableContent } from '../services/readerService'
 import Settings from './Settings'
-import { UserSettings, loadSettings, saveSettings } from '../services/settingsService'
+import { UserSettings, loadSettings, saveSettings, watchSettings } from '../services/settingsService'
 import { loadFont, getFontFamily } from '../utils/fontLoader'
 export type ViewMode = 'compact' | 'cards' | 'large'
 
@@ -52,6 +52,21 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       handleLoadSettings()
     }
   }, [relayPool, activeAccount?.pubkey])
+
+  // Watch for settings changes from Nostr
+  useEffect(() => {
+    if (!activeAccount || !eventStore) return
+    
+    const subscription = watchSettings(eventStore, activeAccount.pubkey, (loadedSettings) => {
+      if (loadedSettings) {
+        setSettings(loadedSettings)
+      }
+    })
+    
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [activeAccount?.pubkey, eventStore])
 
   useEffect(() => {
     const root = document.documentElement.style
