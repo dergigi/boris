@@ -14,6 +14,7 @@ interface CompactViewProps {
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   getIconForUrlType: IconGetter
   firstUrlClassification: { buttonText: string } | null
+  articleImage?: string
 }
 
 export const CompactView: React.FC<CompactViewProps> = ({

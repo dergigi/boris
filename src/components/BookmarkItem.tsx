@@ -30,13 +30,17 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   const firstUrl = hasUrls ? extractedUrls[0] : null
   const firstUrlClassification = firstUrl ? classifyUrl(firstUrl) : null
   
+  // For kind:30023 articles, get the image from tags
+  const isArticle = bookmark.kind === 30023
+  const articleImage = isArticle ? bookmark.tags.find(t => t[0] === 'image')?.[1] : undefined
+  
   // Fetch OG image for large view (hook must be at top level)
   const instantPreview = firstUrl ? getPreviewImage(firstUrl, firstUrlClassification?.type || '') : null
   React.useEffect(() => {
-    if (viewMode === 'large' && firstUrl && !instantPreview && !ogImage) {
+    if (viewMode === 'large' && firstUrl && !instantPreview && !ogImage && !articleImage) {
       fetchOgImage(firstUrl).then(setOgImage)
     }
-  }, [viewMode, firstUrl, instantPreview, ogImage])
+  }, [viewMode, firstUrl, instantPreview, ogImage, articleImage])
 
   // Resolve author profile using applesauce
   const authorProfile = useEventModel(Models.ProfileModel, [bookmark.pubkey])
@@ -99,7 +103,8 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     authorNpub,
     eventNevent,
     getAuthorDisplayName,
-    handleReadNow
+    handleReadNow,
+    articleImage
   }
 
   if (viewMode === 'compact') {
@@ -107,9 +112,9 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   }
 
   if (viewMode === 'large') {
-    const previewImage = instantPreview || ogImage
+    const previewImage = articleImage || instantPreview || ogImage
     return <LargeView {...sharedProps} previewImage={previewImage} />
   }
 
-  return <CardView {...sharedProps} />
+  return <CardView {...sharedProps} articleImage={articleImage} />
 }

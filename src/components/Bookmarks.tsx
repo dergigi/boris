@@ -140,6 +140,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           setReaderContent({
             title: article.title,
             markdown: article.markdown,
+            image: article.image,
             url: `nostr:${naddr}`
           })
         } else {
@@ -190,6 +191,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             title={readerContent?.title}
             html={readerContent?.html}
             markdown={readerContent?.markdown}
+            image={readerContent?.image}
             selectedUrl={selectedUrl}
             highlights={highlights}
             showUnderlines={showUnderlines}

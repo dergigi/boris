@@ -20,6 +20,7 @@ interface CardViewProps {
   eventNevent?: string
   getAuthorDisplayName: () => string
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
+  articleImage?: string
 }
 
 export const CardView: React.FC<CardViewProps> = ({
@@ -33,15 +34,24 @@ export const CardView: React.FC<CardViewProps> = ({
   authorNpub,
   eventNevent,
   getAuthorDisplayName,
-  handleReadNow
+  handleReadNow,
+  articleImage
 }) => {
   const [expanded, setExpanded] = useState(false)
   const [urlsExpanded, setUrlsExpanded] = useState(false)
   const contentLength = (bookmark.content || '').length
   const shouldTruncate = !expanded && contentLength > 210
+  const isArticle = bookmark.kind === 30023
 
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
+      {isArticle && articleImage && (
+        <div 
+          className="article-hero-image"
+          style={{ backgroundImage: `url(${articleImage})` }}
+          onClick={() => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)}
+        />
+      )}
       <div className="bookmark-header">
         <span className="bookmark-type">
           {bookmark.isPrivate ? (

@@ -38,13 +38,19 @@ export const LargeView: React.FC<LargeViewProps> = ({
   
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark large ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
-      {hasUrls && (
+      {(hasUrls || (isArticle && previewImage)) && (
         <div 
           className="large-preview-image" 
-          onClick={() => onSelectUrl?.(extractedUrls[0])}
+          onClick={() => {
+            if (isArticle) {
+              handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)
+            } else {
+              onSelectUrl?.(extractedUrls[0])
+            }
+          }}
           style={previewImage ? { backgroundImage: `url(${previewImage})` } : undefined}
         >
-          {!previewImage && (
+          {!previewImage && hasUrls && (
             <div className="preview-placeholder">
               <FontAwesomeIcon icon={getIconForUrlType(extractedUrls[0])} />
             </div>

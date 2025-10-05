@@ -1023,6 +1023,48 @@ body {
   background: #218838;
 }
 
+/* Article hero image in card view */
+.article-hero-image {
+  width: 100%;
+  height: 200px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px 8px 0 0;
+  position: relative;
+}
+
+.article-hero-image:hover {
+  opacity: 0.9;
+}
+
+.article-hero-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Hero image in reader view */
+.reader-hero-image {
+  width: 100%;
+  margin: 0 0 2rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.reader-hero-image img {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: cover;
+  display: block;
+}
+
 /* Private Bookmark Styles */
 .private-bookmark {
   background: #2a2a2a;

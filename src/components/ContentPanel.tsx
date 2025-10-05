@@ -15,6 +15,7 @@ interface ContentPanelProps {
   html?: string
   markdown?: string
   selectedUrl?: string
+  image?: string
   highlights?: Highlight[]
   showUnderlines?: boolean
   highlightStyle?: 'marker' | 'underline'
@@ -29,6 +30,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   html, 
   markdown, 
   selectedUrl,
+  image,
   highlights = [],
   showUnderlines = true,
   highlightStyle = 'marker',
@@ -158,6 +160,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   return (
     <div className="reader" style={{ '--highlight-rgb': highlightRgb } as React.CSSProperties}>
+      {image && (
+        <div className="reader-hero-image">
+          <img src={image} alt={title || 'Article image'} />
+        </div>
+      )}
       {title && (
         <div className="reader-header">
           <h2 className="reader-title">{title}</h2>
