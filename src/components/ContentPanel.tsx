@@ -84,10 +84,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Store original HTML when content changes
   useEffect(() => {
     if (!contentRef.current) return
-    // Only store if we don't have it yet or content changed
-    if (!originalHtmlRef.current || html) {
-      originalHtmlRef.current = contentRef.current.innerHTML
-    }
+    // Store the fresh HTML content
+    originalHtmlRef.current = contentRef.current.innerHTML
   }, [html, markdown, selectedUrl])
 
   // Apply highlights after DOM is rendered
