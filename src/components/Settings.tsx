@@ -77,7 +77,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
                   <button
                     key={size}
                     onClick={() => setLocalSettings({ ...localSettings, fontSize: size })}
-                    className={`font-size-btn ${(localSettings.fontSize || 16) === size ? 'active' : ''}`}
+                    className={`font-size-btn ${(localSettings.fontSize || 18) === size ? 'active' : ''}`}
                     title={`${size}px`}
                     style={{ fontSize: `${size - 2}px` }}
                   >
@@ -157,7 +157,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
                 className="preview-content" 
                 style={{ 
                   fontFamily: previewFontFamily,
-                  fontSize: `${localSettings.fontSize || 16}px`,
+                  fontSize: `${localSettings.fontSize || 18}px`,
                   '--highlight-rgb': hexToRgb(localSettings.highlightColor || '#ffff00')
                 } as React.CSSProperties}
               >
