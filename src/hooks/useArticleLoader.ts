@@ -81,7 +81,6 @@ export function useArticleLoader({
           html: `<p>Failed to load article: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
           url: `nostr:${naddr}`
         })
-        setReaderLoading(false)
       } finally {
         setReaderLoading(false)
       }
