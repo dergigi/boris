@@ -216,7 +216,7 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 0.5rem 0.5rem 0 0.5rem;
+  padding: 0.5rem 0 0 0.5rem;
   background: transparent;
   border: none;
 }
@@ -503,6 +503,15 @@ body {
   padding: 0 var(--main-horizontal-padding);
   overflow-x: hidden;
   contain: layout style;
+}
+
+/* Remove padding when sidebar is collapsed for zero gap */
+.three-pane.sidebar-collapsed .pane.main {
+  padding-left: 0;
+}
+
+.three-pane.sidebar-collapsed.highlights-collapsed .pane.main {
+  padding-left: 0;
 }
 
 .pane.highlights {
