@@ -1,6 +1,5 @@
 import { RelayPool, completeOnEose } from 'applesauce-relay'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
-import { NostrEvent } from 'nostr-tools'
 
 /**
  * Fetches the contact list (follows) for a specific user
