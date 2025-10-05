@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faChevronLeft, faHighlighter, faEye, faEyeSlash, faRotate } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faHighlighter, faEye, faEyeSlash, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 
@@ -68,7 +68,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           title="Expand highlights panel"
           aria-label="Expand highlights panel"
         >
-          <FontAwesomeIcon icon={faChevronLeft} />
+          <FontAwesomeIcon icon={faChevronRight} />
         </button>
       </div>
     )
