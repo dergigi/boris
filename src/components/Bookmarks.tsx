@@ -45,17 +45,16 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const accountManager = Hooks.useAccountManager()
   const eventStore = useEventStore()
 
+  // Load initial data and set up settings subscription on login
   useEffect(() => {
-    if (relayPool && activeAccount) {
-      handleFetchBookmarks()
-      handleFetchHighlights()
-      handleLoadSettings()
-    }
-  }, [relayPool, activeAccount?.pubkey])
+    if (!relayPool || !activeAccount || !eventStore) return
 
-  // Watch for settings changes from Nostr
-  useEffect(() => {
-    if (!activeAccount || !eventStore) return
+    // Fetch bookmarks and highlights
+    handleFetchBookmarks()
+    handleFetchHighlights()
+
+    // Load settings from Nostr and set up live subscription
+    handleLoadSettings()
     
     const subscription = watchSettings(eventStore, activeAccount.pubkey, (loadedSettings) => {
       if (loadedSettings) {
@@ -66,7 +65,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     return () => {
       subscription.unsubscribe()
     }
-  }, [activeAccount?.pubkey, eventStore])
+  }, [relayPool, activeAccount?.pubkey, eventStore])
 
   useEffect(() => {
     const root = document.documentElement.style
