@@ -124,7 +124,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
             <div className="setting-group setting-inline">
               <label>My Highlights</label>
               <ColorPicker
-                selectedColor={localSettings.highlightColorMine || '#eab308'}
+                selectedColor={localSettings.highlightColorMine || '#ffff00'}
                 onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColorMine: color })}
               />
             </div>
@@ -132,7 +132,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
             <div className="setting-group setting-inline">
               <label>Friends Highlights</label>
               <ColorPicker
-                selectedColor={localSettings.highlightColorFriends || '#f97316'}
+                selectedColor={localSettings.highlightColorFriends || '#ff8c00'}
                 onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColorFriends: color })}
               />
             </div>
@@ -140,7 +140,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
             <div className="setting-group setting-inline">
               <label>Nostrverse Highlights</label>
               <ColorPicker
-                selectedColor={localSettings.highlightColorNostrverse || '#9333ea'}
+                selectedColor={localSettings.highlightColorNostrverse || '#800080'}
                 onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColorNostrverse: color })}
               />
             </div>
