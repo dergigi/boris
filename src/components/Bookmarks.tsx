@@ -73,6 +73,14 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         const dTag = article.event.tags.find(t => t[0] === 'd')?.[1] || ''
         const articleCoordinate = `${article.event.kind}:${article.author}:${dTag}`
         
+        console.log('📰 Article details:')
+        console.log('  - Event ID:', article.event.id)
+        console.log('  - Author:', article.author)
+        console.log('  - Kind:', article.event.kind)
+        console.log('  - D-tag:', dTag)
+        console.log('  - Coordinate:', articleCoordinate)
+        console.log('  - Title:', article.title)
+        
         try {
           setHighlightsLoading(true)
           const fetchedHighlights = await fetchHighlightsForArticle(relayPool, articleCoordinate)

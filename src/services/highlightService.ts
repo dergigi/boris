@@ -50,6 +50,7 @@ export const fetchHighlightsForArticle = async (
     
     console.log('🔍 Fetching highlights (kind 9802) for article:', articleCoordinate)
     console.log('🔍 From relays:', highlightRelays)
+    console.log('🔍 Filter:', JSON.stringify({ kinds: [9802], '#a': [articleCoordinate] }, null, 2))
     
     // Query for highlights that reference this article via the 'a' tag
     const rawEvents = await lastValueFrom(
@@ -59,6 +60,9 @@ export const fetchHighlightsForArticle = async (
     )
     
     console.log('📊 Raw highlight events fetched:', rawEvents.length)
+    if (rawEvents.length > 0) {
+      console.log('📄 Sample highlight tags:', JSON.stringify(rawEvents[0].tags, null, 2))
+    }
     
     // Deduplicate events by ID
     const uniqueEvents = dedupeHighlights(rawEvents)
