@@ -1,5 +1,5 @@
 import { EventStore } from 'applesauce-core'
-import { APP_DATA_KIND, getAppDataContent } from 'applesauce-core/helpers/app-data'
+import { APP_DATA_KIND, getAppDataContent } from 'applesauce-core/helpers'
 import { AppDataBlueprint } from 'applesauce-factory/blueprints'
 import { EventFactory } from 'applesauce-factory'
 import { RelayPool, onlyEvents, mapEventsToStore } from 'applesauce-relay'
