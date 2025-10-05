@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTimes, faSave } from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faSave, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../services/settingsService'
 import IconButton from './IconButton'
 
@@ -50,17 +50,30 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
           </div>
 
           <div className="setting-group">
-            <label htmlFor="defaultViewMode">Default View Mode</label>
-            <select
-              id="defaultViewMode"
-              value={localSettings.defaultViewMode || 'compact'}
-              onChange={(e) => setLocalSettings({ ...localSettings, defaultViewMode: e.target.value as 'compact' | 'cards' | 'large' })}
-              className="setting-select"
-            >
-              <option value="compact">Compact</option>
-              <option value="cards">Cards</option>
-              <option value="large">Large</option>
-            </select>
+            <label>Default View Mode</label>
+            <div className="view-mode-controls">
+              <IconButton
+                icon={faList}
+                onClick={() => setLocalSettings({ ...localSettings, defaultViewMode: 'compact' })}
+                title="Compact list view"
+                ariaLabel="Compact list view"
+                variant={(localSettings.defaultViewMode || 'compact') === 'compact' ? 'primary' : 'ghost'}
+              />
+              <IconButton
+                icon={faThLarge}
+                onClick={() => setLocalSettings({ ...localSettings, defaultViewMode: 'cards' })}
+                title="Cards view"
+                ariaLabel="Cards view"
+                variant={localSettings.defaultViewMode === 'cards' ? 'primary' : 'ghost'}
+              />
+              <IconButton
+                icon={faImage}
+                onClick={() => setLocalSettings({ ...localSettings, defaultViewMode: 'large' })}
+                title="Large preview view"
+                ariaLabel="Large preview view"
+                variant={localSettings.defaultViewMode === 'large' ? 'primary' : 'ghost'}
+              />
+            </div>
           </div>
 
           <div className="setting-group">

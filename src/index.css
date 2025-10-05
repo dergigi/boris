@@ -1502,6 +1502,11 @@ body {
   text-align: left;
 }
 
+.settings-view .view-mode-controls {
+  justify-content: flex-start;
+  margin-bottom: 0;
+}
+
 .settings-footer {
   display: flex;
   justify-content: flex-start;
