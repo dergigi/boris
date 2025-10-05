@@ -1326,6 +1326,15 @@ body {
   opacity: 0.4;
 }
 
+.highlight-level-toggles .level-toggle-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.highlight-level-toggles .level-toggle-btn:disabled:hover {
+  background: none;
+}
+
 .refresh-highlights-btn,
 .toggle-underlines-btn,
 .toggle-highlights-btn {

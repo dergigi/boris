@@ -143,26 +143,26 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
                   friends: !highlightVisibility.friends 
                 })}
                 className={`level-toggle-btn ${highlightVisibility.friends ? 'active' : ''}`}
-                title="Toggle friends highlights"
+                title={currentUserPubkey ? "Toggle friends highlights" : "Login to see friends highlights"}
                 aria-label="Toggle friends highlights"
                 style={{ color: highlightVisibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined }}
+                disabled={!currentUserPubkey}
               >
                 <FontAwesomeIcon icon={faUserGroup} />
               </button>
-              {currentUserPubkey && (
-                <button
-                  onClick={() => onHighlightVisibilityChange({ 
-                    ...highlightVisibility, 
-                    mine: !highlightVisibility.mine 
-                  })}
-                  className={`level-toggle-btn ${highlightVisibility.mine ? 'active' : ''}`}
-                  title="Toggle my highlights"
-                  aria-label="Toggle my highlights"
-                  style={{ color: highlightVisibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined }}
-                >
-                  <FontAwesomeIcon icon={faUser} />
-                </button>
-              )}
+              <button
+                onClick={() => onHighlightVisibilityChange({ 
+                  ...highlightVisibility, 
+                  mine: !highlightVisibility.mine 
+                })}
+                className={`level-toggle-btn ${highlightVisibility.mine ? 'active' : ''}`}
+                title={currentUserPubkey ? "Toggle my highlights" : "Login to see your highlights"}
+                aria-label="Toggle my highlights"
+                style={{ color: highlightVisibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined }}
+                disabled={!currentUserPubkey}
+              >
+                <FontAwesomeIcon icon={faUser} />
+              </button>
             </div>
           )}
           {onRefresh && (
