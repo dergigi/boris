@@ -9,6 +9,7 @@ import { readingTime } from 'reading-time-estimator'
 import { filterHighlightsByUrl } from '../utils/urlHelpers'
 import { hexToRgb } from '../utils/colorHelpers'
 import ReaderHeader from './ReaderHeader'
+import { HighlightVisibility } from './HighlightsPanel'
 
 interface ContentPanelProps {
   loading: boolean
@@ -23,6 +24,9 @@ interface ContentPanelProps {
   highlightColor?: string
   onHighlightClick?: (highlightId: string) => void
   selectedHighlightId?: string
+  highlightVisibility?: HighlightVisibility
+  currentUserPubkey?: string
+  followedPubkeys?: Set<string>
 }
 
 const ContentPanel: React.FC<ContentPanelProps> = ({ 
@@ -37,13 +41,38 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   highlightStyle = 'marker',
   highlightColor = '#ffff00',
   onHighlightClick,
-  selectedHighlightId
+  selectedHighlightId,
+  highlightVisibility = { nostrverse: true, friends: true, mine: true },
+  currentUserPubkey,
+  followedPubkeys = new Set()
 }) => {
   const contentRef = useRef<HTMLDivElement>(null)
   const markdownPreviewRef = useRef<HTMLDivElement>(null)
   const [renderedHtml, setRenderedHtml] = useState<string>('')
   
-  const relevantHighlights = useMemo(() => filterHighlightsByUrl(highlights, selectedUrl), [selectedUrl, highlights])
+  // Filter highlights by URL and visibility settings
+  const relevantHighlights = useMemo(() => {
+    const urlFiltered = filterHighlightsByUrl(highlights, selectedUrl)
+    
+    // Apply visibility filtering
+    return urlFiltered
+      .map(h => {
+        // Classify highlight level
+        let level: 'mine' | 'friends' | 'nostrverse' = 'nostrverse'
+        if (h.pubkey === currentUserPubkey) {
+          level = 'mine'
+        } else if (followedPubkeys.has(h.pubkey)) {
+          level = 'friends'
+        }
+        return { ...h, level }
+      })
+      .filter(h => {
+        // Filter by visibility settings
+        if (h.level === 'mine') return highlightVisibility.mine
+        if (h.level === 'friends') return highlightVisibility.friends
+        return highlightVisibility.nostrverse
+      })
+  }, [selectedUrl, highlights, highlightVisibility, currentUserPubkey, followedPubkeys])
 
   // Convert markdown to HTML when markdown content changes
   useEffect(() => {
