@@ -37,10 +37,17 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
     onToggleUnderlines?.(newValue)
   }
   
-  // Filter highlights to show only those relevant to the current URL
+  // Filter highlights to show only those relevant to the current URL or article
   const filteredHighlights = useMemo(() => {
     if (!selectedUrl) return highlights
     
+    // For Nostr articles (URL starts with "nostr:"), we don't need to filter
+    // because we already fetched highlights specifically for this article
+    if (selectedUrl.startsWith('nostr:')) {
+      return highlights
+    }
+    
+    // For web URLs, filter by URL matching
     const normalizeUrl = (url: string) => {
       try {
         const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
