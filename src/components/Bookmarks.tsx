@@ -119,13 +119,18 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     try {
       // If we're viewing an article, fetch highlights for that article
       if (currentArticleCoordinate) {
-        const fetchedHighlights = await fetchHighlightsForArticle(
+        const highlightsList: Highlight[] = []
+        await fetchHighlightsForArticle(
           relayPool, 
           currentArticleCoordinate, 
-          currentArticleEventId
+          currentArticleEventId,
+          (highlight) => {
+            // Render each highlight immediately as it arrives
+            highlightsList.push(highlight)
+            setHighlights([...highlightsList].sort((a, b) => b.created_at - a.created_at))
+          }
         )
-        console.log(`🔄 Refreshed ${fetchedHighlights.length} highlights for article`)
-        setHighlights(fetchedHighlights)
+        console.log(`🔄 Refreshed ${highlightsList.length} highlights for article`)
       } 
       // Otherwise, if logged in, fetch user's own highlights
       else if (activeAccount) {

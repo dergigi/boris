@@ -65,15 +65,23 @@ export function useArticleLoader({
         setReaderLoading(false)
         
         // Fetch highlights asynchronously without blocking article display
+        // Stream them as they arrive for instant rendering
         try {
           setHighlightsLoading(true)
-          const fetchedHighlights = await fetchHighlightsForArticle(
+          setHighlights([]) // Clear old highlights
+          const highlightsList: Highlight[] = []
+          
+          await fetchHighlightsForArticle(
             relayPool, 
             articleCoordinate, 
-            article.event.id
+            article.event.id,
+            (highlight) => {
+              // Render each highlight immediately as it arrives
+              highlightsList.push(highlight)
+              setHighlights([...highlightsList].sort((a, b) => b.created_at - a.created_at))
+            }
           )
-          console.log(`📌 Found ${fetchedHighlights.length} highlights`)
-          setHighlights(fetchedHighlights)
+          console.log(`📌 Found ${highlightsList.length} highlights`)
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {

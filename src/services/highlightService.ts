@@ -1,5 +1,5 @@
 import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+import { lastValueFrom, takeUntil, timer, toArray, scan } from 'rxjs'
 import { NostrEvent } from 'nostr-tools'
 import {
   getHighlightText,
@@ -38,7 +38,8 @@ function dedupeHighlights(events: NostrEvent[]): NostrEvent[] {
 export const fetchHighlightsForArticle = async (
   relayPool: RelayPool,
   articleCoordinate: string,
-  eventId?: string
+  eventId?: string,
+  onHighlight?: (highlight: Highlight) => void
 ): Promise<Highlight[]> => {
   try {
     // Use well-known relays for highlights even if user isn't logged in
@@ -54,12 +55,52 @@ export const fetchHighlightsForArticle = async (
     console.log('🔍 Event ID:', eventId || 'none')
     console.log('🔍 From relays:', highlightRelays)
     
+    const seenIds = new Set<string>()
+    const processEvent = (event: NostrEvent): Highlight | null => {
+      if (seenIds.has(event.id)) return null
+      seenIds.add(event.id)
+      
+      const highlightText = getHighlightText(event)
+      const context = getHighlightContext(event)
+      const comment = getHighlightComment(event)
+      const sourceEventPointer = getHighlightSourceEventPointer(event)
+      const sourceAddressPointer = getHighlightSourceAddressPointer(event)
+      const sourceUrl = getHighlightSourceUrl(event)
+      const attributions = getHighlightAttributions(event)
+      
+      const author = attributions.find(a => a.role === 'author')?.pubkey
+      const eventReference = sourceEventPointer?.id || 
+        (sourceAddressPointer ? `${sourceAddressPointer.kind}:${sourceAddressPointer.pubkey}:${sourceAddressPointer.identifier}` : undefined)
+      
+      return {
+        id: event.id,
+        pubkey: event.pubkey,
+        created_at: event.created_at,
+        content: highlightText,
+        tags: event.tags,
+        eventReference,
+        urlReference: sourceUrl,
+        author,
+        context,
+        comment
+      }
+    }
+    
     // Query for highlights that reference this article via the 'a' tag
-    console.log('🔍 Filter 1 (a-tag):', JSON.stringify({ kinds: [9802], '#a': [articleCoordinate] }, null, 2))
     const aTagEvents = await lastValueFrom(
       relayPool
         .req(highlightRelays, { kinds: [9802], '#a': [articleCoordinate] })
-        .pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
+        .pipe(
+          scan((acc: NostrEvent[], event: NostrEvent) => {
+            const highlight = processEvent(event)
+            if (highlight && onHighlight) {
+              onHighlight(highlight)
+            }
+            return [...acc, event]
+          }, []),
+          completeOnEose(),
+          takeUntil(timer(10000))
+        )
     )
     
     console.log('📊 Highlights via a-tag:', aTagEvents.length)
@@ -67,11 +108,20 @@ export const fetchHighlightsForArticle = async (
     // If we have an event ID, also query for highlights that reference via the 'e' tag
     let eTagEvents: NostrEvent[] = []
     if (eventId) {
-      console.log('🔍 Filter 2 (e-tag):', JSON.stringify({ kinds: [9802], '#e': [eventId] }, null, 2))
       eTagEvents = await lastValueFrom(
         relayPool
           .req(highlightRelays, { kinds: [9802], '#e': [eventId] })
-          .pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
+          .pipe(
+            scan((acc: NostrEvent[], event: NostrEvent) => {
+              const highlight = processEvent(event)
+              if (highlight && onHighlight) {
+                onHighlight(highlight)
+              }
+              return [...acc, event]
+            }, []),
+            completeOnEose(),
+            takeUntil(timer(10000))
+          )
       )
       console.log('📊 Highlights via e-tag:', eTagEvents.length)
     }
@@ -135,30 +185,70 @@ export const fetchHighlightsForArticle = async (
  * Fetches highlights created by a specific user
  * @param relayPool - The relay pool to query
  * @param pubkey - The user's public key
+ * @param onHighlight - Optional callback to receive highlights as they arrive
  */
 export const fetchHighlights = async (
   relayPool: RelayPool,
-  pubkey: string
+  pubkey: string,
+  onHighlight?: (highlight: Highlight) => void
 ): Promise<Highlight[]> => {
   try {
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
     
     console.log('🔍 Fetching highlights (kind 9802) by author:', pubkey)
     
+    const seenIds = new Set<string>()
     const rawEvents = await lastValueFrom(
       relayPool
         .req(relayUrls, { kinds: [9802], authors: [pubkey] })
-        .pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
+        .pipe(
+          scan((acc: NostrEvent[], event: NostrEvent) => {
+            if (!seenIds.has(event.id)) {
+              seenIds.add(event.id)
+              
+              const highlightText = getHighlightText(event)
+              const context = getHighlightContext(event)
+              const comment = getHighlightComment(event)
+              const sourceEventPointer = getHighlightSourceEventPointer(event)
+              const sourceAddressPointer = getHighlightSourceAddressPointer(event)
+              const sourceUrl = getHighlightSourceUrl(event)
+              const attributions = getHighlightAttributions(event)
+              
+              const author = attributions.find(a => a.role === 'author')?.pubkey
+              const eventReference = sourceEventPointer?.id || 
+                (sourceAddressPointer ? `${sourceAddressPointer.kind}:${sourceAddressPointer.pubkey}:${sourceAddressPointer.identifier}` : undefined)
+              
+              const highlight: Highlight = {
+                id: event.id,
+                pubkey: event.pubkey,
+                created_at: event.created_at,
+                content: highlightText,
+                tags: event.tags,
+                eventReference,
+                urlReference: sourceUrl,
+                author,
+                context,
+                comment
+              }
+              
+              if (onHighlight) {
+                onHighlight(highlight)
+              }
+            }
+            return [...acc, event]
+          }, []),
+          completeOnEose(),
+          takeUntil(timer(10000))
+        )
     )
     
     console.log('📊 Raw highlight events fetched:', rawEvents.length)
     
-    // Deduplicate events by ID
+    // Deduplicate and process events
     const uniqueEvents = dedupeHighlights(rawEvents)
     console.log('📊 Unique highlight events after deduplication:', uniqueEvents.length)
     
     const highlights: Highlight[] = uniqueEvents.map((event: NostrEvent) => {
-      // Use applesauce helpers to extract highlight data
       const highlightText = getHighlightText(event)
       const context = getHighlightContext(event)
       const comment = getHighlightComment(event)
@@ -167,10 +257,7 @@ export const fetchHighlights = async (
       const sourceUrl = getHighlightSourceUrl(event)
       const attributions = getHighlightAttributions(event)
       
-      // Get author from attributions
       const author = attributions.find(a => a.role === 'author')?.pubkey
-      
-      // Get event reference (prefer event pointer, fallback to address pointer)
       const eventReference = sourceEventPointer?.id || 
         (sourceAddressPointer ? `${sourceAddressPointer.kind}:${sourceAddressPointer.pubkey}:${sourceAddressPointer.identifier}` : undefined)
       
