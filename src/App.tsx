@@ -10,6 +10,8 @@ import { RelayPool } from 'applesauce-relay'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Login from './components/Login'
 import Bookmarks from './components/Bookmarks'
+import Toast from './components/Toast'
+import { useToast } from './hooks/useToast'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -18,6 +20,7 @@ function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
   const [accountManager, setAccountManager] = useState<AccountManager | null>(null)
   const [relayPool, setRelayPool] = useState<RelayPool | null>(null)
+  const { toastMessage, toastType, showToast, clearToast } = useToast()
 
   useEffect(() => {
     // Initialize event store, account manager, and relay pool
@@ -128,6 +131,7 @@ function App() {
                       if (accountManager) {
                         accountManager.setActive(undefined as never)
                         localStorage.removeItem('active')
+                        showToast('Logged out successfully')
                         console.log('Logged out')
                       }
                     }}
@@ -135,10 +139,17 @@ function App() {
                 } 
               />
               <Route path="/" element={<Navigate to={`/a/${DEFAULT_ARTICLE}`} replace />} />
-              <Route path="/login" element={<Login onLogin={() => {}} />} />
+              <Route path="/login" element={<Login onLogin={() => showToast('Logged in successfully')} />} />
             </Routes>
           </div>
         </BrowserRouter>
+        {toastMessage && (
+          <Toast
+            message={toastMessage}
+            type={toastType}
+            onClose={clearToast}
+          />
+        )}
       </AccountsProvider>
     </EventStoreProvider>
   )
