@@ -77,7 +77,11 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   useEffect(() => {
     if (!relayPool || !activeAccount) return
     handleFetchBookmarks()
-    handleFetchHighlights()
+    // Avoid overwriting article-specific highlights during initial article load
+    // If an article is being viewed (naddr present), let useArticleLoader own the first highlights set
+    if (!naddr) {
+      handleFetchHighlights()
+    }
     handleFetchContacts()
   }, [relayPool, activeAccount?.pubkey])
 

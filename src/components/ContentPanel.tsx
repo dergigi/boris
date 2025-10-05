@@ -76,7 +76,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Check if we need to wait for HTML conversion
   const needsHtmlConversion = markdown && !renderedHtml
-  const shouldShowContent = !needsHtmlConversion || relevantHighlights.length === 0
 
   // Attach click handlers to highlight marks
   useEffect(() => {
@@ -188,11 +187,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         </div>
       )}
       {markdown || html ? (
-        finalHtml || (markdown && shouldShowContent) ? (
+        markdown ? (
           finalHtml ? (
             <div 
               ref={contentRef} 
-              className={markdown ? "reader-markdown" : "reader-html"} 
+              className="reader-markdown" 
               dangerouslySetInnerHTML={{ __html: finalHtml }} 
             />
           ) : (
@@ -205,7 +204,13 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               </ReactMarkdown>
             </div>
           )
-        ) : null
+        ) : (
+          <div 
+            ref={contentRef} 
+            className="reader-html" 
+            dangerouslySetInnerHTML={{ __html: finalHtml || html }} 
+          />
+        )
       ) : (
         <div className="reader empty">
           <p>No readable content found for this URL.</p>
