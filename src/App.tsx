@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { EventStoreProvider, AccountsProvider } from 'applesauce-react'
 import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
@@ -6,6 +7,7 @@ import { RelayPool } from 'applesauce-relay'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Login from './components/Login'
 import Bookmarks from './components/Bookmarks'
+import Article from './components/Article'
 
 function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
@@ -62,16 +64,23 @@ function App() {
   return (
     <EventStoreProvider eventStore={eventStore}>
       <AccountsProvider manager={accountManager}>
-        <div className="app">
-          {!isAuthenticated ? (
-            <Login onLogin={() => setIsAuthenticated(true)} />
-          ) : (
-            <Bookmarks 
-              relayPool={relayPool}
-              onLogout={() => setIsAuthenticated(false)}
-            />
-          )}
-        </div>
+        <BrowserRouter>
+          <div className="app">
+            <Routes>
+              <Route path="/a/:naddr" element={<Article relayPool={relayPool} />} />
+              <Route path="/" element={
+                !isAuthenticated ? (
+                  <Login onLogin={() => setIsAuthenticated(true)} />
+                ) : (
+                  <Bookmarks 
+                    relayPool={relayPool}
+                    onLogout={() => setIsAuthenticated(false)}
+                  />
+                )
+              } />
+            </Routes>
+          </div>
+        </BrowserRouter>
       </AccountsProvider>
     </EventStoreProvider>
   )
