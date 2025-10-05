@@ -252,56 +252,58 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const highlightRgb = hexToRgb(highlightColor)
 
   return (
-    <div className="reader" style={{ '--highlight-rgb': highlightRgb } as React.CSSProperties}>
-      {/* Hidden markdown preview to convert markdown to HTML */}
-      {markdown && (
-        <div ref={markdownPreviewRef} style={{ display: 'none' }}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {markdown}
-          </ReactMarkdown>
-        </div>
-      )}
-      
-      <ReaderHeader 
-        title={title}
-        image={image}
-        readingTimeText={readingStats ? readingStats.text : null}
-        hasHighlights={hasHighlights}
-        highlightCount={relevantHighlights.length}
-      />
-      {markdown || html ? (
-        markdown ? (
-          finalHtml ? (
-            <div 
-              ref={contentRef} 
-              className="reader-markdown" 
-              dangerouslySetInnerHTML={{ __html: finalHtml }}
-              onMouseUp={handleMouseUp}
-            />
+    <>
+      <div className="reader" style={{ '--highlight-rgb': highlightRgb } as React.CSSProperties}>
+        {/* Hidden markdown preview to convert markdown to HTML */}
+        {markdown && (
+          <div ref={markdownPreviewRef} style={{ display: 'none' }}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {markdown}
+            </ReactMarkdown>
+          </div>
+        )}
+        
+        <ReaderHeader 
+          title={title}
+          image={image}
+          readingTimeText={readingStats ? readingStats.text : null}
+          hasHighlights={hasHighlights}
+          highlightCount={relevantHighlights.length}
+        />
+        {markdown || html ? (
+          markdown ? (
+            finalHtml ? (
+              <div 
+                ref={contentRef} 
+                className="reader-markdown" 
+                dangerouslySetInnerHTML={{ __html: finalHtml }}
+                onMouseUp={handleMouseUp}
+              />
+            ) : (
+              <div 
+                ref={contentRef} 
+                className="reader-markdown"
+                onMouseUp={handleMouseUp}
+              >
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {markdown}
+                </ReactMarkdown>
+              </div>
+            )
           ) : (
             <div 
               ref={contentRef} 
-              className="reader-markdown"
+              className="reader-html" 
+              dangerouslySetInnerHTML={{ __html: finalHtml || html || '' }}
               onMouseUp={handleMouseUp}
-            >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {markdown}
-              </ReactMarkdown>
-            </div>
+            />
           )
         ) : (
-          <div 
-            ref={contentRef} 
-            className="reader-html" 
-            dangerouslySetInnerHTML={{ __html: finalHtml || html || '' }}
-            onMouseUp={handleMouseUp}
-          />
-        )
-      ) : (
-        <div className="reader empty">
-          <p>No readable content found for this URL.</p>
-        </div>
-      )}
+          <div className="reader empty">
+            <p>No readable content found for this URL.</p>
+          </div>
+        )}
+      </div>
       
       {activeAccount && relayPool && (
         <HighlightButton 
@@ -310,7 +312,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           highlightColor={highlightColor}
         />
       )}
-    </div>
+    </>
   )
 }
 
