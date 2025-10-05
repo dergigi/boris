@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faUser, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faUser, faList, faThLarge, faImage, faGear } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -50,6 +50,13 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
             <FontAwesomeIcon icon={faUser} />
           )}
         </div>
+        <IconButton
+          icon={faGear}
+          onClick={() => console.log('Settings clicked')}
+          title="Settings"
+          ariaLabel="Settings"
+          variant="ghost"
+        />
         <IconButton
           icon={faRightFromBracket}
           onClick={onLogout}
