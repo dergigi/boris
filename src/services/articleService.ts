@@ -9,6 +9,7 @@ import {
   getArticlePublished, 
   getArticleSummary 
 } from 'applesauce-core/helpers'
+import { ARTICLE_RELAYS } from '../config/relays'
 
 export interface ArticleContent {
   title: string
@@ -95,15 +96,10 @@ export async function fetchArticleByNaddr(
 
     const pointer = decoded.data as AddressPointer
 
-    // Define relays to query
+    // Define relays to query - prefer relays from naddr, fallback to configured relays (including local)
     const relays = pointer.relays && pointer.relays.length > 0 
       ? pointer.relays 
-      : [
-          'wss://relay.damus.io',
-          'wss://nos.lol',
-          'wss://relay.nostr.band',
-          'wss://relay.primal.net'
-        ]
+      : ARTICLE_RELAYS
 
     // Fetch the article event
     const filter = {

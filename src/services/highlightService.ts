@@ -11,6 +11,7 @@ import {
   getHighlightAttributions
 } from 'applesauce-core/helpers'
 import { Highlight } from '../types/highlights'
+import { HIGHLIGHT_RELAYS } from '../config/relays'
 
 /**
  * Deduplicate highlight events by ID
@@ -42,18 +43,9 @@ export const fetchHighlightsForArticle = async (
   onHighlight?: (highlight: Highlight) => void
 ): Promise<Highlight[]> => {
   try {
-    // Use well-known relays for highlights even if user isn't logged in
-    const highlightRelays = [
-      'wss://relay.damus.io',
-      'wss://nos.lol',
-      'wss://relay.nostr.band',
-      'wss://relay.snort.social',
-      'wss://purplepag.es'
-    ]
-    
     console.log('🔍 Fetching highlights (kind 9802) for article:', articleCoordinate)
     console.log('🔍 Event ID:', eventId || 'none')
-    console.log('🔍 From relays:', highlightRelays)
+    console.log('🔍 From relays (including local):', HIGHLIGHT_RELAYS)
     
     const seenIds = new Set<string>()
     const processEvent = (event: NostrEvent): Highlight | null => {
@@ -89,7 +81,7 @@ export const fetchHighlightsForArticle = async (
     // Query for highlights that reference this article via the 'a' tag
     const aTagEvents = await lastValueFrom(
       relayPool
-        .req(highlightRelays, { kinds: [9802], '#a': [articleCoordinate] })
+        .req(HIGHLIGHT_RELAYS, { kinds: [9802], '#a': [articleCoordinate] })
         .pipe(
           onlyEvents(),
           tap((event: NostrEvent) => {
@@ -111,7 +103,7 @@ export const fetchHighlightsForArticle = async (
     if (eventId) {
       eTagEvents = await lastValueFrom(
         relayPool
-          .req(highlightRelays, { kinds: [9802], '#e': [eventId] })
+          .req(HIGHLIGHT_RELAYS, { kinds: [9802], '#e': [eventId] })
           .pipe(
             onlyEvents(),
             tap((event: NostrEvent) => {

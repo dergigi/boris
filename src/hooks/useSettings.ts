@@ -5,11 +5,7 @@ import { EventFactory } from 'applesauce-factory'
 import { AccountManager } from 'applesauce-accounts'
 import { UserSettings, loadSettings, saveSettings, watchSettings } from '../services/settingsService'
 import { loadFont, getFontFamily } from '../utils/fontLoader'
-
-const RELAY_URLS = [
-  'wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.band',
-  'wss://relay.dergigi.com', 'wss://wot.dergigi.com'
-]
+import { SETTINGS_RELAYS } from '../config/relays'
 
 interface UseSettingsParams {
   relayPool: RelayPool | null
@@ -29,7 +25,7 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
 
     const loadAndWatch = async () => {
       try {
-        const loadedSettings = await loadSettings(relayPool, eventStore, pubkey, RELAY_URLS)
+        const loadedSettings = await loadSettings(relayPool, eventStore, pubkey, SETTINGS_RELAYS)
         if (loadedSettings) setSettings(loadedSettings)
       } catch (err) {
         console.error('Failed to load settings:', err)
@@ -65,7 +61,7 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       const fullAccount = accountManager.getActive()
       if (!fullAccount) throw new Error('No active account')
       const factory = new EventFactory({ signer: fullAccount })
-      await saveSettings(relayPool, eventStore, factory, newSettings, RELAY_URLS)
+      await saveSettings(relayPool, eventStore, factory, newSettings, SETTINGS_RELAYS)
       setSettings(newSettings)
       setToastType('success')
       setToastMessage('Settings saved')

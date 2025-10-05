@@ -4,6 +4,7 @@ import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
+import { WRITE_RELAYS } from '../config/relays'
 
 /**
  * Creates and publishes a highlight event (NIP-84)
@@ -36,18 +37,10 @@ export async function createHighlight(
   // Sign the event
   const signedEvent = await factory.sign(highlightEvent)
 
-  // Publish to relays
-  const relayUrls = [
-    'wss://relay.damus.io',
-    'wss://nos.lol',
-    'wss://relay.nostr.band',
-    'wss://relay.snort.social',
-    'wss://purplepag.es'
-  ]
-
-  await relayPool.publish(relayUrls, signedEvent)
+  // Publish to relays (including local relay)
+  await relayPool.publish(WRITE_RELAYS, signedEvent)
   
-  console.log('✅ Highlight published:', signedEvent)
+  console.log('✅ Highlight published to', WRITE_RELAYS.length, 'relays (including local):', signedEvent)
 }
 
 /**
