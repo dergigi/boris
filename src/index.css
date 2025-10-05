@@ -1428,6 +1428,7 @@ body {
   height: 100%;
   overflow: hidden;
   padding: 1.5rem;
+  text-align: left;
 }
 
 .settings-header {
@@ -1435,21 +1436,25 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  text-align: left;
 }
 
 .settings-header h2 {
   margin: 0;
   font-size: 1.75rem;
+  text-align: left;
 }
 
 .settings-content {
   overflow-y: auto;
   flex: 1;
   margin-bottom: 2rem;
+  text-align: left;
 }
 
 .setting-group {
   margin-bottom: 1.5rem;
+  text-align: left;
 }
 
 .setting-group label {
@@ -1457,6 +1462,7 @@ body {
   margin-bottom: 0.5rem;
   color: #ccc;
   font-weight: 500;
+  text-align: left;
 }
 
 .setting-select {
@@ -1480,16 +1486,20 @@ body {
   gap: 0.75rem;
   cursor: pointer;
   user-select: none;
+  text-align: left;
+  justify-content: flex-start;
 }
 
 .setting-checkbox {
   width: 20px;
   height: 20px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .checkbox-label span {
   color: #ccc;
+  text-align: left;
 }
 
 .settings-footer {
