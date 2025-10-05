@@ -1596,10 +1596,10 @@ body {
 }
 
 .color-swatch {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 2px solid #444;
-  border-radius: 4px;
+  width: 33px;
+  height: 33px;
+  border: 1px solid #444;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
@@ -1607,13 +1607,11 @@ body {
 
 .color-swatch:hover {
   border-color: #888;
-  transform: scale(1.05);
 }
 
 .color-swatch.active {
-  border-color: #fff;
+  border-color: #646cff;
   box-shadow: 0 0 0 2px #646cff;
-  transform: scale(1.1);
 }
 
 .color-swatch.active::after {
@@ -1623,18 +1621,18 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   color: #000;
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: bold;
   text-shadow: 0 0 2px #fff;
 }
 
 .font-size-btn {
-  min-width: 2.5rem;
-  height: 2.5rem;
-  padding: 0.5rem;
+  min-width: 33px;
+  height: 33px;
+  padding: 0;
   background: transparent;
   border: 1px solid #444;
-  border-radius: 4px;
+  border-radius: 6px;
   color: #ccc;
   cursor: pointer;
   transition: all 0.2s;
