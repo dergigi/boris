@@ -54,7 +54,7 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
     root.setProperty('--reading-font-size', `${settings.fontSize || 18}px`)
     
     // Set highlight colors for three levels
-    root.setProperty('--highlight-color-mine', settings.highlightColorMine || '#eab308')
+    root.setProperty('--highlight-color-mine', settings.highlightColorMine || '#ffff00')
     root.setProperty('--highlight-color-friends', settings.highlightColorFriends || '#f97316')
     root.setProperty('--highlight-color-nostrverse', settings.highlightColorNostrverse || '#9333ea')
   }, [settings])
