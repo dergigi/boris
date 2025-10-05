@@ -190,8 +190,17 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             className={markdown ? "reader-markdown" : "reader-html"} 
             dangerouslySetInnerHTML={{ __html: finalHtml }} 
           />
+        ) : markdown ? (
+          <div 
+            ref={contentRef} 
+            className="reader-markdown"
+          >
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {markdown}
+            </ReactMarkdown>
+          </div>
         ) : (
-          <div className="reader-markdown" ref={contentRef} />
+          <div className="reader-html" ref={contentRef} />
         )
       ) : (
         <div className="reader empty">
