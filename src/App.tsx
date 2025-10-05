@@ -124,7 +124,13 @@ function App() {
                 element={
                   <Bookmarks 
                     relayPool={relayPool}
-                    onLogout={() => {}}
+                    onLogout={() => {
+                      if (accountManager) {
+                        accountManager.setActive(null)
+                        localStorage.removeItem('active')
+                        console.log('Logged out')
+                      }
+                    }}
                   />
                 } 
               />
