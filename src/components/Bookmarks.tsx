@@ -48,16 +48,10 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const eventStore = useEventStore()
 
   useEffect(() => {
-    console.log('Bookmarks useEffect triggered')
-    console.log('relayPool:', !!relayPool)
-    console.log('activeAccount:', !!activeAccount)
     if (relayPool && activeAccount) {
-      console.log('Starting to fetch bookmarks and highlights...')
       handleFetchBookmarks()
       handleFetchHighlights()
       handleLoadSettings()
-    } else {
-      console.log('Not fetching bookmarks - missing dependencies')
     }
   }, [relayPool, activeAccount?.pubkey])
 
@@ -68,35 +62,19 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     if (settings.highlightsCollapsed !== undefined) setIsHighlightsCollapsed(settings.highlightsCollapsed)
     if (settings.readingFont) {
       loadFont(settings.readingFont)
-      // Apply font to content panel
-      const fontFamily = getFontFamily(settings.readingFont)
-      document.documentElement.style.setProperty('--reading-font', fontFamily)
+      document.documentElement.style.setProperty('--reading-font', getFontFamily(settings.readingFont))
     }
   }, [settings])
 
   const handleFetchBookmarks = async () => {
-    console.log('🔍 fetchBookmarks called, loading:', loading)
-    if (!relayPool || !activeAccount) {
-      console.log('🔍 fetchBookmarks early return - relayPool:', !!relayPool, 'activeAccount:', !!activeAccount)
-      return
-    }
-
-    // Set a timeout to ensure loading state gets reset
-    const timeoutId = setTimeout(() => {
-      console.log('⏰ Timeout reached, resetting loading state')
-      setLoading(false)
-    }, 15000) // 15 second timeout
-
-    // Get the full account object with extension capabilities
+    if (!relayPool || !activeAccount) return
+    const timeoutId = setTimeout(() => setLoading(false), 15000)
     const fullAccount = accountManager.getActive()
     await fetchBookmarks(relayPool, fullAccount || activeAccount, setBookmarks, setLoading, timeoutId)
   }
 
   const handleFetchHighlights = async () => {
-    if (!relayPool || !activeAccount) {
-      return
-    }
-    
+    if (!relayPool || !activeAccount) return
     setHighlightsLoading(true)
     try {
       const fetchedHighlights = await fetchHighlights(relayPool, activeAccount.pubkey)
@@ -156,8 +134,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       setReaderLoading(false)
     }
   }
-
-
 
   if (loading) {
     return (
