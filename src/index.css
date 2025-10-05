@@ -1458,6 +1458,25 @@ body {
   padding: 0 0.25rem;
 }
 
+.settings-section {
+  margin-bottom: 2.5rem;
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #333;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .setting-group {
   margin-bottom: 1.5rem;
   text-align: left;
