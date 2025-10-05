@@ -63,6 +63,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
         >
           <FontAwesomeIcon icon={faChevronRight} />
         </button>
+        <div className="sidebar-header-right">
         {onRefresh && (
           <IconButton
             icon={faRotate}
@@ -105,6 +106,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
             variant="ghost"
           />
         )}
+        </div>
       </div>
       <div className="view-mode-controls">
         <IconButton

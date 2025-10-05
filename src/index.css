@@ -134,6 +134,13 @@ body {
   margin-bottom: 0;
 }
 
+.sidebar-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
 .view-mode-controls {
   display: flex;
   align-items: center;
