@@ -40,7 +40,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
     }
     
     onSave(localSettings)
-  }, [localSettings, onSave])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localSettings])
 
   const previewFontFamily = getFontFamily(localSettings.readingFont)
 

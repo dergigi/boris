@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Hooks } from 'applesauce-react'
 import { useEventStore } from 'applesauce-react/hooks'
 import { RelayPool } from 'applesauce-relay'
@@ -114,7 +114,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
   }
 
-  const handleSaveSettings = async (newSettings: UserSettings) => {
+  const handleSaveSettings = useCallback(async (newSettings: UserSettings) => {
     if (!relayPool || !activeAccount) return
     try {
       const fullAccount = accountManager.getActive()
@@ -129,7 +129,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       setToastType('error')
       setToastMessage('Failed to save settings')
     }
-  }
+  }, [relayPool, activeAccount, accountManager, eventStore])
 
   const handleSelectUrl = async (url: string) => {
     setSelectedUrl(url)
