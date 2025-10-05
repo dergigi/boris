@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { EventStoreProvider, AccountsProvider, Hooks } from 'applesauce-react'
@@ -8,7 +8,6 @@ import { AccountManager } from 'applesauce-accounts'
 import { registerCommonAccountTypes } from 'applesauce-accounts/accounts'
 import { RelayPool } from 'applesauce-relay'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
-import Login from './components/Login'
 import Bookmarks from './components/Bookmarks'
 import Toast from './components/Toast'
 import { useToast } from './hooks/useToast'
@@ -16,19 +15,7 @@ import { useToast } from './hooks/useToast'
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
 
-// Protected route component that redirects to login if no active account
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const activeAccount = Hooks.useActiveAccount()
-  const location = useLocation()
-
-  if (!activeAccount) {
-    return <Navigate to="/login" state={{ from: location }} replace />
-  }
-
-  return <>{children}</>
-}
-
-// AppRoutes component that has access to navigation hooks
+// AppRoutes component that has access to hooks
 function AppRoutes({ 
   relayPool, 
   showToast 
@@ -37,13 +24,11 @@ function AppRoutes({
   showToast: (message: string) => void
 }) {
   const accountManager = Hooks.useAccountManager()
-  const navigate = useNavigate()
 
   const handleLogout = () => {
     accountManager.setActive(undefined as never)
     localStorage.removeItem('active')
     showToast('Logged out successfully')
-    navigate('/login')
   }
 
   return (
@@ -51,16 +36,13 @@ function AppRoutes({
       <Route 
         path="/a/:naddr" 
         element={
-          <ProtectedRoute>
-            <Bookmarks 
-              relayPool={relayPool}
-              onLogout={handleLogout}
-            />
-          </ProtectedRoute>
+          <Bookmarks 
+            relayPool={relayPool}
+            onLogout={handleLogout}
+          />
         } 
       />
       <Route path="/" element={<Navigate to={`/a/${DEFAULT_ARTICLE}`} replace />} />
-      <Route path="/login" element={<Login onLogin={() => showToast('Logged in successfully')} />} />
     </Routes>
   )
 }

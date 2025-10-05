@@ -56,53 +56,6 @@ body {
   color: #888;
 }
 
-/* Login Styles */
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 50vh;
-}
-
-.login-card {
-  background: #1a1a1a;
-  padding: 2rem;
-  border-radius: 8px;
-  border: 1px solid #333;
-  max-width: 400px;
-  width: 100%;
-}
-
-.login-card h2 {
-  margin: 0 0 1rem 0;
-  color: #fff;
-}
-
-.login-card p {
-  margin: 0 0 1.5rem 0;
-  color: #ccc;
-}
-
-.login-button {
-  background: #646cff;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.login-button:hover:not(:disabled) {
-  background: #535bf2;
-}
-
-.login-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 /* Bookmarks Styles */
 .bookmarks-container {
   background: #1a1a1a;
@@ -1147,7 +1100,6 @@ body {
     background-color: #ffffff;
   }
   
-  .login-card,
   .bookmark-item {
     background: #f9f9f9;
     border-color: #ddd;
