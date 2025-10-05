@@ -16,6 +16,7 @@ import Toast from './Toast'
 import { useSettings } from '../hooks/useSettings'
 import { useArticleLoader } from '../hooks/useArticleLoader'
 import { loadContent, BookmarkReference } from '../utils/contentLoader'
+import { HighlightMode } from './HighlightsPanel'
 export type ViewMode = 'compact' | 'cards' | 'large'
 
 interface BookmarksProps {
@@ -39,6 +40,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [showSettings, setShowSettings] = useState(false)
   const [currentArticleCoordinate, setCurrentArticleCoordinate] = useState<string | undefined>(undefined)
   const [currentArticleEventId, setCurrentArticleEventId] = useState<string | undefined>(undefined)
+  const [highlightMode, setHighlightMode] = useState<HighlightMode>('others')
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
   const eventStore = useEventStore()
@@ -191,6 +193,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             selectedHighlightId={selectedHighlightId}
             onRefresh={handleFetchHighlights}
             onHighlightClick={setSelectedHighlightId}
+            currentUserPubkey={activeAccount?.pubkey}
+            highlightMode={highlightMode}
+            onHighlightModeChange={setHighlightMode}
           />
         </div>
       </div>

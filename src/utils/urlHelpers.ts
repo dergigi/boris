@@ -12,6 +12,13 @@ export function normalizeUrl(url: string): string {
 export function filterHighlightsByUrl(highlights: Highlight[], selectedUrl: string | undefined): Highlight[] {
   if (!selectedUrl || highlights.length === 0) return []
   
+  // For Nostr articles, we already fetched highlights specifically for this article
+  // So we don't need to filter them - they're all relevant
+  if (selectedUrl.startsWith('nostr:')) {
+    return highlights
+  }
+  
+  // For web URLs, filter by URL matching
   const normalizedSelected = normalizeUrl(selectedUrl)
   
   return highlights.filter(h => {

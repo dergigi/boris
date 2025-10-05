@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faHighlighter, faEye, faEyeSlash, faRotate } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faHighlighter, faEye, faEyeSlash, faRotate, faUser, faUserGroup } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
+
+export type HighlightMode = 'mine' | 'others'
 
 interface HighlightsPanelProps {
   highlights: Highlight[]
@@ -15,6 +17,9 @@ interface HighlightsPanelProps {
   selectedHighlightId?: string
   onRefresh?: () => void
   onHighlightClick?: (highlightId: string) => void
+  currentUserPubkey?: string
+  highlightMode?: HighlightMode
+  onHighlightModeChange?: (mode: HighlightMode) => void
 }
 
 export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
@@ -27,7 +32,10 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   onToggleUnderlines,
   selectedHighlightId,
   onRefresh,
-  onHighlightClick
+  onHighlightClick,
+  currentUserPubkey,
+  highlightMode = 'others',
+  onHighlightModeChange
 }) => {
   const [showUnderlines, setShowUnderlines] = useState(true)
   
@@ -37,36 +45,48 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
     onToggleUnderlines?.(newValue)
   }
   
-  // Filter highlights to show only those relevant to the current URL or article
+  // Filter highlights based on mode and URL
   const filteredHighlights = useMemo(() => {
     if (!selectedUrl) return highlights
     
-    // For Nostr articles (URL starts with "nostr:"), we don't need to filter
+    let urlFiltered = highlights
+    
+    // For Nostr articles (URL starts with "nostr:"), we don't need to filter by URL
     // because we already fetched highlights specifically for this article
-    if (selectedUrl.startsWith('nostr:')) {
-      return highlights
-    }
-    
-    // For web URLs, filter by URL matching
-    const normalizeUrl = (url: string) => {
-      try {
-        const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
-        return `${urlObj.hostname.replace(/^www\./, '')}${urlObj.pathname}`.replace(/\/$/, '').toLowerCase()
-      } catch {
-        return url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '').toLowerCase()
+    if (!selectedUrl.startsWith('nostr:')) {
+      // For web URLs, filter by URL matching
+      const normalizeUrl = (url: string) => {
+        try {
+          const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
+          return `${urlObj.hostname.replace(/^www\./, '')}${urlObj.pathname}`.replace(/\/$/, '').toLowerCase()
+        } catch {
+          return url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '').toLowerCase()
+        }
       }
+      
+      const normalizedSelected = normalizeUrl(selectedUrl)
+      
+      urlFiltered = highlights.filter(h => {
+        if (!h.urlReference) return false
+        const normalizedRef = normalizeUrl(h.urlReference)
+        return normalizedSelected === normalizedRef || 
+               normalizedSelected.includes(normalizedRef) ||
+               normalizedRef.includes(normalizedSelected)
+      })
     }
     
-    const normalizedSelected = normalizeUrl(selectedUrl)
+    // Filter by mode (mine vs others)
+    if (!currentUserPubkey) {
+      // If no user is logged in, show all highlights (others mode only makes sense)
+      return urlFiltered
+    }
     
-    return highlights.filter(h => {
-      if (!h.urlReference) return false
-      const normalizedRef = normalizeUrl(h.urlReference)
-      return normalizedSelected === normalizedRef || 
-             normalizedSelected.includes(normalizedRef) ||
-             normalizedRef.includes(normalizedSelected)
-    })
-  }, [highlights, selectedUrl])
+    if (highlightMode === 'mine') {
+      return urlFiltered.filter(h => h.pubkey === currentUserPubkey)
+    } else {
+      return urlFiltered.filter(h => h.pubkey !== currentUserPubkey)
+    }
+  }, [highlights, selectedUrl, highlightMode, currentUserPubkey])
   
   if (isCollapsed) {
     const hasHighlights = filteredHighlights.length > 0
@@ -95,6 +115,26 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           {!loading && <span className="count">({filteredHighlights.length})</span>}
         </div>
         <div className="highlights-actions">
+          {currentUserPubkey && onHighlightModeChange && (
+            <div className="highlight-mode-toggle">
+              <button
+                onClick={() => onHighlightModeChange('mine')}
+                className={`mode-btn ${highlightMode === 'mine' ? 'active' : ''}`}
+                title="My highlights"
+                aria-label="Show my highlights"
+              >
+                <FontAwesomeIcon icon={faUser} />
+              </button>
+              <button
+                onClick={() => onHighlightModeChange('others')}
+                className={`mode-btn ${highlightMode === 'others' ? 'active' : ''}`}
+                title="Other highlights"
+                aria-label="Show highlights from others"
+              >
+                <FontAwesomeIcon icon={faUserGroup} />
+              </button>
+            </div>
+          )}
           {onRefresh && (
             <button
               onClick={onRefresh}

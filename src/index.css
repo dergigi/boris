@@ -1260,6 +1260,35 @@ body {
   gap: 0.5rem;
 }
 
+.highlight-mode-toggle {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.highlight-mode-toggle .mode-btn {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 0.375rem 0.5rem;
+  border-radius: 3px;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.highlight-mode-toggle .mode-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.highlight-mode-toggle .mode-btn.active {
+  background: #646cff;
+  color: #fff;
+}
+
 .refresh-highlights-btn,
 .toggle-underlines-btn,
 .toggle-highlights-btn {
