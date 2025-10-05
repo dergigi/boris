@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { EventStoreProvider, AccountsProvider } from 'applesauce-react'
 import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
@@ -8,11 +8,12 @@ import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Login from './components/Login'
 import Bookmarks from './components/Bookmarks'
 
+const DEFAULT_ARTICLE = 'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
+
 function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
   const [accountManager, setAccountManager] = useState<AccountManager | null>(null)
   const [relayPool, setRelayPool] = useState<RelayPool | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     // Initialize event store, account manager, and relay pool
@@ -71,20 +72,12 @@ function App() {
                 element={
                   <Bookmarks 
                     relayPool={relayPool}
-                    onLogout={() => setIsAuthenticated(false)}
+                    onLogout={() => {}}
                   />
                 } 
               />
-              <Route path="/" element={
-                !isAuthenticated ? (
-                  <Login onLogin={() => setIsAuthenticated(true)} />
-                ) : (
-                  <Bookmarks 
-                    relayPool={relayPool}
-                    onLogout={() => setIsAuthenticated(false)}
-                  />
-                )
-              } />
+              <Route path="/" element={<Navigate to={`/a/${DEFAULT_ARTICLE}`} replace />} />
+              <Route path="/login" element={<Login onLogin={() => {}} />} />
             </Routes>
           </div>
         </BrowserRouter>

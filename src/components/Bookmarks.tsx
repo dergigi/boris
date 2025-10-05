@@ -31,8 +31,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [selectedUrl, setSelectedUrl] = useState<string | undefined>(undefined)
   const [readerLoading, setReaderLoading] = useState(false)
   const [readerContent, setReaderContent] = useState<ReadableContent | undefined>(undefined)
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isHighlightsCollapsed, setIsHighlightsCollapsed] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(true) // Start collapsed
+  const [isHighlightsCollapsed, setIsHighlightsCollapsed] = useState(true) // Start collapsed
   const [viewMode, setViewMode] = useState<ViewMode>('compact')
   const [showUnderlines, setShowUnderlines] = useState(true)
   const [selectedHighlightId, setSelectedHighlightId] = useState<string | undefined>(undefined)
@@ -57,14 +57,27 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       setReaderContent(undefined)
       setSelectedUrl(`nostr:${naddr}`) // Use naddr as the URL identifier
       setIsCollapsed(true)
+      setIsHighlightsCollapsed(false) // Show highlights for the article
       
       try {
         const article = await fetchArticleByNaddr(relayPool, naddr)
         setReaderContent({
           title: article.title,
           markdown: article.markdown,
+          image: article.image,
           url: `nostr:${naddr}`
         })
+        
+        // Fetch highlights for this article (using the article author's pubkey)
+        try {
+          setHighlightsLoading(true)
+          const fetchedHighlights = await fetchHighlights(relayPool, article.author)
+          setHighlights(fetchedHighlights)
+        } catch (err) {
+          console.error('Failed to fetch highlights:', err)
+        } finally {
+          setHighlightsLoading(false)
+        }
       } catch (err) {
         console.error('Failed to load article:', err)
         setReaderContent({
@@ -72,6 +85,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           html: `<p>Failed to load article: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
           url: `nostr:${naddr}`
         })
+        setReaderLoading(false)
       } finally {
         setReaderLoading(false)
       }
