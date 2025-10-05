@@ -8,7 +8,7 @@ import { Bookmark } from '../types/bookmarks'
 import { Highlight } from '../types/highlights'
 import { BookmarkList } from './BookmarkList'
 import { fetchBookmarks } from '../services/bookmarkService'
-import { fetchHighlights } from '../services/highlightService'
+import { fetchHighlights, fetchHighlightsForArticle } from '../services/highlightService'
 import ContentPanel from './ContentPanel'
 import { HighlightsPanel } from './HighlightsPanel'
 import { fetchReadableContent, ReadableContent } from '../services/readerService'
@@ -68,10 +68,15 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           url: `nostr:${naddr}`
         })
         
-        // Fetch highlights for this article (using the article author's pubkey)
+        // Fetch highlights for this article using its address coordinate
+        // Extract the d-tag identifier from the article event
+        const dTag = article.event.tags.find(t => t[0] === 'd')?.[1] || ''
+        const articleCoordinate = `${article.event.kind}:${article.author}:${dTag}`
+        
         try {
           setHighlightsLoading(true)
-          const fetchedHighlights = await fetchHighlights(relayPool, article.author)
+          const fetchedHighlights = await fetchHighlightsForArticle(relayPool, articleCoordinate)
+          console.log(`📌 Found ${fetchedHighlights.length} highlights for article ${articleCoordinate}`)
           setHighlights(fetchedHighlights)
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
