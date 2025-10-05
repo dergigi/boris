@@ -8,9 +8,9 @@ export function hexToRgb(hex: string): string {
 
 export const HIGHLIGHT_COLORS = [
   { name: 'Yellow', value: '#ffff00' },
-  { name: 'Orange', value: '#ff9500' },
+  { name: 'Orange', value: '#f97316' },
   { name: 'Pink', value: '#ff69b4' },
   { name: 'Green', value: '#00ff7f' },
   { name: 'Blue', value: '#4da6ff' },
-  { name: 'Purple', value: '#b19cd9' }
+  { name: 'Purple', value: '#9333ea' }
 ]
