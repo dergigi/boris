@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTimes, faSave, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../services/settingsService'
 import IconButton from './IconButton'
 import { loadFont, getFontFamily } from '../utils/fontLoader'
@@ -9,11 +9,11 @@ interface SettingsProps {
   settings: UserSettings
   onSave: (settings: UserSettings) => Promise<void>
   onClose: () => void
-  isSaving: boolean
 }
 
-const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving }) => {
+const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
   const [localSettings, setLocalSettings] = useState<UserSettings>(settings)
+  const isInitialMount = useRef(true)
 
   useEffect(() => {
     setLocalSettings(settings)
@@ -32,9 +32,19 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
     }
   }, [localSettings.readingFont])
 
-  const handleSave = async () => {
-    await onSave(localSettings)
-  }
+  // Auto-save settings whenever they change (except on initial mount)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+    
+    const timer = setTimeout(() => {
+      onSave(localSettings)
+    }, 500) // Debounce for 500ms
+    
+    return () => clearTimeout(timer)
+  }, [localSettings, onSave])
 
   const previewFontFamily = getFontFamily(localSettings.readingFont)
 
@@ -199,17 +209,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
               </label>
             </div>
           </div>
-      </div>
-
-      <div className="settings-footer">
-        <button
-          className="btn-primary"
-          onClick={handleSave}
-          disabled={isSaving}
-        >
-          <FontAwesomeIcon icon={faSave} />
-          {isSaving ? 'Saving...' : 'Save Settings'}
-        </button>
       </div>
     </div>
   )

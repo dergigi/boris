@@ -14,6 +14,7 @@ import { fetchReadableContent, ReadableContent } from '../services/readerService
 import Settings from './Settings'
 import { UserSettings, loadSettings, saveSettings, watchSettings } from '../services/settingsService'
 import { loadFont, getFontFamily } from '../utils/fontLoader'
+import Toast from './Toast'
 export type ViewMode = 'compact' | 'cards' | 'large'
 
 interface BookmarksProps {
@@ -40,7 +41,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [selectedHighlightId, setSelectedHighlightId] = useState<string | undefined>(undefined)
   const [showSettings, setShowSettings] = useState(false)
   const [settings, setSettings] = useState<UserSettings>({})
-  const [isSavingSettings, setIsSavingSettings] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [toastType, setToastType] = useState<'success' | 'error'>('success')
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
   const eventStore = useEventStore()
@@ -114,18 +116,18 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
 
   const handleSaveSettings = async (newSettings: UserSettings) => {
     if (!relayPool || !activeAccount) return
-    setIsSavingSettings(true)
     try {
       const fullAccount = accountManager.getActive()
       if (!fullAccount) throw new Error('No active account')
       const factory = new EventFactory({ signer: fullAccount })
       await saveSettings(relayPool, eventStore, factory, newSettings, RELAY_URLS)
       setSettings(newSettings)
-      setShowSettings(false)
+      setToastType('success')
+      setToastMessage('Settings saved')
     } catch (err) {
       console.error('Failed to save settings:', err)
-    } finally {
-      setIsSavingSettings(false)
+      setToastType('error')
+      setToastMessage('Failed to save settings')
     }
   }
 
@@ -171,7 +173,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             settings={settings}
             onSave={handleSaveSettings}
             onClose={() => setShowSettings(false)}
-            isSaving={isSavingSettings}
           />
         ) : (
           <ContentPanel 
@@ -205,6 +206,13 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           />
         </div>
       </div>
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setToastMessage(null)}
+        />
+      )}
     </>
   )
 }
