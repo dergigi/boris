@@ -120,13 +120,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
               </div>
             </div>
 
-            <div className="setting-group setting-inline">
-              <label>Highlight Color (Legacy)</label>
-              <ColorPicker
-                selectedColor={localSettings.highlightColor || '#ffff00'}
-                onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColor: color })}
-              />
-            </div>
 
             <div className="setting-group setting-inline">
               <label>My Highlights Color</label>
