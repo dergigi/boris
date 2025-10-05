@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
-import { EventStoreProvider, AccountsProvider } from 'applesauce-react'
+import { EventStoreProvider, AccountsProvider, Hooks } from 'applesauce-react'
 import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
 import { registerCommonAccountTypes } from 'applesauce-accounts/accounts'
@@ -15,6 +15,55 @@ import { useToast } from './hooks/useToast'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
+
+// Protected route component that redirects to login if no active account
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const activeAccount = Hooks.useActiveAccount()
+  const location = useLocation()
+
+  if (!activeAccount) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  return <>{children}</>
+}
+
+// AppRoutes component that has access to navigation hooks
+function AppRoutes({ 
+  relayPool, 
+  showToast 
+}: { 
+  relayPool: RelayPool
+  showToast: (message: string) => void
+}) {
+  const accountManager = Hooks.useAccountManager()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    accountManager.setActive(undefined as never)
+    localStorage.removeItem('active')
+    showToast('Logged out successfully')
+    navigate('/login')
+  }
+
+  return (
+    <Routes>
+      <Route 
+        path="/a/:naddr" 
+        element={
+          <ProtectedRoute>
+            <Bookmarks 
+              relayPool={relayPool}
+              onLogout={handleLogout}
+            />
+          </ProtectedRoute>
+        } 
+      />
+      <Route path="/" element={<Navigate to={`/a/${DEFAULT_ARTICLE}`} replace />} />
+      <Route path="/login" element={<Login onLogin={() => showToast('Logged in successfully')} />} />
+    </Routes>
+  )
+}
 
 function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
@@ -121,26 +170,7 @@ function App() {
       <AccountsProvider manager={accountManager}>
         <BrowserRouter>
           <div className="app">
-            <Routes>
-              <Route 
-                path="/a/:naddr" 
-                element={
-                  <Bookmarks 
-                    relayPool={relayPool}
-                    onLogout={() => {
-                      if (accountManager) {
-                        accountManager.setActive(undefined as never)
-                        localStorage.removeItem('active')
-                        showToast('Logged out successfully')
-                        console.log('Logged out')
-                      }
-                    }}
-                  />
-                } 
-              />
-              <Route path="/" element={<Navigate to={`/a/${DEFAULT_ARTICLE}`} replace />} />
-              <Route path="/login" element={<Login onLogin={() => showToast('Logged in successfully')} />} />
-            </Routes>
+            <AppRoutes relayPool={relayPool} showToast={showToast} />
           </div>
         </BrowserRouter>
         {toastMessage && (
