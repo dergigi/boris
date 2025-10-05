@@ -9,6 +9,8 @@ interface IconButtonProps {
   ariaLabel?: string
   variant?: 'primary' | 'success' | 'ghost'
   size?: number
+  disabled?: boolean
+  spin?: boolean
 }
 
 const IconButton: React.FC<IconButtonProps> = ({
@@ -17,7 +19,9 @@ const IconButton: React.FC<IconButtonProps> = ({
   title,
   ariaLabel,
   variant = 'ghost',
-  size = 33
+  size = 33,
+  disabled = false,
+  spin = false
 }) => {
   return (
     <button
@@ -26,8 +30,9 @@ const IconButton: React.FC<IconButtonProps> = ({
       title={title}
       aria-label={ariaLabel || title}
       style={{ width: size, height: size }}
+      disabled={disabled}
     >
-      <FontAwesomeIcon icon={icon} />
+      <FontAwesomeIcon icon={icon} spin={spin} />
     </button>
   )
 }

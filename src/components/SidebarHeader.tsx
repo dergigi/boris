@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faRightToBracket, faUser, faList, faThLarge, faImage, faGear } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faRightToBracket, faUser, faList, faThLarge, faImage, faGear, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -14,9 +14,11 @@ interface SidebarHeaderProps {
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
   onOpenSettings: () => void
+  onRefresh?: () => void
+  isRefreshing?: boolean
 }
 
-const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, viewMode, onViewModeChange, onOpenSettings }) => {
+const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, viewMode, onViewModeChange, onOpenSettings, onRefresh, isRefreshing }) => {
   const [isConnecting, setIsConnecting] = useState(false)
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
@@ -68,6 +70,17 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
             <FontAwesomeIcon icon={faUser} />
           )}
         </div>
+        {onRefresh && (
+          <IconButton
+            icon={faRotate}
+            onClick={onRefresh}
+            title="Refresh bookmarks"
+            ariaLabel="Refresh bookmarks"
+            variant="ghost"
+            disabled={isRefreshing}
+            spin={isRefreshing}
+          />
+        )}
         <IconButton
           icon={faGear}
           onClick={onOpenSettings}

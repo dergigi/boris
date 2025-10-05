@@ -47,6 +47,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     mine: true
   })
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
   const eventStore = useEventStore()
@@ -132,6 +133,21 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
   }
 
+  const handleRefreshBookmarks = async () => {
+    if (!relayPool || !activeAccount || isRefreshing) return
+    
+    setIsRefreshing(true)
+    try {
+      await handleFetchBookmarks()
+      await handleFetchHighlights()
+      await handleFetchContacts()
+    } catch (err) {
+      console.error('Failed to refresh bookmarks:', err)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
   // Classify highlights with levels based on user context
   const classifiedHighlights = useMemo(() => {
     return highlights.map(h => {
@@ -182,6 +198,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
               setIsCollapsed(true)
               setIsHighlightsCollapsed(true)
             }}
+            onRefresh={handleRefreshBookmarks}
+            isRefreshing={isRefreshing}
           />
         </div>
       <div className="pane main">

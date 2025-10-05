@@ -17,6 +17,8 @@ interface BookmarkListProps {
   onViewModeChange: (mode: ViewMode) => void
   selectedUrl?: string
   onOpenSettings: () => void
+  onRefresh?: () => void
+  isRefreshing?: boolean
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({
@@ -28,7 +30,9 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   viewMode,
   onViewModeChange,
   selectedUrl,
-  onOpenSettings
+  onOpenSettings,
+  onRefresh,
+  isRefreshing
 }) => {
   if (isCollapsed) {
     // Check if the selected URL is in bookmarks
@@ -60,6 +64,8 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
         onOpenSettings={onOpenSettings}
+        onRefresh={onRefresh}
+        isRefreshing={isRefreshing}
       />
       
       {bookmarks.length === 0 ? (
