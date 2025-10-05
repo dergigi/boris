@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { EventStoreProvider, AccountsProvider } from 'applesauce-react'
 import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
@@ -8,21 +8,8 @@ import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Login from './components/Login'
 import Bookmarks from './components/Bookmarks'
 
-// Load default article from environment variable with fallback
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
-
-function BookmarksRoute({ relayPool }: { relayPool: RelayPool | null }) {
-  const navigate = useNavigate()
-  
-  return (
-    <Bookmarks 
-      relayPool={relayPool}
-      onLogout={() => {}}
-      onLogin={() => navigate('/login')}
-    />
-  )
-}
 
 function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
@@ -83,7 +70,12 @@ function App() {
             <Routes>
               <Route 
                 path="/a/:naddr" 
-                element={<BookmarksRoute relayPool={relayPool} />} 
+                element={
+                  <Bookmarks 
+                    relayPool={relayPool}
+                    onLogout={() => {}}
+                  />
+                } 
               />
               <Route path="/" element={<Navigate to={`/a/${DEFAULT_ARTICLE}`} replace />} />
               <Route path="/login" element={<Login onLogin={() => {}} />} />

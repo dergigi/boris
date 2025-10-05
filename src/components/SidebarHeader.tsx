@@ -1,24 +1,40 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight, faRightFromBracket, faRightToBracket, faUser, faList, faThLarge, faImage, faGear } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
+import { Accounts } from 'applesauce-accounts'
 import IconButton from './IconButton'
 import { ViewMode } from './Bookmarks'
 
 interface SidebarHeaderProps {
   onToggleCollapse: () => void
   onLogout: () => void
-  onLogin?: () => void
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
   onOpenSettings: () => void
 }
 
-const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onLogin, viewMode, onViewModeChange, onOpenSettings }) => {
+const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, viewMode, onViewModeChange, onOpenSettings }) => {
+  const [isConnecting, setIsConnecting] = useState(false)
   const activeAccount = Hooks.useActiveAccount()
+  const accountManager = Hooks.useAccountManager()
   const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
+
+  const handleLogin = async () => {
+    try {
+      setIsConnecting(true)
+      const account = await Accounts.ExtensionAccount.fromExtension()
+      accountManager.addAccount(account)
+      accountManager.setActive(account)
+    } catch (error) {
+      console.error('Login failed:', error)
+      alert('Login failed. Please install a nostr browser extension and try again.')
+    } finally {
+      setIsConnecting(false)
+    }
+  }
 
   const getProfileImage = () => {
     return profile?.picture || null
@@ -67,15 +83,15 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
             ariaLabel="Logout"
             variant="ghost"
           />
-        ) : onLogin ? (
+        ) : (
           <IconButton
             icon={faRightToBracket}
-            onClick={onLogin}
-            title="Login"
+            onClick={isConnecting ? () => {} : handleLogin}
+            title={isConnecting ? "Connecting..." : "Login"}
             ariaLabel="Login"
             variant="ghost"
           />
-        ) : null}
+        )}
       </div>
       <div className="view-mode-controls">
         <IconButton

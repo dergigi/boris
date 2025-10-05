@@ -13,7 +13,6 @@ interface BookmarkListProps {
   isCollapsed: boolean
   onToggleCollapse: () => void
   onLogout: () => void
-  onLogin?: () => void
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
   selectedUrl?: string
@@ -26,7 +25,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   isCollapsed,
   onToggleCollapse,
   onLogout,
-  onLogin,
   viewMode,
   onViewModeChange,
   selectedUrl,
@@ -59,7 +57,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
       <SidebarHeader 
         onToggleCollapse={onToggleCollapse} 
         onLogout={onLogout}
-        onLogin={onLogin}
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
         onOpenSettings={onOpenSettings}
