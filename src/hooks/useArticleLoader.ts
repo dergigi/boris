@@ -16,6 +16,7 @@ interface UseArticleLoaderProps {
   setHighlightsLoading: (loading: boolean) => void
   setCurrentArticleCoordinate: (coord: string | undefined) => void
   setCurrentArticleEventId: (id: string | undefined) => void
+  setCurrentArticle?: (article: any) => void
 }
 
 export function useArticleLoader({
@@ -28,7 +29,8 @@ export function useArticleLoader({
   setHighlights,
   setHighlightsLoading,
   setCurrentArticleCoordinate,
-  setCurrentArticleEventId
+  setCurrentArticleEventId,
+  setCurrentArticle
 }: UseArticleLoaderProps) {
   useEffect(() => {
     if (!relayPool || !naddr) return
@@ -54,6 +56,7 @@ export function useArticleLoader({
         
         setCurrentArticleCoordinate(articleCoordinate)
         setCurrentArticleEventId(article.event.id)
+        setCurrentArticle?.(article.event)
         
         console.log('📰 Article loaded:', article.title)
         console.log('📍 Coordinate:', articleCoordinate)

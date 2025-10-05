@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useRef, useState } from 'react'
+import React, { useMemo, useEffect, useRef, useState, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -10,6 +10,11 @@ import { filterHighlightsByUrl } from '../utils/urlHelpers'
 import { hexToRgb } from '../utils/colorHelpers'
 import ReaderHeader from './ReaderHeader'
 import { HighlightVisibility } from './HighlightsPanel'
+import { HighlightButton, HighlightButtonRef } from './HighlightButton'
+import { createHighlight } from '../services/highlightCreationService'
+import { RelayPool } from 'applesauce-relay'
+import { IAccount } from 'applesauce-accounts'
+import { NostrEvent } from 'nostr-tools'
 
 interface ContentPanelProps {
   loading: boolean
@@ -27,6 +32,13 @@ interface ContentPanelProps {
   highlightVisibility?: HighlightVisibility
   currentUserPubkey?: string
   followedPubkeys?: Set<string>
+  // For highlight creation
+  relayPool?: RelayPool
+  activeAccount?: IAccount
+  currentArticle?: NostrEvent | null
+  currentArticleCoordinate?: string
+  onHighlightCreated?: () => void
+  onShowToast?: (message: string, type: 'success' | 'error') => void
 }
 
 const ContentPanel: React.FC<ContentPanelProps> = ({ 
@@ -44,11 +56,19 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   selectedHighlightId,
   highlightVisibility = { nostrverse: true, friends: true, mine: true },
   currentUserPubkey,
-  followedPubkeys = new Set()
+  followedPubkeys = new Set(),
+  // For highlight creation
+  relayPool,
+  activeAccount,
+  currentArticle,
+  currentArticleCoordinate,
+  onHighlightCreated,
+  onShowToast
 }) => {
   const contentRef = useRef<HTMLDivElement>(null)
   const markdownPreviewRef = useRef<HTMLDivElement>(null)
   const [renderedHtml, setRenderedHtml] = useState<string>('')
+  const highlightButtonRef = useRef<HighlightButtonRef>(null)
   
   // Filter highlights by URL and visibility settings
   const relevantHighlights = useMemo(() => {
@@ -158,6 +178,59 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   const hasHighlights = relevantHighlights.length > 0
 
+  // Handle text selection for highlight creation
+  const handleMouseUp = useCallback(() => {
+    // Only allow highlight creation if user is logged in
+    if (!activeAccount || !relayPool) {
+      highlightButtonRef.current?.hide()
+      return
+    }
+
+    setTimeout(() => {
+      const selection = window.getSelection()
+      if (!selection || selection.rangeCount === 0) {
+        highlightButtonRef.current?.hide()
+        return
+      }
+
+      const range = selection.getRangeAt(0)
+      const text = selection.toString().trim()
+
+      if (text.length > 0 && contentRef.current?.contains(range.commonAncestorContainer)) {
+        highlightButtonRef.current?.updateSelection(text, range.cloneRange())
+      } else {
+        highlightButtonRef.current?.hide()
+      }
+    }, 10)
+  }, [activeAccount, relayPool])
+
+  // Handle highlight creation
+  const handleCreateHighlight = useCallback(async (text: string) => {
+    if (!activeAccount || !relayPool || !currentArticle) {
+      onShowToast?.('Please log in to create highlights', 'error')
+      return
+    }
+
+    try {
+      await createHighlight(
+        text,
+        currentArticle,
+        activeAccount,
+        relayPool
+      )
+      
+      onShowToast?.('Highlight created successfully!', 'success')
+      highlightButtonRef.current?.hide()
+      window.getSelection()?.removeAllRanges()
+      
+      // Trigger refresh of highlights
+      onHighlightCreated?.()
+    } catch (error) {
+      console.error('Failed to create highlight:', error)
+      onShowToast?.('Failed to create highlight', 'error')
+    }
+  }, [activeAccount, relayPool, currentArticle, currentArticleCoordinate, onShowToast, onHighlightCreated])
+
   if (!selectedUrl) {
     return (
       <div className="reader empty">
@@ -202,12 +275,14 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             <div 
               ref={contentRef} 
               className="reader-markdown" 
-              dangerouslySetInnerHTML={{ __html: finalHtml }} 
+              dangerouslySetInnerHTML={{ __html: finalHtml }}
+              onMouseUp={handleMouseUp}
             />
           ) : (
             <div 
               ref={contentRef} 
               className="reader-markdown"
+              onMouseUp={handleMouseUp}
             >
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {markdown}
@@ -218,13 +293,21 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           <div 
             ref={contentRef} 
             className="reader-html" 
-            dangerouslySetInnerHTML={{ __html: finalHtml || html || '' }} 
+            dangerouslySetInnerHTML={{ __html: finalHtml || html || '' }}
+            onMouseUp={handleMouseUp}
           />
         )
       ) : (
         <div className="reader empty">
           <p>No readable content found for this URL.</p>
         </div>
+      )}
+      
+      {activeAccount && relayPool && (
+        <HighlightButton 
+          ref={highlightButtonRef} 
+          onHighlight={handleCreateHighlight} 
+        />
       )}
     </div>
   )

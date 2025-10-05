@@ -42,6 +42,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [showSettings, setShowSettings] = useState(false)
   const [currentArticleCoordinate, setCurrentArticleCoordinate] = useState<string | undefined>(undefined)
   const [currentArticleEventId, setCurrentArticleEventId] = useState<string | undefined>(undefined)
+  const [currentArticle, setCurrentArticle] = useState<any>(undefined) // Store the current article event
   const [highlightVisibility, setHighlightVisibility] = useState<HighlightVisibility>({
     nostrverse: true,
     friends: true,
@@ -71,7 +72,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     setHighlights,
     setHighlightsLoading,
     setCurrentArticleCoordinate,
-    setCurrentArticleEventId
+    setCurrentArticleEventId,
+    setCurrentArticle
   })
 
   // Load initial data on login
@@ -177,16 +179,38 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     setSelectedUrl(url)
     setReaderLoading(true)
     setReaderContent(undefined)
+    setCurrentArticle(undefined) // Clear previous article
     setShowSettings(false)
     if (settings.collapseOnArticleOpen !== false) setIsCollapsed(true)
     
     try {
       const content = await loadContent(url, relayPool, bookmark)
       setReaderContent(content)
+      
+      // If this is a Nostr article (kind:30023), we need to get the event for highlight creation
+      if (bookmark && bookmark.kind === 30023) {
+        setCurrentArticle(bookmark)
+      }
     } catch (err) {
       console.warn('Failed to fetch content:', err)
     } finally {
       setReaderLoading(false)
+    }
+  }
+
+  const handleHighlightCreated = async () => {
+    // Refresh highlights after creating a new one
+    if (!relayPool || !currentArticleCoordinate) return
+    
+    try {
+      const newHighlights = await fetchHighlightsForArticle(
+        relayPool,
+        currentArticleCoordinate,
+        currentArticleEventId
+      )
+      setHighlights(newHighlights)
+    } catch (err) {
+      console.error('Failed to refresh highlights:', err)
     }
   }
 
@@ -237,6 +261,19 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
               if (isHighlightsCollapsed) setIsHighlightsCollapsed(false)
             }}
             selectedHighlightId={selectedHighlightId}
+            relayPool={relayPool || undefined}
+            activeAccount={activeAccount || undefined}
+            currentArticle={currentArticle}
+            currentArticleCoordinate={currentArticleCoordinate}
+            onHighlightCreated={handleHighlightCreated}
+            onShowToast={(message, type) => {
+              // Use existing toast mechanism
+              if (type === 'success') {
+                console.log('✅', message)
+              } else {
+                console.error('❌', message)
+              }
+            }}
             highlightVisibility={highlightVisibility}
             currentUserPubkey={activeAccount?.pubkey}
             followedPubkeys={followedPubkeys}
