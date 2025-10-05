@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { EventStoreProvider, AccountsProvider } from 'applesauce-react'
 import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
+import { registerCommonAccountTypes } from 'applesauce-accounts/accounts'
 import { RelayPool } from 'applesauce-relay'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Login from './components/Login'
@@ -20,6 +21,44 @@ function App() {
     // Initialize event store, account manager, and relay pool
     const store = new EventStore()
     const accounts = new AccountManager()
+    
+    // Register common account types (needed for deserialization)
+    registerCommonAccountTypes(accounts)
+    
+    // Load persisted accounts from localStorage
+    const loadAccounts = async () => {
+      try {
+        const json = JSON.parse(localStorage.getItem('accounts') || '[]')
+        await accounts.fromJSON(json)
+        console.log('Loaded', accounts.accounts.length, 'accounts from storage')
+        
+        // Load active account from storage
+        const activeId = localStorage.getItem('active')
+        if (activeId && accounts.getAccount(activeId)) {
+          accounts.setActive(activeId)
+          console.log('Restored active account:', activeId)
+        }
+      } catch (err) {
+        console.error('Failed to load accounts from storage:', err)
+      }
+    }
+    
+    loadAccounts()
+    
+    // Subscribe to accounts changes and persist to localStorage
+    const accountsSub = accounts.accounts$.subscribe(() => {
+      localStorage.setItem('accounts', JSON.stringify(accounts.toJSON()))
+    })
+    
+    // Subscribe to active account changes and persist to localStorage
+    const activeSub = accounts.active$.subscribe((account) => {
+      if (account) {
+        localStorage.setItem('active', account.id)
+      } else {
+        localStorage.removeItem('active')
+      }
+    })
+    
     const pool = new RelayPool()
     
     // Define relay URLs for bookmark fetching
@@ -56,6 +95,12 @@ function App() {
     setEventStore(store)
     setAccountManager(accounts)
     setRelayPool(pool)
+    
+    // Cleanup subscriptions on unmount
+    return () => {
+      accountsSub.unsubscribe()
+      activeSub.unsubscribe()
+    }
   }, [])
 
   if (!eventStore || !accountManager || !relayPool) {
