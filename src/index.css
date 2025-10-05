@@ -1422,48 +1422,30 @@ body {
 }
 
 /* Settings Panel */
-.settings-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.settings-panel {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh;
-  overflow: hidden;
+.settings-view {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 1.5rem;
 }
 
 .settings-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #333;
+  margin-bottom: 2rem;
 }
 
 .settings-header h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
 }
 
 .settings-content {
-  padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+  margin-bottom: 2rem;
 }
 
 .setting-group {
@@ -1511,10 +1493,9 @@ body {
 }
 
 .settings-footer {
-  padding: 1.5rem;
-  border-top: 1px solid #333;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  padding-top: 1rem;
 }
 
 .settings-footer .btn-primary {

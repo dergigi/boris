@@ -176,7 +176,15 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             onOpenSettings={() => setShowSettings(true)}
           />
         </div>
-        <div className="pane main">
+      <div className="pane main">
+        {showSettings ? (
+          <Settings 
+            settings={settings}
+            onSave={handleSaveSettings}
+            onClose={() => setShowSettings(false)}
+            isSaving={isSavingSettings}
+          />
+        ) : (
           <ContentPanel 
             loading={readerLoading}
             title={readerContent?.title}
@@ -188,7 +196,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             onHighlightClick={setSelectedHighlightId}
             selectedHighlightId={selectedHighlightId}
           />
-        </div>
+        )}
+      </div>
         <div className="pane highlights">
           <HighlightsPanel
             highlights={highlights}
@@ -204,14 +213,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           />
         </div>
       </div>
-      {showSettings && (
-        <Settings 
-          settings={settings}
-          onSave={handleSaveSettings}
-          onClose={() => setShowSettings(false)}
-          isSaving={isSavingSettings}
-        />
-      )}
     </>
   )
 }

@@ -23,20 +23,19 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
   }
 
   return (
-    <div className="settings-overlay">
-      <div className="settings-panel">
-        <div className="settings-header">
-          <h2>Settings</h2>
-          <IconButton
-            icon={faTimes}
-            onClick={onClose}
-            title="Close settings"
-            ariaLabel="Close settings"
-            variant="ghost"
-          />
-        </div>
+    <div className="settings-view">
+      <div className="settings-header">
+        <h2>Settings</h2>
+        <IconButton
+          icon={faTimes}
+          onClick={onClose}
+          title="Close settings"
+          ariaLabel="Close settings"
+          variant="ghost"
+        />
+      </div>
 
-        <div className="settings-content">
+      <div className="settings-content">
           <div className="setting-group">
             <label htmlFor="collapseOnArticleOpen" className="checkbox-label">
               <input
@@ -102,18 +101,17 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
               <span>Start with highlights panel collapsed</span>
             </label>
           </div>
-        </div>
+      </div>
 
-        <div className="settings-footer">
-          <button
-            className="btn-primary"
-            onClick={handleSave}
-            disabled={isSaving}
-          >
-            <FontAwesomeIcon icon={faSave} />
-            {isSaving ? 'Saving...' : 'Save Settings'}
-          </button>
-        </div>
+      <div className="settings-footer">
+        <button
+          className="btn-primary"
+          onClick={handleSave}
+          disabled={isSaving}
+        >
+          <FontAwesomeIcon icon={faSave} />
+          {isSaving ? 'Saving...' : 'Save Settings'}
+        </button>
       </div>
     </div>
   )
