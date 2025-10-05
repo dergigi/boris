@@ -173,7 +173,11 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             selectedUrl={selectedUrl}
-            onOpenSettings={() => setShowSettings(true)}
+            onOpenSettings={() => {
+              setShowSettings(true)
+              setIsCollapsed(true)
+              setIsHighlightsCollapsed(true)
+            }}
           />
         </div>
       <div className="pane main">
