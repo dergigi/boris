@@ -74,6 +74,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     return sourceHtml
   }, [html, renderedHtml, markdown, relevantHighlights, showUnderlines, highlightStyle])
 
+  // Check if we need to wait for HTML conversion
+  const needsHtmlConversion = markdown && !renderedHtml
+  const shouldShowContent = !needsHtmlConversion || relevantHighlights.length === 0
+
   // Attach click handlers to highlight marks
   useEffect(() => {
     if (!onHighlightClick || !contentRef.current) return
@@ -184,24 +188,24 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         </div>
       )}
       {markdown || html ? (
-        finalHtml ? (
-          <div 
-            ref={contentRef} 
-            className={markdown ? "reader-markdown" : "reader-html"} 
-            dangerouslySetInnerHTML={{ __html: finalHtml }} 
-          />
-        ) : markdown ? (
-          <div 
-            ref={contentRef} 
-            className="reader-markdown"
-          >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {markdown}
-            </ReactMarkdown>
-          </div>
-        ) : (
-          <div className={markdown ? "reader-markdown" : "reader-html"} ref={contentRef} />
-        )
+        finalHtml || (markdown && shouldShowContent) ? (
+          finalHtml ? (
+            <div 
+              ref={contentRef} 
+              className={markdown ? "reader-markdown" : "reader-html"} 
+              dangerouslySetInnerHTML={{ __html: finalHtml }} 
+            />
+          ) : (
+            <div 
+              ref={contentRef} 
+              className="reader-markdown"
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {markdown}
+              </ReactMarkdown>
+            </div>
+          )
+        ) : null
       ) : (
         <div className="reader empty">
           <p>No readable content found for this URL.</p>
