@@ -575,8 +575,11 @@ body {
 
 .reader-html p,
 .reader-html div,
-.reader-html span {
-  font-size: 1em;
+.reader-html span,
+.reader-html li,
+.reader-html td,
+.reader-html th {
+  font-size: 1em !important;
 }
 
 .reader-markdown a {
@@ -1585,9 +1588,20 @@ body {
   font-size: 1rem;
 }
 
+.setting-inline .setting-select {
+  width: auto;
+  min-width: 200px;
+  flex: 1;
+}
+
 .setting-select:focus {
   outline: none;
   border-color: #646cff;
+}
+
+.font-select option {
+  padding: 0.5rem;
+  font-size: 1rem;
 }
 
 .checkbox-label {

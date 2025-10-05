@@ -20,6 +20,12 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
   }, [settings])
 
   useEffect(() => {
+    // Preload all fonts for the dropdown
+    const fonts = ['inter', 'lora', 'merriweather', 'open-sans', 'roboto', 'source-serif-4', 'crimson-text', 'libre-baskerville', 'pt-serif']
+    fonts.forEach(font => loadFont(font))
+  }, [])
+
+  useEffect(() => {
     // Load font for preview when it changes
     if (localSettings.readingFont) {
       loadFont(localSettings.readingFont)
@@ -49,24 +55,24 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
           <div className="settings-section">
             <h3 className="section-title">Reading & Display</h3>
             
-            <div className="setting-group">
+            <div className="setting-group setting-inline">
               <label htmlFor="readingFont">Reading Font</label>
               <select
                 id="readingFont"
                 value={localSettings.readingFont || 'system'}
                 onChange={(e) => setLocalSettings({ ...localSettings, readingFont: e.target.value })}
-                className="setting-select"
+                className="setting-select font-select"
               >
-                <option value="system">System Default</option>
-                <option value="inter">Inter</option>
-                <option value="lora">Lora</option>
-                <option value="merriweather">Merriweather</option>
-                <option value="open-sans">Open Sans</option>
-                <option value="roboto">Roboto</option>
-                <option value="source-serif-4">Source Serif 4</option>
-                <option value="crimson-text">Crimson Text</option>
-                <option value="libre-baskerville">Libre Baskerville</option>
-                <option value="pt-serif">PT Serif</option>
+                <option value="system" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>System Default</option>
+                <option value="inter" style={{ fontFamily: 'Inter, sans-serif' }}>Inter</option>
+                <option value="lora" style={{ fontFamily: 'Lora, serif' }}>Lora</option>
+                <option value="merriweather" style={{ fontFamily: 'Merriweather, serif' }}>Merriweather</option>
+                <option value="open-sans" style={{ fontFamily: 'Open Sans, sans-serif' }}>Open Sans</option>
+                <option value="roboto" style={{ fontFamily: 'Roboto, sans-serif' }}>Roboto</option>
+                <option value="source-serif-4" style={{ fontFamily: 'Source Serif 4, serif' }}>Source Serif 4</option>
+                <option value="crimson-text" style={{ fontFamily: 'Crimson Text, serif' }}>Crimson Text</option>
+                <option value="libre-baskerville" style={{ fontFamily: 'Libre Baskerville, serif' }}>Libre Baskerville</option>
+                <option value="pt-serif" style={{ fontFamily: 'PT Serif, serif' }}>PT Serif</option>
               </select>
             </div>
 
