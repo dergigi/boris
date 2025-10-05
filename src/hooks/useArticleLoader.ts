@@ -12,7 +12,6 @@ interface UseArticleLoaderProps {
   setReaderContent: (content: ReadableContent | undefined) => void
   setReaderLoading: (loading: boolean) => void
   setIsCollapsed: (collapsed: boolean) => void
-  setIsHighlightsCollapsed: (collapsed: boolean) => void
   setHighlights: (highlights: Highlight[]) => void
   setHighlightsLoading: (loading: boolean) => void
   setCurrentArticleCoordinate: (coord: string | undefined) => void
@@ -26,7 +25,6 @@ export function useArticleLoader({
   setReaderContent,
   setReaderLoading,
   setIsCollapsed,
-  setIsHighlightsCollapsed,
   setHighlights,
   setHighlightsLoading,
   setCurrentArticleCoordinate,

@@ -68,7 +68,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     setReaderContent,
     setReaderLoading,
     setIsCollapsed,
-    setIsHighlightsCollapsed,
     setHighlights,
     setHighlightsLoading,
     setCurrentArticleCoordinate,

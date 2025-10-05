@@ -1,5 +1,5 @@
-import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, takeUntil, timer, toArray, scan } from 'rxjs'
+import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
+import { lastValueFrom, takeUntil, timer, tap, toArray } from 'rxjs'
 import { NostrEvent } from 'nostr-tools'
 import {
   getHighlightText,
@@ -91,15 +91,16 @@ export const fetchHighlightsForArticle = async (
       relayPool
         .req(highlightRelays, { kinds: [9802], '#a': [articleCoordinate] })
         .pipe(
-          scan((acc: NostrEvent[], event: NostrEvent) => {
+          onlyEvents(),
+          tap((event: NostrEvent) => {
             const highlight = processEvent(event)
             if (highlight && onHighlight) {
               onHighlight(highlight)
             }
-            return [...acc, event]
-          }, []),
+          }),
           completeOnEose(),
-          takeUntil(timer(10000))
+          takeUntil(timer(10000)),
+          toArray()
         )
     )
     
@@ -112,15 +113,16 @@ export const fetchHighlightsForArticle = async (
         relayPool
           .req(highlightRelays, { kinds: [9802], '#e': [eventId] })
           .pipe(
-            scan((acc: NostrEvent[], event: NostrEvent) => {
+            onlyEvents(),
+            tap((event: NostrEvent) => {
               const highlight = processEvent(event)
               if (highlight && onHighlight) {
                 onHighlight(highlight)
               }
-              return [...acc, event]
-            }, []),
+            }),
             completeOnEose(),
-            takeUntil(timer(10000))
+            takeUntil(timer(10000)),
+            toArray()
           )
       )
       console.log('📊 Highlights via e-tag:', eTagEvents.length)
@@ -202,7 +204,8 @@ export const fetchHighlights = async (
       relayPool
         .req(relayUrls, { kinds: [9802], authors: [pubkey] })
         .pipe(
-          scan((acc: NostrEvent[], event: NostrEvent) => {
+          onlyEvents(),
+          tap((event: NostrEvent) => {
             if (!seenIds.has(event.id)) {
               seenIds.add(event.id)
               
@@ -235,10 +238,10 @@ export const fetchHighlights = async (
                 onHighlight(highlight)
               }
             }
-            return [...acc, event]
-          }, []),
+          }),
           completeOnEose(),
-          takeUntil(timer(10000))
+          takeUntil(timer(10000)),
+          toArray()
         )
     )
     
