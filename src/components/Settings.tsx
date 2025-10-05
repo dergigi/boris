@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimes, faSave, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../services/settingsService'
 import IconButton from './IconButton'
+import { loadFont, getFontFamily } from '../utils/fontLoader'
 
 interface SettingsProps {
   settings: UserSettings
@@ -18,9 +19,18 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
     setLocalSettings(settings)
   }, [settings])
 
+  useEffect(() => {
+    // Load font for preview when it changes
+    if (localSettings.readingFont) {
+      loadFont(localSettings.readingFont)
+    }
+  }, [localSettings.readingFont])
+
   const handleSave = async () => {
     await onSave(localSettings)
   }
+
+  const previewFontFamily = getFontFamily(localSettings.readingFont)
 
   return (
     <div className="settings-view">
@@ -95,6 +105,22 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
               <option value="libre-baskerville">Libre Baskerville</option>
               <option value="pt-serif">PT Serif</option>
             </select>
+          </div>
+
+          <div className="setting-preview">
+            <div className="preview-label">Preview</div>
+            <div 
+              className="preview-content" 
+              style={{ fontFamily: previewFontFamily }}
+            >
+              <h3>The Quick Brown Fox</h3>
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+              </p>
+              <p>
+                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+              </p>
+            </div>
           </div>
 
           <div className="setting-group">
