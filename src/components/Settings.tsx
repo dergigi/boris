@@ -77,6 +77,27 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
           </div>
 
           <div className="setting-group">
+            <label htmlFor="readingFont">Reading Font</label>
+            <select
+              id="readingFont"
+              value={localSettings.readingFont || 'system'}
+              onChange={(e) => setLocalSettings({ ...localSettings, readingFont: e.target.value })}
+              className="setting-select"
+            >
+              <option value="system">System Default</option>
+              <option value="inter">Inter</option>
+              <option value="lora">Lora</option>
+              <option value="merriweather">Merriweather</option>
+              <option value="open-sans">Open Sans</option>
+              <option value="roboto">Roboto</option>
+              <option value="source-serif-4">Source Serif 4</option>
+              <option value="crimson-text">Crimson Text</option>
+              <option value="libre-baskerville">Libre Baskerville</option>
+              <option value="pt-serif">PT Serif</option>
+            </select>
+          </div>
+
+          <div className="setting-group">
             <label htmlFor="showUnderlines" className="checkbox-label">
               <input
                 id="showUnderlines"

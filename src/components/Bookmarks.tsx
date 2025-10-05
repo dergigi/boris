@@ -13,6 +13,7 @@ import { HighlightsPanel } from './HighlightsPanel'
 import { fetchReadableContent, ReadableContent } from '../services/readerService'
 import Settings from './Settings'
 import { UserSettings, loadSettings, saveSettings } from '../services/settingsService'
+import { loadFont, getFontFamily } from '../utils/fontLoader'
 
 export type ViewMode = 'compact' | 'cards' | 'large'
 
@@ -65,6 +66,12 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     if (settings.showUnderlines !== undefined) setShowUnderlines(settings.showUnderlines)
     if (settings.sidebarCollapsed !== undefined) setIsCollapsed(settings.sidebarCollapsed)
     if (settings.highlightsCollapsed !== undefined) setIsHighlightsCollapsed(settings.highlightsCollapsed)
+    if (settings.readingFont) {
+      loadFont(settings.readingFont)
+      // Apply font to content panel
+      const fontFamily = getFontFamily(settings.readingFont)
+      document.documentElement.style.setProperty('--reading-font', fontFamily)
+    }
   }, [settings])
 
   const handleFetchBookmarks = async () => {

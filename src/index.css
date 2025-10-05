@@ -12,6 +12,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  
+  --reading-font: system-ui, -apple-system, sans-serif;
 }
 
 body {
@@ -524,11 +526,13 @@ body {
   word-wrap: break-word;
   overflow-wrap: break-word;
   word-break: break-word;
+  font-family: var(--reading-font);
 }
 
 .reader-markdown {
   color: #ddd;
   line-height: 1.7;
+  font-family: var(--reading-font);
 }
 
 /* Ensure content is left-aligned even if source markup uses center */

@@ -14,6 +14,7 @@ export interface UserSettings {
   showUnderlines?: boolean
   sidebarCollapsed?: boolean
   highlightsCollapsed?: boolean
+  readingFont?: string
 }
 
 export async function loadSettings(
