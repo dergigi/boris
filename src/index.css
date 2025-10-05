@@ -17,7 +17,7 @@
   --reading-font-size: 18px;
   /* Layout variables */
   --sidebar-width: 320px;
-  --sidebar-collapsed-width: 56px;
+  --sidebar-collapsed-width: 64px;
   --highlights-width: 360px;
   --highlights-collapsed-width: 56px;
   --main-max-width: 900px;
@@ -216,7 +216,7 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 0.75rem 0 0 0.5rem;
+  padding: 0.5rem 0.5rem 0 0.5rem;
   background: transparent;
   border: none;
 }
@@ -232,8 +232,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
+  width: 48px;
   height: 36px;
+  flex-shrink: 0;
 }
 
 .bookmarks-container.collapsed .toggle-sidebar-btn:hover {
