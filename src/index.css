@@ -1855,6 +1855,17 @@ body {
   gap: 1rem;
 }
 
+.setting-label {
+  text-align: left;
+  flex: 1;
+}
+
+.setting-control {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
 .setting-group.setting-inline label {
   margin-bottom: 0;
 }

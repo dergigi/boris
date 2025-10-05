@@ -122,27 +122,33 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
 
 
             <div className="setting-group setting-inline">
-              <label>My Highlights</label>
-              <ColorPicker
-                selectedColor={localSettings.highlightColorMine || '#ffff00'}
-                onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColorMine: color })}
-              />
+              <label className="setting-label">My Highlights</label>
+              <div className="setting-control">
+                <ColorPicker
+                  selectedColor={localSettings.highlightColorMine || '#ffff00'}
+                  onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColorMine: color })}
+                />
+              </div>
             </div>
 
             <div className="setting-group setting-inline">
-              <label>Friends Highlights</label>
-              <ColorPicker
-                selectedColor={localSettings.highlightColorFriends || '#ff8c00'}
-                onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColorFriends: color })}
-              />
+              <label className="setting-label">Friends Highlights</label>
+              <div className="setting-control">
+                <ColorPicker
+                  selectedColor={localSettings.highlightColorFriends || '#ff8c00'}
+                  onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColorFriends: color })}
+                />
+              </div>
             </div>
 
             <div className="setting-group setting-inline">
-              <label>Nostrverse Highlights</label>
-              <ColorPicker
-                selectedColor={localSettings.highlightColorNostrverse || '#800080'}
-                onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColorNostrverse: color })}
-              />
+              <label className="setting-label">Nostrverse Highlights</label>
+              <div className="setting-control">
+                <ColorPicker
+                  selectedColor={localSettings.highlightColorNostrverse || '#800080'}
+                  onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColorNostrverse: color })}
+                />
+              </div>
             </div>
 
             <div className="setting-preview">
