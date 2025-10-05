@@ -22,9 +22,10 @@ export type ViewMode = 'compact' | 'cards' | 'large'
 interface BookmarksProps {
   relayPool: RelayPool | null
   onLogout: () => void
+  onLogin?: () => void
 }
 
-const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
+const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout, onLogin }) => {
   const { naddr } = useParams<{ naddr?: string }>()
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [highlights, setHighlights] = useState<Highlight[]>([])
@@ -144,6 +145,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             isCollapsed={isCollapsed}
             onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
             onLogout={onLogout}
+            onLogin={onLogin}
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             selectedUrl={selectedUrl}

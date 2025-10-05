@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faUser, faList, faThLarge, faImage, faGear } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faRightToBracket, faUser, faList, faThLarge, faImage, faGear } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -10,12 +10,13 @@ import { ViewMode } from './Bookmarks'
 interface SidebarHeaderProps {
   onToggleCollapse: () => void
   onLogout: () => void
+  onLogin?: () => void
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
   onOpenSettings: () => void
 }
 
-const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, viewMode, onViewModeChange, onOpenSettings }) => {
+const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onLogin, viewMode, onViewModeChange, onOpenSettings }) => {
   const activeAccount = Hooks.useActiveAccount()
   const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
 
@@ -58,13 +59,23 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           ariaLabel="Settings"
           variant="ghost"
         />
-        <IconButton
-          icon={faRightFromBracket}
-          onClick={onLogout}
-          title="Logout"
-          ariaLabel="Logout"
-          variant="ghost"
-        />
+        {activeAccount ? (
+          <IconButton
+            icon={faRightFromBracket}
+            onClick={onLogout}
+            title="Logout"
+            ariaLabel="Logout"
+            variant="ghost"
+          />
+        ) : onLogin ? (
+          <IconButton
+            icon={faRightToBracket}
+            onClick={onLogin}
+            title="Login"
+            ariaLabel="Login"
+            variant="ghost"
+          />
+        ) : null}
       </div>
       <div className="view-mode-controls">
         <IconButton
