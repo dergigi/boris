@@ -123,69 +123,71 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
     <div className="highlights-container">
       <div className="highlights-header">
         <div className="highlights-actions">
-          {onHighlightVisibilityChange && (
-            <div className="highlight-level-toggles">
+          <div className="highlights-actions-left">
+            {onHighlightVisibilityChange && (
+              <div className="highlight-level-toggles">
+                <button
+                  onClick={() => onHighlightVisibilityChange({ 
+                    ...highlightVisibility, 
+                    nostrverse: !highlightVisibility.nostrverse 
+                  })}
+                  className={`level-toggle-btn ${highlightVisibility.nostrverse ? 'active' : ''}`}
+                  title="Toggle nostrverse highlights"
+                  aria-label="Toggle nostrverse highlights"
+                  style={{ color: highlightVisibility.nostrverse ? 'var(--highlight-color-nostrverse, #9333ea)' : undefined }}
+                >
+                  <FontAwesomeIcon icon={faGlobe} />
+                </button>
+                <button
+                  onClick={() => onHighlightVisibilityChange({ 
+                    ...highlightVisibility, 
+                    friends: !highlightVisibility.friends 
+                  })}
+                  className={`level-toggle-btn ${highlightVisibility.friends ? 'active' : ''}`}
+                  title={currentUserPubkey ? "Toggle friends highlights" : "Login to see friends highlights"}
+                  aria-label="Toggle friends highlights"
+                  style={{ color: highlightVisibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined }}
+                  disabled={!currentUserPubkey}
+                >
+                  <FontAwesomeIcon icon={faUserGroup} />
+                </button>
+                <button
+                  onClick={() => onHighlightVisibilityChange({ 
+                    ...highlightVisibility, 
+                    mine: !highlightVisibility.mine 
+                  })}
+                  className={`level-toggle-btn ${highlightVisibility.mine ? 'active' : ''}`}
+                  title={currentUserPubkey ? "Toggle my highlights" : "Login to see your highlights"}
+                  aria-label="Toggle my highlights"
+                  style={{ color: highlightVisibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined }}
+                  disabled={!currentUserPubkey}
+                >
+                  <FontAwesomeIcon icon={faUser} />
+                </button>
+              </div>
+            )}
+            {onRefresh && (
               <button
-                onClick={() => onHighlightVisibilityChange({ 
-                  ...highlightVisibility, 
-                  nostrverse: !highlightVisibility.nostrverse 
-                })}
-                className={`level-toggle-btn ${highlightVisibility.nostrverse ? 'active' : ''}`}
-                title="Toggle nostrverse highlights"
-                aria-label="Toggle nostrverse highlights"
-                style={{ color: highlightVisibility.nostrverse ? 'var(--highlight-color-nostrverse, #9333ea)' : undefined }}
+                onClick={onRefresh}
+                className="refresh-highlights-btn"
+                title="Refresh highlights"
+                aria-label="Refresh highlights"
+                disabled={loading}
               >
-                <FontAwesomeIcon icon={faGlobe} />
+                <FontAwesomeIcon icon={faRotate} spin={loading} />
               </button>
+            )}
+            {filteredHighlights.length > 0 && (
               <button
-                onClick={() => onHighlightVisibilityChange({ 
-                  ...highlightVisibility, 
-                  friends: !highlightVisibility.friends 
-                })}
-                className={`level-toggle-btn ${highlightVisibility.friends ? 'active' : ''}`}
-                title={currentUserPubkey ? "Toggle friends highlights" : "Login to see friends highlights"}
-                aria-label="Toggle friends highlights"
-                style={{ color: highlightVisibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined }}
-                disabled={!currentUserPubkey}
+                onClick={handleToggleUnderlines}
+                className="toggle-underlines-btn"
+                title={showUnderlines ? 'Hide underlines' : 'Show underlines'}
+                aria-label={showUnderlines ? 'Hide underlines' : 'Show underlines'}
               >
-                <FontAwesomeIcon icon={faUserGroup} />
+                <FontAwesomeIcon icon={showUnderlines ? faEye : faEyeSlash} />
               </button>
-              <button
-                onClick={() => onHighlightVisibilityChange({ 
-                  ...highlightVisibility, 
-                  mine: !highlightVisibility.mine 
-                })}
-                className={`level-toggle-btn ${highlightVisibility.mine ? 'active' : ''}`}
-                title={currentUserPubkey ? "Toggle my highlights" : "Login to see your highlights"}
-                aria-label="Toggle my highlights"
-                style={{ color: highlightVisibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined }}
-                disabled={!currentUserPubkey}
-              >
-                <FontAwesomeIcon icon={faUser} />
-              </button>
-            </div>
-          )}
-          {onRefresh && (
-            <button
-              onClick={onRefresh}
-              className="refresh-highlights-btn"
-              title="Refresh highlights"
-              aria-label="Refresh highlights"
-              disabled={loading}
-            >
-              <FontAwesomeIcon icon={faRotate} spin={loading} />
-            </button>
-          )}
-          {filteredHighlights.length > 0 && (
-            <button
-              onClick={handleToggleUnderlines}
-              className="toggle-underlines-btn"
-              title={showUnderlines ? 'Hide underlines' : 'Show underlines'}
-              aria-label={showUnderlines ? 'Hide underlines' : 'Show underlines'}
-            >
-              <FontAwesomeIcon icon={showUnderlines ? faEye : faEyeSlash} />
-            </button>
-          )}
+            )}
+          </div>
           <button
             onClick={onToggleCollapse}
             className="toggle-highlights-btn"
