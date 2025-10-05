@@ -14,7 +14,6 @@ import { fetchReadableContent, ReadableContent } from '../services/readerService
 import Settings from './Settings'
 import { UserSettings, loadSettings, saveSettings } from '../services/settingsService'
 import { loadFont, getFontFamily } from '../utils/fontLoader'
-
 export type ViewMode = 'compact' | 'cards' | 'large'
 
 interface BookmarksProps {
