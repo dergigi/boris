@@ -758,6 +758,7 @@ body {
   align-items: center;
   gap: 0.75rem;
   height: 28px;
+  justify-content: space-between;
 }
 
 .compact-row.clickable {
@@ -809,6 +810,7 @@ body {
   width: 26px;
   height: 22px;
   flex-shrink: 0;
+  margin-left: auto;
   transition: background-color 0.2s ease;
 }
 
