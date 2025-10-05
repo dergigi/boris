@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { faTimes, faList, faThLarge, faImage, faUnderline, faHighlighter, faRotateLeft } from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faList, faThLarge, faImage, faUnderline, faHighlighter, faUndo } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../services/settingsService'
 import IconButton from './IconButton'
 import ColorPicker from './ColorPicker'
@@ -72,7 +72,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
         <h2>Settings</h2>
         <div className="settings-header-actions">
           <IconButton
-            icon={faRotateLeft}
+            icon={faUndo}
             onClick={handleResetToDefaults}
             title="Reset to defaults"
             ariaLabel="Reset to defaults"
