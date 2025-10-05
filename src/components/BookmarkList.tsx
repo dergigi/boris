@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faBookmark } from '@fortawesome/free-solid-svg-icons'
 import { Bookmark } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
@@ -31,11 +31,12 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
       <div className="bookmarks-container collapsed">
         <button 
           onClick={onToggleCollapse}
-          className="toggle-sidebar-btn"
+          className="toggle-sidebar-btn with-icon"
           title="Expand bookmarks sidebar"
           aria-label="Expand bookmarks sidebar"
         >
           <FontAwesomeIcon icon={faChevronLeft} />
+          <FontAwesomeIcon icon={faBookmark} />
         </button>
       </div>
     )

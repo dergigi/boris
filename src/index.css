@@ -206,6 +206,12 @@ body {
   transform: translateY(1px);
 }
 
+.bookmarks-container.collapsed .toggle-sidebar-btn.with-icon {
+  width: auto;
+  padding: 0 0.5rem;
+  gap: 0.5rem;
+}
+
 .user-info {
   margin: 0.5rem 0 0 0;
   color: #888;
