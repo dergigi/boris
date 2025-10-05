@@ -216,7 +216,7 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 0.5rem 0 0 0.5rem;
+  padding: 0;
   background: transparent;
   border: none;
 }
@@ -1230,7 +1230,7 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 0.5rem 0 0 0.5rem;
+  padding: 0;
   background: transparent;
   border: none;
 }
