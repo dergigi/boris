@@ -11,7 +11,7 @@ interface CompactViewProps {
   index: number
   hasUrls: boolean
   extractedUrls: string[]
-  onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][] }) => void
+  onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   getIconForUrlType: IconGetter
   firstUrlClassification: { buttonText: string } | null
 }
@@ -32,7 +32,7 @@ export const CompactView: React.FC<CompactViewProps> = ({
     if (!onSelectUrl) return
     
     if (isArticle) {
-      onSelectUrl('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags })
+      onSelectUrl('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags, pubkey: bookmark.pubkey })
     } else if (hasUrls) {
       onSelectUrl(extractedUrls[0])
     }
@@ -68,7 +68,7 @@ export const CompactView: React.FC<CompactViewProps> = ({
             onClick={(e) => { 
               e.stopPropagation()
               if (isArticle) {
-                onSelectUrl?.('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags })
+                onSelectUrl?.('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags, pubkey: bookmark.pubkey })
               } else {
                 onSelectUrl?.(extractedUrls[0])
               }

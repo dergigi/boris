@@ -13,7 +13,7 @@ interface CardViewProps {
   index: number
   hasUrls: boolean
   extractedUrls: string[]
-  onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][] }) => void
+  onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   getIconForUrlType: IconGetter
   firstUrlClassification: { buttonText: string } | null
   authorNpub: string

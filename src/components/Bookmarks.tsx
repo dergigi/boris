@@ -114,7 +114,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
   }
 
-  const handleSelectUrl = async (url: string, bookmark?: { id: string; kind: number; tags: string[][] }) => {
+  const handleSelectUrl = async (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => {
     if (!relayPool) return
     
     setSelectedUrl(url)
@@ -129,15 +129,11 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         // For articles, construct an naddr and fetch using article service
         const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1] || ''
         
-        // Try to get author from tags first, then fall back to bookmark id as pubkey
-        const author = bookmark.tags.find(t => t[0] === 'author')?.[1] || 
-                       (bookmark.id.length === 64 ? bookmark.id : undefined)
-        
-        if (dTag !== undefined) {
+        if (dTag !== undefined && bookmark.pubkey) {
           const pointer = {
             identifier: dTag,
             kind: 30023,
-            pubkey: author || bookmark.id,
+            pubkey: bookmark.pubkey,
           }
           const naddr = nip19.naddrEncode(pointer)
           const article = await fetchArticleByNaddr(relayPool, naddr)
@@ -147,7 +143,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             url: `nostr:${naddr}`
           })
         } else {
-          throw new Error('Invalid article reference - missing d tag')
+          throw new Error('Invalid article reference - missing d tag or pubkey')
         }
       } else {
         // For regular URLs, fetch readable content

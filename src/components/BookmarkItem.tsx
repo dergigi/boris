@@ -15,7 +15,7 @@ import { CardView } from './BookmarkViews/CardView'
 interface BookmarkItemProps {
   bookmark: IndividualBookmark
   index: number
-  onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][] }) => void
+  onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   viewMode?: ViewMode
 }
 
@@ -73,7 +73,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     // For kind:30023 articles, pass the bookmark data instead of URL
     if (bookmark.kind === 30023) {
       if (onSelectUrl) {
-        onSelectUrl('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags })
+        onSelectUrl('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags, pubkey: bookmark.pubkey })
       }
       return
     }
