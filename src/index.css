@@ -125,7 +125,7 @@ body {
 }
 
 .bookmarks-container .bookmarks-list {
-  padding: 1rem;
+  padding: 0.5rem;
   overflow-y: auto;
   flex: 1;
 }
@@ -768,7 +768,7 @@ body {
 
 /* Compact view styles */
 .individual-bookmark.compact {
-  padding: 0.4rem 0.75rem;
+  padding: 0.3rem 0.5rem;
   background: transparent;
   border-bottom: 1px solid #333;
   border-radius: 0;
