@@ -96,7 +96,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
                   onChange={(e) => setLocalSettings({ ...localSettings, showUnderlines: e.target.checked })}
                   className="setting-checkbox"
                 />
-                <span>Show highlight underlines</span>
+                <span>Show highlights</span>
               </label>
             </div>
 
