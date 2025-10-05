@@ -105,8 +105,21 @@ body {
 
 /* Bookmarks Styles */
 .bookmarks-container {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
   text-align: left;
-  padding-left: 1rem;
+  padding: 0;
+}
+
+.bookmarks-container .bookmarks-list {
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .sidebar-header-bar {
@@ -117,8 +130,8 @@ body {
   padding: 0.75rem 1rem;
   background: #1a1a1a;
   border: 1px solid #333;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
+  border-radius: 12px 12px 0 0;
+  margin-bottom: 0;
 }
 
 .view-mode-controls {
@@ -1248,6 +1261,8 @@ body {
   justify-content: space-between;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid #333;
+  background: #1a1a1a;
+  border-radius: 12px 12px 0 0;
 }
 
 .highlights-actions {
