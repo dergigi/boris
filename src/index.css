@@ -1435,6 +1435,22 @@ body {
   box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3);
 }
 
+/* Level colors in sidebar items */
+.highlight-item.level-mine {
+  border-color: color-mix(in srgb, var(--highlight-color-mine, #eab308) 60%, #333);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight-color-mine, #eab308) 25%, transparent);
+}
+
+.highlight-item.level-friends {
+  border-color: color-mix(in srgb, var(--highlight-color-friends, #f97316) 60%, #333);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight-color-friends, #f97316) 25%, transparent);
+}
+
+.highlight-item.level-nostrverse {
+  border-color: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 60%, #333);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 25%, transparent);
+}
+
 .highlight-quote-icon {
   color: #646cff;
   font-size: 1.2rem;

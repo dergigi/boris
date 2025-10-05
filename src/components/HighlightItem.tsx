@@ -4,8 +4,12 @@ import { faQuoteLeft, faLink, faExternalLinkAlt } from '@fortawesome/free-solid-
 import { Highlight } from '../types/highlights'
 import { formatDistanceToNow } from 'date-fns'
 
+interface HighlightWithLevel extends Highlight {
+  level?: 'mine' | 'friends' | 'nostrverse'
+}
+
 interface HighlightItemProps {
-  highlight: Highlight
+  highlight: HighlightWithLevel
   onSelectUrl?: (url: string) => void
   isSelected?: boolean
   onHighlightClick?: (highlightId: string) => void
@@ -45,7 +49,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
   return (
     <div 
       ref={itemRef} 
-      className={`highlight-item ${isSelected ? 'selected' : ''}`} 
+      className={`highlight-item ${isSelected ? 'selected' : ''} ${highlight.level ? `level-${highlight.level}` : ''}`} 
       data-highlight-id={highlight.id}
       onClick={handleItemClick}
       style={{ cursor: onHighlightClick ? 'pointer' : 'default' }}
