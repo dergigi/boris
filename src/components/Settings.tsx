@@ -1,11 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { faTimes, faList, faThLarge, faImage, faUnderline, faHighlighter } from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faList, faThLarge, faImage, faUnderline, faHighlighter, faRotateLeft } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../services/settingsService'
 import IconButton from './IconButton'
 import ColorPicker from './ColorPicker'
 import FontSelector from './FontSelector'
 import { loadFont, getFontFamily } from '../utils/fontLoader'
 import { hexToRgb } from '../utils/colorHelpers'
+
+const DEFAULT_SETTINGS: UserSettings = {
+  collapseOnArticleOpen: true,
+  defaultViewMode: 'compact',
+  showHighlights: true,
+  sidebarCollapsed: true,
+  highlightsCollapsed: true,
+  readingFont: 'source-serif-4',
+  fontSize: 18,
+  highlightStyle: 'marker',
+  highlightColor: '#ffff00',
+  highlightColorNostrverse: '#9333ea',
+  highlightColorFriends: '#f97316',
+  highlightColorMine: '#ffff00',
+}
 
 interface SettingsProps {
   settings: UserSettings
@@ -45,17 +60,32 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
 
   const previewFontFamily = getFontFamily(localSettings.readingFont || 'source-serif-4')
 
+  const handleResetToDefaults = () => {
+    if (confirm('Reset all settings to defaults?')) {
+      setLocalSettings(DEFAULT_SETTINGS)
+    }
+  }
+
   return (
     <div className="settings-view">
       <div className="settings-header">
         <h2>Settings</h2>
-        <IconButton
-          icon={faTimes}
-          onClick={onClose}
-          title="Close settings"
-          ariaLabel="Close settings"
-          variant="ghost"
-        />
+        <div className="settings-header-actions">
+          <IconButton
+            icon={faRotateLeft}
+            onClick={handleResetToDefaults}
+            title="Reset to defaults"
+            ariaLabel="Reset to defaults"
+            variant="ghost"
+          />
+          <IconButton
+            icon={faTimes}
+            onClick={onClose}
+            title="Close settings"
+            ariaLabel="Close settings"
+            variant="ghost"
+          />
+        </div>
       </div>
 
       <div className="settings-content">

@@ -1846,6 +1846,12 @@ body {
   text-align: left;
 }
 
+.settings-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .settings-content {
   overflow-y: auto;
   flex: 1;
