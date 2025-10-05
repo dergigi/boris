@@ -2,15 +2,10 @@ import React, { useState, useEffect, useRef } from 'react'
 import { faTimes, faList, faThLarge, faImage, faUnderline, faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../services/settingsService'
 import IconButton from './IconButton'
+import ColorPicker from './ColorPicker'
+import FontSelector from './FontSelector'
 import { loadFont, getFontFamily } from '../utils/fontLoader'
-
-// Helper to convert hex color to RGB values
-function hexToRgb(hex: string): string {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  return result 
-    ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
-    : '255, 255, 0'
-}
+import { hexToRgb } from '../utils/colorHelpers'
 
 interface SettingsProps {
   settings: UserSettings
@@ -70,23 +65,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
             
             <div className="setting-group setting-inline">
               <label htmlFor="readingFont">Reading Font</label>
-              <select
-                id="readingFont"
+              <FontSelector
                 value={localSettings.readingFont || 'system'}
-                onChange={(e) => setLocalSettings({ ...localSettings, readingFont: e.target.value })}
-                className="setting-select font-select"
-              >
-                <option value="system" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>System Default</option>
-                <option value="inter" style={{ fontFamily: 'Inter, sans-serif' }}>Inter</option>
-                <option value="lora" style={{ fontFamily: 'Lora, serif' }}>Lora</option>
-                <option value="merriweather" style={{ fontFamily: 'Merriweather, serif' }}>Merriweather</option>
-                <option value="open-sans" style={{ fontFamily: 'Open Sans, sans-serif' }}>Open Sans</option>
-                <option value="roboto" style={{ fontFamily: 'Roboto, sans-serif' }}>Roboto</option>
-                <option value="source-serif-4" style={{ fontFamily: 'Source Serif 4, serif' }}>Source Serif 4</option>
-                <option value="crimson-text" style={{ fontFamily: 'Crimson Text, serif' }}>Crimson Text</option>
-                <option value="libre-baskerville" style={{ fontFamily: 'Libre Baskerville, serif' }}>Libre Baskerville</option>
-                <option value="pt-serif" style={{ fontFamily: 'PT Serif, serif' }}>PT Serif</option>
-              </select>
+                onChange={(font) => setLocalSettings({ ...localSettings, readingFont: font })}
+              />
             </div>
 
             <div className="setting-group setting-inline">
@@ -141,25 +123,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
 
             <div className="setting-group setting-inline">
               <label>Highlight Color</label>
-              <div className="color-picker">
-                {[
-                  { name: 'Yellow', value: '#ffff00' },
-                  { name: 'Orange', value: '#ff9500' },
-                  { name: 'Pink', value: '#ff69b4' },
-                  { name: 'Green', value: '#00ff7f' },
-                  { name: 'Blue', value: '#4da6ff' },
-                  { name: 'Purple', value: '#b19cd9' }
-                ].map(color => (
-                  <button
-                    key={color.value}
-                    onClick={() => setLocalSettings({ ...localSettings, highlightColor: color.value })}
-                    className={`color-swatch ${(localSettings.highlightColor || '#ffff00') === color.value ? 'active' : ''}`}
-                    style={{ backgroundColor: color.value }}
-                    title={color.name}
-                    aria-label={`${color.name} highlight color`}
-                  />
-                ))}
-              </div>
+              <ColorPicker
+                selectedColor={localSettings.highlightColor || '#ffff00'}
+                onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColor: color })}
+              />
             </div>
 
             <div className="setting-preview">

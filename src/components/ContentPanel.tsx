@@ -7,14 +7,7 @@ import { Highlight } from '../types/highlights'
 import { applyHighlightsToHTML } from '../utils/highlightMatching'
 import { readingTime } from 'reading-time-estimator'
 import { filterHighlightsByUrl } from '../utils/urlHelpers'
-
-// Helper to convert hex color to RGB values
-function hexToRgb(hex: string): string {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  return result 
-    ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
-    : '255, 255, 0'
-}
+import { hexToRgb } from '../utils/colorHelpers'
 
 interface ContentPanelProps {
   loading: boolean
