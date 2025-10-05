@@ -80,9 +80,7 @@ export async function collectBookmarksFromEvents(
             privateItemsAll.push(...processApplesauceBookmarks(manualPrivate, activeAccount, true))
             Reflect.set(evt, BookmarkHiddenSymbol, manualPrivate)
             Reflect.set(evt, 'EncryptedContentSymbol', decryptedContent)
-            if (!latestContent) {
-              latestContent = decryptedContent
-            }
+            // Don't set latestContent to decrypted JSON - it's not user-facing content
           } catch {
             // ignore
           }
