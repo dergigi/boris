@@ -157,16 +157,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
   }
 
-  const handleHighlightClick = (highlightId: string) => {
-    console.log('Highlight clicked:', highlightId)
-    setSelectedHighlightId(highlightId)
-    // Open highlights panel if it's collapsed
-    if (isHighlightsCollapsed) {
-      console.log('Opening highlights panel')
-      setIsHighlightsCollapsed(false)
-    }
-  }
-
 
 
   if (loading) {
@@ -214,7 +204,10 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             selectedUrl={selectedUrl}
             highlights={highlights}
             showUnderlines={showUnderlines}
-            onHighlightClick={handleHighlightClick}
+            onHighlightClick={(id) => {
+              setSelectedHighlightId(id)
+              if (isHighlightsCollapsed) setIsHighlightsCollapsed(false)
+            }}
             selectedHighlightId={selectedHighlightId}
           />
         )}
@@ -230,7 +223,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             onToggleUnderlines={setShowUnderlines}
             selectedHighlightId={selectedHighlightId}
             onRefresh={handleFetchHighlights}
-            onHighlightClick={handleHighlightClick}
+            onHighlightClick={setSelectedHighlightId}
           />
         </div>
       </div>
