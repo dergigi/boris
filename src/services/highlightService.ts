@@ -30,13 +30,15 @@ function dedupeHighlights(events: NostrEvent[]): NostrEvent[] {
 }
 
 /**
- * Fetches highlights for a specific article by its address coordinate
+ * Fetches highlights for a specific article by its address coordinate and/or event ID
  * @param relayPool - The relay pool to query
  * @param articleCoordinate - The article's address in format "kind:pubkey:identifier" (e.g., "30023:abc...def:my-article")
+ * @param eventId - Optional event ID to also query by 'e' tag
  */
 export const fetchHighlightsForArticle = async (
   relayPool: RelayPool,
-  articleCoordinate: string
+  articleCoordinate: string,
+  eventId?: string
 ): Promise<Highlight[]> => {
   try {
     // Use well-known relays for highlights even if user isn't logged in
@@ -49,19 +51,41 @@ export const fetchHighlightsForArticle = async (
     ]
     
     console.log('🔍 Fetching highlights (kind 9802) for article:', articleCoordinate)
+    console.log('🔍 Event ID:', eventId || 'none')
     console.log('🔍 From relays:', highlightRelays)
-    console.log('🔍 Filter:', JSON.stringify({ kinds: [9802], '#a': [articleCoordinate] }, null, 2))
     
     // Query for highlights that reference this article via the 'a' tag
-    const rawEvents = await lastValueFrom(
+    console.log('🔍 Filter 1 (a-tag):', JSON.stringify({ kinds: [9802], '#a': [articleCoordinate] }, null, 2))
+    const aTagEvents = await lastValueFrom(
       relayPool
         .req(highlightRelays, { kinds: [9802], '#a': [articleCoordinate] })
         .pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
     )
     
-    console.log('📊 Raw highlight events fetched:', rawEvents.length)
+    console.log('📊 Highlights via a-tag:', aTagEvents.length)
+    
+    // If we have an event ID, also query for highlights that reference via the 'e' tag
+    let eTagEvents: NostrEvent[] = []
+    if (eventId) {
+      console.log('🔍 Filter 2 (e-tag):', JSON.stringify({ kinds: [9802], '#e': [eventId] }, null, 2))
+      eTagEvents = await lastValueFrom(
+        relayPool
+          .req(highlightRelays, { kinds: [9802], '#e': [eventId] })
+          .pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
+      )
+      console.log('📊 Highlights via e-tag:', eTagEvents.length)
+    }
+    
+    // Combine results from both queries
+    const rawEvents = [...aTagEvents, ...eTagEvents]
+    console.log('📊 Total raw highlight events fetched:', rawEvents.length)
+    
     if (rawEvents.length > 0) {
       console.log('📄 Sample highlight tags:', JSON.stringify(rawEvents[0].tags, null, 2))
+    } else {
+      console.log('❌ No highlights found. Article coordinate:', articleCoordinate)
+      console.log('❌ Event ID:', eventId || 'none')
+      console.log('💡 Try checking if there are any highlights on this article at https://highlighter.com')
     }
     
     // Deduplicate events by ID

@@ -83,7 +83,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         
         try {
           setHighlightsLoading(true)
-          const fetchedHighlights = await fetchHighlightsForArticle(relayPool, articleCoordinate)
+          // Pass both the article coordinate and event ID for comprehensive highlight fetching
+          const fetchedHighlights = await fetchHighlightsForArticle(relayPool, articleCoordinate, article.event.id)
           console.log(`📌 Found ${fetchedHighlights.length} highlights for article ${articleCoordinate}`)
           setHighlights(fetchedHighlights)
         } catch (err) {
