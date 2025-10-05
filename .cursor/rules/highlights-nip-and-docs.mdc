@@ -1,3 +1,9 @@
 ---
-alwaysApply: true
+description: nostr highlights spec and docs
+alwaysApply: false
 ---
+
+Here's the spec for nostr-native highlights: 
+
+- https://github.com/nostr-protocol/nips/blob/master/84.md
+- https://nostrbook.dev/kinds/9802

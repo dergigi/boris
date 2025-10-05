@@ -20,14 +20,72 @@ export interface ArticleContent {
   event: NostrEvent
 }
 
+interface CachedArticle {
+  content: ArticleContent
+  timestamp: number
+}
+
+const CACHE_TTL = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+const CACHE_PREFIX = 'article_cache_'
+
+function getCacheKey(naddr: string): string {
+  return `${CACHE_PREFIX}${naddr}`
+}
+
+function getFromCache(naddr: string): ArticleContent | null {
+  try {
+    const cacheKey = getCacheKey(naddr)
+    const cached = localStorage.getItem(cacheKey)
+    if (!cached) return null
+
+    const { content, timestamp }: CachedArticle = JSON.parse(cached)
+    const age = Date.now() - timestamp
+
+    if (age > CACHE_TTL) {
+      localStorage.removeItem(cacheKey)
+      return null
+    }
+
+    console.log('📦 Loaded article from cache:', naddr)
+    return content
+  } catch {
+    return null
+  }
+}
+
+function saveToCache(naddr: string, content: ArticleContent): void {
+  try {
+    const cacheKey = getCacheKey(naddr)
+    const cached: CachedArticle = {
+      content,
+      timestamp: Date.now()
+    }
+    localStorage.setItem(cacheKey, JSON.stringify(cached))
+    console.log('💾 Saved article to cache:', naddr)
+  } catch (err) {
+    console.warn('Failed to cache article:', err)
+    // Silently fail if storage is full or unavailable
+  }
+}
+
 /**
  * Fetches a Nostr long-form article (NIP-23) by naddr
+ * @param relayPool - The relay pool to query
+ * @param naddr - The article's naddr
+ * @param bypassCache - If true, skip cache and fetch fresh from relays
  */
 export async function fetchArticleByNaddr(
   relayPool: RelayPool,
-  naddr: string
+  naddr: string,
+  bypassCache = false
 ): Promise<ArticleContent> {
   try {
+    // Check cache first unless bypassed
+    if (!bypassCache) {
+      const cached = getFromCache(naddr)
+      if (cached) return cached
+    }
+
     // Decode the naddr
     const decoded = nip19.decode(naddr)
     
@@ -74,7 +132,7 @@ export async function fetchArticleByNaddr(
     const published = getArticlePublished(article)
     const summary = getArticleSummary(article)
 
-    return {
+    const content: ArticleContent = {
       title,
       markdown: article.content,
       image,
@@ -83,6 +141,11 @@ export async function fetchArticleByNaddr(
       author: article.pubkey,
       event: article
     }
+
+    // Save to cache before returning
+    saveToCache(naddr, content)
+    
+    return content
   } catch (err) {
     console.error('Failed to fetch article:', err)
     throw err
