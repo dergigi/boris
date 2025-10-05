@@ -1,10 +1,11 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faBookmark, faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faBookmark, faSpinner, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
 import { Bookmark } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
 import SidebarHeader from './SidebarHeader'
+import IconButton from './IconButton'
 import { ViewMode } from './Bookmarks'
 
 interface BookmarkListProps {
@@ -151,6 +152,29 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
           ))}
         </div>
       )}
+      <div className="view-mode-controls">
+        <IconButton
+          icon={faList}
+          onClick={() => onViewModeChange('compact')}
+          title="Compact list view"
+          ariaLabel="Compact list view"
+          variant={viewMode === 'compact' ? 'primary' : 'ghost'}
+        />
+        <IconButton
+          icon={faThLarge}
+          onClick={() => onViewModeChange('cards')}
+          title="Cards view"
+          ariaLabel="Cards view"
+          variant={viewMode === 'cards' ? 'primary' : 'ghost'}
+        />
+        <IconButton
+          icon={faImage}
+          onClick={() => onViewModeChange('large')}
+          title="Large preview view"
+          ariaLabel="Large preview view"
+          variant={viewMode === 'large' ? 'primary' : 'ghost'}
+        />
+      </div>
     </div>
   )
 }
