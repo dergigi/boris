@@ -11,7 +11,7 @@ import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Bookmarks from './components/Bookmarks'
 import Toast from './components/Toast'
 import { useToast } from './hooks/useToast'
-import { ALL_RELAYS, PROFILE_RELAYS } from './config/relays'
+import { RELAYS } from './config/relays'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -96,15 +96,14 @@ function App() {
       const pool = new RelayPool()
       
       // Create a relay group for better event deduplication and management
-      // This follows the applesauce-relay documentation pattern
-      pool.group(ALL_RELAYS)
-      console.log('Created relay group with', ALL_RELAYS.length, 'relays (including local)')
-      console.log('Relay URLs:', ALL_RELAYS)
+      pool.group(RELAYS)
+      console.log('Created relay group with', RELAYS.length, 'relays (including local)')
+      console.log('Relay URLs:', RELAYS)
       
       // Attach address/replaceable loaders so ProfileModel can fetch profiles
       const addressLoader = createAddressLoader(pool, {
         eventStore: store,
-        lookupRelays: PROFILE_RELAYS
+        lookupRelays: RELAYS
       })
       store.addressableLoader = addressLoader
       store.replaceableLoader = addressLoader

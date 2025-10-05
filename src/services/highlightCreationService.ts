@@ -4,7 +4,7 @@ import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
-import { WRITE_RELAYS } from '../config/relays'
+import { RELAYS } from '../config/relays'
 
 /**
  * Creates and publishes a highlight event (NIP-84)
@@ -38,9 +38,9 @@ export async function createHighlight(
   const signedEvent = await factory.sign(highlightEvent)
 
   // Publish to relays (including local relay)
-  await relayPool.publish(WRITE_RELAYS, signedEvent)
+  await relayPool.publish(RELAYS, signedEvent)
   
-  console.log('✅ Highlight published to', WRITE_RELAYS.length, 'relays (including local):', signedEvent)
+  console.log('✅ Highlight published to', RELAYS.length, 'relays (including local):', signedEvent)
 }
 
 /**

@@ -9,7 +9,7 @@ import {
   getArticlePublished, 
   getArticleSummary 
 } from 'applesauce-core/helpers'
-import { ARTICLE_RELAYS } from '../config/relays'
+import { RELAYS } from '../config/relays'
 
 export interface ArticleContent {
   title: string
@@ -99,7 +99,7 @@ export async function fetchArticleByNaddr(
     // Define relays to query - prefer relays from naddr, fallback to configured relays (including local)
     const relays = pointer.relays && pointer.relays.length > 0 
       ? pointer.relays 
-      : ARTICLE_RELAYS
+      : RELAYS
 
     // Fetch the article event
     const filter = {

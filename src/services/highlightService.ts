@@ -11,7 +11,7 @@ import {
   getHighlightAttributions
 } from 'applesauce-core/helpers'
 import { Highlight } from '../types/highlights'
-import { HIGHLIGHT_RELAYS } from '../config/relays'
+import { RELAYS } from '../config/relays'
 
 /**
  * Deduplicate highlight events by ID
@@ -45,7 +45,7 @@ export const fetchHighlightsForArticle = async (
   try {
     console.log('🔍 Fetching highlights (kind 9802) for article:', articleCoordinate)
     console.log('🔍 Event ID:', eventId || 'none')
-    console.log('🔍 From relays (including local):', HIGHLIGHT_RELAYS)
+    console.log('🔍 From relays (including local):', RELAYS)
     
     const seenIds = new Set<string>()
     const processEvent = (event: NostrEvent): Highlight | null => {
@@ -81,7 +81,7 @@ export const fetchHighlightsForArticle = async (
     // Query for highlights that reference this article via the 'a' tag
     const aTagEvents = await lastValueFrom(
       relayPool
-        .req(HIGHLIGHT_RELAYS, { kinds: [9802], '#a': [articleCoordinate] })
+        .req(RELAYS, { kinds: [9802], '#a': [articleCoordinate] })
         .pipe(
           onlyEvents(),
           tap((event: NostrEvent) => {
@@ -103,7 +103,7 @@ export const fetchHighlightsForArticle = async (
     if (eventId) {
       eTagEvents = await lastValueFrom(
         relayPool
-          .req(HIGHLIGHT_RELAYS, { kinds: [9802], '#e': [eventId] })
+          .req(RELAYS, { kinds: [9802], '#e': [eventId] })
           .pipe(
             onlyEvents(),
             tap((event: NostrEvent) => {
