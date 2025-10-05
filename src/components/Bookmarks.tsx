@@ -27,7 +27,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [readerContent, setReaderContent] = useState<ReadableContent | undefined>(undefined)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isHighlightsCollapsed, setIsHighlightsCollapsed] = useState(false)
-  const [viewMode, setViewMode] = useState<ViewMode>('cards')
+  const [viewMode, setViewMode] = useState<ViewMode>('compact')
   const [showUnderlines, setShowUnderlines] = useState(true)
   const [selectedHighlightId, setSelectedHighlightId] = useState<string | undefined>(undefined)
   const activeAccount = Hooks.useActiveAccount()
