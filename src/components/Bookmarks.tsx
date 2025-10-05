@@ -55,14 +55,16 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   }, [relayPool, activeAccount?.pubkey])
 
   useEffect(() => {
+    const root = document.documentElement.style
     if (settings.defaultViewMode) setViewMode(settings.defaultViewMode)
     if (settings.showUnderlines !== undefined) setShowUnderlines(settings.showUnderlines)
     if (settings.sidebarCollapsed !== undefined) setIsCollapsed(settings.sidebarCollapsed)
     if (settings.highlightsCollapsed !== undefined) setIsHighlightsCollapsed(settings.highlightsCollapsed)
     if (settings.readingFont) {
       loadFont(settings.readingFont)
-      document.documentElement.style.setProperty('--reading-font', getFontFamily(settings.readingFont))
+      root.setProperty('--reading-font', getFontFamily(settings.readingFont))
     }
+    if (settings.fontSize) root.setProperty('--reading-font-size', `${settings.fontSize}px`)
   }, [settings])
 
   const handleFetchBookmarks = async () => {
@@ -119,12 +121,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     setReaderLoading(true)
     setReaderContent(undefined)
     setShowSettings(false)
-    
-    // Collapse sidebar if setting is enabled (default true)
-    if (settings.collapseOnArticleOpen !== false) {
-      setIsCollapsed(true)
-    }
-    
+    if (settings.collapseOnArticleOpen !== false) setIsCollapsed(true)
     try {
       const content = await fetchReadableContent(url)
       setReaderContent(content)

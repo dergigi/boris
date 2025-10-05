@@ -71,6 +71,23 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
             </div>
 
             <div className="setting-group">
+              <label htmlFor="fontSize">Font Size</label>
+              <select
+                id="fontSize"
+                value={localSettings.fontSize || 16}
+                onChange={(e) => setLocalSettings({ ...localSettings, fontSize: parseInt(e.target.value) })}
+                className="setting-select"
+              >
+                <option value="12">12px (Very Small)</option>
+                <option value="14">14px (Small)</option>
+                <option value="16">16px (Medium)</option>
+                <option value="18">18px (Large)</option>
+                <option value="20">20px (Very Large)</option>
+                <option value="22">22px (Extra Large)</option>
+              </select>
+            </div>
+
+            <div className="setting-group">
               <label htmlFor="showUnderlines" className="checkbox-label">
                 <input
                   id="showUnderlines"
@@ -87,7 +104,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
               <div className="preview-label">Preview</div>
               <div 
                 className="preview-content" 
-                style={{ fontFamily: previewFontFamily }}
+                style={{ 
+                  fontFamily: previewFontFamily,
+                  fontSize: `${localSettings.fontSize || 16}px`
+                }}
               >
                 <h3>The Quick Brown Fox</h3>
                 <p>

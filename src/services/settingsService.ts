@@ -15,6 +15,7 @@ export interface UserSettings {
   sidebarCollapsed?: boolean
   highlightsCollapsed?: boolean
   readingFont?: string
+  fontSize?: number
 }
 
 export async function loadSettings(
