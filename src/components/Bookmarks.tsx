@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Hooks } from 'applesauce-react'
+import { Hooks, useEventStore } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
+import { EventFactory } from 'applesauce-factory'
 import { Bookmark } from '../types/bookmarks'
 import { Highlight } from '../types/highlights'
 import { BookmarkList } from './BookmarkList'
@@ -9,6 +10,8 @@ import { fetchHighlights } from '../services/highlightService'
 import ContentPanel from './ContentPanel'
 import { HighlightsPanel } from './HighlightsPanel'
 import { fetchReadableContent, ReadableContent } from '../services/readerService'
+import Settings from './Settings'
+import { UserSettings, loadSettings, saveSettings } from '../services/settingsService'
 
 export type ViewMode = 'compact' | 'cards' | 'large'
 
@@ -16,6 +19,11 @@ interface BookmarksProps {
   relayPool: RelayPool | null
   onLogout: () => void
 }
+
+const RELAY_URLS = [
+  'wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.nostr.band',
+  'wss://relay.dergigi.com', 'wss://wot.dergigi.com'
+]
 
 const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
@@ -30,8 +38,12 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('compact')
   const [showUnderlines, setShowUnderlines] = useState(true)
   const [selectedHighlightId, setSelectedHighlightId] = useState<string | undefined>(undefined)
+  const [showSettings, setShowSettings] = useState(false)
+  const [settings, setSettings] = useState<UserSettings>({})
+  const [isSavingSettings, setIsSavingSettings] = useState(false)
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
+  const eventStore = useEventStore()
 
   useEffect(() => {
     console.log('Bookmarks useEffect triggered')
@@ -41,10 +53,18 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       console.log('Starting to fetch bookmarks and highlights...')
       handleFetchBookmarks()
       handleFetchHighlights()
+      handleLoadSettings()
     } else {
       console.log('Not fetching bookmarks - missing dependencies')
     }
-  }, [relayPool, activeAccount?.pubkey]) // Only depend on pubkey, not the entire activeAccount object
+  }, [relayPool, activeAccount?.pubkey])
+
+  useEffect(() => {
+    if (settings.defaultViewMode) setViewMode(settings.defaultViewMode)
+    if (settings.showUnderlines !== undefined) setShowUnderlines(settings.showUnderlines)
+    if (settings.sidebarCollapsed !== undefined) setIsCollapsed(settings.sidebarCollapsed)
+    if (settings.highlightsCollapsed !== undefined) setIsHighlightsCollapsed(settings.highlightsCollapsed)
+  }, [settings])
 
   const handleFetchBookmarks = async () => {
     console.log('🔍 fetchBookmarks called, loading:', loading)
@@ -80,6 +100,35 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
   }
 
+  const handleLoadSettings = async () => {
+    if (!relayPool || !activeAccount) return
+    try {
+      const loadedSettings = await loadSettings(relayPool, eventStore, activeAccount.pubkey, RELAY_URLS)
+      if (loadedSettings) {
+        setSettings(loadedSettings)
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err)
+    }
+  }
+
+  const handleSaveSettings = async (newSettings: UserSettings) => {
+    if (!relayPool || !activeAccount) return
+    setIsSavingSettings(true)
+    try {
+      const fullAccount = accountManager.getActive()
+      if (!fullAccount) throw new Error('No active account')
+      const factory = new EventFactory({ signer: fullAccount })
+      await saveSettings(relayPool, eventStore, factory, newSettings, RELAY_URLS)
+      setSettings(newSettings)
+      setShowSettings(false)
+    } catch (err) {
+      console.error('Failed to save settings:', err)
+    } finally {
+      setIsSavingSettings(false)
+    }
+  }
+
   const handleSelectUrl = async (url: string) => {
     setSelectedUrl(url)
     setReaderLoading(true)
@@ -105,47 +154,58 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   }
 
   return (
-    <div className={`three-pane ${isCollapsed ? 'sidebar-collapsed' : ''} ${isHighlightsCollapsed ? 'highlights-collapsed' : ''}`}>
-      <div className="pane sidebar">
-        <BookmarkList 
-          bookmarks={bookmarks}
-          onSelectUrl={handleSelectUrl}
-          isCollapsed={isCollapsed}
-          onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-          onLogout={onLogout}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          selectedUrl={selectedUrl}
-        />
+    <>
+      <div className={`three-pane ${isCollapsed ? 'sidebar-collapsed' : ''} ${isHighlightsCollapsed ? 'highlights-collapsed' : ''}`}>
+        <div className="pane sidebar">
+          <BookmarkList 
+            bookmarks={bookmarks}
+            onSelectUrl={handleSelectUrl}
+            isCollapsed={isCollapsed}
+            onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+            onLogout={onLogout}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            selectedUrl={selectedUrl}
+            onOpenSettings={() => setShowSettings(true)}
+          />
+        </div>
+        <div className="pane main">
+          <ContentPanel 
+            loading={readerLoading}
+            title={readerContent?.title}
+            html={readerContent?.html}
+            markdown={readerContent?.markdown}
+            selectedUrl={selectedUrl}
+            highlights={highlights}
+            showUnderlines={showUnderlines}
+            onHighlightClick={setSelectedHighlightId}
+            selectedHighlightId={selectedHighlightId}
+          />
+        </div>
+        <div className="pane highlights">
+          <HighlightsPanel
+            highlights={highlights}
+            loading={highlightsLoading}
+            isCollapsed={isHighlightsCollapsed}
+            onToggleCollapse={() => setIsHighlightsCollapsed(!isHighlightsCollapsed)}
+            onSelectUrl={handleSelectUrl}
+            selectedUrl={selectedUrl}
+            onToggleUnderlines={setShowUnderlines}
+            selectedHighlightId={selectedHighlightId}
+            onRefresh={handleFetchHighlights}
+            onHighlightClick={setSelectedHighlightId}
+          />
+        </div>
       </div>
-      <div className="pane main">
-        <ContentPanel 
-          loading={readerLoading}
-          title={readerContent?.title}
-          html={readerContent?.html}
-          markdown={readerContent?.markdown}
-          selectedUrl={selectedUrl}
-          highlights={highlights}
-          showUnderlines={showUnderlines}
-          onHighlightClick={setSelectedHighlightId}
-          selectedHighlightId={selectedHighlightId}
+      {showSettings && (
+        <Settings 
+          settings={settings}
+          onSave={handleSaveSettings}
+          onClose={() => setShowSettings(false)}
+          isSaving={isSavingSettings}
         />
-      </div>
-      <div className="pane highlights">
-        <HighlightsPanel
-          highlights={highlights}
-          loading={highlightsLoading}
-          isCollapsed={isHighlightsCollapsed}
-          onToggleCollapse={() => setIsHighlightsCollapsed(!isHighlightsCollapsed)}
-          onSelectUrl={handleSelectUrl}
-          selectedUrl={selectedUrl}
-          onToggleUnderlines={setShowUnderlines}
-          selectedHighlightId={selectedHighlightId}
-          onRefresh={handleFetchHighlights}
-          onHighlightClick={setSelectedHighlightId}
-        />
-      </div>
-    </div>
+      )}
+    </>
   )
 }
 

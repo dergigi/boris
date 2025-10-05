@@ -12,9 +12,10 @@ interface SidebarHeaderProps {
   onLogout: () => void
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
+  onOpenSettings: () => void
 }
 
-const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, viewMode, onViewModeChange }) => {
+const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, viewMode, onViewModeChange, onOpenSettings }) => {
   const activeAccount = Hooks.useActiveAccount()
   const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
 
@@ -52,7 +53,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
         </div>
         <IconButton
           icon={faGear}
-          onClick={() => console.log('Settings clicked')}
+          onClick={onOpenSettings}
           title="Settings"
           ariaLabel="Settings"
           variant="ghost"

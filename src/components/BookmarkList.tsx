@@ -16,6 +16,7 @@ interface BookmarkListProps {
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
   selectedUrl?: string
+  onOpenSettings: () => void
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({ 
@@ -26,7 +27,8 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   onLogout,
   viewMode,
   onViewModeChange,
-  selectedUrl
+  selectedUrl,
+  onOpenSettings
 }) => {
   if (isCollapsed) {
     // Check if the selected URL is in bookmarks
@@ -57,6 +59,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         onLogout={onLogout}
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
+        onOpenSettings={onOpenSettings}
       />
       
       {bookmarks.length === 0 ? (
