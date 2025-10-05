@@ -7,7 +7,6 @@ import { RelayPool } from 'applesauce-relay'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Login from './components/Login'
 import Bookmarks from './components/Bookmarks'
-import Article from './components/Article'
 
 function App() {
   const [eventStore, setEventStore] = useState<EventStore | null>(null)
@@ -67,7 +66,15 @@ function App() {
         <BrowserRouter>
           <div className="app">
             <Routes>
-              <Route path="/a/:naddr" element={<Article relayPool={relayPool} />} />
+              <Route 
+                path="/a/:naddr" 
+                element={
+                  <Bookmarks 
+                    relayPool={relayPool}
+                    onLogout={() => setIsAuthenticated(false)}
+                  />
+                } 
+              />
               <Route path="/" element={
                 !isAuthenticated ? (
                   <Login onLogin={() => setIsAuthenticated(true)} />

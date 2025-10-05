@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import { Hooks } from 'applesauce-react'
 import { useEventStore } from 'applesauce-react/hooks'
 import { RelayPool } from 'applesauce-relay'
@@ -10,6 +11,7 @@ import { fetchHighlights } from '../services/highlightService'
 import ContentPanel from './ContentPanel'
 import { HighlightsPanel } from './HighlightsPanel'
 import { fetchReadableContent, ReadableContent } from '../services/readerService'
+import { fetchArticleByNaddr } from '../services/articleService'
 import Settings from './Settings'
 import Toast from './Toast'
 import { useSettings } from '../hooks/useSettings'
@@ -21,6 +23,7 @@ interface BookmarksProps {
 }
 
 const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
+  const { naddr } = useParams<{ naddr?: string }>()
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [highlightsLoading, setHighlightsLoading] = useState(true)
@@ -43,6 +46,38 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     pubkey: activeAccount?.pubkey,
     accountManager
   })
+
+  // Load article if naddr is in URL
+  useEffect(() => {
+    if (!relayPool || !naddr) return
+    
+    const loadArticle = async () => {
+      setReaderLoading(true)
+      setReaderContent(undefined)
+      setSelectedUrl(`nostr:${naddr}`) // Use naddr as the URL identifier
+      setIsCollapsed(true)
+      
+      try {
+        const article = await fetchArticleByNaddr(relayPool, naddr)
+        setReaderContent({
+          title: article.title,
+          markdown: article.markdown,
+          url: `nostr:${naddr}`
+        })
+      } catch (err) {
+        console.error('Failed to load article:', err)
+        setReaderContent({
+          title: 'Error Loading Article',
+          html: `<p>Failed to load article: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
+          url: `nostr:${naddr}`
+        })
+      } finally {
+        setReaderLoading(false)
+      }
+    }
+    
+    loadArticle()
+  }, [naddr, relayPool])
 
   // Load initial data on login
   useEffect(() => {
