@@ -99,9 +99,9 @@ export function applyHighlightsToText(
 const normalizeWhitespace = (str: string) => str.replace(/\s+/g, ' ').trim()
 
 // Helper to create a mark element for a highlight
-function createMarkElement(highlight: Highlight, matchText: string): HTMLElement {
+function createMarkElement(highlight: Highlight, matchText: string, highlightStyle: 'marker' | 'underline' = 'marker'): HTMLElement {
   const mark = document.createElement('mark')
-  mark.className = 'content-highlight'
+  mark.className = `content-highlight-${highlightStyle}`
   mark.setAttribute('data-highlight-id', highlight.id)
   mark.setAttribute('title', `Highlighted ${new Date(highlight.created_at * 1000).toLocaleDateString()}`)
   mark.textContent = matchText
@@ -127,7 +127,8 @@ function tryMarkInTextNodes(
   textNodes: Text[],
   searchText: string,
   highlight: Highlight,
-  useNormalized: boolean
+  useNormalized: boolean,
+  highlightStyle: 'marker' | 'underline' = 'marker'
 ): boolean {
   const normalizedSearch = normalizeWhitespace(searchText)
   
@@ -154,7 +155,7 @@ function tryMarkInTextNodes(
     const before = text.substring(0, actualIndex)
     const match = text.substring(actualIndex, actualIndex + searchText.length)
     const after = text.substring(actualIndex + searchText.length)
-    const mark = createMarkElement(highlight, match)
+    const mark = createMarkElement(highlight, match, highlightStyle)
     
     replaceTextWithMark(textNode, before, after, mark)
     return true
@@ -166,7 +167,7 @@ function tryMarkInTextNodes(
 /**
  * Apply highlights to HTML content by injecting mark tags using DOM manipulation
  */
-export function applyHighlightsToHTML(html: string, highlights: Highlight[]): string {
+export function applyHighlightsToHTML(html: string, highlights: Highlight[], highlightStyle: 'marker' | 'underline' = 'marker'): string {
   if (!html || highlights.length === 0) return html
   
   const tempDiv = document.createElement('div')
@@ -183,8 +184,8 @@ export function applyHighlightsToHTML(html: string, highlights: Highlight[]): st
     while ((node = walker.nextNode())) textNodes.push(node as Text)
     
     // Try exact match first, then normalized match
-    tryMarkInTextNodes(textNodes, searchText, highlight, false) ||
-    tryMarkInTextNodes(textNodes, searchText, highlight, true)
+    tryMarkInTextNodes(textNodes, searchText, highlight, false, highlightStyle) ||
+    tryMarkInTextNodes(textNodes, searchText, highlight, true, highlightStyle)
   }
   
   return tempDiv.innerHTML

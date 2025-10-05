@@ -16,6 +16,7 @@ export interface UserSettings {
   highlightsCollapsed?: boolean
   readingFont?: string
   fontSize?: number
+  highlightStyle?: 'marker' | 'underline'
 }
 
 export async function loadSettings(

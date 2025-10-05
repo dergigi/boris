@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { faTimes, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faList, faThLarge, faImage, faUnderline, faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../services/settingsService'
 import IconButton from './IconButton'
 import { loadFont, getFontFamily } from '../utils/fontLoader'
@@ -111,6 +111,26 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
               </label>
             </div>
 
+            <div className="setting-group setting-inline">
+              <label>Highlight Style</label>
+              <div className="setting-buttons">
+                <IconButton 
+                  icon={faHighlighter} 
+                  onClick={() => setLocalSettings({ ...localSettings, highlightStyle: 'marker' })} 
+                  title="Text marker style" 
+                  ariaLabel="Text marker style" 
+                  variant={(localSettings.highlightStyle || 'marker') === 'marker' ? 'primary' : 'ghost'} 
+                />
+                <IconButton 
+                  icon={faUnderline} 
+                  onClick={() => setLocalSettings({ ...localSettings, highlightStyle: 'underline' })} 
+                  title="Underline style" 
+                  ariaLabel="Underline style" 
+                  variant={localSettings.highlightStyle === 'underline' ? 'primary' : 'ghost'} 
+                />
+              </div>
+            </div>
+
             <div className="setting-preview">
               <div className="preview-label">Preview</div>
               <div 
@@ -121,7 +141,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
                 }}
               >
                 <h3>The Quick Brown Fox</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <span className={localSettings.showUnderlines !== false ? "content-highlight" : ""}>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</span> Ut enim ad minim veniam.</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <span className={localSettings.showUnderlines !== false ? `content-highlight-${localSettings.highlightStyle || 'marker'}` : ""}>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</span> Ut enim ad minim veniam.</p>
                 <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
               </div>
             </div>

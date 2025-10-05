@@ -1402,7 +1402,8 @@ body {
 }
 
 /* Inline content highlights - fluorescent marker style */
-.content-highlight {
+.content-highlight,
+.content-highlight-marker {
   background: rgba(255, 255, 0, 0.35);
   padding: 0.125rem 0.25rem;
   cursor: pointer;
@@ -1412,12 +1413,33 @@ body {
   box-shadow: 0 0 8px rgba(255, 255, 0, 0.2);
 }
 
-.content-highlight:hover {
+.content-highlight:hover,
+.content-highlight-marker:hover {
   background: rgba(255, 255, 0, 0.5);
   box-shadow: 0 0 12px rgba(255, 255, 0, 0.3);
 }
 
-.content-highlight.highlight-pulse {
+/* Underline style for highlights */
+.content-highlight-underline {
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 200, 0, 0.8);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+.content-highlight-underline:hover {
+  text-decoration-color: rgba(255, 200, 0, 1);
+  text-decoration-thickness: 3px;
+}
+
+.content-highlight.highlight-pulse,
+.content-highlight-marker.highlight-pulse,
+.content-highlight-underline.highlight-pulse {
   animation: highlight-pulse-animation 1.5s ease-in-out;
 }
 
@@ -1441,21 +1463,41 @@ body {
 }
 
 .reader-html .content-highlight,
-.reader-markdown .content-highlight {
+.reader-markdown .content-highlight,
+.reader-html .content-highlight-marker,
+.reader-markdown .content-highlight-marker,
+.reader-html .content-highlight-underline,
+.reader-markdown .content-highlight-underline {
   color: inherit;
+}
+
+.reader-html .content-highlight,
+.reader-markdown .content-highlight,
+.reader-html .content-highlight-marker,
+.reader-markdown .content-highlight-marker {
   text-decoration: none;
 }
 
 /* Ensure highlights work in both light and dark mode */
 @media (prefers-color-scheme: light) {
-  .content-highlight {
+  .content-highlight,
+  .content-highlight-marker {
     background: rgba(255, 255, 0, 0.4);
     box-shadow: 0 0 6px rgba(255, 255, 0, 0.15);
   }
   
-  .content-highlight:hover {
+  .content-highlight:hover,
+  .content-highlight-marker:hover {
     background: rgba(255, 255, 0, 0.55);
     box-shadow: 0 0 10px rgba(255, 255, 0, 0.25);
+  }
+  
+  .content-highlight-underline {
+    text-decoration-color: rgba(255, 180, 0, 0.9);
+  }
+  
+  .content-highlight-underline:hover {
+    text-decoration-color: rgba(255, 180, 0, 1);
   }
   
   .highlight-indicator {

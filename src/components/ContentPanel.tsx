@@ -16,6 +16,7 @@ interface ContentPanelProps {
   selectedUrl?: string
   highlights?: Highlight[]
   showUnderlines?: boolean
+  highlightStyle?: 'marker' | 'underline'
   onHighlightClick?: (highlightId: string) => void
   selectedHighlightId?: string
 }
@@ -28,6 +29,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   selectedUrl,
   highlights = [],
   showUnderlines = true,
+  highlightStyle = 'marker',
   onHighlightClick,
   selectedHighlightId
 }) => {
@@ -38,7 +40,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   useEffect(() => {
     if (!selectedHighlightId || !contentRef.current) return
     
-    const markElement = contentRef.current.querySelector(`mark.content-highlight[data-highlight-id="${selectedHighlightId}"]`)
+    const markElement = contentRef.current.querySelector(`mark[data-highlight-id="${selectedHighlightId}"]`)
     
     if (markElement) {
       markElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -86,18 +88,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       if (!contentRef.current || !originalHtmlRef.current) return
       
       // Always apply highlights to the ORIGINAL HTML, not already-highlighted content
-      const highlightedHTML = applyHighlightsToHTML(originalHtmlRef.current, relevantHighlights)
+      const highlightedHTML = applyHighlightsToHTML(originalHtmlRef.current, relevantHighlights, highlightStyle)
       contentRef.current.innerHTML = highlightedHTML
     })
     
     return () => cancelAnimationFrame(rafId)
-  }, [relevantHighlights, html, markdown, showUnderlines])
+  }, [relevantHighlights, html, markdown, showUnderlines, highlightStyle])
 
   // Attach click handlers separately (only when handler changes)
   useEffect(() => {
     if (!onHighlightClick || !contentRef.current) return
     
-    const marks = contentRef.current.querySelectorAll('mark.content-highlight')
+    const marks = contentRef.current.querySelectorAll('mark[data-highlight-id]')
     const handlers = new Map<Element, () => void>()
     
     marks.forEach(mark => {
