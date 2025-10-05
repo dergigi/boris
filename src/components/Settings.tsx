@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimes, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../services/settingsService'
 import IconButton from './IconButton'
@@ -40,8 +39,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
     }
     
     onSave(localSettings)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localSettings])
+  }, [localSettings, onSave])
 
   const previewFontFamily = getFontFamily(localSettings.readingFont)
 
