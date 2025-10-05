@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Hooks } from 'applesauce-react'
 import { Accounts } from 'applesauce-accounts'
 
@@ -9,6 +10,7 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [isConnecting, setIsConnecting] = useState(false)
   const accountManager = Hooks.useAccountManager()
+  const navigate = useNavigate()
 
   const handleLogin = async () => {
     try {
@@ -19,6 +21,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       accountManager.addAccount(account)
       accountManager.setActive(account)
       onLogin()
+      
+      // Navigate to the default article to load bookmarks and settings
+      const defaultArticle = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
+        'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
+      navigate(`/a/${defaultArticle}`)
     } catch (error) {
       console.error('Login failed:', error)
       alert('Login failed. Please install a nostr browser extension and try again.')
