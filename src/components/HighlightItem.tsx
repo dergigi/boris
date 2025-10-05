@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuoteLeft, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { formatDistanceToNow } from 'date-fns'
+import { useEventModel } from 'applesauce-react/hooks'
+import { Models } from 'applesauce-core'
 
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
@@ -17,6 +19,16 @@ interface HighlightItemProps {
 
 export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelectUrl, isSelected, onHighlightClick }) => {
   const itemRef = useRef<HTMLDivElement>(null)
+  
+  // Resolve the profile of the user who made the highlight
+  const profile = useEventModel(Models.ProfileModel, [highlight.pubkey])
+  
+  // Get display name for the user
+  const getUserDisplayName = () => {
+    if (profile?.name) return profile.name
+    if (profile?.display_name) return profile.display_name
+    return `${highlight.pubkey.slice(0, 8)}...` // fallback to short pubkey
+  }
   
   useEffect(() => {
     if (isSelected && itemRef.current) {
@@ -71,6 +83,10 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
         
         
         <div className="highlight-meta">
+          <span className="highlight-author">
+            {getUserDisplayName()}
+          </span>
+          <span className="highlight-meta-separator">•</span>
           <span className="highlight-time">
             {formatDistanceToNow(new Date(highlight.created_at * 1000), { addSuffix: true })}
           </span>
