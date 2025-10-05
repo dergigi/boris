@@ -21,6 +21,7 @@ import { HighlightVisibility } from './HighlightsPanel'
 import { HighlightButton, HighlightButtonRef } from './HighlightButton'
 import { createHighlight } from '../services/highlightCreationService'
 import { useRef, useCallback } from 'react'
+import { NostrEvent } from 'nostr-tools'
 export type ViewMode = 'compact' | 'cards' | 'large'
 
 interface BookmarksProps {
@@ -45,7 +46,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [showSettings, setShowSettings] = useState(false)
   const [currentArticleCoordinate, setCurrentArticleCoordinate] = useState<string | undefined>(undefined)
   const [currentArticleEventId, setCurrentArticleEventId] = useState<string | undefined>(undefined)
-  const [currentArticle, setCurrentArticle] = useState<any>(undefined) // Store the current article event
+  const [currentArticle, setCurrentArticle] = useState<NostrEvent | undefined>(undefined) // Store the current article event
   const [highlightVisibility, setHighlightVisibility] = useState<HighlightVisibility>({
     nostrverse: true,
     friends: true,
@@ -191,10 +192,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       const content = await loadContent(url, relayPool, bookmark)
       setReaderContent(content)
       
-      // If this is a Nostr article (kind:30023), we need to get the event for highlight creation
-      if (bookmark && bookmark.kind === 30023) {
-        setCurrentArticle(bookmark)
-      }
+      // Note: currentArticle is set by useArticleLoader when loading Nostr articles
+      // For web bookmarks, there's no article event to set
     } catch (err) {
       console.warn('Failed to fetch content:', err)
     } finally {

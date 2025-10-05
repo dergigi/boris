@@ -4,6 +4,7 @@ import { fetchArticleByNaddr } from '../services/articleService'
 import { fetchHighlightsForArticle } from '../services/highlightService'
 import { ReadableContent } from '../services/readerService'
 import { Highlight } from '../types/highlights'
+import { NostrEvent } from 'nostr-tools'
 
 interface UseArticleLoaderProps {
   naddr: string | undefined
@@ -16,7 +17,7 @@ interface UseArticleLoaderProps {
   setHighlightsLoading: (loading: boolean) => void
   setCurrentArticleCoordinate: (coord: string | undefined) => void
   setCurrentArticleEventId: (id: string | undefined) => void
-  setCurrentArticle?: (article: any) => void
+  setCurrentArticle?: (article: NostrEvent) => void
 }
 
 export function useArticleLoader({
