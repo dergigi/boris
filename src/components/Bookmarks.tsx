@@ -97,8 +97,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   useEffect(() => {
     if (settings.defaultViewMode) setViewMode(settings.defaultViewMode)
     if (settings.showUnderlines !== undefined) setShowUnderlines(settings.showUnderlines)
-    if (settings.sidebarCollapsed !== undefined) setIsCollapsed(settings.sidebarCollapsed)
-    if (settings.highlightsCollapsed !== undefined) setIsHighlightsCollapsed(settings.highlightsCollapsed)
+    // Always start with both panels collapsed on initial load
+    // Don't apply saved collapse settings on initial load - let user control them
   }, [settings])
 
   const handleFetchBookmarks = async () => {
