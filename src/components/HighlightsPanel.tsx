@@ -122,11 +122,6 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   return (
     <div className="highlights-container">
       <div className="highlights-header">
-        <div className="highlights-title">
-          <FontAwesomeIcon icon={faHighlighter} />
-          <h3>Highlights</h3>
-          {!loading && <span className="count">({filteredHighlights.length})</span>}
-        </div>
         <div className="highlights-actions">
           {onHighlightVisibilityChange && (
             <div className="highlight-level-toggles">
