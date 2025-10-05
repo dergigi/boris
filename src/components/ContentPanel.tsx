@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useRef } from 'react'
+import React, { useMemo, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -39,68 +39,42 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   selectedHighlightId
 }) => {
   const contentRef = useRef<HTMLDivElement>(null)
-  const originalHtmlRef = useRef<string>('')
-  
-  // Scroll to selected highlight in article when clicked from sidebar
-  useEffect(() => {
-    if (!selectedHighlightId || !contentRef.current) return
-    
-    const markElement = contentRef.current.querySelector(`mark[data-highlight-id="${selectedHighlightId}"]`)
-    
-    if (markElement) {
-      markElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      
-      // Add pulsing animation after scroll completes
-      const htmlElement = markElement as HTMLElement
-      setTimeout(() => {
-        htmlElement.classList.add('highlight-pulse')
-        setTimeout(() => htmlElement.classList.remove('highlight-pulse'), 1500)
-      }, 500)
-    }
-  }, [selectedHighlightId])
+  const markdownPreviewRef = useRef<HTMLDivElement>(null)
+  const [renderedHtml, setRenderedHtml] = useState<string>('')
   
   const relevantHighlights = useMemo(() => filterHighlightsByUrl(highlights, selectedUrl), [selectedUrl, highlights])
 
-  // Store original HTML when content changes
+  // Convert markdown to HTML when markdown content changes
   useEffect(() => {
-    if (!contentRef.current) return
-    // Store the fresh HTML content
-    originalHtmlRef.current = contentRef.current.innerHTML
-  }, [html, markdown, selectedUrl])
+    if (!markdown) {
+      setRenderedHtml('')
+      return
+    }
 
-  // Apply highlights after DOM is rendered
-  useEffect(() => {
-    // Skip if no content or underlines are hidden
-    if ((!html && !markdown) || !showUnderlines) {
-      // If underlines are hidden, restore original HTML
-      if (!showUnderlines && contentRef.current && originalHtmlRef.current) {
-        contentRef.current.innerHTML = originalHtmlRef.current
-      }
-      return
-    }
-    
-    // Skip if no relevant highlights
-    if (relevantHighlights.length === 0) {
-      // Restore original HTML if no highlights
-      if (contentRef.current && originalHtmlRef.current) {
-        contentRef.current.innerHTML = originalHtmlRef.current
-      }
-      return
-    }
-    
-    // Use requestAnimationFrame to ensure DOM is fully rendered
+    // Use requestAnimationFrame to ensure ReactMarkdown has rendered
     const rafId = requestAnimationFrame(() => {
-      if (!contentRef.current || !originalHtmlRef.current) return
-      
-      // Always apply highlights to the ORIGINAL HTML, not already-highlighted content
-      const highlightedHTML = applyHighlightsToHTML(originalHtmlRef.current, relevantHighlights, highlightStyle)
-      contentRef.current.innerHTML = highlightedHTML
+      if (markdownPreviewRef.current) {
+        setRenderedHtml(markdownPreviewRef.current.innerHTML)
+      }
     })
-    
-    return () => cancelAnimationFrame(rafId)
-  }, [relevantHighlights, html, markdown, showUnderlines, highlightStyle])
 
-  // Attach click handlers separately (only when handler changes)
+    return () => cancelAnimationFrame(rafId)
+  }, [markdown])
+
+  // Prepare the final HTML with highlights applied
+  const finalHtml = useMemo(() => {
+    const sourceHtml = markdown ? renderedHtml : html
+    if (!sourceHtml) return ''
+    
+    // Apply highlights if we have them and underlines are shown
+    if (showUnderlines && relevantHighlights.length > 0) {
+      return applyHighlightsToHTML(sourceHtml, relevantHighlights, highlightStyle)
+    }
+    
+    return sourceHtml
+  }, [html, renderedHtml, markdown, relevantHighlights, showUnderlines, highlightStyle])
+
+  // Attach click handlers to highlight marks
   useEffect(() => {
     if (!onHighlightClick || !contentRef.current) return
     
@@ -122,9 +96,25 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         mark.removeEventListener('click', handler)
       })
     }
-  }, [onHighlightClick, relevantHighlights])
+  }, [onHighlightClick, finalHtml])
 
-  const highlightedMarkdown = useMemo(() => markdown, [markdown])
+  // Scroll to selected highlight in article when clicked from sidebar
+  useEffect(() => {
+    if (!selectedHighlightId || !contentRef.current) return
+    
+    const markElement = contentRef.current.querySelector(`mark[data-highlight-id="${selectedHighlightId}"]`)
+    
+    if (markElement) {
+      markElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      
+      // Add pulsing animation after scroll completes
+      const htmlElement = markElement as HTMLElement
+      setTimeout(() => {
+        htmlElement.classList.add('highlight-pulse')
+        setTimeout(() => htmlElement.classList.remove('highlight-pulse'), 1500)
+      }, 500)
+    }
+  }, [selectedHighlightId, finalHtml])
 
   // Calculate reading time from content (must be before early returns)
   const readingStats = useMemo(() => {
@@ -160,6 +150,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   return (
     <div className="reader" style={{ '--highlight-rgb': highlightRgb } as React.CSSProperties}>
+      {/* Hidden markdown preview to convert markdown to HTML */}
+      {markdown && (
+        <div ref={markdownPreviewRef} style={{ display: 'none' }}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {markdown}
+          </ReactMarkdown>
+        </div>
+      )}
+      
       {image && (
         <div className="reader-hero-image">
           <img src={image} alt={title || 'Article image'} />
@@ -184,14 +183,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           </div>
         </div>
       )}
-      {markdown ? (
-        <div ref={contentRef} className="reader-markdown">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {highlightedMarkdown}
-          </ReactMarkdown>
-        </div>
-      ) : html ? (
-        <div ref={contentRef} className="reader-html" dangerouslySetInnerHTML={{ __html: html }} />
+      {finalHtml ? (
+        <div 
+          ref={contentRef} 
+          className={markdown ? "reader-markdown" : "reader-html"} 
+          dangerouslySetInnerHTML={{ __html: finalHtml }} 
+        />
       ) : (
         <div className="reader empty">
           <p>No readable content found for this URL.</p>
