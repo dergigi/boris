@@ -1374,6 +1374,29 @@ body {
   box-shadow: 0 0 12px rgba(255, 255, 0, 0.3);
 }
 
+.content-highlight.highlight-pulse {
+  animation: highlight-pulse-animation 1.5s ease-in-out;
+}
+
+@keyframes highlight-pulse-animation {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(255, 255, 0, 0.2);
+    transform: scale(1);
+  }
+  25% {
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
+    transform: scale(1.02);
+  }
+  50% {
+    box-shadow: 0 0 8px rgba(255, 255, 0, 0.2);
+    transform: scale(1);
+  }
+  75% {
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
+    transform: scale(1.02);
+  }
+}
+
 .reader-html .content-highlight,
 .reader-markdown .content-highlight {
   color: inherit;
