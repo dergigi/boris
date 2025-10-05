@@ -1404,38 +1404,36 @@ body {
 /* Inline content highlights - fluorescent marker style */
 .content-highlight,
 .content-highlight-marker {
-  --highlight-rgb: 255, 255, 0;
-  background: rgba(var(--highlight-rgb), 0.35);
+  background: rgba(var(--highlight-rgb, 255, 255, 0), 0.35);
   padding: 0.125rem 0.25rem;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
   border-radius: 2px;
-  box-shadow: 0 0 8px rgba(var(--highlight-rgb), 0.2);
+  box-shadow: 0 0 8px rgba(var(--highlight-rgb, 255, 255, 0), 0.2);
 }
 
 .content-highlight:hover,
 .content-highlight-marker:hover {
-  background: rgba(var(--highlight-rgb), 0.5);
-  box-shadow: 0 0 12px rgba(var(--highlight-rgb), 0.3);
+  background: rgba(var(--highlight-rgb, 255, 255, 0), 0.5);
+  box-shadow: 0 0 12px rgba(var(--highlight-rgb, 255, 255, 0), 0.3);
 }
 
 /* Underline style for highlights */
 .content-highlight-underline {
-  --highlight-rgb: 255, 255, 0;
   background: transparent;
   padding: 0;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
   text-decoration: underline;
-  text-decoration-color: rgba(var(--highlight-rgb), 0.8);
+  text-decoration-color: rgba(var(--highlight-rgb, 255, 255, 0), 0.8);
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
 }
 
 .content-highlight-underline:hover {
-  text-decoration-color: rgba(var(--highlight-rgb), 1);
+  text-decoration-color: rgba(var(--highlight-rgb, 255, 255, 0), 1);
   text-decoration-thickness: 3px;
 }
 
@@ -1484,22 +1482,22 @@ body {
 @media (prefers-color-scheme: light) {
   .content-highlight,
   .content-highlight-marker {
-    background: rgba(var(--highlight-rgb), 0.4);
-    box-shadow: 0 0 6px rgba(var(--highlight-rgb), 0.15);
+    background: rgba(var(--highlight-rgb, 255, 255, 0), 0.4);
+    box-shadow: 0 0 6px rgba(var(--highlight-rgb, 255, 255, 0), 0.15);
   }
   
   .content-highlight:hover,
   .content-highlight-marker:hover {
-    background: rgba(var(--highlight-rgb), 0.55);
-    box-shadow: 0 0 10px rgba(var(--highlight-rgb), 0.25);
+    background: rgba(var(--highlight-rgb, 255, 255, 0), 0.55);
+    box-shadow: 0 0 10px rgba(var(--highlight-rgb, 255, 255, 0), 0.25);
   }
   
   .content-highlight-underline {
-    text-decoration-color: rgba(var(--highlight-rgb), 0.9);
+    text-decoration-color: rgba(var(--highlight-rgb, 255, 255, 0), 0.9);
   }
   
   .content-highlight-underline:hover {
-    text-decoration-color: rgba(var(--highlight-rgb), 1);
+    text-decoration-color: rgba(var(--highlight-rgb, 255, 255, 0), 1);
   }
   
   .highlight-indicator {
