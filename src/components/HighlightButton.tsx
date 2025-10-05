@@ -54,20 +54,20 @@ export const HighlightButton = React.forwardRef<HighlightButtonRef, HighlightBut
           backgroundColor: highlightColor,
           color: '#000',
           border: 'none',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-          cursor: hasSelection ? 'pointer' : 'not-allowed',
+          boxShadow: hasSelection ? '0 4px 12px rgba(0, 0, 0, 0.3)' : 'none',
+          cursor: hasSelection ? 'pointer' : 'default',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           transition: 'all 0.3s ease',
-          opacity: hasSelection ? 1 : 0.4,
-          transform: hasSelection ? 'scale(1)' : 'scale(0.9)',
+          opacity: hasSelection ? 1 : 0,
+          transform: hasSelection ? 'scale(1)' : 'scale(0.8)',
+          pointerEvents: hasSelection ? 'auto' : 'none',
           userSelect: 'none'
         }}
         onClick={handleClick}
-        disabled={!hasSelection}
         aria-label="Create highlight from selection"
-        title={hasSelection ? 'Create highlight' : 'Select text to highlight'}
+        title={hasSelection ? 'Create highlight' : ''}
       >
         <FontAwesomeIcon icon={faHighlighter} size="lg" />
       </button>
