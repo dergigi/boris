@@ -54,15 +54,15 @@ function App() {
   const { toastMessage, toastType, showToast, clearToast } = useToast()
 
   useEffect(() => {
-    // Initialize event store, account manager, and relay pool
-    const store = new EventStore()
-    const accounts = new AccountManager()
-    
-    // Register common account types (needed for deserialization)
-    registerCommonAccountTypes(accounts)
-    
-    // Load persisted accounts from localStorage
-    const loadAccounts = async () => {
+    const initializeApp = async () => {
+      // Initialize event store, account manager, and relay pool
+      const store = new EventStore()
+      const accounts = new AccountManager()
+      
+      // Register common account types (needed for deserialization)
+      registerCommonAccountTypes(accounts)
+      
+      // Load persisted accounts from localStorage
       try {
         const json = JSON.parse(localStorage.getItem('accounts') || '[]')
         await accounts.fromJSON(json)
@@ -77,65 +77,72 @@ function App() {
       } catch (err) {
         console.error('Failed to load accounts from storage:', err)
       }
+      
+      // Subscribe to accounts changes and persist to localStorage
+      const accountsSub = accounts.accounts$.subscribe(() => {
+        localStorage.setItem('accounts', JSON.stringify(accounts.toJSON()))
+      })
+      
+      // Subscribe to active account changes and persist to localStorage
+      const activeSub = accounts.active$.subscribe((account) => {
+        if (account) {
+          localStorage.setItem('active', account.id)
+        } else {
+          localStorage.removeItem('active')
+        }
+      })
+      
+      const pool = new RelayPool()
+      
+      // Define relay URLs for bookmark fetching
+      const relayUrls = [
+        'wss://relay.damus.io',
+        'wss://nos.lol',
+        'wss://relay.nostr.band',
+        'wss://relay.dergigi.com',
+        'wss://wot.dergigi.com',
+        'wss://relay.snort.social',
+        'wss://relay.current.fyi',
+        'wss://nostr-pub.wellorder.net'
+      ]
+      
+      // Create a relay group for better event deduplication and management
+      // This follows the applesauce-relay documentation pattern
+      // Note: We could use pool.group(relayUrls) for direct requests in the future
+      pool.group(relayUrls)
+      console.log('Created relay group with', relayUrls.length, 'relays')
+      console.log('Relay URLs:', relayUrls)
+      
+      // Attach address/replaceable loaders so ProfileModel can fetch profiles
+      const addressLoader = createAddressLoader(pool, {
+        eventStore: store,
+        lookupRelays: [
+          'wss://purplepag.es',
+          'wss://relay.primal.net',
+          'wss://relay.nostr.band'
+        ]
+      })
+      store.addressableLoader = addressLoader
+      store.replaceableLoader = addressLoader
+
+      setEventStore(store)
+      setAccountManager(accounts)
+      setRelayPool(pool)
+      
+      // Cleanup function
+      return () => {
+        accountsSub.unsubscribe()
+        activeSub.unsubscribe()
+      }
     }
     
-    loadAccounts()
-    
-    // Subscribe to accounts changes and persist to localStorage
-    const accountsSub = accounts.accounts$.subscribe(() => {
-      localStorage.setItem('accounts', JSON.stringify(accounts.toJSON()))
+    let cleanup: (() => void) | undefined
+    initializeApp().then((fn) => {
+      cleanup = fn
     })
     
-    // Subscribe to active account changes and persist to localStorage
-    const activeSub = accounts.active$.subscribe((account) => {
-      if (account) {
-        localStorage.setItem('active', account.id)
-      } else {
-        localStorage.removeItem('active')
-      }
-    })
-    
-    const pool = new RelayPool()
-    
-    // Define relay URLs for bookmark fetching
-    const relayUrls = [
-      'wss://relay.damus.io',
-      'wss://nos.lol',
-      'wss://relay.nostr.band',
-      'wss://relay.dergigi.com',
-      'wss://wot.dergigi.com',
-      'wss://relay.snort.social',
-      'wss://relay.current.fyi',
-      'wss://nostr-pub.wellorder.net'
-    ]
-    
-    // Create a relay group for better event deduplication and management
-    // This follows the applesauce-relay documentation pattern
-    // Note: We could use pool.group(relayUrls) for direct requests in the future
-    pool.group(relayUrls)
-    console.log('Created relay group with', relayUrls.length, 'relays')
-    console.log('Relay URLs:', relayUrls)
-    
-    // Attach address/replaceable loaders so ProfileModel can fetch profiles
-    const addressLoader = createAddressLoader(pool, {
-      eventStore: store,
-      lookupRelays: [
-        'wss://purplepag.es',
-        'wss://relay.primal.net',
-        'wss://relay.nostr.band'
-      ]
-    })
-    store.addressableLoader = addressLoader
-    store.replaceableLoader = addressLoader
-
-    setEventStore(store)
-    setAccountManager(accounts)
-    setRelayPool(pool)
-    
-    // Cleanup subscriptions on unmount
     return () => {
-      accountsSub.unsubscribe()
-      activeSub.unsubscribe()
+      if (cleanup) cleanup()
     }
   }, [])
 
