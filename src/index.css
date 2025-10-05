@@ -224,9 +224,9 @@ body {
 .bookmarks-container.collapsed .toggle-sidebar-btn {
   background: #2a2a2a;
   color: #ddd;
-  border: 1px solid #444;
+  border: none;
   padding: 0;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -1230,7 +1230,7 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 0.75rem 0 0 0.5rem;
+  padding: 0.5rem 0 0 0.5rem;
   background: transparent;
   border: none;
 }
@@ -1238,9 +1238,9 @@ body {
 .highlights-container.collapsed .toggle-highlights-btn {
   background: #2a2a2a;
   color: #ddd;
-  border: 1px solid #444;
+  border: none;
   padding: 0;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
