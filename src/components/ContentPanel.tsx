@@ -2,9 +2,10 @@ import React, { useMemo, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faHighlighter } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faHighlighter, faClock } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { applyHighlightsToHTML } from '../utils/highlightMatching'
+import readingTime from 'reading-time'
 
 interface ContentPanelProps {
   loading: boolean
@@ -172,17 +173,34 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   const hasHighlights = relevantHighlights.length > 0
 
+  // Calculate reading time from content
+  const readingStats = useMemo(() => {
+    const content = markdown || html || ''
+    if (!content) return null
+    // Strip HTML tags for more accurate word count
+    const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+    return readingTime(textContent)
+  }, [html, markdown])
+
   return (
     <div className="reader">
       {title && (
         <div className="reader-header">
           <h2 className="reader-title">{title}</h2>
-          {hasHighlights && (
-            <div className="highlight-indicator">
-              <FontAwesomeIcon icon={faHighlighter} />
-              <span>{relevantHighlights.length} highlight{relevantHighlights.length !== 1 ? 's' : ''}</span>
-            </div>
-          )}
+          <div className="reader-meta">
+            {readingStats && (
+              <div className="reading-time">
+                <FontAwesomeIcon icon={faClock} />
+                <span>{readingStats.text}</span>
+              </div>
+            )}
+            {hasHighlights && (
+              <div className="highlight-indicator">
+                <FontAwesomeIcon icon={faHighlighter} />
+                <span>{relevantHighlights.length} highlight{relevantHighlights.length !== 1 ? 's' : ''}</span>
+              </div>
+            )}
+          </div>
         </div>
       )}
       {markdown ? (
