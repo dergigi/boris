@@ -423,7 +423,7 @@ body {
 .two-pane {
   display: grid;
   grid-template-columns: 360px 1fr;
-  gap: 1rem;
+  column-gap: 0;
   height: calc(100vh - 4rem);
   transition: grid-template-columns 0.3s ease;
 }
@@ -436,7 +436,7 @@ body {
 .three-pane {
   display: grid;
   grid-template-columns: 360px 1fr 360px;
-  gap: 1rem;
+  column-gap: 0;
   height: calc(100vh - 4rem);
   transition: grid-template-columns 0.3s ease;
 }
@@ -456,6 +456,7 @@ body {
 .pane.sidebar {
   overflow-y: auto;
   height: 100%;
+  padding-right: 1rem;
 }
 
 .pane.main {
@@ -471,6 +472,7 @@ body {
 .pane.highlights {
   overflow-y: auto;
   height: 100%;
+  padding-left: 1rem;
 }
 
 .reader {
