@@ -8,6 +8,14 @@ import { applyHighlightsToHTML } from '../utils/highlightMatching'
 import { readingTime } from 'reading-time-estimator'
 import { filterHighlightsByUrl } from '../utils/urlHelpers'
 
+// Helper to convert hex color to RGB values
+function hexToRgb(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  return result 
+    ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
+    : '255, 255, 0'
+}
+
 interface ContentPanelProps {
   loading: boolean
   title?: string
@@ -17,6 +25,7 @@ interface ContentPanelProps {
   highlights?: Highlight[]
   showUnderlines?: boolean
   highlightStyle?: 'marker' | 'underline'
+  highlightColor?: string
   onHighlightClick?: (highlightId: string) => void
   selectedHighlightId?: string
 }
@@ -30,6 +39,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   highlights = [],
   showUnderlines = true,
   highlightStyle = 'marker',
+  highlightColor = '#ffff00',
   onHighlightClick,
   selectedHighlightId
 }) => {
@@ -151,8 +161,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     )
   }
 
+  const highlightRgb = hexToRgb(highlightColor)
+
   return (
-    <div className="reader">
+    <div className="reader" style={{ '--highlight-rgb': highlightRgb } as React.CSSProperties}>
       {title && (
         <div className="reader-header">
           <h2 className="reader-title">{title}</h2>

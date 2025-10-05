@@ -131,6 +131,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             highlights={highlights}
             showUnderlines={showUnderlines}
             highlightStyle={settings.highlightStyle || 'marker'}
+            highlightColor={settings.highlightColor || '#ffff00'}
             onHighlightClick={(id) => {
               setSelectedHighlightId(id)
               if (isHighlightsCollapsed) setIsHighlightsCollapsed(false)

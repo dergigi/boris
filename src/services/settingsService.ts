@@ -17,6 +17,7 @@ export interface UserSettings {
   readingFont?: string
   fontSize?: number
   highlightStyle?: 'marker' | 'underline'
+  highlightColor?: string
 }
 
 export async function loadSettings(

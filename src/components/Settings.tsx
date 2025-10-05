@@ -4,6 +4,14 @@ import { UserSettings } from '../services/settingsService'
 import IconButton from './IconButton'
 import { loadFont, getFontFamily } from '../utils/fontLoader'
 
+// Helper to convert hex color to RGB values
+function hexToRgb(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  return result 
+    ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
+    : '255, 255, 0'
+}
+
 interface SettingsProps {
   settings: UserSettings
   onSave: (settings: UserSettings) => Promise<void>
@@ -131,14 +139,38 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
               </div>
             </div>
 
+            <div className="setting-group setting-inline">
+              <label>Highlight Color</label>
+              <div className="color-picker">
+                {[
+                  { name: 'Yellow', value: '#ffff00' },
+                  { name: 'Orange', value: '#ff9500' },
+                  { name: 'Pink', value: '#ff69b4' },
+                  { name: 'Green', value: '#00ff7f' },
+                  { name: 'Blue', value: '#4da6ff' },
+                  { name: 'Purple', value: '#b19cd9' }
+                ].map(color => (
+                  <button
+                    key={color.value}
+                    onClick={() => setLocalSettings({ ...localSettings, highlightColor: color.value })}
+                    className={`color-swatch ${(localSettings.highlightColor || '#ffff00') === color.value ? 'active' : ''}`}
+                    style={{ backgroundColor: color.value }}
+                    title={color.name}
+                    aria-label={`${color.name} highlight color`}
+                  />
+                ))}
+              </div>
+            </div>
+
             <div className="setting-preview">
               <div className="preview-label">Preview</div>
               <div 
                 className="preview-content" 
                 style={{ 
                   fontFamily: previewFontFamily,
-                  fontSize: `${localSettings.fontSize || 16}px`
-                }}
+                  fontSize: `${localSettings.fontSize || 16}px`,
+                  '--highlight-rgb': hexToRgb(localSettings.highlightColor || '#ffff00')
+                } as React.CSSProperties}
               >
                 <h3>The Quick Brown Fox</h3>
                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <span className={localSettings.showUnderlines !== false ? `content-highlight-${localSettings.highlightStyle || 'marker'}` : ""}>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</span> Ut enim ad minim veniam.</p>

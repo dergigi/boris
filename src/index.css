@@ -1404,36 +1404,38 @@ body {
 /* Inline content highlights - fluorescent marker style */
 .content-highlight,
 .content-highlight-marker {
-  background: rgba(255, 255, 0, 0.35);
+  --highlight-rgb: 255, 255, 0;
+  background: rgba(var(--highlight-rgb), 0.35);
   padding: 0.125rem 0.25rem;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
   border-radius: 2px;
-  box-shadow: 0 0 8px rgba(255, 255, 0, 0.2);
+  box-shadow: 0 0 8px rgba(var(--highlight-rgb), 0.2);
 }
 
 .content-highlight:hover,
 .content-highlight-marker:hover {
-  background: rgba(255, 255, 0, 0.5);
-  box-shadow: 0 0 12px rgba(255, 255, 0, 0.3);
+  background: rgba(var(--highlight-rgb), 0.5);
+  box-shadow: 0 0 12px rgba(var(--highlight-rgb), 0.3);
 }
 
 /* Underline style for highlights */
 .content-highlight-underline {
+  --highlight-rgb: 255, 255, 0;
   background: transparent;
   padding: 0;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
   text-decoration: underline;
-  text-decoration-color: rgba(255, 200, 0, 0.8);
+  text-decoration-color: rgba(var(--highlight-rgb), 0.8);
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
 }
 
 .content-highlight-underline:hover {
-  text-decoration-color: rgba(255, 200, 0, 1);
+  text-decoration-color: rgba(var(--highlight-rgb), 1);
   text-decoration-thickness: 3px;
 }
 
@@ -1445,19 +1447,19 @@ body {
 
 @keyframes highlight-pulse-animation {
   0%, 100% {
-    box-shadow: 0 0 8px rgba(255, 255, 0, 0.2);
+    box-shadow: 0 0 8px rgba(var(--highlight-rgb, 255, 255, 0), 0.2);
     transform: scale(1);
   }
   25% {
-    box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
+    box-shadow: 0 0 20px rgba(var(--highlight-rgb, 255, 255, 0), 0.6);
     transform: scale(1.02);
   }
   50% {
-    box-shadow: 0 0 8px rgba(255, 255, 0, 0.2);
+    box-shadow: 0 0 8px rgba(var(--highlight-rgb, 255, 255, 0), 0.2);
     transform: scale(1);
   }
   75% {
-    box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
+    box-shadow: 0 0 20px rgba(var(--highlight-rgb, 255, 255, 0), 0.6);
     transform: scale(1.02);
   }
 }
@@ -1482,22 +1484,22 @@ body {
 @media (prefers-color-scheme: light) {
   .content-highlight,
   .content-highlight-marker {
-    background: rgba(255, 255, 0, 0.4);
-    box-shadow: 0 0 6px rgba(255, 255, 0, 0.15);
+    background: rgba(var(--highlight-rgb), 0.4);
+    box-shadow: 0 0 6px rgba(var(--highlight-rgb), 0.15);
   }
   
   .content-highlight:hover,
   .content-highlight-marker:hover {
-    background: rgba(255, 255, 0, 0.55);
-    box-shadow: 0 0 10px rgba(255, 255, 0, 0.25);
+    background: rgba(var(--highlight-rgb), 0.55);
+    box-shadow: 0 0 10px rgba(var(--highlight-rgb), 0.25);
   }
   
   .content-highlight-underline {
-    text-decoration-color: rgba(255, 180, 0, 0.9);
+    text-decoration-color: rgba(var(--highlight-rgb), 0.9);
   }
   
   .content-highlight-underline:hover {
-    text-decoration-color: rgba(255, 180, 0, 1);
+    text-decoration-color: rgba(var(--highlight-rgb), 1);
   }
   
   .highlight-indicator {
@@ -1585,6 +1587,45 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.color-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-swatch {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.color-swatch:hover {
+  border-color: #888;
+  transform: scale(1.05);
+}
+
+.color-swatch.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px #646cff;
+  transform: scale(1.1);
+}
+
+.color-swatch.active::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #000;
+  font-size: 1rem;
+  font-weight: bold;
+  text-shadow: 0 0 2px #fff;
 }
 
 .font-size-btn {
