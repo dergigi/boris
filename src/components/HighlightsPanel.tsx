@@ -17,7 +17,7 @@ interface HighlightsPanelProps {
   onToggleCollapse: () => void
   onSelectUrl?: (url: string) => void
   selectedUrl?: string
-  onToggleUnderlines?: (show: boolean) => void
+  onToggleHighlights?: (show: boolean) => void
   selectedHighlightId?: string
   onRefresh?: () => void
   onHighlightClick?: (highlightId: string) => void
@@ -34,7 +34,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   onToggleCollapse,
   onSelectUrl,
   selectedUrl,
-  onToggleUnderlines,
+  onToggleHighlights,
   selectedHighlightId,
   onRefresh,
   onHighlightClick,
@@ -43,12 +43,12 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   onHighlightVisibilityChange,
   followedPubkeys = new Set()
 }) => {
-  const [showUnderlines, setShowUnderlines] = useState(true)
+  const [showHighlights, setShowHighlights] = useState(true)
   
-  const handleToggleUnderlines = () => {
-    const newValue = !showUnderlines
-    setShowUnderlines(newValue)
-    onToggleUnderlines?.(newValue)
+  const handleToggleHighlights = () => {
+    const newValue = !showHighlights
+    setShowHighlights(newValue)
+    onToggleHighlights?.(newValue)
   }
   
   // Filter highlights based on visibility levels and URL
@@ -179,12 +179,12 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
             )}
             {filteredHighlights.length > 0 && (
               <button
-                onClick={handleToggleUnderlines}
-                className="toggle-underlines-btn"
-                title={showUnderlines ? 'Hide underlines' : 'Show underlines'}
-                aria-label={showUnderlines ? 'Hide underlines' : 'Show underlines'}
+                onClick={handleToggleHighlights}
+                className="toggle-highlight-display-btn"
+                title={showHighlights ? 'Hide highlights' : 'Show highlights'}
+                aria-label={showHighlights ? 'Hide highlights' : 'Show highlights'}
               >
-                <FontAwesomeIcon icon={showUnderlines ? faEye : faEyeSlash} />
+                <FontAwesomeIcon icon={showHighlights ? faEye : faEyeSlash} />
               </button>
             )}
           </div>

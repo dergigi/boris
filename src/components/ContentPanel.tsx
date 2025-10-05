@@ -19,7 +19,7 @@ interface ContentPanelProps {
   selectedUrl?: string
   image?: string
   highlights?: Highlight[]
-  showUnderlines?: boolean
+  showHighlights?: boolean
   highlightStyle?: 'marker' | 'underline'
   highlightColor?: string
   onHighlightClick?: (highlightId: string) => void
@@ -37,7 +37,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   selectedUrl,
   image,
   highlights = [],
-  showUnderlines = true,
+  showHighlights = true,
   highlightStyle = 'marker',
   highlightColor = '#ffff00',
   onHighlightClick,
@@ -96,13 +96,13 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     const sourceHtml = markdown ? renderedHtml : html
     if (!sourceHtml) return ''
     
-    // Apply highlights if we have them and underlines are shown
-    if (showUnderlines && relevantHighlights.length > 0) {
+    // Apply highlights if we have them and highlights are enabled
+    if (showHighlights && relevantHighlights.length > 0) {
       return applyHighlightsToHTML(sourceHtml, relevantHighlights, highlightStyle)
     }
     
     return sourceHtml
-  }, [html, renderedHtml, markdown, relevantHighlights, showUnderlines, highlightStyle])
+  }, [html, renderedHtml, markdown, relevantHighlights, showHighlights, highlightStyle])
 
 
   // Attach click handlers to highlight marks

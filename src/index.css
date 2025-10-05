@@ -1408,7 +1408,7 @@ body {
 }
 
 .refresh-highlights-btn,
-.toggle-underlines-btn,
+.toggle-highlight-display-btn,
 .toggle-highlights-btn {
   background: transparent;
   color: #ddd;
@@ -1425,14 +1425,14 @@ body {
 }
 
 .refresh-highlights-btn:hover,
-.toggle-underlines-btn:hover,
+.toggle-highlight-display-btn:hover,
 .toggle-highlights-btn:hover {
   background: #2a2a2a;
   color: #fff;
 }
 
 .refresh-highlights-btn:active,
-.toggle-underlines-btn:active,
+.toggle-highlight-display-btn:active,
 .toggle-highlights-btn:active {
   transform: translateY(1px);
 }

@@ -11,7 +11,7 @@ const SETTINGS_IDENTIFIER = 'com.dergigi.boris.user-settings'
 export interface UserSettings {
   collapseOnArticleOpen?: boolean
   defaultViewMode?: 'compact' | 'cards' | 'large'
-  showUnderlines?: boolean
+  showHighlights?: boolean
   sidebarCollapsed?: boolean
   highlightsCollapsed?: boolean
   readingFont?: string

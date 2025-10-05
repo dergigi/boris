@@ -37,7 +37,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(true) // Start collapsed
   const [isHighlightsCollapsed, setIsHighlightsCollapsed] = useState(true) // Start collapsed
   const [viewMode, setViewMode] = useState<ViewMode>('compact')
-  const [showUnderlines, setShowUnderlines] = useState(true)
+  const [showHighlights, setShowHighlights] = useState(true)
   const [selectedHighlightId, setSelectedHighlightId] = useState<string | undefined>(undefined)
   const [showSettings, setShowSettings] = useState(false)
   const [currentArticleCoordinate, setCurrentArticleCoordinate] = useState<string | undefined>(undefined)
@@ -95,7 +95,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   // Apply UI settings
   useEffect(() => {
     if (settings.defaultViewMode) setViewMode(settings.defaultViewMode)
-    if (settings.showUnderlines !== undefined) setShowUnderlines(settings.showUnderlines)
+    if (settings.showHighlights !== undefined) setShowHighlights(settings.showHighlights)
     // Always start with both panels collapsed on initial load
     // Don't apply saved collapse settings on initial load - let user control them
   }, [settings])
@@ -229,7 +229,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             image={readerContent?.image}
             selectedUrl={selectedUrl}
             highlights={classifiedHighlights}
-            showUnderlines={showUnderlines}
+            showHighlights={showHighlights}
             highlightStyle={settings.highlightStyle || 'marker'}
             highlightColor={settings.highlightColor || '#ffff00'}
             onHighlightClick={(id) => {
@@ -251,7 +251,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             onToggleCollapse={() => setIsHighlightsCollapsed(!isHighlightsCollapsed)}
             onSelectUrl={handleSelectUrl}
             selectedUrl={selectedUrl}
-            onToggleUnderlines={setShowUnderlines}
+            onToggleHighlights={setShowHighlights}
             selectedHighlightId={selectedHighlightId}
             onRefresh={handleFetchHighlights}
             onHighlightClick={setSelectedHighlightId}
