@@ -121,12 +121,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
                 }}
               >
                 <h3>The Quick Brown Fox</h3>
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. <span className={localSettings.showUnderlines !== false ? "content-highlight" : ""}>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</span> Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                </p>
-                <p>
-                  Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                </p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <span className={localSettings.showUnderlines !== false ? "content-highlight" : ""}>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</span> Ut enim ad minim veniam.</p>
+                <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
               </div>
             </div>
           </div>
@@ -137,27 +133,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
             <div className="setting-group setting-inline">
               <label>Default View Mode</label>
               <div className="setting-buttons">
-                <IconButton
-                  icon={faList}
-                  onClick={() => setLocalSettings({ ...localSettings, defaultViewMode: 'compact' })}
-                  title="Compact list view"
-                  ariaLabel="Compact list view"
-                  variant={(localSettings.defaultViewMode || 'compact') === 'compact' ? 'primary' : 'ghost'}
-                />
-                <IconButton
-                  icon={faThLarge}
-                  onClick={() => setLocalSettings({ ...localSettings, defaultViewMode: 'cards' })}
-                  title="Cards view"
-                  ariaLabel="Cards view"
-                  variant={localSettings.defaultViewMode === 'cards' ? 'primary' : 'ghost'}
-                />
-                <IconButton
-                  icon={faImage}
-                  onClick={() => setLocalSettings({ ...localSettings, defaultViewMode: 'large' })}
-                  title="Large preview view"
-                  ariaLabel="Large preview view"
-                  variant={localSettings.defaultViewMode === 'large' ? 'primary' : 'ghost'}
-                />
+                <IconButton icon={faList} onClick={() => setLocalSettings({ ...localSettings, defaultViewMode: 'compact' })} title="Compact list view" ariaLabel="Compact list view" variant={(localSettings.defaultViewMode || 'compact') === 'compact' ? 'primary' : 'ghost'} />
+                <IconButton icon={faThLarge} onClick={() => setLocalSettings({ ...localSettings, defaultViewMode: 'cards' })} title="Cards view" ariaLabel="Cards view" variant={localSettings.defaultViewMode === 'cards' ? 'primary' : 'ghost'} />
+                <IconButton icon={faImage} onClick={() => setLocalSettings({ ...localSettings, defaultViewMode: 'large' })} title="Large preview view" ariaLabel="Large preview view" variant={localSettings.defaultViewMode === 'large' ? 'primary' : 'ghost'} />
               </div>
             </div>
 

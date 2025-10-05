@@ -6,6 +6,7 @@ import { faSpinner, faHighlighter, faClock } from '@fortawesome/free-solid-svg-i
 import { Highlight } from '../types/highlights'
 import { applyHighlightsToHTML } from '../utils/highlightMatching'
 import { readingTime } from 'reading-time-estimator'
+import { filterHighlightsByUrl } from '../utils/urlHelpers'
 
 interface ContentPanelProps {
   loading: boolean
@@ -51,35 +52,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }
   }, [selectedHighlightId])
   
-  // Filter highlights relevant to the current URL
-  const relevantHighlights = useMemo(() => {
-    if (!selectedUrl || highlights.length === 0) return []
-    
-    // Normalize URLs for comparison (remove trailing slashes, protocols, www, query params, fragments)
-    const normalizeUrl = (url: string) => {
-      try {
-        const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
-        // Get just the hostname + pathname, remove trailing slash
-        return `${urlObj.hostname.replace(/^www\./, '')}${urlObj.pathname}`.replace(/\/$/, '').toLowerCase()
-      } catch {
-        // Fallback for invalid URLs
-        return url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '').toLowerCase()
-      }
-    }
-    
-    const normalizedSelected = normalizeUrl(selectedUrl)
-    
-    const filtered = highlights.filter(h => {
-      if (!h.urlReference) return false
-      
-      const normalizedRef = normalizeUrl(h.urlReference)
-      return normalizedSelected === normalizedRef || 
-             normalizedSelected.includes(normalizedRef) ||
-             normalizedRef.includes(normalizedSelected)
-    })
-    
-    return filtered
-  }, [selectedUrl, highlights])
+  const relevantHighlights = useMemo(() => filterHighlightsByUrl(highlights, selectedUrl), [selectedUrl, highlights])
 
   // Store original HTML when content changes
   useEffect(() => {
@@ -144,11 +117,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }
   }, [onHighlightClick, relevantHighlights])
 
-  const highlightedMarkdown = useMemo(() => {
-    if (!markdown || relevantHighlights.length === 0) return markdown
-    // For markdown, we'll apply highlights after rendering
-    return markdown
-  }, [markdown, relevantHighlights])
+  const highlightedMarkdown = useMemo(() => markdown, [markdown])
 
   // Calculate reading time from content (must be before early returns)
   const readingStats = useMemo(() => {
@@ -219,5 +188,3 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 }
 
 export default ContentPanel
-
-
