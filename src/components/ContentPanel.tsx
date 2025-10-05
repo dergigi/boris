@@ -152,6 +152,17 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     return markdown
   }, [markdown, relevantHighlights])
 
+  // Calculate reading time from content (must be before early returns)
+  const readingStats = useMemo(() => {
+    const content = markdown || html || ''
+    if (!content) return null
+    // Strip HTML tags for more accurate word count
+    const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+    return readingTime(textContent)
+  }, [html, markdown])
+
+  const hasHighlights = relevantHighlights.length > 0
+
   if (!selectedUrl) {
     return (
       <div className="reader empty">
@@ -170,17 +181,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       </div>
     )
   }
-
-  const hasHighlights = relevantHighlights.length > 0
-
-  // Calculate reading time from content
-  const readingStats = useMemo(() => {
-    const content = markdown || html || ''
-    if (!content) return null
-    // Strip HTML tags for more accurate word count
-    const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
-    return readingTime(textContent)
-  }, [html, markdown])
 
   return (
     <div className="reader">
