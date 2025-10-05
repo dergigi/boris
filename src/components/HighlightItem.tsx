@@ -69,12 +69,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
           </div>
         )}
         
-        {highlight.context && (
-          <details className="highlight-context">
-            <summary>Show context</summary>
-            <p className="context-text">{highlight.context}</p>
-          </details>
-        )}
         
         <div className="highlight-meta">
           <span className="highlight-time">
