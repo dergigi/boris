@@ -9,7 +9,7 @@ import { ViewMode } from './Bookmarks'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
-  onSelectUrl?: (url: string) => void
+  onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][] }) => void
   isCollapsed: boolean
   onToggleCollapse: () => void
   onLogout: () => void

@@ -13,7 +13,7 @@ interface CardViewProps {
   index: number
   hasUrls: boolean
   extractedUrls: string[]
-  onSelectUrl?: (url: string) => void
+  onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][] }) => void
   getIconForUrlType: IconGetter
   firstUrlClassification: { buttonText: string } | null
   authorNpub: string
@@ -141,11 +141,11 @@ export const CardView: React.FC<CardViewProps> = ({
             {getAuthorDisplayName()}
           </a>
         </div>
-        {hasUrls && firstUrlClassification && (
+        {(hasUrls && firstUrlClassification) || bookmark.kind === 30023 ? (
           <button className="read-now-button-minimal" onClick={handleReadNow}>
-            {firstUrlClassification.buttonText}
+            {bookmark.kind === 30023 ? 'Read Article' : firstUrlClassification?.buttonText}
           </button>
-        )}
+        ) : null}
       </div>
     </div>
   )

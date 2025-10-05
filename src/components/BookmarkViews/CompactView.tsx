@@ -11,7 +11,7 @@ interface CompactViewProps {
   index: number
   hasUrls: boolean
   extractedUrls: string[]
-  onSelectUrl?: (url: string) => void
+  onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][] }) => void
   getIconForUrlType: IconGetter
   firstUrlClassification: { buttonText: string } | null
 }
@@ -25,8 +25,15 @@ export const CompactView: React.FC<CompactViewProps> = ({
   getIconForUrlType,
   firstUrlClassification
 }) => {
+  const isArticle = bookmark.kind === 30023
+  const isClickable = hasUrls || isArticle
+  
   const handleCompactClick = () => {
-    if (hasUrls && onSelectUrl) {
+    if (!onSelectUrl) return
+    
+    if (isArticle) {
+      onSelectUrl('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags })
+    } else if (hasUrls) {
       onSelectUrl(extractedUrls[0])
     }
   }
@@ -34,10 +41,10 @@ export const CompactView: React.FC<CompactViewProps> = ({
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark compact ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
       <div 
-        className={`compact-row ${hasUrls ? 'clickable' : ''}`}
+        className={`compact-row ${isClickable ? 'clickable' : ''}`}
         onClick={handleCompactClick}
-        role={hasUrls ? 'button' : undefined}
-        tabIndex={hasUrls ? 0 : undefined}
+        role={isClickable ? 'button' : undefined}
+        tabIndex={isClickable ? 0 : undefined}
       >
         <span className="bookmark-type-compact">
           {bookmark.isPrivate ? (
@@ -55,13 +62,20 @@ export const CompactView: React.FC<CompactViewProps> = ({
           </div>
         )}
         <span className="bookmark-date-compact">{formatDate(bookmark.created_at)}</span>
-        {hasUrls && (
+        {isClickable && (
           <button
             className="compact-read-btn"
-            onClick={(e) => { e.stopPropagation(); onSelectUrl?.(extractedUrls[0]) }}
-            title={firstUrlClassification?.buttonText}
+            onClick={(e) => { 
+              e.stopPropagation()
+              if (isArticle) {
+                onSelectUrl?.('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags })
+              } else {
+                onSelectUrl?.(extractedUrls[0])
+              }
+            }}
+            title={isArticle ? 'Read Article' : firstUrlClassification?.buttonText}
           >
-            <FontAwesomeIcon icon={getIconForUrlType(extractedUrls[0])} />
+            <FontAwesomeIcon icon={isArticle ? getIconForUrlType('') : getIconForUrlType(extractedUrls[0])} />
           </button>
         )}
       </div>

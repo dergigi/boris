@@ -10,7 +10,7 @@ interface LargeViewProps {
   index: number
   hasUrls: boolean
   extractedUrls: string[]
-  onSelectUrl?: (url: string) => void
+  onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][] }) => void
   getIconForUrlType: IconGetter
   firstUrlClassification: { buttonText: string } | null
   previewImage: string | null
@@ -34,6 +34,8 @@ export const LargeView: React.FC<LargeViewProps> = ({
   getAuthorDisplayName,
   handleReadNow
 }) => {
+  const isArticle = bookmark.kind === 30023
+  
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark large ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
       {hasUrls && (
@@ -80,12 +82,12 @@ export const LargeView: React.FC<LargeViewProps> = ({
             </a>
           )}
           
-          {hasUrls && firstUrlClassification && (
+          {(hasUrls && firstUrlClassification) || isArticle ? (
             <button className="large-read-button" onClick={handleReadNow}>
-              <FontAwesomeIcon icon={getIconForUrlType(extractedUrls[0])} />
-              {firstUrlClassification.buttonText}
+              <FontAwesomeIcon icon={isArticle ? getIconForUrlType('') : getIconForUrlType(extractedUrls[0])} />
+              {isArticle ? 'Read Article' : firstUrlClassification?.buttonText}
             </button>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

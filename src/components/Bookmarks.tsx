@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { nip19 } from 'nostr-tools'
 import { Hooks } from 'applesauce-react'
 import { useEventStore } from 'applesauce-react/hooks'
 import { RelayPool } from 'applesauce-relay'
@@ -113,17 +114,48 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
   }
 
-  const handleSelectUrl = async (url: string) => {
+  const handleSelectUrl = async (url: string, bookmark?: { id: string; kind: number; tags: string[][] }) => {
+    if (!relayPool) return
+    
     setSelectedUrl(url)
     setReaderLoading(true)
     setReaderContent(undefined)
     setShowSettings(false)
     if (settings.collapseOnArticleOpen !== false) setIsCollapsed(true)
+    
     try {
-      const content = await fetchReadableContent(url)
-      setReaderContent(content)
+      // Check if this is a kind:30023 article
+      if (bookmark && bookmark.kind === 30023) {
+        // For articles, construct an naddr and fetch using article service
+        const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1] || ''
+        
+        // Try to get author from tags first, then fall back to bookmark id as pubkey
+        const author = bookmark.tags.find(t => t[0] === 'author')?.[1] || 
+                       (bookmark.id.length === 64 ? bookmark.id : undefined)
+        
+        if (dTag !== undefined) {
+          const pointer = {
+            identifier: dTag,
+            kind: 30023,
+            pubkey: author || bookmark.id,
+          }
+          const naddr = nip19.naddrEncode(pointer)
+          const article = await fetchArticleByNaddr(relayPool, naddr)
+          setReaderContent({
+            title: article.title,
+            markdown: article.markdown,
+            url: `nostr:${naddr}`
+          })
+        } else {
+          throw new Error('Invalid article reference - missing d tag')
+        }
+      } else {
+        // For regular URLs, fetch readable content
+        const content = await fetchReadableContent(url)
+        setReaderContent(content)
+      }
     } catch (err) {
-      console.warn('Failed to fetch readable content:', err)
+      console.warn('Failed to fetch content:', err)
     } finally {
       setReaderLoading(false)
     }
