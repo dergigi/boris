@@ -60,6 +60,11 @@ export function useArticleLoader({
         console.log('📰 Article loaded:', article.title)
         console.log('📍 Coordinate:', articleCoordinate)
         
+        // Set reader loading to false immediately after article content is ready
+        // Don't wait for highlights to finish loading
+        setReaderLoading(false)
+        
+        // Fetch highlights asynchronously without blocking article display
         try {
           setHighlightsLoading(true)
           const fetchedHighlights = await fetchHighlightsForArticle(
@@ -81,7 +86,6 @@ export function useArticleLoader({
           html: `<p>Failed to load article: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
           url: `nostr:${naddr}`
         })
-      } finally {
         setReaderLoading(false)
       }
     }
