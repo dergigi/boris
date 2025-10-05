@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { nip19 } from 'nostr-tools'
 import { Hooks } from 'applesauce-react'
 import { useEventStore } from 'applesauce-react/hooks'
 import { RelayPool } from 'applesauce-relay'
@@ -11,11 +10,12 @@ import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchHighlights, fetchHighlightsForArticle } from '../services/highlightService'
 import ContentPanel from './ContentPanel'
 import { HighlightsPanel } from './HighlightsPanel'
-import { fetchReadableContent, ReadableContent } from '../services/readerService'
-import { fetchArticleByNaddr } from '../services/articleService'
+import { ReadableContent } from '../services/readerService'
 import Settings from './Settings'
 import Toast from './Toast'
 import { useSettings } from '../hooks/useSettings'
+import { useArticleLoader } from '../hooks/useArticleLoader'
+import { loadContent, BookmarkReference } from '../utils/contentLoader'
 export type ViewMode = 'compact' | 'cards' | 'large'
 
 interface BookmarksProps {
@@ -51,68 +51,19 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   })
 
   // Load article if naddr is in URL
-  useEffect(() => {
-    if (!relayPool || !naddr) return
-    
-    const loadArticle = async () => {
-      setReaderLoading(true)
-      setReaderContent(undefined)
-      setSelectedUrl(`nostr:${naddr}`) // Use naddr as the URL identifier
-      setIsCollapsed(true)
-      setIsHighlightsCollapsed(false) // Show highlights for the article
-      
-      try {
-        const article = await fetchArticleByNaddr(relayPool, naddr)
-        setReaderContent({
-          title: article.title,
-          markdown: article.markdown,
-          image: article.image,
-          url: `nostr:${naddr}`
-        })
-        
-        // Fetch highlights for this article using its address coordinate
-        // Extract the d-tag identifier from the article event
-        const dTag = article.event.tags.find(t => t[0] === 'd')?.[1] || ''
-        const articleCoordinate = `${article.event.kind}:${article.author}:${dTag}`
-        
-        // Store article info for refresh functionality
-        setCurrentArticleCoordinate(articleCoordinate)
-        setCurrentArticleEventId(article.event.id)
-        
-        console.log('📰 Article details:')
-        console.log('  - Event ID:', article.event.id)
-        console.log('  - Author:', article.author)
-        console.log('  - Kind:', article.event.kind)
-        console.log('  - D-tag:', dTag)
-        console.log('  - Coordinate:', articleCoordinate)
-        console.log('  - Title:', article.title)
-        
-        try {
-          setHighlightsLoading(true)
-          // Pass both the article coordinate and event ID for comprehensive highlight fetching
-          const fetchedHighlights = await fetchHighlightsForArticle(relayPool, articleCoordinate, article.event.id)
-          console.log(`📌 Found ${fetchedHighlights.length} highlights for article ${articleCoordinate}`)
-          setHighlights(fetchedHighlights)
-        } catch (err) {
-          console.error('Failed to fetch highlights:', err)
-        } finally {
-          setHighlightsLoading(false)
-        }
-      } catch (err) {
-        console.error('Failed to load article:', err)
-        setReaderContent({
-          title: 'Error Loading Article',
-          html: `<p>Failed to load article: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
-          url: `nostr:${naddr}`
-        })
-        setReaderLoading(false)
-      } finally {
-        setReaderLoading(false)
-      }
-    }
-    
-    loadArticle()
-  }, [naddr, relayPool])
+  useArticleLoader({
+    naddr,
+    relayPool,
+    setSelectedUrl,
+    setReaderContent,
+    setReaderLoading,
+    setIsCollapsed,
+    setIsHighlightsCollapsed,
+    setHighlights,
+    setHighlightsLoading,
+    setCurrentArticleCoordinate,
+    setCurrentArticleEventId
+  })
 
   // Load initial data on login
   useEffect(() => {
@@ -162,7 +113,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
   }
 
-  const handleSelectUrl = async (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => {
+  const handleSelectUrl = async (url: string, bookmark?: BookmarkReference) => {
     if (!relayPool) return
     
     setSelectedUrl(url)
@@ -172,33 +123,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     if (settings.collapseOnArticleOpen !== false) setIsCollapsed(true)
     
     try {
-      // Check if this is a kind:30023 article
-      if (bookmark && bookmark.kind === 30023) {
-        // For articles, construct an naddr and fetch using article service
-        const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1] || ''
-        
-        if (dTag !== undefined && bookmark.pubkey) {
-          const pointer = {
-            identifier: dTag,
-            kind: 30023,
-            pubkey: bookmark.pubkey,
-          }
-          const naddr = nip19.naddrEncode(pointer)
-          const article = await fetchArticleByNaddr(relayPool, naddr)
-          setReaderContent({
-            title: article.title,
-            markdown: article.markdown,
-            image: article.image,
-            url: `nostr:${naddr}`
-          })
-        } else {
-          throw new Error('Invalid article reference - missing d tag or pubkey')
-        }
-      } else {
-        // For regular URLs, fetch readable content
-        const content = await fetchReadableContent(url)
-        setReaderContent(content)
-      }
+      const content = await loadContent(url, relayPool, bookmark)
+      setReaderContent(content)
     } catch (err) {
       console.warn('Failed to fetch content:', err)
     } finally {
