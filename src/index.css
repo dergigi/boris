@@ -1494,7 +1494,7 @@ body {
   flex: 1;
   margin-bottom: 1rem;
   text-align: left;
-  padding: 0 0.25rem;
+  padding: 0 0.25rem 1rem 0.25rem;
 }
 
 .settings-section {
@@ -1660,7 +1660,8 @@ body {
 .settings-footer {
   display: flex;
   justify-content: flex-start;
-  padding-top: 1rem;
+  padding: 1rem 0 0.5rem 0;
+  flex-shrink: 0;
 }
 
 .settings-footer .btn-primary {
