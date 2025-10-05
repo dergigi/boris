@@ -176,8 +176,10 @@ body {
 .bookmarks-container.collapsed {
   display: flex;
   align-items: flex-start;
-  justify-content: center;
-  padding-top: 1rem;
+  justify-content: flex-end;
+  padding: 0.75rem 0 0 0;
+  background: transparent;
+  border: none;
 }
 
 .bookmarks-container.collapsed .toggle-sidebar-btn {
@@ -191,9 +193,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 33px;
-  height: 33px;
-  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
 }
 
 .bookmarks-container.collapsed .toggle-sidebar-btn:hover {
