@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faLink, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -88,10 +88,9 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
               rel="noopener noreferrer"
               onClick={(e) => highlight.urlReference && onSelectUrl ? handleLinkClick(highlight.urlReference, e) : undefined}
               className="highlight-source"
-              title={highlight.eventReference ? 'View on Nostr' : 'View source'}
+              title={highlight.eventReference ? 'Open on Nostr' : 'Open source'}
             >
-              <FontAwesomeIcon icon={highlight.eventReference ? faLink : faExternalLinkAlt} />
-              <span>{highlight.eventReference ? 'Nostr event' : 'Source'}</span>
+              <FontAwesomeIcon icon={faExternalLinkAlt} />
             </a>
           )}
         </div>
