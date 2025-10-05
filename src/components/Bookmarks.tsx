@@ -128,6 +128,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           highlights={highlights}
           showUnderlines={showUnderlines}
           onHighlightClick={setSelectedHighlightId}
+          selectedHighlightId={selectedHighlightId}
         />
       </div>
       <div className="pane highlights">

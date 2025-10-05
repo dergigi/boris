@@ -15,6 +15,7 @@ interface ContentPanelProps {
   highlights?: Highlight[]
   showUnderlines?: boolean
   onHighlightClick?: (highlightId: string) => void
+  selectedHighlightId?: string
 }
 
 const ContentPanel: React.FC<ContentPanelProps> = ({ 
@@ -25,9 +26,35 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   selectedUrl,
   highlights = [],
   showUnderlines = true,
-  onHighlightClick
+  onHighlightClick,
+  selectedHighlightId
 }) => {
   const contentRef = useRef<HTMLDivElement>(null)
+  
+  // Scroll to selected highlight in article when clicked from sidebar
+  useEffect(() => {
+    if (!selectedHighlightId || !contentRef.current) {
+      return
+    }
+    
+    // Find the mark element with the matching highlight ID
+    const markElement = contentRef.current.querySelector(`mark.content-highlight[data-highlight-id="${selectedHighlightId}"]`)
+    
+    if (markElement) {
+      console.log('📍 Scrolling to highlight in article:', selectedHighlightId.slice(0, 8))
+      markElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      
+      // Temporarily enhance the highlight to show it's selected
+      const originalBackground = (markElement as HTMLElement).style.background
+      ;(markElement as HTMLElement).style.background = 'rgba(255, 255, 0, 0.7)'
+      
+      setTimeout(() => {
+        (markElement as HTMLElement).style.background = originalBackground
+      }, 1500)
+    } else {
+      console.log('⚠️ Could not find mark element for highlight:', selectedHighlightId.slice(0, 8))
+    }
+  }, [selectedHighlightId])
   
   // Filter highlights relevant to the current URL
   const relevantHighlights = useMemo(() => {
