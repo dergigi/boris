@@ -70,21 +70,21 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
               </select>
             </div>
 
-            <div className="setting-group">
-              <label htmlFor="fontSize">Font Size</label>
-              <select
-                id="fontSize"
-                value={localSettings.fontSize || 16}
-                onChange={(e) => setLocalSettings({ ...localSettings, fontSize: parseInt(e.target.value) })}
-                className="setting-select"
-              >
-                <option value="12">12px (Very Small)</option>
-                <option value="14">14px (Small)</option>
-                <option value="16">16px (Medium)</option>
-                <option value="18">18px (Large)</option>
-                <option value="20">20px (Very Large)</option>
-                <option value="22">22px (Extra Large)</option>
-              </select>
+            <div className="setting-group setting-inline">
+              <label>Font Size</label>
+              <div className="setting-buttons">
+                {[14, 16, 18, 20, 22].map(size => (
+                  <button
+                    key={size}
+                    onClick={() => setLocalSettings({ ...localSettings, fontSize: size })}
+                    className={`font-size-btn ${(localSettings.fontSize || 16) === size ? 'active' : ''}`}
+                    title={`${size}px`}
+                    style={{ fontSize: `${size - 2}px` }}
+                  >
+                    A
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="setting-group">
