@@ -99,6 +99,7 @@ body {
 /* Bookmarks Styles */
 .bookmarks-container {
   text-align: left;
+  padding-left: 1rem;
 }
 
 .sidebar-header-bar {
@@ -180,7 +181,7 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  padding: 0.75rem 0 0 0;
+  padding: 0.75rem 0.5rem 0 0;
   background: transparent;
   border: none;
 }
@@ -456,7 +457,6 @@ body {
 .pane.sidebar {
   overflow-y: auto;
   height: 100%;
-  padding-right: 1rem;
 }
 
 .pane.main {
@@ -472,7 +472,6 @@ body {
 .pane.highlights {
   overflow-y: auto;
   height: 100%;
-  padding-left: 1rem;
 }
 
 .reader {
@@ -1177,13 +1176,14 @@ body {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  padding-right: 1rem;
 }
 
 .highlights-container.collapsed {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 0.75rem 0 0 0;
+  padding: 0.75rem 0 0 0.5rem;
   background: transparent;
   border: none;
 }
