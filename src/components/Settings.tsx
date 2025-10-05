@@ -49,9 +49,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
             </label>
           </div>
 
-          <div className="setting-group">
+          <div className="setting-group setting-inline">
             <label>Default View Mode</label>
-            <div className="view-mode-controls">
+            <div className="setting-buttons">
               <IconButton
                 icon={faList}
                 onClick={() => setLocalSettings({ ...localSettings, defaultViewMode: 'compact' })}

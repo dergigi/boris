@@ -1459,12 +1459,28 @@ body {
   text-align: left;
 }
 
+.setting-group.setting-inline {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.setting-group.setting-inline label {
+  margin-bottom: 0;
+}
+
 .setting-group label {
   display: block;
   margin-bottom: 0.5rem;
   color: #ccc;
   font-weight: 500;
   text-align: left;
+}
+
+.setting-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .setting-select {
@@ -1502,11 +1518,6 @@ body {
 .checkbox-label span {
   color: #ccc;
   text-align: left;
-}
-
-.settings-view .view-mode-controls {
-  justify-content: flex-start;
-  margin-bottom: 0;
 }
 
 .settings-footer {
