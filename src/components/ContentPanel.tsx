@@ -10,11 +10,6 @@ import { filterHighlightsByUrl } from '../utils/urlHelpers'
 import { hexToRgb } from '../utils/colorHelpers'
 import ReaderHeader from './ReaderHeader'
 import { HighlightVisibility } from './HighlightsPanel'
-import { HighlightButton, HighlightButtonRef } from './HighlightButton'
-import { createHighlight } from '../services/highlightCreationService'
-import { RelayPool } from 'applesauce-relay'
-import { IAccount } from 'applesauce-accounts'
-import { NostrEvent } from 'nostr-tools'
 
 interface ContentPanelProps {
   loading: boolean
@@ -33,12 +28,8 @@ interface ContentPanelProps {
   currentUserPubkey?: string
   followedPubkeys?: Set<string>
   // For highlight creation
-  relayPool?: RelayPool
-  activeAccount?: IAccount
-  currentArticle?: NostrEvent | null
-  currentArticleCoordinate?: string
-  onHighlightCreated?: () => void
-  onShowToast?: (message: string, type: 'success' | 'error') => void
+  onTextSelection?: (text: string) => void
+  onClearSelection?: () => void
 }
 
 const ContentPanel: React.FC<ContentPanelProps> = ({ 
@@ -58,17 +49,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   currentUserPubkey,
   followedPubkeys = new Set(),
   // For highlight creation
-  relayPool,
-  activeAccount,
-  currentArticle,
-  currentArticleCoordinate,
-  onHighlightCreated,
-  onShowToast
+  onTextSelection,
+  onClearSelection
 }) => {
   const contentRef = useRef<HTMLDivElement>(null)
   const markdownPreviewRef = useRef<HTMLDivElement>(null)
   const [renderedHtml, setRenderedHtml] = useState<string>('')
-  const highlightButtonRef = useRef<HighlightButtonRef>(null)
   
   // Filter highlights by URL and visibility settings
   const relevantHighlights = useMemo(() => {
@@ -180,16 +166,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Handle text selection for highlight creation
   const handleMouseUp = useCallback(() => {
-    // Only allow highlight creation if user is logged in
-    if (!activeAccount || !relayPool) {
-      highlightButtonRef.current?.clearSelection()
-      return
-    }
-
     setTimeout(() => {
       const selection = window.getSelection()
       if (!selection || selection.rangeCount === 0) {
-        highlightButtonRef.current?.clearSelection()
+        onClearSelection?.()
         return
       }
 
@@ -197,39 +177,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       const text = selection.toString().trim()
 
       if (text.length > 0 && contentRef.current?.contains(range.commonAncestorContainer)) {
-        highlightButtonRef.current?.updateSelection(text)
+        onTextSelection?.(text)
       } else {
-        highlightButtonRef.current?.clearSelection()
+        onClearSelection?.()
       }
     }, 10)
-  }, [activeAccount, relayPool])
-
-  // Handle highlight creation
-  const handleCreateHighlight = useCallback(async (text: string) => {
-    if (!activeAccount || !relayPool || !currentArticle) {
-      onShowToast?.('Please log in to create highlights', 'error')
-      return
-    }
-
-    try {
-      await createHighlight(
-        text,
-        currentArticle,
-        activeAccount,
-        relayPool
-      )
-      
-      onShowToast?.('Highlight created successfully!', 'success')
-      highlightButtonRef.current?.clearSelection()
-      window.getSelection()?.removeAllRanges()
-      
-      // Trigger refresh of highlights
-      onHighlightCreated?.()
-    } catch (error) {
-      console.error('Failed to create highlight:', error)
-      onShowToast?.('Failed to create highlight', 'error')
-    }
-  }, [activeAccount, relayPool, currentArticle, currentArticleCoordinate, onShowToast, onHighlightCreated])
+  }, [onTextSelection, onClearSelection])
 
   if (!selectedUrl) {
     return (
@@ -252,67 +205,57 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const highlightRgb = hexToRgb(highlightColor)
 
   return (
-    <>
-      <div className="reader" style={{ '--highlight-rgb': highlightRgb } as React.CSSProperties}>
-        {/* Hidden markdown preview to convert markdown to HTML */}
-        {markdown && (
-          <div ref={markdownPreviewRef} style={{ display: 'none' }}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {markdown}
-            </ReactMarkdown>
-          </div>
-        )}
-        
-        <ReaderHeader 
-          title={title}
-          image={image}
-          readingTimeText={readingStats ? readingStats.text : null}
-          hasHighlights={hasHighlights}
-          highlightCount={relevantHighlights.length}
-        />
-        {markdown || html ? (
-          markdown ? (
-            finalHtml ? (
-              <div 
-                ref={contentRef} 
-                className="reader-markdown" 
-                dangerouslySetInnerHTML={{ __html: finalHtml }}
-                onMouseUp={handleMouseUp}
-              />
-            ) : (
-              <div 
-                ref={contentRef} 
-                className="reader-markdown"
-                onMouseUp={handleMouseUp}
-              >
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {markdown}
-                </ReactMarkdown>
-              </div>
-            )
+    <div className="reader" style={{ '--highlight-rgb': highlightRgb } as React.CSSProperties}>
+      {/* Hidden markdown preview to convert markdown to HTML */}
+      {markdown && (
+        <div ref={markdownPreviewRef} style={{ display: 'none' }}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {markdown}
+          </ReactMarkdown>
+        </div>
+      )}
+      
+      <ReaderHeader 
+        title={title}
+        image={image}
+        readingTimeText={readingStats ? readingStats.text : null}
+        hasHighlights={hasHighlights}
+        highlightCount={relevantHighlights.length}
+      />
+      {markdown || html ? (
+        markdown ? (
+          finalHtml ? (
+            <div 
+              ref={contentRef} 
+              className="reader-markdown" 
+              dangerouslySetInnerHTML={{ __html: finalHtml }}
+              onMouseUp={handleMouseUp}
+            />
           ) : (
             <div 
               ref={contentRef} 
-              className="reader-html" 
-              dangerouslySetInnerHTML={{ __html: finalHtml || html || '' }}
+              className="reader-markdown"
               onMouseUp={handleMouseUp}
-            />
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {markdown}
+              </ReactMarkdown>
+            </div>
           )
         ) : (
-          <div className="reader empty">
-            <p>No readable content found for this URL.</p>
-          </div>
-        )}
-      </div>
-      
-      {activeAccount && relayPool && (
-        <HighlightButton 
-          ref={highlightButtonRef} 
-          onHighlight={handleCreateHighlight}
-          highlightColor={highlightColor}
-        />
+          <div 
+            ref={contentRef} 
+            className="reader-html" 
+            dangerouslySetInnerHTML={{ __html: finalHtml || html || '' }}
+            onMouseUp={handleMouseUp}
+          />
+        )
+      ) : (
+        <div className="reader empty">
+          <p>No readable content found for this URL.</p>
+        </div>
       )}
-    </>
+    </div>
   )
 }
 

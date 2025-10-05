@@ -18,6 +18,9 @@ import { useSettings } from '../hooks/useSettings'
 import { useArticleLoader } from '../hooks/useArticleLoader'
 import { loadContent, BookmarkReference } from '../utils/contentLoader'
 import { HighlightVisibility } from './HighlightsPanel'
+import { HighlightButton, HighlightButtonRef } from './HighlightButton'
+import { createHighlight } from '../services/highlightCreationService'
+import { useRef, useCallback } from 'react'
 export type ViewMode = 'compact' | 'cards' | 'large'
 
 interface BookmarksProps {
@@ -53,6 +56,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
   const eventStore = useEventStore()
+  const highlightButtonRef = useRef<HighlightButtonRef>(null)
   
   const { settings, saveSettings, toastMessage, toastType, clearToast } = useSettings({
     relayPool,
@@ -214,6 +218,38 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
   }
 
+  const handleTextSelection = useCallback((text: string) => {
+    highlightButtonRef.current?.updateSelection(text)
+  }, [])
+
+  const handleClearSelection = useCallback(() => {
+    highlightButtonRef.current?.clearSelection()
+  }, [])
+
+  const handleCreateHighlight = useCallback(async (text: string) => {
+    if (!activeAccount || !relayPool || !currentArticle) {
+      console.error('Missing requirements for highlight creation')
+      return
+    }
+
+    try {
+      await createHighlight(
+        text,
+        currentArticle,
+        activeAccount,
+        relayPool
+      )
+      
+      console.log('✅ Highlight created successfully!')
+      highlightButtonRef.current?.clearSelection()
+      
+      // Trigger refresh of highlights
+      handleHighlightCreated()
+    } catch (error) {
+      console.error('Failed to create highlight:', error)
+    }
+  }, [activeAccount, relayPool, currentArticle, handleHighlightCreated])
+
   return (
     <>
       <div className={`three-pane ${isCollapsed ? 'sidebar-collapsed' : ''} ${isHighlightsCollapsed ? 'highlights-collapsed' : ''}`}>
@@ -261,20 +297,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
               if (isHighlightsCollapsed) setIsHighlightsCollapsed(false)
             }}
             selectedHighlightId={selectedHighlightId}
-            relayPool={relayPool || undefined}
-            activeAccount={activeAccount || undefined}
-            currentArticle={currentArticle}
-            currentArticleCoordinate={currentArticleCoordinate}
-            onHighlightCreated={handleHighlightCreated}
-            onShowToast={(message, type) => {
-              // Use existing toast mechanism
-              if (type === 'success') {
-                console.log('✅', message)
-              } else {
-                console.error('❌', message)
-              }
-            }}
             highlightVisibility={highlightVisibility}
+            onTextSelection={handleTextSelection}
+            onClearSelection={handleClearSelection}
             currentUserPubkey={activeAccount?.pubkey}
             followedPubkeys={followedPubkeys}
           />
@@ -299,6 +324,13 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           />
         </div>
       </div>
+      {activeAccount && relayPool && (
+        <HighlightButton 
+          ref={highlightButtonRef} 
+          onHighlight={handleCreateHighlight}
+          highlightColor={settings.highlightColor || '#ffff00'}
+        />
+      )}
       {toastMessage && (
         <Toast
           message={toastMessage}
