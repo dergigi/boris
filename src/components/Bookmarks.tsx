@@ -118,6 +118,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     setSelectedUrl(url)
     setReaderLoading(true)
     setReaderContent(undefined)
+    setShowSettings(false)
     
     // Collapse sidebar if setting is enabled (default true)
     if (settings.collapseOnArticleOpen !== false) {
