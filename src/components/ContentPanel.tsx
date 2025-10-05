@@ -44,13 +44,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       console.log('📍 Scrolling to highlight in article:', selectedHighlightId.slice(0, 8))
       markElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
       
-      // Add pulsing animation to show it's selected
+      // Add pulsing animation after scroll completes
       const htmlElement = markElement as HTMLElement
-      htmlElement.classList.add('highlight-pulse')
-      
       setTimeout(() => {
-        htmlElement.classList.remove('highlight-pulse')
-      }, 1500)
+        htmlElement.classList.add('highlight-pulse')
+        
+        setTimeout(() => {
+          htmlElement.classList.remove('highlight-pulse')
+        }, 1500)
+      }, 500) // Delay to let scroll animation complete
     } else {
       console.log('⚠️ Could not find mark element for highlight:', selectedHighlightId.slice(0, 8))
     }
