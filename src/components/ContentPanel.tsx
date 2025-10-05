@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner, faHighlighter, faClock } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { applyHighlightsToHTML } from '../utils/highlightMatching'
-import readingTime from 'reading-time'
+import { readingTime } from 'reading-time-estimator'
 
 interface ContentPanelProps {
   loading: boolean
