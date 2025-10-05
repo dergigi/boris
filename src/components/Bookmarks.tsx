@@ -128,6 +128,19 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
   }
 
+  // Classify highlights with levels based on user context
+  const classifiedHighlights = useMemo(() => {
+    return highlights.map(h => {
+      let level: 'mine' | 'friends' | 'nostrverse' = 'nostrverse'
+      if (h.pubkey === activeAccount?.pubkey) {
+        level = 'mine'
+      } else if (followedPubkeys.has(h.pubkey)) {
+        level = 'friends'
+      }
+      return { ...h, level }
+    })
+  }, [highlights, activeAccount?.pubkey, followedPubkeys])
+
   const handleSelectUrl = async (url: string, bookmark?: BookmarkReference) => {
     if (!relayPool) return
     
@@ -182,7 +195,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             markdown={readerContent?.markdown}
             image={readerContent?.image}
             selectedUrl={selectedUrl}
-            highlights={highlights}
+            highlights={classifiedHighlights}
             showUnderlines={showUnderlines}
             highlightStyle={settings.highlightStyle || 'marker'}
             highlightColor={settings.highlightColor || '#ffff00'}

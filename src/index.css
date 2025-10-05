@@ -477,7 +477,7 @@ body {
 .reader {
   background: #1a1a1a;
   border: 1px solid #333;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 1rem;
   text-align: left;
   overflow: hidden;
