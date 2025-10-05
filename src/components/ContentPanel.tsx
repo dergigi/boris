@@ -144,7 +144,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       <div className="reader loading">
         <div className="loading-spinner">
           <FontAwesomeIcon icon={faSpinner} spin />
-          <span>Loading content…</span>
         </div>
       </div>
     )

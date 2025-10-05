@@ -4,3 +4,5 @@ alwaysApply: false
 ---
 
 We use FontAwesome. If you can use a fa-icon (instead of text) use a fa-icon. Always strive to keep the UI modern, beautiful, and minimalistic. Shy away from using too many colors, borders, glow, and animations.
+
+Never write "Loading" - always show a spinner, and just a spinner.

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { EventStoreProvider, AccountsProvider } from 'applesauce-react'
 import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
@@ -104,7 +106,11 @@ function App() {
   }, [])
 
   if (!eventStore || !accountManager || !relayPool) {
-    return <div>Loading...</div>
+    return (
+      <div className="loading">
+        <FontAwesomeIcon icon={faSpinner} spin />
+      </div>
+    )
   }
 
   return (

@@ -199,7 +199,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
 
       {loading ? (
         <div className="highlights-loading">
-          <p>Loading highlights...</p>
+          <FontAwesomeIcon icon={faHighlighter} spin />
         </div>
       ) : filteredHighlights.length === 0 ? (
         <div className="highlights-empty">
