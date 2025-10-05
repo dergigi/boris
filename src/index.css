@@ -464,6 +464,8 @@ body {
   max-width: 900px;
   margin: 0 auto;
   padding: 0 2rem;
+  overflow-x: hidden;
+  contain: layout style;
 }
 
 .pane.highlights {
@@ -477,6 +479,8 @@ body {
   border-radius: 12px;
   padding: 1rem;
   text-align: left;
+  overflow: hidden;
+  contain: layout style;
 }
 
 .reader.empty {
@@ -1482,6 +1486,7 @@ body {
   position: relative;
   border-radius: 2px;
   box-shadow: 0 0 8px rgba(var(--highlight-rgb, 255, 255, 0), 0.2);
+  contain: layout style;
 }
 
 .content-highlight:hover,
@@ -1501,6 +1506,7 @@ body {
   text-decoration-color: rgba(var(--highlight-rgb, 255, 255, 0), 0.8);
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
+  contain: layout style;
 }
 
 .content-highlight-underline:hover {
