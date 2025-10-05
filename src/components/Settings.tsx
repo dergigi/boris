@@ -204,11 +204,11 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
                 <input
                   id="sidebarCollapsed"
                   type="checkbox"
-                  checked={localSettings.sidebarCollapsed === true}
+                  checked={localSettings.sidebarCollapsed !== false}
                   onChange={(e) => setLocalSettings({ ...localSettings, sidebarCollapsed: e.target.checked })}
                   className="setting-checkbox"
                 />
-                <span>Start with bookmarks sidebar collapsed (default: on)</span>
+                <span>Start with bookmarks sidebar collapsed</span>
               </label>
             </div>
 
@@ -217,11 +217,11 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
                 <input
                   id="highlightsCollapsed"
                   type="checkbox"
-                  checked={localSettings.highlightsCollapsed === true}
+                  checked={localSettings.highlightsCollapsed !== false}
                   onChange={(e) => setLocalSettings({ ...localSettings, highlightsCollapsed: e.target.checked })}
                   className="setting-checkbox"
                 />
-                <span>Start with highlights panel collapsed (default: on)</span>
+                <span>Start with highlights panel collapsed</span>
               </label>
             </div>
           </div>
