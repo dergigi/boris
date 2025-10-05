@@ -1,4 +1,5 @@
 import { getParsedContent } from 'applesauce-content/text'
+import { getArticleTitle } from 'applesauce-core/helpers'
 import { ActiveAccount, IndividualBookmark, ParsedContent } from '../types/bookmarks'
 import type { NostrEvent } from './bookmarkEvents'
 
@@ -94,14 +95,24 @@ export function hydrateItems(
   return items.map(item => {
     const ev = idToEvent.get(item.id)
     if (!ev) return item
+    
+    // For long-form articles (kind:30023), use the article title as content
+    let content = ev.content || item.content || ''
+    if (ev.kind === 30023) {
+      const articleTitle = getArticleTitle(ev)
+      if (articleTitle) {
+        content = articleTitle
+      }
+    }
+    
     return {
       ...item,
       pubkey: ev.pubkey || item.pubkey,
-      content: ev.content || item.content || '',
+      content,
       created_at: ev.created_at || item.created_at,
       kind: ev.kind || item.kind,
       tags: ev.tags || item.tags,
-      parsedContent: ev.content ? (getParsedContent(ev.content) as ParsedContent) : item.parsedContent
+      parsedContent: ev.content ? (getParsedContent(content) as ParsedContent) : item.parsedContent
     }
   })
 }
