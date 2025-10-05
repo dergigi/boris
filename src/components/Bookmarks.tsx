@@ -37,6 +37,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [showUnderlines, setShowUnderlines] = useState(true)
   const [selectedHighlightId, setSelectedHighlightId] = useState<string | undefined>(undefined)
   const [showSettings, setShowSettings] = useState(false)
+  const [currentArticleCoordinate, setCurrentArticleCoordinate] = useState<string | undefined>(undefined)
+  const [currentArticleEventId, setCurrentArticleEventId] = useState<string | undefined>(undefined)
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
   const eventStore = useEventStore()
@@ -72,6 +74,10 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         // Extract the d-tag identifier from the article event
         const dTag = article.event.tags.find(t => t[0] === 'd')?.[1] || ''
         const articleCoordinate = `${article.event.kind}:${article.author}:${dTag}`
+        
+        // Store article info for refresh functionality
+        setCurrentArticleCoordinate(articleCoordinate)
+        setCurrentArticleEventId(article.event.id)
         
         console.log('📰 Article details:')
         console.log('  - Event ID:', article.event.id)
@@ -130,11 +136,25 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   }
 
   const handleFetchHighlights = async () => {
-    if (!relayPool || !activeAccount) return
+    if (!relayPool) return
+    
     setHighlightsLoading(true)
     try {
-      const fetchedHighlights = await fetchHighlights(relayPool, activeAccount.pubkey)
-      setHighlights(fetchedHighlights)
+      // If we're viewing an article, fetch highlights for that article
+      if (currentArticleCoordinate) {
+        const fetchedHighlights = await fetchHighlightsForArticle(
+          relayPool, 
+          currentArticleCoordinate, 
+          currentArticleEventId
+        )
+        console.log(`🔄 Refreshed ${fetchedHighlights.length} highlights for article`)
+        setHighlights(fetchedHighlights)
+      } 
+      // Otherwise, if logged in, fetch user's own highlights
+      else if (activeAccount) {
+        const fetchedHighlights = await fetchHighlights(relayPool, activeAccount.pubkey)
+        setHighlights(fetchedHighlights)
+      }
     } catch (err) {
       console.error('Failed to fetch highlights:', err)
     } finally {
