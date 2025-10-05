@@ -59,11 +59,12 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     if (settings.showUnderlines !== undefined) setShowUnderlines(settings.showUnderlines)
     if (settings.sidebarCollapsed !== undefined) setIsCollapsed(settings.sidebarCollapsed)
     if (settings.highlightsCollapsed !== undefined) setIsHighlightsCollapsed(settings.highlightsCollapsed)
-    if (settings.readingFont) {
-      loadFont(settings.readingFont)
-      root.setProperty('--reading-font', getFontFamily(settings.readingFont))
-    }
-    if (settings.fontSize) root.setProperty('--reading-font-size', `${settings.fontSize}px`)
+    
+    // Always set font variables (use defaults if not specified)
+    const fontKey = settings.readingFont || 'system'
+    if (fontKey !== 'system') loadFont(fontKey)
+    root.setProperty('--reading-font', getFontFamily(fontKey))
+    root.setProperty('--reading-font-size', `${settings.fontSize || 16}px`)
   }, [settings])
 
   const handleFetchBookmarks = async () => {

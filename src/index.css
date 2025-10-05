@@ -542,6 +542,7 @@ body {
 .reader .reader-html *,
 .reader .reader-markdown * {
   text-align: left !important;
+  font-family: inherit !important;
 }
 
 .reader center,
@@ -570,6 +571,12 @@ body {
 
 .reader-markdown p {
   margin: 0.5rem 0;
+}
+
+.reader-html p,
+.reader-html div,
+.reader-html span {
+  font-size: 1em;
 }
 
 .reader-markdown a {
