@@ -183,12 +183,16 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           </div>
         </div>
       )}
-      {finalHtml ? (
-        <div 
-          ref={contentRef} 
-          className={markdown ? "reader-markdown" : "reader-html"} 
-          dangerouslySetInnerHTML={{ __html: finalHtml }} 
-        />
+      {markdown || html ? (
+        finalHtml ? (
+          <div 
+            ref={contentRef} 
+            className={markdown ? "reader-markdown" : "reader-html"} 
+            dangerouslySetInnerHTML={{ __html: finalHtml }} 
+          />
+        ) : (
+          <div className="reader-markdown" ref={contentRef} />
+        )
       ) : (
         <div className="reader empty">
           <p>No readable content found for this URL.</p>
