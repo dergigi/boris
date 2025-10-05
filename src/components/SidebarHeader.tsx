@@ -63,13 +63,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
         >
           <FontAwesomeIcon icon={faChevronRight} />
         </button>
-        <div className="profile-avatar" title={getUserDisplayName()}>
-          {profileImage ? (
-            <img src={profileImage} alt={getUserDisplayName()} />
-          ) : (
-            <FontAwesomeIcon icon={faUser} />
-          )}
-        </div>
         {onRefresh && (
           <IconButton
             icon={faRotate}
@@ -88,6 +81,13 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           ariaLabel="Settings"
           variant="ghost"
         />
+        <div className="profile-avatar" title={getUserDisplayName()}>
+          {profileImage ? (
+            <img src={profileImage} alt={getUserDisplayName()} />
+          ) : (
+            <FontAwesomeIcon icon={faUser} />
+          )}
+        </div>
         {activeAccount ? (
           <IconButton
             icon={faRightFromBracket}
