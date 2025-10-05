@@ -60,7 +60,7 @@ export const HighlightButton = React.forwardRef<HighlightButtonRef, HighlightBut
           alignItems: 'center',
           justifyContent: 'center',
           transition: 'all 0.3s ease',
-          opacity: hasSelection ? 1 : 0,
+          opacity: hasSelection ? 1 : 0.5,
           transform: hasSelection ? 'scale(1)' : 'scale(0.8)',
           pointerEvents: hasSelection ? 'auto' : 'none',
           userSelect: 'none'
