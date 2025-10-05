@@ -29,9 +29,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
 
   useEffect(() => {
     // Load font for preview when it changes
-    if (localSettings.readingFont) {
-      loadFont(localSettings.readingFont)
-    }
+    const fontToLoad = localSettings.readingFont || 'source-serif-4'
+    loadFont(fontToLoad)
   }, [localSettings.readingFont])
 
   // Auto-save settings whenever they change (except on initial mount)
@@ -44,7 +43,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
     onSave(localSettings)
   }, [localSettings, onSave])
 
-  const previewFontFamily = getFontFamily(localSettings.readingFont)
+  const previewFontFamily = getFontFamily(localSettings.readingFont || 'source-serif-4')
 
   return (
     <div className="settings-view">
@@ -66,7 +65,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
             <div className="setting-group setting-inline">
               <label htmlFor="readingFont">Reading Font</label>
               <FontSelector
-                value={localSettings.readingFont || 'system'}
+                value={localSettings.readingFont || 'source-serif-4'}
                 onChange={(font) => setLocalSettings({ ...localSettings, readingFont: font })}
               />
             </div>

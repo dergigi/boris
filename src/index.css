@@ -13,7 +13,7 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   
-  --reading-font: system-ui, -apple-system, sans-serif;
+  --reading-font: 'Source Serif 4', serif;
   --reading-font-size: 16px;
   /* Layout variables */
   --sidebar-width: 320px;
