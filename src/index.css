@@ -1110,6 +1110,12 @@ body {
   transform: translateY(1px);
 }
 
+.highlights-container.collapsed .toggle-highlights-btn.with-icon {
+  width: auto;
+  padding: 0 0.5rem;
+  gap: 0.5rem;
+}
+
 .highlights-header {
   display: flex;
   align-items: center;

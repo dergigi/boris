@@ -64,10 +64,11 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
       <div className="highlights-container collapsed">
         <button
           onClick={onToggleCollapse}
-          className="toggle-highlights-btn"
+          className="toggle-highlights-btn with-icon"
           title="Expand highlights panel"
           aria-label="Expand highlights panel"
         >
+          <FontAwesomeIcon icon={faHighlighter} />
           <FontAwesomeIcon icon={faChevronRight} />
         </button>
       </div>
