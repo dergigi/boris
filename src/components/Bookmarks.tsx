@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Hooks, useEventStore } from 'applesauce-react'
+import { Hooks } from 'applesauce-react'
+import { useEventStore } from 'applesauce-react/hooks'
 import { RelayPool } from 'applesauce-relay'
 import { EventFactory } from 'applesauce-factory'
 import { Bookmark } from '../types/bookmarks'

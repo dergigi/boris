@@ -37,7 +37,7 @@ export async function collectBookmarksFromEvents(
     publicItemsAll.push(...processApplesauceBookmarks(pub, activeAccount, false))
 
     try {
-      if (Helpers.hasHiddenTags(evt) && Helpers.isHiddenTagsLocked(evt) && signerCandidate) {
+      if (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt) && signerCandidate) {
         try {
           await Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner)
         } catch {

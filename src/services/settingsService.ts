@@ -1,10 +1,10 @@
-import { EventStore } from 'applesauce-core'
+import { IEventStore, mapEventsToStore } from 'applesauce-core'
 import { APP_DATA_KIND, getAppDataContent } from 'applesauce-core/helpers/app-data'
 import { AppDataBlueprint } from 'applesauce-factory/blueprints'
 import { EventFactory } from 'applesauce-factory'
-import { RelayPool, onlyEvents, mapEventsToStore } from 'applesauce-relay'
+import { RelayPool, onlyEvents } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
-import { Account } from 'applesauce-accounts'
+import { firstValueFrom } from 'rxjs'
 
 const SETTINGS_IDENTIFIER = 'com.dergigi.boris.user-settings'
 
@@ -18,7 +18,7 @@ export interface UserSettings {
 
 export async function loadSettings(
   relayPool: RelayPool,
-  eventStore: EventStore,
+  eventStore: IEventStore,
   pubkey: string,
   relays: string[]
 ): Promise<UserSettings | null> {
@@ -39,15 +39,21 @@ export async function loadSettings(
       })
       .pipe(onlyEvents(), mapEventsToStore(eventStore))
       .subscribe({
-        complete: () => {
+        complete: async () => {
           clearTimeout(timeout)
           if (!hasResolved) {
             hasResolved = true
-            const event = eventStore.replaceable(APP_DATA_KIND, pubkey, SETTINGS_IDENTIFIER).value
-            if (event) {
-              const content = getAppDataContent<UserSettings>(event)
-              resolve(content || null)
-            } else {
+            try {
+              const event = await firstValueFrom(
+                eventStore.replaceable(APP_DATA_KIND, pubkey, SETTINGS_IDENTIFIER)
+              )
+              if (event) {
+                const content = getAppDataContent<UserSettings>(event)
+                resolve(content || null)
+              } else {
+                resolve(null)
+              }
+            } catch {
               resolve(null)
             }
           }
@@ -69,7 +75,7 @@ export async function loadSettings(
 
 export async function saveSettings(
   relayPool: RelayPool,
-  eventStore: EventStore,
+  eventStore: IEventStore,
   factory: EventFactory,
   settings: UserSettings,
   relays: string[]
@@ -82,7 +88,7 @@ export async function saveSettings(
 }
 
 export function watchSettings(
-  eventStore: EventStore,
+  eventStore: IEventStore,
   pubkey: string,
   callback: (settings: UserSettings | null) => void
 ) {
