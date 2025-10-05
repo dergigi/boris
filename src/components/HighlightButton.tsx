@@ -39,7 +39,8 @@ export const HighlightButton = React.forwardRef<HighlightButtonRef, HighlightBut
         if (buttonRef.current) {
           const rect = range.getBoundingClientRect()
           buttonRef.current.style.display = 'flex'
-          buttonRef.current.style.top = `${rect.bottom + window.scrollY + 8}px`
+          // Use fixed positioning relative to viewport, so it follows the scroll
+          buttonRef.current.style.top = `${rect.bottom + 8}px`
           buttonRef.current.style.left = `${rect.left + rect.width / 2 - 20}px`
         }
       },
@@ -57,7 +58,7 @@ export const HighlightButton = React.forwardRef<HighlightButtonRef, HighlightBut
         className="highlight-create-button"
         style={{
           display: 'none',
-          position: 'absolute',
+          position: 'fixed',
           zIndex: 1000,
           width: '40px',
           height: '40px',
