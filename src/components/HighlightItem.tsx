@@ -8,9 +8,10 @@ interface HighlightItemProps {
   highlight: Highlight
   onSelectUrl?: (url: string) => void
   isSelected?: boolean
+  onHighlightClick?: (highlightId: string) => void
 }
 
-export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelectUrl, isSelected }) => {
+export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelectUrl, isSelected, onHighlightClick }) => {
   const itemRef = useRef<HTMLDivElement>(null)
   
   useEffect(() => {
@@ -18,6 +19,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
       itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }, [isSelected])
+  
+  const handleItemClick = () => {
+    if (onHighlightClick) {
+      onHighlightClick(highlight.id)
+    }
+  }
+  
   const handleLinkClick = (url: string, e: React.MouseEvent) => {
     if (onSelectUrl) {
       e.preventDefault()
@@ -35,7 +43,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
   const sourceLink = getSourceLink()
   
   return (
-    <div ref={itemRef} className={`highlight-item ${isSelected ? 'selected' : ''}`} data-highlight-id={highlight.id}>
+    <div 
+      ref={itemRef} 
+      className={`highlight-item ${isSelected ? 'selected' : ''}`} 
+      data-highlight-id={highlight.id}
+      onClick={handleItemClick}
+      style={{ cursor: onHighlightClick ? 'pointer' : 'default' }}
+    >
       <div className="highlight-quote-icon">
         <FontAwesomeIcon icon={faQuoteLeft} />
       </div>
