@@ -135,7 +135,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
               <label className="setting-label">Friends Highlights</label>
               <div className="setting-control">
                 <ColorPicker
-                  selectedColor={localSettings.highlightColorFriends || '#ff8c00'}
+                  selectedColor={localSettings.highlightColorFriends || '#f97316'}
                   onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColorFriends: color })}
                 />
               </div>
@@ -145,7 +145,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
               <label className="setting-label">Nostrverse Highlights</label>
               <div className="setting-control">
                 <ColorPicker
-                  selectedColor={localSettings.highlightColorNostrverse || '#800080'}
+                  selectedColor={localSettings.highlightColorNostrverse || '#9333ea'}
                   onColorChange={(color) => setLocalSettings({ ...localSettings, highlightColorNostrverse: color })}
                 />
               </div>
