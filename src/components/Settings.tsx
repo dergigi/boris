@@ -24,7 +24,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, isSaving
 
   return (
     <div className="settings-view">
-      <div className="settings-header">
+      <div className="settings-header-bar">
         <h2>Settings</h2>
         <IconButton
           icon={faTimes}
