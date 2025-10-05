@@ -172,17 +172,9 @@ export function applyHighlightsToHTML(html: string, highlights: Highlight[]): st
   const tempDiv = document.createElement('div')
   tempDiv.innerHTML = html
   
-  console.log('🔍 applyHighlightsToHTML:', {
-    htmlLength: html.length,
-    highlightsCount: highlights.length,
-    highlightTexts: highlights.map(h => h.content.slice(0, 50))
-  })
-  
   for (const highlight of highlights) {
     const searchText = highlight.content.trim()
     if (!searchText) continue
-    
-    console.log('🔍 Processing highlight:', searchText.slice(0, 50))
     
     // Collect all text nodes
     const walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, null)
@@ -191,18 +183,9 @@ export function applyHighlightsToHTML(html: string, highlights: Highlight[]): st
     while ((node = walker.nextNode())) textNodes.push(node as Text)
     
     // Try exact match first, then normalized match
-    const found = tryMarkInTextNodes(textNodes, searchText, highlight, false) ||
-                  tryMarkInTextNodes(textNodes, searchText, highlight, true)
-    
-    if (!found) console.log('⚠️ No match found for highlight')
+    tryMarkInTextNodes(textNodes, searchText, highlight, false) ||
+    tryMarkInTextNodes(textNodes, searchText, highlight, true)
   }
   
-  const result = tempDiv.innerHTML
-  console.log('🔍 HTML highlighting complete:', {
-    originalLength: html.length,
-    modifiedLength: result.length,
-    changed: html !== result
-  })
-  
-  return result
+  return tempDiv.innerHTML
 }

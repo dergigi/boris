@@ -30,40 +30,29 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   selectedHighlightId
 }) => {
   const contentRef = useRef<HTMLDivElement>(null)
+  const originalHtmlRef = useRef<string>('')
   
   // Scroll to selected highlight in article when clicked from sidebar
   useEffect(() => {
-    if (!selectedHighlightId || !contentRef.current) {
-      return
-    }
+    if (!selectedHighlightId || !contentRef.current) return
     
-    // Find the mark element with the matching highlight ID
     const markElement = contentRef.current.querySelector(`mark.content-highlight[data-highlight-id="${selectedHighlightId}"]`)
     
     if (markElement) {
-      console.log('📍 Scrolling to highlight in article:', selectedHighlightId.slice(0, 8))
       markElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
       
       // Add pulsing animation after scroll completes
       const htmlElement = markElement as HTMLElement
       setTimeout(() => {
         htmlElement.classList.add('highlight-pulse')
-        
-        setTimeout(() => {
-          htmlElement.classList.remove('highlight-pulse')
-        }, 1500)
-      }, 500) // Delay to let scroll animation complete
-    } else {
-      console.log('⚠️ Could not find mark element for highlight:', selectedHighlightId.slice(0, 8))
+        setTimeout(() => htmlElement.classList.remove('highlight-pulse'), 1500)
+      }, 500)
     }
   }, [selectedHighlightId])
   
   // Filter highlights relevant to the current URL
   const relevantHighlights = useMemo(() => {
-    if (!selectedUrl || highlights.length === 0) {
-      console.log('🔍 No highlights to filter:', { selectedUrl, highlightsCount: highlights.length })
-      return []
-    }
+    if (!selectedUrl || highlights.length === 0) return []
     
     // Normalize URLs for comparison (remove trailing slashes, protocols, www, query params, fragments)
     const normalizeUrl = (url: string) => {
@@ -78,116 +67,83 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }
     
     const normalizedSelected = normalizeUrl(selectedUrl)
-    console.log('🔍 Normalized selected URL:', normalizedSelected)
     
     const filtered = highlights.filter(h => {
-      if (!h.urlReference) {
-        console.log('⚠️ Highlight has no URL reference:', h.id.slice(0, 8))
-        return false
-      }
+      if (!h.urlReference) return false
       
       const normalizedRef = normalizeUrl(h.urlReference)
-      const matches = normalizedSelected === normalizedRef || 
-                     normalizedSelected.includes(normalizedRef) ||
-                     normalizedRef.includes(normalizedSelected)
-      
-      console.log('🔍 URL comparison:', {
-        highlightId: h.id.slice(0, 8),
-        originalRef: h.urlReference,
-        normalizedRef,
-        normalizedSelected,
-        matches
-      })
-      
-      return matches
-    })
-    
-    console.log('🔍 Filtered highlights:', {
-      selectedUrl,
-      totalHighlights: highlights.length,
-      relevantHighlights: filtered.length,
-      highlights: filtered.map(h => ({
-        id: h.id.slice(0, 8),
-        urlRef: h.urlReference,
-        content: h.content.slice(0, 50)
-      }))
+      return normalizedSelected === normalizedRef || 
+             normalizedSelected.includes(normalizedRef) ||
+             normalizedRef.includes(normalizedSelected)
     })
     
     return filtered
   }, [selectedUrl, highlights])
 
+  // Store original HTML when content changes
+  useEffect(() => {
+    if (!contentRef.current) return
+    // Only store if we don't have it yet or content changed
+    if (!originalHtmlRef.current || html) {
+      originalHtmlRef.current = contentRef.current.innerHTML
+    }
+  }, [html, markdown, selectedUrl])
+
   // Apply highlights after DOM is rendered
   useEffect(() => {
     // Skip if no content or underlines are hidden
     if ((!html && !markdown) || !showUnderlines) {
-      console.log('⚠️ Skipping highlight application:', {
-        reason: (!html && !markdown) ? 'no content' : 'underlines hidden',
-        hasHtml: !!html,
-        hasMarkdown: !!markdown
-      })
-      
-      // If underlines are hidden, remove any existing highlights
-      if (!showUnderlines && contentRef.current) {
-        const marks = contentRef.current.querySelectorAll('mark.content-highlight')
-        marks.forEach(mark => {
-          const text = mark.textContent || ''
-          const textNode = document.createTextNode(text)
-          mark.parentNode?.replaceChild(textNode, mark)
-        })
+      // If underlines are hidden, restore original HTML
+      if (!showUnderlines && contentRef.current && originalHtmlRef.current) {
+        contentRef.current.innerHTML = originalHtmlRef.current
       }
-      
       return
     }
     
     // Skip if no relevant highlights
     if (relevantHighlights.length === 0) {
-      console.log('⚠️ No relevant highlights to apply')
+      // Restore original HTML if no highlights
+      if (contentRef.current && originalHtmlRef.current) {
+        contentRef.current.innerHTML = originalHtmlRef.current
+      }
       return
     }
     
-    console.log('🔍 Scheduling highlight application:', {
-      relevantHighlightsCount: relevantHighlights.length,
-      highlights: relevantHighlights.map(h => h.content.slice(0, 50)),
-      hasHtml: !!html,
-      hasMarkdown: !!markdown
-    })
-    
     // Use requestAnimationFrame to ensure DOM is fully rendered
     const rafId = requestAnimationFrame(() => {
-      if (!contentRef.current) {
-        console.log('⚠️ contentRef not available after RAF')
-        return
-      }
+      if (!contentRef.current || !originalHtmlRef.current) return
       
-      console.log('🔍 Applying highlights to rendered DOM')
-      
-      const originalHTML = contentRef.current.innerHTML
-      const highlightedHTML = applyHighlightsToHTML(originalHTML, relevantHighlights)
-      
-      if (originalHTML !== highlightedHTML) {
-        console.log('✅ Applied highlights to DOM')
-        contentRef.current.innerHTML = highlightedHTML
-        
-        // Add click handlers to all highlight marks
-        if (onHighlightClick) {
-          const marks = contentRef.current.querySelectorAll('mark.content-highlight')
-          marks.forEach(mark => {
-            const highlightId = mark.getAttribute('data-highlight-id')
-            if (highlightId) {
-              mark.addEventListener('click', () => {
-                onHighlightClick(highlightId)
-              })
-              ;(mark as HTMLElement).style.cursor = 'pointer'
-            }
-          })
-        }
-      } else {
-        console.log('⚠️ No changes made to DOM')
-      }
+      // Always apply highlights to the ORIGINAL HTML, not already-highlighted content
+      const highlightedHTML = applyHighlightsToHTML(originalHtmlRef.current, relevantHighlights)
+      contentRef.current.innerHTML = highlightedHTML
     })
     
     return () => cancelAnimationFrame(rafId)
-  }, [relevantHighlights, html, markdown, showUnderlines, onHighlightClick])
+  }, [relevantHighlights, html, markdown, showUnderlines])
+
+  // Attach click handlers separately (only when handler changes)
+  useEffect(() => {
+    if (!onHighlightClick || !contentRef.current) return
+    
+    const marks = contentRef.current.querySelectorAll('mark.content-highlight')
+    const handlers = new Map<Element, () => void>()
+    
+    marks.forEach(mark => {
+      const highlightId = mark.getAttribute('data-highlight-id')
+      if (highlightId) {
+        const handler = () => onHighlightClick(highlightId)
+        mark.addEventListener('click', handler)
+        ;(mark as HTMLElement).style.cursor = 'pointer'
+        handlers.set(mark, handler)
+      }
+    })
+    
+    return () => {
+      handlers.forEach((handler, mark) => {
+        mark.removeEventListener('click', handler)
+      })
+    }
+  }, [onHighlightClick, relevantHighlights])
 
   const highlightedMarkdown = useMemo(() => {
     if (!markdown || relevantHighlights.length === 0) return markdown
