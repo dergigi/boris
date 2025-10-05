@@ -28,6 +28,7 @@ interface BookmarksProps {
 const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const { naddr } = useParams<{ naddr?: string }>()
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
+  const [bookmarksLoading, setBookmarksLoading] = useState(true)
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [highlightsLoading, setHighlightsLoading] = useState(true)
   const [selectedUrl, setSelectedUrl] = useState<string | undefined>(undefined)
@@ -102,8 +103,13 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
 
   const handleFetchBookmarks = async () => {
     if (!relayPool || !activeAccount) return
-    const fullAccount = accountManager.getActive()
-    await fetchBookmarks(relayPool, fullAccount || activeAccount, setBookmarks)
+    setBookmarksLoading(true)
+    try {
+      const fullAccount = accountManager.getActive()
+      await fetchBookmarks(relayPool, fullAccount || activeAccount, setBookmarks)
+    } finally {
+      setBookmarksLoading(false)
+    }
   }
 
   const handleFetchHighlights = async () => {
@@ -200,6 +206,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             }}
             onRefresh={handleRefreshBookmarks}
             isRefreshing={isRefreshing}
+            loading={bookmarksLoading}
           />
         </div>
       <div className="pane main">

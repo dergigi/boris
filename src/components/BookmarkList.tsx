@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faBookmark } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faBookmark, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { Bookmark } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
 import { formatDate, renderParsedContent } from '../utils/bookmarkUtils'
@@ -19,6 +19,7 @@ interface BookmarkListProps {
   onOpenSettings: () => void
   onRefresh?: () => void
   isRefreshing?: boolean
+  loading?: boolean
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({
@@ -32,7 +33,8 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   selectedUrl,
   onOpenSettings,
   onRefresh,
-  isRefreshing
+  isRefreshing,
+  loading = false
 }) => {
   if (isCollapsed) {
     // Check if the selected URL is in bookmarks
@@ -68,7 +70,11 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         isRefreshing={isRefreshing}
       />
       
-      {bookmarks.length === 0 ? (
+      {loading ? (
+        <div className="loading">
+          <FontAwesomeIcon icon={faSpinner} spin />
+        </div>
+      ) : bookmarks.length === 0 ? (
         <div className="empty-state">
           <p>No bookmarks found.</p>
           <p>Add bookmarks using your nostr client to see them here.</p>
