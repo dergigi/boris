@@ -40,7 +40,7 @@ export function useArticleLoader({
       setReaderContent(undefined)
       setSelectedUrl(`nostr:${naddr}`)
       setIsCollapsed(true)
-      setIsHighlightsCollapsed(false)
+      // Keep highlights panel collapsed by default - only open on user interaction
       
       try {
         const article = await fetchArticleByNaddr(relayPool, naddr)
