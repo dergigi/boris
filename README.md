@@ -2,7 +2,27 @@
 
 Your reading list for the Nostr world.
 
-Boris turns your Nostr bookmarks into a calm, fast, and focused reading experience. Connect your Nostr account and you’ll get a clean three‑pane reader: bookmarks on the left, the article in the middle, and highlights on the right.
+Boris turns your Nostr bookmarks into a calm, fast, and focused reading experience. Connect your Nostr account and you'll get a clean three‑pane reader: bookmarks on the left, the article in the middle, and highlights on the right.
+
+## The Vision
+
+When I wrote "Purple Text, Orange Highlights" 2.5 years ago, I had a certain interface in mind that would allow the reader to curate, discover, highlight, and provide value to writers and other readers alike. Boris is my attempt to build this interface.
+
+Boris has three "levels" of highlights for each article:
+- user = yellow
+- friends = orange
+- nostrverse = purple
+
+In case it's not self-explanatory:
+- **your highlights** = highlights that the logged-in npub made
+- **friends** = highlights that your friends made, i.e. highlights of the npubs that the logged-in user follows
+- **nostrverse** = all the highlights we can find on all the relays we're connected to
+
+The user can toggle hide/show any of these "levels".
+
+In addition to rendering articles from nostr and the legacy web, Boris can act as a "read it later" app, thanks to the power of nostr bookmarks.
+
+If you bookmark something on nostr, Boris will show it in the bookmarks bar. If said something contains a URL, Boris will extract and render it in a distraction-free and reader-friendly way.
 
 ## What Boris does
 
