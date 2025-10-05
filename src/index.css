@@ -1458,6 +1458,19 @@ body {
   margin-top: 0.25rem;
 }
 
+/* Level-colored quote icon */
+.highlight-item.level-mine .highlight-quote-icon {
+  color: var(--highlight-color-mine, #eab308);
+}
+
+.highlight-item.level-friends .highlight-quote-icon {
+  color: var(--highlight-color-friends, #f97316);
+}
+
+.highlight-item.level-nostrverse .highlight-quote-icon {
+  color: var(--highlight-color-nostrverse, #9333ea);
+}
+
 .highlight-content {
   flex: 1;
   display: flex;
