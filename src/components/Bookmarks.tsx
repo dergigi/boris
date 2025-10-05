@@ -28,7 +28,6 @@ const RELAY_URLS = [
 
 const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
-  const [loading, setLoading] = useState(true)
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [highlightsLoading, setHighlightsLoading] = useState(true)
   const [selectedUrl, setSelectedUrl] = useState<string | undefined>(undefined)
@@ -69,9 +68,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
 
   const handleFetchBookmarks = async () => {
     if (!relayPool || !activeAccount) return
-    const timeoutId = setTimeout(() => setLoading(false), 15000)
     const fullAccount = accountManager.getActive()
-    await fetchBookmarks(relayPool, fullAccount || activeAccount, setBookmarks, setLoading, timeoutId)
+    await fetchBookmarks(relayPool, fullAccount || activeAccount, setBookmarks)
   }
 
   const handleFetchHighlights = async () => {
@@ -130,14 +128,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     } finally {
       setReaderLoading(false)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="bookmarks-container">
-        <div className="loading">Loading bookmarks...</div>
-      </div>
-    )
   }
 
   return (

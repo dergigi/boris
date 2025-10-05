@@ -20,12 +20,9 @@ import { collectBookmarksFromEvents } from './bookmarkProcessing.ts'
 export const fetchBookmarks = async (
   relayPool: RelayPool,
   activeAccount: unknown, // Full account object with extension capabilities
-  setBookmarks: (bookmarks: Bookmark[]) => void,
-  setLoading: (loading: boolean) => void,
-  timeoutId: number
+  setBookmarks: (bookmarks: Bookmark[]) => void
 ) => {
   try {
-    setLoading(true)
     
     if (!isAccountWithExtension(activeAccount)) {
       throw new Error('Invalid account object provided')
@@ -62,7 +59,6 @@ export const fetchBookmarks = async (
     console.log('📋 After deduplication:', bookmarkListEvents.length, 'bookmark events')
     if (bookmarkListEvents.length === 0) {
       setBookmarks([])
-      setLoading(false)
       return
     }
     // Aggregate across events
@@ -139,12 +135,8 @@ export const fetchBookmarks = async (
     }
     
     setBookmarks([bookmark])
-    clearTimeout(timeoutId)
-    setLoading(false)
 
   } catch (error) {
     console.error('Failed to fetch bookmarks:', error)
-    clearTimeout(timeoutId)
-    setLoading(false)
   }
 }
