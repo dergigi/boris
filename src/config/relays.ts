@@ -5,7 +5,7 @@
 
 // All relays including local relay
 export const RELAYS = [
-  'ws://localhost:7777',
+  'ws://localhost:10547',
   'wss://relay.damus.io',
   'wss://nos.lol',
   'wss://relay.nostr.band',
