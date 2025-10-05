@@ -39,11 +39,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
       return
     }
     
-    const timer = setTimeout(() => {
-      onSave(localSettings)
-    }, 500) // Debounce for 500ms
-    
-    return () => clearTimeout(timer)
+    onSave(localSettings)
   }, [localSettings, onSave])
 
   const previewFontFamily = getFontFamily(localSettings.readingFont)
