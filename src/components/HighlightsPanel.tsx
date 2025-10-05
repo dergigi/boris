@@ -60,15 +60,17 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   }, [highlights, selectedUrl])
   
   if (isCollapsed) {
+    const hasHighlights = filteredHighlights.length > 0
+    
     return (
       <div className="highlights-container collapsed">
         <button
           onClick={onToggleCollapse}
-          className="toggle-highlights-btn with-icon"
+          className={`toggle-highlights-btn with-icon ${hasHighlights ? 'has-highlights' : ''}`}
           title="Expand highlights panel"
           aria-label="Expand highlights panel"
         >
-          <FontAwesomeIcon icon={faHighlighter} />
+          <FontAwesomeIcon icon={faHighlighter} className={hasHighlights ? 'glow' : ''} />
           <FontAwesomeIcon icon={faChevronRight} />
         </button>
       </div>
