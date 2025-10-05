@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faRightToBracket, faUser, faGear, faRotate } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -88,7 +88,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           {profileImage ? (
             <img src={profileImage} alt={getUserDisplayName()} />
           ) : (
-            <FontAwesomeIcon icon={faUser} />
+            <FontAwesomeIcon icon={faUserCircle} />
           )}
         </div>
         {activeAccount ? (
