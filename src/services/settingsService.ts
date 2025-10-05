@@ -18,6 +18,10 @@ export interface UserSettings {
   fontSize?: number
   highlightStyle?: 'marker' | 'underline'
   highlightColor?: string
+  // Three-level highlight colors
+  highlightColorNostrverse?: string
+  highlightColorFriends?: string
+  highlightColorMine?: string
 }
 
 export async function loadSettings(

@@ -52,6 +52,11 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
     if (fontKey !== 'system') loadFont(fontKey)
     root.setProperty('--reading-font', getFontFamily(fontKey))
     root.setProperty('--reading-font-size', `${settings.fontSize || 16}px`)
+    
+    // Set highlight colors for three levels
+    root.setProperty('--highlight-color-mine', settings.highlightColorMine || '#eab308')
+    root.setProperty('--highlight-color-friends', settings.highlightColorFriends || '#f97316')
+    root.setProperty('--highlight-color-nostrverse', settings.highlightColorNostrverse || '#9333ea')
   }, [settings])
 
   const saveSettingsWithToast = useCallback(async (newSettings: UserSettings) => {

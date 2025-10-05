@@ -8,6 +8,7 @@ import { Highlight } from '../types/highlights'
 import { BookmarkList } from './BookmarkList'
 import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchHighlights, fetchHighlightsForArticle } from '../services/highlightService'
+import { fetchContacts } from '../services/contactService'
 import ContentPanel from './ContentPanel'
 import { HighlightsPanel } from './HighlightsPanel'
 import { ReadableContent } from '../services/readerService'
@@ -16,7 +17,7 @@ import Toast from './Toast'
 import { useSettings } from '../hooks/useSettings'
 import { useArticleLoader } from '../hooks/useArticleLoader'
 import { loadContent, BookmarkReference } from '../utils/contentLoader'
-import { HighlightMode } from './HighlightsPanel'
+import { HighlightVisibility } from './HighlightsPanel'
 export type ViewMode = 'compact' | 'cards' | 'large'
 
 interface BookmarksProps {
@@ -40,7 +41,12 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const [showSettings, setShowSettings] = useState(false)
   const [currentArticleCoordinate, setCurrentArticleCoordinate] = useState<string | undefined>(undefined)
   const [currentArticleEventId, setCurrentArticleEventId] = useState<string | undefined>(undefined)
-  const [highlightMode, setHighlightMode] = useState<HighlightMode>('others')
+  const [highlightVisibility, setHighlightVisibility] = useState<HighlightVisibility>({
+    nostrverse: true,
+    friends: true,
+    mine: true
+  })
+  const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
   const eventStore = useEventStore()
@@ -72,7 +78,14 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     if (!relayPool || !activeAccount) return
     handleFetchBookmarks()
     handleFetchHighlights()
+    handleFetchContacts()
   }, [relayPool, activeAccount?.pubkey])
+
+  const handleFetchContacts = async () => {
+    if (!relayPool || !activeAccount) return
+    const contacts = await fetchContacts(relayPool, activeAccount.pubkey)
+    setFollowedPubkeys(contacts)
+  }
 
   // Apply UI settings
   useEffect(() => {
@@ -194,8 +207,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
             onRefresh={handleFetchHighlights}
             onHighlightClick={setSelectedHighlightId}
             currentUserPubkey={activeAccount?.pubkey}
-            highlightMode={highlightMode}
-            onHighlightModeChange={setHighlightMode}
+            highlightVisibility={highlightVisibility}
+            onHighlightVisibilityChange={setHighlightVisibility}
+            followedPubkeys={followedPubkeys}
           />
         </div>
       </div>

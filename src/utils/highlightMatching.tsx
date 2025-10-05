@@ -73,11 +73,13 @@ export function applyHighlightsToText(
     
     // Add the highlighted text
     const highlightedText = text.substring(match.startIndex, match.endIndex)
+    const levelClass = match.highlight.level ? ` level-${match.highlight.level}` : ''
     result.push(
       <mark
         key={`highlight-${match.highlight.id}-${match.startIndex}`}
-        className="content-highlight"
+        className={`content-highlight${levelClass}`}
         data-highlight-id={match.highlight.id}
+        data-highlight-level={match.highlight.level || 'nostrverse'}
         title={`Highlighted ${new Date(match.highlight.created_at * 1000).toLocaleDateString()}`}
       >
         {highlightedText}
@@ -101,8 +103,10 @@ const normalizeWhitespace = (str: string) => str.replace(/\s+/g, ' ').trim()
 // Helper to create a mark element for a highlight
 function createMarkElement(highlight: Highlight, matchText: string, highlightStyle: 'marker' | 'underline' = 'marker'): HTMLElement {
   const mark = document.createElement('mark')
-  mark.className = `content-highlight-${highlightStyle}`
+  const levelClass = highlight.level ? ` level-${highlight.level}` : ''
+  mark.className = `content-highlight-${highlightStyle}${levelClass}`
   mark.setAttribute('data-highlight-id', highlight.id)
+  mark.setAttribute('data-highlight-level', highlight.level || 'nostrverse')
   mark.setAttribute('title', `Highlighted ${new Date(highlight.created_at * 1000).toLocaleDateString()}`)
   mark.textContent = matchText
   return mark

@@ -1293,6 +1293,39 @@ body {
   color: #fff;
 }
 
+/* Three-level highlight toggles */
+.highlight-level-toggles {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.highlight-level-toggles .level-toggle-btn {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 0.375rem 0.5rem;
+  border-radius: 3px;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.highlight-level-toggles .level-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.highlight-level-toggles .level-toggle-btn.active {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+}
+
+.highlight-level-toggles .level-toggle-btn:not(.active) {
+  opacity: 0.4;
+}
+
 .refresh-highlights-btn,
 .toggle-underlines-btn,
 .toggle-highlights-btn {
@@ -1555,6 +1588,68 @@ body {
   text-decoration: none;
 }
 
+/* Three-level highlight colors */
+.content-highlight-marker.level-mine,
+.content-highlight.level-mine {
+  background: color-mix(in srgb, var(--highlight-color-mine, #eab308) 35%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--highlight-color-mine, #eab308) 20%, transparent);
+}
+
+.content-highlight-marker.level-mine:hover,
+.content-highlight.level-mine:hover {
+  background: color-mix(in srgb, var(--highlight-color-mine, #eab308) 50%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--highlight-color-mine, #eab308) 30%, transparent);
+}
+
+.content-highlight-marker.level-friends,
+.content-highlight.level-friends {
+  background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 35%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--highlight-color-friends, #f97316) 20%, transparent);
+}
+
+.content-highlight-marker.level-friends:hover,
+.content-highlight.level-friends:hover {
+  background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 50%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--highlight-color-friends, #f97316) 30%, transparent);
+}
+
+.content-highlight-marker.level-nostrverse,
+.content-highlight.level-nostrverse {
+  background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 35%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 20%, transparent);
+}
+
+.content-highlight-marker.level-nostrverse:hover,
+.content-highlight.level-nostrverse:hover {
+  background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 50%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 30%, transparent);
+}
+
+/* Underline styles for three levels */
+.content-highlight-underline.level-mine {
+  text-decoration-color: color-mix(in srgb, var(--highlight-color-mine, #eab308) 80%, transparent);
+}
+
+.content-highlight-underline.level-mine:hover {
+  text-decoration-color: var(--highlight-color-mine, #eab308);
+}
+
+.content-highlight-underline.level-friends {
+  text-decoration-color: color-mix(in srgb, var(--highlight-color-friends, #f97316) 80%, transparent);
+}
+
+.content-highlight-underline.level-friends:hover {
+  text-decoration-color: var(--highlight-color-friends, #f97316);
+}
+
+.content-highlight-underline.level-nostrverse {
+  text-decoration-color: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 80%, transparent);
+}
+
+.content-highlight-underline.level-nostrverse:hover {
+  text-decoration-color: var(--highlight-color-nostrverse, #9333ea);
+}
+
 /* Ensure highlights work in both light and dark mode */
 @media (prefers-color-scheme: light) {
   .content-highlight,
@@ -1575,6 +1670,55 @@ body {
   
   .content-highlight-underline:hover {
     text-decoration-color: rgba(var(--highlight-rgb, 255, 255, 0), 1);
+  }
+  
+  /* Three-level overrides for light mode */
+  .content-highlight-marker.level-mine,
+  .content-highlight.level-mine {
+    background: color-mix(in srgb, var(--highlight-color-mine, #eab308) 40%, transparent);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--highlight-color-mine, #eab308) 15%, transparent);
+  }
+
+  .content-highlight-marker.level-mine:hover,
+  .content-highlight.level-mine:hover {
+    background: color-mix(in srgb, var(--highlight-color-mine, #eab308) 55%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--highlight-color-mine, #eab308) 25%, transparent);
+  }
+
+  .content-highlight-marker.level-friends,
+  .content-highlight.level-friends {
+    background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 40%, transparent);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--highlight-color-friends, #f97316) 15%, transparent);
+  }
+
+  .content-highlight-marker.level-friends:hover,
+  .content-highlight.level-friends:hover {
+    background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 55%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--highlight-color-friends, #f97316) 25%, transparent);
+  }
+
+  .content-highlight-marker.level-nostrverse,
+  .content-highlight.level-nostrverse {
+    background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 40%, transparent);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 15%, transparent);
+  }
+
+  .content-highlight-marker.level-nostrverse:hover,
+  .content-highlight.level-nostrverse:hover {
+    background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 55%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 25%, transparent);
+  }
+
+  .content-highlight-underline.level-mine {
+    text-decoration-color: color-mix(in srgb, var(--highlight-color-mine, #eab308) 90%, transparent);
+  }
+
+  .content-highlight-underline.level-friends {
+    text-decoration-color: color-mix(in srgb, var(--highlight-color-friends, #f97316) 90%, transparent);
+  }
+
+  .content-highlight-underline.level-nostrverse {
+    text-decoration-color: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 90%, transparent);
   }
   
   .highlight-indicator {

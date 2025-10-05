@@ -1,10 +1,14 @@
 import React, { useMemo, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faHighlighter, faEye, faEyeSlash, faRotate, faUser, faUserGroup } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faHighlighter, faEye, faEyeSlash, faRotate, faUser, faUserGroup, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 
-export type HighlightMode = 'mine' | 'others'
+export interface HighlightVisibility {
+  nostrverse: boolean
+  friends: boolean
+  mine: boolean
+}
 
 interface HighlightsPanelProps {
   highlights: Highlight[]
@@ -18,8 +22,9 @@ interface HighlightsPanelProps {
   onRefresh?: () => void
   onHighlightClick?: (highlightId: string) => void
   currentUserPubkey?: string
-  highlightMode?: HighlightMode
-  onHighlightModeChange?: (mode: HighlightMode) => void
+  highlightVisibility?: HighlightVisibility
+  onHighlightVisibilityChange?: (visibility: HighlightVisibility) => void
+  followedPubkeys?: Set<string>
 }
 
 export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
@@ -34,8 +39,9 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   onRefresh,
   onHighlightClick,
   currentUserPubkey,
-  highlightMode = 'others',
-  onHighlightModeChange
+  highlightVisibility = { nostrverse: true, friends: true, mine: true },
+  onHighlightVisibilityChange,
+  followedPubkeys = new Set()
 }) => {
   const [showUnderlines, setShowUnderlines] = useState(true)
   
@@ -45,7 +51,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
     onToggleUnderlines?.(newValue)
   }
   
-  // Filter highlights based on mode and URL
+  // Filter highlights based on visibility levels and URL
   const filteredHighlights = useMemo(() => {
     if (!selectedUrl) return highlights
     
@@ -75,18 +81,25 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
       })
     }
     
-    // Filter by mode (mine vs others)
-    if (!currentUserPubkey) {
-      // If no user is logged in, show all highlights (others mode only makes sense)
-      return urlFiltered
-    }
-    
-    if (highlightMode === 'mine') {
-      return urlFiltered.filter(h => h.pubkey === currentUserPubkey)
-    } else {
-      return urlFiltered.filter(h => h.pubkey !== currentUserPubkey)
-    }
-  }, [highlights, selectedUrl, highlightMode, currentUserPubkey])
+    // Classify and filter by visibility levels
+    return urlFiltered
+      .map(h => {
+        // Classify highlight level
+        let level: 'mine' | 'friends' | 'nostrverse' = 'nostrverse'
+        if (h.pubkey === currentUserPubkey) {
+          level = 'mine'
+        } else if (followedPubkeys.has(h.pubkey)) {
+          level = 'friends'
+        }
+        return { ...h, level }
+      })
+      .filter(h => {
+        // Filter by visibility settings
+        if (h.level === 'mine') return highlightVisibility.mine
+        if (h.level === 'friends') return highlightVisibility.friends
+        return highlightVisibility.nostrverse
+      })
+  }, [highlights, selectedUrl, highlightVisibility, currentUserPubkey, followedPubkeys])
   
   if (isCollapsed) {
     const hasHighlights = filteredHighlights.length > 0
@@ -115,24 +128,46 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           {!loading && <span className="count">({filteredHighlights.length})</span>}
         </div>
         <div className="highlights-actions">
-          {currentUserPubkey && onHighlightModeChange && (
-            <div className="highlight-mode-toggle">
+          {onHighlightVisibilityChange && (
+            <div className="highlight-level-toggles">
               <button
-                onClick={() => onHighlightModeChange('mine')}
-                className={`mode-btn ${highlightMode === 'mine' ? 'active' : ''}`}
-                title="My highlights"
-                aria-label="Show my highlights"
+                onClick={() => onHighlightVisibilityChange({ 
+                  ...highlightVisibility, 
+                  nostrverse: !highlightVisibility.nostrverse 
+                })}
+                className={`level-toggle-btn ${highlightVisibility.nostrverse ? 'active' : ''}`}
+                title="Toggle nostrverse highlights"
+                aria-label="Toggle nostrverse highlights"
+                style={{ color: highlightVisibility.nostrverse ? 'var(--highlight-color-nostrverse, #9333ea)' : undefined }}
               >
-                <FontAwesomeIcon icon={faUser} />
+                <FontAwesomeIcon icon={faGlobe} />
               </button>
               <button
-                onClick={() => onHighlightModeChange('others')}
-                className={`mode-btn ${highlightMode === 'others' ? 'active' : ''}`}
-                title="Other highlights"
-                aria-label="Show highlights from others"
+                onClick={() => onHighlightVisibilityChange({ 
+                  ...highlightVisibility, 
+                  friends: !highlightVisibility.friends 
+                })}
+                className={`level-toggle-btn ${highlightVisibility.friends ? 'active' : ''}`}
+                title="Toggle friends highlights"
+                aria-label="Toggle friends highlights"
+                style={{ color: highlightVisibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined }}
               >
                 <FontAwesomeIcon icon={faUserGroup} />
               </button>
+              {currentUserPubkey && (
+                <button
+                  onClick={() => onHighlightVisibilityChange({ 
+                    ...highlightVisibility, 
+                    mine: !highlightVisibility.mine 
+                  })}
+                  className={`level-toggle-btn ${highlightVisibility.mine ? 'active' : ''}`}
+                  title="Toggle my highlights"
+                  aria-label="Toggle my highlights"
+                  style={{ color: highlightVisibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined }}
+                >
+                  <FontAwesomeIcon icon={faUser} />
+                </button>
+              )}
             </div>
           )}
           {onRefresh && (

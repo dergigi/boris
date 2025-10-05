@@ -1,4 +1,6 @@
 // NIP-84 Highlight types
+export type HighlightLevel = 'nostrverse' | 'friends' | 'mine'
+
 export interface Highlight {
   id: string
   pubkey: string
@@ -11,5 +13,7 @@ export interface Highlight {
   author?: string // 'p' tag with 'author' role
   context?: string // surrounding text context
   comment?: string // optional comment about the highlight
+  // Level classification (computed based on user's context)
+  level?: HighlightLevel
 }
 
