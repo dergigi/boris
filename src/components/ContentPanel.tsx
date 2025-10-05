@@ -182,14 +182,14 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const handleMouseUp = useCallback(() => {
     // Only allow highlight creation if user is logged in
     if (!activeAccount || !relayPool) {
-      highlightButtonRef.current?.hide()
+      highlightButtonRef.current?.clearSelection()
       return
     }
 
     setTimeout(() => {
       const selection = window.getSelection()
       if (!selection || selection.rangeCount === 0) {
-        highlightButtonRef.current?.hide()
+        highlightButtonRef.current?.clearSelection()
         return
       }
 
@@ -197,9 +197,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       const text = selection.toString().trim()
 
       if (text.length > 0 && contentRef.current?.contains(range.commonAncestorContainer)) {
-        highlightButtonRef.current?.updateSelection(text, range.cloneRange())
+        highlightButtonRef.current?.updateSelection(text)
       } else {
-        highlightButtonRef.current?.hide()
+        highlightButtonRef.current?.clearSelection()
       }
     }, 10)
   }, [activeAccount, relayPool])
@@ -220,7 +220,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       )
       
       onShowToast?.('Highlight created successfully!', 'success')
-      highlightButtonRef.current?.hide()
+      highlightButtonRef.current?.clearSelection()
       window.getSelection()?.removeAllRanges()
       
       // Trigger refresh of highlights
@@ -306,7 +306,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       {activeAccount && relayPool && (
         <HighlightButton 
           ref={highlightButtonRef} 
-          onHighlight={handleCreateHighlight} 
+          onHighlight={handleCreateHighlight}
+          highlightColor={highlightColor}
         />
       )}
     </div>

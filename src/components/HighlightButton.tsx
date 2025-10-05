@@ -1,20 +1,21 @@
-import React, { useCallback, useImperativeHandle, useRef } from 'react'
+import React, { useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter } from '@fortawesome/free-solid-svg-icons'
 
 interface HighlightButtonProps {
   onHighlight: (text: string) => void
+  highlightColor?: string
 }
 
 export interface HighlightButtonRef {
-  updateSelection: (text: string, range: Range) => void
-  hide: () => void
+  updateSelection: (text: string) => void
+  clearSelection: () => void
 }
 
 export const HighlightButton = React.forwardRef<HighlightButtonRef, HighlightButtonProps>(
-  ({ onHighlight }, ref) => {
+  ({ onHighlight, highlightColor = '#ffff00' }, ref) => {
     const currentSelectionRef = useRef<string>('')
-    const buttonRef = useRef<HTMLButtonElement>(null)
+    const [hasSelection, setHasSelection] = useState(false)
 
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
@@ -27,59 +28,48 @@ export const HighlightButton = React.forwardRef<HighlightButtonRef, HighlightBut
       [onHighlight]
     )
 
-    const handleMouseDown = useCallback((e: React.MouseEvent) => {
-      // Prevent the button from taking focus away from the text selection
-      e.preventDefault()
-    }, [])
-
-    // Expose methods to update selection and hide button
+    // Expose methods to update selection
     useImperativeHandle(ref, () => ({
-      updateSelection: (text: string, range: Range) => {
+      updateSelection: (text: string) => {
         currentSelectionRef.current = text
-        if (buttonRef.current) {
-          const rect = range.getBoundingClientRect()
-          buttonRef.current.style.display = 'flex'
-          // Use fixed positioning relative to viewport, so it follows the scroll
-          buttonRef.current.style.top = `${rect.bottom + 8}px`
-          buttonRef.current.style.left = `${rect.left + rect.width / 2 - 20}px`
-        }
+        setHasSelection(!!text)
       },
-      hide: () => {
+      clearSelection: () => {
         currentSelectionRef.current = ''
-        if (buttonRef.current) {
-          buttonRef.current.style.display = 'none'
-        }
+        setHasSelection(false)
       }
     }))
 
     return (
       <button
-        ref={buttonRef}
-        className="highlight-create-button"
+        className="highlight-fab"
         style={{
-          display: 'none',
           position: 'fixed',
+          bottom: '32px',
+          right: '32px',
           zIndex: 1000,
-          width: '40px',
-          height: '40px',
+          width: '56px',
+          height: '56px',
           borderRadius: '50%',
-          backgroundColor: 'var(--color-primary, #0066cc)',
-          color: 'white',
-          border: '2px solid white',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
-          cursor: 'pointer',
+          backgroundColor: highlightColor,
+          color: '#000',
+          border: 'none',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+          cursor: hasSelection ? 'pointer' : 'not-allowed',
+          display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transition: 'all 0.2s ease',
+          transition: 'all 0.3s ease',
+          opacity: hasSelection ? 1 : 0.4,
+          transform: hasSelection ? 'scale(1)' : 'scale(0.9)',
           userSelect: 'none'
         }}
         onClick={handleClick}
-        onMouseDown={handleMouseDown}
-        tabIndex={-1}
-        aria-label="Create highlight"
-        title="Create highlight"
+        disabled={!hasSelection}
+        aria-label="Create highlight from selection"
+        title={hasSelection ? 'Create highlight' : 'Select text to highlight'}
       >
-        <FontAwesomeIcon icon={faHighlighter} />
+        <FontAwesomeIcon icon={faHighlighter} size="lg" />
       </button>
     )
   }
