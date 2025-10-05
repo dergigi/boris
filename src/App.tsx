@@ -126,7 +126,7 @@ function App() {
                     relayPool={relayPool}
                     onLogout={() => {
                       if (accountManager) {
-                        accountManager.setActive(null)
+                        accountManager.setActive(undefined as never)
                         localStorage.removeItem('active')
                         console.log('Logged out')
                       }

@@ -64,8 +64,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
       <SidebarHeader 
         onToggleCollapse={onToggleCollapse} 
         onLogout={onLogout}
-        viewMode={viewMode}
-        onViewModeChange={onViewModeChange}
         onOpenSettings={onOpenSettings}
         onRefresh={onRefresh}
         isRefreshing={isRefreshing}

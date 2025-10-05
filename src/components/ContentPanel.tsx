@@ -75,8 +75,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     return sourceHtml
   }, [html, renderedHtml, markdown, relevantHighlights, showUnderlines, highlightStyle])
 
-  // Check if we need to wait for HTML conversion
-  const needsHtmlConversion = markdown && !renderedHtml
 
   // Attach click handlers to highlight marks
   useEffect(() => {
@@ -191,7 +189,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           <div 
             ref={contentRef} 
             className="reader-html" 
-            dangerouslySetInnerHTML={{ __html: finalHtml || html }} 
+            dangerouslySetInnerHTML={{ __html: finalHtml || html || '' }} 
           />
         )
       ) : (
