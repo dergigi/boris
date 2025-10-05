@@ -15,6 +15,13 @@
   
   --reading-font: system-ui, -apple-system, sans-serif;
   --reading-font-size: 16px;
+  /* Layout variables */
+  --sidebar-width: 320px;
+  --sidebar-collapsed-width: 56px;
+  --highlights-width: 360px;
+  --highlights-collapsed-width: 56px;
+  --main-max-width: 900px;
+  --main-horizontal-padding: 1rem;
 }
 
 body {
@@ -24,9 +31,9 @@ body {
 }
 
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: none;
+  margin: 0;
+  padding: 1rem;
 }
 
 .app {
@@ -436,22 +443,22 @@ body {
 /* Three-pane layout */
 .three-pane {
   display: grid;
-  grid-template-columns: 360px 1fr 360px;
+  grid-template-columns: var(--sidebar-width) 1fr var(--highlights-width);
   column-gap: 0;
-  height: calc(100vh - 4rem);
+  height: calc(100vh - 2rem);
   transition: grid-template-columns 0.3s ease;
 }
 
 .three-pane.sidebar-collapsed {
-  grid-template-columns: 60px 1fr 360px;
+  grid-template-columns: var(--sidebar-collapsed-width) 1fr var(--highlights-width);
 }
 
 .three-pane.highlights-collapsed {
-  grid-template-columns: 360px 1fr 60px;
+  grid-template-columns: var(--sidebar-width) 1fr var(--highlights-collapsed-width);
 }
 
 .three-pane.sidebar-collapsed.highlights-collapsed {
-  grid-template-columns: 60px 1fr 60px;
+  grid-template-columns: var(--sidebar-collapsed-width) 1fr var(--highlights-collapsed-width);
 }
 
 .pane.sidebar {
@@ -462,9 +469,9 @@ body {
 .pane.main {
   overflow-y: auto;
   height: 100%;
-  max-width: 900px;
+  max-width: var(--main-max-width);
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 var(--main-horizontal-padding);
   overflow-x: hidden;
   contain: layout style;
 }
@@ -478,7 +485,7 @@ body {
   background: #1a1a1a;
   border: 1px solid #333;
   border-radius: 8px;
-  padding: 1rem;
+  padding: 0.75rem;
   text-align: left;
   overflow: hidden;
   contain: layout style;
