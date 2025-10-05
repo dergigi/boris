@@ -115,6 +115,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
           onLogout={onLogout}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          selectedUrl={selectedUrl}
         />
       </div>
       <div className="pane main">

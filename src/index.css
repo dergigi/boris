@@ -212,6 +212,11 @@ body {
   gap: 0.5rem;
 }
 
+.bookmarks-container.collapsed .toggle-sidebar-btn .glow-blue {
+  color: #646cff;
+  filter: drop-shadow(0 0 4px rgba(100, 108, 255, 0.6));
+}
+
 .user-info {
   margin: 0.5rem 0 0 0;
   color: #888;

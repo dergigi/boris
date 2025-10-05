@@ -15,6 +15,7 @@ interface BookmarkListProps {
   onLogout: () => void
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
+  selectedUrl?: string
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({ 
@@ -24,19 +25,26 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   onToggleCollapse,
   onLogout,
   viewMode,
-  onViewModeChange
+  onViewModeChange,
+  selectedUrl
 }) => {
   if (isCollapsed) {
+    // Check if the selected URL is in bookmarks
+    const isBookmarked = selectedUrl && bookmarks.some(bookmark => {
+      const bookmarkUrl = bookmark.url
+      return bookmarkUrl === selectedUrl || selectedUrl.includes(bookmarkUrl) || bookmarkUrl.includes(selectedUrl)
+    })
+    
     return (
       <div className="bookmarks-container collapsed">
         <button 
           onClick={onToggleCollapse}
-          className="toggle-sidebar-btn with-icon"
+          className={`toggle-sidebar-btn with-icon ${isBookmarked ? 'is-bookmarked' : ''}`}
           title="Expand bookmarks sidebar"
           aria-label="Expand bookmarks sidebar"
         >
           <FontAwesomeIcon icon={faChevronLeft} />
-          <FontAwesomeIcon icon={faBookmark} />
+          <FontAwesomeIcon icon={faBookmark} className={isBookmarked ? 'glow-blue' : ''} />
         </button>
       </div>
     )
