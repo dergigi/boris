@@ -43,16 +43,32 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
 
   // Apply settings to document
   useEffect(() => {
-    const root = document.documentElement.style
-    const fontKey = settings.readingFont || 'system'
-    if (fontKey !== 'system') loadFont(fontKey)
-    root.setProperty('--reading-font', getFontFamily(fontKey))
-    root.setProperty('--reading-font-size', `${settings.fontSize || 18}px`)
+    const applyStyles = async () => {
+      const root = document.documentElement.style
+      const fontKey = settings.readingFont || 'system'
+      
+      console.log('🎨 Applying settings styles:', { fontKey, fontSize: settings.fontSize })
+      
+      // Load font first and wait for it to be ready
+      if (fontKey !== 'system') {
+        console.log('⏳ Waiting for font to load...')
+        await loadFont(fontKey)
+        console.log('✅ Font loaded, applying styles')
+      }
+      
+      // Apply font settings after font is loaded
+      root.setProperty('--reading-font', getFontFamily(fontKey))
+      root.setProperty('--reading-font-size', `${settings.fontSize || 18}px`)
+      
+      // Set highlight colors for three levels
+      root.setProperty('--highlight-color-mine', settings.highlightColorMine || '#ffff00')
+      root.setProperty('--highlight-color-friends', settings.highlightColorFriends || '#f97316')
+      root.setProperty('--highlight-color-nostrverse', settings.highlightColorNostrverse || '#9333ea')
+      
+      console.log('✅ All styles applied')
+    }
     
-    // Set highlight colors for three levels
-    root.setProperty('--highlight-color-mine', settings.highlightColorMine || '#ffff00')
-    root.setProperty('--highlight-color-friends', settings.highlightColorFriends || '#f97316')
-    root.setProperty('--highlight-color-nostrverse', settings.highlightColorNostrverse || '#9333ea')
+    applyStyles()
   }, [settings])
 
   const saveSettingsWithToast = useCallback(async (newSettings: UserSettings) => {

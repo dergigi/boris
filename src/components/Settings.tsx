@@ -39,13 +39,15 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
   useEffect(() => {
     // Preload all fonts for the dropdown
     const fonts = ['inter', 'lora', 'merriweather', 'open-sans', 'roboto', 'source-serif-4', 'crimson-text', 'libre-baskerville', 'pt-serif']
-    fonts.forEach(font => loadFont(font))
+    fonts.forEach(font => {
+      loadFont(font).catch(err => console.warn('Failed to preload font:', font, err))
+    })
   }, [])
 
   useEffect(() => {
     // Load font for preview when it changes
     const fontToLoad = localSettings.readingFont || 'source-serif-4'
-    loadFont(fontToLoad)
+    loadFont(fontToLoad).catch(err => console.warn('Failed to load preview font:', fontToLoad, err))
   }, [localSettings.readingFont])
 
   // Auto-save settings whenever they change (except on initial mount)
