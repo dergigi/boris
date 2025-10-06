@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { faTimes, faList, faThLarge, faImage, faUnderline, faHighlighter, faUndo } from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faList, faThLarge, faImage, faUnderline, faHighlighter, faUndo, faNetworkWired, faUserGroup, faUser } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../services/settingsService'
 import IconButton from './IconButton'
 import ColorPicker from './ColorPicker'
@@ -260,43 +260,31 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
               </label>
             </div>
 
-            <div className="setting-group">
-              <label htmlFor="highlightVisibilityNostrverse" className="checkbox-label">
-                <input
-                  id="highlightVisibilityNostrverse"
-                  type="checkbox"
-                  checked={localSettings.defaultHighlightVisibilityNostrverse !== false}
-                  onChange={(e) => setLocalSettings({ ...localSettings, defaultHighlightVisibilityNostrverse: e.target.checked })}
-                  className="setting-checkbox"
+            <div className="setting-group setting-inline">
+              <label>Default Highlight Visibility</label>
+              <div className="setting-buttons">
+                <IconButton 
+                  icon={faNetworkWired} 
+                  onClick={() => setLocalSettings({ ...localSettings, defaultHighlightVisibilityNostrverse: !(localSettings.defaultHighlightVisibilityNostrverse !== false) })} 
+                  title="Nostrverse highlights" 
+                  ariaLabel="Toggle nostrverse highlights by default" 
+                  variant={(localSettings.defaultHighlightVisibilityNostrverse !== false) ? 'primary' : 'ghost'} 
                 />
-                <span>Show nostrverse highlights by default</span>
-              </label>
-            </div>
-
-            <div className="setting-group">
-              <label htmlFor="highlightVisibilityFriends" className="checkbox-label">
-                <input
-                  id="highlightVisibilityFriends"
-                  type="checkbox"
-                  checked={localSettings.defaultHighlightVisibilityFriends !== false}
-                  onChange={(e) => setLocalSettings({ ...localSettings, defaultHighlightVisibilityFriends: e.target.checked })}
-                  className="setting-checkbox"
+                <IconButton 
+                  icon={faUserGroup} 
+                  onClick={() => setLocalSettings({ ...localSettings, defaultHighlightVisibilityFriends: !(localSettings.defaultHighlightVisibilityFriends !== false) })} 
+                  title="Friends highlights" 
+                  ariaLabel="Toggle friends highlights by default" 
+                  variant={(localSettings.defaultHighlightVisibilityFriends !== false) ? 'primary' : 'ghost'} 
                 />
-                <span>Show friends highlights by default</span>
-              </label>
-            </div>
-
-            <div className="setting-group">
-              <label htmlFor="highlightVisibilityMine" className="checkbox-label">
-                <input
-                  id="highlightVisibilityMine"
-                  type="checkbox"
-                  checked={localSettings.defaultHighlightVisibilityMine !== false}
-                  onChange={(e) => setLocalSettings({ ...localSettings, defaultHighlightVisibilityMine: e.target.checked })}
-                  className="setting-checkbox"
+                <IconButton 
+                  icon={faUser} 
+                  onClick={() => setLocalSettings({ ...localSettings, defaultHighlightVisibilityMine: !(localSettings.defaultHighlightVisibilityMine !== false) })} 
+                  title="My highlights" 
+                  ariaLabel="Toggle my highlights by default" 
+                  variant={(localSettings.defaultHighlightVisibilityMine !== false) ? 'primary' : 'ghost'} 
                 />
-                <span>Show my highlights by default</span>
-              </label>
+              </div>
             </div>
           </div>
       </div>
