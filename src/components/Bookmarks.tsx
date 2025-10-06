@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useLocation } from 'react-router-dom'
 import { Hooks } from 'applesauce-react'
 import { useEventStore } from 'applesauce-react/hooks'
 import { RelayPool } from 'applesauce-relay'
@@ -16,6 +16,7 @@ import Settings from './Settings'
 import Toast from './Toast'
 import { useSettings } from '../hooks/useSettings'
 import { useArticleLoader } from '../hooks/useArticleLoader'
+import { useExternalUrlLoader } from '../hooks/useExternalUrlLoader'
 import { loadContent, BookmarkReference } from '../utils/contentLoader'
 import { HighlightVisibility } from './HighlightsPanel'
 import { HighlightButton, HighlightButtonRef } from './HighlightButton'
@@ -31,6 +32,13 @@ interface BookmarksProps {
 
 const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const { naddr } = useParams<{ naddr?: string }>()
+  const location = useLocation()
+  
+  // Extract external URL from /r/* route
+  const externalUrl = location.pathname.startsWith('/r/') 
+    ? location.pathname.slice(3) // Remove '/r/' prefix
+    : undefined
+    
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [bookmarksLoading, setBookmarksLoading] = useState(true)
   const [highlights, setHighlights] = useState<Highlight[]>([])
@@ -66,7 +74,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     accountManager
   })
 
-  // Load article if naddr is in URL
+  // Load nostr-native article if naddr is in URL
   useArticleLoader({
     naddr,
     relayPool,
@@ -79,6 +87,20 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     setCurrentArticleCoordinate,
     setCurrentArticleEventId,
     setCurrentArticle
+  })
+  
+  // Load external URL if /r/* route is used
+  useExternalUrlLoader({
+    url: externalUrl,
+    relayPool,
+    setSelectedUrl,
+    setReaderContent,
+    setReaderLoading,
+    setIsCollapsed,
+    setHighlights,
+    setHighlightsLoading,
+    setCurrentArticleCoordinate,
+    setCurrentArticleEventId
   })
 
   // Load initial data on login

@@ -176,6 +176,70 @@ export const fetchHighlightsForArticle = async (
 }
 
 /**
+ * Fetches highlights for a specific URL
+ * @param relayPool - The relay pool to query
+ * @param url - The external URL to find highlights for
+ */
+export const fetchHighlightsForUrl = async (
+  relayPool: RelayPool,
+  url: string
+): Promise<Highlight[]> => {
+  try {
+    console.log('🔍 Fetching highlights (kind 9802) for URL:', url)
+    
+    const seenIds = new Set<string>()
+    const rawEvents = await lastValueFrom(
+      relayPool
+        .req(RELAYS, { kinds: [9802], '#r': [url] })
+        .pipe(
+          onlyEvents(),
+          tap((event: NostrEvent) => {
+            seenIds.add(event.id)
+          }),
+          completeOnEose(),
+          takeUntil(timer(10000)),
+          toArray()
+        )
+    )
+    
+    console.log('📊 Highlights for URL:', rawEvents.length)
+    
+    const uniqueEvents = dedupeHighlights(rawEvents)
+    const highlights: Highlight[] = uniqueEvents.map((event: NostrEvent) => {
+      const highlightText = getHighlightText(event)
+      const context = getHighlightContext(event)
+      const comment = getHighlightComment(event)
+      const sourceEventPointer = getHighlightSourceEventPointer(event)
+      const sourceAddressPointer = getHighlightSourceAddressPointer(event)
+      const sourceUrl = getHighlightSourceUrl(event)
+      const attributions = getHighlightAttributions(event)
+      
+      const author = attributions.find(a => a.role === 'author')?.pubkey
+      const eventReference = sourceEventPointer?.id || 
+        (sourceAddressPointer ? `${sourceAddressPointer.kind}:${sourceAddressPointer.pubkey}:${sourceAddressPointer.identifier}` : undefined)
+      
+      return {
+        id: event.id,
+        pubkey: event.pubkey,
+        created_at: event.created_at,
+        content: highlightText,
+        tags: event.tags,
+        eventReference,
+        urlReference: sourceUrl,
+        author,
+        context,
+        comment
+      }
+    })
+    
+    return highlights.sort((a, b) => b.created_at - a.created_at)
+  } catch (error) {
+    console.error('Failed to fetch highlights for URL:', error)
+    return []
+  }
+}
+
+/**
  * Fetches highlights created by a specific user
  * @param relayPool - The relay pool to query
  * @param pubkey - The user's public key
