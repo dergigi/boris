@@ -15,6 +15,7 @@ export const RELAYS = [
   'wss://relay.current.fyi',
   'wss://nostr-pub.wellorder.net',
   'wss://purplepag.es',
-  'wss://relay.primal.net'
+  'wss://relay.primal.net',
+  'wss://proxy.nostr-relay.app/5d0d38afc49c4b84ca0da951a336affa18438efed302aeedfa92eb8b0d3fcb87'
 ]
 
