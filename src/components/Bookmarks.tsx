@@ -125,6 +125,12 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   useEffect(() => {
     if (settings.defaultViewMode) setViewMode(settings.defaultViewMode)
     if (settings.showHighlights !== undefined) setShowHighlights(settings.showHighlights)
+    // Apply default highlight visibility settings
+    setHighlightVisibility({
+      nostrverse: settings.defaultHighlightVisibilityNostrverse !== false,
+      friends: settings.defaultHighlightVisibilityFriends !== false,
+      mine: settings.defaultHighlightVisibilityMine !== false
+    })
     // Always start with both panels collapsed on initial load
     // Don't apply saved collapse settings on initial load - let user control them
   }, [settings])

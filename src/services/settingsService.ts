@@ -22,6 +22,10 @@ export interface UserSettings {
   highlightColorNostrverse?: string
   highlightColorFriends?: string
   highlightColorMine?: string
+  // Default highlight visibility toggles
+  defaultHighlightVisibilityNostrverse?: boolean
+  defaultHighlightVisibilityFriends?: boolean
+  defaultHighlightVisibilityMine?: boolean
 }
 
 export async function loadSettings(

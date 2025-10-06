@@ -20,6 +20,9 @@ const DEFAULT_SETTINGS: UserSettings = {
   highlightColorNostrverse: '#9333ea',
   highlightColorFriends: '#f97316',
   highlightColorMine: '#ffff00',
+  defaultHighlightVisibilityNostrverse: true,
+  defaultHighlightVisibilityFriends: true,
+  defaultHighlightVisibilityMine: true,
 }
 
 interface SettingsProps {
@@ -254,6 +257,45 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
                   className="setting-checkbox"
                 />
                 <span>Start with highlights panel collapsed</span>
+              </label>
+            </div>
+
+            <div className="setting-group">
+              <label htmlFor="highlightVisibilityNostrverse" className="checkbox-label">
+                <input
+                  id="highlightVisibilityNostrverse"
+                  type="checkbox"
+                  checked={localSettings.defaultHighlightVisibilityNostrverse !== false}
+                  onChange={(e) => setLocalSettings({ ...localSettings, defaultHighlightVisibilityNostrverse: e.target.checked })}
+                  className="setting-checkbox"
+                />
+                <span>Show nostrverse highlights by default</span>
+              </label>
+            </div>
+
+            <div className="setting-group">
+              <label htmlFor="highlightVisibilityFriends" className="checkbox-label">
+                <input
+                  id="highlightVisibilityFriends"
+                  type="checkbox"
+                  checked={localSettings.defaultHighlightVisibilityFriends !== false}
+                  onChange={(e) => setLocalSettings({ ...localSettings, defaultHighlightVisibilityFriends: e.target.checked })}
+                  className="setting-checkbox"
+                />
+                <span>Show friends highlights by default</span>
+              </label>
+            </div>
+
+            <div className="setting-group">
+              <label htmlFor="highlightVisibilityMine" className="checkbox-label">
+                <input
+                  id="highlightVisibilityMine"
+                  type="checkbox"
+                  checked={localSettings.defaultHighlightVisibilityMine !== false}
+                  onChange={(e) => setLocalSettings({ ...localSettings, defaultHighlightVisibilityMine: e.target.checked })}
+                  className="setting-checkbox"
+                />
+                <span>Show my highlights by default</span>
               </label>
             </div>
           </div>
