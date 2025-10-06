@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faHighlighter, faEye, faEyeSlash, faRotate, faUser, faUserGroup, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faHighlighter, faEye, faEyeSlash, faRotate, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 
@@ -136,7 +136,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
                   aria-label="Toggle nostrverse highlights"
                   style={{ color: highlightVisibility.nostrverse ? 'var(--highlight-color-nostrverse, #9333ea)' : undefined }}
                 >
-                  <FontAwesomeIcon icon={faGlobe} />
+                  <FontAwesomeIcon icon={faNetworkWired} />
                 </button>
                 <button
                   onClick={() => onHighlightVisibilityChange({ 
