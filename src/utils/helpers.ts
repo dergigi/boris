@@ -13,7 +13,10 @@ export interface UrlClassification {
   buttonText: string
 }
 
-export const classifyUrl = (url: string): UrlClassification => {
+export const classifyUrl = (url: string | undefined): UrlClassification => {
+  if (!url) {
+    return { type: 'article', buttonText: 'READ NOW' }
+  }
   const urlLower = url.toLowerCase()
   
   // Check for YouTube

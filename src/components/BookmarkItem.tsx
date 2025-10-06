@@ -24,8 +24,15 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
 
   const short = (v: string) => `${v.slice(0, 8)}...${v.slice(-8)}`
   
-  // Extract URLs from bookmark content
-  const extractedUrls = extractUrlsFromContent(bookmark.content)
+  // For web bookmarks (kind:39701), URL is stored in the 'd' tag
+  const isWebBookmark = bookmark.kind === 39701
+  const webBookmarkUrl = isWebBookmark ? bookmark.tags.find(t => t[0] === 'd')?.[1] : null
+  
+  // Extract URLs from bookmark content (for regular bookmarks)
+  // For web bookmarks, ensure URL has protocol
+  const extractedUrls = webBookmarkUrl 
+    ? [webBookmarkUrl.startsWith('http') ? webBookmarkUrl : `https://${webBookmarkUrl}`] 
+    : extractUrlsFromContent(bookmark.content)
   const hasUrls = extractedUrls.length > 0
   const firstUrl = hasUrls ? extractedUrls[0] : null
   const firstUrlClassification = firstUrl ? classifyUrl(firstUrl) : null
