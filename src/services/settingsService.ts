@@ -32,6 +32,32 @@ export async function loadSettings(
 ): Promise<UserSettings | null> {
   console.log('⚙️ Loading settings from nostr...', { pubkey: pubkey.slice(0, 8) + '...', relays })
   
+  // First, check if we already have settings in the local event store
+  try {
+    const localEvent = await firstValueFrom(
+      eventStore.replaceable(APP_DATA_KIND, pubkey, SETTINGS_IDENTIFIER)
+    )
+    if (localEvent) {
+      const content = getAppDataContent<UserSettings>(localEvent)
+      console.log('✅ Settings loaded from local store (cached):', content)
+      
+      // Still fetch from relays in the background to get any updates
+      relayPool
+        .subscription(relays, {
+          kinds: [APP_DATA_KIND],
+          authors: [pubkey],
+          '#d': [SETTINGS_IDENTIFIER]
+        })
+        .pipe(onlyEvents(), mapEventsToStore(eventStore))
+        .subscribe()
+      
+      return content || null
+    }
+  } catch (err) {
+    console.log('📭 No cached settings found, fetching from relays...')
+  }
+  
+  // If not in local store, fetch from relays
   return new Promise((resolve) => {
     let hasResolved = false
     const timeout = setTimeout(() => {
@@ -60,7 +86,7 @@ export async function loadSettings(
               )
               if (event) {
                 const content = getAppDataContent<UserSettings>(event)
-                console.log('✅ Settings loaded from nostr:', content)
+                console.log('✅ Settings loaded from relays:', content)
                 resolve(content || null)
               } else {
                 console.log('📭 No settings event found - using defaults')
