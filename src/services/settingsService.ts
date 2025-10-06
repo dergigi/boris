@@ -30,10 +30,13 @@ export async function loadSettings(
   pubkey: string,
   relays: string[]
 ): Promise<UserSettings | null> {
+  console.log('⚙️ Loading settings from nostr...', { pubkey: pubkey.slice(0, 8) + '...', relays })
+  
   return new Promise((resolve) => {
     let hasResolved = false
     const timeout = setTimeout(() => {
       if (!hasResolved) {
+        console.warn('⚠️ Settings load timeout - no settings event found')
         hasResolved = true
         resolve(null)
       }
@@ -57,16 +60,20 @@ export async function loadSettings(
               )
               if (event) {
                 const content = getAppDataContent<UserSettings>(event)
+                console.log('✅ Settings loaded from nostr:', content)
                 resolve(content || null)
               } else {
+                console.log('📭 No settings event found - using defaults')
                 resolve(null)
               }
-            } catch {
+            } catch (err) {
+              console.error('❌ Error loading settings:', err)
               resolve(null)
             }
           }
         },
-        error: () => {
+        error: (err) => {
+          console.error('❌ Settings subscription error:', err)
           clearTimeout(timeout)
           if (!hasResolved) {
             hasResolved = true
@@ -88,11 +95,17 @@ export async function saveSettings(
   settings: UserSettings,
   relays: string[]
 ): Promise<void> {
+  console.log('💾 Saving settings to nostr:', settings)
+  
   const draft = await factory.create(AppDataBlueprint, SETTINGS_IDENTIFIER, settings, false)
   const signed = await factory.sign(draft)
   
+  console.log('📤 Publishing settings event:', signed.id, 'to', relays.length, 'relays')
+  
   eventStore.add(signed)
   await relayPool.publish(relays, signed)
+  
+  console.log('✅ Settings published successfully')
 }
 
 export function watchSettings(
