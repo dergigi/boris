@@ -8,32 +8,45 @@ import { RELAYS } from '../config/relays'
 
 /**
  * Creates and publishes a highlight event (NIP-84)
+ * Supports both nostr-native articles and external URLs
  */
 export async function createHighlight(
   selectedText: string,
-  article: NostrEvent | null,
+  source: NostrEvent | string,
   account: IAccount,
   relayPool: RelayPool,
+  contentForContext?: string,
   comment?: string
 ): Promise<void> {
-  if (!selectedText || !article) {
+  if (!selectedText || !source) {
     throw new Error('Missing required data to create highlight')
   }
 
   // Create EventFactory with the account as signer
   const factory = new EventFactory({ signer: account })
 
-  // Parse article coordinate to get address pointer
-  const addressPointer = parseArticleCoordinate(article)
+  let blueprintSource: NostrEvent | AddressPointer | string
+  let context: string | undefined
 
-  // Extract context (previous and next sentences from the same paragraph)
-  const context = extractContext(selectedText, article.content)
+  // Handle NostrEvent (article) source
+  if (typeof source === 'object' && 'kind' in source) {
+    blueprintSource = parseArticleCoordinate(source)
+    context = extractContext(selectedText, source.content)
+  } 
+  // Handle URL string source
+  else {
+    blueprintSource = source
+    // Try to extract context from provided content if available
+    if (contentForContext) {
+      context = extractContext(selectedText, contentForContext)
+    }
+  }
 
   // Create highlight event using the blueprint
   const highlightEvent = await factory.create(
     HighlightBlueprint,
     selectedText,
-    addressPointer,
+    blueprintSource,
     context ? { comment, context } : comment ? { comment } : undefined
   )
 

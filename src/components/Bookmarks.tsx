@@ -7,7 +7,7 @@ import { Bookmark } from '../types/bookmarks'
 import { Highlight } from '../types/highlights'
 import { BookmarkList } from './BookmarkList'
 import { fetchBookmarks } from '../services/bookmarkService'
-import { fetchHighlights, fetchHighlightsForArticle } from '../services/highlightService'
+import { fetchHighlights, fetchHighlightsForArticle, fetchHighlightsForUrl } from '../services/highlightService'
 import { fetchContacts } from '../services/contactService'
 import ContentPanel from './ContentPanel'
 import { HighlightsPanel } from './HighlightsPanel'
@@ -225,15 +225,23 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
 
   const handleHighlightCreated = async () => {
     // Refresh highlights after creating a new one
-    if (!relayPool || !currentArticleCoordinate) return
+    if (!relayPool) return
     
     try {
-      const newHighlights = await fetchHighlightsForArticle(
-        relayPool,
-        currentArticleCoordinate,
-        currentArticleEventId
-      )
-      setHighlights(newHighlights)
+      // Refresh based on what we're currently viewing
+      if (currentArticleCoordinate) {
+        // Viewing a nostr article - fetch by article coordinate
+        const newHighlights = await fetchHighlightsForArticle(
+          relayPool,
+          currentArticleCoordinate,
+          currentArticleEventId
+        )
+        setHighlights(newHighlights)
+      } else if (selectedUrl && !selectedUrl.startsWith('nostr:')) {
+        // Viewing an external URL - fetch by URL
+        const newHighlights = await fetchHighlightsForUrl(relayPool, selectedUrl)
+        setHighlights(newHighlights)
+      }
     } catch (err) {
       console.error('Failed to refresh highlights:', err)
     }
@@ -248,17 +256,32 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   }, [])
 
   const handleCreateHighlight = useCallback(async (text: string) => {
-    if (!activeAccount || !relayPool || !currentArticle) {
+    if (!activeAccount || !relayPool) {
       console.error('Missing requirements for highlight creation')
       return
     }
 
+    // Need either a nostr article or an external URL
+    if (!currentArticle && !selectedUrl) {
+      console.error('No source available for highlight creation')
+      return
+    }
+
     try {
+      // Determine the source: prefer currentArticle (for nostr content), fallback to selectedUrl (for external URLs)
+      const source = currentArticle || selectedUrl!
+      
+      // For context extraction, use article content or reader content
+      const contentForContext = currentArticle 
+        ? currentArticle.content 
+        : readerContent?.markdown || readerContent?.html
+      
       await createHighlight(
         text,
-        currentArticle,
+        source,
         activeAccount,
-        relayPool
+        relayPool,
+        contentForContext
       )
       
       console.log('✅ Highlight created successfully!')
@@ -269,7 +292,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     } catch (error) {
       console.error('Failed to create highlight:', error)
     }
-  }, [activeAccount, relayPool, currentArticle, handleHighlightCreated])
+  }, [activeAccount, relayPool, currentArticle, selectedUrl, readerContent, handleHighlightCreated])
 
   return (
     <>
