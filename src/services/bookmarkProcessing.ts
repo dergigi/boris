@@ -33,6 +33,23 @@ export async function collectBookmarksFromEvents(
     if (!latestContent && evt.content && !Helpers.hasHiddenContent(evt)) latestContent = evt.content
     if (Array.isArray(evt.tags)) allTags = allTags.concat(evt.tags)
 
+    // Handle web bookmarks (kind:39701) as individual bookmarks
+    if (evt.kind === 39701) {
+      publicItemsAll.push({
+        id: evt.id,
+        content: evt.content || '',
+        created_at: evt.created_at || Math.floor(Date.now() / 1000),
+        pubkey: evt.pubkey,
+        kind: evt.kind,
+        tags: evt.tags || [],
+        parsedContent: undefined,
+        type: 'web' as const,
+        isPrivate: false,
+        added_at: evt.created_at || Math.floor(Date.now() / 1000)
+      })
+      continue
+    }
+
     const pub = Helpers.getPublicBookmarks(evt)
     publicItemsAll.push(...processApplesauceBookmarks(pub, activeAccount, false))
 

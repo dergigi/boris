@@ -37,7 +37,7 @@ export interface IndividualBookmark {
   tags: string[][]
   parsedContent?: ParsedContent
   author?: string
-  type: 'event' | 'article'
+  type: 'event' | 'article' | 'web'
   isPrivate?: boolean
   encryptedContent?: string
   // When the item was added to the bookmark list (synthetic, for sorting)

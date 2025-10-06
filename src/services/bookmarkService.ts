@@ -29,11 +29,11 @@ export const fetchBookmarks = async (
     }
     // Get relay URLs from the pool
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-    // Fetch bookmark events - NIP-51 standards and legacy formats
+    // Fetch bookmark events - NIP-51 standards, legacy formats, and web bookmarks (NIP-B0)
     console.log('🔍 Fetching bookmark events from relays:', relayUrls)
     const rawEvents = await lastValueFrom(
       relayPool
-        .req(relayUrls, { kinds: [10003, 30003, 30001], authors: [activeAccount.pubkey] })
+        .req(relayUrls, { kinds: [10003, 30003, 30001, 39701], authors: [activeAccount.pubkey] })
         .pipe(completeOnEose(), takeUntil(timer(20000)), toArray())
     )
     console.log('📊 Raw events fetched:', rawEvents.length, 'events')

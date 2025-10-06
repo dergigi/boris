@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookmark, faUserLock } from '@fortawesome/free-solid-svg-icons'
+import { faBookmark, faUserLock, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
@@ -27,7 +27,8 @@ export const CompactView: React.FC<CompactViewProps> = ({
   firstUrlClassification
 }) => {
   const isArticle = bookmark.kind === 30023
-  const isClickable = hasUrls || isArticle
+  const isWebBookmark = bookmark.kind === 39701
+  const isClickable = hasUrls || isArticle || isWebBookmark
   
   const handleCompactClick = () => {
     if (!onSelectUrl) return
@@ -48,7 +49,12 @@ export const CompactView: React.FC<CompactViewProps> = ({
         tabIndex={isClickable ? 0 : undefined}
       >
         <span className="bookmark-type-compact">
-          {bookmark.isPrivate ? (
+          {isWebBookmark ? (
+            <span className="fa-layers fa-fw">
+              <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
+              <FontAwesomeIcon icon={faGlobe} className="bookmark-visibility public" transform="shrink-8 down-2" />
+            </span>
+          ) : bookmark.isPrivate ? (
             <>
               <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
               <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />

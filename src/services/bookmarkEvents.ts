@@ -15,6 +15,9 @@ export function dedupeNip51Events(events: NostrEvent[]): NostrEvent[] {
   }
   const unique = Array.from(byId.values())
 
+  // Separate web bookmarks (kind:39701) from list-based bookmarks
+  const webBookmarks = unique.filter(e => e.kind === 39701)
+
   const bookmarkLists = unique
     .filter(e => e.kind === 10003 || e.kind === 30001)
     .sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
@@ -33,6 +36,8 @@ export function dedupeNip51Events(events: NostrEvent[]): NostrEvent[] {
   const out: NostrEvent[] = []
   if (latestBookmarkList) out.push(latestBookmarkList)
   out.push(...setsAndNamedLists)
+  // Add web bookmarks as individual events
+  out.push(...webBookmarks)
   return out
 }
 

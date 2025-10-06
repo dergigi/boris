@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookmark, faUserLock, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
+import { faBookmark, faUserLock, faChevronDown, faChevronUp, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate, renderParsedContent } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
@@ -42,6 +42,7 @@ export const CardView: React.FC<CardViewProps> = ({
   const contentLength = (bookmark.content || '').length
   const shouldTruncate = !expanded && contentLength > 210
   const isArticle = bookmark.kind === 30023
+  const isWebBookmark = bookmark.kind === 39701
 
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
@@ -54,7 +55,12 @@ export const CardView: React.FC<CardViewProps> = ({
       )}
       <div className="bookmark-header">
         <span className="bookmark-type">
-          {bookmark.isPrivate ? (
+          {isWebBookmark ? (
+            <span className="fa-layers fa-fw">
+              <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
+              <FontAwesomeIcon icon={faGlobe} className="bookmark-visibility public" transform="shrink-8 down-2" />
+            </span>
+          ) : bookmark.isPrivate ? (
             <>
               <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
               <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />
