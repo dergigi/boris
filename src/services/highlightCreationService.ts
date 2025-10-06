@@ -34,6 +34,14 @@ export async function createHighlight(
     comment ? { comment } : undefined
   )
 
+  // Update the alt tag to identify Boris as the creator
+  const altTagIndex = highlightEvent.tags.findIndex(tag => tag[0] === 'alt')
+  if (altTagIndex !== -1) {
+    highlightEvent.tags[altTagIndex] = ['alt', 'Highlight created by Boris. readwithboris.com']
+  } else {
+    highlightEvent.tags.push(['alt', 'Highlight created by Boris. readwithboris.com'])
+  }
+
   // Sign the event
   const signedEvent = await factory.sign(highlightEvent)
 
