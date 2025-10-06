@@ -58,10 +58,17 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   
   // Filter highlights by URL and visibility settings
   const relevantHighlights = useMemo(() => {
+    console.log('🔍 ContentPanel: Processing highlights', {
+      totalHighlights: highlights.length,
+      selectedUrl,
+      showHighlights
+    })
+    
     const urlFiltered = filterHighlightsByUrl(highlights, selectedUrl)
+    console.log('📌 URL filtered highlights:', urlFiltered.length)
     
     // Apply visibility filtering
-    return urlFiltered
+    const filtered = urlFiltered
       .map(h => {
         // Classify highlight level
         let level: 'mine' | 'friends' | 'nostrverse' = 'nostrverse'
@@ -78,7 +85,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         if (h.level === 'friends') return highlightVisibility.friends
         return highlightVisibility.nostrverse
       })
-  }, [selectedUrl, highlights, highlightVisibility, currentUserPubkey, followedPubkeys])
+      
+    console.log('✅ Relevant highlights after filtering:', filtered.length, filtered.map(h => h.content.substring(0, 30)))
+    return filtered
+  }, [selectedUrl, highlights, highlightVisibility, currentUserPubkey, followedPubkeys, showHighlights])
 
   // Convert markdown to HTML when markdown content changes
   useEffect(() => {
@@ -87,10 +97,16 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       return
     }
 
+    console.log('📝 Converting markdown to HTML...')
+    
     // Use requestAnimationFrame to ensure ReactMarkdown has rendered
     const rafId = requestAnimationFrame(() => {
       if (markdownPreviewRef.current) {
-        setRenderedHtml(markdownPreviewRef.current.innerHTML)
+        const html = markdownPreviewRef.current.innerHTML
+        console.log('✅ Markdown converted to HTML:', html.length, 'chars')
+        setRenderedHtml(html)
+      } else {
+        console.warn('⚠️ markdownPreviewRef.current is null')
       }
     })
 
@@ -100,13 +116,30 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Prepare the final HTML with highlights applied
   const finalHtml = useMemo(() => {
     const sourceHtml = markdown ? renderedHtml : html
-    if (!sourceHtml) return ''
+    
+    console.log('🎨 Preparing final HTML:', {
+      hasMarkdown: !!markdown,
+      hasHtml: !!html,
+      renderedHtmlLength: renderedHtml.length,
+      sourceHtmlLength: sourceHtml?.length || 0,
+      showHighlights,
+      relevantHighlightsCount: relevantHighlights.length
+    })
+    
+    if (!sourceHtml) {
+      console.warn('⚠️ No source HTML available')
+      return ''
+    }
     
     // Apply highlights if we have them and highlights are enabled
     if (showHighlights && relevantHighlights.length > 0) {
-      return applyHighlightsToHTML(sourceHtml, relevantHighlights, highlightStyle)
+      console.log('✨ Applying', relevantHighlights.length, 'highlights to HTML')
+      const highlightedHtml = applyHighlightsToHTML(sourceHtml, relevantHighlights, highlightStyle)
+      console.log('✅ Highlights applied, result length:', highlightedHtml.length)
+      return highlightedHtml
     }
     
+    console.log('📄 Returning source HTML without highlights')
     return sourceHtml
   }, [html, renderedHtml, markdown, relevantHighlights, showHighlights, highlightStyle])
 
@@ -224,7 +257,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       />
       {markdown || html ? (
         markdown ? (
-          finalHtml ? (
+          // For markdown, always use finalHtml once it's ready to ensure highlights are applied
+          renderedHtml && finalHtml ? (
             <div 
               ref={contentRef} 
               className="reader-markdown" 
@@ -232,17 +266,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               onMouseUp={handleMouseUp}
             />
           ) : (
-            <div 
-              ref={contentRef} 
-              className="reader-markdown"
-              onMouseUp={handleMouseUp}
-            >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {markdown}
-              </ReactMarkdown>
+            // Show loading state while markdown is being converted to HTML
+            <div className="reader-markdown">
+              <div className="loading-spinner">
+                <FontAwesomeIcon icon={faSpinner} spin size="sm" />
+              </div>
             </div>
           )
         ) : (
+          // For HTML, use finalHtml directly
           <div 
             ref={contentRef} 
             className="reader-html" 
