@@ -5,10 +5,21 @@ import { IAccount } from 'applesauce-accounts'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
 import { RELAYS } from '../config/relays'
+import { Highlight } from '../types/highlights'
+import {
+  getHighlightText,
+  getHighlightContext,
+  getHighlightComment,
+  getHighlightSourceEventPointer,
+  getHighlightSourceAddressPointer,
+  getHighlightSourceUrl,
+  getHighlightAttributions
+} from 'applesauce-core/helpers'
 
 /**
  * Creates and publishes a highlight event (NIP-84)
  * Supports both nostr-native articles and external URLs
+ * Returns the signed event for immediate UI updates
  */
 export async function createHighlight(
   selectedText: string,
@@ -17,7 +28,7 @@ export async function createHighlight(
   relayPool: RelayPool,
   contentForContext?: string,
   comment?: string
-): Promise<void> {
+): Promise<NostrEvent> {
   if (!selectedText || !source) {
     throw new Error('Missing required data to create highlight')
   }
@@ -65,6 +76,9 @@ export async function createHighlight(
   await relayPool.publish(RELAYS, signedEvent)
   
   console.log('✅ Highlight published to', RELAYS.length, 'relays (including local):', signedEvent)
+  
+  // Return the signed event for immediate UI updates
+  return signedEvent
 }
 
 /**
@@ -157,5 +171,35 @@ function extractContext(selectedText: string, articleContent: string): string | 
 
   // Only return context if we have more than just the selected sentence
   return contextParts.length > 1 ? contextParts.join(' ') : undefined
+}
+
+/**
+ * Converts a NostrEvent to a Highlight object for immediate UI display
+ */
+export function eventToHighlight(event: NostrEvent): Highlight {
+  const highlightText = getHighlightText(event)
+  const context = getHighlightContext(event)
+  const comment = getHighlightComment(event)
+  const sourceEventPointer = getHighlightSourceEventPointer(event)
+  const sourceAddressPointer = getHighlightSourceAddressPointer(event)
+  const sourceUrl = getHighlightSourceUrl(event)
+  const attributions = getHighlightAttributions(event)
+  
+  const author = attributions.find(a => a.role === 'author')?.pubkey
+  const eventReference = sourceEventPointer?.id || 
+    (sourceAddressPointer ? `${sourceAddressPointer.kind}:${sourceAddressPointer.pubkey}:${sourceAddressPointer.identifier}` : undefined)
+  
+  return {
+    id: event.id,
+    pubkey: event.pubkey,
+    created_at: event.created_at,
+    content: highlightText,
+    tags: event.tags,
+    eventReference,
+    urlReference: sourceUrl,
+    author,
+    context,
+    comment
+  }
 }
 

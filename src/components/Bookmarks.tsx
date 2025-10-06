@@ -7,7 +7,7 @@ import { Bookmark } from '../types/bookmarks'
 import { Highlight } from '../types/highlights'
 import { BookmarkList } from './BookmarkList'
 import { fetchBookmarks } from '../services/bookmarkService'
-import { fetchHighlights, fetchHighlightsForArticle, fetchHighlightsForUrl } from '../services/highlightService'
+import { fetchHighlights, fetchHighlightsForArticle } from '../services/highlightService'
 import { fetchContacts } from '../services/contactService'
 import ContentPanel from './ContentPanel'
 import { HighlightsPanel } from './HighlightsPanel'
@@ -20,7 +20,7 @@ import { useExternalUrlLoader } from '../hooks/useExternalUrlLoader'
 import { loadContent, BookmarkReference } from '../utils/contentLoader'
 import { HighlightVisibility } from './HighlightsPanel'
 import { HighlightButton, HighlightButtonRef } from './HighlightButton'
-import { createHighlight } from '../services/highlightCreationService'
+import { createHighlight, eventToHighlight } from '../services/highlightCreationService'
 import { useRef, useCallback } from 'react'
 import { NostrEvent } from 'nostr-tools'
 export type ViewMode = 'compact' | 'cards' | 'large'
@@ -223,30 +223,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
   }
 
-  const handleHighlightCreated = async () => {
-    // Refresh highlights after creating a new one
-    if (!relayPool) return
-    
-    try {
-      // Refresh based on what we're currently viewing
-      if (currentArticleCoordinate) {
-        // Viewing a nostr article - fetch by article coordinate
-        const newHighlights = await fetchHighlightsForArticle(
-          relayPool,
-          currentArticleCoordinate,
-          currentArticleEventId
-        )
-        setHighlights(newHighlights)
-      } else if (selectedUrl && !selectedUrl.startsWith('nostr:')) {
-        // Viewing an external URL - fetch by URL
-        const newHighlights = await fetchHighlightsForUrl(relayPool, selectedUrl)
-        setHighlights(newHighlights)
-      }
-    } catch (err) {
-      console.error('Failed to refresh highlights:', err)
-    }
-  }
-
   const handleTextSelection = useCallback((text: string) => {
     highlightButtonRef.current?.updateSelection(text)
   }, [])
@@ -276,7 +252,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         ? currentArticle.content 
         : readerContent?.markdown || readerContent?.html
       
-      await createHighlight(
+      // Create and publish the highlight
+      const signedEvent = await createHighlight(
         text,
         source,
         activeAccount,
@@ -287,12 +264,13 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       console.log('✅ Highlight created successfully!')
       highlightButtonRef.current?.clearSelection()
       
-      // Trigger refresh of highlights
-      handleHighlightCreated()
+      // Immediately add the highlight to the UI (optimistic update)
+      const newHighlight = eventToHighlight(signedEvent)
+      setHighlights(prev => [newHighlight, ...prev])
     } catch (error) {
       console.error('Failed to create highlight:', error)
     }
-  }, [activeAccount, relayPool, currentArticle, selectedUrl, readerContent, handleHighlightCreated])
+  }, [activeAccount, relayPool, currentArticle, selectedUrl, readerContent])
 
   return (
     <>
