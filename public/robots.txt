@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://xn--bris-v0b.com/sitemap.xml
+
