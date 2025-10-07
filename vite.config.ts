@@ -8,7 +8,11 @@ export default defineConfig({
   },
   resolve: {
     extensions: ['.js', '.ts', '.tsx', '.json'],
-    conditions: ['import', 'module', 'browser', 'default']
+    conditions: ['import', 'module', 'browser', 'default'],
+    // Disable strict package exports resolution to allow Rollup to resolve
+    // internal modules in packages with restrictive exports maps
+    preserveSymlinks: false,
+    mainFields: ['module', 'jsnext:main', 'jsnext', 'main']
   },
   optimizeDeps: {
     include: ['applesauce-core', 'applesauce-factory', 'applesauce-relay', 'applesauce-react'],
@@ -20,7 +24,17 @@ export default defineConfig({
     commonjsOptions: {
       include: [/node_modules/],
       transformMixedEsModules: true
+    },
+    rollupOptions: {
+      output: {
+        // Ensure ESM output
+        format: 'es'
+      }
     }
+  },
+  // Force pre-bundling of problematic packages
+  ssr: {
+    noExternal: ['applesauce-core', 'applesauce-factory', 'applesauce-relay']
   }
 })
 
