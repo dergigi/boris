@@ -1,0 +1,158 @@
+import React from 'react'
+import { BookmarkList } from './BookmarkList'
+import ContentPanel from './ContentPanel'
+import { HighlightsPanel } from './HighlightsPanel'
+import Settings from './Settings'
+import Toast from './Toast'
+import { HighlightButton } from './HighlightButton'
+import { ViewMode } from './Bookmarks'
+import { Bookmark } from '../types/bookmarks'
+import { Highlight } from '../types/highlights'
+import { ReadableContent } from '../services/readerService'
+import { UserSettings } from '../services/settingsService'
+import { HighlightVisibility } from './HighlightsPanel'
+import { HighlightButtonRef } from './HighlightButton'
+import { BookmarkReference } from '../utils/contentLoader'
+
+interface ThreePaneLayoutProps {
+  // Layout state
+  isCollapsed: boolean
+  isHighlightsCollapsed: boolean
+  showSettings: boolean
+  
+  // Bookmarks pane
+  bookmarks: Bookmark[]
+  bookmarksLoading: boolean
+  viewMode: ViewMode
+  isRefreshing: boolean
+  onToggleSidebar: () => void
+  onLogout: () => void
+  onViewModeChange: (mode: ViewMode) => void
+  onOpenSettings: () => void
+  onRefresh: () => void
+  
+  // Content pane
+  readerLoading: boolean
+  readerContent?: ReadableContent
+  selectedUrl?: string
+  settings: UserSettings
+  onSaveSettings: (settings: UserSettings) => Promise<void>
+  onCloseSettings: () => void
+  classifiedHighlights: Highlight[]
+  showHighlights: boolean
+  selectedHighlightId?: string
+  highlightVisibility: HighlightVisibility
+  onHighlightClick: (id: string) => void
+  onTextSelection: (text: string) => void
+  onClearSelection: () => void
+  currentUserPubkey?: string
+  followedPubkeys: Set<string>
+  
+  // Highlights pane
+  highlights: Highlight[]
+  highlightsLoading: boolean
+  onToggleHighlightsPanel: () => void
+  onSelectUrl: (url: string, bookmark?: BookmarkReference) => void
+  onToggleHighlights: (show: boolean) => void
+  onRefreshHighlights: () => void
+  onHighlightVisibilityChange: (visibility: HighlightVisibility) => void
+  
+  // Highlight button
+  highlightButtonRef: React.RefObject<HighlightButtonRef>
+  onCreateHighlight: (text: string) => void
+  hasActiveAccount: boolean
+  
+  // Toast
+  toastMessage?: string
+  toastType?: 'success' | 'error'
+  onClearToast: () => void
+}
+
+const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
+  return (
+    <>
+      <div className={`three-pane ${props.isCollapsed ? 'sidebar-collapsed' : ''} ${props.isHighlightsCollapsed ? 'highlights-collapsed' : ''}`}>
+        <div className="pane sidebar">
+          <BookmarkList 
+            bookmarks={props.bookmarks}
+            onSelectUrl={props.onSelectUrl}
+            isCollapsed={props.isCollapsed}
+            onToggleCollapse={props.onToggleSidebar}
+            onLogout={props.onLogout}
+            viewMode={props.viewMode}
+            onViewModeChange={props.onViewModeChange}
+            selectedUrl={props.selectedUrl}
+            onOpenSettings={props.onOpenSettings}
+            onRefresh={props.onRefresh}
+            isRefreshing={props.isRefreshing}
+            loading={props.bookmarksLoading}
+          />
+        </div>
+        <div className="pane main">
+          {props.showSettings ? (
+            <Settings 
+              settings={props.settings}
+              onSave={props.onSaveSettings}
+              onClose={props.onCloseSettings}
+            />
+          ) : (
+            <ContentPanel 
+              loading={props.readerLoading}
+              title={props.readerContent?.title}
+              html={props.readerContent?.html}
+              markdown={props.readerContent?.markdown}
+              image={props.readerContent?.image}
+              selectedUrl={props.selectedUrl}
+              highlights={props.classifiedHighlights}
+              showHighlights={props.showHighlights}
+              highlightStyle={props.settings.highlightStyle || 'marker'}
+              highlightColor={props.settings.highlightColor || '#ffff00'}
+              onHighlightClick={props.onHighlightClick}
+              selectedHighlightId={props.selectedHighlightId}
+              highlightVisibility={props.highlightVisibility}
+              onTextSelection={props.onTextSelection}
+              onClearSelection={props.onClearSelection}
+              currentUserPubkey={props.currentUserPubkey}
+              followedPubkeys={props.followedPubkeys}
+            />
+          )}
+        </div>
+        <div className="pane highlights">
+          <HighlightsPanel
+            highlights={props.highlights}
+            loading={props.highlightsLoading}
+            isCollapsed={props.isHighlightsCollapsed}
+            onToggleCollapse={props.onToggleHighlightsPanel}
+            onSelectUrl={props.onSelectUrl}
+            selectedUrl={props.selectedUrl}
+            onToggleHighlights={props.onToggleHighlights}
+            selectedHighlightId={props.selectedHighlightId}
+            onRefresh={props.onRefreshHighlights}
+            onHighlightClick={props.onHighlightClick}
+            currentUserPubkey={props.currentUserPubkey}
+            highlightVisibility={props.highlightVisibility}
+            onHighlightVisibilityChange={props.onHighlightVisibilityChange}
+            followedPubkeys={props.followedPubkeys}
+          />
+        </div>
+      </div>
+      {props.hasActiveAccount && (
+        <HighlightButton 
+          ref={props.highlightButtonRef} 
+          onHighlight={props.onCreateHighlight}
+          highlightColor={props.settings.highlightColor || '#ffff00'}
+        />
+      )}
+      {props.toastMessage && (
+        <Toast
+          message={props.toastMessage}
+          type={props.toastType}
+          onClose={props.onClearToast}
+        />
+      )}
+    </>
+  )
+}
+
+export default ThreePaneLayout
+
