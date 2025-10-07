@@ -1,16 +1,30 @@
-import { defineConfig } from 'vite'
+import { defineConfig, Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+// Custom plugin to resolve applesauce-core internal modules
+// Workaround for restrictive exports field blocking internal imports
+const applesauceResolver = (): Plugin => ({
+  name: 'applesauce-resolver',
+  resolveId(source, importer) {
+    if (importer && source.startsWith('./') && importer.includes('applesauce-core/dist/event-store')) {
+      // Resolve relative imports within applesauce-core/dist/event-store
+      const resolved = path.resolve(path.dirname(importer), source)
+      return resolved
+    }
+    return null
+  }
+})
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), applesauceResolver()],
   server: {
     port: 9802
   },
   resolve: {
     extensions: ['.js', '.ts', '.tsx', '.json'],
     conditions: ['import', 'module', 'browser', 'default'],
-    // Disable strict package exports resolution to allow Rollup to resolve
-    // internal modules in packages with restrictive exports maps
     preserveSymlinks: false,
     mainFields: ['module', 'jsnext:main', 'jsnext', 'main']
   },
@@ -27,12 +41,10 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        // Ensure ESM output
         format: 'es'
       }
     }
   },
-  // Force pre-bundling of problematic packages
   ssr: {
     noExternal: ['applesauce-core', 'applesauce-factory', 'applesauce-relay']
   }
