@@ -100,7 +100,7 @@ export const useBookmarksData = ({
       handleFetchHighlights()
     }
     handleFetchContacts()
-  }, [relayPool, activeAccount?.pubkey])
+  }, [relayPool, activeAccount?.pubkey, naddr, handleFetchBookmarks, handleFetchHighlights, handleFetchContacts])
 
   return {
     bookmarks,

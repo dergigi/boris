@@ -101,5 +101,5 @@ export function useArticleLoader({
     }
     
     loadArticle()
-  }, [naddr, relayPool])
+  }, [naddr, relayPool, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId, setCurrentArticle])
 }

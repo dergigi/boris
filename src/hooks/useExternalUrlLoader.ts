@@ -80,6 +80,6 @@ export function useExternalUrlLoader({
     }
     
     loadExternalUrl()
-  }, [url, relayPool])
+  }, [url, relayPool, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId])
 }
 
