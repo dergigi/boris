@@ -1,24 +1,8 @@
-import { defineConfig, Plugin } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
-import { fileURLToPath } from 'url'
-
-// Custom plugin to resolve applesauce-core internal modules
-// Workaround for restrictive exports field blocking internal imports
-const applesauceResolver = (): Plugin => ({
-  name: 'applesauce-resolver',
-  resolveId(source, importer) {
-    if (importer && source.startsWith('./') && importer.includes('applesauce-core/dist/event-store')) {
-      // Resolve relative imports within applesauce-core/dist/event-store
-      const resolved = path.resolve(path.dirname(importer), source)
-      return resolved
-    }
-    return null
-  }
-})
 
 export default defineConfig({
-  plugins: [react(), applesauceResolver()],
+  plugins: [react()],
   server: {
     port: 9802
   },
