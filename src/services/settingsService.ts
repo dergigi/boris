@@ -1,6 +1,5 @@
 import { IEventStore, mapEventsToStore } from 'applesauce-core'
 import { EventFactory } from 'applesauce-factory'
-import { AppDataBlueprint } from 'applesauce-factory/blueprints'
 import { RelayPool, onlyEvents } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { firstValueFrom } from 'rxjs'
@@ -137,7 +136,14 @@ export async function saveSettings(
 ): Promise<void> {
   console.log('💾 Saving settings to nostr:', settings)
   
-  const draft = await factory.create(AppDataBlueprint, SETTINGS_IDENTIFIER, settings, false)
+  // Create NIP-78 application data event manually
+  const draft = await factory.create(async () => ({
+    kind: APP_DATA_KIND,
+    content: JSON.stringify(settings),
+    tags: [['d', SETTINGS_IDENTIFIER]],
+    created_at: Math.floor(Date.now() / 1000)
+  }))
+  
   const signed = await factory.sign(draft)
   
   console.log('📤 Publishing settings event:', signed.id, 'to', relays.length, 'relays')
