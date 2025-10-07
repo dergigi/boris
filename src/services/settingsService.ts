@@ -3,6 +3,7 @@ import { EventFactory } from 'applesauce-factory'
 import { RelayPool, onlyEvents } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { firstValueFrom } from 'rxjs'
+import * as Blueprints from 'applesauce-factory/blueprints'
 
 const SETTINGS_IDENTIFIER = 'com.dergigi.boris.user-settings'
 const APP_DATA_KIND = 30078 // NIP-78 Application Data
@@ -136,13 +137,13 @@ export async function saveSettings(
 ): Promise<void> {
   console.log('💾 Saving settings to nostr:', settings)
   
-  // Create NIP-78 application data event manually
-  const draft = await factory.create(async () => ({
-    kind: APP_DATA_KIND,
-    content: JSON.stringify(settings),
-    tags: [['d', SETTINGS_IDENTIFIER]],
-    created_at: Math.floor(Date.now() / 1000)
-  }))
+  // Create NIP-78 application data event using the AppDataBlueprint
+  const draft = await factory.create(
+    Blueprints.AppDataBlueprint,
+    SETTINGS_IDENTIFIER,
+    settings,
+    false // no encryption
+  )
   
   const signed = await factory.sign(draft)
   
