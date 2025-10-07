@@ -15,6 +15,7 @@ interface CompactViewProps {
   getIconForUrlType: IconGetter
   firstUrlClassification: { buttonText: string } | null
   articleImage?: string
+  articleSummary?: string
 }
 
 export const CompactView: React.FC<CompactViewProps> = ({
@@ -24,7 +25,8 @@ export const CompactView: React.FC<CompactViewProps> = ({
   extractedUrls,
   onSelectUrl,
   getIconForUrlType,
-  firstUrlClassification
+  firstUrlClassification,
+  articleSummary
 }) => {
   const isArticle = bookmark.kind === 30023
   const isWebBookmark = bookmark.kind === 39701
@@ -39,6 +41,11 @@ export const CompactView: React.FC<CompactViewProps> = ({
       onSelectUrl(extractedUrls[0])
     }
   }
+
+  // For articles, prefer summary; for others, use content
+  const displayText = isArticle && articleSummary 
+    ? articleSummary 
+    : bookmark.content
 
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark compact ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
@@ -63,9 +70,9 @@ export const CompactView: React.FC<CompactViewProps> = ({
             <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
           )}
         </span>
-        {bookmark.content && (
+        {displayText && (
           <div className="compact-text">
-            <ContentWithResolvedProfiles content={bookmark.content.slice(0, 60) + (bookmark.content.length > 60 ? '…' : '')} />
+            <ContentWithResolvedProfiles content={displayText.slice(0, 60) + (displayText.length > 60 ? '…' : '')} />
           </div>
         )}
         <span className="bookmark-date-compact">{formatDate(bookmark.created_at)}</span>

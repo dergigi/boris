@@ -21,6 +21,7 @@ interface CardViewProps {
   getAuthorDisplayName: () => string
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
   articleImage?: string
+  articleSummary?: string
 }
 
 export const CardView: React.FC<CardViewProps> = ({
@@ -35,7 +36,8 @@ export const CardView: React.FC<CardViewProps> = ({
   eventNevent,
   getAuthorDisplayName,
   handleReadNow,
-  articleImage
+  articleImage,
+  articleSummary
 }) => {
   const [expanded, setExpanded] = useState(false)
   const [urlsExpanded, setUrlsExpanded] = useState(false)
@@ -122,7 +124,11 @@ export const CardView: React.FC<CardViewProps> = ({
         </div>
       )}
       
-      {bookmark.parsedContent ? (
+      {isArticle && articleSummary ? (
+        <div className="bookmark-content article-summary">
+          <ContentWithResolvedProfiles content={articleSummary} />
+        </div>
+      ) : bookmark.parsedContent ? (
         <div className="bookmark-content">
           {shouldTruncate && bookmark.content
             ? <ContentWithResolvedProfiles content={`${bookmark.content.slice(0, 210).trimEnd()}…`} />

@@ -18,6 +18,7 @@ interface LargeViewProps {
   eventNevent?: string
   getAuthorDisplayName: () => string
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
+  articleSummary?: string
 }
 
 export const LargeView: React.FC<LargeViewProps> = ({
@@ -32,7 +33,8 @@ export const LargeView: React.FC<LargeViewProps> = ({
   authorNpub,
   eventNevent,
   getAuthorDisplayName,
-  handleReadNow
+  handleReadNow,
+  articleSummary
 }) => {
   const isArticle = bookmark.kind === 30023
   
@@ -59,7 +61,11 @@ export const LargeView: React.FC<LargeViewProps> = ({
       )}
       
       <div className="large-content">
-        {bookmark.content && (
+        {isArticle && articleSummary ? (
+          <div className="large-text article-summary">
+            <ContentWithResolvedProfiles content={articleSummary} />
+          </div>
+        ) : bookmark.content && (
           <div className="large-text">
             <ContentWithResolvedProfiles content={bookmark.content} />
           </div>
