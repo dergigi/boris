@@ -1,18 +1,8 @@
 import { useMemo } from 'react'
 import { Highlight } from '../types/highlights'
 import { HighlightVisibility } from '../components/HighlightsPanel'
-
-/**
- * Normalize URL for comparison
- */
-function normalizeUrl(url: string): string {
-  try {
-    const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
-    return `${urlObj.hostname.replace(/^www\./, '')}${urlObj.pathname}`.replace(/\/$/, '').toLowerCase()
-  } catch {
-    return url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '').toLowerCase()
-  }
-}
+import { normalizeUrl } from '../utils/urlHelpers'
+import { classifyHighlights } from '../utils/highlightClassification'
 
 interface UseFilteredHighlightsParams {
   highlights: Highlight[]
@@ -48,21 +38,12 @@ export const useFilteredHighlights = ({
     }
     
     // Classify and filter by visibility levels
-    return urlFiltered
-      .map(h => {
-        let level: 'mine' | 'friends' | 'nostrverse' = 'nostrverse'
-        if (h.pubkey === currentUserPubkey) {
-          level = 'mine'
-        } else if (followedPubkeys.has(h.pubkey)) {
-          level = 'friends'
-        }
-        return { ...h, level }
-      })
-      .filter(h => {
-        if (h.level === 'mine') return highlightVisibility.mine
-        if (h.level === 'friends') return highlightVisibility.friends
-        return highlightVisibility.nostrverse
-      })
+    const classified = classifyHighlights(urlFiltered, currentUserPubkey, followedPubkeys)
+    return classified.filter(h => {
+      if (h.level === 'mine') return highlightVisibility.mine
+      if (h.level === 'friends') return highlightVisibility.friends
+      return highlightVisibility.nostrverse
+    })
   }, [highlights, selectedUrl, highlightVisibility, currentUserPubkey, followedPubkeys])
 }
 

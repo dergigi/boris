@@ -3,6 +3,7 @@ import { Highlight } from '../types/highlights'
 import { applyHighlightsToHTML } from '../utils/highlightMatching'
 import { filterHighlightsByUrl } from '../utils/urlHelpers'
 import { HighlightVisibility } from '../components/HighlightsPanel'
+import { classifyHighlights } from '../utils/highlightClassification'
 
 interface UseHighlightedContentParams {
   html?: string
@@ -41,21 +42,12 @@ export const useHighlightedContent = ({
     console.log('📌 URL filtered highlights:', urlFiltered.length)
     
     // Apply visibility filtering
-    const filtered = urlFiltered
-      .map(h => {
-        let level: 'mine' | 'friends' | 'nostrverse' = 'nostrverse'
-        if (h.pubkey === currentUserPubkey) {
-          level = 'mine'
-        } else if (followedPubkeys.has(h.pubkey)) {
-          level = 'friends'
-        }
-        return { ...h, level }
-      })
-      .filter(h => {
-        if (h.level === 'mine') return highlightVisibility.mine
-        if (h.level === 'friends') return highlightVisibility.friends
-        return highlightVisibility.nostrverse
-      })
+    const classified = classifyHighlights(urlFiltered, currentUserPubkey, followedPubkeys)
+    const filtered = classified.filter(h => {
+      if (h.level === 'mine') return highlightVisibility.mine
+      if (h.level === 'friends') return highlightVisibility.friends
+      return highlightVisibility.nostrverse
+    })
       
     console.log('✅ Relevant highlights after filtering:', filtered.length, filtered.map(h => h.content.substring(0, 30)))
     return filtered

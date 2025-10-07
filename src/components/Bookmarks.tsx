@@ -11,6 +11,7 @@ import { useContentSelection } from '../hooks/useContentSelection'
 import { useHighlightCreation } from '../hooks/useHighlightCreation'
 import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import ThreePaneLayout from './ThreePaneLayout'
+import { classifyHighlights } from '../utils/highlightClassification'
 
 export type ViewMode = 'compact' | 'cards' | 'large'
 
@@ -142,15 +143,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
 
   // Classify highlights with levels based on user context
   const classifiedHighlights = useMemo(() => {
-    return highlights.map(h => {
-      let level: 'mine' | 'friends' | 'nostrverse' = 'nostrverse'
-      if (h.pubkey === activeAccount?.pubkey) {
-        level = 'mine'
-      } else if (followedPubkeys.has(h.pubkey)) {
-        level = 'friends'
-      }
-      return { ...h, level }
-    })
+    return classifyHighlights(highlights, activeAccount?.pubkey, followedPubkeys)
   }, [highlights, activeAccount?.pubkey, followedPubkeys])
 
   return (
