@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react'
+import React, { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -52,9 +52,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   onTextSelection,
   onClearSelection
 }) => {
-  const markdownPreviewRef = useRef<HTMLDivElement>(null)
-  
-  const renderedMarkdownHtml = useMarkdownToHTML(markdown)
+  const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef } = useMarkdownToHTML(markdown)
   
   const { finalHtml, relevantHighlights } = useHighlightedContent({
     html,

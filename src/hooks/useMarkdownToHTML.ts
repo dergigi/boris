@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
 /**
  * Hook to convert markdown to HTML using a hidden ReactMarkdown component
  */
-export const useMarkdownToHTML = (markdown?: string): string => {
-  const markdownPreviewRef = useRef<HTMLDivElement>(null)
+export const useMarkdownToHTML = (markdown?: string): { renderedHtml: string, previewRef: React.RefObject<HTMLDivElement> } => {
+  const previewRef = useRef<HTMLDivElement>(null)
   const [renderedHtml, setRenderedHtml] = useState<string>('')
 
   useEffect(() => {
@@ -16,8 +16,8 @@ export const useMarkdownToHTML = (markdown?: string): string => {
     console.log('📝 Converting markdown to HTML...')
     
     const rafId = requestAnimationFrame(() => {
-      if (markdownPreviewRef.current) {
-        const html = markdownPreviewRef.current.innerHTML
+      if (previewRef.current) {
+        const html = previewRef.current.innerHTML
         console.log('✅ Markdown converted to HTML:', html.length, 'chars')
         setRenderedHtml(html)
       } else {
@@ -28,10 +28,8 @@ export const useMarkdownToHTML = (markdown?: string): string => {
     return () => cancelAnimationFrame(rafId)
   }, [markdown])
 
-  return renderedHtml
+  return { renderedHtml, previewRef }
 }
 
-export const useMarkdownPreviewRef = () => {
-  return useRef<HTMLDivElement>(null)
-}
+// Removed separate useMarkdownPreviewRef; use useMarkdownToHTML to obtain previewRef
 
