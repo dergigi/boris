@@ -136,9 +136,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
                   </div>
                 </div>
               )}
-              <div className="bookmark-meta">
-                <span>Created: {formatDate(bookmark.created_at)}</span>
-              </div>
             </div>
           ))}
         </div>
