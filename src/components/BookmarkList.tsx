@@ -136,13 +136,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
                   </div>
                 </div>
               )}
-              {bookmark.parsedContent ? (
-                <div className="bookmark-content">
-                  {renderParsedContent(bookmark.parsedContent)}
-                </div>
-              ) : bookmark.content && (
-                <p className="bookmark-content">{bookmark.content}</p>
-              )}
               <div className="bookmark-meta">
                 <span>Created: {formatDate(bookmark.created_at)}</span>
               </div>
