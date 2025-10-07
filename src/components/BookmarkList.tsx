@@ -1,11 +1,12 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faBookmark, faSpinner, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
-import { Bookmark } from '../types/bookmarks'
+import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
 import SidebarHeader from './SidebarHeader'
 import IconButton from './IconButton'
 import { ViewMode } from './Bookmarks'
+import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -36,10 +37,35 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   isRefreshing,
   loading = false
 }) => {
+  // Helper to check if a bookmark has either content or a URL
+  const hasContentOrUrl = (ib: IndividualBookmark) => {
+    // Check if has content (text)
+    const hasContent = ib.content && ib.content.trim().length > 0
+    
+    // Check if has URL
+    let hasUrl = false
+    
+    // For web bookmarks (kind:39701), URL is in the 'd' tag
+    if (ib.kind === 39701) {
+      const dTag = ib.tags?.find((t: string[]) => t[0] === 'd')?.[1]
+      hasUrl = !!dTag && dTag.trim().length > 0
+    } else {
+      // For other bookmarks, extract URLs from content
+      const urls = extractUrlsFromContent(ib.content || '')
+      hasUrl = urls.length > 0
+    }
+    
+    // Always show articles (kind:30023) as they have special handling
+    if (ib.kind === 30023) return true
+    
+    // Otherwise, must have either content or URL
+    return hasContent || hasUrl
+  }
+  
   // Merge and flatten all individual bookmarks from all lists
   // Re-sort after flattening to ensure newest first across all lists
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
-    .filter(ib => ib.content || ib.kind === 30023 || ib.kind === 39701)
+    .filter(hasContentOrUrl)
     .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
   
   if (isCollapsed) {
