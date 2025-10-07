@@ -109,15 +109,17 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
               {bookmark.individualBookmarks && bookmark.individualBookmarks.length > 0 && (
                 <div className="individual-bookmarks">
                   <div className={`bookmarks-grid bookmarks-${viewMode}`}>
-                    {bookmark.individualBookmarks.map((individualBookmark, index) => 
-                      <BookmarkItem 
-                        key={index} 
-                        bookmark={individualBookmark} 
-                        index={index} 
-                        onSelectUrl={onSelectUrl}
-                        viewMode={viewMode}
-                      />
-                    )}
+                    {bookmark.individualBookmarks
+                      .filter(ib => ib.content || ib.kind === 30023 || ib.kind === 39701)
+                      .map((individualBookmark, index) => 
+                        <BookmarkItem 
+                          key={index} 
+                          bookmark={individualBookmark} 
+                          index={index} 
+                          onSelectUrl={onSelectUrl}
+                          viewMode={viewMode}
+                        />
+                      )}
                   </div>
                 </div>
               )}
