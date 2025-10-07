@@ -3,13 +3,10 @@ import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
-import { 
-  getArticleTitle, 
-  getArticleImage, 
-  getArticlePublished, 
-  getArticleSummary 
-} from 'applesauce-core/helpers'
+import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
+
+const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 export interface ArticleContent {
   title: string

@@ -1,8 +1,9 @@
 import React from 'react'
 import { useEventModel } from 'applesauce-react/hooks'
-import { Models } from 'applesauce-core'
+import { Models, Helpers } from 'applesauce-core'
 import { decode, npubEncode } from 'nostr-tools/nip19'
-import { getPubkeyFromDecodeResult } from 'applesauce-core/helpers'
+
+const { getPubkeyFromDecodeResult } = Helpers
 
 interface ResolvedMentionProps {
   encoded?: string

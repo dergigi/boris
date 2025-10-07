@@ -1,12 +1,13 @@
-import { EventFactory } from 'applesauce-factory'
-import { HighlightBlueprint } from 'applesauce-factory/blueprints'
+import { EventFactory, Blueprints } from 'applesauce-factory'
 import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
+import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
 import { Highlight } from '../types/highlights'
-import {
+
+const {
   getHighlightText,
   getHighlightContext,
   getHighlightComment,
@@ -14,7 +15,9 @@ import {
   getHighlightSourceAddressPointer,
   getHighlightSourceUrl,
   getHighlightAttributions
-} from 'applesauce-core/helpers'
+} = Helpers
+
+const { HighlightBlueprint } = Blueprints
 
 /**
  * Creates and publishes a highlight event (NIP-84)

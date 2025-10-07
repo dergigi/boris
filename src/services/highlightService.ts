@@ -1,7 +1,11 @@
 import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
 import { lastValueFrom, takeUntil, timer, tap, toArray } from 'rxjs'
 import { NostrEvent } from 'nostr-tools'
-import {
+import { Helpers } from 'applesauce-core'
+import { Highlight } from '../types/highlights'
+import { RELAYS } from '../config/relays'
+
+const {
   getHighlightText,
   getHighlightContext,
   getHighlightComment,
@@ -9,9 +13,7 @@ import {
   getHighlightSourceAddressPointer,
   getHighlightSourceUrl,
   getHighlightAttributions
-} from 'applesauce-core/helpers'
-import { Highlight } from '../types/highlights'
-import { RELAYS } from '../config/relays'
+} = Helpers
 
 /**
  * Deduplicate highlight events by ID
