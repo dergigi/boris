@@ -37,9 +37,10 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   loading = false
 }) => {
   // Merge and flatten all individual bookmarks from all lists
-  // They're already sorted by date in the service layer
+  // Re-sort after flattening to ensure newest first across all lists
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(ib => ib.content || ib.kind === 30023 || ib.kind === 39701)
+    .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
   
   if (isCollapsed) {
     // Check if the selected URL is in bookmarks
