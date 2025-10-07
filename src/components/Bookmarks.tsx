@@ -37,7 +37,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   
   // Extract external URL from /r/* route
   const externalUrl = location.pathname.startsWith('/r/') 
-    ? location.pathname.slice(3) // Remove '/r/' prefix
+    ? decodeURIComponent(location.pathname.slice(3)) // Remove '/r/' prefix and decode
     : undefined
     
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
@@ -224,8 +224,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         navigate(`/a/${naddr}`)
       }
     } else if (url) {
-      // For external URLs, navigate to /r/:url
-      navigate(`/r/${url}`)
+      // For external URLs, navigate to /r/:url (encoded to preserve special chars like //)
+      navigate(`/r/${encodeURIComponent(url)}`)
     }
     
     setSelectedUrl(url)
