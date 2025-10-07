@@ -1,15 +1,16 @@
-import React, { useMemo, useEffect, useRef, useState, useCallback } from 'react'
+import React, { useMemo, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
-import { applyHighlightsToHTML } from '../utils/highlightMatching'
 import { readingTime } from 'reading-time-estimator'
-import { filterHighlightsByUrl } from '../utils/urlHelpers'
 import { hexToRgb } from '../utils/colorHelpers'
 import ReaderHeader from './ReaderHeader'
 import { HighlightVisibility } from './HighlightsPanel'
+import { useMarkdownToHTML } from '../hooks/useMarkdownToHTML'
+import { useHighlightedContent } from '../hooks/useHighlightedContent'
+import { useHighlightInteractions } from '../hooks/useHighlightInteractions'
 
 interface ContentPanelProps {
   loading: boolean
@@ -48,174 +49,41 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   highlightVisibility = { nostrverse: true, friends: true, mine: true },
   currentUserPubkey,
   followedPubkeys = new Set(),
-  // For highlight creation
   onTextSelection,
   onClearSelection
 }) => {
-  const contentRef = useRef<HTMLDivElement>(null)
   const markdownPreviewRef = useRef<HTMLDivElement>(null)
-  const [renderedHtml, setRenderedHtml] = useState<string>('')
   
-  // Filter highlights by URL and visibility settings
-  const relevantHighlights = useMemo(() => {
-    console.log('🔍 ContentPanel: Processing highlights', {
-      totalHighlights: highlights.length,
-      selectedUrl,
-      showHighlights
-    })
-    
-    const urlFiltered = filterHighlightsByUrl(highlights, selectedUrl)
-    console.log('📌 URL filtered highlights:', urlFiltered.length)
-    
-    // Apply visibility filtering
-    const filtered = urlFiltered
-      .map(h => {
-        // Classify highlight level
-        let level: 'mine' | 'friends' | 'nostrverse' = 'nostrverse'
-        if (h.pubkey === currentUserPubkey) {
-          level = 'mine'
-        } else if (followedPubkeys.has(h.pubkey)) {
-          level = 'friends'
-        }
-        return { ...h, level }
-      })
-      .filter(h => {
-        // Filter by visibility settings
-        if (h.level === 'mine') return highlightVisibility.mine
-        if (h.level === 'friends') return highlightVisibility.friends
-        return highlightVisibility.nostrverse
-      })
-      
-    console.log('✅ Relevant highlights after filtering:', filtered.length, filtered.map(h => h.content.substring(0, 30)))
-    return filtered
-  }, [selectedUrl, highlights, highlightVisibility, currentUserPubkey, followedPubkeys, showHighlights])
+  const renderedMarkdownHtml = useMarkdownToHTML(markdown)
+  
+  const { finalHtml, relevantHighlights } = useHighlightedContent({
+    html,
+    markdown,
+    renderedMarkdownHtml,
+    highlights,
+    showHighlights,
+    highlightStyle,
+    selectedUrl,
+    highlightVisibility,
+    currentUserPubkey,
+    followedPubkeys
+  })
 
-  // Convert markdown to HTML when markdown content changes
-  useEffect(() => {
-    if (!markdown) {
-      setRenderedHtml('')
-      return
-    }
+  const { contentRef, handleMouseUp } = useHighlightInteractions({
+    onHighlightClick,
+    selectedHighlightId,
+    onTextSelection,
+    onClearSelection
+  })
 
-    console.log('📝 Converting markdown to HTML...')
-    
-    // Use requestAnimationFrame to ensure ReactMarkdown has rendered
-    const rafId = requestAnimationFrame(() => {
-      if (markdownPreviewRef.current) {
-        const html = markdownPreviewRef.current.innerHTML
-        console.log('✅ Markdown converted to HTML:', html.length, 'chars')
-        setRenderedHtml(html)
-      } else {
-        console.warn('⚠️ markdownPreviewRef.current is null')
-      }
-    })
-
-    return () => cancelAnimationFrame(rafId)
-  }, [markdown])
-
-  // Prepare the final HTML with highlights applied
-  const finalHtml = useMemo(() => {
-    const sourceHtml = markdown ? renderedHtml : html
-    
-    console.log('🎨 Preparing final HTML:', {
-      hasMarkdown: !!markdown,
-      hasHtml: !!html,
-      renderedHtmlLength: renderedHtml.length,
-      sourceHtmlLength: sourceHtml?.length || 0,
-      showHighlights,
-      relevantHighlightsCount: relevantHighlights.length
-    })
-    
-    if (!sourceHtml) {
-      console.warn('⚠️ No source HTML available')
-      return ''
-    }
-    
-    // Apply highlights if we have them and highlights are enabled
-    if (showHighlights && relevantHighlights.length > 0) {
-      console.log('✨ Applying', relevantHighlights.length, 'highlights to HTML')
-      const highlightedHtml = applyHighlightsToHTML(sourceHtml, relevantHighlights, highlightStyle)
-      console.log('✅ Highlights applied, result length:', highlightedHtml.length)
-      return highlightedHtml
-    }
-    
-    console.log('📄 Returning source HTML without highlights')
-    return sourceHtml
-  }, [html, renderedHtml, markdown, relevantHighlights, showHighlights, highlightStyle])
-
-
-  // Attach click handlers to highlight marks
-  useEffect(() => {
-    if (!onHighlightClick || !contentRef.current) return
-    
-    const marks = contentRef.current.querySelectorAll('mark[data-highlight-id]')
-    const handlers = new Map<Element, () => void>()
-    
-    marks.forEach(mark => {
-      const highlightId = mark.getAttribute('data-highlight-id')
-      if (highlightId) {
-        const handler = () => onHighlightClick(highlightId)
-        mark.addEventListener('click', handler)
-        ;(mark as HTMLElement).style.cursor = 'pointer'
-        handlers.set(mark, handler)
-      }
-    })
-    
-    return () => {
-      handlers.forEach((handler, mark) => {
-        mark.removeEventListener('click', handler)
-      })
-    }
-  }, [onHighlightClick, finalHtml])
-
-  // Scroll to selected highlight in article when clicked from sidebar
-  useEffect(() => {
-    if (!selectedHighlightId || !contentRef.current) return
-    
-    const markElement = contentRef.current.querySelector(`mark[data-highlight-id="${selectedHighlightId}"]`)
-    
-    if (markElement) {
-      markElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      
-      // Add pulsing animation after scroll completes
-      const htmlElement = markElement as HTMLElement
-      setTimeout(() => {
-        htmlElement.classList.add('highlight-pulse')
-        setTimeout(() => htmlElement.classList.remove('highlight-pulse'), 1500)
-      }, 500)
-    }
-  }, [selectedHighlightId, finalHtml])
-
-  // Calculate reading time from content (must be before early returns)
   const readingStats = useMemo(() => {
     const content = markdown || html || ''
     if (!content) return null
-    // Strip HTML tags for more accurate word count
     const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
     return readingTime(textContent)
   }, [html, markdown])
 
   const hasHighlights = relevantHighlights.length > 0
-
-  // Handle text selection for highlight creation
-  const handleMouseUp = useCallback(() => {
-    setTimeout(() => {
-      const selection = window.getSelection()
-      if (!selection || selection.rangeCount === 0) {
-        onClearSelection?.()
-        return
-      }
-
-      const range = selection.getRangeAt(0)
-      const text = selection.toString().trim()
-
-      if (text.length > 0 && contentRef.current?.contains(range.commonAncestorContainer)) {
-        onTextSelection?.(text)
-      } else {
-        onClearSelection?.()
-      }
-    }, 10)
-  }, [onTextSelection, onClearSelection])
 
   if (!selectedUrl) {
     return (
@@ -257,8 +125,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       />
       {markdown || html ? (
         markdown ? (
-          // For markdown, always use finalHtml once it's ready to ensure highlights are applied
-          renderedHtml && finalHtml ? (
+          renderedMarkdownHtml && finalHtml ? (
             <div 
               ref={contentRef} 
               className="reader-markdown" 
@@ -266,7 +133,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               onMouseUp={handleMouseUp}
             />
           ) : (
-            // Show loading state while markdown is being converted to HTML
             <div className="reader-markdown">
               <div className="loading-spinner">
                 <FontAwesomeIcon icon={faSpinner} spin size="sm" />
@@ -274,7 +140,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             </div>
           )
         ) : (
-          // For HTML, use finalHtml directly
           <div 
             ref={contentRef} 
             className="reader-html" 
