@@ -1,12 +1,22 @@
 import { IEventStore, mapEventsToStore } from 'applesauce-core'
-import { APP_DATA_KIND, getAppDataContent } from 'applesauce-core/helpers/app-data'
-import { AppDataBlueprint } from 'applesauce-factory/blueprints/app-data'
 import { EventFactory } from 'applesauce-factory'
+import { AppDataBlueprint } from 'applesauce-factory/blueprints'
 import { RelayPool, onlyEvents } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { firstValueFrom } from 'rxjs'
 
 const SETTINGS_IDENTIFIER = 'com.dergigi.boris.user-settings'
+const APP_DATA_KIND = 30078 // NIP-78 Application Data
+
+// Helper to extract and parse app data content from an event
+function getAppDataContent<R>(event: NostrEvent): R | undefined {
+  if (!event.content || event.content.length === 0) return undefined
+  try {
+    return JSON.parse(event.content) as R
+  } catch {
+    return undefined
+  }
+}
 
 export interface UserSettings {
   collapseOnArticleOpen?: boolean
