@@ -7,6 +7,7 @@ import { createHighlight, eventToHighlight } from '../services/highlightCreation
 import { HighlightButtonRef } from '../components/HighlightButton'
 
 interface UseHighlightCreationParams {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   activeAccount: any
   relayPool: RelayPool | null
   currentArticle: NostrEvent | undefined

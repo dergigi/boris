@@ -5,11 +5,12 @@ import { Highlight } from '../types/highlights'
 import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchHighlights, fetchHighlightsForArticle } from '../services/highlightService'
 import { fetchContacts } from '../services/contactService'
-import { Account } from 'applesauce-core/account'
 
 interface UseBookmarksDataParams {
   relayPool: RelayPool | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   activeAccount: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   accountManager: any
   naddr?: string
   currentArticleCoordinate?: string
