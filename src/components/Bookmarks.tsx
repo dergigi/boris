@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { useParams, useLocation } from 'react-router-dom'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { Hooks } from 'applesauce-react'
 import { useEventStore } from 'applesauce-react/hooks'
 import { RelayPool } from 'applesauce-relay'
@@ -22,7 +22,7 @@ import { HighlightVisibility } from './HighlightsPanel'
 import { HighlightButton, HighlightButtonRef } from './HighlightButton'
 import { createHighlight, eventToHighlight } from '../services/highlightCreationService'
 import { useRef, useCallback } from 'react'
-import { NostrEvent } from 'nostr-tools'
+import { NostrEvent, nip19 } from 'nostr-tools'
 export type ViewMode = 'compact' | 'cards' | 'large'
 
 interface BookmarksProps {
@@ -33,6 +33,7 @@ interface BookmarksProps {
 const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const { naddr } = useParams<{ naddr?: string }>()
   const location = useLocation()
+  const navigate = useNavigate()
   
   // Extract external URL from /r/* route
   const externalUrl = location.pathname.startsWith('/r/') 
@@ -208,6 +209,24 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
 
   const handleSelectUrl = async (url: string, bookmark?: BookmarkReference) => {
     if (!relayPool) return
+    
+    // Update the URL path based on content type
+    if (bookmark && bookmark.kind === 30023) {
+      // For nostr articles, navigate to /a/:naddr
+      const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1] || ''
+      if (dTag && bookmark.pubkey) {
+        const pointer = {
+          identifier: dTag,
+          kind: 30023,
+          pubkey: bookmark.pubkey,
+        }
+        const naddr = nip19.naddrEncode(pointer)
+        navigate(`/a/${naddr}`)
+      }
+    } else if (url) {
+      // For external URLs, navigate to /r/:url
+      navigate(`/r/${url}`)
+    }
     
     setSelectedUrl(url)
     setReaderLoading(true)
