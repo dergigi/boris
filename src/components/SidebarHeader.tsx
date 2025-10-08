@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faRotate } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faRotate, faHome } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -17,6 +18,7 @@ interface SidebarHeaderProps {
 
 const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onOpenSettings, onRefresh, isRefreshing }) => {
   const [isConnecting, setIsConnecting] = useState(false)
+  const navigate = useNavigate()
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
   const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
@@ -61,6 +63,13 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           <FontAwesomeIcon icon={faChevronRight} />
         </button>
         <div className="sidebar-header-right">
+        <IconButton
+          icon={faHome}
+          onClick={() => navigate('/')}
+          title="Home"
+          ariaLabel="Home"
+          variant="ghost"
+        />
         {onRefresh && (
           <IconButton
             icon={faRotate}
