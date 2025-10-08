@@ -101,6 +101,13 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           ariaLabel="Home"
           variant="ghost"
         />
+        <IconButton
+          icon={faGear}
+          onClick={onOpenSettings}
+          title="Settings"
+          ariaLabel="Settings"
+          variant="ghost"
+        />
         {onRefresh && (
           <IconButton
             icon={faRotate}
@@ -121,13 +128,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
             variant="ghost"
           />
         )}
-        <IconButton
-          icon={faGear}
-          onClick={onOpenSettings}
-          title="Settings"
-          ariaLabel="Settings"
-          variant="ghost"
-        />
         {activeAccount ? (
           <IconButton
             icon={faRightFromBracket}
