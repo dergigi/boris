@@ -165,6 +165,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         setIsHighlightsCollapsed(true)
       }}
       onRefresh={handleRefreshAll}
+      relayPool={relayPool}
       readerLoading={readerLoading}
       readerContent={readerContent}
       selectedUrl={selectedUrl}

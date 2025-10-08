@@ -1,6 +1,7 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faBookmark, faSpinner, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
+import { RelayPool } from 'applesauce-relay'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
 import SidebarHeader from './SidebarHeader'
@@ -21,6 +22,7 @@ interface BookmarkListProps {
   onRefresh?: () => void
   isRefreshing?: boolean
   loading?: boolean
+  relayPool: RelayPool | null
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({
@@ -35,7 +37,8 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   onOpenSettings,
   onRefresh,
   isRefreshing,
-  loading = false
+  loading = false,
+  relayPool
 }) => {
   // Helper to check if a bookmark has either content or a URL
   const hasContentOrUrl = (ib: IndividualBookmark) => {
@@ -98,6 +101,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         onOpenSettings={onOpenSettings}
         onRefresh={onRefresh}
         isRefreshing={isRefreshing}
+        relayPool={relayPool}
       />
       
       {loading ? (

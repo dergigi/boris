@@ -6,6 +6,7 @@ import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { Accounts } from 'applesauce-accounts'
+import { RelayPool } from 'applesauce-relay'
 import IconButton from './IconButton'
 import AddBookmarkModal from './AddBookmarkModal'
 import { createWebBookmark } from '../services/webBookmarkService'
@@ -17,15 +18,15 @@ interface SidebarHeaderProps {
   onOpenSettings: () => void
   onRefresh?: () => void
   isRefreshing?: boolean
+  relayPool: RelayPool | null
 }
 
-const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onOpenSettings, onRefresh, isRefreshing }) => {
+const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onOpenSettings, onRefresh, isRefreshing, relayPool }) => {
   const [isConnecting, setIsConnecting] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const navigate = useNavigate()
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
-  const relayPool = Hooks.useRelayPool()
   const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
 
   const handleLogin = async () => {

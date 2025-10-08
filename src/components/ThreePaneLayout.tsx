@@ -1,4 +1,5 @@
 import React from 'react'
+import { RelayPool } from 'applesauce-relay'
 import { BookmarkList } from './BookmarkList'
 import ContentPanel from './ContentPanel'
 import { HighlightsPanel } from './HighlightsPanel'
@@ -30,6 +31,7 @@ interface ThreePaneLayoutProps {
   onViewModeChange: (mode: ViewMode) => void
   onOpenSettings: () => void
   onRefresh: () => void
+  relayPool: RelayPool | null
   
   // Content pane
   readerLoading: boolean
@@ -86,6 +88,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             onRefresh={props.onRefresh}
             isRefreshing={props.isRefreshing}
             loading={props.bookmarksLoading}
+            relayPool={props.relayPool}
           />
         </div>
         <div className="pane main">
