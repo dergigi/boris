@@ -512,6 +512,7 @@ body {
 .reader-title {
   margin: 0;
   flex: 1;
+  font-family: var(--reading-font);
 }
 
 .reader-meta {
