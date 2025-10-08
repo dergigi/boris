@@ -2,11 +2,45 @@ import React, { useState, useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimes, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
-import urlMetadata from 'url-metadata'
+import { fetchReadableContent } from '../services/readerService'
 
 interface AddBookmarkModalProps {
   onClose: () => void
   onSave: (url: string, title?: string, description?: string, tags?: string[]) => Promise<void>
+}
+
+// Helper to extract metadata from HTML
+function extractMetaTag(html: string, patterns: string[]): string | null {
+  for (const pattern of patterns) {
+    const match = html.match(new RegExp(pattern, 'i'))
+    if (match) return match[1]
+  }
+  return null
+}
+
+function extractTags(html: string): string[] {
+  const tags: string[] = []
+  
+  // Extract keywords meta tag
+  const keywords = extractMetaTag(html, [
+    '<meta\\s+name=["\'"]keywords["\'"]\\s+content=["\'"]([^"\']+)["\']'
+  ])
+  if (keywords) {
+    keywords.split(/[,;]/)
+      .map(k => k.trim().toLowerCase())
+      .filter(k => k.length > 0 && k.length < 30)
+      .forEach(k => tags.push(k))
+  }
+  
+  // Extract article:tag (multiple possible)
+  const articleTagRegex = /<meta\s+property=["']article:tag["']\s+content=["']([^"']+)["']/gi
+  let match
+  while ((match = articleTagRegex.exec(html)) !== null) {
+    const tag = match[1].trim().toLowerCase()
+    if (tag && tag.length < 30) tags.push(tag)
+  }
+  
+  return Array.from(new Set(tags)).slice(0, 5)
 }
 
 const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) => {
@@ -48,47 +82,46 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
     fetchTimeoutRef.current = window.setTimeout(async () => {
       setIsFetchingMetadata(true)
       try {
-        const metadata = await urlMetadata(normalizedUrl)
+        const content = await fetchReadableContent(normalizedUrl)
         lastFetchedUrlRef.current = normalizedUrl
         
         let extractedAnything = false
         
-        // Extract title: prioritize og:title > twitter:title > title
-        const extractedTitle = metadata['og:title'] || metadata['twitter:title'] || metadata.title
-        if (extractedTitle && !title) {
-          setTitle(extractedTitle as string)
-          extractedAnything = true
+        // Extract title: prioritize og:title > twitter:title > <title>
+        if (!title && content.html) {
+          const extractedTitle = extractMetaTag(content.html, [
+            '<meta\\s+property=["\'"]og:title["\'"]\\s+content=["\'"]([^"\']+)["\']',
+            '<meta\\s+name=["\'"]twitter:title["\'"]\\s+content=["\'"]([^"\']+)["\']'
+          ]) || content.title
+          
+          if (extractedTitle) {
+            setTitle(extractedTitle)
+            extractedAnything = true
+          }
         }
         
-        // Extract description: prioritize og:description > twitter:description > description
-        if (!description) {
-          const extractedDesc = metadata['og:description'] || metadata['twitter:description'] || metadata.description
+        // Extract description: prioritize og:description > twitter:description > meta description
+        if (!description && content.html) {
+          const extractedDesc = extractMetaTag(content.html, [
+            '<meta\\s+property=["\'"]og:description["\'"]\\s+content=["\'"]([^"\']+)["\']',
+            '<meta\\s+name=["\'"]twitter:description["\'"]\\s+content=["\'"]([^"\']+)["\']',
+            '<meta\\s+name=["\'"]description["\'"]\\s+content=["\'"]([^"\']+)["\']'
+          ])
+          
           if (extractedDesc) {
-            setDescription(extractedDesc as string)
+            setDescription(extractedDesc)
             extractedAnything = true
           }
         }
         
         // Extract tags from keywords and article:tag (only if user hasn't modified tags)
-        if (!tagsInput) {
-          const normalizeTags = (value: string | string[], delimiter = /[,;]/) => {
-            const arr = Array.isArray(value) ? value : value.split(delimiter)
-            return arr
-              .map(t => t.trim().toLowerCase())
-              .filter(t => t.length > 0 && t.length < 30)
-          }
-          
-          const extractedTags = [
-            ...(metadata.keywords ? normalizeTags(metadata.keywords) : []),
-            ...(metadata['article:tag'] ? normalizeTags(metadata['article:tag']) : [])
-          ]
-          
-          const uniqueTags = Array.from(new Set(extractedTags)).slice(0, 5)
+        if (!tagsInput && content.html) {
+          const extractedTags = extractTags(content.html)
           
           // Only add boris tag if we extracted something
-          if (extractedAnything || uniqueTags.length > 0) {
-            const allTags = uniqueTags.length > 0 
-              ? ['boris', ...uniqueTags] 
+          if (extractedAnything || extractedTags.length > 0) {
+            const allTags = extractedTags.length > 0 
+              ? ['boris', ...extractedTags] 
               : ['boris']
             setTagsInput(allTags.join(', '))
           }
