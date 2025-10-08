@@ -2,7 +2,7 @@
   "name": "boris",
   "version": "0.2.7",
   "description": "A minimal nostr client for bookmark management",
-  "homepage": "https://xn--bris-v0b.com/",
+  "homepage": "https://read.withboris.com/",
   "type": "module",
   "scripts": {
     "dev": "vite",
