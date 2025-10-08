@@ -2280,6 +2280,13 @@ body {
   min-height: 80px;
 }
 
+.form-helper-text {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #999;
+  line-height: 1.4;
+}
+
 .modal-error {
   padding: 0.75rem;
   background: rgba(220, 53, 69, 0.1);

@@ -5,13 +5,14 @@ import IconButton from './IconButton'
 
 interface AddBookmarkModalProps {
   onClose: () => void
-  onSave: (url: string, title?: string, description?: string) => Promise<void>
+  onSave: (url: string, title?: string, description?: string, tags?: string[]) => Promise<void>
 }
 
 const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) => {
   const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [tagsInput, setTagsInput] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -34,10 +35,18 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
 
     try {
       setIsSaving(true)
+      
+      // Parse tags from comma-separated input
+      const tags = tagsInput
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0)
+      
       await onSave(
         url.trim(),
         title.trim() || undefined,
-        description.trim() || undefined
+        description.trim() || undefined,
+        tags.length > 0 ? tags : undefined
       )
       onClose()
     } catch (err) {
@@ -98,6 +107,21 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
               disabled={isSaving}
               rows={3}
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="bookmark-tags">Tags</label>
+            <input
+              id="bookmark-tags"
+              type="text"
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="comma, separated, tags"
+              disabled={isSaving}
+            />
+            <div className="form-helper-text">
+              Separate tags with commas (e.g., "nostr, web3, article")
+            </div>
           </div>
 
           {error && (

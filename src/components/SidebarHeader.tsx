@@ -55,12 +55,12 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
     return `${activeAccount.pubkey.slice(0, 8)}...${activeAccount.pubkey.slice(-8)}`
   }
 
-  const handleSaveBookmark = async (url: string, title?: string, description?: string) => {
+  const handleSaveBookmark = async (url: string, title?: string, description?: string, tags?: string[]) => {
     if (!activeAccount || !relayPool) {
       throw new Error('Please login to create bookmarks')
     }
 
-    await createWebBookmark(url, title, description, activeAccount, relayPool, RELAYS)
+    await createWebBookmark(url, title, description, tags, activeAccount, relayPool, RELAYS)
     
     // Refresh bookmarks after creating
     if (onRefresh) {
