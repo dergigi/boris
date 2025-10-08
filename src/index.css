@@ -2088,6 +2088,36 @@ body {
   text-align: left;
 }
 
+.zap-preset-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.zap-preset-btn {
+  padding: 0.5rem 1rem;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 80px;
+}
+
+.zap-preset-btn:hover {
+  background: #333;
+  border-color: #646cff;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.zap-preset-btn:active {
+  transform: translateY(0);
+}
+
 .settings-footer {
   display: flex;
   justify-content: flex-start;

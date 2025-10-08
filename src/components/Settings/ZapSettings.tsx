@@ -17,9 +17,51 @@ const ZapSettings: React.FC<ZapSettingsProps> = ({ settings, onUpdate }) => {
   const borisPercentage = totalWeight > 0 ? (borisWeight / totalWeight) * 100 : 0
   const authorPercentage = totalWeight > 0 ? (authorWeight / totalWeight) * 100 : 0
 
+  const applyPreset = (preset: { highlighter: number; boris: number; author: number }) => {
+    onUpdate({
+      zapSplitHighlighterWeight: preset.highlighter,
+      zapSplitBorisWeight: preset.boris,
+      zapSplitAuthorWeight: preset.author,
+    })
+  }
+
   return (
     <div className="settings-section">
       <h3 className="section-title">Zap Splits</h3>
+      
+      <div className="setting-group">
+        <label className="setting-label">Presets</label>
+        <div className="zap-preset-buttons">
+          <button
+            onClick={() => applyPreset({ highlighter: 50, boris: 2.1, author: 50 })}
+            className="zap-preset-btn"
+            title="You: 49%, Author: 49%, Boris: 2%"
+          >
+            Default
+          </button>
+          <button
+            onClick={() => applyPreset({ highlighter: 5, boris: 10, author: 75 })}
+            className="zap-preset-btn"
+            title="You: 6%, Author: 83%, Boris: 11%"
+          >
+            Generous
+          </button>
+          <button
+            onClick={() => applyPreset({ highlighter: 1, boris: 19, author: 80 })}
+            className="zap-preset-btn"
+            title="You: 1%, Author: 80%, Boris: 19%"
+          >
+            Selfless
+          </button>
+          <button
+            onClick={() => applyPreset({ highlighter: 10, boris: 80, author: 10 })}
+            className="zap-preset-btn"
+            title="You: 10%, Author: 10%, Boris: 80%"
+          >
+            Boris 🧡
+          </button>
+        </div>
+      </div>
       
       <div className="setting-group">
         <label className="setting-label">Your Share</label>
