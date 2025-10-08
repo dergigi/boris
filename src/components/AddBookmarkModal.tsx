@@ -67,35 +67,19 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
         
         // Extract tags from keywords and article:tag
         if (tagsInput === 'boris') {
-          const extractedTags: string[] = []
-          
-          // Get keywords (can be string or array)
-          if (metadata.keywords) {
-            const keywords = Array.isArray(metadata.keywords) 
-              ? metadata.keywords 
-              : metadata.keywords.split(/[,;]/)
-            
-            keywords
-              .map(k => k.trim().toLowerCase())
-              .filter(k => k.length > 0 && k.length < 30)
-              .forEach(k => extractedTags.push(k))
-          }
-          
-          // Get article:tag (can be string or array)
-          if (metadata['article:tag']) {
-            const articleTags = Array.isArray(metadata['article:tag'])
-              ? metadata['article:tag']
-              : [metadata['article:tag']]
-            
-            articleTags
+          const normalizeTags = (value: string | string[], delimiter = /[,;]/) => {
+            const arr = Array.isArray(value) ? value : value.split(delimiter)
+            return arr
               .map(t => t.trim().toLowerCase())
               .filter(t => t.length > 0 && t.length < 30)
-              .forEach(t => extractedTags.push(t))
           }
           
-          // Deduplicate and limit to first 5 tags
-          const uniqueTags = Array.from(new Set(extractedTags)).slice(0, 5)
+          const extractedTags = [
+            ...(metadata.keywords ? normalizeTags(metadata.keywords) : []),
+            ...(metadata['article:tag'] ? normalizeTags(metadata['article:tag']) : [])
+          ]
           
+          const uniqueTags = Array.from(new Set(extractedTags)).slice(0, 5)
           if (uniqueTags.length > 0) {
             setTagsInput('boris, ' + uniqueTags.join(', '))
           }
