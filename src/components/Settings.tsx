@@ -50,8 +50,15 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
     return migrated
   })
   const isInitialMount = useRef(true)
+  const saveTimeoutRef = useRef<number | null>(null)
+  const isLocallyUpdating = useRef(false)
 
   useEffect(() => {
+    // Don't update from external settings if we're currently making local changes
+    if (isLocallyUpdating.current) {
+      return
+    }
+    
     const migrated = { ...settings }
     const anySettings = migrated as Record<string, unknown>
     if ('zapSplitPercentage' in anySettings && !('zapSplitHighlighterWeight' in migrated)) {
@@ -82,7 +89,30 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
       isInitialMount.current = false
       return
     }
-    onSave(localSettings)
+    
+    // Mark that we're making local updates
+    isLocallyUpdating.current = true
+    
+    // Clear any pending save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+    
+    // Debounce the save to avoid rapid updates
+    saveTimeoutRef.current = setTimeout(() => {
+      onSave(localSettings).finally(() => {
+        // Allow external updates again after a short delay
+        setTimeout(() => {
+          isLocallyUpdating.current = false
+        }, 500)
+      })
+    }, 300)
+    
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
   }, [localSettings, onSave])
 
   const handleResetToDefaults = () => {
