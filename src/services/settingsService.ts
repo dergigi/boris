@@ -35,10 +35,10 @@ export interface UserSettings {
   defaultHighlightVisibilityNostrverse?: boolean
   defaultHighlightVisibilityFriends?: boolean
   defaultHighlightVisibilityMine?: boolean
-  // Zap split percentage for highlights (0-100, default 50)
-  zapSplitPercentage?: number
-  // Boris support percentage (0-100, default 2.1)
-  borisSupportPercentage?: number
+  // Zap split weights (treated as relative weights, not strict percentages)
+  zapSplitHighlighterWeight?: number // default 50
+  zapSplitBorisWeight?: number // default 2.1
+  zapSplitAuthorWeight?: number // default 50
 }
 
 export async function loadSettings(

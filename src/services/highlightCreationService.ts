@@ -79,9 +79,26 @@ export async function createHighlight(
 
   // Add zap tags for nostr-native content (NIP-57 Appendix G)
   if (typeof source === 'object' && 'kind' in source) {
-    const zapSplitPercentage = settings?.zapSplitPercentage ?? 50
-    const borisSupportPercentage = settings?.borisSupportPercentage ?? 2.1
-    addZapTags(highlightEvent, account.pubkey, source, zapSplitPercentage, borisSupportPercentage)
+    // Migrate old settings format to new weight-based format if needed
+    let highlighterWeight = settings?.zapSplitHighlighterWeight
+    let borisWeight = settings?.zapSplitBorisWeight
+    let authorWeight = settings?.zapSplitAuthorWeight
+    
+    const anySettings = settings as Record<string, unknown> | undefined
+    if (!highlighterWeight && anySettings && 'zapSplitPercentage' in anySettings) {
+      highlighterWeight = anySettings.zapSplitPercentage as number
+      authorWeight = 100 - (anySettings.zapSplitPercentage as number)
+    }
+    if (!borisWeight && anySettings && 'borisSupportPercentage' in anySettings) {
+      borisWeight = anySettings.borisSupportPercentage as number
+    }
+    
+    // Use defaults if still undefined
+    highlighterWeight = highlighterWeight ?? 50
+    borisWeight = borisWeight ?? 2.1
+    authorWeight = authorWeight ?? 50
+    
+    addZapTags(highlightEvent, account.pubkey, source, highlighterWeight, borisWeight, authorWeight)
   }
 
   // Sign the event
@@ -194,37 +211,38 @@ function extractContext(selectedText: string, articleContent: string): string | 
  * @param event The highlight event to add zap tags to
  * @param highlighterPubkey The pubkey of the user creating the highlight
  * @param sourceEvent The source event (may contain existing zap tags)
- * @param highlighterPercentage Percentage (0-100) to give to the highlighter (default 50)
- * @param borisPercentage Percentage (0-100) to give to Boris (default 2.1)
+ * @param highlighterWeight Weight to give to the highlighter (default 50)
+ * @param borisWeight Weight to give to Boris (default 2.1)
+ * @param authorWeight Weight to give to author(s) (default 50)
  */
 function addZapTags(
   event: NostrEvent,
   highlighterPubkey: string,
   sourceEvent: NostrEvent,
-  highlighterPercentage: number = 50,
-  borisPercentage: number = 2.1
+  highlighterWeight: number = 50,
+  borisWeight: number = 2.1,
+  authorWeight: number = 50
 ): void {
   // Use a reliable relay for zap metadata lookup (first non-local relay)
   const zapRelay = RELAYS.find(r => !r.includes('localhost')) || RELAYS[0]
-  
-  // Calculate author group percentage (what remains after highlighter and Boris)
-  const authorGroupPercentage = Math.max(0, 100 - highlighterPercentage - borisPercentage)
   
   // Extract existing zap tags from source event (the "author group")
   const existingZapTags = sourceEvent.tags.filter(tag => tag[0] === 'zap')
   
   // Add zap tag for the highlighter
-  event.tags.push(['zap', highlighterPubkey, zapRelay, highlighterPercentage.toString()])
-  
-  // Add zap tag for Boris (if percentage > 0 and Boris is not the highlighter)
-  if (borisPercentage > 0 && BORIS_PUBKEY !== highlighterPubkey) {
-    event.tags.push(['zap', BORIS_PUBKEY, zapRelay, borisPercentage.toFixed(1)])
+  if (highlighterWeight > 0) {
+    event.tags.push(['zap', highlighterPubkey, zapRelay, highlighterWeight.toString()])
   }
   
-  if (existingZapTags.length > 0) {
+  // Add zap tag for Boris (if weight > 0 and Boris is not the highlighter)
+  if (borisWeight > 0 && BORIS_PUBKEY !== highlighterPubkey) {
+    event.tags.push(['zap', BORIS_PUBKEY, zapRelay, borisWeight.toFixed(1)])
+  }
+  
+  if (existingZapTags.length > 0 && authorWeight > 0) {
     // Calculate total weight from existing zap tags
     const totalExistingWeight = existingZapTags.reduce((sum, tag) => {
-      const weight = parseInt(tag[3] || '1', 10)
+      const weight = parseFloat(tag[3] || '1')
       return sum + weight
     }, 0)
     
@@ -236,25 +254,23 @@ function addZapTags(
       // Skip if this is the highlighter or Boris (they already have their shares)
       if (authorPubkey === highlighterPubkey || authorPubkey === BORIS_PUBKEY) continue
       
-      const originalWeight = parseInt(zapTag[3] || '1', 10)
+      const originalWeight = parseFloat(zapTag[3] || '1')
       const originalRelay = zapTag[2] || zapRelay
       
-      // Calculate proportional weight: (original weight / total weight) * author group percentage
-      const adjustedWeight = (originalWeight / totalExistingWeight) * authorGroupPercentage
+      // Calculate proportional weight: (original weight / total weight) * author group weight
+      const adjustedWeight = (originalWeight / totalExistingWeight) * authorWeight
       
       // Only add if weight is greater than 0
       if (adjustedWeight > 0) {
         event.tags.push(['zap', authorPubkey, originalRelay, adjustedWeight.toFixed(1)])
       }
     }
-  } else {
-    // No existing zap tags, use simple split between highlighter, Boris, and source author
+  } else if (authorWeight > 0) {
+    // No existing zap tags, give full author weight to source author
     
-    // Add zap tag for the original author (only if different from highlighter and Boris, and if weight > 0)
-    if (sourceEvent.pubkey !== highlighterPubkey && 
-        sourceEvent.pubkey !== BORIS_PUBKEY && 
-        authorGroupPercentage > 0) {
-      event.tags.push(['zap', sourceEvent.pubkey, zapRelay, authorGroupPercentage.toFixed(1)])
+    // Add zap tag for the original author (only if different from highlighter and Boris)
+    if (sourceEvent.pubkey !== highlighterPubkey && sourceEvent.pubkey !== BORIS_PUBKEY) {
+      event.tags.push(['zap', sourceEvent.pubkey, zapRelay, authorWeight.toFixed(1)])
     }
   }
 }

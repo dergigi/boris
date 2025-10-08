@@ -24,8 +24,9 @@ const DEFAULT_SETTINGS: UserSettings = {
   defaultHighlightVisibilityNostrverse: true,
   defaultHighlightVisibilityFriends: true,
   defaultHighlightVisibilityMine: true,
-  zapSplitPercentage: 50,
-  borisSupportPercentage: 2.1,
+  zapSplitHighlighterWeight: 50,
+  zapSplitBorisWeight: 2.1,
+  zapSplitAuthorWeight: 50,
 }
 
 interface SettingsProps {
@@ -35,11 +36,32 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
-  const [localSettings, setLocalSettings] = useState<UserSettings>(settings)
+  const [localSettings, setLocalSettings] = useState<UserSettings>(() => {
+    // Migrate old settings format to new weight-based format
+    const migrated = { ...settings }
+    const anySettings = migrated as Record<string, unknown>
+    if ('zapSplitPercentage' in anySettings && !('zapSplitHighlighterWeight' in migrated)) {
+      migrated.zapSplitHighlighterWeight = (anySettings.zapSplitPercentage as number) ?? 50
+      migrated.zapSplitAuthorWeight = 100 - ((anySettings.zapSplitPercentage as number) ?? 50)
+    }
+    if ('borisSupportPercentage' in anySettings && !('zapSplitBorisWeight' in migrated)) {
+      migrated.zapSplitBorisWeight = (anySettings.borisSupportPercentage as number) ?? 2.1
+    }
+    return migrated
+  })
   const isInitialMount = useRef(true)
 
   useEffect(() => {
-    setLocalSettings(settings)
+    const migrated = { ...settings }
+    const anySettings = migrated as Record<string, unknown>
+    if ('zapSplitPercentage' in anySettings && !('zapSplitHighlighterWeight' in migrated)) {
+      migrated.zapSplitHighlighterWeight = (anySettings.zapSplitPercentage as number) ?? 50
+      migrated.zapSplitAuthorWeight = 100 - ((anySettings.zapSplitPercentage as number) ?? 50)
+    }
+    if ('borisSupportPercentage' in anySettings && !('zapSplitBorisWeight' in migrated)) {
+      migrated.zapSplitBorisWeight = (anySettings.borisSupportPercentage as number) ?? 2.1
+    }
+    setLocalSettings(migrated)
   }, [settings])
 
   useEffect(() => {
