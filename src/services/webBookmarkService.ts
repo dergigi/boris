@@ -75,11 +75,16 @@ export async function createWebBookmark(
   // Sign the event
   const signedEvent = await factory.sign(draft)
 
-  // Publish to relays
-  await relayPool.publish(relays, signedEvent)
+  // Publish to relays in the background (don't block UI)
+  relayPool.publish(relays, signedEvent)
+    .then(() => {
+      console.log('✅ Web bookmark published to', relays.length, 'relays:', signedEvent)
+    })
+    .catch((err) => {
+      console.warn('⚠️ Some relays failed to publish bookmark:', err)
+    })
 
-  console.log('✅ Web bookmark published:', signedEvent)
-
+  // Return immediately so UI doesn't block
   return signedEvent
 }
 
