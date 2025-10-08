@@ -57,7 +57,7 @@ function saveToCache(url: string, content: ReadableContent): void {
 function toProxyUrl(url: string): string {
   // Ensure the target URL has a protocol and build the proxy URL
   const normalized = /^https?:\/\//i.test(url) ? url : `https://${url}`
-  return `https://r.jina.ai/http://${normalized.replace(/^https?:\/\//, '')}`
+  return `https://r.jina.ai/${normalized}`
 }
 
 export async function fetchReadableContent(
