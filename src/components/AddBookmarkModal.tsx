@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimes, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
-import { fetchReadableContent } from '../services/readerService'
+import urlMetadata from 'url-metadata'
 
 interface AddBookmarkModalProps {
   onClose: () => void
@@ -48,103 +48,55 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
     fetchTimeoutRef.current = window.setTimeout(async () => {
       setIsFetchingMetadata(true)
       try {
-        const metadata = await fetchReadableContent(normalizedUrl)
+        const metadata = await urlMetadata(normalizedUrl)
         lastFetchedUrlRef.current = normalizedUrl
         
-        // Extract title: prioritize og:title, then regular title
-        let extractedTitle = ''
-        if (metadata.html) {
-          // Try OpenGraph title first
-          const ogTitleMatch = metadata.html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i)
-          if (ogTitleMatch) {
-            extractedTitle = ogTitleMatch[1]
-          } else {
-            // Fallback to twitter:title
-            const twitterTitleMatch = metadata.html.match(/<meta\s+name=["']twitter:title["']\s+content=["']([^"']+)["']/i)
-            if (twitterTitleMatch) {
-              extractedTitle = twitterTitleMatch[1]
-            }
-          }
-        }
-        
-        // Use metadata.title as last resort
-        if (!extractedTitle && metadata.title) {
-          extractedTitle = metadata.title
-        }
-        
-        // Only auto-fill if field is empty
+        // Extract title: prioritize og:title > twitter:title > title
+        const extractedTitle = metadata['og:title'] || metadata['twitter:title'] || metadata.title
         if (extractedTitle && !title) {
-          setTitle(extractedTitle)
+          setTitle(extractedTitle as string)
         }
         
-        // Extract description: prioritize og:description
+        // Extract description: prioritize og:description > twitter:description > description
         if (!description) {
-          let extractedDesc = ''
-          
-          if (metadata.html) {
-            // Try OpenGraph description first
-            const ogDescMatch = metadata.html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i)
-            if (ogDescMatch) {
-              extractedDesc = ogDescMatch[1]
-            } else {
-              // Try twitter:description
-              const twitterDescMatch = metadata.html.match(/<meta\s+name=["']twitter:description["']\s+content=["']([^"']+)["']/i)
-              if (twitterDescMatch) {
-                extractedDesc = twitterDescMatch[1]
-              } else {
-                // Fallback to standard meta description
-                const metaDescMatch = metadata.html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i)
-                if (metaDescMatch) {
-                  extractedDesc = metaDescMatch[1]
-                } else {
-                  // Last resort: extract from first <p> tag
-                  const pMatch = metadata.html.match(/<p[^>]*>(.*?)<\/p>/is)
-                  if (pMatch) {
-                    extractedDesc = pMatch[1].replace(/<[^>]+>/g, '').trim().slice(0, 200)
-                  }
-                }
-              }
-            }
-          } else if (metadata.markdown) {
-            // For markdown, take first paragraph
-            const firstPara = metadata.markdown.split('\n\n')[0]
-            extractedDesc = firstPara.replace(/^#+\s*/g, '').trim().slice(0, 200)
-          }
-          
+          const extractedDesc = metadata['og:description'] || metadata['twitter:description'] || metadata.description
           if (extractedDesc) {
-            setDescription(extractedDesc)
+            setDescription(extractedDesc as string)
           }
         }
         
-        // Extract tags: check keywords meta and OpenGraph article tags
-        if (metadata.html && tagsInput === 'boris') {
+        // Extract tags from keywords and article:tag
+        if (tagsInput === 'boris') {
           const extractedTags: string[] = []
           
-          // Try keywords meta tag
-          const keywordsMatch = metadata.html.match(/<meta\s+name=["']keywords["']\s+content=["']([^"']+)["']/i)
-          if (keywordsMatch) {
-            const keywords = keywordsMatch[1]
-              .split(/[,;]/)
+          // Get keywords (can be string or array)
+          if (metadata.keywords) {
+            const keywords = Array.isArray(metadata.keywords) 
+              ? metadata.keywords 
+              : metadata.keywords.split(/[,;]/)
+            
+            keywords
               .map(k => k.trim().toLowerCase())
-              .filter(k => k.length > 0 && k.length < 30) // Reasonable tag length
-            extractedTags.push(...keywords)
+              .filter(k => k.length > 0 && k.length < 30)
+              .forEach(k => extractedTags.push(k))
           }
           
-          // Try OpenGraph article:tag
-          const articleTagRegex = /<meta\s+property=["']article:tag["']\s+content=["']([^"']+)["']/gi
-          let match
-          while ((match = articleTagRegex.exec(metadata.html)) !== null) {
-            const tag = match[1].trim().toLowerCase()
-            if (tag && tag.length < 30) {
-              extractedTags.push(tag)
-            }
+          // Get article:tag (can be string or array)
+          if (metadata['article:tag']) {
+            const articleTags = Array.isArray(metadata['article:tag'])
+              ? metadata['article:tag']
+              : [metadata['article:tag']]
+            
+            articleTags
+              .map(t => t.trim().toLowerCase())
+              .filter(t => t.length > 0 && t.length < 30)
+              .forEach(t => extractedTags.push(t))
           }
           
           // Deduplicate and limit to first 5 tags
           const uniqueTags = Array.from(new Set(extractedTags)).slice(0, 5)
           
           if (uniqueTags.length > 0) {
-            // Prepend boris to extracted tags
             setTagsInput('boris, ' + uniqueTags.join(', '))
           }
         }
