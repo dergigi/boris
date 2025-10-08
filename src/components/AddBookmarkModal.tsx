@@ -13,11 +13,12 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
   const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [tagsInput, setTagsInput] = useState('')
+  const [tagsInput, setTagsInput] = useState('boris')
   const [isSaving, setIsSaving] = useState(false)
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fetchTimeoutRef = useRef<number | null>(null)
+  const lastFetchedUrlRef = useRef<string>('')
 
   // Fetch metadata when URL changes
   useEffect(() => {
@@ -37,11 +38,18 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
       return // Invalid URL, don't fetch
     }
 
+    // Skip if we've already fetched this URL
+    const normalizedUrl = parsedUrl.toString()
+    if (lastFetchedUrlRef.current === normalizedUrl) {
+      return
+    }
+
     // Debounce the fetch to avoid spamming the API
     fetchTimeoutRef.current = window.setTimeout(async () => {
       setIsFetchingMetadata(true)
       try {
-        const metadata = await fetchReadableContent(parsedUrl.toString())
+        const metadata = await fetchReadableContent(normalizedUrl)
+        lastFetchedUrlRef.current = normalizedUrl
         
         // Extract title: prioritize og:title, then regular title
         let extractedTitle = ''
@@ -107,6 +115,39 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
             setDescription(extractedDesc)
           }
         }
+        
+        // Extract tags: check keywords meta and OpenGraph article tags
+        if (metadata.html && tagsInput === 'boris') {
+          const extractedTags: string[] = []
+          
+          // Try keywords meta tag
+          const keywordsMatch = metadata.html.match(/<meta\s+name=["']keywords["']\s+content=["']([^"']+)["']/i)
+          if (keywordsMatch) {
+            const keywords = keywordsMatch[1]
+              .split(/[,;]/)
+              .map(k => k.trim().toLowerCase())
+              .filter(k => k.length > 0 && k.length < 30) // Reasonable tag length
+            extractedTags.push(...keywords)
+          }
+          
+          // Try OpenGraph article:tag
+          const articleTagRegex = /<meta\s+property=["']article:tag["']\s+content=["']([^"']+)["']/gi
+          let match
+          while ((match = articleTagRegex.exec(metadata.html)) !== null) {
+            const tag = match[1].trim().toLowerCase()
+            if (tag && tag.length < 30) {
+              extractedTags.push(tag)
+            }
+          }
+          
+          // Deduplicate and limit to first 5 tags
+          const uniqueTags = Array.from(new Set(extractedTags)).slice(0, 5)
+          
+          if (uniqueTags.length > 0) {
+            // Prepend boris to extracted tags
+            setTagsInput('boris, ' + uniqueTags.join(', '))
+          }
+        }
       } catch (err) {
         console.warn('Failed to fetch metadata:', err)
         // Don't show error to user, just skip auto-fill
@@ -120,7 +161,7 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
         clearTimeout(fetchTimeoutRef.current)
       }
     }
-  }, [url]) // Only depend on url, not title/description to avoid loops
+  }, [url]) // Only depend on url
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
