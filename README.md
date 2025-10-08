@@ -35,6 +35,7 @@ If you bookmark something on nostr, Boris will show it in the bookmarks bar. If 
 - Collects your saved links from Nostr and shows them as a tidy reading list
 - Opens articles in a distraction‑free reader with clear typography
 - Shows community highlights layered on the article (yours, friends, everyone)
+- Splits zaps between you and the author(s) when you highlight
 - Lets you collapse sidebars anytime for full‑focus reading
 - Remembers simple preferences like view mode, fonts, and highlight style
 
