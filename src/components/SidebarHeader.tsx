@@ -98,6 +98,18 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
             variant="ghost"
           />
         )}
+        <div 
+          className="profile-avatar" 
+          title={activeAccount ? getUserDisplayName() : "Login"}
+          onClick={!activeAccount ? (isConnecting ? () => {} : handleLogin) : undefined}
+          style={{ cursor: !activeAccount ? 'pointer' : 'default' }}
+        >
+          {profileImage ? (
+            <img src={profileImage} alt={getUserDisplayName()} />
+          ) : (
+            <FontAwesomeIcon icon={faUserCircle} />
+          )}
+        </div>
         {onRefresh && (
           <IconButton
             icon={faRotate}
@@ -116,18 +128,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           ariaLabel="Settings"
           variant="ghost"
         />
-        <div 
-          className="profile-avatar" 
-          title={activeAccount ? getUserDisplayName() : "Login"}
-          onClick={!activeAccount ? (isConnecting ? () => {} : handleLogin) : undefined}
-          style={{ cursor: !activeAccount ? 'pointer' : 'default' }}
-        >
-          {profileImage ? (
-            <img src={profileImage} alt={getUserDisplayName()} />
-          ) : (
-            <FontAwesomeIcon icon={faUserCircle} />
-          )}
-        </div>
         {activeAccount ? (
           <IconButton
             icon={faRightFromBracket}
