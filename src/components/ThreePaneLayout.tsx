@@ -105,6 +105,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
               html={props.readerContent?.html}
               markdown={props.readerContent?.markdown}
               image={props.readerContent?.image}
+              summary={props.readerContent?.summary}
               selectedUrl={props.selectedUrl}
               highlights={props.classifiedHighlights}
               showHighlights={props.showHighlights}

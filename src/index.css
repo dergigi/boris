@@ -501,17 +501,19 @@ body {
 }
 
 .reader-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  gap: 1rem;
-  flex-wrap: wrap;
+  margin-bottom: 2rem;
 }
 
 .reader-title {
-  margin: 0;
-  flex: 1;
+  margin: 0 0 0.75rem 0;
+  font-family: var(--reading-font);
+}
+
+.reader-summary {
+  color: #aaa;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
   font-family: var(--reading-font);
 }
 
@@ -1096,6 +1098,15 @@ body {
   color: #fff;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   margin-bottom: 0.75rem;
+}
+
+.reader-header-overlay .reader-summary {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  font-family: var(--reading-font);
 }
 
 .reader-header-overlay .reader-meta {

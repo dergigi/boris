@@ -7,6 +7,7 @@ export interface ReadableContent {
   html?: string
   markdown?: string
   image?: string
+  summary?: string
 }
 
 interface CachedContent {

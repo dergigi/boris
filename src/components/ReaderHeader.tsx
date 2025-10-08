@@ -5,6 +5,7 @@ import { faHighlighter, faClock } from '@fortawesome/free-solid-svg-icons'
 interface ReaderHeaderProps {
   title?: string
   image?: string
+  summary?: string
   readingTimeText?: string | null
   hasHighlights: boolean
   highlightCount: number
@@ -13,6 +14,7 @@ interface ReaderHeaderProps {
 const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   title,
   image,
+  summary,
   readingTimeText,
   hasHighlights,
   highlightCount
@@ -24,6 +26,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
         {title && (
           <div className="reader-header-overlay">
             <h2 className="reader-title">{title}</h2>
+            {summary && <p className="reader-summary">{summary}</p>}
             <div className="reader-meta">
               {readingTimeText && (
                 <div className="reading-time">
@@ -49,6 +52,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
       {title && (
         <div className="reader-header">
           <h2 className="reader-title">{title}</h2>
+          {summary && <p className="reader-summary">{summary}</p>}
           <div className="reader-meta">
             {readingTimeText && (
               <div className="reading-time">
