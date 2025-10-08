@@ -1071,6 +1071,8 @@ body {
   margin: 0 0 2rem 0;
   border-radius: 8px;
   overflow: hidden;
+  position: relative;
+  min-height: 300px;
 }
 
 .reader-hero-image img {
@@ -1079,6 +1081,41 @@ body {
   max-height: 500px;
   object-fit: cover;
   display: block;
+}
+
+.reader-header-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 2rem 2rem 1.5rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 60%, rgba(0, 0, 0, 0) 100%);
+}
+
+.reader-header-overlay .reader-title {
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  margin-bottom: 0.75rem;
+}
+
+.reader-header-overlay .reader-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.reader-header-overlay .reading-time,
+.reader-header-overlay .highlight-indicator {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.reader-header-overlay .highlight-indicator {
+  background: rgba(100, 108, 255, 0.25);
+  border: 1px solid rgba(100, 108, 255, 0.4);
 }
 
 /* Private Bookmark Styles */
