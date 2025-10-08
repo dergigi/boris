@@ -1,12 +1,15 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faRotate, faHome } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faRotate, faHome, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { Accounts } from 'applesauce-accounts'
 import IconButton from './IconButton'
+import AddBookmarkModal from './AddBookmarkModal'
+import { createWebBookmark } from '../services/webBookmarkService'
+import { RELAYS } from '../config/relays'
 
 interface SidebarHeaderProps {
   onToggleCollapse: () => void
@@ -18,9 +21,11 @@ interface SidebarHeaderProps {
 
 const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onOpenSettings, onRefresh, isRefreshing }) => {
   const [isConnecting, setIsConnecting] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
   const navigate = useNavigate()
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
+  const relayPool = Hooks.useRelayPool()
   const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
 
   const handleLogin = async () => {
@@ -49,6 +54,19 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
     return `${activeAccount.pubkey.slice(0, 8)}...${activeAccount.pubkey.slice(-8)}`
   }
 
+  const handleSaveBookmark = async (url: string, title?: string, description?: string) => {
+    if (!activeAccount || !relayPool) {
+      throw new Error('Please login to create bookmarks')
+    }
+
+    await createWebBookmark(url, title, description, activeAccount, relayPool, RELAYS)
+    
+    // Refresh bookmarks after creating
+    if (onRefresh) {
+      onRefresh()
+    }
+  }
+
   const profileImage = getProfileImage()
 
   return (
@@ -70,6 +88,15 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           ariaLabel="Home"
           variant="ghost"
         />
+        {activeAccount && (
+          <IconButton
+            icon={faPlus}
+            onClick={() => setShowAddModal(true)}
+            title="Add bookmark"
+            ariaLabel="Add bookmark"
+            variant="ghost"
+          />
+        )}
         {onRefresh && (
           <IconButton
             icon={faRotate}
@@ -119,6 +146,12 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
         )}
         </div>
       </div>
+      {showAddModal && (
+        <AddBookmarkModal
+          onClose={() => setShowAddModal(false)}
+          onSave={handleSaveBookmark}
+        />
+      )}
     </>
   )
 }
