@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
+import { fetchReadableContent } from '../services/readerService'
 
 interface AddBookmarkModalProps {
   onClose: () => void
@@ -14,7 +15,77 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
   const [description, setDescription] = useState('')
   const [tagsInput, setTagsInput] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [isFetchingMetadata, setIsFetchingMetadata] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fetchTimeoutRef = useRef<number | null>(null)
+
+  // Fetch metadata when URL changes
+  useEffect(() => {
+    // Clear any pending fetch
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current)
+    }
+
+    // Don't fetch if URL is empty or invalid
+    if (!url.trim()) return
+
+    // Validate URL format first
+    let parsedUrl: URL
+    try {
+      parsedUrl = new URL(url.trim())
+    } catch {
+      return // Invalid URL, don't fetch
+    }
+
+    // Debounce the fetch to avoid spamming the API
+    fetchTimeoutRef.current = window.setTimeout(async () => {
+      setIsFetchingMetadata(true)
+      try {
+        const metadata = await fetchReadableContent(parsedUrl.toString())
+        
+        // Only auto-fill if fields are empty
+        if (metadata.title && !title) {
+          setTitle(metadata.title)
+        }
+        
+        // Try to extract description from markdown or HTML
+        if (!description) {
+          let extractedDesc = ''
+          if (metadata.markdown) {
+            // Take first paragraph from markdown
+            const firstPara = metadata.markdown.split('\n\n')[0]
+            extractedDesc = firstPara.replace(/^#+\s*/g, '').trim().slice(0, 200)
+          } else if (metadata.html) {
+            // Try to extract meta description or first paragraph
+            const metaMatch = metadata.html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i)
+            if (metaMatch) {
+              extractedDesc = metaMatch[1]
+            } else {
+              // Fallback to first <p> tag
+              const pMatch = metadata.html.match(/<p[^>]*>(.*?)<\/p>/is)
+              if (pMatch) {
+                extractedDesc = pMatch[1].replace(/<[^>]+>/g, '').trim().slice(0, 200)
+              }
+            }
+          }
+          if (extractedDesc) {
+            setDescription(extractedDesc)
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch metadata:', err)
+        // Don't show error to user, just skip auto-fill
+      } finally {
+        setIsFetchingMetadata(false)
+      }
+    }, 800) // Wait 800ms after user stops typing
+
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current)
+      }
+    }
+  }, [url]) // Only depend on url, not title/description to avoid loops
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,7 +144,14 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
-            <label htmlFor="bookmark-url">URL *</label>
+            <label htmlFor="bookmark-url">
+              URL *
+              {isFetchingMetadata && (
+                <span className="fetching-indicator">
+                  <FontAwesomeIcon icon={faSpinner} spin /> Fetching details...
+                </span>
+              )}
+            </label>
             <input
               id="bookmark-url"
               type="text"

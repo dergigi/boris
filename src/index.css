@@ -2243,11 +2243,22 @@ body {
 }
 
 .form-group label {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 0.5rem;
   color: #ccc;
   font-size: 0.9rem;
   font-weight: 500;
+}
+
+.fetching-indicator {
+  font-size: 0.8rem;
+  color: #999;
+  font-weight: normal;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .form-group input,
