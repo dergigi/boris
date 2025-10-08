@@ -13,7 +13,7 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
   const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [tagsInput, setTagsInput] = useState('boris')
+  const [tagsInput, setTagsInput] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -51,10 +51,13 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
         const metadata = await urlMetadata(normalizedUrl)
         lastFetchedUrlRef.current = normalizedUrl
         
+        let extractedAnything = false
+        
         // Extract title: prioritize og:title > twitter:title > title
         const extractedTitle = metadata['og:title'] || metadata['twitter:title'] || metadata.title
         if (extractedTitle && !title) {
           setTitle(extractedTitle as string)
+          extractedAnything = true
         }
         
         // Extract description: prioritize og:description > twitter:description > description
@@ -62,11 +65,12 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
           const extractedDesc = metadata['og:description'] || metadata['twitter:description'] || metadata.description
           if (extractedDesc) {
             setDescription(extractedDesc as string)
+            extractedAnything = true
           }
         }
         
-        // Extract tags from keywords and article:tag
-        if (tagsInput === 'boris') {
+        // Extract tags from keywords and article:tag (only if user hasn't modified tags)
+        if (!tagsInput) {
           const normalizeTags = (value: string | string[], delimiter = /[,;]/) => {
             const arr = Array.isArray(value) ? value : value.split(delimiter)
             return arr
@@ -80,8 +84,13 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
           ]
           
           const uniqueTags = Array.from(new Set(extractedTags)).slice(0, 5)
-          if (uniqueTags.length > 0) {
-            setTagsInput('boris, ' + uniqueTags.join(', '))
+          
+          // Only add boris tag if we extracted something
+          if (extractedAnything || uniqueTags.length > 0) {
+            const allTags = uniqueTags.length > 0 
+              ? ['boris', ...uniqueTags] 
+              : ['boris']
+            setTagsInput(allTags.join(', '))
           }
         }
       } catch (err) {
