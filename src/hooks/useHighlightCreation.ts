@@ -5,6 +5,7 @@ import { Highlight } from '../types/highlights'
 import { ReadableContent } from '../services/readerService'
 import { createHighlight, eventToHighlight } from '../services/highlightCreationService'
 import { HighlightButtonRef } from '../components/HighlightButton'
+import { UserSettings } from '../services/settingsService'
 
 interface UseHighlightCreationParams {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -14,6 +15,7 @@ interface UseHighlightCreationParams {
   selectedUrl: string | undefined
   readerContent: ReadableContent | undefined
   onHighlightCreated: (highlight: Highlight) => void
+  settings?: UserSettings
 }
 
 export const useHighlightCreation = ({
@@ -22,7 +24,8 @@ export const useHighlightCreation = ({
   currentArticle,
   selectedUrl,
   readerContent,
-  onHighlightCreated
+  onHighlightCreated,
+  settings
 }: UseHighlightCreationParams) => {
   const highlightButtonRef = useRef<HighlightButtonRef>(null)
 
@@ -56,7 +59,9 @@ export const useHighlightCreation = ({
         source,
         activeAccount,
         relayPool,
-        contentForContext
+        contentForContext,
+        undefined,
+        settings
       )
       
       console.log('✅ Highlight created successfully!')
@@ -67,7 +72,7 @@ export const useHighlightCreation = ({
     } catch (error) {
       console.error('Failed to create highlight:', error)
     }
-  }, [activeAccount, relayPool, currentArticle, selectedUrl, readerContent, onHighlightCreated])
+  }, [activeAccount, relayPool, currentArticle, selectedUrl, readerContent, onHighlightCreated, settings])
 
   return {
     highlightButtonRef,

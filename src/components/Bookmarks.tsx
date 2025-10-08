@@ -109,7 +109,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     currentArticle,
     selectedUrl,
     readerContent,
-    onHighlightCreated: (highlight) => setHighlights(prev => [highlight, ...prev])
+    onHighlightCreated: (highlight) => setHighlights(prev => [highlight, ...prev]),
+    settings
   })
 
   // Load nostr-native article if naddr is in URL

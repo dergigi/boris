@@ -35,6 +35,8 @@ export interface UserSettings {
   defaultHighlightVisibilityNostrverse?: boolean
   defaultHighlightVisibilityFriends?: boolean
   defaultHighlightVisibilityMine?: boolean
+  // Zap split percentage for highlights (0-100, default 50)
+  zapSplitPercentage?: number
 }
 
 export async function loadSettings(

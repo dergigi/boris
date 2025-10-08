@@ -107,6 +107,27 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
         </div>
       </div>
 
+      <div className="setting-group">
+        <label className="setting-label">Zap Split for Highlights</label>
+        <div className="zap-split-container">
+          <div className="zap-split-labels">
+            <span className="zap-split-label">You: {settings.zapSplitPercentage ?? 50}%</span>
+            <span className="zap-split-label">Author: {100 - (settings.zapSplitPercentage ?? 50)}%</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={settings.zapSplitPercentage ?? 50}
+            onChange={(e) => onUpdate({ zapSplitPercentage: parseInt(e.target.value) })}
+            className="zap-split-slider"
+          />
+          <div className="zap-split-description">
+            When highlighting nostr-native content, zaps will be split between you and the author.
+          </div>
+        </div>
+      </div>
+
       <div className="setting-preview">
         <div className="preview-label">Preview</div>
         <div 

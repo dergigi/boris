@@ -6,6 +6,7 @@ import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
 import { Highlight } from '../types/highlights'
+import { UserSettings } from './settingsService'
 
 const {
   getHighlightText,
@@ -30,7 +31,8 @@ export async function createHighlight(
   account: IAccount,
   relayPool: RelayPool,
   contentForContext?: string,
-  comment?: string
+  comment?: string,
+  settings?: UserSettings
 ): Promise<NostrEvent> {
   if (!selectedText || !source) {
     throw new Error('Missing required data to create highlight')
@@ -70,6 +72,12 @@ export async function createHighlight(
     highlightEvent.tags[altTagIndex] = ['alt', 'Highlight created by Boris. readwithboris.com']
   } else {
     highlightEvent.tags.push(['alt', 'Highlight created by Boris. readwithboris.com'])
+  }
+
+  // Add zap tags for nostr-native content (NIP-57 Appendix G)
+  if (typeof source === 'object' && 'kind' in source) {
+    const zapSplitPercentage = settings?.zapSplitPercentage ?? 50
+    addZapTags(highlightEvent, account.pubkey, source.pubkey, zapSplitPercentage)
   }
 
   // Sign the event
@@ -174,6 +182,36 @@ function extractContext(selectedText: string, articleContent: string): string | 
 
   // Only return context if we have more than just the selected sentence
   return contextParts.length > 1 ? contextParts.join(' ') : undefined
+}
+
+/**
+ * Adds zap tags to a highlight event for split payments (NIP-57 Appendix G)
+ * @param event The highlight event to add zap tags to
+ * @param highlighterPubkey The pubkey of the user creating the highlight
+ * @param authorPubkey The pubkey of the original article author
+ * @param highlighterPercentage Percentage (0-100) to give to the highlighter (default 50)
+ */
+function addZapTags(
+  event: NostrEvent,
+  highlighterPubkey: string,
+  authorPubkey: string,
+  highlighterPercentage: number = 50
+): void {
+  // Calculate weights based on percentage
+  // Using simple integer weights where highlighterPercentage:authorPercentage ratio is maintained
+  const highlighterWeight = Math.round(highlighterPercentage)
+  const authorWeight = Math.round(100 - highlighterPercentage)
+  
+  // Use a reliable relay for zap metadata lookup (first non-local relay)
+  const zapRelay = RELAYS.find(r => !r.includes('localhost')) || RELAYS[0]
+  
+  // Add zap tag for the highlighter
+  event.tags.push(['zap', highlighterPubkey, zapRelay, highlighterWeight.toString()])
+  
+  // Add zap tag for the original author (only if different from highlighter)
+  if (authorPubkey !== highlighterPubkey) {
+    event.tags.push(['zap', authorPubkey, zapRelay, authorWeight.toString()])
+  }
 }
 
 /**

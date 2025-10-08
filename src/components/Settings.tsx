@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   defaultHighlightVisibilityNostrverse: true,
   defaultHighlightVisibilityFriends: true,
   defaultHighlightVisibilityMine: true,
+  zapSplitPercentage: 50,
 }
 
 interface SettingsProps {
