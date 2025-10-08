@@ -208,7 +208,7 @@ function extractContext(selectedText: string, articleContent: string): string | 
 /**
  * Adds zap tags to a highlight event for split payments (NIP-57 Appendix G)
  * Respects existing zap tags in the source event (author group)
- * @param event The highlight event to add zap tags to
+ * @param event The highlight event to add zap tags to (can be EventTemplate or NostrEvent)
  * @param highlighterPubkey The pubkey of the user creating the highlight
  * @param sourceEvent The source event (may contain existing zap tags)
  * @param highlighterWeight Weight to give to the highlighter (default 50)
@@ -216,7 +216,7 @@ function extractContext(selectedText: string, articleContent: string): string | 
  * @param authorWeight Weight to give to author(s) (default 50)
  */
 function addZapTags(
-  event: NostrEvent,
+  event: { tags: string[][] },
   highlighterPubkey: string,
   sourceEvent: NostrEvent,
   highlighterWeight: number = 50,
