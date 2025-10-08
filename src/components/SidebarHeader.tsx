@@ -101,22 +101,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           ariaLabel="Home"
           variant="ghost"
         />
-        <IconButton
-          icon={faGear}
-          onClick={onOpenSettings}
-          title="Settings"
-          ariaLabel="Settings"
-          variant="ghost"
-        />
-        {activeAccount && (
-          <IconButton
-            icon={faPlus}
-            onClick={() => setShowAddModal(true)}
-            title="Add bookmark"
-            ariaLabel="Add bookmark"
-            variant="ghost"
-          />
-        )}
         {onRefresh && (
           <IconButton
             icon={faRotate}
@@ -128,6 +112,22 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
             spin={isRefreshing}
           />
         )}
+        {activeAccount && (
+          <IconButton
+            icon={faPlus}
+            onClick={() => setShowAddModal(true)}
+            title="Add bookmark"
+            ariaLabel="Add bookmark"
+            variant="ghost"
+          />
+        )}
+        <IconButton
+          icon={faGear}
+          onClick={onOpenSettings}
+          title="Settings"
+          ariaLabel="Settings"
+          variant="ghost"
+        />
         {activeAccount ? (
           <IconButton
             icon={faRightFromBracket}
