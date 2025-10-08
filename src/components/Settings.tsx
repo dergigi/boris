@@ -6,6 +6,7 @@ import { loadFont } from '../utils/fontLoader'
 import ReadingDisplaySettings from './Settings/ReadingDisplaySettings'
 import LayoutNavigationSettings from './Settings/LayoutNavigationSettings'
 import StartupPreferencesSettings from './Settings/StartupPreferencesSettings'
+import ZapSettings from './Settings/ZapSettings'
 
 const DEFAULT_SETTINGS: UserSettings = {
   collapseOnArticleOpen: true,
@@ -97,6 +98,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
         <ReadingDisplaySettings settings={localSettings} onUpdate={handleUpdate} />
         <LayoutNavigationSettings settings={localSettings} onUpdate={handleUpdate} />
         <StartupPreferencesSettings settings={localSettings} onUpdate={handleUpdate} />
+        <ZapSettings settings={localSettings} onUpdate={handleUpdate} />
       </div>
     </div>
   )
