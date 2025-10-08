@@ -2218,6 +2218,7 @@ body {
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
 }
 
 .modal-header {
@@ -2272,6 +2273,7 @@ body {
   font-size: 1rem;
   font-family: inherit;
   transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 
 .form-group input:focus,
