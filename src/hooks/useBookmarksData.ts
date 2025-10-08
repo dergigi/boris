@@ -55,17 +55,21 @@ export const useBookmarksData = ({
     setHighlightsLoading(true)
     try {
       if (currentArticleCoordinate) {
-        const highlightsList: Highlight[] = []
+        const highlightsMap = new Map<string, Highlight>()
         await fetchHighlightsForArticle(
           relayPool, 
           currentArticleCoordinate, 
           currentArticleEventId,
           (highlight) => {
-            highlightsList.push(highlight)
-            setHighlights([...highlightsList].sort((a, b) => b.created_at - a.created_at))
+            // Deduplicate highlights by ID as they arrive
+            if (!highlightsMap.has(highlight.id)) {
+              highlightsMap.set(highlight.id, highlight)
+              const highlightsList = Array.from(highlightsMap.values())
+              setHighlights(highlightsList.sort((a, b) => b.created_at - a.created_at))
+            }
           }
         )
-        console.log(`🔄 Refreshed ${highlightsList.length} highlights for article`)
+        console.log(`🔄 Refreshed ${highlightsMap.size} highlights for article`)
       } else if (activeAccount) {
         const fetchedHighlights = await fetchHighlights(relayPool, activeAccount.pubkey)
         setHighlights(fetchedHighlights)

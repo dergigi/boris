@@ -72,19 +72,22 @@ export function useArticleLoader({
         try {
           setHighlightsLoading(true)
           setHighlights([]) // Clear old highlights
-          const highlightsList: Highlight[] = []
+          const highlightsMap = new Map<string, Highlight>()
           
           await fetchHighlightsForArticle(
             relayPool, 
             articleCoordinate, 
             article.event.id,
             (highlight) => {
-              // Render each highlight immediately as it arrives
-              highlightsList.push(highlight)
-              setHighlights([...highlightsList].sort((a, b) => b.created_at - a.created_at))
+              // Deduplicate highlights by ID as they arrive
+              if (!highlightsMap.has(highlight.id)) {
+                highlightsMap.set(highlight.id, highlight)
+                const highlightsList = Array.from(highlightsMap.values())
+                setHighlights(highlightsList.sort((a, b) => b.created_at - a.created_at))
+              }
             }
           )
-          console.log(`📌 Found ${highlightsList.length} highlights`)
+          console.log(`📌 Found ${highlightsMap.size} highlights`)
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {
