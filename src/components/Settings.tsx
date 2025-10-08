@@ -25,6 +25,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   defaultHighlightVisibilityFriends: true,
   defaultHighlightVisibilityMine: true,
   zapSplitPercentage: 50,
+  borisSupportPercentage: 2.1,
 }
 
 interface SettingsProps {

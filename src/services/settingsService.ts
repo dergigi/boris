@@ -37,6 +37,8 @@ export interface UserSettings {
   defaultHighlightVisibilityMine?: boolean
   // Zap split percentage for highlights (0-100, default 50)
   zapSplitPercentage?: number
+  // Boris support percentage (0-100, default 2.1)
+  borisSupportPercentage?: number
 }
 
 export async function loadSettings(
