@@ -82,22 +82,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           <FontAwesomeIcon icon={faChevronRight} />
         </button>
         <div className="sidebar-header-right">
-        <IconButton
-          icon={faHome}
-          onClick={() => navigate('/')}
-          title="Home"
-          ariaLabel="Home"
-          variant="ghost"
-        />
-        {activeAccount && (
-          <IconButton
-            icon={faPlus}
-            onClick={() => setShowAddModal(true)}
-            title="Add bookmark"
-            ariaLabel="Add bookmark"
-            variant="ghost"
-          />
-        )}
         <div 
           className="profile-avatar" 
           title={activeAccount ? getUserDisplayName() : "Login"}
@@ -110,6 +94,29 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
             <FontAwesomeIcon icon={faUserCircle} />
           )}
         </div>
+        <IconButton
+          icon={faHome}
+          onClick={() => navigate('/')}
+          title="Home"
+          ariaLabel="Home"
+          variant="ghost"
+        />
+        <IconButton
+          icon={faGear}
+          onClick={onOpenSettings}
+          title="Settings"
+          ariaLabel="Settings"
+          variant="ghost"
+        />
+        {activeAccount && (
+          <IconButton
+            icon={faPlus}
+            onClick={() => setShowAddModal(true)}
+            title="Add bookmark"
+            ariaLabel="Add bookmark"
+            variant="ghost"
+          />
+        )}
         {onRefresh && (
           <IconButton
             icon={faRotate}
@@ -121,13 +128,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
             spin={isRefreshing}
           />
         )}
-        <IconButton
-          icon={faGear}
-          onClick={onOpenSettings}
-          title="Settings"
-          ariaLabel="Settings"
-          variant="ghost"
-        />
         {activeAccount ? (
           <IconButton
             icon={faRightFromBracket}
