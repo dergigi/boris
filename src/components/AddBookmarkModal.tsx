@@ -43,31 +43,66 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
       try {
         const metadata = await fetchReadableContent(parsedUrl.toString())
         
-        // Only auto-fill if fields are empty
-        if (metadata.title && !title) {
-          setTitle(metadata.title)
-        }
-        
-        // Try to extract description from markdown or HTML
-        if (!description) {
-          let extractedDesc = ''
-          if (metadata.markdown) {
-            // Take first paragraph from markdown
-            const firstPara = metadata.markdown.split('\n\n')[0]
-            extractedDesc = firstPara.replace(/^#+\s*/g, '').trim().slice(0, 200)
-          } else if (metadata.html) {
-            // Try to extract meta description or first paragraph
-            const metaMatch = metadata.html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i)
-            if (metaMatch) {
-              extractedDesc = metaMatch[1]
-            } else {
-              // Fallback to first <p> tag
-              const pMatch = metadata.html.match(/<p[^>]*>(.*?)<\/p>/is)
-              if (pMatch) {
-                extractedDesc = pMatch[1].replace(/<[^>]+>/g, '').trim().slice(0, 200)
-              }
+        // Extract title: prioritize og:title, then regular title
+        let extractedTitle = ''
+        if (metadata.html) {
+          // Try OpenGraph title first
+          const ogTitleMatch = metadata.html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i)
+          if (ogTitleMatch) {
+            extractedTitle = ogTitleMatch[1]
+          } else {
+            // Fallback to twitter:title
+            const twitterTitleMatch = metadata.html.match(/<meta\s+name=["']twitter:title["']\s+content=["']([^"']+)["']/i)
+            if (twitterTitleMatch) {
+              extractedTitle = twitterTitleMatch[1]
             }
           }
+        }
+        
+        // Use metadata.title as last resort
+        if (!extractedTitle && metadata.title) {
+          extractedTitle = metadata.title
+        }
+        
+        // Only auto-fill if field is empty
+        if (extractedTitle && !title) {
+          setTitle(extractedTitle)
+        }
+        
+        // Extract description: prioritize og:description
+        if (!description) {
+          let extractedDesc = ''
+          
+          if (metadata.html) {
+            // Try OpenGraph description first
+            const ogDescMatch = metadata.html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i)
+            if (ogDescMatch) {
+              extractedDesc = ogDescMatch[1]
+            } else {
+              // Try twitter:description
+              const twitterDescMatch = metadata.html.match(/<meta\s+name=["']twitter:description["']\s+content=["']([^"']+)["']/i)
+              if (twitterDescMatch) {
+                extractedDesc = twitterDescMatch[1]
+              } else {
+                // Fallback to standard meta description
+                const metaDescMatch = metadata.html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i)
+                if (metaDescMatch) {
+                  extractedDesc = metaDescMatch[1]
+                } else {
+                  // Last resort: extract from first <p> tag
+                  const pMatch = metadata.html.match(/<p[^>]*>(.*?)<\/p>/is)
+                  if (pMatch) {
+                    extractedDesc = pMatch[1].replace(/<[^>]+>/g, '').trim().slice(0, 200)
+                  }
+                }
+              }
+            }
+          } else if (metadata.markdown) {
+            // For markdown, take first paragraph
+            const firstPara = metadata.markdown.split('\n\n')[0]
+            extractedDesc = firstPara.replace(/^#+\s*/g, '').trim().slice(0, 200)
+          }
+          
           if (extractedDesc) {
             setDescription(extractedDesc)
           }
