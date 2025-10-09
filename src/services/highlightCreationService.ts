@@ -114,12 +114,27 @@ export async function createHighlight(
   eventStore.add(signedEvent)
   console.log('💾 Stored highlight in EventStore:', signedEvent.id.slice(0, 8))
   
-  // Check if we're only publishing to local relays
-  const isLocalOnly = areAllRelaysLocal(targetRelays)
+  // Check current connection status - are we online or in flight mode?
+  const connectedRelays = Array.from(relayPool.relays.values())
+    .filter(relay => relay.connected)
+    .map(relay => relay.url)
+  
+  const hasRemoteConnection = connectedRelays.some(url => 
+    !url.includes('localhost') && !url.includes('127.0.0.1')
+  )
+  
+  // Determine which relays we expect to succeed
+  const expectedSuccessRelays = hasRemoteConnection 
+    ? RELAYS 
+    : RELAYS.filter(r => r.includes('localhost') || r.includes('127.0.0.1'))
+  
+  const isLocalOnly = areAllRelaysLocal(expectedSuccessRelays)
   
   console.log('📍 Highlight relay status:', {
-    targetRelays,
+    targetRelays: targetRelays.length,
+    expectedSuccessRelays,
     isLocalOnly,
+    hasRemoteConnection,
     eventId: signedEvent.id
   })
   
@@ -130,7 +145,7 @@ export async function createHighlight(
   
   // Convert to Highlight with relay tracking info and return IMMEDIATELY
   const highlight = eventToHighlight(signedEvent)
-  highlight.publishedRelays = targetRelays
+  highlight.publishedRelays = expectedSuccessRelays // Show only relays we expect to succeed
   highlight.isLocalOnly = isLocalOnly
   highlight.isOfflineCreated = isLocalOnly // Mark as created offline if local-only
   
