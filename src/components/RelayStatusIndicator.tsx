@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlane, faGlobe, faCircle } from '@fortawesome/free-solid-svg-icons'
+import { faPlane, faGlobe, faCircle, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { RelayPool } from 'applesauce-relay'
 import { useRelayStatus } from '../hooks/useRelayStatus'
 import { isLocalRelay } from '../utils/helpers'
@@ -12,6 +12,7 @@ interface RelayStatusIndicatorProps {
 export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ relayPool }) => {
   // Poll frequently for responsive offline indicator (5s instead of default 20s)
   const relayStatuses = useRelayStatus({ relayPool, pollingInterval: 5000 })
+  const [isConnecting, setIsConnecting] = useState(true)
   
   if (!relayPool) return null
   
@@ -25,32 +26,55 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ rela
   const localOnlyMode = hasLocalRelay && !hasRemoteRelay
   const offlineMode = connectedUrls.length === 0
   
+  // Show "Connecting" for first few seconds or until relays connect
+  useEffect(() => {
+    if (connectedUrls.length > 0) {
+      // Connected! Stop showing connecting state
+      setIsConnecting(false)
+    } else {
+      // No connections yet - show connecting for 4 seconds
+      setIsConnecting(true)
+      const timeout = setTimeout(() => {
+        setIsConnecting(false)
+      }, 4000)
+      return () => clearTimeout(timeout)
+    }
+  }, [connectedUrls.length])
+  
   // Debug logging
-  React.useEffect(() => {
+  useEffect(() => {
     console.log('🔌 Relay Status Indicator:', {
-      mode: offlineMode ? 'OFFLINE' : localOnlyMode ? 'LOCAL_ONLY' : 'ONLINE',
+      mode: isConnecting ? 'CONNECTING' : offlineMode ? 'OFFLINE' : localOnlyMode ? 'LOCAL_ONLY' : 'ONLINE',
       totalStatuses: relayStatuses.length,
       connectedCount: connectedUrls.length,
       connectedUrls: connectedUrls.map(u => u.replace(/^wss?:\/\//, '')),
       hasLocalRelay,
-      hasRemoteRelay
+      hasRemoteRelay,
+      isConnecting
     })
-  }, [offlineMode, localOnlyMode, connectedUrls.length, relayStatuses.length, hasLocalRelay, hasRemoteRelay])
+  }, [offlineMode, localOnlyMode, connectedUrls.length, relayStatuses.length, hasLocalRelay, hasRemoteRelay, isConnecting])
   
-  // Don't show indicator when fully connected
-  if (!localOnlyMode && !offlineMode) return null
+  // Don't show indicator when fully connected (but show when connecting)
+  if (!localOnlyMode && !offlineMode && !isConnecting) return null
   
   return (
     <div className="relay-status-indicator" title={
-      offlineMode 
-        ? 'Offline - No relays connected'
-        : 'Local Relays Only - Highlights will be marked as local'
+      isConnecting
+        ? 'Connecting to relays...'
+        : offlineMode 
+          ? 'Offline - No relays connected'
+          : 'Local Relays Only - Highlights will be marked as local'
     }>
       <div className="relay-status-icon">
-        <FontAwesomeIcon icon={offlineMode ? faCircle : faPlane} />
+        <FontAwesomeIcon icon={isConnecting ? faSpinner : offlineMode ? faCircle : faPlane} spin={isConnecting} />
       </div>
       <div className="relay-status-text">
-        {offlineMode ? (
+        {isConnecting ? (
+          <>
+            <span className="relay-status-title">Connecting</span>
+            <span className="relay-status-subtitle">Establishing connections...</span>
+          </>
+        ) : offlineMode ? (
           <>
             <span className="relay-status-title">Offline</span>
             <span className="relay-status-subtitle">No relays connected</span>
@@ -62,7 +86,7 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ rela
           </>
         )}
       </div>
-      {!offlineMode && (
+      {!offlineMode && !isConnecting && (
         <div className="relay-status-pulse">
           <FontAwesomeIcon icon={faGlobe} className="pulse-icon" />
         </div>
