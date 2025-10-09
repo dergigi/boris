@@ -44,7 +44,7 @@ export const HighlightButton = React.forwardRef<HighlightButtonRef, HighlightBut
       <button
         className="highlight-fab"
         style={{
-          position: 'fixed',
+          position: 'absolute',
           bottom: '32px',
           right: '32px',
           zIndex: 1000,
