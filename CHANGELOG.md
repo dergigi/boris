@@ -5,6 +5,73 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.10] - 2025-10-09
+
+### Added
+- URL-based settings navigation with /settings route
+- Active zap split preset highlighting
+- Educational links about relays in reader view
+- Article publication date display in reader
+- Local relay recommendations in settings
+- Relays section showing active and recently connected relays
+
+### Fixed
+- Remove trailing slash from relay URLs
+- Constrain Reading Font dropdown width
+
+### Changed
+- Rename 'Default View Mode' to 'Default Bookmark View' in settings
+- Reorganize settings layout for better UX
+- Use sidebar-style colored buttons for highlight visibility
+- Simplify Relays section presentation
+
+## [0.2.9] - 2025-10-09
+
+### Fixed
+- Deduplicate highlights in streaming callbacks
+
+## [0.2.8] - 2025-10-09
+
+### Added
+- Display article summary in header
+- Overlay title and metadata on hero images
+- Apply reading font to article titles
+
+### Fixed
+- Pass article summary through to ReadableContent
+- Correct Jina AI Reader proxy URL format
+
+### Changed
+- Update homepage URL to read.withboris.com
+- Reorder toolbar buttons for better UX
+
+## [0.2.7] - 2025-10-08
+
+### Added
+- Web bookmark creation (NIP-B0, kind:39701)
+- Tags support for web bookmarks per NIP-B0
+- Auto-fetch title and description when URL is pasted
+- Prioritize OpenGraph tags for metadata extraction
+- Auto-extract tags from metadata with boris as default tag
+- Zap split preset buttons
+- Boris support percentage to zap splits
+- Respect existing zap tags in source content when creating highlights
+
+### Fixed
+- Revert to fetchReadableContent to avoid CORS issues
+- Improve modal spacing with proper box-sizing
+- Prevent sliders from jumping when resetting settings
+- Pass relayPool as prop instead of using non-existent hook
+- Correct type signature for addZapTags function
+
+### Changed
+- Reorder toolbar buttons for better UX
+- DRY up tag extraction with normalizeTags helper
+- Use url-metadata package for robust metadata extraction
+- Make zap split sliders independent using weights
+- Move zap splits to dedicated settings section
+- Publish bookmarks to relays in background for better performance
+
 ## [0.2.6] - 2025-10-08
 
 ### Added
@@ -359,6 +426,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
+[0.2.10]: https://github.com/dergigi/boris/compare/v0.2.9...v0.2.10
+[0.2.9]: https://github.com/dergigi/boris/compare/v0.2.8...v0.2.9
+[0.2.8]: https://github.com/dergigi/boris/compare/v0.2.7...v0.2.8
+[0.2.7]: https://github.com/dergigi/boris/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/dergigi/boris/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/dergigi/boris/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/dergigi/boris/compare/v0.2.3...v0.2.4
