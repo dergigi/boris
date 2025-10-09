@@ -105,19 +105,6 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
         </label>
       </div>
 
-      <div className="setting-group">
-        <label htmlFor="rebroadcastToAllRelays" className="checkbox-label">
-          <input
-            id="rebroadcastToAllRelays"
-            type="checkbox"
-            checked={settings.rebroadcastToAllRelays ?? false}
-            onChange={(e) => onUpdate({ rebroadcastToAllRelays: e.target.checked })}
-            className="setting-checkbox"
-          />
-          <span>Rebroadcast events while browsing</span>
-        </label>
-      </div>
-
       <div style={{ 
         marginTop: '1.5rem', 
         padding: '1rem',
