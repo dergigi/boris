@@ -1286,7 +1286,6 @@ body {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  padding-right: 1rem;
 }
 
 .highlights-container.collapsed {
