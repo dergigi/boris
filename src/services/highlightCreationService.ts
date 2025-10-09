@@ -75,9 +75,9 @@ export async function createHighlight(
   // Update the alt tag to identify Boris as the creator
   const altTagIndex = highlightEvent.tags.findIndex(tag => tag[0] === 'alt')
   if (altTagIndex !== -1) {
-    highlightEvent.tags[altTagIndex] = ['alt', 'Highlight created by Boris. readwithboris.com']
+    highlightEvent.tags[altTagIndex] = ['alt', 'Highlight created by Boris. read.withboris.com']
   } else {
-    highlightEvent.tags.push(['alt', 'Highlight created by Boris. readwithboris.com'])
+    highlightEvent.tags.push(['alt', 'Highlight created by Boris. read.withboris.com'])
   }
 
   // Add p tag (author tag) for nostr-native content
