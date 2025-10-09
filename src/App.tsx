@@ -9,6 +9,7 @@ import { registerCommonAccountTypes } from 'applesauce-accounts/accounts'
 import { RelayPool } from 'applesauce-relay'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Bookmarks from './components/Bookmarks'
+import Explore from './components/Explore'
 import Toast from './components/Toast'
 import { useToast } from './hooks/useToast'
 import { RELAYS } from './config/relays'
@@ -59,6 +60,12 @@ function AppRoutes({
             relayPool={relayPool}
             onLogout={handleLogout}
           />
+        } 
+      />
+      <Route 
+        path="/explore" 
+        element={
+          <Explore relayPool={relayPool} />
         } 
       />
       <Route path="/" element={<Navigate to={`/a/${DEFAULT_ARTICLE}`} replace />} />
