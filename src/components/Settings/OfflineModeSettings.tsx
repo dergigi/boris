@@ -109,7 +109,7 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
               gap: '0.5rem'
             }}>
               <span>
-                ({cacheStats.totalSizeMB.toFixed(1)} MB, {cacheStats.itemCount} images)
+                ( {cacheStats.totalSizeMB.toFixed(1)} MB / [ {settings.imageCacheSizeMB ?? 50} ] MB used )
               </span>
               <button
                 onClick={handleClearCache}
