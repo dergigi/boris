@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendar, faUser } from '@fortawesome/free-solid-svg-icons'
 import { formatDistance } from 'date-fns'
@@ -8,10 +9,10 @@ import { Models } from 'applesauce-core'
 
 interface BlogPostCardProps {
   post: BlogPostPreview
-  onClick: () => void
+  href: string
 }
 
-const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, onClick }) => {
+const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href }) => {
   const profile = useEventModel(Models.ProfileModel, [post.author])
   const displayName = profile?.name || profile?.display_name || 
     `${post.author.slice(0, 8)}...${post.author.slice(-4)}`
@@ -22,10 +23,10 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, onClick }) => {
   })
 
   return (
-    <div 
+    <Link 
+      to={href}
       className="blog-post-card"
-      onClick={onClick}
-      style={{ cursor: 'pointer' }}
+      style={{ textDecoration: 'none', color: 'inherit' }}
     >
       {post.image && (
         <div className="blog-post-card-image">
@@ -52,7 +53,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, onClick }) => {
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 

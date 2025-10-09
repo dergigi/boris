@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner, faExclamationCircle, faCompass } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
@@ -14,7 +13,6 @@ interface ExploreProps {
 }
 
 const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
-  const navigate = useNavigate()
   const activeAccount = Hooks.useActiveAccount()
   const [blogPosts, setBlogPosts] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
@@ -67,7 +65,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
     loadBlogPosts()
   }, [relayPool, activeAccount])
 
-  const handlePostClick = (post: BlogPostPreview) => {
+  const getPostUrl = (post: BlogPostPreview) => {
     // Get the d-tag identifier
     const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
     
@@ -78,8 +76,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
       identifier: dTag
     })
     
-    // Navigate to article view
-    navigate(`/a/${naddr}`)
+    return `/a/${naddr}`
   }
 
   if (loading) {
@@ -120,7 +117,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
           <BlogPostCard
             key={`${post.author}:${post.event.tags.find(t => t[0] === 'd')?.[1]}`}
             post={post}
-            onClick={() => handlePostClick(post)}
+            href={getPostUrl(post)}
           />
         ))}
       </div>
