@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2025-10-09
+
+### Fixed
+- Add p tag (author tag) to highlights of nostr-native content for proper attribution
+
+## [0.3.3] - 2025-10-09
+
+### Added
+- Service Worker for robust offline image caching
+- /explore route to discover blog posts from friends on Nostr
+- Explore button (newspaper icon) in bookmarks header
+- "Connecting" status indicator on page load (instead of immediately showing "Offline")
+- Last fetch time display with relative timestamps in bookmarks list
+
+### Changed
+- Simplify image caching to use Service Worker transparently
+- Move refresh button from top bar to end of bookmarks list
+- Make explore page article cards proper links (supports CMD+click to open in new tab)
+- Reorganize bookmarks UI for better UX
+
+### Fixed
+- Improve image cache resilience for offline viewing and hard reloads
+- Correct TypeScript types for cache stats state
+- Resolve linter errors for unused parameters
+- Import useEventModel from applesauce-react/hooks for proper type safety
+- Import Models from applesauce-core instead of applesauce-react
+- Use correct useEventModel hook for profile loading in BlogPostCard
+
 ## [0.3.0] - 2025-10-09
 
 ### Added
@@ -472,6 +500,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
+[0.3.4]: https://github.com/dergigi/boris/compare/v0.3.3...v0.3.4
+[0.3.3]: https://github.com/dergigi/boris/compare/v0.3.2...v0.3.3
+[0.3.2]: https://github.com/dergigi/boris/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/dergigi/boris/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/dergigi/boris/compare/v0.2.10...v0.3.0
 [0.2.10]: https://github.com/dergigi/boris/compare/v0.2.9...v0.2.10
 [0.2.9]: https://github.com/dergigi/boris/compare/v0.2.8...v0.2.9
