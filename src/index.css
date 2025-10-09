@@ -547,17 +547,16 @@ body {
   align-items: center;
   gap: 0.4rem;
   font-size: 0.813rem;
-  color: rgba(136, 136, 136, 0.8);
+  color: #fff;
   padding: 0.4rem 0.75rem;
-  background: var(--surface-secondary);
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 10;
 }
 
 .publish-date-topright svg {
   font-size: 0.75rem;
-  opacity: 0.7;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 .reading-time {
@@ -1162,12 +1161,6 @@ body {
   opacity: 0.7;
 }
 
-.reader-hero-image .publish-date-topright {
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.85);
-}
 
 .reader-header-overlay .reading-time,
 .reader-header-overlay .highlight-indicator {
