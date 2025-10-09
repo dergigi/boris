@@ -154,7 +154,7 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, onClose })
         fontSize: '0.9rem',
         lineHeight: '1.6'
       }}>
-        <p style={{ margin: '0 0 0.75rem 0', color: 'var(--text-secondary)' }}>
+        <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
           Boris works best with a local relay. Consider running{' '}
           <a 
             href="https://github.com/greenart7c3/Citrine?tab=readme-ov-file#download" 
@@ -173,10 +173,7 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, onClose })
           >
             nostr-relay-tray
           </a>
-          .
-        </p>
-        <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-          Don't know what relays are? Learn more{' '}
+          . Don't know what relays are? Learn more{' '}
           <a 
             onClick={(e) => {
               e.preventDefault()
