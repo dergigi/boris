@@ -80,6 +80,16 @@ export async function createHighlight(
     highlightEvent.tags.push(['alt', 'Highlight created by Boris. readwithboris.com'])
   }
 
+  // Add p tag (author tag) for nostr-native content
+  // This tags the original author so they can see highlights of their work
+  if (typeof source === 'object' && 'kind' in source) {
+    // Only add p tag if it doesn't already exist
+    const hasPTag = highlightEvent.tags.some(tag => tag[0] === 'p' && tag[1] === source.pubkey)
+    if (!hasPTag) {
+      highlightEvent.tags.push(['p', source.pubkey])
+    }
+  }
+
   // Add zap tags for nostr-native content (NIP-57 Appendix G)
   if (typeof source === 'object' && 'kind' in source) {
     // Migrate old settings format to new weight-based format if needed
