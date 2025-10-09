@@ -543,22 +543,11 @@ body {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
   font-size: 0.813rem;
   color: #fff;
   padding: 0.4rem 0.75rem;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
   z-index: 10;
-}
-
-.publish-date-topright svg {
-  font-size: 0.75rem;
-  opacity: 0.9;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 .reading-time {

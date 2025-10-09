@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHighlighter, faClock, faCalendar } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faClock } from '@fortawesome/free-solid-svg-icons'
 import { format } from 'date-fns'
 
 interface ReaderHeaderProps {
@@ -29,8 +29,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
         <img src={image} alt={title || 'Article image'} />
         {formattedDate && (
           <div className="publish-date-topright">
-            <FontAwesomeIcon icon={faCalendar} />
-            <span>{formattedDate}</span>
+            {formattedDate}
           </div>
         )}
         {title && (
@@ -63,8 +62,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
         <div className="reader-header">
           {formattedDate && (
             <div className="publish-date-topright">
-              <FontAwesomeIcon icon={faCalendar} />
-              <span>{formattedDate}</span>
+              {formattedDate}
             </div>
           )}
           <h2 className="reader-title">{title}</h2>
