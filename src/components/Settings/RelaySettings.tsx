@@ -1,17 +1,20 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheckCircle, faCircle, faClock, faPlane } from '@fortawesome/free-solid-svg-icons'
+import { faCheckCircle, faCircle, faClock, faPlane, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { RelayStatus } from '../../services/relayStatusService'
 import { formatDistanceToNow } from 'date-fns'
 import { isLocalRelay } from '../../utils/helpers'
+import { UserSettings } from '../../services/settingsService'
 
 interface RelaySettingsProps {
   relayStatuses: RelayStatus[]
+  settings: UserSettings
+  onUpdate: (updates: Partial<UserSettings>) => void
   onClose?: () => void
 }
 
-const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, onClose }) => {
+const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, settings, onUpdate, onClose }) => {
   const navigate = useNavigate()
   const activeRelays = relayStatuses.filter(r => r.isInPool)
   const recentRelays = relayStatuses.filter(r => !r.isInPool)
@@ -36,6 +39,44 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, onClose })
   return (
     <div className="settings-section">
       <h3>Relays</h3>
+
+      <div className="settings-group">
+        <label className="settings-checkbox-label">
+          <input
+            type="checkbox"
+            checked={settings.useLocalRelayAsCache ?? true}
+            onChange={(e) => onUpdate({ useLocalRelayAsCache: e.target.checked })}
+          />
+          <div className="settings-label-content">
+            <div className="settings-label-title">
+              <FontAwesomeIcon icon={faPlane} style={{ marginRight: '0.5rem', color: '#f59e0b' }} />
+              Use local relay(s) as cache
+            </div>
+            <div className="settings-label-description">
+              Rebroadcast articles, bookmarks, and highlights to your local relays when fetched
+            </div>
+          </div>
+        </label>
+      </div>
+
+      <div className="settings-group">
+        <label className="settings-checkbox-label">
+          <input
+            type="checkbox"
+            checked={settings.rebroadcastToAllRelays ?? false}
+            onChange={(e) => onUpdate({ rebroadcastToAllRelays: e.target.checked })}
+          />
+          <div className="settings-label-content">
+            <div className="settings-label-title">
+              <FontAwesomeIcon icon={faGlobe} style={{ marginRight: '0.5rem', color: '#646cff' }} />
+              Rebroadcast events to all relays
+            </div>
+            <div className="settings-label-description">
+              Rebroadcast articles, bookmarks, and highlights to all your relays to help propagate content
+            </div>
+          </div>
+        </label>
+      </div>
 
       {activeRelays.length > 0 && (
         <div className="relay-group" style={{ marginBottom: '1.5rem' }}>
