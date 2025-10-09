@@ -1,6 +1,7 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faBookmark, faSpinner, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faBookmark, faSpinner, faList, faThLarge, faImage, faRotate } from '@fortawesome/free-solid-svg-icons'
+import { formatDistanceToNow } from 'date-fns'
 import { RelayPool } from 'applesauce-relay'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
@@ -22,6 +23,7 @@ interface BookmarkListProps {
   onOpenSettings: () => void
   onRefresh?: () => void
   isRefreshing?: boolean
+  lastFetchTime?: number | null
   loading?: boolean
   relayPool: RelayPool | null
   settings?: UserSettings
@@ -39,6 +41,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   onOpenSettings,
   onRefresh,
   isRefreshing,
+  lastFetchTime,
   loading = false,
   relayPool,
   settings
@@ -102,8 +105,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         onToggleCollapse={onToggleCollapse} 
         onLogout={onLogout}
         onOpenSettings={onOpenSettings}
-        onRefresh={onRefresh}
-        isRefreshing={isRefreshing}
         relayPool={relayPool}
       />
       
@@ -130,6 +131,34 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
               />
             )}
           </div>
+          {onRefresh && (
+            <div className="refresh-section" style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              padding: '1rem',
+              marginTop: '1rem',
+              borderTop: '1px solid var(--border-color)',
+              fontSize: '0.85rem',
+              color: 'var(--text-secondary)'
+            }}>
+              <IconButton
+                icon={faRotate}
+                onClick={onRefresh}
+                title="Refresh bookmarks"
+                ariaLabel="Refresh bookmarks"
+                variant="ghost"
+                disabled={isRefreshing}
+                spin={isRefreshing}
+              />
+              {lastFetchTime && (
+                <span>
+                  Updated {formatDistanceToNow(lastFetchTime, { addSuffix: true })}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
       <div className="view-mode-controls">

@@ -94,6 +94,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     setHighlightsLoading,
     followedPubkeys,
     isRefreshing,
+    lastFetchTime,
     handleFetchHighlights,
     handleRefreshAll
   } = useBookmarksData({
@@ -182,6 +183,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       bookmarksLoading={bookmarksLoading}
       viewMode={viewMode}
       isRefreshing={isRefreshing}
+      lastFetchTime={lastFetchTime}
       onToggleSidebar={() => setIsCollapsed(!isCollapsed)}
       onLogout={onLogout}
       onViewModeChange={setViewMode}

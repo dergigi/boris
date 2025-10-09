@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faRotate, faHome, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faHome, faPlus, faNewspaper } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -16,12 +16,10 @@ interface SidebarHeaderProps {
   onToggleCollapse: () => void
   onLogout: () => void
   onOpenSettings: () => void
-  onRefresh?: () => void
-  isRefreshing?: boolean
   relayPool: RelayPool | null
 }
 
-const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onOpenSettings, onRefresh, isRefreshing, relayPool }) => {
+const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onOpenSettings, relayPool }) => {
   const [isConnecting, setIsConnecting] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const navigate = useNavigate()
@@ -61,11 +59,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
     }
 
     await createWebBookmark(url, title, description, tags, activeAccount, relayPool, RELAYS)
-    
-    // Refresh bookmarks after creating
-    if (onRefresh) {
-      onRefresh()
-    }
   }
 
   const profileImage = getProfileImage()
@@ -102,23 +95,19 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           variant="ghost"
         />
         <IconButton
+          icon={faNewspaper}
+          onClick={() => navigate('/explore')}
+          title="Explore"
+          ariaLabel="Explore"
+          variant="ghost"
+        />
+        <IconButton
           icon={faGear}
           onClick={onOpenSettings}
           title="Settings"
           ariaLabel="Settings"
           variant="ghost"
         />
-        {onRefresh && (
-          <IconButton
-            icon={faRotate}
-            onClick={onRefresh}
-            title="Refresh bookmarks"
-            ariaLabel="Refresh bookmarks"
-            variant="ghost"
-            disabled={isRefreshing}
-            spin={isRefreshing}
-          />
-        )}
         {activeAccount && (
           <IconButton
             icon={faPlus}

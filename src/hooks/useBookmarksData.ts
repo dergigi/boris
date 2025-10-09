@@ -34,6 +34,7 @@ export const useBookmarksData = ({
   const [highlightsLoading, setHighlightsLoading] = useState(true)
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null)
 
   const handleFetchContacts = useCallback(async () => {
     if (!relayPool || !activeAccount) return
@@ -93,6 +94,7 @@ export const useBookmarksData = ({
       await handleFetchBookmarks()
       await handleFetchHighlights()
       await handleFetchContacts()
+      setLastFetchTime(Date.now())
     } catch (err) {
       console.error('Failed to refresh data:', err)
     } finally {
@@ -119,6 +121,7 @@ export const useBookmarksData = ({
     setHighlightsLoading,
     followedPubkeys,
     isRefreshing,
+    lastFetchTime,
     handleFetchBookmarks,
     handleFetchHighlights,
     handleRefreshAll

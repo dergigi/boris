@@ -28,6 +28,7 @@ interface ThreePaneLayoutProps {
   bookmarksLoading: boolean
   viewMode: ViewMode
   isRefreshing: boolean
+  lastFetchTime?: number | null
   onToggleSidebar: () => void
   onLogout: () => void
   onViewModeChange: (mode: ViewMode) => void
@@ -90,6 +91,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             onOpenSettings={props.onOpenSettings}
             onRefresh={props.onRefresh}
             isRefreshing={props.isRefreshing}
+            lastFetchTime={props.lastFetchTime}
             loading={props.bookmarksLoading}
             relayPool={props.relayPool}
             settings={props.settings}
