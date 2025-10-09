@@ -44,7 +44,7 @@ export interface UserSettings {
   rebroadcastToAllRelays?: boolean // Rebroadcast events to all relays
   // Image cache settings
   enableImageCache?: boolean // Enable caching images in localStorage
-  imageCacheSizeMB?: number // Maximum cache size in megabytes (default: 50MB)
+  imageCacheSizeMB?: number // Maximum cache size in megabytes (default: 210MB)
 }
 
 export async function loadSettings(

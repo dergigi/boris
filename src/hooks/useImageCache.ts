@@ -43,7 +43,7 @@ export function useImageCache(
     // Cache image in background
     if (!isLoading) {
       setIsLoading(true)
-      const maxSize = settings?.imageCacheSizeMB ?? 50
+      const maxSize = settings?.imageCacheSizeMB ?? 210
       
       cacheImage(imageUrl, maxSize)
         .then(dataUrl => {
@@ -81,7 +81,7 @@ export function useCacheImageOnLoad(
     if (cached) return
 
     // Cache in background
-    const maxSize = settings?.imageCacheSizeMB ?? 50
+    const maxSize = settings?.imageCacheSizeMB ?? 210
     cacheImage(imageUrl, maxSize).catch(err => {
       console.error('Failed to cache image:', err)
     })

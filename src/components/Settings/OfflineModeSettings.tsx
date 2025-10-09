@@ -65,8 +65,8 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
                 type="number"
                 min="10"
                 max="500"
-                value={settings.imageCacheSizeMB ?? 50}
-                onChange={(e) => onUpdate({ imageCacheSizeMB: parseInt(e.target.value) || 50 })}
+                value={settings.imageCacheSizeMB ?? 210}
+                onChange={(e) => onUpdate({ imageCacheSizeMB: parseInt(e.target.value) || 210 })}
                 style={{
                   width: '50px',
                   padding: '0.15rem 0.35rem',

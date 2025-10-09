@@ -148,7 +148,7 @@ export async function fetchArticleByNaddr(
     
     // Cache cover image if enabled and present
     if (image && settings?.enableImageCache !== false) {
-      const maxSize = settings?.imageCacheSizeMB ?? 50
+      const maxSize = settings?.imageCacheSizeMB ?? 210
       cacheImage(image, maxSize).catch(err => {
         console.warn('Failed to cache article cover image:', err)
       })
