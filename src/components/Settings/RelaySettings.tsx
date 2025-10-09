@@ -1,9 +1,10 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheckCircle, faCircle, faClock } from '@fortawesome/free-solid-svg-icons'
+import { faCheckCircle, faCircle, faClock, faPlane } from '@fortawesome/free-solid-svg-icons'
 import { RelayStatus } from '../../services/relayStatusService'
 import { formatDistanceToNow } from 'date-fns'
+import { isLocalRelay } from '../../utils/helpers'
 
 interface RelaySettingsProps {
   relayStatuses: RelayStatus[]
@@ -66,9 +67,29 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, onClose })
                     fontFamily: 'var(--font-mono, monospace)',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
-                    textOverflow: 'ellipsis'
+                    textOverflow: 'ellipsis',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
                   }}>
                     {formatRelayUrl(relay.url)}
+                    {isLocalRelay(relay.url) && (
+                      <span 
+                        title="Local relay"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          padding: '0.15rem 0.4rem',
+                          background: 'rgba(245, 158, 11, 0.15)',
+                          borderRadius: '4px',
+                          color: '#f59e0b',
+                          fontSize: '0.75rem',
+                          flexShrink: 0
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faPlane} />
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -118,9 +139,29 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, onClose })
                     fontFamily: 'var(--font-mono, monospace)',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
-                    textOverflow: 'ellipsis'
+                    textOverflow: 'ellipsis',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
                   }}>
                     {formatRelayUrl(relay.url)}
+                    {isLocalRelay(relay.url) && (
+                      <span 
+                        title="Local relay"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          padding: '0.15rem 0.4rem',
+                          background: 'rgba(245, 158, 11, 0.15)',
+                          borderRadius: '4px',
+                          color: '#f59e0b',
+                          fontSize: '0.75rem',
+                          flexShrink: 0
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faPlane} />
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div style={{
