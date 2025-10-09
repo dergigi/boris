@@ -99,8 +99,9 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
                   background: 'var(--surface-secondary)',
                   border: '1px solid var(--border-color, #333)',
                   borderRadius: '4px',
-                  color: 'var(--text-primary)',
-                  fontSize: '0.85rem',
+                  color: 'inherit',
+                  fontSize: 'inherit',
+                  fontFamily: 'inherit',
                   textAlign: 'center'
                 }}
               />
