@@ -8,7 +8,7 @@ import { Models, IEventStore } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
 import { onSyncStateChange, isEventSyncing } from '../services/offlineSyncService'
 import { RELAYS } from '../config/relays'
-import { areAllRelaysLocal } from '../utils/helpers'
+import { areAllRelaysLocal, isLocalRelay } from '../utils/helpers'
 
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
@@ -201,10 +201,14 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       }
     }
     
-    // Default server icon for highlights without relay info
+    // Fallback: show remote relays we queried (where this was likely fetched from)
+    const remoteRelays = RELAYS.filter(url => !isLocalRelay(url))
+    const relayNames = remoteRelays.map(url => 
+      url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
+    )
     return {
       icon: faServer,
-      tooltip: 'no relay info',
+      tooltip: relayNames.join('\n'),
       spin: false
     }
   }
