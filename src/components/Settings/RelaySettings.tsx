@@ -21,7 +21,7 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, onClose })
   }
 
   const formatRelayUrl = (url: string) => {
-    return url.replace(/^wss?:\/\//, '')
+    return url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
   }
 
   const formatLastSeen = (timestamp: number) => {
