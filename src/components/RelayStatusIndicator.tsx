@@ -13,6 +13,7 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ rela
   // Poll frequently for responsive offline indicator (5s instead of default 20s)
   const relayStatuses = useRelayStatus({ relayPool, pollingInterval: 5000 })
   const [isConnecting, setIsConnecting] = useState(true)
+  const [connectingStartTime] = useState(Date.now())
   
   if (!relayPool) return null
   
@@ -26,20 +27,27 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ rela
   const localOnlyMode = hasLocalRelay && !hasRemoteRelay
   const offlineMode = connectedUrls.length === 0
   
-  // Show "Connecting" for first few seconds or until relays connect
+  // Show "Connecting" for minimum duration (15s) to avoid flashing states
   useEffect(() => {
-    if (connectedUrls.length > 0) {
-      // Connected! Stop showing connecting state
+    const MIN_CONNECTING_DURATION = 15000 // 15 seconds minimum
+    const elapsedTime = Date.now() - connectingStartTime
+    
+    if (connectedUrls.length > 0 && elapsedTime >= MIN_CONNECTING_DURATION) {
+      // Connected and minimum time passed - stop showing connecting state
       setIsConnecting(false)
-    } else {
-      // No connections yet - show connecting for 8 seconds
-      setIsConnecting(true)
+    } else if (connectedUrls.length > 0) {
+      // Connected but haven't shown connecting long enough
+      const remainingTime = MIN_CONNECTING_DURATION - elapsedTime
       const timeout = setTimeout(() => {
         setIsConnecting(false)
-      }, 8000)
+      }, remainingTime)
       return () => clearTimeout(timeout)
+    } else if (elapsedTime >= MIN_CONNECTING_DURATION) {
+      // No connections and minimum time passed - show offline
+      setIsConnecting(false)
     }
-  }, [connectedUrls.length])
+    // If no connections and time hasn't passed, keep showing connecting
+  }, [connectedUrls.length, connectingStartTime])
   
   // Debug logging
   useEffect(() => {
