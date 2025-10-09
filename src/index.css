@@ -78,8 +78,9 @@ body {
 }
 
 .bookmarks-container .bookmarks-list {
-  padding: 0.25rem;
+  padding: 0.5rem;
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
   width: 100%;
   max-width: 100%;
@@ -760,7 +761,7 @@ body {
 
 /* Compact view styles */
 .individual-bookmark.compact {
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.5rem;
   background: transparent;
   border: none;
   border-bottom: 1px solid #2a2a2a;
@@ -768,6 +769,7 @@ body {
   box-shadow: none;
   width: 100%;
   max-width: 100%;
+  overflow: hidden;
 }
 
 .individual-bookmark.compact:hover {
@@ -780,11 +782,11 @@ body {
 .compact-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   height: 28px;
-  justify-content: space-between;
   width: 100%;
   min-width: 0;
+  overflow: hidden;
 }
 
 .compact-row.clickable {
@@ -805,7 +807,7 @@ body {
 }
 
 .compact-text {
-  flex: 1 1 0;
+  flex: 1;
   min-width: 0;
   color: #ccc;
   font-size: 0.85rem;
@@ -813,7 +815,6 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
 }
 
 .bookmark-date-compact {
@@ -834,10 +835,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
+  width: 24px;
   height: 22px;
   flex-shrink: 0;
-  margin-left: auto;
   transition: color 0.2s ease;
 }
 
