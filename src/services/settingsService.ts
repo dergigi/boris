@@ -39,6 +39,9 @@ export interface UserSettings {
   zapSplitHighlighterWeight?: number // default 50
   zapSplitBorisWeight?: number // default 2.1
   zapSplitAuthorWeight?: number // default 50
+  // Relay rebroadcast settings
+  useLocalRelayAsCache?: boolean // Rebroadcast events to local relays
+  rebroadcastToAllRelays?: boolean // Rebroadcast events to all relays
 }
 
 export async function loadSettings(

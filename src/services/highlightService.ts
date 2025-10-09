@@ -4,18 +4,23 @@ import { NostrEvent } from 'nostr-tools'
 import { Highlight } from '../types/highlights'
 import { RELAYS } from '../config/relays'
 import { eventToHighlight, dedupeHighlights, sortHighlights } from './highlightEventProcessor'
+import { UserSettings } from './settingsService'
+import { rebroadcastEvents } from './rebroadcastService'
 
 /**
  * Fetches highlights for a specific article by its address coordinate and/or event ID
  * @param relayPool - The relay pool to query
  * @param articleCoordinate - The article's address in format "kind:pubkey:identifier" (e.g., "30023:abc...def:my-article")
  * @param eventId - Optional event ID to also query by 'e' tag
+ * @param onHighlight - Optional callback to receive highlights as they arrive
+ * @param settings - User settings for rebroadcast options
  */
 export const fetchHighlightsForArticle = async (
   relayPool: RelayPool,
   articleCoordinate: string,
   eventId?: string,
-  onHighlight?: (highlight: Highlight) => void
+  onHighlight?: (highlight: Highlight) => void,
+  settings?: UserSettings
 ): Promise<Highlight[]> => {
   try {
     console.log('🔍 Fetching highlights (kind 9802) for article:', articleCoordinate)
@@ -75,6 +80,9 @@ export const fetchHighlightsForArticle = async (
     const rawEvents = [...aTagEvents, ...eTagEvents]
     console.log('📊 Total raw highlight events fetched:', rawEvents.length)
     
+    // Rebroadcast highlight events to local/all relays based on settings
+    await rebroadcastEvents(rawEvents, relayPool, settings)
+    
     if (rawEvents.length > 0) {
       console.log('📄 Sample highlight tags:', JSON.stringify(rawEvents[0].tags, null, 2))
     } else {
@@ -99,10 +107,12 @@ export const fetchHighlightsForArticle = async (
  * Fetches highlights for a specific URL
  * @param relayPool - The relay pool to query
  * @param url - The external URL to find highlights for
+ * @param settings - User settings for rebroadcast options
  */
 export const fetchHighlightsForUrl = async (
   relayPool: RelayPool,
-  url: string
+  url: string,
+  settings?: UserSettings
 ): Promise<Highlight[]> => {
   try {
     console.log('🔍 Fetching highlights (kind 9802) for URL:', url)
@@ -124,6 +134,9 @@ export const fetchHighlightsForUrl = async (
     
     console.log('📊 Highlights for URL:', rawEvents.length)
     
+    // Rebroadcast highlight events to local/all relays based on settings
+    await rebroadcastEvents(rawEvents, relayPool, settings)
+    
     const uniqueEvents = dedupeHighlights(rawEvents)
     const highlights: Highlight[] = uniqueEvents.map(eventToHighlight)
     return sortHighlights(highlights)
@@ -138,11 +151,13 @@ export const fetchHighlightsForUrl = async (
  * @param relayPool - The relay pool to query
  * @param pubkey - The user's public key
  * @param onHighlight - Optional callback to receive highlights as they arrive
+ * @param settings - User settings for rebroadcast options
  */
 export const fetchHighlights = async (
   relayPool: RelayPool,
   pubkey: string,
-  onHighlight?: (highlight: Highlight) => void
+  onHighlight?: (highlight: Highlight) => void,
+  settings?: UserSettings
 ): Promise<Highlight[]> => {
   try {
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
@@ -171,6 +186,9 @@ export const fetchHighlights = async (
     )
     
     console.log('📊 Raw highlight events fetched:', rawEvents.length)
+    
+    // Rebroadcast highlight events to local/all relays based on settings
+    await rebroadcastEvents(rawEvents, relayPool, settings)
     
     // Deduplicate and process events
     const uniqueEvents = dedupeHighlights(rawEvents)

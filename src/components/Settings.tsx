@@ -9,6 +9,7 @@ import LayoutNavigationSettings from './Settings/LayoutNavigationSettings'
 import StartupPreferencesSettings from './Settings/StartupPreferencesSettings'
 import ZapSettings from './Settings/ZapSettings'
 import RelaySettings from './Settings/RelaySettings'
+import RelayRebroadcastSettings from './Settings/RelayRebroadcastSettings'
 import { useRelayStatus } from '../hooks/useRelayStatus'
 
 const DEFAULT_SETTINGS: UserSettings = {
@@ -30,6 +31,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   zapSplitHighlighterWeight: 50,
   zapSplitBorisWeight: 2.1,
   zapSplitAuthorWeight: 50,
+  useLocalRelayAsCache: true,
+  rebroadcastToAllRelays: false,
 }
 
 interface SettingsProps {
@@ -159,6 +162,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPoo
         <LayoutNavigationSettings settings={localSettings} onUpdate={handleUpdate} />
         <StartupPreferencesSettings settings={localSettings} onUpdate={handleUpdate} />
         <ZapSettings settings={localSettings} onUpdate={handleUpdate} />
+        <RelayRebroadcastSettings settings={localSettings} onUpdate={handleUpdate} />
         <RelaySettings relayStatuses={relayStatuses} onClose={onClose} />
       </div>
     </div>

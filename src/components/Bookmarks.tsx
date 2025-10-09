@@ -88,7 +88,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     accountManager,
     naddr,
     currentArticleCoordinate,
-    currentArticleEventId
+    currentArticleEventId,
+    settings
   })
 
   const {
@@ -134,7 +135,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     setHighlightsLoading,
     setCurrentArticleCoordinate,
     setCurrentArticleEventId,
-    setCurrentArticle
+    setCurrentArticle,
+    settings
   })
   
   // Load external URL if /r/* route is used

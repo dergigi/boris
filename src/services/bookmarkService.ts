@@ -14,13 +14,16 @@ import {
 } from './bookmarkHelpers'
 import { Bookmark } from '../types/bookmarks'
 import { collectBookmarksFromEvents } from './bookmarkProcessing.ts'
+import { UserSettings } from './settingsService'
+import { rebroadcastEvents } from './rebroadcastService'
 
 
 
 export const fetchBookmarks = async (
   relayPool: RelayPool,
   activeAccount: unknown, // Full account object with extension capabilities
-  setBookmarks: (bookmarks: Bookmark[]) => void
+  setBookmarks: (bookmarks: Bookmark[]) => void,
+  settings?: UserSettings
 ) => {
   try {
     
@@ -37,6 +40,9 @@ export const fetchBookmarks = async (
         .pipe(completeOnEose(), takeUntil(timer(20000)), toArray())
     )
     console.log('📊 Raw events fetched:', rawEvents.length, 'events')
+    
+    // Rebroadcast bookmark events to local/all relays based on settings
+    await rebroadcastEvents(rawEvents, relayPool, settings)
 
     // Check for events with potentially encrypted content
     const eventsWithContent = rawEvents.filter(evt => evt.content && evt.content.length > 0)

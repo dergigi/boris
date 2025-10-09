@@ -5,6 +5,7 @@ import { fetchHighlightsForArticle } from '../services/highlightService'
 import { ReadableContent } from '../services/readerService'
 import { Highlight } from '../types/highlights'
 import { NostrEvent } from 'nostr-tools'
+import { UserSettings } from '../services/settingsService'
 
 interface UseArticleLoaderProps {
   naddr: string | undefined
@@ -18,6 +19,7 @@ interface UseArticleLoaderProps {
   setCurrentArticleCoordinate: (coord: string | undefined) => void
   setCurrentArticleEventId: (id: string | undefined) => void
   setCurrentArticle?: (article: NostrEvent) => void
+  settings?: UserSettings
 }
 
 export function useArticleLoader({
@@ -31,7 +33,8 @@ export function useArticleLoader({
   setHighlightsLoading,
   setCurrentArticleCoordinate,
   setCurrentArticleEventId,
-  setCurrentArticle
+  setCurrentArticle,
+  settings
 }: UseArticleLoaderProps) {
   useEffect(() => {
     if (!relayPool || !naddr) return
@@ -44,7 +47,7 @@ export function useArticleLoader({
       // Keep highlights panel collapsed by default - only open on user interaction
       
       try {
-        const article = await fetchArticleByNaddr(relayPool, naddr)
+        const article = await fetchArticleByNaddr(relayPool, naddr, false, settings)
         setReaderContent({
           title: article.title,
           markdown: article.markdown,
@@ -86,7 +89,8 @@ export function useArticleLoader({
                 const highlightsList = Array.from(highlightsMap.values())
                 setHighlights(highlightsList.sort((a, b) => b.created_at - a.created_at))
               }
-            }
+            },
+            settings
           )
           console.log(`📌 Found ${highlightsMap.size} highlights`)
         } catch (err) {
@@ -106,5 +110,5 @@ export function useArticleLoader({
     }
     
     loadArticle()
-  }, [naddr, relayPool, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId, setCurrentArticle])
+  }, [naddr, relayPool, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId, setCurrentArticle, settings])
 }

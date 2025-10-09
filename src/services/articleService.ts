@@ -5,6 +5,8 @@ import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
+import { UserSettings } from './settingsService'
+import { rebroadcastEvents } from './rebroadcastService'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -71,11 +73,13 @@ function saveToCache(naddr: string, content: ArticleContent): void {
  * @param relayPool - The relay pool to query
  * @param naddr - The article's naddr
  * @param bypassCache - If true, skip cache and fetch fresh from relays
+ * @param settings - User settings for rebroadcast options
  */
 export async function fetchArticleByNaddr(
   relayPool: RelayPool,
   naddr: string,
-  bypassCache = false
+  bypassCache = false,
+  settings?: UserSettings
 ): Promise<ArticleContent> {
   try {
     // Check cache first unless bypassed
@@ -119,6 +123,9 @@ export async function fetchArticleByNaddr(
     // Sort by created_at and take the most recent
     events.sort((a, b) => b.created_at - a.created_at)
     const article = events[0]
+
+    // Rebroadcast article to local/all relays based on settings
+    await rebroadcastEvents([article], relayPool, settings)
 
     const title = getArticleTitle(article) || 'Untitled Article'
     const image = getArticleImage(article)

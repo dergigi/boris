@@ -5,6 +5,7 @@ import { Highlight } from '../types/highlights'
 import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchHighlights, fetchHighlightsForArticle } from '../services/highlightService'
 import { fetchContacts } from '../services/contactService'
+import { UserSettings } from '../services/settingsService'
 
 interface UseBookmarksDataParams {
   relayPool: RelayPool | null
@@ -15,6 +16,7 @@ interface UseBookmarksDataParams {
   naddr?: string
   currentArticleCoordinate?: string
   currentArticleEventId?: string
+  settings?: UserSettings
 }
 
 export const useBookmarksData = ({
@@ -23,7 +25,8 @@ export const useBookmarksData = ({
   accountManager,
   naddr,
   currentArticleCoordinate,
-  currentArticleEventId
+  currentArticleEventId,
+  settings
 }: UseBookmarksDataParams) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [bookmarksLoading, setBookmarksLoading] = useState(true)
@@ -43,11 +46,11 @@ export const useBookmarksData = ({
     setBookmarksLoading(true)
     try {
       const fullAccount = accountManager.getActive()
-      await fetchBookmarks(relayPool, fullAccount || activeAccount, setBookmarks)
+      await fetchBookmarks(relayPool, fullAccount || activeAccount, setBookmarks, settings)
     } finally {
       setBookmarksLoading(false)
     }
-  }, [relayPool, activeAccount, accountManager])
+  }, [relayPool, activeAccount, accountManager, settings])
 
   const handleFetchHighlights = useCallback(async () => {
     if (!relayPool) return
@@ -67,11 +70,12 @@ export const useBookmarksData = ({
               const highlightsList = Array.from(highlightsMap.values())
               setHighlights(highlightsList.sort((a, b) => b.created_at - a.created_at))
             }
-          }
+          },
+          settings
         )
         console.log(`🔄 Refreshed ${highlightsMap.size} highlights for article`)
       } else if (activeAccount) {
-        const fetchedHighlights = await fetchHighlights(relayPool, activeAccount.pubkey)
+        const fetchedHighlights = await fetchHighlights(relayPool, activeAccount.pubkey, undefined, settings)
         setHighlights(fetchedHighlights)
       }
     } catch (err) {
@@ -79,7 +83,7 @@ export const useBookmarksData = ({
     } finally {
       setHighlightsLoading(false)
     }
-  }, [relayPool, activeAccount, currentArticleCoordinate, currentArticleEventId])
+  }, [relayPool, activeAccount, currentArticleCoordinate, currentArticleEventId, settings])
 
   const handleRefreshAll = useCallback(async () => {
     if (!relayPool || !activeAccount || isRefreshing) return
