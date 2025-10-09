@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../../services/settingsService'
 import { getImageCacheStats, clearImageCache } from '../../services/imageCacheService'
+import IconButton from '../IconButton'
 
 interface OfflineModeSettingsProps {
   settings: UserSettings
@@ -111,20 +111,13 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
               <span>
                 ( {cacheStats.totalSizeMB.toFixed(1)} MB / [ {settings.imageCacheSizeMB ?? 50} ] MB used )
               </span>
-              <button
+              <IconButton
+                icon={faTrash}
                 onClick={handleClearCache}
                 title="Clear cache"
-                style={{
-                  padding: '0.25rem 0.5rem',
-                  background: 'transparent',
-                  color: 'var(--danger, #ef4444)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem'
-                }}
-              >
-                <FontAwesomeIcon icon={faTrash} />
-              </button>
+                variant="ghost"
+                size={28}
+              />
             </div>
           </>
         )}
