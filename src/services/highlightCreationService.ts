@@ -121,45 +121,41 @@ export async function createHighlight(
   
   const targetRelays = publishingRelays
   
-  // Attempt to publish - don't block UI on publish failures
-  let actualPublishedRelays: string[] = []
-  try {
-    await relayPool.publish(targetRelays, signedEvent)
-    actualPublishedRelays = targetRelays
-    console.log('✅ Highlight published to', targetRelays.length, 'relay(s):', targetRelays)
-  } catch (error) {
-    console.warn('⚠️ Failed to publish highlight to relays, but highlight will still be created locally:', error)
-    // Even if publish fails, treat it as local-only
-    const localRelays = RELAYS.filter(r => r.includes('localhost') || r.includes('127.0.0.1'))
-    actualPublishedRelays = localRelays
-  }
+  // Store the event in the local EventStore FIRST for immediate UI display
+  eventStore.add(signedEvent)
+  console.log('💾 Stored highlight in EventStore:', signedEvent.id.slice(0, 8))
   
   // Check if we're only publishing to local relays
-  const isLocalOnly = actualPublishedRelays.length === 0 || areAllRelaysLocal(actualPublishedRelays)
+  const isLocalOnly = areAllRelaysLocal(targetRelays)
   
   console.log('📍 Highlight relay status:', {
     targetRelays,
-    actualPublishedRelays,
     isLocalOnly,
     eventId: signedEvent.id
   })
-  
-  // Store the event in the local EventStore immediately
-  eventStore.add(signedEvent)
-  console.log('💾 Stored highlight in EventStore:', signedEvent.id.slice(0, 8))
   
   // If we're in local-only mode, mark this event for later sync
   if (isLocalOnly) {
     markEventAsOfflineCreated(signedEvent.id)
   }
   
-  // Convert to Highlight with relay tracking info
+  // Convert to Highlight with relay tracking info and return IMMEDIATELY
   const highlight = eventToHighlight(signedEvent)
-  highlight.publishedRelays = actualPublishedRelays
+  highlight.publishedRelays = targetRelays
   highlight.isLocalOnly = isLocalOnly
   highlight.isOfflineCreated = isLocalOnly // Mark as created offline if local-only
   
-  // Return the highlight for immediate UI updates
+  // Publish to relays in the background (non-blocking)
+  // This allows instant UI updates while publishing happens asynchronously
+  relayPool.publish(targetRelays, signedEvent)
+    .then(() => {
+      console.log('✅ Highlight published to', targetRelays.length, 'relay(s):', targetRelays)
+    })
+    .catch((error) => {
+      console.warn('⚠️ Failed to publish highlight to relays (event still saved locally):', error)
+    })
+  
+  // Return the highlight immediately for instant UI updates
   return highlight
 }
 
