@@ -17,6 +17,19 @@ const ZapSettings: React.FC<ZapSettingsProps> = ({ settings, onUpdate }) => {
   const borisPercentage = totalWeight > 0 ? (borisWeight / totalWeight) * 100 : 0
   const authorPercentage = totalWeight > 0 ? (authorWeight / totalWeight) * 100 : 0
 
+  const presets = {
+    default: { highlighter: 50, boris: 2.1, author: 50 },
+    generous: { highlighter: 5, boris: 10, author: 75 },
+    selfless: { highlighter: 1, boris: 19, author: 80 },
+    boris: { highlighter: 10, boris: 80, author: 10 },
+  }
+
+  const isPresetActive = (preset: { highlighter: number; boris: number; author: number }) => {
+    return highlighterWeight === preset.highlighter &&
+           borisWeight === preset.boris &&
+           authorWeight === preset.author
+  }
+
   const applyPreset = (preset: { highlighter: number; boris: number; author: number }) => {
     onUpdate({
       zapSplitHighlighterWeight: preset.highlighter,
@@ -33,29 +46,29 @@ const ZapSettings: React.FC<ZapSettingsProps> = ({ settings, onUpdate }) => {
         <label className="setting-label">Presets</label>
         <div className="zap-preset-buttons">
           <button
-            onClick={() => applyPreset({ highlighter: 50, boris: 2.1, author: 50 })}
-            className="zap-preset-btn"
+            onClick={() => applyPreset(presets.default)}
+            className={`zap-preset-btn ${isPresetActive(presets.default) ? 'active' : ''}`}
             title="You: 49%, Author: 49%, Boris: 2%"
           >
             Default
           </button>
           <button
-            onClick={() => applyPreset({ highlighter: 5, boris: 10, author: 75 })}
-            className="zap-preset-btn"
+            onClick={() => applyPreset(presets.generous)}
+            className={`zap-preset-btn ${isPresetActive(presets.generous) ? 'active' : ''}`}
             title="You: 6%, Author: 83%, Boris: 11%"
           >
             Generous
           </button>
           <button
-            onClick={() => applyPreset({ highlighter: 1, boris: 19, author: 80 })}
-            className="zap-preset-btn"
+            onClick={() => applyPreset(presets.selfless)}
+            className={`zap-preset-btn ${isPresetActive(presets.selfless) ? 'active' : ''}`}
             title="You: 1%, Author: 80%, Boris: 19%"
           >
             Selfless
           </button>
           <button
-            onClick={() => applyPreset({ highlighter: 10, boris: 80, author: 10 })}
-            className="zap-preset-btn"
+            onClick={() => applyPreset(presets.boris)}
+            className={`zap-preset-btn ${isPresetActive(presets.boris) ? 'active' : ''}`}
             title="You: 10%, Author: 10%, Boris: 80%"
           >
             Boris 🧡
