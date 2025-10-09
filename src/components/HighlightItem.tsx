@@ -9,6 +9,7 @@ import { RelayPool } from 'applesauce-relay'
 import { onSyncStateChange, isEventSyncing } from '../services/offlineSyncService'
 import { RELAYS } from '../config/relays'
 import { areAllRelaysLocal } from '../utils/helpers'
+import { nip19 } from 'nostr-tools'
 
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
@@ -102,7 +103,41 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   
   const getSourceLink = () => {
     if (highlight.eventReference) {
-      return `https://search.dergigi.com/e/${highlight.eventReference}`
+      // Check if it's a coordinate string (kind:pubkey:identifier) or a simple event ID
+      if (highlight.eventReference.includes(':')) {
+        // It's an addressable event coordinate, encode as naddr
+        const parts = highlight.eventReference.split(':')
+        if (parts.length === 3) {
+          const [kindStr, pubkey, identifier] = parts
+          const kind = parseInt(kindStr, 10)
+          
+          // Get non-local relays for the hint
+          const relayHints = RELAYS.filter(r => 
+            !r.includes('localhost') && !r.includes('127.0.0.1')
+          ).slice(0, 3) // Include up to 3 relay hints
+          
+          const naddr = nip19.naddrEncode({
+            kind,
+            pubkey,
+            identifier,
+            relays: relayHints
+          })
+          return `https://njump.me/${naddr}`
+        }
+      } else {
+        // It's a simple event ID, encode as nevent
+        // Get non-local relays for the hint
+        const relayHints = RELAYS.filter(r => 
+          !r.includes('localhost') && !r.includes('127.0.0.1')
+        ).slice(0, 3) // Include up to 3 relay hints
+        
+        const nevent = nip19.neventEncode({
+          id: highlight.eventReference,
+          relays: relayHints,
+          author: highlight.author
+        })
+        return `https://njump.me/${nevent}`
+      }
     }
     return highlight.urlReference
   }
