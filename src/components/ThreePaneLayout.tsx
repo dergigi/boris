@@ -101,7 +101,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             settings={props.settings}
           />
         </div>
-        <div className="pane main" style={{ position: 'relative' }}>
+        <div className="pane main">
           {props.showSettings ? (
             <Settings 
               settings={props.settings}
@@ -138,13 +138,6 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
               settings={props.settings}
             />
           )}
-          {props.hasActiveAccount && (
-            <HighlightButton 
-              ref={props.highlightButtonRef} 
-              onHighlight={props.onCreateHighlight}
-              highlightColor={props.settings.highlightColor || '#ffff00'}
-            />
-          )}
         </div>
         <div className="pane highlights">
           <HighlightsPanel
@@ -167,6 +160,13 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
           />
         </div>
       </div>
+      {props.hasActiveAccount && (
+        <HighlightButton 
+          ref={props.highlightButtonRef} 
+          onHighlight={props.onCreateHighlight}
+          highlightColor={props.settings.highlightColor || '#ffff00'}
+        />
+      )}
       <RelayStatusIndicator relayPool={props.relayPool} />
       {props.toastMessage && (
         <Toast
