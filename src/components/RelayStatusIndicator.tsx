@@ -32,11 +32,11 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ rela
       // Connected! Stop showing connecting state
       setIsConnecting(false)
     } else {
-      // No connections yet - show connecting for 4 seconds
+      // No connections yet - show connecting for 8 seconds
       setIsConnecting(true)
       const timeout = setTimeout(() => {
         setIsConnecting(false)
-      }, 4000)
+      }, 8000)
       return () => clearTimeout(timeout)
     }
   }, [connectedUrls.length])
@@ -70,10 +70,7 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ rela
       </div>
       <div className="relay-status-text">
         {isConnecting ? (
-          <>
-            <span className="relay-status-title">Connecting</span>
-            <span className="relay-status-subtitle">Establishing connections...</span>
-          </>
+          <span className="relay-status-title">Connecting</span>
         ) : offlineMode ? (
           <>
             <span className="relay-status-title">Offline</span>
