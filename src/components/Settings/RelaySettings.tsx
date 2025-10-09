@@ -68,7 +68,7 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses }) => {
 
   return (
     <div className="settings-section">
-      <h3>Relays</h3>
+      <h3 className="section-title">Relays</h3>
 
       {sortedRelays.length > 0 && (
         <div className="relay-group">
