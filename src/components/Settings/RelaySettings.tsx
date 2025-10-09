@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheckCircle, faCircle, faClock, faPlane, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faCheckCircle, faCircle, faClock, faPlane } from '@fortawesome/free-solid-svg-icons'
 import { RelayStatus } from '../../services/relayStatusService'
 import { formatDistanceToNow } from 'date-fns'
 import { isLocalRelay } from '../../utils/helpers'
@@ -47,15 +47,7 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, settings, 
             checked={settings.useLocalRelayAsCache ?? true}
             onChange={(e) => onUpdate({ useLocalRelayAsCache: e.target.checked })}
           />
-          <div className="settings-label-content">
-            <div className="settings-label-title">
-              <FontAwesomeIcon icon={faPlane} style={{ marginRight: '0.5rem', color: '#f59e0b' }} />
-              Use local relay(s) as cache
-            </div>
-            <div className="settings-label-description">
-              Rebroadcast articles, bookmarks, and highlights to your local relays when fetched
-            </div>
-          </div>
+          <span>Use local relay(s) as cache</span>
         </label>
       </div>
 
@@ -66,15 +58,7 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, settings, 
             checked={settings.rebroadcastToAllRelays ?? false}
             onChange={(e) => onUpdate({ rebroadcastToAllRelays: e.target.checked })}
           />
-          <div className="settings-label-content">
-            <div className="settings-label-title">
-              <FontAwesomeIcon icon={faGlobe} style={{ marginRight: '0.5rem', color: '#646cff' }} />
-              Rebroadcast events to all relays
-            </div>
-            <div className="settings-label-description">
-              Rebroadcast articles, bookmarks, and highlights to all your relays to help propagate content
-            </div>
-          </div>
+          <span>Rebroadcast events to all relays</span>
         </label>
       </div>
 
