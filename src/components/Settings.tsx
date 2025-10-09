@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { faTimes, faUndo } from '@fortawesome/free-solid-svg-icons'
+import { RelayPool } from 'applesauce-relay'
 import { UserSettings } from '../services/settingsService'
 import IconButton from './IconButton'
 import { loadFont } from '../utils/fontLoader'
@@ -7,6 +8,8 @@ import ReadingDisplaySettings from './Settings/ReadingDisplaySettings'
 import LayoutNavigationSettings from './Settings/LayoutNavigationSettings'
 import StartupPreferencesSettings from './Settings/StartupPreferencesSettings'
 import ZapSettings from './Settings/ZapSettings'
+import RelaySettings from './Settings/RelaySettings'
+import { useRelayStatus } from '../hooks/useRelayStatus'
 
 const DEFAULT_SETTINGS: UserSettings = {
   collapseOnArticleOpen: true,
@@ -33,9 +36,10 @@ interface SettingsProps {
   settings: UserSettings
   onSave: (settings: UserSettings) => Promise<void>
   onClose: () => void
+  relayPool: RelayPool | null
 }
 
-const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
+const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPool }) => {
   const [localSettings, setLocalSettings] = useState<UserSettings>(() => {
     // Migrate old settings format to new weight-based format
     const migrated = { ...settings }
@@ -52,6 +56,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
   const isInitialMount = useRef(true)
   const saveTimeoutRef = useRef<number | null>(null)
   const isLocallyUpdating = useRef(false)
+  
+  const relayStatuses = useRelayStatus({ relayPool })
 
   useEffect(() => {
     // Don't update from external settings if we're currently making local changes
@@ -152,6 +158,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose }) => {
         <LayoutNavigationSettings settings={localSettings} onUpdate={handleUpdate} />
         <StartupPreferencesSettings settings={localSettings} onUpdate={handleUpdate} />
         <ZapSettings settings={localSettings} onUpdate={handleUpdate} />
+        <RelaySettings relayStatuses={relayStatuses} />
       </div>
     </div>
   )

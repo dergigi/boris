@@ -97,6 +97,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
               settings={props.settings}
               onSave={props.onSaveSettings}
               onClose={props.onCloseSettings}
+              relayPool={props.relayPool}
             />
           ) : (
             <ContentPanel 
