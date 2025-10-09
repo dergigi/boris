@@ -20,9 +20,9 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
     navigate(`/r/${encodeURIComponent(url)}`)
   }
 
-  const handleClearCache = () => {
+  const handleClearCache = async () => {
     if (confirm('Are you sure you want to clear all cached images?')) {
-      clearImageCache()
+      await clearImageCache()
       setCacheStats(getImageCacheStats())
     }
   }

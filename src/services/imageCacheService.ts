@@ -1,23 +1,22 @@
 /**
  * Image Cache Service
  * 
- * Caches images in localStorage for offline access.
+ * Caches images using the Cache API for offline access.
  * Uses LRU (Least Recently Used) eviction when cache size limit is exceeded.
  */
 
-const CACHE_PREFIX = 'img_cache_'
+const CACHE_NAME = 'boris-image-cache-v1'
 const CACHE_METADATA_KEY = 'img_cache_metadata'
 
 interface CacheMetadata {
   [url: string]: {
-    key: string
     size: number
     lastAccessed: number
   }
 }
 
 /**
- * Get cache metadata
+ * Get cache metadata from localStorage
  */
 function getMetadata(): CacheMetadata {
   try {
@@ -29,7 +28,7 @@ function getMetadata(): CacheMetadata {
 }
 
 /**
- * Save cache metadata
+ * Save cache metadata to localStorage
  */
 function saveMetadata(metadata: CacheMetadata): void {
   try {
@@ -62,23 +61,9 @@ function mbToBytes(mb: number): number {
 }
 
 /**
- * Generate cache key for URL
- */
-function getCacheKey(url: string): string {
-  // Use a simple hash of the URL
-  let hash = 0
-  for (let i = 0; i < url.length; i++) {
-    const char = url.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash
-  }
-  return `${CACHE_PREFIX}${Math.abs(hash)}`
-}
-
-/**
  * Evict least recently used images until cache is under limit
  */
-function evictLRU(maxSizeBytes: number): void {
+async function evictLRU(maxSizeBytes: number): Promise<void> {
   const metadata = getMetadata()
   const entries = Object.entries(metadata)
   
@@ -86,12 +71,13 @@ function evictLRU(maxSizeBytes: number): void {
   entries.sort((a, b) => a[1].lastAccessed - b[1].lastAccessed)
   
   let currentSize = getTotalCacheSize()
+  const cache = await caches.open(CACHE_NAME)
   
   for (const [url, item] of entries) {
     if (currentSize <= maxSizeBytes) break
     
     try {
-      localStorage.removeItem(item.key)
+      await cache.delete(url)
       delete metadata[url]
       currentSize -= item.size
       console.log(`🗑️ Evicted image from cache: ${url.substring(0, 50)}...`)
@@ -104,50 +90,32 @@ function evictLRU(maxSizeBytes: number): void {
 }
 
 /**
- * Fetch image and convert to data URL
- */
-async function fetchImageAsDataUrl(url: string): Promise<string> {
-  const response = await fetch(url)
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image: ${response.statusText}`)
-  }
-  
-  const blob = await response.blob()
-  
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result)
-      } else {
-        reject(new Error('Failed to convert image to data URL'))
-      }
-    }
-    reader.onerror = reject
-    reader.readAsDataURL(blob)
-  })
-}
-
-/**
- * Cache an image
+ * Cache an image using Cache API
  */
 export async function cacheImage(
   url: string, 
-  maxCacheSizeMB: number = 50
+  maxCacheSizeMB: number = 210
 ): Promise<string> {
   try {
     // Check if already cached
-    const cached = getCachedImage(url)
+    const cached = await getCachedImageUrl(url)
     if (cached) {
       console.log('✅ Image already cached:', url.substring(0, 50))
       return cached
     }
     
-    // Fetch and convert to data URL
+    // Fetch the image
     console.log('📥 Caching image:', url.substring(0, 50))
-    const dataUrl = await fetchImageAsDataUrl(url)
-    const size = dataUrl.length
+    const response = await fetch(url)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`)
+    }
+    
+    // Clone the response so we can read it twice (once for size, once for cache)
+    const responseClone = response.clone()
+    const blob = await response.blob()
+    const size = blob.size
     
     // Check if image alone exceeds cache limit
     if (bytesToMB(size) > maxCacheSizeMB) {
@@ -160,43 +128,25 @@ export async function cacheImage(
     // Evict old images if necessary
     const currentSize = getTotalCacheSize()
     if (currentSize + size > maxSizeBytes) {
-      evictLRU(maxSizeBytes - size)
+      await evictLRU(maxSizeBytes - size)
     }
     
-    // Store image
-    const key = getCacheKey(url)
+    // Store in Cache API
+    const cache = await caches.open(CACHE_NAME)
+    await cache.put(url, responseClone)
+    
+    // Update metadata
     const metadata = getMetadata()
-    
-    try {
-      localStorage.setItem(key, dataUrl)
-      metadata[url] = {
-        key,
-        size,
-        lastAccessed: Date.now()
-      }
-      saveMetadata(metadata)
-      
-      console.log(`💾 Cached image (${bytesToMB(size).toFixed(2)}MB). Total cache: ${bytesToMB(getTotalCacheSize()).toFixed(2)}MB`)
-      return dataUrl
-    } catch (err) {
-      // If storage fails, try evicting more and retry once
-      console.warn('Storage full, evicting more items...')
-      evictLRU(maxSizeBytes / 2) // Free up half the cache
-      
-      try {
-        localStorage.setItem(key, dataUrl)
-        metadata[url] = {
-          key,
-          size,
-          lastAccessed: Date.now()
-        }
-        saveMetadata(metadata)
-        return dataUrl
-      } catch {
-        console.error('Failed to cache image after eviction')
-        return url // Return original URL on failure
-      }
+    metadata[url] = {
+      size,
+      lastAccessed: Date.now()
     }
+    saveMetadata(metadata)
+    
+    console.log(`💾 Cached image (${bytesToMB(size).toFixed(2)}MB). Total cache: ${bytesToMB(getTotalCacheSize()).toFixed(2)}MB`)
+    
+    // Return blob URL for immediate use
+    return URL.createObjectURL(blob)
   } catch (err) {
     console.error('Failed to cache image:', err)
     return url // Return original URL on error
@@ -204,50 +154,53 @@ export async function cacheImage(
 }
 
 /**
- * Get cached image
+ * Get cached image URL (creates blob URL from cached response)
  */
-export function getCachedImage(url: string): string | null {
+async function getCachedImageUrl(url: string): Promise<string | null> {
   try {
-    const metadata = getMetadata()
-    const item = metadata[url]
+    const cache = await caches.open(CACHE_NAME)
+    const response = await cache.match(url)
     
-    if (!item) return null
-    
-    const dataUrl = localStorage.getItem(item.key)
-    if (!dataUrl) {
-      // Clean up stale metadata
-      delete metadata[url]
-      saveMetadata(metadata)
+    if (!response) {
       return null
     }
     
-    // Update last accessed time
-    item.lastAccessed = Date.now()
-    metadata[url] = item
-    saveMetadata(metadata)
+    // Update last accessed time in metadata
+    const metadata = getMetadata()
+    if (metadata[url]) {
+      metadata[url].lastAccessed = Date.now()
+      saveMetadata(metadata)
+    }
     
-    return dataUrl
+    // Convert response to blob URL
+    const blob = await response.blob()
+    return URL.createObjectURL(blob)
   } catch {
     return null
   }
 }
 
 /**
+ * Get cached image (synchronous wrapper that returns null, actual loading happens async)
+ * This maintains backward compatibility with the hook's synchronous check
+ */
+export function getCachedImage(url: string): string | null {
+  // Check if we have metadata for this URL
+  const metadata = getMetadata()
+  return metadata[url] ? url : null // Return URL if in metadata, let hook handle async loading
+}
+
+/**
  * Clear all cached images
  */
-export function clearImageCache(): void {
+export async function clearImageCache(): Promise<void> {
   try {
-    const metadata = getMetadata()
+    // Clear from Cache API
+    await caches.delete(CACHE_NAME)
     
-    for (const item of Object.values(metadata)) {
-      try {
-        localStorage.removeItem(item.key)
-      } catch (err) {
-        console.warn('Failed to remove cached image:', err)
-      }
-    }
-    
+    // Clear metadata from localStorage
     localStorage.removeItem(CACHE_METADATA_KEY)
+    
     console.log('🗑️ Cleared all cached images')
   } catch (err) {
     console.error('Failed to clear image cache:', err)
@@ -276,3 +229,9 @@ export function getImageCacheStats(): {
   }
 }
 
+/**
+ * Load cached image asynchronously (for use in hooks/components)
+ */
+export async function loadCachedImage(url: string): Promise<string | null> {
+  return getCachedImageUrl(url)
+}
