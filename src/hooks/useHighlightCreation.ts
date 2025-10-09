@@ -54,6 +54,8 @@ export const useHighlightCreation = ({
         ? currentArticle.content 
         : readerContent?.markdown || readerContent?.html
       
+      console.log('🎯 Creating highlight...', { text: text.substring(0, 50) + '...' })
+      
       const newHighlight = await createHighlight(
         text,
         source,
@@ -64,12 +66,18 @@ export const useHighlightCreation = ({
         settings
       )
       
-      console.log('✅ Highlight created successfully!')
-      highlightButtonRef.current?.clearSelection()
+      console.log('✅ Highlight created successfully!', {
+        id: newHighlight.id,
+        isLocalOnly: newHighlight.isLocalOnly,
+        publishedRelays: newHighlight.publishedRelays
+      })
       
+      highlightButtonRef.current?.clearSelection()
       onHighlightCreated(newHighlight)
     } catch (error) {
-      console.error('Failed to create highlight:', error)
+      console.error('❌ Failed to create highlight:', error)
+      // Re-throw to allow parent to handle
+      throw error
     }
   }, [activeAccount, relayPool, currentArticle, selectedUrl, readerContent, onHighlightCreated, settings])
 

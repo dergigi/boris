@@ -109,26 +109,42 @@ export async function createHighlight(
   const connectedRelays = Array.from(relayPool.relays.values()).map(relay => relay.url)
   
   // Determine which relays we're publishing to (intersection of RELAYS and connected relays)
-  const publishingRelays = RELAYS.filter(url => connectedRelays.includes(url))
+  let publishingRelays = RELAYS.filter(url => connectedRelays.includes(url))
   
-  // If no relays are connected, fallback to just local relay if available
-  const targetRelays = publishingRelays.length > 0 ? publishingRelays : RELAYS.filter(r => r.includes('localhost') || r.includes('127.0.0.1'))
+  // If no relays are connected, try local relay anyway (might still work)
+  if (publishingRelays.length === 0) {
+    const localRelays = RELAYS.filter(r => r.includes('localhost') || r.includes('127.0.0.1'))
+    publishingRelays = localRelays.length > 0 ? localRelays : RELAYS
+  }
   
-  // Publish to relays (including local relay)
-  await relayPool.publish(targetRelays, signedEvent)
+  const targetRelays = publishingRelays
+  
+  // Attempt to publish - don't block UI on publish failures
+  let actualPublishedRelays: string[] = []
+  try {
+    await relayPool.publish(targetRelays, signedEvent)
+    actualPublishedRelays = targetRelays
+    console.log('✅ Highlight published to', targetRelays.length, 'relay(s):', targetRelays)
+  } catch (error) {
+    console.warn('⚠️ Failed to publish highlight to relays, but highlight will still be created locally:', error)
+    // Even if publish fails, treat it as local-only
+    const localRelays = RELAYS.filter(r => r.includes('localhost') || r.includes('127.0.0.1'))
+    actualPublishedRelays = localRelays
+  }
   
   // Check if we're only publishing to local relays
-  const isLocalOnly = areAllRelaysLocal(targetRelays)
+  const isLocalOnly = actualPublishedRelays.length === 0 || areAllRelaysLocal(actualPublishedRelays)
   
-  console.log('✅ Highlight published to', targetRelays.length, 'relays:', {
-    relays: targetRelays,
+  console.log('📍 Highlight relay status:', {
+    targetRelays,
+    actualPublishedRelays,
     isLocalOnly,
-    event: signedEvent
+    eventId: signedEvent.id
   })
   
   // Convert to Highlight with relay tracking info
   const highlight = eventToHighlight(signedEvent)
-  highlight.publishedRelays = targetRelays
+  highlight.publishedRelays = actualPublishedRelays
   highlight.isLocalOnly = isLocalOnly
   
   // Return the highlight for immediate UI updates
