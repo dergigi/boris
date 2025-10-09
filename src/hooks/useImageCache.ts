@@ -6,11 +6,11 @@ import { UserSettings } from '../services/settingsService'
  * Images are cached on first load and available offline automatically
  * 
  * @param imageUrl - The URL of the image to display
- * @param settings - User settings (for future use if needed)
  * @returns The image URL (Service Worker handles caching)
  */
 export function useImageCache(
   imageUrl: string | undefined,
+  // eslint-disable-next-line no-unused-vars
   _settings?: UserSettings
 ): string | undefined {
   // Service Worker handles everything - just return the URL as-is
@@ -23,6 +23,7 @@ export function useImageCache(
  */
 export function useCacheImageOnLoad(
   imageUrl: string | undefined,
+  // eslint-disable-next-line no-unused-vars
   _settings?: UserSettings
 ): void {
   // Service Worker will cache on first fetch
