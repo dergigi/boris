@@ -9,7 +9,7 @@ interface UseRelayStatusParams {
 
 export function useRelayStatus({ 
   relayPool, 
-  pollingInterval = 5000 
+  pollingInterval = 20000 
 }: UseRelayStatusParams) {
   const [relayStatuses, setRelayStatuses] = useState<RelayStatus[]>([])
 

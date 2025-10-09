@@ -53,7 +53,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   })
 
   // Monitor relay status for offline sync
-  const relayStatuses = useRelayStatus({ relayPool, pollingInterval: 5000 })
+  const relayStatuses = useRelayStatus({ relayPool })
 
   // Automatically sync local events to remote relays when coming back online
   useOfflineSync({

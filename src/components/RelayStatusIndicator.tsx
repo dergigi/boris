@@ -10,8 +10,8 @@ interface RelayStatusIndicatorProps {
 }
 
 export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ relayPool }) => {
-  // Poll frequently for responsive local-only detection
-  const relayStatuses = useRelayStatus({ relayPool, pollingInterval: 2000 })
+  // Poll for relay status updates
+  const relayStatuses = useRelayStatus({ relayPool })
   
   if (!relayPool) return null
   

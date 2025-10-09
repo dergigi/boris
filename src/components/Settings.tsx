@@ -60,8 +60,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPoo
   const saveTimeoutRef = useRef<number | null>(null)
   const isLocallyUpdating = useRef(false)
   
-  // Poll more frequently in settings for responsive status updates
-  const relayStatuses = useRelayStatus({ relayPool, pollingInterval: 2000 })
+  // Poll for relay status updates
+  const relayStatuses = useRelayStatus({ relayPool })
 
   useEffect(() => {
     // Don't update from external settings if we're currently making local changes
