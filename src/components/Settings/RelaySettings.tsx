@@ -35,28 +35,9 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, onClose })
   return (
     <div className="settings-section">
       <h3>Relays</h3>
-      
-      <div className="relay-summary" style={{ marginBottom: '1rem' }}>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          {activeRelays.length} active relay{activeRelays.length !== 1 ? 's' : ''}
-          {recentRelays.length > 0 && 
-            ` · ${recentRelays.length} recently seen`
-          }
-        </p>
-      </div>
 
       {activeRelays.length > 0 && (
         <div className="relay-group" style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ 
-            fontSize: '0.85rem', 
-            fontWeight: 600, 
-            color: 'var(--text-secondary)',
-            marginBottom: '0.75rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em'
-          }}>
-            Active
-          </h4>
           <div className="relay-list">
             {activeRelays.map((relay) => (
               <div 
