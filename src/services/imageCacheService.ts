@@ -162,6 +162,13 @@ async function getCachedImageUrl(url: string): Promise<string | null> {
     const response = await cache.match(url)
     
     if (!response) {
+      // Cache miss - clean up stale metadata if it exists
+      const metadata = getMetadata()
+      if (metadata[url]) {
+        delete metadata[url]
+        saveMetadata(metadata)
+        console.log('🧹 Cleaned up stale cache metadata for:', url.substring(0, 50))
+      }
       return null
     }
     
@@ -175,7 +182,8 @@ async function getCachedImageUrl(url: string): Promise<string | null> {
     // Convert response to blob URL
     const blob = await response.blob()
     return URL.createObjectURL(blob)
-  } catch {
+  } catch (err) {
+    console.warn('Failed to load from cache:', err)
     return null
   }
 }

@@ -31,51 +31,54 @@ export function useImageCache(
 
     // Store imageUrl in local variable for closure
     const urlToCache = imageUrl
-
-    // Check if image is in cache metadata (fast synchronous check)
-    const isCached = getCachedImage(urlToCache)
+    const isOffline = !navigator.onLine
     
-    if (isCached) {
-      // Load the cached image asynchronously
-      loadCachedImage(urlToCache)
-        .then(blobUrl => {
-          if (blobUrl) {
-            console.log('📦 Using cached image:', urlToCache.substring(0, 50))
-            setCachedUrl(blobUrl)
-          } else {
-            // Not actually cached, fall through to caching logic
-            setCachedUrl(urlToCache)
-            cacheInBackground()
-          }
-        })
-        .catch(err => {
-          console.error('Failed to load cached image:', err)
-          setCachedUrl(urlToCache)
-        })
-    } else {
-      // Not cached, show original and cache in background
+    // When online: show original URL first for immediate display
+    // When offline: don't show anything until we load from cache
+    if (!isOffline) {
       setCachedUrl(urlToCache)
-      cacheInBackground()
     }
 
-    function cacheInBackground() {
-      if (!isLoading) {
-        setIsLoading(true)
-        const maxSize = settings?.imageCacheSizeMB ?? 210
-        
-        cacheImage(urlToCache, maxSize)
-          .then(blobUrl => {
-            setCachedUrl(blobUrl)
-          })
-          .catch(err => {
-            console.error('Failed to cache image:', err)
-            // Keep using original URL on error
-          })
-          .finally(() => {
-            setIsLoading(false)
-          })
-      }
-    }
+    // Try to load from cache asynchronously
+    loadCachedImage(urlToCache)
+      .then(blobUrl => {
+        if (blobUrl) {
+          console.log('📦 Using cached image:', urlToCache.substring(0, 50))
+          setCachedUrl(blobUrl)
+        } else if (!isOffline) {
+          // Not cached and online - cache it now
+          if (!isLoading) {
+            setIsLoading(true)
+            const maxSize = settings?.imageCacheSizeMB ?? 210
+            
+            cacheImage(urlToCache, maxSize)
+              .then(newBlobUrl => {
+                // Only update if we got a blob URL back
+                if (newBlobUrl && newBlobUrl.startsWith('blob:')) {
+                  setCachedUrl(newBlobUrl)
+                }
+              })
+              .catch(err => {
+                console.error('Failed to cache image:', err)
+                // Keep using original URL on error
+              })
+              .finally(() => {
+                setIsLoading(false)
+              })
+          }
+        } else {
+          // Offline and not cached - no image available
+          console.warn('⚠️ Image not available offline:', urlToCache.substring(0, 50))
+          setCachedUrl(undefined)
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load cached image:', err)
+        // If online, fall back to original URL
+        if (!isOffline) {
+          setCachedUrl(urlToCache)
+        }
+      })
 
     // Cleanup: revoke blob URLs when component unmounts or URL changes
     return () => {
