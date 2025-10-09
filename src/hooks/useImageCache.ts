@@ -1,71 +1,33 @@
-import { useState, useEffect } from 'react'
-import { cacheImage, getCachedImage } from '../services/imageCacheService'
 import { UserSettings } from '../services/settingsService'
 
 /**
- * Hook to pre-cache images and return the URL for display
- * With Service Worker active, images are automatically cached and served offline
- * This hook ensures proactive caching for better offline experience
+ * Hook to return image URL for display
+ * Service Worker handles all caching transparently
+ * Images are cached on first load and available offline automatically
  * 
- * @param imageUrl - The URL of the image to cache
- * @param settings - User settings to determine if caching is enabled
- * @returns The image URL (Service Worker handles caching transparently)
+ * @param imageUrl - The URL of the image to display
+ * @param settings - User settings (for future use if needed)
+ * @returns The image URL (Service Worker handles caching)
  */
 export function useImageCache(
   imageUrl: string | undefined,
-  settings: UserSettings | undefined
+  _settings?: UserSettings
 ): string | undefined {
-  const [displayUrl, setDisplayUrl] = useState<string | undefined>(imageUrl)
-
-  useEffect(() => {
-    if (!imageUrl) {
-      setDisplayUrl(undefined)
-      return
-    }
-
-    // Always show the original URL - Service Worker will serve from cache if available
-    setDisplayUrl(imageUrl)
-
-    // If caching is disabled, don't pre-cache
-    const enableCache = settings?.enableImageCache ?? true
-    if (!enableCache || !navigator.onLine) {
-      return
-    }
-
-    // Pre-cache the image for offline availability
-    // Service Worker will handle serving it, but we ensure it's cached
-    const maxSize = settings?.imageCacheSizeMB ?? 210
-    cacheImage(imageUrl, maxSize).catch(err => {
-      console.warn('Failed to pre-cache image:', err)
-    })
-  }, [imageUrl, settings?.enableImageCache, settings?.imageCacheSizeMB])
-
-  return displayUrl
+  // Service Worker handles everything - just return the URL as-is
+  return imageUrl
 }
 
 /**
- * Simpler hook variant that just caches on mount if enabled
- * Useful for preloading article cover images
+ * Pre-load image to ensure it's cached by Service Worker
+ * Triggers a fetch so the SW can cache it even if not visible yet
  */
 export function useCacheImageOnLoad(
   imageUrl: string | undefined,
-  settings: UserSettings | undefined
+  _settings?: UserSettings
 ): void {
-  useEffect(() => {
-    if (!imageUrl) return
-
-    const enableCache = settings?.enableImageCache ?? true
-    if (!enableCache) return
-
-    // Check if already cached (fast metadata check)
-    const isCached = getCachedImage(imageUrl)
-    if (isCached) return
-
-    // Cache in background
-    const maxSize = settings?.imageCacheSizeMB ?? 210
-    cacheImage(imageUrl, maxSize).catch(err => {
-      console.error('Failed to cache image:', err)
-    })
-  }, [imageUrl, settings?.enableImageCache, settings?.imageCacheSizeMB])
+  // Service Worker will cache on first fetch
+  // This hook is now a no-op, kept for API compatibility
+  // The browser will automatically fetch and cache images when they're used in <img> tags
+  void imageUrl
 }
 

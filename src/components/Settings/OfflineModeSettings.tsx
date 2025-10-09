@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../../services/settingsService'
-import { getImageCacheStats, clearImageCache } from '../../services/imageCacheService'
+import { getImageCacheStatsAsync, clearImageCache } from '../../services/imageCacheService'
 import IconButton from '../IconButton'
 
 interface OfflineModeSettingsProps {
@@ -13,7 +13,7 @@ interface OfflineModeSettingsProps {
 
 const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onUpdate, onClose }) => {
   const navigate = useNavigate()
-  const [cacheStats, setCacheStats] = useState(getImageCacheStats())
+  const [cacheStats, setCacheStats] = useState({ totalSizeMB: 0, itemCount: 0, items: [] })
 
   const handleLinkClick = (url: string) => {
     if (onClose) onClose()
@@ -23,14 +23,20 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
   const handleClearCache = async () => {
     if (confirm('Are you sure you want to clear all cached images?')) {
       await clearImageCache()
-      setCacheStats(getImageCacheStats())
+      const stats = await getImageCacheStatsAsync()
+      setCacheStats(stats)
     }
   }
 
-  // Update cache stats when settings change
+  // Update cache stats periodically
   useEffect(() => {
-    const updateStats = () => setCacheStats(getImageCacheStats())
-    const interval = setInterval(updateStats, 2000) // Update every 2 seconds
+    const updateStats = async () => {
+      const stats = await getImageCacheStatsAsync()
+      setCacheStats(stats)
+    }
+    
+    updateStats() // Initial load
+    const interval = setInterval(updateStats, 3000) // Update every 3 seconds
     return () => clearInterval(interval)
   }, [])
 
