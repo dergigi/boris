@@ -2,7 +2,7 @@ import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBookmark, faUserLock, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { IndividualBookmark } from '../../types/bookmarks'
-import { formatDate } from '../../utils/bookmarkUtils'
+import { formatDateCompact } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
 import { IconGetter } from './shared'
 
@@ -75,7 +75,7 @@ export const CompactView: React.FC<CompactViewProps> = ({
             <ContentWithResolvedProfiles content={displayText.slice(0, 60) + (displayText.length > 60 ? '…' : '')} />
           </div>
         )}
-        <span className="bookmark-date-compact">{formatDate(bookmark.created_at)}</span>
+        <span className="bookmark-date-compact">{formatDateCompact(bookmark.created_at)}</span>
         {isClickable && (
           <button
             className="compact-read-btn"
