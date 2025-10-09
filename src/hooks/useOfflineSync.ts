@@ -48,7 +48,17 @@ export function useOfflineSync({
 
     if (wasLocalOnly && isNowOnline) {
       console.log('✈️ Detected transition: Flight Mode → Online')
-      syncLocalEventsToRemote(relayPool, account)
+      console.log('📊 Relay state:', {
+        connectedRelays: connectedRelays.length,
+        remoteRelays: connectedRelays.filter(r => !isLocalRelay(r.url)).length,
+        localRelays: connectedRelays.filter(r => isLocalRelay(r.url)).length
+      })
+      
+      // Wait a moment for relays to fully establish connections
+      setTimeout(() => {
+        console.log('🚀 Starting sync after delay...')
+        syncLocalEventsToRemote(relayPool, account)
+      }, 2000)
     }
 
     previousStateRef.current.hasRemoteRelays = hasRemoteRelays

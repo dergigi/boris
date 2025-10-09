@@ -8,6 +8,7 @@ import { RELAYS } from '../config/relays'
 import { Highlight } from '../types/highlights'
 import { UserSettings } from './settingsService'
 import { areAllRelaysLocal } from '../utils/helpers'
+import { markEventAsOfflineCreated } from './offlineSyncService'
 
 // Boris pubkey for zap splits
 const BORIS_PUBKEY = '6e468422dfb74a5738702a8823b9b28168fc6cfb119d613e49ca0ec5a0bbd0c3'
@@ -141,6 +142,11 @@ export async function createHighlight(
     isLocalOnly,
     eventId: signedEvent.id
   })
+  
+  // If we're in local-only mode, mark this event for later sync
+  if (isLocalOnly) {
+    markEventAsOfflineCreated(signedEvent.id)
+  }
   
   // Convert to Highlight with relay tracking info
   const highlight = eventToHighlight(signedEvent)
