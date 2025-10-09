@@ -3,7 +3,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendar, faUser } from '@fortawesome/free-solid-svg-icons'
 import { formatDistance } from 'date-fns'
 import { BlogPostPreview } from '../services/exploreService'
-import { useEventModel, Models } from 'applesauce-react'
+import { useEventModel } from 'applesauce-react'
+import { Models } from 'applesauce-core'
 
 interface BlogPostCardProps {
   post: BlogPostPreview
