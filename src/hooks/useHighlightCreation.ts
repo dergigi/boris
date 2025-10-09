@@ -73,6 +73,7 @@ export const useHighlightCreation = ({
       console.log('✅ Highlight created successfully!', {
         id: newHighlight.id,
         isLocalOnly: newHighlight.isLocalOnly,
+        isOfflineCreated: newHighlight.isOfflineCreated,
         publishedRelays: newHighlight.publishedRelays
       })
       

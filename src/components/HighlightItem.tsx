@@ -33,6 +33,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
     return `${highlight.pubkey.slice(0, 8)}...` // fallback to short pubkey
   }
   
+  // Update offline indicator when highlight prop changes
+  useEffect(() => {
+    if (highlight.isOfflineCreated && !isSyncing) {
+      setShowOfflineIndicator(true)
+    }
+  }, [highlight.isOfflineCreated, isSyncing])
+  
   // Listen to sync state changes
   useEffect(() => {
     const unsubscribe = onSyncStateChange((eventId, syncingState) => {
