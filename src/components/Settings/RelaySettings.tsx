@@ -156,6 +156,37 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses }) => {
           No relay connections found
         </p>
       )}
+
+      <div style={{ 
+        marginTop: '1.5rem', 
+        padding: '1rem',
+        background: 'var(--surface-secondary)',
+        borderRadius: '6px',
+        fontSize: '0.9rem',
+        lineHeight: '1.6'
+      }}>
+        <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+          Boris works best with a local relay. Consider running{' '}
+          <a 
+            href="https://github.com/greenart7c3/Citrine?tab=readme-ov-file#download" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ color: 'var(--accent, #8b5cf6)' }}
+          >
+            Citrine
+          </a>
+          {' or '}
+          <a 
+            href="https://github.com/CodyTseng/nostr-relay-tray/releases" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ color: 'var(--accent, #8b5cf6)' }}
+          >
+            nostr-relay-tray
+          </a>
+          .
+        </p>
+      </div>
     </div>
   )
 }
