@@ -5,16 +5,13 @@ import { faCheckCircle, faCircle, faClock, faPlane } from '@fortawesome/free-sol
 import { RelayStatus } from '../../services/relayStatusService'
 import { formatDistanceToNow } from 'date-fns'
 import { isLocalRelay } from '../../utils/helpers'
-import { UserSettings } from '../../services/settingsService'
 
 interface RelaySettingsProps {
   relayStatuses: RelayStatus[]
-  settings: UserSettings
-  onUpdate: (updates: Partial<UserSettings>) => void
   onClose?: () => void
 }
 
-const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, settings, onUpdate, onClose }) => {
+const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, onClose }) => {
   const navigate = useNavigate()
   const activeRelays = relayStatuses.filter(r => r.isInPool)
   const recentRelays = relayStatuses.filter(r => !r.isInPool)
@@ -39,32 +36,6 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, settings, 
   return (
     <div className="settings-section">
       <h3>Relays</h3>
-
-      <div className="setting-group">
-        <label htmlFor="useLocalRelayAsCache" className="checkbox-label">
-          <input
-            id="useLocalRelayAsCache"
-            type="checkbox"
-            checked={settings.useLocalRelayAsCache ?? true}
-            onChange={(e) => onUpdate({ useLocalRelayAsCache: e.target.checked })}
-            className="setting-checkbox"
-          />
-          <span>Use local relay(s) as cache</span>
-        </label>
-      </div>
-
-      <div className="setting-group">
-        <label htmlFor="rebroadcastToAllRelays" className="checkbox-label">
-          <input
-            id="rebroadcastToAllRelays"
-            type="checkbox"
-            checked={settings.rebroadcastToAllRelays ?? false}
-            onChange={(e) => onUpdate({ rebroadcastToAllRelays: e.target.checked })}
-            className="setting-checkbox"
-          />
-          <span>Rebroadcast events to all relays</span>
-        </label>
-      </div>
 
       {activeRelays.length > 0 && (
         <div className="relay-group" style={{ marginBottom: '1.5rem' }}>
