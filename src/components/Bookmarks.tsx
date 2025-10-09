@@ -13,6 +13,7 @@ import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import { useRelayStatus } from '../hooks/useRelayStatus'
 import { useOfflineSync } from '../hooks/useOfflineSync'
 import ThreePaneLayout from './ThreePaneLayout'
+import Explore from './Explore'
 import { classifyHighlights } from '../utils/highlightClassification'
 
 export type ViewMode = 'compact' | 'cards' | 'large'
@@ -33,6 +34,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     : undefined
   
   const showSettings = location.pathname === '/settings'
+  const showExplore = location.pathname === '/explore'
   
   // Track previous location for going back from settings
   useEffect(() => {
@@ -179,6 +181,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       isCollapsed={isCollapsed}
       isHighlightsCollapsed={isHighlightsCollapsed}
       showSettings={showSettings}
+      showExplore={showExplore}
       bookmarks={bookmarks}
       bookmarksLoading={bookmarksLoading}
       viewMode={viewMode}
@@ -227,6 +230,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       highlightButtonRef={highlightButtonRef}
       onCreateHighlight={handleCreateHighlight}
       hasActiveAccount={!!(activeAccount && relayPool)}
+      explore={showExplore ? (
+        relayPool ? <Explore relayPool={relayPool} /> : null
+      ) : undefined}
       toastMessage={toastMessage ?? undefined}
       toastType={toastType}
       onClearToast={clearToast}

@@ -22,6 +22,7 @@ interface ThreePaneLayoutProps {
   isCollapsed: boolean
   isHighlightsCollapsed: boolean
   showSettings: boolean
+  showExplore?: boolean
   
   // Bookmarks pane
   bookmarks: Bookmark[]
@@ -72,6 +73,9 @@ interface ThreePaneLayoutProps {
   toastMessage?: string
   toastType?: 'success' | 'error'
   onClearToast: () => void
+  
+  // Optional Explore content
+  explore?: React.ReactNode
 }
 
 const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
@@ -105,6 +109,11 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
               onClose={props.onCloseSettings}
               relayPool={props.relayPool}
             />
+          ) : props.showExplore && props.explore ? (
+            // Render Explore inside the main pane to keep side panels
+            <>
+              {props.explore}
+            </>
           ) : (
             <ContentPanel 
               loading={props.readerLoading}
