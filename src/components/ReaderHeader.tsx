@@ -1,11 +1,13 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHighlighter, faClock } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faClock, faCalendar } from '@fortawesome/free-solid-svg-icons'
+import { format } from 'date-fns'
 
 interface ReaderHeaderProps {
   title?: string
   image?: string
   summary?: string
+  published?: number
   readingTimeText?: string | null
   hasHighlights: boolean
   highlightCount: number
@@ -15,10 +17,12 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   title,
   image,
   summary,
+  published,
   readingTimeText,
   hasHighlights,
   highlightCount
 }) => {
+  const formattedDate = published ? format(new Date(published * 1000), 'MMMM d, yyyy') : null
   if (image) {
     return (
       <div className="reader-hero-image">
@@ -28,6 +32,12 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
             <h2 className="reader-title">{title}</h2>
             {summary && <p className="reader-summary">{summary}</p>}
             <div className="reader-meta">
+              {formattedDate && (
+                <div className="publish-date">
+                  <FontAwesomeIcon icon={faCalendar} />
+                  <span>{formattedDate}</span>
+                </div>
+              )}
               {readingTimeText && (
                 <div className="reading-time">
                   <FontAwesomeIcon icon={faClock} />
@@ -54,6 +64,12 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
           <h2 className="reader-title">{title}</h2>
           {summary && <p className="reader-summary">{summary}</p>}
           <div className="reader-meta">
+            {formattedDate && (
+              <div className="publish-date">
+                <FontAwesomeIcon icon={faCalendar} />
+                <span>{formattedDate}</span>
+              </div>
+            )}
             {readingTimeText && (
               <div className="reading-time">
                 <FontAwesomeIcon icon={faClock} />

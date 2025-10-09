@@ -50,6 +50,7 @@ export function useArticleLoader({
           markdown: article.markdown,
           image: article.image,
           summary: article.summary,
+          published: article.published,
           url: `nostr:${naddr}`
         })
         

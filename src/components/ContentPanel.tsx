@@ -20,6 +20,7 @@ interface ContentPanelProps {
   selectedUrl?: string
   image?: string
   summary?: string
+  published?: number
   highlights?: Highlight[]
   showHighlights?: boolean
   highlightStyle?: 'marker' | 'underline'
@@ -42,6 +43,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   selectedUrl,
   image,
   summary,
+  published,
   highlights = [],
   showHighlights = true,
   highlightStyle = 'marker',
@@ -120,6 +122,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         title={title}
         image={image}
         summary={summary}
+        published={published}
         readingTimeText={readingStats ? readingStats.text : null}
         hasHighlights={hasHighlights}
         highlightCount={relevantHighlights.length}
