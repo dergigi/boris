@@ -7,6 +7,7 @@ import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
 import { UserSettings } from './settingsService'
 import { rebroadcastEvents } from './rebroadcastService'
+import { cacheImage } from './imageCacheService'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -144,6 +145,14 @@ export async function fetchArticleByNaddr(
 
     // Save to cache before returning
     saveToCache(naddr, content)
+    
+    // Cache cover image if enabled and present
+    if (image && settings?.enableImageCache !== false) {
+      const maxSize = settings?.imageCacheSizeMB ?? 50
+      cacheImage(image, maxSize).catch(err => {
+        console.warn('Failed to cache article cover image:', err)
+      })
+    }
     
     return content
   } catch (err) {

@@ -92,6 +92,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             isRefreshing={props.isRefreshing}
             loading={props.bookmarksLoading}
             relayPool={props.relayPool}
+            settings={props.settings}
           />
         </div>
         <div className="pane main">
@@ -123,6 +124,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
               onClearSelection={props.onClearSelection}
               currentUserPubkey={props.currentUserPubkey}
               followedPubkeys={props.followedPubkeys}
+              settings={props.settings}
             />
           )}
         </div>

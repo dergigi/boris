@@ -11,15 +11,17 @@ import { getPreviewImage, fetchOgImage } from '../utils/imagePreview'
 import { CompactView } from './BookmarkViews/CompactView'
 import { LargeView } from './BookmarkViews/LargeView'
 import { CardView } from './BookmarkViews/CardView'
+import { UserSettings } from '../services/settingsService'
 
 interface BookmarkItemProps {
   bookmark: IndividualBookmark
   index: number
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   viewMode?: ViewMode
+  settings?: UserSettings
 }
 
-export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onSelectUrl, viewMode = 'cards' }) => {
+export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onSelectUrl, viewMode = 'cards', settings }) => {
   const [ogImage, setOgImage] = useState<string | null>(null)
 
   const short = (v: string) => `${v.slice(0, 8)}...${v.slice(-8)}`
@@ -115,7 +117,8 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     getAuthorDisplayName,
     handleReadNow,
     articleImage,
-    articleSummary
+    articleSummary,
+    settings
   }
 
   if (viewMode === 'compact') {

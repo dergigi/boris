@@ -11,6 +11,7 @@ import { HighlightVisibility } from './HighlightsPanel'
 import { useMarkdownToHTML } from '../hooks/useMarkdownToHTML'
 import { useHighlightedContent } from '../hooks/useHighlightedContent'
 import { useHighlightInteractions } from '../hooks/useHighlightInteractions'
+import { UserSettings } from '../services/settingsService'
 
 interface ContentPanelProps {
   loading: boolean
@@ -30,6 +31,7 @@ interface ContentPanelProps {
   highlightVisibility?: HighlightVisibility
   currentUserPubkey?: string
   followedPubkeys?: Set<string>
+  settings?: UserSettings
   // For highlight creation
   onTextSelection?: (text: string) => void
   onClearSelection?: () => void
@@ -48,6 +50,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   showHighlights = true,
   highlightStyle = 'marker',
   highlightColor = '#ffff00',
+  settings,
   onHighlightClick,
   selectedHighlightId,
   highlightVisibility = { nostrverse: true, friends: true, mine: true },
@@ -126,6 +129,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         readingTimeText={readingStats ? readingStats.text : null}
         hasHighlights={hasHighlights}
         highlightCount={relevantHighlights.length}
+        settings={settings}
       />
       {markdown || html ? (
         markdown ? (

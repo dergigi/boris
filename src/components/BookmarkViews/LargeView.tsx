@@ -4,6 +4,8 @@ import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
 import { IconGetter } from './shared'
+import { useImageCache } from '../../hooks/useImageCache'
+import { UserSettings } from '../../services/settingsService'
 
 interface LargeViewProps {
   bookmark: IndividualBookmark
@@ -19,6 +21,7 @@ interface LargeViewProps {
   getAuthorDisplayName: () => string
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
   articleSummary?: string
+  settings?: UserSettings
 }
 
 export const LargeView: React.FC<LargeViewProps> = ({
@@ -34,13 +37,15 @@ export const LargeView: React.FC<LargeViewProps> = ({
   eventNevent,
   getAuthorDisplayName,
   handleReadNow,
-  articleSummary
+  articleSummary,
+  settings
 }) => {
+  const cachedImage = useImageCache(previewImage || undefined, settings)
   const isArticle = bookmark.kind === 30023
   
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark large ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
-      {(hasUrls || (isArticle && previewImage)) && (
+      {(hasUrls || (isArticle && cachedImage)) && (
         <div 
           className="large-preview-image" 
           onClick={() => {
@@ -50,7 +55,7 @@ export const LargeView: React.FC<LargeViewProps> = ({
               onSelectUrl?.(extractedUrls[0])
             }
           }}
-          style={previewImage ? { backgroundImage: `url(${previewImage})` } : undefined}
+          style={cachedImage ? { backgroundImage: `url(${cachedImage})` } : undefined}
         >
           {!previewImage && hasUrls && (
             <div className="preview-placeholder">

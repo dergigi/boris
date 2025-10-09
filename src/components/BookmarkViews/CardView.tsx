@@ -7,6 +7,8 @@ import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
 import IconButton from '../IconButton'
 import { classifyUrl } from '../../utils/helpers'
 import { IconGetter } from './shared'
+import { useImageCache } from '../../hooks/useImageCache'
+import { UserSettings } from '../../services/settingsService'
 
 interface CardViewProps {
   bookmark: IndividualBookmark
@@ -22,6 +24,7 @@ interface CardViewProps {
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
   articleImage?: string
   articleSummary?: string
+  settings?: UserSettings
 }
 
 export const CardView: React.FC<CardViewProps> = ({
@@ -37,8 +40,10 @@ export const CardView: React.FC<CardViewProps> = ({
   getAuthorDisplayName,
   handleReadNow,
   articleImage,
-  articleSummary
+  articleSummary,
+  settings
 }) => {
+  const cachedImage = useImageCache(articleImage, settings)
   const [expanded, setExpanded] = useState(false)
   const [urlsExpanded, setUrlsExpanded] = useState(false)
   const contentLength = (bookmark.content || '').length
@@ -48,10 +53,10 @@ export const CardView: React.FC<CardViewProps> = ({
 
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
-      {isArticle && articleImage && (
+      {isArticle && cachedImage && (
         <div 
           className="article-hero-image"
-          style={{ backgroundImage: `url(${articleImage})` }}
+          style={{ backgroundImage: `url(${cachedImage})` }}
           onClick={() => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)}
         />
       )}

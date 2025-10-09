@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { UserSettings } from '../../services/settingsService'
+import { getImageCacheStats, clearImageCache } from '../../services/imageCacheService'
 
 interface OfflineModeSettingsProps {
   settings: UserSettings
@@ -10,11 +11,26 @@ interface OfflineModeSettingsProps {
 
 const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onUpdate, onClose }) => {
   const navigate = useNavigate()
+  const [cacheStats, setCacheStats] = useState(getImageCacheStats())
 
   const handleLinkClick = (url: string) => {
     if (onClose) onClose()
     navigate(`/r/${encodeURIComponent(url)}`)
   }
+
+  const handleClearCache = () => {
+    if (confirm('Are you sure you want to clear all cached images?')) {
+      clearImageCache()
+      setCacheStats(getImageCacheStats())
+    }
+  }
+
+  // Update cache stats when settings change
+  useEffect(() => {
+    const updateStats = () => setCacheStats(getImageCacheStats())
+    const interval = setInterval(updateStats, 2000) // Update every 2 seconds
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <div className="settings-section">
@@ -45,6 +61,92 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
           <span>Rebroadcast events while browsing</span>
         </label>
       </div>
+
+      <h3 className="section-title" style={{ marginTop: '2rem' }}>Image Cache</h3>
+      
+      <div className="setting-group">
+        <label htmlFor="enableImageCache" className="checkbox-label">
+          <input
+            id="enableImageCache"
+            type="checkbox"
+            checked={settings.enableImageCache ?? true}
+            onChange={(e) => onUpdate({ enableImageCache: e.target.checked })}
+            className="setting-checkbox"
+          />
+          <span>Cache images for offline viewing</span>
+        </label>
+        <p style={{ 
+          margin: '0.5rem 0 0 1.75rem', 
+          fontSize: '0.85rem', 
+          color: 'var(--text-secondary)' 
+        }}>
+          Images will be stored in browser localStorage
+        </p>
+      </div>
+
+      {(settings.enableImageCache ?? true) && (
+        <>
+          <div className="setting-group">
+            <label htmlFor="imageCacheSizeMB">
+              <span>Max cache size: {settings.imageCacheSizeMB ?? 50} MB</span>
+            </label>
+            <input
+              id="imageCacheSizeMB"
+              type="range"
+              min="10"
+              max="200"
+              step="10"
+              value={settings.imageCacheSizeMB ?? 50}
+              onChange={(e) => onUpdate({ imageCacheSizeMB: parseInt(e.target.value) })}
+              className="setting-slider"
+              style={{ width: '100%', marginTop: '0.5rem' }}
+            />
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              fontSize: '0.75rem', 
+              color: 'var(--text-tertiary)',
+              marginTop: '0.25rem'
+            }}>
+              <span>10 MB</span>
+              <span>200 MB</span>
+            </div>
+          </div>
+
+          <div style={{ 
+            marginTop: '1rem', 
+            padding: '1rem',
+            background: 'var(--surface-secondary)',
+            borderRadius: '6px',
+            fontSize: '0.9rem'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: '0.5rem'
+            }}>
+              <span style={{ color: 'var(--text-secondary)' }}>
+                Current cache: {cacheStats.totalSizeMB.toFixed(2)} MB ({cacheStats.itemCount} images)
+              </span>
+              <button
+                onClick={handleClearCache}
+                style={{
+                  padding: '0.25rem 0.75rem',
+                  fontSize: '0.85rem',
+                  background: 'var(--danger, #ef4444)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Clear Cache
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       <div style={{ 
         marginTop: '1.5rem', 

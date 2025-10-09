@@ -8,6 +8,7 @@ import SidebarHeader from './SidebarHeader'
 import IconButton from './IconButton'
 import { ViewMode } from './Bookmarks'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
+import { UserSettings } from '../services/settingsService'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -23,6 +24,7 @@ interface BookmarkListProps {
   isRefreshing?: boolean
   loading?: boolean
   relayPool: RelayPool | null
+  settings?: UserSettings
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({
@@ -38,7 +40,8 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   onRefresh,
   isRefreshing,
   loading = false,
-  relayPool
+  relayPool,
+  settings
 }) => {
   // Helper to check if a bookmark has either content or a URL
   const hasContentOrUrl = (ib: IndividualBookmark) => {
@@ -123,6 +126,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
                 index={index} 
                 onSelectUrl={onSelectUrl}
                 viewMode={viewMode}
+                settings={settings}
               />
             )}
           </div>

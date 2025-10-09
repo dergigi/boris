@@ -2,6 +2,8 @@ import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter, faClock } from '@fortawesome/free-solid-svg-icons'
 import { format } from 'date-fns'
+import { useImageCache } from '../hooks/useImageCache'
+import { UserSettings } from '../services/settingsService'
 
 interface ReaderHeaderProps {
   title?: string
@@ -11,6 +13,7 @@ interface ReaderHeaderProps {
   readingTimeText?: string | null
   hasHighlights: boolean
   highlightCount: number
+  settings?: UserSettings
 }
 
 const ReaderHeader: React.FC<ReaderHeaderProps> = ({
@@ -20,13 +23,15 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   published,
   readingTimeText,
   hasHighlights,
-  highlightCount
+  highlightCount,
+  settings
 }) => {
+  const cachedImage = useImageCache(image, settings)
   const formattedDate = published ? format(new Date(published * 1000), 'MMM d, yyyy') : null
-  if (image) {
+  if (cachedImage) {
     return (
       <div className="reader-hero-image">
-        <img src={image} alt={title || 'Article image'} />
+        <img src={cachedImage} alt={title || 'Article image'} />
         {formattedDate && (
           <div className="publish-date-topright">
             {formattedDate}
