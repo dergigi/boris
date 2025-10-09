@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { RelayPool } from 'applesauce-relay'
-import { IAccount, IEventStore } from 'applesauce-core'
+import { IAccount } from 'applesauce-accounts'
+import { IEventStore } from 'applesauce-core'
 import { syncLocalEventsToRemote } from '../services/offlineSyncService'
 import { isLocalRelay } from '../utils/helpers'
 import { RelayStatus } from '../services/relayStatusService'
@@ -15,7 +16,7 @@ interface UseOfflineSyncParams {
 
 export function useOfflineSync({
   relayPool,
-  account,
+  account: _account,
   eventStore,
   relayStatuses,
   enabled = true
@@ -29,7 +30,7 @@ export function useOfflineSync({
   })
 
   useEffect(() => {
-    if (!enabled || !relayPool || !account || !eventStore) return
+    if (!enabled || !relayPool || !_account || !eventStore) return
 
     const connectedRelays = relayStatuses.filter(r => r.isInPool)
     const hasRemoteRelays = connectedRelays.some(r => !isLocalRelay(r.url))
@@ -59,11 +60,11 @@ export function useOfflineSync({
       // Wait a moment for relays to fully establish connections
       setTimeout(() => {
         console.log('🚀 Starting sync after delay...')
-        syncLocalEventsToRemote(relayPool, account, eventStore)
+        syncLocalEventsToRemote(relayPool, eventStore)
       }, 2000)
     }
 
     previousStateRef.current.hasRemoteRelays = hasRemoteRelays
-  }, [relayPool, account, eventStore, relayStatuses, enabled])
+  }, [relayPool, _account, eventStore, relayStatuses, enabled])
 }
 

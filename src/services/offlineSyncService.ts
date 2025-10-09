@@ -1,6 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
-import { IAccount, IEventStore } from 'applesauce-core'
+import { IEventStore } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
 import { isLocalRelay } from '../utils/helpers'
 
@@ -54,7 +54,6 @@ function notifySyncStateChange(eventId: string, isSyncing: boolean): void {
  */
 export async function syncLocalEventsToRemote(
   relayPool: RelayPool,
-  account: IAccount,
   eventStore: IEventStore
 ): Promise<void> {
   if (isSyncing) {
