@@ -27,11 +27,22 @@ export async function rebroadcastEvents(
     return // No rebroadcast enabled
   }
 
+  // Check current relay connectivity - don't rebroadcast in flight mode
+  const connectedRelays = Array.from(relayPool.relays.values())
+  const connectedRemoteRelays = connectedRelays.filter(relay => relay.connected && !isLocalRelay(relay.url))
+  const hasRemoteConnection = connectedRemoteRelays.length > 0
+  
+  // If we're in flight mode (only local relays connected) and user wants to broadcast to all relays, skip
+  if (broadcastToAll && !hasRemoteConnection) {
+    console.log('✈️ Flight mode: skipping rebroadcast to remote relays')
+    return
+  }
+
   // Determine target relays based on settings
   let targetRelays: string[] = []
   
   if (broadcastToAll) {
-    // Broadcast to all relays
+    // Broadcast to all relays (only if we have remote connection)
     targetRelays = RELAYS
   } else if (useLocalCache) {
     // Only broadcast to local relays
