@@ -4,36 +4,22 @@ import { IAccount } from 'applesauce-core/helpers'
 import { RELAYS } from '../config/relays'
 import { isLocalRelay } from '../utils/helpers'
 
-interface SyncState {
-  lastRemoteConnectionTime: number
-  wasLocalOnly: boolean
-  isSyncing: boolean
-}
-
-const syncState: SyncState = {
-  lastRemoteConnectionTime: 0,
-  wasLocalOnly: false,
-  isSyncing: false
-}
+let isSyncing = false
 
 /**
  * Syncs local-only events to remote relays when coming back online
  */
 export async function syncLocalEventsToRemote(
   relayPool: RelayPool,
-  account: IAccount | null,
-  hasRemoteRelays: boolean
+  account: IAccount
 ): Promise<void> {
-  if (!account || syncState.isSyncing) return
-
-  // Detect transition from local-only to having remote relays
-  const justCameOnline = !syncState.wasLocalOnly && hasRemoteRelays
-  syncState.wasLocalOnly = !hasRemoteRelays
-
-  if (!justCameOnline) return
+  if (isSyncing) {
+    console.log('⏳ Sync already in progress, skipping...')
+    return
+  }
 
   console.log('🔄 Coming back online - syncing local events to remote relays...')
-  syncState.isSyncing = true
+  isSyncing = true
 
   try {
     const localRelays = RELAYS.filter(isLocalRelay)
@@ -79,7 +65,7 @@ export async function syncLocalEventsToRemote(
 
     if (eventsToSync.length === 0) {
       console.log('✅ No local events to sync')
-      syncState.isSyncing = false
+      isSyncing = false
       return
     }
 
@@ -102,25 +88,10 @@ export async function syncLocalEventsToRemote(
     }
 
     console.log(`✅ Synced ${successCount}/${uniqueEvents.length} events to remote relays`)
-    syncState.lastRemoteConnectionTime = Date.now()
   } catch (error) {
     console.error('❌ Error during offline sync:', error)
   } finally {
-    syncState.isSyncing = false
+    isSyncing = false
   }
-}
-
-/**
- * Checks if we should sync based on current relay state
- */
-export function shouldSync(
-  hasRemoteRelays: boolean,
-  account: IAccount | null
-): boolean {
-  if (!account || syncState.isSyncing) return false
-
-  // Only sync if we just came online (transition from local-only to having remote relays)
-  const justCameOnline = syncState.wasLocalOnly && hasRemoteRelays
-  return justCameOnline
 }
 

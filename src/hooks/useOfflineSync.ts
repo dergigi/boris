@@ -48,7 +48,7 @@ export function useOfflineSync({
 
     if (wasLocalOnly && isNowOnline) {
       console.log('✈️ Detected transition: Flight Mode → Online')
-      syncLocalEventsToRemote(relayPool, account, true)
+      syncLocalEventsToRemote(relayPool, account)
     }
 
     previousStateRef.current.hasRemoteRelays = hasRemoteRelays
