@@ -73,7 +73,7 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
             onChange={(e) => onUpdate({ enableImageCache: e.target.checked })}
             className="setting-checkbox"
           />
-          <span>Cache images</span>
+          <span>Use local image cache</span>
         </label>
 
         {(settings.enableImageCache ?? true) && (
