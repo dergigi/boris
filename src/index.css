@@ -71,10 +71,10 @@ body {
 
 .bookmarks-container .view-mode-controls {
   margin-top: auto;
-  padding: 0.75rem 1rem;
+  padding: 1rem;
   border-top: 1px solid #333;
-  background: #1a1a1a;
-  border-radius: 0 0 12px 12px;
+  background: transparent;
+  border-radius: 0;
 }
 
 .bookmarks-container .bookmarks-list {
@@ -108,13 +108,8 @@ body {
 .view-mode-controls {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 8px;
-  margin-bottom: 1rem;
   justify-content: center;
+  gap: 0.5rem;
 }
 
 .profile-avatar {
