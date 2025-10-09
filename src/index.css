@@ -1577,7 +1577,7 @@ body {
 
 .highlight-relay-indicator {
   position: absolute;
-  bottom: -4px;
+  bottom: -2px;
   left: 0;
   font-size: 0.7rem;
   color: #888;
