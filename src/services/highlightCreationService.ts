@@ -108,7 +108,9 @@ export async function createHighlight(
   const signedEvent = await factory.sign(highlightEvent)
 
   // Get list of currently connected relays from the pool
-  const connectedRelays = Array.from(relayPool.relays.values()).map(relay => relay.url)
+  const connectedRelays = Array.from(relayPool.relays.values())
+    .filter(relay => relay.connected)
+    .map(relay => relay.url)
   
   // Determine which relays we're publishing to (intersection of RELAYS and connected relays)
   let publishingRelays = RELAYS.filter(url => connectedRelays.includes(url))
