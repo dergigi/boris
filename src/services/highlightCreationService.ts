@@ -11,7 +11,8 @@ import { areAllRelaysLocal } from '../utils/helpers'
 import { markEventAsOfflineCreated } from './offlineSyncService'
 
 // Boris pubkey for zap splits
-const BORIS_PUBKEY = '6e468422dfb74a5738702a8823b9b28168fc6cfb119d613e49ca0ec5a0bbd0c3'
+// npub19802see0gnk3vjlus0dnmfdagusqrtmsxpl5yfmkwn9uvnfnqylqduhr0x
+const BORIS_PUBKEY = '29dea8672f44ed164bfc83db3da5bd472001af70307f42277674cbc64d33013e'
 
 const {
   getHighlightText,
