@@ -29,7 +29,7 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
             onChange={(e) => onUpdate({ useLocalRelayAsCache: e.target.checked })}
             className="setting-checkbox"
           />
-          <span>Use local relay(s) as cache</span>
+          <span>Use local relays as cache</span>
         </label>
       </div>
 
