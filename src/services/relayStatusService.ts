@@ -6,7 +6,8 @@ export interface RelayStatus {
   lastSeen: number // timestamp
 }
 
-const RECENT_CONNECTION_WINDOW = 20 * 60 * 1000 // 20 minutes
+// How long to show disconnected relays as "recently seen" before hiding them
+const RECENT_CONNECTION_WINDOW = 10 * 1000 // 10 seconds
 
 // In-memory tracking of relay last seen times
 const relayLastSeen = new Map<string, number>()

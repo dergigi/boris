@@ -103,12 +103,12 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, onClose })
           <h4 style={{ 
             fontSize: '0.85rem', 
             fontWeight: 600, 
-            color: 'var(--text-secondary)',
+            color: '#ef4444',
             marginBottom: '0.75rem',
             textTransform: 'uppercase',
             letterSpacing: '0.05em'
           }}>
-            Recently Seen
+            Offline
           </h4>
           <div className="relay-list">
             {recentRelays.map((relay) => (
@@ -129,7 +129,7 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, onClose })
                 <FontAwesomeIcon 
                   icon={faCircle} 
                   style={{ 
-                    color: 'var(--text-tertiary, #6b7280)',
+                    color: '#ef4444',
                     fontSize: '0.7rem'
                   }} 
                 />
