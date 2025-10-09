@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faHouseSignal, faPlane, faSpinner, faServer } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { formatDistanceToNow } from 'date-fns'
 import { useEventModel } from 'applesauce-react/hooks'
@@ -83,16 +83,33 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
   
   const sourceLink = getSourceLink()
   
-  // Format relay list for tooltip
-  const getRelayTooltip = () => {
-    if (!highlight.publishedRelays || highlight.publishedRelays.length === 0) {
-      return 'No relay information available'
+  // Determine relay indicator icon and tooltip
+  const getRelayIndicatorInfo = () => {
+    const isLocalOrOffline = highlight.isLocalOnly || (showOfflineIndicator && !isSyncing)
+    
+    if (isLocalOrOffline) {
+      return {
+        icon: faPlane,
+        tooltip: highlight.isLocalOnly 
+          ? 'Local only (not published to remote relays)'
+          : 'Created in flight mode'
+      }
     }
+    
+    if (!highlight.publishedRelays || highlight.publishedRelays.length === 0) {
+      return null
+    }
+    
     const relayNames = highlight.publishedRelays.map(url => 
       url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
     )
-    return `Published to ${relayNames.length} relay(s):\n${relayNames.join('\n')}`
+    return {
+      icon: faServer,
+      tooltip: `Published to ${relayNames.length} relay(s):\n${relayNames.join('\n')}`
+    }
   }
+  
+  const relayIndicator = getRelayIndicatorInfo()
   
   return (
     <div 
@@ -104,9 +121,9 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
     >
       <div className="highlight-quote-icon">
         <FontAwesomeIcon icon={faQuoteLeft} />
-        {highlight.publishedRelays && highlight.publishedRelays.length > 0 && (
-          <div className="highlight-relay-indicator" title={getRelayTooltip()}>
-            <FontAwesomeIcon icon={faServer} />
+        {relayIndicator && (
+          <div className="highlight-relay-indicator" title={relayIndicator.tooltip}>
+            <FontAwesomeIcon icon={relayIndicator.icon} />
           </div>
         )}
       </div>
@@ -132,30 +149,11 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
             {formatDistanceToNow(new Date(highlight.created_at * 1000), { addSuffix: true })}
           </span>
           
-          {highlight.isLocalOnly && (
-            <>
-              <span className="highlight-meta-separator">•</span>
-              <span className="highlight-local-indicator" title="This highlight is only stored on your local relay">
-                <FontAwesomeIcon icon={faHouseSignal} />
-                <span className="highlight-local-text">Local</span>
-              </span>
-            </>
-          )}
-          
           {isSyncing && (
             <>
               <span className="highlight-meta-separator">•</span>
               <span className="highlight-syncing-indicator" title="Syncing to remote relays...">
                 <FontAwesomeIcon icon={faSpinner} spin />
-              </span>
-            </>
-          )}
-          
-          {!isSyncing && showOfflineIndicator && (
-            <>
-              <span className="highlight-meta-separator">•</span>
-              <span className="highlight-offline-indicator" title="Created while in flight mode">
-                <FontAwesomeIcon icon={faPlane} />
               </span>
             </>
           )}
