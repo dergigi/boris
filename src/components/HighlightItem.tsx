@@ -8,7 +8,7 @@ import { Models, IEventStore } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
 import { onSyncStateChange, isEventSyncing } from '../services/offlineSyncService'
 import { RELAYS } from '../config/relays'
-import { areAllRelaysLocal, isLocalRelay } from '../utils/helpers'
+import { areAllRelaysLocal } from '../utils/helpers'
 
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
