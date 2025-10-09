@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faHouseSignal, faPlane, faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faHouseSignal, faPlane, faSpinner, faServer } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { formatDistanceToNow } from 'date-fns'
 import { useEventModel } from 'applesauce-react/hooks'
@@ -83,6 +83,17 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
   
   const sourceLink = getSourceLink()
   
+  // Format relay list for tooltip
+  const getRelayTooltip = () => {
+    if (!highlight.publishedRelays || highlight.publishedRelays.length === 0) {
+      return 'No relay information available'
+    }
+    const relayNames = highlight.publishedRelays.map(url => 
+      url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
+    )
+    return `Published to ${relayNames.length} relay(s):\n${relayNames.join('\n')}`
+  }
+  
   return (
     <div 
       ref={itemRef} 
@@ -93,6 +104,11 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
     >
       <div className="highlight-quote-icon">
         <FontAwesomeIcon icon={faQuoteLeft} />
+        {highlight.publishedRelays && highlight.publishedRelays.length > 0 && (
+          <div className="highlight-relay-indicator" title={getRelayTooltip()}>
+            <FontAwesomeIcon icon={faServer} />
+          </div>
+        )}
       </div>
       
       <div className="highlight-content">
