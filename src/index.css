@@ -1637,20 +1637,27 @@ body {
   gap: 0.5rem;
   font-size: 0.875rem;
   color: #888;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .highlight-author {
   color: #aaa;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
 }
 
 .highlight-meta-separator {
   color: #666;
+  flex-shrink: 0;
 }
 
 .highlight-time {
   color: #888;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .highlight-source {
@@ -1660,6 +1667,8 @@ body {
   color: #646cff;
   text-decoration: none;
   transition: color 0.2s ease;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .highlight-source:hover {
