@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.5] - 2025-10-09
+
+### Fixed
+- Ensure connecting state shows for minimum 15 seconds to prevent premature offline display
+- Add Cloudflare Pages routing config for SPA paths
+
+### Changed
+- Extend connecting state duration and remove subtitle text for cleaner UI
+
 ## [0.3.4] - 2025-10-09
 
 ### Fixed
@@ -500,6 +509,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
+[0.3.5]: https://github.com/dergigi/boris/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/dergigi/boris/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/dergigi/boris/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/dergigi/boris/compare/v0.3.1...v0.3.2
