@@ -34,7 +34,7 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
         <div className="setting-group setting-inline" style={{ flex: '0 1 auto' }}>
           <label>Font Size</label>
           <div className="setting-buttons">
-            {[14, 16, 18, 20, 22].map(size => (
+            {[14, 16, 18, 20, 22, 24].map(size => (
               <button
                 key={size}
                 onClick={() => onUpdate({ fontSize: size })}
