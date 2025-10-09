@@ -57,7 +57,7 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ rela
           </>
         ) : (
           <>
-            <span className="relay-status-title">Local Only</span>
+            <span className="relay-status-title">Flight Mode</span>
             <span className="relay-status-subtitle">{connectedUrls.length} local relay{connectedUrls.length !== 1 ? 's' : ''}</span>
           </>
         )}

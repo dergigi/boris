@@ -18,7 +18,7 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
 
   return (
     <div className="settings-section">
-      <h3 className="section-title">Offline Mode</h3>
+      <h3 className="section-title">Flight Mode</h3>
       
       <div className="setting-group">
         <label htmlFor="useLocalRelayAsCache" className="checkbox-label">
