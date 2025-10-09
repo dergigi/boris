@@ -10,6 +10,8 @@ import { useBookmarksData } from '../hooks/useBookmarksData'
 import { useContentSelection } from '../hooks/useContentSelection'
 import { useHighlightCreation } from '../hooks/useHighlightCreation'
 import { useBookmarksUI } from '../hooks/useBookmarksUI'
+import { useRelayStatus } from '../hooks/useRelayStatus'
+import { useOfflineSync } from '../hooks/useOfflineSync'
 import ThreePaneLayout from './ThreePaneLayout'
 import { classifyHighlights } from '../utils/highlightClassification'
 
@@ -48,6 +50,17 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     eventStore,
     pubkey: activeAccount?.pubkey,
     accountManager
+  })
+
+  // Monitor relay status for offline sync
+  const relayStatuses = useRelayStatus({ relayPool, pollingInterval: 5000 })
+
+  // Automatically sync local events to remote relays when coming back online
+  useOfflineSync({
+    relayPool,
+    account: activeAccount,
+    relayStatuses,
+    enabled: true
   })
 
   const {
