@@ -201,9 +201,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       }
     }
     
-    // Fallback: show remote relays we queried (where this was likely fetched from)
-    const remoteRelays = RELAYS.filter(url => !isLocalRelay(url))
-    const relayNames = remoteRelays.map(url => 
+    // Fallback: show all relays we queried (where this was likely fetched from)
+    const relayNames = RELAYS.map(url => 
       url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
     )
     return {
