@@ -118,21 +118,18 @@ function App() {
       console.log('Created relay group with', RELAYS.length, 'relays (including local)')
       console.log('Relay URLs:', RELAYS)
       
-      // Keep local relay connections alive indefinitely by creating a persistent subscription
-      // This prevents disconnection in flight mode when no other subscriptions are active
-      const localRelays = RELAYS.filter(url => url.includes('localhost') || url.includes('127.0.0.1'))
-      if (localRelays.length > 0) {
-        // Create a minimal subscription that never completes to keep connections alive
-        const keepAliveSub = pool.subscription(localRelays, { kinds: [0], limit: 0 }).subscribe({
-          next: () => {}, // No-op, we don't care about events
-          error: (err) => console.warn('Keep-alive subscription error:', err)
-        })
-        console.log('🔗 Created keep-alive subscription for', localRelays.length, 'local relay(s)')
-        
-        // Store subscription for cleanup
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(pool as any)._keepAliveSubscription = keepAliveSub
-      }
+      // Keep all relay connections alive indefinitely by creating a persistent subscription
+      // This prevents disconnection when no other subscriptions are active
+      // Create a minimal subscription that never completes to keep connections alive
+      const keepAliveSub = pool.subscription(RELAYS, { kinds: [0], limit: 0 }).subscribe({
+        next: () => {}, // No-op, we don't care about events
+        error: (err) => console.warn('Keep-alive subscription error:', err)
+      })
+      console.log('🔗 Created keep-alive subscription for', RELAYS.length, 'relay(s)')
+      
+      // Store subscription for cleanup
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(pool as any)._keepAliveSubscription = keepAliveSub
       
       // Attach address/replaceable loaders so ProfileModel can fetch profiles
       const addressLoader = createAddressLoader(pool, {
