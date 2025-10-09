@@ -1623,6 +1623,14 @@ body {
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
+.highlight-offline-indicator {
+  display: inline-flex;
+  align-items: center;
+  color: #fbbf24;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
 .highlight-local-text {
   font-size: 0.75rem;
   text-transform: uppercase;

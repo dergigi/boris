@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faHouseSignal } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faHouseSignal, faPlane } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { formatDistanceToNow } from 'date-fns'
 import { useEventModel } from 'applesauce-react/hooks'
@@ -97,6 +97,15 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
               <span className="highlight-local-indicator" title="This highlight is only stored on your local relay">
                 <FontAwesomeIcon icon={faHouseSignal} />
                 <span className="highlight-local-text">Local</span>
+              </span>
+            </>
+          )}
+          
+          {highlight.isOfflineCreated && (
+            <>
+              <span className="highlight-meta-separator">•</span>
+              <span className="highlight-offline-indicator" title="Created while in flight mode">
+                <FontAwesomeIcon icon={faPlane} />
               </span>
             </>
           )}

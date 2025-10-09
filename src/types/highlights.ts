@@ -18,5 +18,6 @@ export interface Highlight {
   // Relay tracking for offline/local-only highlights
   publishedRelays?: string[] // URLs of relays that acknowledged this event
   isLocalOnly?: boolean // true if only published to local relays
+  isOfflineCreated?: boolean // true if created while in flight mode (offline)
 }
 

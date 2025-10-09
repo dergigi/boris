@@ -152,6 +152,7 @@ export async function createHighlight(
   const highlight = eventToHighlight(signedEvent)
   highlight.publishedRelays = actualPublishedRelays
   highlight.isLocalOnly = isLocalOnly
+  highlight.isOfflineCreated = isLocalOnly // Mark as created offline if local-only
   
   // Return the highlight for immediate UI updates
   return highlight
