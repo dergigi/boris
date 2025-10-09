@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
-import { formatDistanceToNow } from 'date-fns'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models, IEventStore } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
@@ -10,6 +9,7 @@ import { onSyncStateChange, isEventSyncing } from '../services/offlineSyncServic
 import { RELAYS } from '../config/relays'
 import { areAllRelaysLocal } from '../utils/helpers'
 import { nip19 } from 'nostr-tools'
+import { formatDateCompact } from '../utils/bookmarkUtils'
 
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
@@ -283,7 +283,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
           </span>
           <span className="highlight-meta-separator">•</span>
           <span className="highlight-time">
-            {formatDistanceToNow(new Date(highlight.created_at * 1000), { addSuffix: true })}
+            {formatDateCompact(highlight.created_at)}
           </span>
           
           {sourceLink && (
