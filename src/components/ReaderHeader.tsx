@@ -27,17 +27,17 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
     return (
       <div className="reader-hero-image">
         <img src={image} alt={title || 'Article image'} />
+        {formattedDate && (
+          <div className="publish-date-topright">
+            <FontAwesomeIcon icon={faCalendar} />
+            <span>{formattedDate}</span>
+          </div>
+        )}
         {title && (
           <div className="reader-header-overlay">
             <h2 className="reader-title">{title}</h2>
             {summary && <p className="reader-summary">{summary}</p>}
             <div className="reader-meta">
-              {formattedDate && (
-                <div className="publish-date">
-                  <FontAwesomeIcon icon={faCalendar} />
-                  <span>{formattedDate}</span>
-                </div>
-              )}
               {readingTimeText && (
                 <div className="reading-time">
                   <FontAwesomeIcon icon={faClock} />
@@ -61,15 +61,15 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
     <>
       {title && (
         <div className="reader-header">
+          {formattedDate && (
+            <div className="publish-date-topright">
+              <FontAwesomeIcon icon={faCalendar} />
+              <span>{formattedDate}</span>
+            </div>
+          )}
           <h2 className="reader-title">{title}</h2>
           {summary && <p className="reader-summary">{summary}</p>}
           <div className="reader-meta">
-            {formattedDate && (
-              <div className="publish-date">
-                <FontAwesomeIcon icon={faCalendar} />
-                <span>{formattedDate}</span>
-              </div>
-            )}
             {readingTimeText && (
               <div className="reading-time">
                 <FontAwesomeIcon icon={faClock} />

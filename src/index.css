@@ -502,6 +502,7 @@ body {
 
 .reader-header {
   margin-bottom: 2rem;
+  position: relative;
 }
 
 .reader-title {
@@ -536,6 +537,27 @@ body {
 .publish-date svg {
   font-size: 0.75rem;
   opacity: 0.6;
+}
+
+.publish-date-topright {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.813rem;
+  color: rgba(136, 136, 136, 0.8);
+  padding: 0.4rem 0.75rem;
+  background: var(--surface-secondary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  z-index: 10;
+}
+
+.publish-date-topright svg {
+  font-size: 0.75rem;
+  opacity: 0.7;
 }
 
 .reading-time {
@@ -1138,6 +1160,13 @@ body {
 
 .reader-header-overlay .publish-date svg {
   opacity: 0.7;
+}
+
+.reader-hero-image .publish-date-topright {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .reader-header-overlay .reading-time,
