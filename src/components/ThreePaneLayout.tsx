@@ -1,5 +1,6 @@
 import React from 'react'
 import { RelayPool } from 'applesauce-relay'
+import { IEventStore } from 'applesauce-core'
 import { BookmarkList } from './BookmarkList'
 import ContentPanel from './ContentPanel'
 import { HighlightsPanel } from './HighlightsPanel'
@@ -33,6 +34,7 @@ interface ThreePaneLayoutProps {
   onOpenSettings: () => void
   onRefresh: () => void
   relayPool: RelayPool | null
+  eventStore: IEventStore | null
   
   // Content pane
   readerLoading: boolean
