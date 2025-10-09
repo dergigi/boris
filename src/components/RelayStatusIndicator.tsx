@@ -10,8 +10,8 @@ interface RelayStatusIndicatorProps {
 }
 
 export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ relayPool }) => {
-  // Poll for relay status updates
-  const relayStatuses = useRelayStatus({ relayPool })
+  // Poll frequently for responsive offline indicator (3s instead of default 20s)
+  const relayStatuses = useRelayStatus({ relayPool, pollingInterval: 3000 })
   
   if (!relayPool) return null
   
@@ -27,15 +27,15 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ rela
   
   // Debug logging
   React.useEffect(() => {
-    if (localOnlyMode || offlineMode) {
-      console.log('✈️ Relay Status Indicator:', {
-        mode: offlineMode ? 'OFFLINE' : 'LOCAL_ONLY',
-        connectedUrls,
-        hasLocalRelay,
-        hasRemoteRelay
-      })
-    }
-  }, [localOnlyMode, offlineMode, connectedUrls.length])
+    console.log('🔌 Relay Status Indicator:', {
+      mode: offlineMode ? 'OFFLINE' : localOnlyMode ? 'LOCAL_ONLY' : 'ONLINE',
+      totalStatuses: relayStatuses.length,
+      connectedCount: connectedUrls.length,
+      connectedUrls: connectedUrls.map(u => u.replace(/^wss?:\/\//, '')),
+      hasLocalRelay,
+      hasRemoteRelay
+    })
+  }, [offlineMode, localOnlyMode, connectedUrls.length, relayStatuses.length, hasLocalRelay, hasRemoteRelay])
   
   // Don't show indicator when fully connected
   if (!localOnlyMode && !offlineMode) return null
