@@ -524,6 +524,20 @@ body {
   flex-wrap: wrap;
 }
 
+.publish-date {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.813rem;
+  color: rgba(136, 136, 136, 0.7);
+  opacity: 0.85;
+}
+
+.publish-date svg {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
 .reading-time {
   display: flex;
   align-items: center;
@@ -1114,6 +1128,16 @@ body {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.reader-header-overlay .publish-date {
+  color: rgba(255, 255, 255, 0.65);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  opacity: 1;
+}
+
+.reader-header-overlay .publish-date svg {
+  opacity: 0.7;
 }
 
 .reader-header-overlay .reading-time,

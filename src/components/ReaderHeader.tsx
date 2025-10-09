@@ -22,7 +22,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   hasHighlights,
   highlightCount
 }) => {
-  const formattedDate = published ? format(new Date(published * 1000), 'MMMM d, yyyy') : null
+  const formattedDate = published ? format(new Date(published * 1000), 'MMM d, yyyy') : null
   if (image) {
     return (
       <div className="reader-hero-image">
