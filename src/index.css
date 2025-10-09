@@ -2426,3 +2426,84 @@ body {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Relay Status Indicator */
+.relay-status-indicator {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(245, 158, 11, 0.95);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.relay-status-indicator:hover {
+  background: rgba(245, 158, 11, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.relay-status-icon {
+  font-size: 1.25rem;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.relay-status-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.relay-status-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+
+.relay-status-subtitle {
+  font-size: 0.75rem;
+  color: rgba(26, 26, 26, 0.8);
+  line-height: 1.2;
+}
+
+.relay-status-pulse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.25rem;
+}
+
+.pulse-icon {
+  font-size: 0.875rem;
+  color: rgba(26, 26, 26, 0.6);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Adjust for collapsed sidebar */
+.three-pane.sidebar-collapsed .relay-status-indicator {
+  left: calc(var(--sidebar-collapsed-width) + 1.5rem);
+}

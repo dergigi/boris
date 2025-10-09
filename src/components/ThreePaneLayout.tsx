@@ -6,6 +6,7 @@ import { HighlightsPanel } from './HighlightsPanel'
 import Settings from './Settings'
 import Toast from './Toast'
 import { HighlightButton } from './HighlightButton'
+import { RelayStatusIndicator } from './RelayStatusIndicator'
 import { ViewMode } from './Bookmarks'
 import { Bookmark } from '../types/bookmarks'
 import { Highlight } from '../types/highlights'
@@ -149,6 +150,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
           highlightColor={props.settings.highlightColor || '#ffff00'}
         />
       )}
+      <RelayStatusIndicator relayPool={props.relayPool} />
       {props.toastMessage && (
         <Toast
           message={props.toastMessage}
