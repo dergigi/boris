@@ -153,20 +153,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     if (isRebroadcasting || isSyncing) {
       return {
         icon: faSpinner,
-        tooltip: isRebroadcasting ? 'Rebroadcasting to all relays...' : 'Auto-syncing to remote relays...',
+        tooltip: isRebroadcasting ? 'rebroadcasting...' : 'syncing...',
         spin: true
       }
     }
     
+    // Always show relay list, use plane icon for local-only
     const isLocalOrOffline = highlight.isLocalOnly || showOfflineIndicator
-    
-    if (isLocalOrOffline) {
-      return {
-        icon: faPlane,
-        tooltip: 'Click to rebroadcast to all relays',
-        spin: false
-      }
-    }
     
     // Show server icon with relay info if available
     if (highlight.publishedRelays && highlight.publishedRelays.length > 0) {
@@ -174,7 +167,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
       )
       return {
-        icon: faServer,
+        icon: isLocalOrOffline ? faPlane : faServer,
         tooltip: relayNames.join('\n'),
         spin: false
       }
