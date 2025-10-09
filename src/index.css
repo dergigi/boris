@@ -1539,6 +1539,9 @@ body {
   display: flex;
   gap: 0.75rem;
   transition: border-color 0.2s ease;
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .highlight-item:hover {
@@ -1614,6 +1617,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .highlight-text {
@@ -1624,6 +1629,9 @@ body {
   line-height: 1.6;
   border-left: none;
   font-size: 0.95rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .highlight-comment {
@@ -1635,6 +1643,9 @@ body {
   font-size: 0.875rem;
   color: #ddd;
   line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 
