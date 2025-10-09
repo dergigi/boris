@@ -9,7 +9,7 @@ interface StartupPreferencesSettingsProps {
 const StartupPreferencesSettings: React.FC<StartupPreferencesSettingsProps> = ({ settings, onUpdate }) => {
   return (
     <div className="settings-section">
-      <h3 className="section-title">Startup Preferences</h3>
+      <h3 className="section-title">Startup & Behavior</h3>
       
       <div className="setting-group">
         <label htmlFor="sidebarCollapsed" className="checkbox-label">
