@@ -64,8 +64,8 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
         </label>
       </div>
 
-      <div className="setting-group">
-        <label htmlFor="enableImageCache" className="checkbox-label">
+      <div className="setting-group" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+        <label htmlFor="enableImageCache" className="checkbox-label" style={{ marginBottom: 0 }}>
           <input
             id="enableImageCache"
             type="checkbox"
@@ -73,64 +73,62 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
             onChange={(e) => onUpdate({ enableImageCache: e.target.checked })}
             className="setting-checkbox"
           />
-          <span>Cache images for offline viewing</span>
+          <span>Cache images</span>
         </label>
+
+        {(settings.enableImageCache ?? true) && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label htmlFor="imageCacheSizeMB" style={{ fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                Max (MB):
+              </label>
+              <input
+                id="imageCacheSizeMB"
+                type="number"
+                min="10"
+                max="500"
+                value={settings.imageCacheSizeMB ?? 50}
+                onChange={(e) => onUpdate({ imageCacheSizeMB: parseInt(e.target.value) || 50 })}
+                style={{
+                  width: '70px',
+                  padding: '0.25rem 0.5rem',
+                  background: 'var(--surface-secondary)',
+                  border: '1px solid var(--border-color, #333)',
+                  borderRadius: '4px',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.9rem'
+                }}
+              />
+            </div>
+
+            <div style={{ 
+              fontSize: '0.85rem',
+              color: 'var(--text-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <span>
+                ({cacheStats.totalSizeMB.toFixed(1)} MB, {cacheStats.itemCount} images)
+              </span>
+              <button
+                onClick={handleClearCache}
+                title="Clear cache"
+                style={{
+                  padding: '0.25rem 0.5rem',
+                  background: 'transparent',
+                  color: 'var(--danger, #ef4444)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                <FontAwesomeIcon icon={faTrash} />
+              </button>
+            </div>
+          </>
+        )}
       </div>
-
-      {(settings.enableImageCache ?? true) && (
-        <>
-          <div className="setting-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <label htmlFor="imageCacheSizeMB" style={{ marginBottom: 0 }}>
-              <span>Max cache size (MB):</span>
-            </label>
-            <input
-              id="imageCacheSizeMB"
-              type="number"
-              min="10"
-              max="500"
-              value={settings.imageCacheSizeMB ?? 50}
-              onChange={(e) => onUpdate({ imageCacheSizeMB: parseInt(e.target.value) || 50 })}
-              style={{
-                width: '80px',
-                padding: '0.25rem 0.5rem',
-                background: 'var(--surface-secondary)',
-                border: '1px solid var(--border-color, #333)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontSize: '0.9rem'
-              }}
-            />
-          </div>
-
-          <div style={{ 
-            marginTop: '0.5rem',
-            marginLeft: '1.75rem',
-            fontSize: '0.85rem',
-            color: 'var(--text-secondary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <span>
-              Current: {cacheStats.totalSizeMB.toFixed(2)} MB ({cacheStats.itemCount} images)
-            </span>
-            <button
-              onClick={handleClearCache}
-              title="Clear cache"
-              style={{
-                padding: '0.25rem 0.5rem',
-                background: 'transparent',
-                color: 'var(--danger, #ef4444)',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '0.9rem'
-              }}
-            >
-              <FontAwesomeIcon icon={faTrash} />
-            </button>
-          </div>
-        </>
-      )}
 
       <div style={{ 
         marginTop: '1.5rem', 
