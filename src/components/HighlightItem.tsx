@@ -114,18 +114,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         return
       }
       
-      // Get all connected relays
-      const connectedRelays = Array.from(relayPool.relays.values())
-        .filter(relay => relay.connected)
-        .map(relay => relay.url)
-      
-      // Publish to all connected relays
-      const targetRelays = RELAYS.filter(url => connectedRelays.includes(url))
-      
-      if (targetRelays.length === 0) {
-        console.warn('No connected relays to rebroadcast to')
-        return
-      }
+      // Publish to all configured relays - let the relay pool handle connection state
+      const targetRelays = RELAYS
       
       console.log('📡 Rebroadcasting highlight to', targetRelays.length, 'relay(s):', targetRelays)
       

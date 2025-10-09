@@ -107,21 +107,8 @@ export async function createHighlight(
   // Sign the event
   const signedEvent = await factory.sign(highlightEvent)
 
-  // Get list of currently connected relays from the pool
-  const connectedRelays = Array.from(relayPool.relays.values())
-    .filter(relay => relay.connected)
-    .map(relay => relay.url)
-  
-  // Determine which relays we're publishing to (intersection of RELAYS and connected relays)
-  let publishingRelays = RELAYS.filter(url => connectedRelays.includes(url))
-  
-  // If no relays are connected, try local relay anyway (might still work)
-  if (publishingRelays.length === 0) {
-    const localRelays = RELAYS.filter(r => r.includes('localhost') || r.includes('127.0.0.1'))
-    publishingRelays = localRelays.length > 0 ? localRelays : RELAYS
-  }
-  
-  const targetRelays = publishingRelays
+  // Publish to all configured relays - let the relay pool handle connection state
+  const targetRelays = RELAYS
   
   // Store the event in the local EventStore FIRST for immediate UI display
   eventStore.add(signedEvent)
