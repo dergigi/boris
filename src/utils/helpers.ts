@@ -40,3 +40,26 @@ export const classifyUrl = (url: string | undefined): UrlClassification => {
   return { type: 'article', buttonText: 'READ NOW' }
 }
 
+/**
+ * Checks if a relay URL is a local relay (localhost or 127.0.0.1)
+ */
+export const isLocalRelay = (relayUrl: string): boolean => {
+  return relayUrl.includes('localhost') || relayUrl.includes('127.0.0.1')
+}
+
+/**
+ * Checks if all relays in the list are local relays
+ */
+export const areAllRelaysLocal = (relayUrls: string[]): boolean => {
+  if (!relayUrls || relayUrls.length === 0) return false
+  return relayUrls.every(isLocalRelay)
+}
+
+/**
+ * Checks if at least one relay is a remote (non-local) relay
+ */
+export const hasRemoteRelay = (relayUrls: string[]): boolean => {
+  if (!relayUrls || relayUrls.length === 0) return false
+  return relayUrls.some(url => !isLocalRelay(url))
+}
+

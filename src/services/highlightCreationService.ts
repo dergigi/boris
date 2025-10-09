@@ -7,6 +7,7 @@ import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
 import { Highlight } from '../types/highlights'
 import { UserSettings } from './settingsService'
+import { areAllRelaysLocal } from '../utils/helpers'
 
 // Boris pubkey for zap splits
 const BORIS_PUBKEY = '6e468422dfb74a5738702a8823b9b28168fc6cfb119d613e49ca0ec5a0bbd0c3'
@@ -26,7 +27,7 @@ const { HighlightBlueprint } = Blueprints
 /**
  * Creates and publishes a highlight event (NIP-84)
  * Supports both nostr-native articles and external URLs
- * Returns the signed event for immediate UI updates
+ * Returns a Highlight object with relay tracking info for immediate UI updates
  */
 export async function createHighlight(
   selectedText: string,
@@ -36,7 +37,7 @@ export async function createHighlight(
   contentForContext?: string,
   comment?: string,
   settings?: UserSettings
-): Promise<NostrEvent> {
+): Promise<Highlight> {
   if (!selectedText || !source) {
     throw new Error('Missing required data to create highlight')
   }
@@ -104,13 +105,34 @@ export async function createHighlight(
   // Sign the event
   const signedEvent = await factory.sign(highlightEvent)
 
+  // Get list of currently connected relays from the pool
+  const connectedRelays = Array.from(relayPool.relays.values()).map(relay => relay.url)
+  
+  // Determine which relays we're publishing to (intersection of RELAYS and connected relays)
+  const publishingRelays = RELAYS.filter(url => connectedRelays.includes(url))
+  
+  // If no relays are connected, fallback to just local relay if available
+  const targetRelays = publishingRelays.length > 0 ? publishingRelays : RELAYS.filter(r => r.includes('localhost') || r.includes('127.0.0.1'))
+  
   // Publish to relays (including local relay)
-  await relayPool.publish(RELAYS, signedEvent)
+  await relayPool.publish(targetRelays, signedEvent)
   
-  console.log('✅ Highlight published to', RELAYS.length, 'relays (including local):', signedEvent)
+  // Check if we're only publishing to local relays
+  const isLocalOnly = areAllRelaysLocal(targetRelays)
   
-  // Return the signed event for immediate UI updates
-  return signedEvent
+  console.log('✅ Highlight published to', targetRelays.length, 'relays:', {
+    relays: targetRelays,
+    isLocalOnly,
+    event: signedEvent
+  })
+  
+  // Convert to Highlight with relay tracking info
+  const highlight = eventToHighlight(signedEvent)
+  highlight.publishedRelays = targetRelays
+  highlight.isLocalOnly = isLocalOnly
+  
+  // Return the highlight for immediate UI updates
+  return highlight
 }
 
 /**

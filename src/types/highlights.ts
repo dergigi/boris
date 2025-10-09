@@ -15,5 +15,8 @@ export interface Highlight {
   comment?: string // optional comment about the highlight
   // Level classification (computed based on user's context)
   level?: HighlightLevel
+  // Relay tracking for offline/local-only highlights
+  publishedRelays?: string[] // URLs of relays that acknowledged this event
+  isLocalOnly?: boolean // true if only published to local relays
 }
 

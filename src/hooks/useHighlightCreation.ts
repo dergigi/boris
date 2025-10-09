@@ -3,7 +3,7 @@ import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { Highlight } from '../types/highlights'
 import { ReadableContent } from '../services/readerService'
-import { createHighlight, eventToHighlight } from '../services/highlightCreationService'
+import { createHighlight } from '../services/highlightCreationService'
 import { HighlightButtonRef } from '../components/HighlightButton'
 import { UserSettings } from '../services/settingsService'
 
@@ -54,7 +54,7 @@ export const useHighlightCreation = ({
         ? currentArticle.content 
         : readerContent?.markdown || readerContent?.html
       
-      const signedEvent = await createHighlight(
+      const newHighlight = await createHighlight(
         text,
         source,
         activeAccount,
@@ -67,7 +67,6 @@ export const useHighlightCreation = ({
       console.log('✅ Highlight created successfully!')
       highlightButtonRef.current?.clearSelection()
       
-      const newHighlight = eventToHighlight(signedEvent)
       onHighlightCreated(newHighlight)
     } catch (error) {
       console.error('Failed to create highlight:', error)
