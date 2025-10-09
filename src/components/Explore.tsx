@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faExclamationCircle, faCompass } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faExclamationCircle, faNewspaper } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
@@ -105,7 +105,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
     <div className="explore-container">
       <div className="explore-header">
         <h1>
-          <FontAwesomeIcon icon={faCompass} />
+          <FontAwesomeIcon icon={faNewspaper} />
           Explore
         </h1>
         <p className="explore-subtitle">
