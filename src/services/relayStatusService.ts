@@ -18,29 +18,48 @@ const relayLastSeen = new Map<string, number>()
 export function updateAndGetRelayStatuses(relayPool: RelayPool): RelayStatus[] {
   const statuses: RelayStatus[] = []
   const now = Date.now()
-  const currentRelayUrls = new Set<string>()
+  const currentlyConnectedUrls = new Set<string>()
   
-  // Update relays currently in the pool
+  // Check all relays in the pool for their actual connection status
   for (const relay of relayPool.relays.values()) {
-    currentRelayUrls.add(relay.url)
-    relayLastSeen.set(relay.url, now)
+    const isConnected = relay.connected
+    
+    if (isConnected) {
+      currentlyConnectedUrls.add(relay.url)
+      relayLastSeen.set(relay.url, now)
+    }
     
     statuses.push({
       url: relay.url,
-      isInPool: true,
-      lastSeen: now
+      isInPool: isConnected,
+      lastSeen: isConnected ? now : (relayLastSeen.get(relay.url) || now)
     })
   }
   
-  // Add recently seen relays that are no longer in the pool
+  // Debug logging
+  const connectedCount = statuses.filter(s => s.isInPool).length
+  const disconnectedCount = statuses.filter(s => !s.isInPool).length
+  if (connectedCount === 0 || disconnectedCount > 0) {
+    console.log(`🔌 Relay status: ${connectedCount} connected, ${disconnectedCount} disconnected`)
+    const connected = statuses.filter(s => s.isInPool).map(s => s.url.replace(/^wss?:\/\//, ''))
+    const disconnected = statuses.filter(s => !s.isInPool).map(s => s.url.replace(/^wss?:\/\//, ''))
+    if (connected.length > 0) console.log('✅ Connected:', connected.join(', '))
+    if (disconnected.length > 0) console.log('❌ Disconnected:', disconnected.join(', '))
+  }
+  
+  // Add recently seen relays that are no longer connected
   const cutoffTime = now - RECENT_CONNECTION_WINDOW
   for (const [url, lastSeen] of relayLastSeen.entries()) {
-    if (!currentRelayUrls.has(url) && lastSeen >= cutoffTime) {
-      statuses.push({
-        url,
-        isInPool: false,
-        lastSeen
-      })
+    if (!currentlyConnectedUrls.has(url) && lastSeen >= cutoffTime) {
+      // Check if this relay is already in statuses (might be in pool but not connected)
+      const existingStatus = statuses.find(s => s.url === url)
+      if (!existingStatus) {
+        statuses.push({
+          url,
+          isInPool: false,
+          lastSeen
+        })
+      }
     }
   }
   
