@@ -34,11 +34,11 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
         <div className="setting-group setting-inline" style={{ flex: '0 1 auto' }}>
           <label>Font Size</label>
           <div className="setting-buttons">
-            {[14, 16, 18, 20, 22, 24].map(size => (
+            {[16, 18, 21, 24, 28, 32].map(size => (
               <button
                 key={size}
                 onClick={() => onUpdate({ fontSize: size })}
-                className={`font-size-btn ${(settings.fontSize || 18) === size ? 'active' : ''}`}
+                className={`font-size-btn ${(settings.fontSize || 21) === size ? 'active' : ''}`}
                 title={`${size}px`}
                 style={{ fontSize: `${size - 2}px` }}
               >
@@ -151,7 +151,7 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
           className="preview-content" 
           style={{ 
             fontFamily: previewFontFamily,
-            fontSize: `${settings.fontSize || 18}px`,
+            fontSize: `${settings.fontSize || 21}px`,
             '--highlight-rgb': hexToRgb(settings.highlightColor || '#ffff00')
           } as React.CSSProperties}
         >

@@ -58,7 +58,7 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       
       // Apply font settings after font is loaded
       root.setProperty('--reading-font', getFontFamily(fontKey))
-      root.setProperty('--reading-font-size', `${settings.fontSize || 18}px`)
+      root.setProperty('--reading-font-size', `${settings.fontSize || 21}px`)
       
       // Set highlight colors for three levels
       root.setProperty('--highlight-color-mine', settings.highlightColorMine || '#ffff00')

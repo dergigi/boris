@@ -19,7 +19,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   sidebarCollapsed: true,
   highlightsCollapsed: true,
   readingFont: 'source-serif-4',
-  fontSize: 18,
+  fontSize: 21,
   highlightStyle: 'marker',
   highlightColor: '#ffff00',
   highlightColorNostrverse: '#9333ea',
