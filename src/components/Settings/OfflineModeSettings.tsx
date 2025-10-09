@@ -77,11 +77,15 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
         </label>
 
         {(settings.enableImageCache ?? true) && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <label htmlFor="imageCacheSizeMB" style={{ fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
-                Max (MB):
-              </label>
+          <div style={{ 
+            fontSize: '0.85rem',
+            color: 'var(--text-secondary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              ( {cacheStats.totalSizeMB.toFixed(1)} MB / 
               <input
                 id="imageCacheSizeMB"
                 type="number"
@@ -90,36 +94,26 @@ const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onU
                 value={settings.imageCacheSizeMB ?? 50}
                 onChange={(e) => onUpdate({ imageCacheSizeMB: parseInt(e.target.value) || 50 })}
                 style={{
-                  width: '70px',
-                  padding: '0.25rem 0.5rem',
+                  width: '50px',
+                  padding: '0.15rem 0.35rem',
                   background: 'var(--surface-secondary)',
                   border: '1px solid var(--border-color, #333)',
                   borderRadius: '4px',
                   color: 'var(--text-primary)',
-                  fontSize: '0.9rem'
+                  fontSize: '0.85rem',
+                  textAlign: 'center'
                 }}
               />
-            </div>
-
-            <div style={{ 
-              fontSize: '0.85rem',
-              color: 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <span>
-                ( {cacheStats.totalSizeMB.toFixed(1)} MB / [ {settings.imageCacheSizeMB ?? 50} ] MB used )
-              </span>
-              <IconButton
-                icon={faTrash}
-                onClick={handleClearCache}
-                title="Clear cache"
-                variant="ghost"
-                size={28}
-              />
-            </div>
-          </>
+              MB used )
+            </span>
+            <IconButton
+              icon={faTrash}
+              onClick={handleClearCache}
+              title="Clear cache"
+              variant="ghost"
+              size={28}
+            />
+          </div>
         )}
       </div>
 
