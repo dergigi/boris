@@ -6,7 +6,7 @@ Boris turns your Nostr bookmarks into a calm, fast, and focused reading experien
 
 ## Live
 
-- App: [https://xn--bris-v0b.com/](https://xn--bris-v0b.com/)
+- App: [https://read.withboris.com/](https://read.withboris.com/)
 
 ## The Vision
 
