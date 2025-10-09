@@ -159,15 +159,16 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   
   // Determine relay indicator icon and tooltip
   const getRelayIndicatorInfo = () => {
-    if (isRebroadcasting) {
+    // Show spinner if manually rebroadcasting OR auto-syncing
+    if (isRebroadcasting || isSyncing) {
       return {
         icon: faSpinner,
-        tooltip: 'Rebroadcasting to all relays...',
+        tooltip: isRebroadcasting ? 'Rebroadcasting to all relays...' : 'Auto-syncing to remote relays...',
         spin: true
       }
     }
     
-    const isLocalOrOffline = highlight.isLocalOnly || (showOfflineIndicator && !isSyncing)
+    const isLocalOrOffline = highlight.isLocalOnly || showOfflineIndicator
     
     if (isLocalOrOffline) {
       return {
@@ -235,15 +236,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
           <span className="highlight-time">
             {formatDistanceToNow(new Date(highlight.created_at * 1000), { addSuffix: true })}
           </span>
-          
-          {isSyncing && (
-            <>
-              <span className="highlight-meta-separator">•</span>
-              <span className="highlight-syncing-indicator" title="Syncing to remote relays...">
-                <FontAwesomeIcon icon={faSpinner} spin />
-              </span>
-            </>
-          )}
           
           {sourceLink && (
             <a

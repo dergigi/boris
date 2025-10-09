@@ -1653,14 +1653,6 @@ body {
   color: #888;
 }
 
-.highlight-syncing-indicator {
-  display: inline-flex;
-  align-items: center;
-  color: #3b82f6;
-  font-size: 0.8rem;
-  opacity: 0.9;
-}
-
 .highlight-source {
   display: flex;
   align-items: center;
