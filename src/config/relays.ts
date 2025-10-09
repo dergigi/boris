@@ -3,9 +3,10 @@
  * Single set of relays used throughout the application
  */
 
-// All relays including local relay
+// All relays including local relays
 export const RELAYS = [
   'ws://localhost:10547',
+  'ws://localhost:4869',
   'wss://relay.damus.io',
   'wss://nos.lol',
   'wss://relay.nostr.band',
