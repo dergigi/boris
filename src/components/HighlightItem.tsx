@@ -60,15 +60,26 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     const unsubscribe = onSyncStateChange((eventId, syncingState) => {
       if (eventId === highlight.id) {
         setIsSyncing(syncingState)
-        // Hide offline indicator when sync completes successfully
+        // When sync completes successfully, update highlight to show all relays
         if (!syncingState) {
           setShowOfflineIndicator(false)
+          
+          // Update the highlight with all relays after successful sync
+          if (onHighlightUpdate && highlight.isLocalOnly) {
+            const updatedHighlight = {
+              ...highlight,
+              publishedRelays: RELAYS,
+              isLocalOnly: false,
+              isOfflineCreated: false
+            }
+            onHighlightUpdate(updatedHighlight)
+          }
         }
       }
     })
     
     return unsubscribe
-  }, [highlight.id])
+  }, [highlight, onHighlightUpdate])
   
   useEffect(() => {
     if (isSelected && itemRef.current) {
