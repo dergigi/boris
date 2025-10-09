@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheckCircle, faCircle, faClock, faPlane } from '@fortawesome/free-solid-svg-icons'
+import { faCheckCircle, faWifi, faClock, faPlane } from '@fortawesome/free-solid-svg-icons'
 import { RelayStatus } from '../../services/relayStatusService'
 import { formatDistanceToNow } from 'date-fns'
 import { isLocalRelay } from '../../utils/helpers'
@@ -58,9 +58,9 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses }) => {
         }
       } else {
         return {
-          icon: faCircle,
+          icon: faWifi,
           color: '#ef4444',
-          size: '0.7rem'
+          size: '1rem'
         }
       }
     }
