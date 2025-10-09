@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheckCircle, faCircle, faClock } from '@fortawesome/free-solid-svg-icons'
 import { RelayStatus } from '../../services/relayStatusService'
@@ -6,11 +7,18 @@ import { formatDistanceToNow } from 'date-fns'
 
 interface RelaySettingsProps {
   relayStatuses: RelayStatus[]
+  onClose?: () => void
 }
 
-const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses }) => {
+const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, onClose }) => {
+  const navigate = useNavigate()
   const activeRelays = relayStatuses.filter(r => r.isInPool)
   const recentRelays = relayStatuses.filter(r => !r.isInPool)
+
+  const handleLinkClick = (url: string) => {
+    if (onClose) onClose()
+    navigate(`/r/${encodeURIComponent(url)}`)
+  }
 
   const formatRelayUrl = (url: string) => {
     return url.replace(/^wss?:\/\//, '')
@@ -165,7 +173,7 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses }) => {
         fontSize: '0.9rem',
         lineHeight: '1.6'
       }}>
-        <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+        <p style={{ margin: '0 0 0.75rem 0', color: 'var(--text-secondary)' }}>
           Boris works best with a local relay. Consider running{' '}
           <a 
             href="https://github.com/greenart7c3/Citrine?tab=readme-ov-file#download" 
@@ -183,6 +191,29 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses }) => {
             style={{ color: 'var(--accent, #8b5cf6)' }}
           >
             nostr-relay-tray
+          </a>
+          .
+        </p>
+        <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+          Don't know what relays are? Learn more{' '}
+          <a 
+            onClick={(e) => {
+              e.preventDefault()
+              handleLinkClick('https://nostr.how/en/relays')
+            }}
+            style={{ color: 'var(--accent, #8b5cf6)', cursor: 'pointer' }}
+          >
+            here
+          </a>
+          {' and '}
+          <a 
+            onClick={(e) => {
+              e.preventDefault()
+              handleLinkClick('https://davidebtc186.substack.com/p/the-importance-of-hosting-your-own')
+            }}
+            style={{ color: 'var(--accent, #8b5cf6)', cursor: 'pointer' }}
+          >
+            here
           </a>
           .
         </p>
