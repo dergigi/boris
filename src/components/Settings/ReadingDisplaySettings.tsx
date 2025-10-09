@@ -47,19 +47,6 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
         </div>
       </div>
 
-      <div className="setting-group">
-        <label htmlFor="showHighlights" className="checkbox-label">
-          <input
-            id="showHighlights"
-            type="checkbox"
-            checked={settings.showHighlights !== false}
-            onChange={(e) => onUpdate({ showHighlights: e.target.checked })}
-            className="setting-checkbox"
-          />
-          <span>Show highlights</span>
-        </label>
-      </div>
-
       <div className="setting-group setting-inline">
         <label>Highlight Style</label>
         <div className="setting-buttons">
@@ -141,6 +128,19 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
             <FontAwesomeIcon icon={faUser} />
           </button>
         </div>
+      </div>
+
+      <div className="setting-group">
+        <label htmlFor="showHighlights" className="checkbox-label">
+          <input
+            id="showHighlights"
+            type="checkbox"
+            checked={settings.showHighlights !== false}
+            onChange={(e) => onUpdate({ showHighlights: e.target.checked })}
+            className="setting-checkbox"
+          />
+          <span>Show highlights</span>
+        </label>
       </div>
 
       <div className="setting-preview">
