@@ -14,7 +14,7 @@ const LayoutNavigationSettings: React.FC<LayoutNavigationSettingsProps> = ({ set
       <h3 className="section-title">Layout & Navigation</h3>
       
       <div className="setting-group setting-inline">
-        <label>Default View Mode</label>
+        <label>Default Bookmark View</label>
         <div className="setting-buttons">
           <IconButton 
             icon={faList} 
