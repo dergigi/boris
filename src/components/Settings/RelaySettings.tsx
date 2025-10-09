@@ -40,23 +40,27 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses, settings, 
     <div className="settings-section">
       <h3>Relays</h3>
 
-      <div className="settings-group">
-        <label className="settings-checkbox-label">
+      <div className="setting-group">
+        <label htmlFor="useLocalRelayAsCache" className="checkbox-label">
           <input
+            id="useLocalRelayAsCache"
             type="checkbox"
             checked={settings.useLocalRelayAsCache ?? true}
             onChange={(e) => onUpdate({ useLocalRelayAsCache: e.target.checked })}
+            className="setting-checkbox"
           />
           <span>Use local relay(s) as cache</span>
         </label>
       </div>
 
-      <div className="settings-group">
-        <label className="settings-checkbox-label">
+      <div className="setting-group">
+        <label htmlFor="rebroadcastToAllRelays" className="checkbox-label">
           <input
+            id="rebroadcastToAllRelays"
             type="checkbox"
             checked={settings.rebroadcastToAllRelays ?? false}
             onChange={(e) => onUpdate({ rebroadcastToAllRelays: e.target.checked })}
+            className="setting-checkbox"
           />
           <span>Rebroadcast events to all relays</span>
         </label>
