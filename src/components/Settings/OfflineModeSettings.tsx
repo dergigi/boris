@@ -13,7 +13,11 @@ interface OfflineModeSettingsProps {
 
 const OfflineModeSettings: React.FC<OfflineModeSettingsProps> = ({ settings, onUpdate, onClose }) => {
   const navigate = useNavigate()
-  const [cacheStats, setCacheStats] = useState({ totalSizeMB: 0, itemCount: 0, items: [] })
+  const [cacheStats, setCacheStats] = useState<{
+    totalSizeMB: number
+    itemCount: number
+    items: Array<{ url: string, sizeMB: number }>
+  }>({ totalSizeMB: 0, itemCount: 0, items: [] })
 
   const handleLinkClick = (url: string) => {
     if (onClose) onClose()
