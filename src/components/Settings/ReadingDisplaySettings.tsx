@@ -22,10 +22,12 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
       
       <div className="setting-group setting-inline">
         <label htmlFor="readingFont">Reading Font</label>
-        <FontSelector
-          value={settings.readingFont || 'source-serif-4'}
-          onChange={(font) => onUpdate({ readingFont: font })}
-        />
+        <div className="setting-control">
+          <FontSelector
+            value={settings.readingFont || 'source-serif-4'}
+            onChange={(font) => onUpdate({ readingFont: font })}
+          />
+        </div>
       </div>
 
       <div className="setting-group setting-inline">
