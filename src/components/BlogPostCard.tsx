@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendar, faUser } from '@fortawesome/free-solid-svg-icons'
 import { formatDistance } from 'date-fns'
 import { BlogPostPreview } from '../services/exploreService'
-import { Hooks } from 'applesauce-react'
+import { useEventModel, Models } from 'applesauce-react'
 
 interface BlogPostCardProps {
   post: BlogPostPreview
@@ -11,7 +11,7 @@ interface BlogPostCardProps {
 }
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, onClick }) => {
-  const profile = Hooks.useProfile(post.author)
+  const profile = useEventModel(Models.ProfileModel, [post.author])
   const displayName = profile?.name || profile?.display_name || 
     `${post.author.slice(0, 8)}...${post.author.slice(-4)}`
   
