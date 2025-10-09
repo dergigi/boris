@@ -185,7 +185,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       )
       return {
         icon: faServer,
-        tooltip: `Published to ${relayNames.length} relay(s):\n${relayNames.join('\n')}\n\nClick to rebroadcast`,
+        tooltip: relayNames.join('\n'),
         spin: false
       }
     }
@@ -196,7 +196,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       )
       return {
         icon: faServer,
-        tooltip: `Seen on ${relayNames.length} relay(s):\n${relayNames.join('\n')}\n\nClick to rebroadcast`,
+        tooltip: relayNames.join('\n'),
         spin: false
       }
     }
@@ -204,7 +204,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     // Default server icon for highlights without relay info
     return {
       icon: faServer,
-      tooltip: 'Fetched from network\n\nClick to rebroadcast to all relays',
+      tooltip: 'no relay info',
       spin: false
     }
   }
