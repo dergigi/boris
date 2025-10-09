@@ -178,16 +178,22 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       }
     }
     
-    if (!highlight.publishedRelays || highlight.publishedRelays.length === 0) {
-      return null
+    // Always show server icon, even if we don't have relay info
+    if (highlight.publishedRelays && highlight.publishedRelays.length > 0) {
+      const relayNames = highlight.publishedRelays.map(url => 
+        url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
+      )
+      return {
+        icon: faServer,
+        tooltip: `Published to ${relayNames.length} relay(s):\n${relayNames.join('\n')}\n\nClick to rebroadcast`,
+        spin: false
+      }
     }
     
-    const relayNames = highlight.publishedRelays.map(url => 
-      url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
-    )
+    // Default server icon for highlights without relay info
     return {
       icon: faServer,
-      tooltip: `Published to ${relayNames.length} relay(s):\n${relayNames.join('\n')}\n\nClick to rebroadcast`,
+      tooltip: 'Click to rebroadcast to all relays',
       spin: false
     }
   }
