@@ -3,7 +3,7 @@ import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
-import { Helpers } from 'applesauce-core'
+import { Helpers, IEventStore } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
 import { Highlight } from '../types/highlights'
 import { UserSettings } from './settingsService'
@@ -35,6 +35,7 @@ export async function createHighlight(
   source: NostrEvent | string,
   account: IAccount,
   relayPool: RelayPool,
+  eventStore: IEventStore,
   contentForContext?: string,
   comment?: string,
   settings?: UserSettings
@@ -142,6 +143,10 @@ export async function createHighlight(
     isLocalOnly,
     eventId: signedEvent.id
   })
+  
+  // Store the event in the local EventStore immediately
+  eventStore.add(signedEvent)
+  console.log('💾 Stored highlight in EventStore:', signedEvent.id.slice(0, 8))
   
   // If we're in local-only mode, mark this event for later sync
   if (isLocalOnly) {

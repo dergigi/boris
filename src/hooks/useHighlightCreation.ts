@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
+import { IEventStore } from 'applesauce-core'
 import { Highlight } from '../types/highlights'
 import { ReadableContent } from '../services/readerService'
 import { createHighlight } from '../services/highlightCreationService'
@@ -11,6 +12,7 @@ interface UseHighlightCreationParams {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   activeAccount: any
   relayPool: RelayPool | null
+  eventStore: IEventStore | null
   currentArticle: NostrEvent | undefined
   selectedUrl: string | undefined
   readerContent: ReadableContent | undefined
@@ -21,6 +23,7 @@ interface UseHighlightCreationParams {
 export const useHighlightCreation = ({
   activeAccount,
   relayPool,
+  eventStore,
   currentArticle,
   selectedUrl,
   readerContent,
@@ -38,7 +41,7 @@ export const useHighlightCreation = ({
   }, [])
 
   const handleCreateHighlight = useCallback(async (text: string) => {
-    if (!activeAccount || !relayPool) {
+    if (!activeAccount || !relayPool || !eventStore) {
       console.error('Missing requirements for highlight creation')
       return
     }
@@ -61,6 +64,7 @@ export const useHighlightCreation = ({
         source,
         activeAccount,
         relayPool,
+        eventStore,
         contentForContext,
         undefined,
         settings
@@ -79,7 +83,7 @@ export const useHighlightCreation = ({
       // Re-throw to allow parent to handle
       throw error
     }
-  }, [activeAccount, relayPool, currentArticle, selectedUrl, readerContent, onHighlightCreated, settings])
+  }, [activeAccount, relayPool, eventStore, currentArticle, selectedUrl, readerContent, onHighlightCreated, settings])
 
   return {
     highlightButtonRef,

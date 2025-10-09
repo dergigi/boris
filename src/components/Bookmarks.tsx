@@ -59,6 +59,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   useOfflineSync({
     relayPool,
     account: activeAccount,
+    eventStore,
     relayStatuses,
     enabled: true
   })
@@ -129,6 +130,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   } = useHighlightCreation({
     activeAccount,
     relayPool,
+    eventStore,
     currentArticle,
     selectedUrl,
     readerContent,

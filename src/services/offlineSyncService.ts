@@ -1,6 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
-import { IAccount } from 'applesauce-core/helpers'
+import { IAccount, IEventStore } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
 import { isLocalRelay } from '../utils/helpers'
 
@@ -19,10 +19,12 @@ export function markEventAsOfflineCreated(eventId: string): void {
 
 /**
  * Syncs local-only events to remote relays when coming back online
+ * Now uses applesauce EventStore instead of querying relays
  */
 export async function syncLocalEventsToRemote(
   relayPool: RelayPool,
-  account: IAccount
+  account: IAccount,
+  eventStore: IEventStore
 ): Promise<void> {
   if (isSyncing) {
     console.log('⏳ Sync already in progress, skipping...')
@@ -34,16 +36,9 @@ export async function syncLocalEventsToRemote(
   isSyncing = true
 
   try {
-    const localRelays = RELAYS.filter(isLocalRelay)
     const remoteRelays = RELAYS.filter(url => !isLocalRelay(url))
 
-    console.log(`📡 Local relays: ${localRelays.length}, Remote relays: ${remoteRelays.length}`)
-    
-    if (localRelays.length === 0) {
-      console.log('⚠️ No local relays available for sync')
-      isSyncing = false
-      return
-    }
+    console.log(`📡 Remote relays: ${remoteRelays.length}`)
     
     if (remoteRelays.length === 0) {
       console.log('⚠️ No remote relays available for sync')
@@ -51,49 +46,30 @@ export async function syncLocalEventsToRemote(
       return
     }
 
-    // Get events from local relays that were created in the last 24 hours
-    const since = Math.floor(Date.now() / 1000) - (24 * 60 * 60)
-    const eventsToSync: NostrEvent[] = []
-
-    console.log(`🔍 Querying local relays for events since ${new Date(since * 1000).toISOString()}...`)
-
-    // Query for user's events from local relays
-    const filters = [
-      { kinds: [9802], authors: [account.pubkey], since }, // Highlights
-      { kinds: [10003, 30003], authors: [account.pubkey], since }, // Bookmarks
-    ]
-
-    for (const filter of filters) {
-      console.log(`🔎 Querying with filter:`, filter)
-      const events = await new Promise<NostrEvent[]>((resolve) => {
-        const collected: NostrEvent[] = []
-        const sub = relayPool.req(localRelays, filter, {
-          onevent: (event: NostrEvent) => {
-            console.log(`📥 Received event ${event.id.slice(0, 8)} (kind ${event.kind}) from local relay`)
-            collected.push(event)
-          },
-          oneose: () => {
-            console.log(`✅ EOSE received, collected ${collected.length} events`)
-            sub.close()
-            resolve(collected)
-          }
-        })
-
-        // Timeout after 10 seconds (increased from 5)
-        setTimeout(() => {
-          console.log(`⏱️ Query timeout, collected ${collected.length} events`)
-          sub.close()
-          resolve(collected)
-        }, 10000)
-      })
-
-      eventsToSync.push(...events)
+    if (offlineCreatedEvents.size === 0) {
+      console.log('✅ No offline events to sync')
+      isSyncing = false
+      return
     }
 
-    console.log(`📊 Total events collected: ${eventsToSync.length}`)
+    // Get events from EventStore using the tracked IDs
+    const eventsToSync: NostrEvent[] = []
+    console.log(`🔍 Querying EventStore for ${offlineCreatedEvents.size} offline events...`)
+
+    for (const eventId of offlineCreatedEvents) {
+      const event = eventStore.getEvent(eventId)
+      if (event) {
+        console.log(`📥 Found event ${eventId.slice(0, 8)} (kind ${event.kind}) in EventStore`)
+        eventsToSync.push(event)
+      } else {
+        console.warn(`⚠️ Event ${eventId.slice(0, 8)} not found in EventStore`)
+      }
+    }
+
+    console.log(`📊 Total events to sync: ${eventsToSync.length}`)
 
     if (eventsToSync.length === 0) {
-      console.log('✅ No local events to sync')
+      console.log('✅ No events found in EventStore to sync')
       isSyncing = false
       offlineCreatedEvents.clear()
       return
