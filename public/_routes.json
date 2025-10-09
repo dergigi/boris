@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": ["/assets/*", "/robots.txt", "/sw.js", "/_headers", "/_redirects"]
+}
+
