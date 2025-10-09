@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-10-09
+
+### Added
+- Flight Mode with offline highlight creation and local relay support
+- Automatic offline sync - rebroadcast local events when back online
+- Relay indicator icon on highlight items showing sync status
+- Click-to-rebroadcast functionality for highlights
+- Flight mode indicator (plane icon) on offline-created highlights
+- Relay rebroadcast settings for caching and propagation
+- Local relay status indicator for local-only/offline mode
+- Second local relay support (localhost:4869)
+- Relay connection status tracking and display
+- 6th font size option for better UI scaling
+
+### Fixed
+- Highlight creation resilient to offline/flight mode
+- TypeScript type errors in offline sync
+- Relay indicator tooltip accuracy and reliability
+- Always show relay indicator icon on highlights
+- Show remote relay list for fetched highlights
+- Publish highlights to all connected relays instead of just one
+- Keep all relay connections alive, not just local ones
+- Check actual relay connection status instead of pool membership
+- Skip rebroadcasting when in flight mode
+- Update relay info after automatic sync completes
+- Only show successfully reachable relays in flight mode
+- Include local relays in relay indicator tooltip
+
+### Changed
+- Rename 'Offline Mode' to 'Flight Mode' throughout UI
+- Move publication date to top-right corner with subtle border styling
+- Consolidate relay/status indicators into single unified icon
+- Simplify relay indicator tooltip to show relay list
+- Move rebroadcast settings to dedicated Flight Mode section
+- Place Reading Font and Font Size settings side-by-side
+- Improve font size scale and default value
+- Use wifi icon for disconnected remote relays
+- Use airplane icons for local relay indicators
+- Make Relays heading same level as Flight Mode in settings
+- Simplify rebroadcast settings UI with consistent checkbox style
+
+### Performance
+- Make highlight creation instant with non-blocking relay publish
+- Reduce relay status polling interval to 20 seconds
+- Show sync progress and hide indicator after successful sync
+
 ## [0.2.10] - 2025-10-09
 
 ### Added
@@ -426,6 +472,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
+[0.3.0]: https://github.com/dergigi/boris/compare/v0.2.10...v0.3.0
 [0.2.10]: https://github.com/dergigi/boris/compare/v0.2.9...v0.2.10
 [0.2.9]: https://github.com/dergigi/boris/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/dergigi/boris/compare/v0.2.7...v0.2.8
