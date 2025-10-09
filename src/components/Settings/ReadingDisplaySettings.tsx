@@ -20,30 +20,32 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
     <div className="settings-section">
       <h3 className="section-title">Reading & Display</h3>
       
-      <div className="setting-group setting-inline">
-        <label htmlFor="readingFont">Reading Font</label>
-        <div className="setting-control">
-          <FontSelector
-            value={settings.readingFont || 'source-serif-4'}
-            onChange={(font) => onUpdate({ readingFont: font })}
-          />
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+        <div className="setting-group setting-inline" style={{ flex: '1 1 auto', minWidth: '200px' }}>
+          <label htmlFor="readingFont">Reading Font</label>
+          <div className="setting-control">
+            <FontSelector
+              value={settings.readingFont || 'source-serif-4'}
+              onChange={(font) => onUpdate({ readingFont: font })}
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="setting-group setting-inline">
-        <label>Font Size</label>
-        <div className="setting-buttons">
-          {[14, 16, 18, 20, 22].map(size => (
-            <button
-              key={size}
-              onClick={() => onUpdate({ fontSize: size })}
-              className={`font-size-btn ${(settings.fontSize || 18) === size ? 'active' : ''}`}
-              title={`${size}px`}
-              style={{ fontSize: `${size - 2}px` }}
-            >
-              A
-            </button>
-          ))}
+        <div className="setting-group setting-inline" style={{ flex: '0 1 auto' }}>
+          <label>Font Size</label>
+          <div className="setting-buttons">
+            {[14, 16, 18, 20, 22].map(size => (
+              <button
+                key={size}
+                onClick={() => onUpdate({ fontSize: size })}
+                className={`font-size-btn ${(settings.fontSize || 18) === size ? 'active' : ''}`}
+                title={`${size}px`}
+                style={{ fontSize: `${size - 2}px` }}
+              >
+                A
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
