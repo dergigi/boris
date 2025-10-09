@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react'
-import { useParams, useLocation } from 'react-router-dom'
+import React, { useMemo, useEffect, useRef } from 'react'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { Hooks } from 'applesauce-react'
 import { useEventStore } from 'applesauce-react/hooks'
 import { RelayPool } from 'applesauce-relay'
@@ -23,10 +23,21 @@ interface BookmarksProps {
 const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const { naddr } = useParams<{ naddr?: string }>()
   const location = useLocation()
+  const navigate = useNavigate()
+  const previousLocationRef = useRef<string>()
   
   const externalUrl = location.pathname.startsWith('/r/') 
     ? decodeURIComponent(location.pathname.slice(3))
     : undefined
+  
+  const showSettings = location.pathname === '/settings'
+  
+  // Track previous location for going back from settings
+  useEffect(() => {
+    if (!showSettings) {
+      previousLocationRef.current = location.pathname
+    }
+  }, [location.pathname, showSettings])
     
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
@@ -50,8 +61,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     setShowHighlights,
     selectedHighlightId,
     setSelectedHighlightId,
-    showSettings,
-    setShowSettings,
     currentArticleCoordinate,
     setCurrentArticleCoordinate,
     currentArticleEventId,
@@ -94,7 +103,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     relayPool,
     settings,
     setIsCollapsed,
-    setShowSettings,
+    setShowSettings: () => {}, // No-op since we use route-based settings now
     setCurrentArticle
   })
 
@@ -160,7 +169,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       onLogout={onLogout}
       onViewModeChange={setViewMode}
       onOpenSettings={() => {
-        setShowSettings(true)
+        navigate('/settings')
         setIsCollapsed(true)
         setIsHighlightsCollapsed(true)
       }}
@@ -171,7 +180,11 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       selectedUrl={selectedUrl}
       settings={settings}
       onSaveSettings={saveSettings}
-      onCloseSettings={() => setShowSettings(false)}
+      onCloseSettings={() => {
+        // Navigate back to previous location or default
+        const backTo = previousLocationRef.current || '/'
+        navigate(backTo)
+      }}
       classifiedHighlights={classifiedHighlights}
       showHighlights={showHighlights}
       selectedHighlightId={selectedHighlightId}

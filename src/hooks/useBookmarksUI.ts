@@ -14,7 +14,6 @@ export const useBookmarksUI = ({ settings }: UseBookmarksUIParams) => {
   const [viewMode, setViewMode] = useState<ViewMode>('compact')
   const [showHighlights, setShowHighlights] = useState(true)
   const [selectedHighlightId, setSelectedHighlightId] = useState<string | undefined>(undefined)
-  const [showSettings, setShowSettings] = useState(false)
   const [currentArticleCoordinate, setCurrentArticleCoordinate] = useState<string | undefined>(undefined)
   const [currentArticleEventId, setCurrentArticleEventId] = useState<string | undefined>(undefined)
   const [currentArticle, setCurrentArticle] = useState<NostrEvent | undefined>(undefined)
@@ -46,8 +45,6 @@ export const useBookmarksUI = ({ settings }: UseBookmarksUIParams) => {
     setShowHighlights,
     selectedHighlightId,
     setSelectedHighlightId,
-    showSettings,
-    setShowSettings,
     currentArticleCoordinate,
     setCurrentArticleCoordinate,
     currentArticleEventId,
