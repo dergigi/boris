@@ -9,12 +9,43 @@ let isSyncing = false
 // Track events created during offline period
 const offlineCreatedEvents = new Set<string>()
 
+// Track events currently being synced
+const syncingEvents = new Set<string>()
+
+// Callbacks to notify when sync state changes
+const syncStateListeners: Array<(eventId: string, isSyncing: boolean) => void> = []
+
 /**
  * Marks an event as created during offline period
  */
 export function markEventAsOfflineCreated(eventId: string): void {
   offlineCreatedEvents.add(eventId)
   console.log(`📝 Marked event ${eventId.slice(0, 8)} as offline-created. Total: ${offlineCreatedEvents.size}`)
+}
+
+/**
+ * Check if an event is currently being synced
+ */
+export function isEventSyncing(eventId: string): boolean {
+  return syncingEvents.has(eventId)
+}
+
+/**
+ * Subscribe to sync state changes
+ */
+export function onSyncStateChange(callback: (eventId: string, isSyncing: boolean) => void): () => void {
+  syncStateListeners.push(callback)
+  return () => {
+    const index = syncStateListeners.indexOf(callback)
+    if (index > -1) syncStateListeners.splice(index, 1)
+  }
+}
+
+/**
+ * Notify listeners of sync state change
+ */
+function notifySyncStateChange(eventId: string, isSyncing: boolean): void {
+  syncStateListeners.forEach(listener => listener(eventId, isSyncing))
 }
 
 /**
@@ -82,12 +113,22 @@ export async function syncLocalEventsToRemote(
 
     console.log(`📤 Syncing ${uniqueEvents.length} event(s) to remote relays...`)
 
+    // Mark all events as syncing
+    uniqueEvents.forEach(event => {
+      syncingEvents.add(event.id)
+      notifySyncStateChange(event.id, true)
+    })
+
     // Publish to remote relays
     let successCount = 0
+    const successfulIds: string[] = []
+    
     for (const event of uniqueEvents) {
       try {
         await relayPool.publish(remoteRelays, event)
         successCount++
+        successfulIds.push(event.id)
+        console.log(`✅ Synced event ${event.id.slice(0, 8)}`)
       } catch (error) {
         console.warn(`⚠️ Failed to sync event ${event.id.slice(0, 8)}:`, error)
       }
@@ -95,8 +136,20 @@ export async function syncLocalEventsToRemote(
 
     console.log(`✅ Synced ${successCount}/${uniqueEvents.length} events to remote relays`)
     
-    // Clear offline events tracking after successful sync
-    offlineCreatedEvents.clear()
+    // Clear syncing state and offline tracking for successful events
+    successfulIds.forEach(eventId => {
+      syncingEvents.delete(eventId)
+      offlineCreatedEvents.delete(eventId)
+      notifySyncStateChange(eventId, false)
+    })
+    
+    // Clear syncing state for failed events
+    uniqueEvents.forEach(event => {
+      if (!successfulIds.includes(event.id)) {
+        syncingEvents.delete(event.id)
+        notifySyncStateChange(event.id, false)
+      }
+    })
   } catch (error) {
     console.error('❌ Error during offline sync:', error)
   } finally {

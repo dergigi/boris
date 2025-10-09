@@ -1,10 +1,11 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faHouseSignal, faPlane } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faHouseSignal, faPlane, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { formatDistanceToNow } from 'date-fns'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
+import { onSyncStateChange, isEventSyncing } from '../services/offlineSyncService'
 
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
@@ -19,6 +20,8 @@ interface HighlightItemProps {
 
 export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelectUrl, isSelected, onHighlightClick }) => {
   const itemRef = useRef<HTMLDivElement>(null)
+  const [isSyncing, setIsSyncing] = useState(() => isEventSyncing(highlight.id))
+  const [showOfflineIndicator, setShowOfflineIndicator] = useState(() => highlight.isOfflineCreated && !isSyncing)
   
   // Resolve the profile of the user who made the highlight
   const profile = useEventModel(Models.ProfileModel, [highlight.pubkey])
@@ -29,6 +32,21 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
     if (profile?.display_name) return profile.display_name
     return `${highlight.pubkey.slice(0, 8)}...` // fallback to short pubkey
   }
+  
+  // Listen to sync state changes
+  useEffect(() => {
+    const unsubscribe = onSyncStateChange((eventId, syncingState) => {
+      if (eventId === highlight.id) {
+        setIsSyncing(syncingState)
+        // Hide offline indicator when sync completes successfully
+        if (!syncingState) {
+          setShowOfflineIndicator(false)
+        }
+      }
+    })
+    
+    return unsubscribe
+  }, [highlight.id])
   
   useEffect(() => {
     if (isSelected && itemRef.current) {
@@ -101,7 +119,16 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
             </>
           )}
           
-          {highlight.isOfflineCreated && (
+          {isSyncing && (
+            <>
+              <span className="highlight-meta-separator">•</span>
+              <span className="highlight-syncing-indicator" title="Syncing to remote relays...">
+                <FontAwesomeIcon icon={faSpinner} spin />
+              </span>
+            </>
+          )}
+          
+          {!isSyncing && showOfflineIndicator && (
             <>
               <span className="highlight-meta-separator">•</span>
               <span className="highlight-offline-indicator" title="Created while in flight mode">
