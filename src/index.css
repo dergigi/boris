@@ -1645,6 +1645,7 @@ body {
   font-size: 0.875rem;
   color: #888;
   flex-wrap: nowrap;
+  min-height: 20px;
 }
 
 .highlight-author {
@@ -1654,17 +1655,20 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 150px;
+  line-height: 1;
 }
 
 .highlight-meta-separator {
   color: #666;
   flex-shrink: 0;
+  line-height: 1;
 }
 
 .highlight-time {
   color: #888;
   white-space: nowrap;
   flex-shrink: 0;
+  line-height: 1;
 }
 
 .highlight-source {
@@ -1676,6 +1680,7 @@ body {
   transition: color 0.2s ease;
   flex-shrink: 0;
   margin-left: auto;
+  line-height: 1;
 }
 
 .highlight-source:hover {
