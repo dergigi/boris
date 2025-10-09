@@ -192,6 +192,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       }}
       onRefresh={handleRefreshAll}
       relayPool={relayPool}
+      eventStore={eventStore}
       readerLoading={readerLoading}
       readerContent={readerContent}
       selectedUrl={selectedUrl}

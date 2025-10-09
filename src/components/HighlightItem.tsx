@@ -4,8 +4,11 @@ import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer } from '@f
 import { Highlight } from '../types/highlights'
 import { formatDistanceToNow } from 'date-fns'
 import { useEventModel } from 'applesauce-react/hooks'
-import { Models } from 'applesauce-core'
+import { Models, IEventStore } from 'applesauce-core'
+import { RelayPool } from 'applesauce-relay'
 import { onSyncStateChange, isEventSyncing } from '../services/offlineSyncService'
+import { RELAYS } from '../config/relays'
+import { areAllRelaysLocal } from '../utils/helpers'
 
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
@@ -16,12 +19,24 @@ interface HighlightItemProps {
   onSelectUrl?: (url: string) => void
   isSelected?: boolean
   onHighlightClick?: (highlightId: string) => void
+  relayPool?: RelayPool | null
+  eventStore?: IEventStore | null
+  onHighlightUpdate?: (highlight: Highlight) => void
 }
 
-export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelectUrl, isSelected, onHighlightClick }) => {
+export const HighlightItem: React.FC<HighlightItemProps> = ({ 
+  highlight, 
+  onSelectUrl, 
+  isSelected, 
+  onHighlightClick,
+  relayPool,
+  eventStore,
+  onHighlightUpdate
+}) => {
   const itemRef = useRef<HTMLDivElement>(null)
   const [isSyncing, setIsSyncing] = useState(() => isEventSyncing(highlight.id))
   const [showOfflineIndicator, setShowOfflineIndicator] = useState(() => highlight.isOfflineCreated && !isSyncing)
+  const [isRebroadcasting, setIsRebroadcasting] = useState(false)
   
   // Resolve the profile of the user who made the highlight
   const profile = useEventModel(Models.ProfileModel, [highlight.pubkey])
@@ -83,16 +98,82 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
   
   const sourceLink = getSourceLink()
   
+  // Handle rebroadcast to all relays
+  const handleRebroadcast = async (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent triggering highlight selection
+    
+    if (!relayPool || !eventStore || isRebroadcasting) return
+    
+    setIsRebroadcasting(true)
+    
+    try {
+      // Get the event from the event store
+      const event = eventStore.getEvent(highlight.id)
+      if (!event) {
+        console.error('Event not found in store:', highlight.id)
+        return
+      }
+      
+      // Get all connected relays
+      const connectedRelays = Array.from(relayPool.relays.values())
+        .filter(relay => relay.connected)
+        .map(relay => relay.url)
+      
+      // Publish to all connected relays
+      const targetRelays = RELAYS.filter(url => connectedRelays.includes(url))
+      
+      if (targetRelays.length === 0) {
+        console.warn('No connected relays to rebroadcast to')
+        return
+      }
+      
+      console.log('📡 Rebroadcasting highlight to', targetRelays.length, 'relay(s):', targetRelays)
+      
+      await relayPool.publish(targetRelays, event)
+      
+      console.log('✅ Rebroadcast successful!')
+      
+      // Update the highlight with new relay info
+      const isLocalOnly = areAllRelaysLocal(targetRelays)
+      const updatedHighlight = {
+        ...highlight,
+        publishedRelays: targetRelays,
+        isLocalOnly,
+        isOfflineCreated: false
+      }
+      
+      // Notify parent of the update
+      if (onHighlightUpdate) {
+        onHighlightUpdate(updatedHighlight)
+      }
+      
+      // Update local state
+      setShowOfflineIndicator(false)
+      
+    } catch (error) {
+      console.error('❌ Failed to rebroadcast:', error)
+    } finally {
+      setIsRebroadcasting(false)
+    }
+  }
+  
   // Determine relay indicator icon and tooltip
   const getRelayIndicatorInfo = () => {
+    if (isRebroadcasting) {
+      return {
+        icon: faSpinner,
+        tooltip: 'Rebroadcasting to all relays...',
+        spin: true
+      }
+    }
+    
     const isLocalOrOffline = highlight.isLocalOnly || (showOfflineIndicator && !isSyncing)
     
     if (isLocalOrOffline) {
       return {
         icon: faPlane,
-        tooltip: highlight.isLocalOnly 
-          ? 'Local only (not published to remote relays)'
-          : 'Created in flight mode'
+        tooltip: 'Click to rebroadcast to all relays',
+        spin: false
       }
     }
     
@@ -105,7 +186,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
     )
     return {
       icon: faServer,
-      tooltip: `Published to ${relayNames.length} relay(s):\n${relayNames.join('\n')}`
+      tooltip: `Published to ${relayNames.length} relay(s):\n${relayNames.join('\n')}\n\nClick to rebroadcast`,
+      spin: false
     }
   }
   
@@ -122,8 +204,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({ highlight, onSelec
       <div className="highlight-quote-icon">
         <FontAwesomeIcon icon={faQuoteLeft} />
         {relayIndicator && (
-          <div className="highlight-relay-indicator" title={relayIndicator.tooltip}>
-            <FontAwesomeIcon icon={relayIndicator.icon} />
+          <div 
+            className="highlight-relay-indicator" 
+            title={relayIndicator.tooltip}
+            onClick={handleRebroadcast}
+            style={{ cursor: relayPool && eventStore ? 'pointer' : 'default' }}
+          >
+            <FontAwesomeIcon icon={relayIndicator.icon} spin={relayIndicator.spin} />
           </div>
         )}
       </div>

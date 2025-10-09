@@ -6,6 +6,8 @@ import { HighlightItem } from './HighlightItem'
 import { useFilteredHighlights } from '../hooks/useFilteredHighlights'
 import HighlightsPanelCollapsed from './HighlightsPanel/HighlightsPanelCollapsed'
 import HighlightsPanelHeader from './HighlightsPanel/HighlightsPanelHeader'
+import { RelayPool } from 'applesauce-relay'
+import { IEventStore } from 'applesauce-core'
 
 export interface HighlightVisibility {
   nostrverse: boolean
@@ -28,6 +30,8 @@ interface HighlightsPanelProps {
   highlightVisibility?: HighlightVisibility
   onHighlightVisibilityChange?: (visibility: HighlightVisibility) => void
   followedPubkeys?: Set<string>
+  relayPool?: RelayPool | null
+  eventStore?: IEventStore | null
 }
 
 export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
@@ -44,9 +48,12 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   currentUserPubkey,
   highlightVisibility = { nostrverse: true, friends: true, mine: true },
   onHighlightVisibilityChange,
-  followedPubkeys = new Set()
+  followedPubkeys = new Set(),
+  relayPool,
+  eventStore
 }) => {
   const [showHighlights, setShowHighlights] = useState(true)
+  const [localHighlights, setLocalHighlights] = useState(highlights)
   
   const handleToggleHighlights = () => {
     const newValue = !showHighlights
@@ -54,8 +61,19 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
     onToggleHighlights?.(newValue)
   }
   
+  // Keep track of highlight updates
+  React.useEffect(() => {
+    setLocalHighlights(highlights)
+  }, [highlights])
+  
+  const handleHighlightUpdate = (updatedHighlight: Highlight) => {
+    setLocalHighlights(prev => 
+      prev.map(h => h.id === updatedHighlight.id ? updatedHighlight : h)
+    )
+  }
+  
   const filteredHighlights = useFilteredHighlights({
-    highlights,
+    highlights: localHighlights,
     selectedUrl,
     highlightVisibility,
     currentUserPubkey,
@@ -108,6 +126,9 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
               onSelectUrl={onSelectUrl}
               isSelected={highlight.id === selectedHighlightId}
               onHighlightClick={onHighlightClick}
+              relayPool={relayPool}
+              eventStore={eventStore}
+              onHighlightUpdate={handleHighlightUpdate}
             />
           ))}
         </div>

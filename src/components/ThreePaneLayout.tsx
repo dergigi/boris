@@ -140,6 +140,8 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             highlightVisibility={props.highlightVisibility}
             onHighlightVisibilityChange={props.onHighlightVisibilityChange}
             followedPubkeys={props.followedPubkeys}
+            relayPool={props.relayPool}
+            eventStore={props.eventStore}
           />
         </div>
       </div>

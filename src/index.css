@@ -1575,13 +1575,18 @@ body {
   font-size: 0.7rem;
   color: #888;
   opacity: 0.7;
-  transition: opacity 0.2s ease;
-  cursor: help;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .highlight-relay-indicator:hover {
   opacity: 1;
   color: #aaa;
+  transform: scale(1.1);
+}
+
+.highlight-relay-indicator:active {
+  transform: scale(0.95);
 }
 
 /* Level-colored quote icon */
