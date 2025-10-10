@@ -2514,6 +2514,23 @@ body {
   cursor: default;
 }
 
+.relay-status-indicator.connecting {
+  background: rgba(100, 108, 255, 0.15);
+  border: 1px solid rgba(100, 108, 255, 0.25);
+}
+
+.relay-status-indicator.connecting:hover {
+  background: rgba(100, 108, 255, 0.25);
+}
+
+.relay-status-indicator.connecting .relay-status-icon {
+  color: rgba(100, 108, 255, 0.9);
+}
+
+.relay-status-indicator.connecting .relay-status-title {
+  color: rgba(100, 108, 255, 1);
+}
+
 .relay-status-indicator:hover {
   background: rgba(245, 158, 11, 1);
   transform: translateY(-2px);

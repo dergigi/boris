@@ -58,7 +58,7 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ rela
   if (!localOnlyMode && !offlineMode && !isConnecting) return null
   
   return (
-    <div className="relay-status-indicator" title={
+    <div className={`relay-status-indicator ${isConnecting ? 'connecting' : ''}`} title={
       isConnecting
         ? 'Connecting to relays...'
         : offlineMode 
