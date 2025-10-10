@@ -36,7 +36,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
       accountManager.setActive(account)
     } catch (error) {
       console.error('Login failed:', error)
-      alert('Login failed. Please install a nostr browser extension and try again.')
+      alert('Login failed. Please install a nostr browser extension and try again.\n\nIf you aren\'t on nostr yet, start here: https://nstart.me/')
     } finally {
       setIsConnecting(false)
     }

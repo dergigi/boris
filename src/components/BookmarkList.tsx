@@ -119,6 +119,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         <div className="empty-state">
           <p>No bookmarks found.</p>
           <p>Add bookmarks using your nostr client to see them here.</p>
+          <p>If you aren't on nostr yet, start here: <a href="https://nstart.me/" target="_blank" rel="noopener noreferrer">nstart.me</a></p>
         </div>
       ) : (
         <div className="bookmarks-list">
