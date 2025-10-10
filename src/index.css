@@ -602,8 +602,6 @@ body.mobile-sidebar-open {
 .pane.highlights {
   overflow-y: auto;
   height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
 /* Mobile pane styles */
@@ -621,6 +619,8 @@ body.mobile-sidebar-open {
     z-index: 1000;
     transition: transform 0.3s ease;
     box-shadow: none;
+    display: flex;
+    flex-direction: column;
   }
   
   /* Ensure content fills the mobile sidepanes */
