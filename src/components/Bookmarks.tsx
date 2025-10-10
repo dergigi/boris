@@ -129,7 +129,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   })
 
   // Wrap handleSelectUrl to close mobile sidebar when selecting content
-  const handleSelectUrl = (url: string, bookmark?: any) => {
+  const handleSelectUrl = (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => {
     if (isMobile && isSidebarOpen) {
       toggleSidebar()
     }
