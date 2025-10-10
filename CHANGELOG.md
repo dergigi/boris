@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.6] - 2025-10-10
+
+### Added
+- Compact date format for highlights (now, 5m, 3h, 2d, 1mo, 1y)
+- Ultra-compact date format for bookmarks sidebar
+- Encode event links as nevent/naddr per NIP-19 for better client compatibility
+- Render /explore within ThreePaneLayout to keep side panels visible
+
+### Fixed
+- Remove incorrect padding-right from highlights container
+- Reduce font size of highlight metadata for cleaner look
+- Position highlight FAB button relative to article pane instead of viewport
+- Adjust relay indicator position for better visual alignment
+- Ensure highlight metadata elements align on single visual line with consistent line-height
+- Prevent bookmark icons from being cut off in compact view
+- Clean up nested borders in bookmark items and sidebar view mode controls
+- Align highlight metadata elements on single line in sidebar
+- Change explore header icon from compass to newspaper
+
+### Changed
+- Make connecting notification more subtle with muted blue background
+- Update Boris pubkey for zap splits to npub19802see0gnk3vjlus0dnmfdagusqrtmsxpl5yfmkwn9uvnfnqylqduhr0x
+- Update domain references to read.withboris.com (URLs, SEO metadata, and documentation)
+
 ## [0.3.5] - 2025-10-09
 
 ### Fixed
@@ -509,6 +533,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
+[0.3.6]: https://github.com/dergigi/boris/compare/v0.3.5...v0.3.6
 [0.3.5]: https://github.com/dergigi/boris/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/dergigi/boris/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/dergigi/boris/compare/v0.3.2...v0.3.3
