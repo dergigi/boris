@@ -49,6 +49,19 @@ const StartupPreferencesSettings: React.FC<StartupPreferencesSettingsProps> = ({
           <span>Rebroadcast events while browsing</span>
         </label>
       </div>
+
+      <div className="setting-group">
+        <label htmlFor="autoCollapseSidebarOnMobile" className="checkbox-label">
+          <input
+            id="autoCollapseSidebarOnMobile"
+            type="checkbox"
+            checked={settings.autoCollapseSidebarOnMobile !== false}
+            onChange={(e) => onUpdate({ autoCollapseSidebarOnMobile: e.target.checked })}
+            className="setting-checkbox"
+          />
+          <span>Auto-collapse sidebar on small screens</span>
+        </label>
+      </div>
     </div>
   )
 }

@@ -45,6 +45,8 @@ export interface UserSettings {
   // Image cache settings
   enableImageCache?: boolean // Enable caching images in localStorage
   imageCacheSizeMB?: number // Maximum cache size in megabytes (default: 210MB)
+  // Mobile settings
+  autoCollapseSidebarOnMobile?: boolean // Auto-collapse sidebar on mobile (default: true)
 }
 
 export async function loadSettings(

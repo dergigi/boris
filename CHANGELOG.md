@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Mobile-responsive design with overlay sidebar drawer
+- Media query hooks for responsive behavior (`useIsMobile`, `useIsTablet`, `useIsCoarsePointer`)
+- Auto-collapse sidebar setting for mobile devices
+- Touch-optimized UI with 44x44px minimum touch targets
+- Safe area inset support for notched devices
+- Mobile hamburger menu and backdrop
+- Focus trap in mobile sidebar with ESC key support
+- Body scroll locking when mobile sidebar is open
+- Mobile-optimized modals (full-screen sheet style)
+- Mobile-optimized toast notifications (bottom position)
+- Dynamic viewport height support (100dvh)
+
+### Changed
+- Sidebar now displays as overlay drawer on mobile (≤768px)
+- Highlights panel hidden on mobile for better content focus
+- Sidebar auto-closes when selecting content on mobile
+- Hover effects disabled on touch devices
+
 ## [0.3.8] - 2025-10-10
 
 ### Fixed

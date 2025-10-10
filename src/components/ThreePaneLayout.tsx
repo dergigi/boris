@@ -1,4 +1,6 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBookmark, faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { BookmarkList } from './BookmarkList'
@@ -16,11 +18,13 @@ import { UserSettings } from '../services/settingsService'
 import { HighlightVisibility } from './HighlightsPanel'
 import { HighlightButtonRef } from './HighlightButton'
 import { BookmarkReference } from '../utils/contentLoader'
+import { useIsMobile } from '../hooks/useMediaQuery'
 
 interface ThreePaneLayoutProps {
   // Layout state
   isCollapsed: boolean
   isHighlightsCollapsed: boolean
+  isSidebarOpen: boolean
   showSettings: boolean
   showExplore?: boolean
   
@@ -79,14 +83,167 @@ interface ThreePaneLayoutProps {
 }
 
 const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
+  const isMobile = useIsMobile()
+  const sidebarRef = useRef<HTMLDivElement>(null)
+  const highlightsRef = useRef<HTMLDivElement>(null)
+
+  // Lock body scroll when mobile sidebar or highlights is open
+  useEffect(() => {
+    if (isMobile && (props.isSidebarOpen || !props.isHighlightsCollapsed)) {
+      document.body.classList.add('mobile-sidebar-open')
+    } else {
+      document.body.classList.remove('mobile-sidebar-open')
+    }
+    
+    return () => {
+      document.body.classList.remove('mobile-sidebar-open')
+    }
+  }, [isMobile, props.isSidebarOpen, props.isHighlightsCollapsed])
+
+  // Handle ESC key to close sidebar or highlights
+  useEffect(() => {
+    if (!isMobile) return
+    if (!props.isSidebarOpen && props.isHighlightsCollapsed) return
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (props.isSidebarOpen) {
+          props.onToggleSidebar()
+        } else if (!props.isHighlightsCollapsed) {
+          props.onToggleHighlightsPanel()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isMobile, props.isSidebarOpen, props.isHighlightsCollapsed, props.onToggleSidebar, props.onToggleHighlightsPanel])
+
+  // Trap focus in sidebar when open on mobile
+  useEffect(() => {
+    if (!isMobile || !props.isSidebarOpen || !sidebarRef.current) return
+
+    const sidebar = sidebarRef.current
+    const focusableElements = sidebar.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+    const firstElement = focusableElements[0]
+    const lastElement = focusableElements[focusableElements.length - 1]
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault()
+          lastElement?.focus()
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault()
+          firstElement?.focus()
+        }
+      }
+    }
+
+    sidebar.addEventListener('keydown', handleTab)
+    firstElement?.focus()
+
+    return () => {
+      sidebar.removeEventListener('keydown', handleTab)
+    }
+  }, [isMobile, props.isSidebarOpen])
+
+  // Trap focus in highlights panel when open on mobile
+  useEffect(() => {
+    if (!isMobile || props.isHighlightsCollapsed || !highlightsRef.current) return
+
+    const highlights = highlightsRef.current
+    const focusableElements = highlights.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+    const firstElement = focusableElements[0]
+    const lastElement = focusableElements[focusableElements.length - 1]
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault()
+          lastElement?.focus()
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault()
+          firstElement?.focus()
+        }
+      }
+    }
+
+    highlights.addEventListener('keydown', handleTab)
+    firstElement?.focus()
+
+    return () => {
+      highlights.removeEventListener('keydown', handleTab)
+    }
+  }, [isMobile, props.isHighlightsCollapsed])
+
+  const handleBackdropClick = () => {
+    if (isMobile) {
+      if (props.isSidebarOpen) {
+        props.onToggleSidebar()
+      } else if (!props.isHighlightsCollapsed) {
+        props.onToggleHighlightsPanel()
+      }
+    }
+  }
+
   return (
     <>
+      {/* Mobile bookmark button - only show when viewing article */}
+      {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
+        <button
+          className="mobile-hamburger-btn"
+          onClick={props.onToggleSidebar}
+          aria-label="Open bookmarks"
+          aria-expanded={props.isSidebarOpen}
+        >
+          <FontAwesomeIcon icon={faBookmark} />
+        </button>
+      )}
+
+      {/* Mobile highlights button - only show when viewing article */}
+      {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
+        <button
+          className="mobile-highlights-btn"
+          onClick={props.onToggleHighlightsPanel}
+          aria-label="Open highlights"
+          aria-expanded={!props.isHighlightsCollapsed}
+        >
+          <FontAwesomeIcon icon={faHighlighter} />
+        </button>
+      )}
+
+      {/* Mobile backdrop */}
+      {isMobile && (
+        <div
+          className={`mobile-sidebar-backdrop ${(props.isSidebarOpen || !props.isHighlightsCollapsed) ? 'visible' : ''}`}
+          onClick={handleBackdropClick}
+          aria-hidden="true"
+        />
+      )}
+
       <div className={`three-pane ${props.isCollapsed ? 'sidebar-collapsed' : ''} ${props.isHighlightsCollapsed ? 'highlights-collapsed' : ''}`}>
-        <div className="pane sidebar">
+        <div 
+          ref={sidebarRef}
+          className={`pane sidebar ${isMobile && props.isSidebarOpen ? 'mobile-open' : ''}`}
+          aria-hidden={isMobile && !props.isSidebarOpen}
+        >
           <BookmarkList 
             bookmarks={props.bookmarks}
             onSelectUrl={props.onSelectUrl}
-            isCollapsed={props.isCollapsed}
+            isCollapsed={isMobile ? false : props.isCollapsed}
             onToggleCollapse={props.onToggleSidebar}
             onLogout={props.onLogout}
             viewMode={props.viewMode}
@@ -99,9 +256,10 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             loading={props.bookmarksLoading}
             relayPool={props.relayPool}
             settings={props.settings}
+            isMobile={isMobile}
           />
         </div>
-        <div className="pane main">
+        <div className={`pane main ${isMobile && (props.isSidebarOpen || !props.isHighlightsCollapsed) ? 'mobile-hidden' : ''}`}>
           {props.showSettings ? (
             <Settings 
               settings={props.settings}
@@ -139,7 +297,11 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             />
           )}
         </div>
-        <div className="pane highlights">
+        <div 
+          ref={highlightsRef}
+          className={`pane highlights ${isMobile && !props.isHighlightsCollapsed ? 'mobile-open' : ''}`}
+          aria-hidden={isMobile && props.isHighlightsCollapsed}
+        >
           <HighlightsPanel
             highlights={props.highlights}
             loading={props.highlightsLoading}
