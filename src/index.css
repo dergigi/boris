@@ -1458,6 +1458,28 @@ body.mobile-sidebar-open {
     line-height: 1.6;
     margin: 0;
   }
+
+  .reader-hero-image {
+    min-height: 280px;
+    max-height: 400px;
+    height: 50vh;
+  }
+
+  .reader-hero-image img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .reader-header-overlay {
+    padding: 1.5rem 1rem 1rem;
+  }
+
+  .reader-header-overlay .reader-title {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
 }
 
 /* Private Bookmark Styles */
