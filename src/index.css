@@ -1437,6 +1437,29 @@ body.mobile-sidebar-open {
   border: 1px solid rgba(100, 108, 255, 0.4);
 }
 
+.reader-summary-below-image {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .reader-header-overlay .reader-summary.hide-on-mobile {
+    display: none;
+  }
+
+  .reader-summary-below-image {
+    display: block;
+    padding: 0 0 1.5rem 0;
+    margin-top: -1rem;
+  }
+
+  .reader-summary-below-image .reader-summary {
+    color: #aaa;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+}
+
 /* Private Bookmark Styles */
 .private-bookmark {
   background: #2a2a2a;
