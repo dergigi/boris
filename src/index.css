@@ -604,6 +604,11 @@ body.mobile-sidebar-open {
   height: 100%;
 }
 
+/* Ensure panes are stacked in the correct order on desktop */
+.three-pane .pane.sidebar { z-index: 1; }
+.three-pane .pane.main { z-index: 1; }
+.three-pane .pane.highlights { z-index: 2; }
+
 /* Mobile pane styles */
 @media (max-width: 768px) {
   /* Both sidepanes slide in as overlays */

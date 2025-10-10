@@ -243,7 +243,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
           <BookmarkList 
             bookmarks={props.bookmarks}
             onSelectUrl={props.onSelectUrl}
-            isCollapsed={props.isCollapsed}
+            isCollapsed={isMobile ? false : props.isCollapsed}
             onToggleCollapse={props.onToggleSidebar}
             onLogout={props.onLogout}
             viewMode={props.viewMode}
