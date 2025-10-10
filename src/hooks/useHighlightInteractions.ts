@@ -56,8 +56,8 @@ export const useHighlightInteractions = ({
     }
   }, [selectedHighlightId])
 
-  // Handle text selection
-  const handleMouseUp = useCallback(() => {
+  // Handle text selection (works for both mouse and touch)
+  const handleSelectionEnd = useCallback(() => {
     setTimeout(() => {
       const selection = window.getSelection()
       if (!selection || selection.rangeCount === 0) {
@@ -76,6 +76,6 @@ export const useHighlightInteractions = ({
     }, 10)
   }, [onTextSelection, onClearSelection])
 
-  return { contentRef, handleMouseUp }
+  return { contentRef, handleSelectionEnd }
 }
 

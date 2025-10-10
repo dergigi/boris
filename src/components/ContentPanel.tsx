@@ -74,7 +74,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     followedPubkeys
   })
 
-  const { contentRef, handleMouseUp } = useHighlightInteractions({
+  const { contentRef, handleSelectionEnd } = useHighlightInteractions({
     onHighlightClick,
     selectedHighlightId,
     onTextSelection,
@@ -138,7 +138,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               ref={contentRef} 
               className="reader-markdown" 
               dangerouslySetInnerHTML={{ __html: finalHtml }}
-              onMouseUp={handleMouseUp}
+              onMouseUp={handleSelectionEnd}
+              onTouchEnd={handleSelectionEnd}
             />
           ) : (
             <div className="reader-markdown">
@@ -152,7 +153,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             ref={contentRef} 
             className="reader-html" 
             dangerouslySetInnerHTML={{ __html: finalHtml || html || '' }}
-            onMouseUp={handleMouseUp}
+            onMouseUp={handleSelectionEnd}
+            onTouchEnd={handleSelectionEnd}
           />
         )
       ) : (
