@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookmark } from '@fortawesome/free-solid-svg-icons'
+import { faBookmark, faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { BookmarkList } from './BookmarkList'
@@ -85,10 +85,11 @@ interface ThreePaneLayoutProps {
 const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
   const isMobile = useIsMobile()
   const sidebarRef = useRef<HTMLDivElement>(null)
+  const highlightsRef = useRef<HTMLDivElement>(null)
 
-  // Lock body scroll when mobile sidebar is open
+  // Lock body scroll when mobile sidebar or highlights is open
   useEffect(() => {
-    if (isMobile && props.isSidebarOpen) {
+    if (isMobile && (props.isSidebarOpen || !props.isHighlightsCollapsed)) {
       document.body.classList.add('mobile-sidebar-open')
     } else {
       document.body.classList.remove('mobile-sidebar-open')
@@ -97,21 +98,26 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
     return () => {
       document.body.classList.remove('mobile-sidebar-open')
     }
-  }, [isMobile, props.isSidebarOpen])
+  }, [isMobile, props.isSidebarOpen, props.isHighlightsCollapsed])
 
-  // Handle ESC key to close sidebar
+  // Handle ESC key to close sidebar or highlights
   useEffect(() => {
-    if (!isMobile || !props.isSidebarOpen) return
+    if (!isMobile) return
+    if (!props.isSidebarOpen && props.isHighlightsCollapsed) return
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        props.onToggleSidebar()
+        if (props.isSidebarOpen) {
+          props.onToggleSidebar()
+        } else if (!props.isHighlightsCollapsed) {
+          props.onToggleHighlightsPanel()
+        }
       }
     }
 
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [isMobile, props.isSidebarOpen, props.onToggleSidebar])
+  }, [isMobile, props.isSidebarOpen, props.isHighlightsCollapsed, props.onToggleSidebar, props.onToggleHighlightsPanel])
 
   // Trap focus in sidebar when open on mobile
   useEffect(() => {
@@ -148,16 +154,55 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
     }
   }, [isMobile, props.isSidebarOpen])
 
+  // Trap focus in highlights panel when open on mobile
+  useEffect(() => {
+    if (!isMobile || props.isHighlightsCollapsed || !highlightsRef.current) return
+
+    const highlights = highlightsRef.current
+    const focusableElements = highlights.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+    const firstElement = focusableElements[0]
+    const lastElement = focusableElements[focusableElements.length - 1]
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault()
+          lastElement?.focus()
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault()
+          firstElement?.focus()
+        }
+      }
+    }
+
+    highlights.addEventListener('keydown', handleTab)
+    firstElement?.focus()
+
+    return () => {
+      highlights.removeEventListener('keydown', handleTab)
+    }
+  }, [isMobile, props.isHighlightsCollapsed])
+
   const handleBackdropClick = () => {
-    if (isMobile && props.isSidebarOpen) {
-      props.onToggleSidebar()
+    if (isMobile) {
+      if (props.isSidebarOpen) {
+        props.onToggleSidebar()
+      } else if (!props.isHighlightsCollapsed) {
+        props.onToggleHighlightsPanel()
+      }
     }
   }
 
   return (
     <>
       {/* Mobile bookmark button */}
-      {isMobile && !props.isSidebarOpen && (
+      {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
         <button
           className="mobile-hamburger-btn"
           onClick={props.onToggleSidebar}
@@ -168,10 +213,22 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
         </button>
       )}
 
+      {/* Mobile highlights button */}
+      {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
+        <button
+          className="mobile-highlights-btn"
+          onClick={props.onToggleHighlightsPanel}
+          aria-label="Open highlights"
+          aria-expanded={!props.isHighlightsCollapsed}
+        >
+          <FontAwesomeIcon icon={faHighlighter} />
+        </button>
+      )}
+
       {/* Mobile backdrop */}
       {isMobile && (
         <div
-          className={`mobile-sidebar-backdrop ${props.isSidebarOpen ? 'visible' : ''}`}
+          className={`mobile-sidebar-backdrop ${(props.isSidebarOpen || !props.isHighlightsCollapsed) ? 'visible' : ''}`}
           onClick={handleBackdropClick}
           aria-hidden="true"
         />
@@ -240,7 +297,11 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             />
           )}
         </div>
-        <div className="pane highlights">
+        <div 
+          ref={highlightsRef}
+          className={`pane highlights ${isMobile && !props.isHighlightsCollapsed ? 'mobile-open' : ''}`}
+          aria-hidden={isMobile && props.isHighlightsCollapsed}
+        >
           <HighlightsPanel
             highlights={props.highlights}
             loading={props.highlightsLoading}
