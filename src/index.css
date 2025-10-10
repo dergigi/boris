@@ -605,9 +605,12 @@ body.mobile-sidebar-open {
 }
 
 /* Ensure panes are stacked in the correct order on desktop */
-.three-pane .pane.sidebar { z-index: 1; }
-.three-pane .pane.main { z-index: 1; }
-.three-pane .pane.highlights { z-index: 2; }
+@media (min-width: 769px) {
+  /* Desktop stacking to keep highlights above main without overlap */
+  .three-pane .pane.sidebar { z-index: 1; }
+  .three-pane .pane.main { z-index: 1; }
+  .three-pane .pane.highlights { z-index: 2; }
+}
 
 /* Mobile pane styles */
 @media (max-width: 768px) {
@@ -621,7 +624,7 @@ body.mobile-sidebar-open {
     height: 100vh;
     height: 100dvh;
     background: #1a1a1a;
-    z-index: 1000;
+    z-index: 1001; /* Above backdrop */
     transition: transform 0.3s ease;
     box-shadow: none;
     display: flex;
@@ -687,8 +690,8 @@ body.mobile-sidebar-open {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 999;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 999; /* Below sidepanes */
     opacity: 0;
     transition: opacity 0.3s ease;
   }
