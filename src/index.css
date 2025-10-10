@@ -635,6 +635,8 @@ body.mobile-sidebar-open {
   .pane.highlights .highlights-container {
     border: none;
     border-radius: 0;
+    flex: 1;
+    min-height: 0;
   }
   
   /* Bookmarks sidebar from left */
