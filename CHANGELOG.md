@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2025-10-10
+
+### Fixed
+- Long article summaries overlapping with hero image content on mobile devices
+- Article summary now moves below hero image on mobile when longer than 150 characters
+- Article summary line clamp reduced from 3 to 2 lines on mobile for better space utilization
+
+### Changed
+- Hero image rendering on mobile now uses zoom-to-fit approach with viewport-based sizing
+- Hero image height on mobile set to 50vh (constrained between 280px-400px)
+- Improved image cropping with center positioning for better visual presentation
+- Optimized reader header overlay padding and title sizing on mobile
+
 ## [0.4.0] - 2025-10-10
 
 ### Added
