@@ -28,7 +28,6 @@ interface BookmarkListProps {
   relayPool: RelayPool | null
   settings?: UserSettings
   isMobile?: boolean
-  isSidebarOpen?: boolean
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({
@@ -47,8 +46,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   loading = false,
   relayPool,
   settings,
-  isMobile = false,
-  isSidebarOpen = false
+  isMobile = false
 }) => {
   // Helper to check if a bookmark has either content or a URL
   const hasContentOrUrl = (ib: IndividualBookmark) => {

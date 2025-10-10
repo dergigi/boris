@@ -11,6 +11,7 @@ interface IconButtonProps {
   size?: number
   disabled?: boolean
   spin?: boolean
+  className?: string
 }
 
 const IconButton: React.FC<IconButtonProps> = ({
@@ -21,11 +22,12 @@ const IconButton: React.FC<IconButtonProps> = ({
   variant = 'ghost',
   size = 33,
   disabled = false,
-  spin = false
+  spin = false,
+  className = ''
 }) => {
   return (
     <button
-      className={`icon-button ${variant}`}
+      className={`icon-button ${variant} ${className}`.trim()}
       onClick={onClick}
       title={title}
       aria-label={ariaLabel || title}

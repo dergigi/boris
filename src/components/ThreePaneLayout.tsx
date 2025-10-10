@@ -200,7 +200,6 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             relayPool={props.relayPool}
             settings={props.settings}
             isMobile={isMobile}
-            isSidebarOpen={props.isSidebarOpen}
           />
         </div>
         <div className="pane main">
