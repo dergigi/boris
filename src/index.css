@@ -619,6 +619,13 @@ body.mobile-sidebar-open {
     grid-row: 1;
     padding: 0.5rem;
     max-width: 100%;
+    transition: opacity 0.2s ease;
+  }
+  
+  /* Hide main content when sidepanes are open on mobile */
+  .three-pane .pane.main.mobile-hidden {
+    opacity: 0;
+    pointer-events: none;
   }
   
   .pane.highlights {

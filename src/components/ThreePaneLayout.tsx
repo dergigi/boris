@@ -201,7 +201,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
 
   return (
     <>
-      {/* Mobile bookmark button */}
+      {/* Mobile bookmark button - only show when viewing article */}
       {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
         <button
           className="mobile-hamburger-btn"
@@ -213,7 +213,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
         </button>
       )}
 
-      {/* Mobile highlights button */}
+      {/* Mobile highlights button - only show when viewing article */}
       {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
         <button
           className="mobile-highlights-btn"
@@ -259,7 +259,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             isMobile={isMobile}
           />
         </div>
-        <div className="pane main">
+        <div className={`pane main ${isMobile && (props.isSidebarOpen || !props.isHighlightsCollapsed) ? 'mobile-hidden' : ''}`}>
           {props.showSettings ? (
             <Settings 
               settings={props.settings}
