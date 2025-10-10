@@ -1,6 +1,6 @@
 {
   "name": "boris",
-  "version": "0.3.8",
+  "version": "0.4.0",
   "description": "A minimal nostr client for bookmark management",
   "homepage": "https://read.withboris.com/",
   "type": "module",
