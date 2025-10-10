@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faHome, faPlus, faNewspaper } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faHome, faPlus, faNewspaper, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -17,9 +17,10 @@ interface SidebarHeaderProps {
   onLogout: () => void
   onOpenSettings: () => void
   relayPool: RelayPool | null
+  isMobile?: boolean
 }
 
-const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onOpenSettings, relayPool }) => {
+const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onOpenSettings, relayPool, isMobile = false }) => {
   const [isConnecting, setIsConnecting] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const navigate = useNavigate()
@@ -66,14 +67,25 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
   return (
     <>
       <div className="sidebar-header-bar">
-        <button 
-          onClick={onToggleCollapse}
-          className="toggle-sidebar-btn"
-          title="Collapse bookmarks sidebar"
-          aria-label="Collapse bookmarks sidebar"
-        >
-          <FontAwesomeIcon icon={faChevronRight} />
-        </button>
+        {isMobile ? (
+          <IconButton
+            icon={faTimes}
+            onClick={onToggleCollapse}
+            title="Close sidebar"
+            ariaLabel="Close sidebar"
+            variant="ghost"
+            className="mobile-close-btn"
+          />
+        ) : (
+          <button 
+            onClick={onToggleCollapse}
+            className="toggle-sidebar-btn"
+            title="Collapse bookmarks sidebar"
+            aria-label="Collapse bookmarks sidebar"
+          >
+            <FontAwesomeIcon icon={faChevronRight} />
+          </button>
+        )}
         <div className="sidebar-header-right">
         <div 
           className="profile-avatar" 

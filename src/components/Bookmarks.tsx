@@ -67,6 +67,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   })
 
   const {
+    isMobile,
+    isSidebarOpen,
+    toggleSidebar,
     isCollapsed,
     setIsCollapsed,
     isHighlightsCollapsed,
@@ -116,7 +119,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     setReaderLoading,
     readerContent,
     setReaderContent,
-    handleSelectUrl
+    handleSelectUrl: baseHandleSelectUrl
   } = useContentSelection({
     relayPool,
     settings,
@@ -124,6 +127,14 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     setShowSettings: () => {}, // No-op since we use route-based settings now
     setCurrentArticle
   })
+
+  // Wrap handleSelectUrl to close mobile sidebar when selecting content
+  const handleSelectUrl = (url: string, bookmark?: any) => {
+    if (isMobile && isSidebarOpen) {
+      toggleSidebar()
+    }
+    baseHandleSelectUrl(url, bookmark)
+  }
 
   const {
     highlightButtonRef,
@@ -180,6 +191,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     <ThreePaneLayout
       isCollapsed={isCollapsed}
       isHighlightsCollapsed={isHighlightsCollapsed}
+      isSidebarOpen={isSidebarOpen}
       showSettings={showSettings}
       showExplore={showExplore}
       bookmarks={bookmarks}
@@ -187,12 +199,16 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       viewMode={viewMode}
       isRefreshing={isRefreshing}
       lastFetchTime={lastFetchTime}
-      onToggleSidebar={() => setIsCollapsed(!isCollapsed)}
+      onToggleSidebar={isMobile ? toggleSidebar : () => setIsCollapsed(!isCollapsed)}
       onLogout={onLogout}
       onViewModeChange={setViewMode}
       onOpenSettings={() => {
         navigate('/settings')
-        setIsCollapsed(true)
+        if (isMobile) {
+          toggleSidebar()
+        } else {
+          setIsCollapsed(true)
+        }
         setIsHighlightsCollapsed(true)
       }}
       onRefresh={handleRefreshAll}
