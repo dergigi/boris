@@ -27,7 +27,7 @@ function AppRoutes({
   const accountManager = Hooks.useAccountManager()
 
   const handleLogout = () => {
-    accountManager.setActive(null)
+    accountManager.clearActive()
     showToast('Logged out successfully')
   }
 
