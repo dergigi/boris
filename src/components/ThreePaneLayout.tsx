@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBars } from '@fortawesome/free-solid-svg-icons'
+import { faBookmark } from '@fortawesome/free-solid-svg-icons'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { BookmarkList } from './BookmarkList'
@@ -156,15 +156,15 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
 
   return (
     <>
-      {/* Mobile hamburger button */}
+      {/* Mobile bookmark button */}
       {isMobile && !props.isSidebarOpen && (
         <button
           className="mobile-hamburger-btn"
           onClick={props.onToggleSidebar}
-          aria-label="Open sidebar"
+          aria-label="Open bookmarks"
           aria-expanded={props.isSidebarOpen}
         >
-          <FontAwesomeIcon icon={faBars} />
+          <FontAwesomeIcon icon={faBookmark} />
         </button>
       )}
 
