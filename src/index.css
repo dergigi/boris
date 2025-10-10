@@ -607,7 +607,13 @@ body.mobile-sidebar-open {
     z-index: 1000;
     transition: transform 0.3s ease;
     box-shadow: none;
-    display: flex;
+  }
+  
+  /* Ensure content fills the mobile sidepanes */
+  .pane.sidebar > *,
+  .pane.highlights > * {
+    width: 100%;
+    height: 100%;
   }
   
   /* Bookmarks sidebar from left */
