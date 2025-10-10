@@ -594,24 +594,42 @@ body.mobile-sidebar-open {
 
 /* Mobile pane styles */
 @media (max-width: 768px) {
-  .pane.sidebar {
+  /* Both sidepanes slide in as overlays */
+  .pane.sidebar,
+  .pane.highlights {
     position: fixed;
     top: 0;
-    left: 0;
     width: 85%;
     max-width: 320px;
     height: 100vh;
     height: 100dvh;
     background: #1a1a1a;
     z-index: 1000;
-    transform: translateX(-100%);
     transition: transform 0.3s ease;
     box-shadow: none;
+    display: flex;
+  }
+  
+  /* Bookmarks sidebar from left */
+  .pane.sidebar {
+    left: 0;
+    transform: translateX(-100%);
   }
   
   .pane.sidebar.mobile-open {
     transform: translateX(0);
     box-shadow: 4px 0 12px rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Highlights sidebar from right */
+  .pane.highlights {
+    right: 0;
+    transform: translateX(100%);
+  }
+  
+  .pane.highlights.mobile-open {
+    transform: translateX(0);
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.5);
   }
   
   .pane.main {
@@ -626,27 +644,6 @@ body.mobile-sidebar-open {
   .three-pane .pane.main.mobile-hidden {
     opacity: 0;
     pointer-events: none;
-  }
-  
-  .pane.highlights {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 85%;
-    max-width: 320px;
-    height: 100vh;
-    height: 100dvh;
-    background: #1a1a1a;
-    z-index: 1000;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    box-shadow: none;
-    display: flex;
-  }
-  
-  .pane.highlights.mobile-open {
-    transform: translateX(0);
-    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.5);
   }
   
   .mobile-sidebar-backdrop {
