@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-10-10
+
 ### Added
 - Mobile-responsive design with overlay sidebar drawer
 - Media query hooks for responsive behavior (`useIsMobile`, `useIsTablet`, `useIsCoarsePointer`)
@@ -19,12 +21,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mobile-optimized modals (full-screen sheet style)
 - Mobile-optimized toast notifications (bottom position)
 - Dynamic viewport height support (100dvh)
+- Mobile highlights panel as overlay with toggle button
 
 ### Changed
 - Sidebar now displays as overlay drawer on mobile (≤768px)
 - Highlights panel hidden on mobile for better content focus
 - Sidebar auto-closes when selecting content on mobile
 - Hover effects disabled on touch devices
+- Replace hamburger icon with bookmark icon on mobile
+
+### Fixed
+- Ensure bookmarks container fills mobile sidepane properly
+- Restore desktop grid layout for highlights panel
+- Improve empty state and loading visibility in mobile sidepanes
+- Add flex properties to mobile bookmark containers for proper filling
+- Force bookmarks pane expanded on mobile and ensure highlights pane sits above content on desktop
+- Reduce mobile backdrop opacity and ensure sidepanes appear above it
+- Replace any type with proper bookmark interface for linter compliance
 
 ## [0.3.8] - 2025-10-10
 
@@ -564,6 +577,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
+[0.4.0]: https://github.com/dergigi/boris/compare/v0.3.8...v0.4.0
+[0.3.8]: https://github.com/dergigi/boris/compare/v0.3.7...v0.3.8
+[0.3.7]: https://github.com/dergigi/boris/compare/v0.3.6...v0.3.7
 [0.3.6]: https://github.com/dergigi/boris/compare/v0.3.5...v0.3.6
 [0.3.5]: https://github.com/dergigi/boris/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/dergigi/boris/compare/v0.3.3...v0.3.4
