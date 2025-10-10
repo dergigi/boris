@@ -3062,4 +3062,13 @@ body.mobile-sidebar-open {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
+
+  .blog-post-card-summary {
+    -webkit-line-clamp: 2;
+    font-size: 0.8rem;
+  }
+
+  .blog-post-card-content {
+    padding: 1rem;
+  }
 }
