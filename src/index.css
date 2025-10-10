@@ -492,10 +492,22 @@ body.mobile-sidebar-open {
   text-align: center;
   padding: 3rem;
   color: #888;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .empty-state p {
   margin: 0.5rem 0;
+}
+
+.loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bookmarks-list {
@@ -616,6 +628,13 @@ body.mobile-sidebar-open {
   .pane.highlights > * {
     width: 100%;
     height: 100%;
+  }
+  
+  /* Remove borders from containers in mobile overlays */
+  .pane.sidebar .bookmarks-container,
+  .pane.highlights .highlights-container {
+    border: none;
+    border-radius: 0;
   }
   
   /* Bookmarks sidebar from left */
