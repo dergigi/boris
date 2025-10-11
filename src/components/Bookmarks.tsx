@@ -247,6 +247,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       onClearSelection={handleClearSelection}
       currentUserPubkey={activeAccount?.pubkey}
       followedPubkeys={followedPubkeys}
+      activeAccount={activeAccount}
+      currentArticle={currentArticle}
       highlights={highlights}
       highlightsLoading={highlightsLoading}
       onToggleHighlightsPanel={() => setIsHighlightsCollapsed(!isHighlightsCollapsed)}

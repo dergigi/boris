@@ -20,6 +20,8 @@ import { HighlightButtonRef } from './HighlightButton'
 import { BookmarkReference } from '../utils/contentLoader'
 import { useIsMobile } from '../hooks/useMediaQuery'
 import { useScrollDirection } from '../hooks/useScrollDirection'
+import { IAccount } from 'applesauce-accounts'
+import { NostrEvent } from 'nostr-tools'
 
 interface ThreePaneLayoutProps {
   // Layout state
@@ -60,6 +62,8 @@ interface ThreePaneLayoutProps {
   onClearSelection: () => void
   currentUserPubkey?: string
   followedPubkeys: Set<string>
+  activeAccount?: IAccount | null
+  currentArticle?: NostrEvent | null
   
   // Highlights pane
   highlights: Highlight[]
@@ -320,6 +324,8 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
               followedPubkeys={props.followedPubkeys}
               settings={props.settings}
               relayPool={props.relayPool}
+              activeAccount={props.activeAccount}
+              currentArticle={props.currentArticle}
             />
           )}
         </div>

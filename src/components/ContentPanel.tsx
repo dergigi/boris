@@ -1,9 +1,11 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faBook } from '@fortawesome/free-solid-svg-icons'
 import { RelayPool } from 'applesauce-relay'
+import { IAccount } from 'applesauce-accounts'
+import { NostrEvent } from 'nostr-tools'
 import { Highlight } from '../types/highlights'
 import { readingTime } from 'reading-time-estimator'
 import { hexToRgb } from '../utils/colorHelpers'
@@ -13,6 +15,7 @@ import { useMarkdownToHTML } from '../hooks/useMarkdownToHTML'
 import { useHighlightedContent } from '../hooks/useHighlightedContent'
 import { useHighlightInteractions } from '../hooks/useHighlightInteractions'
 import { UserSettings } from '../services/settingsService'
+import { createEventReaction, createWebsiteReaction } from '../services/reactionService'
 
 interface ContentPanelProps {
   loading: boolean
@@ -34,6 +37,8 @@ interface ContentPanelProps {
   followedPubkeys?: Set<string>
   settings?: UserSettings
   relayPool?: RelayPool | null
+  activeAccount?: IAccount | null
+  currentArticle?: NostrEvent | null
   // For highlight creation
   onTextSelection?: (text: string) => void
   onClearSelection?: () => void
@@ -54,6 +59,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   highlightColor = '#ffff00',
   settings,
   relayPool,
+  activeAccount,
+  currentArticle,
   onHighlightClick,
   selectedHighlightId,
   highlightVisibility = { nostrverse: true, friends: true, mine: true },
@@ -62,6 +69,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   onTextSelection,
   onClearSelection
 }) => {
+  const [isMarkingAsRead, setIsMarkingAsRead] = useState(false)
   const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef, processedMarkdown } = useMarkdownToHTML(markdown, relayPool)
   
   const { finalHtml, relevantHighlights } = useHighlightedContent({
@@ -92,6 +100,44 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   }, [html, markdown])
 
   const hasHighlights = relevantHighlights.length > 0
+
+  // Determine if we're on a nostr-native article (/a/) or external URL (/r/)
+  const isNostrArticle = selectedUrl && selectedUrl.startsWith('nostr:')
+  
+  const handleMarkAsRead = async () => {
+    if (!activeAccount || !relayPool) {
+      console.warn('Cannot mark as read: no account or relay pool')
+      return
+    }
+
+    setIsMarkingAsRead(true)
+
+    try {
+      if (isNostrArticle && currentArticle) {
+        // Kind 7 reaction for nostr-native articles
+        await createEventReaction(
+          currentArticle.id,
+          currentArticle.pubkey,
+          currentArticle.kind,
+          activeAccount,
+          relayPool
+        )
+        console.log('✅ Marked nostr article as read')
+      } else if (selectedUrl) {
+        // Kind 17 reaction for external websites
+        await createWebsiteReaction(
+          selectedUrl,
+          activeAccount,
+          relayPool
+        )
+        console.log('✅ Marked website as read')
+      }
+    } catch (error) {
+      console.error('Failed to mark as read:', error)
+    } finally {
+      setIsMarkingAsRead(false)
+    }
+  }
 
   if (!selectedUrl) {
     return (
@@ -135,31 +181,48 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         settings={settings}
       />
       {markdown || html ? (
-        markdown ? (
-          renderedMarkdownHtml && finalHtml ? (
+        <>
+          {markdown ? (
+            renderedMarkdownHtml && finalHtml ? (
+              <div 
+                ref={contentRef} 
+                className="reader-markdown" 
+                dangerouslySetInnerHTML={{ __html: finalHtml }}
+                onMouseUp={handleSelectionEnd}
+                onTouchEnd={handleSelectionEnd}
+              />
+            ) : (
+              <div className="reader-markdown">
+                <div className="loading-spinner">
+                  <FontAwesomeIcon icon={faSpinner} spin size="sm" />
+                </div>
+              </div>
+            )
+          ) : (
             <div 
               ref={contentRef} 
-              className="reader-markdown" 
-              dangerouslySetInnerHTML={{ __html: finalHtml }}
+              className="reader-html" 
+              dangerouslySetInnerHTML={{ __html: finalHtml || html || '' }}
               onMouseUp={handleSelectionEnd}
               onTouchEnd={handleSelectionEnd}
             />
-          ) : (
-            <div className="reader-markdown">
-              <div className="loading-spinner">
-                <FontAwesomeIcon icon={faSpinner} spin size="sm" />
-              </div>
+          )}
+          
+          {/* Mark as Read button */}
+          {activeAccount && (
+            <div className="mark-as-read-container">
+              <button
+                className="mark-as-read-btn"
+                onClick={handleMarkAsRead}
+                disabled={isMarkingAsRead}
+                title="Mark as Read"
+              >
+                <FontAwesomeIcon icon={isMarkingAsRead ? faSpinner : faBook} spin={isMarkingAsRead} />
+                <span>{isMarkingAsRead ? 'Marking...' : 'Mark as Read'}</span>
+              </button>
             </div>
-          )
-        ) : (
-          <div 
-            ref={contentRef} 
-            className="reader-html" 
-            dangerouslySetInnerHTML={{ __html: finalHtml || html || '' }}
-            onMouseUp={handleSelectionEnd}
-            onTouchEnd={handleSelectionEnd}
-          />
-        )
+          )}
+        </>
       ) : (
         <div className="reader empty">
           <p>No readable content found for this URL.</p>
