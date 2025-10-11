@@ -59,7 +59,8 @@
     "parser": "@typescript-eslint/parser",
     "plugins": [
       "@typescript-eslint",
-      "react-refresh"
+      "react-refresh",
+      "react-hooks"
     ],
     "rules": {
       "react-refresh/only-export-components": [
@@ -68,6 +69,7 @@
           "allowConstantExport": true
         }
       ],
+      "react-hooks/exhaustive-deps": "warn",
       "@typescript-eslint/no-unused-vars": [
         "error",
         {

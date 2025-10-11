@@ -1,6 +1,4 @@
-import React from 'react'
 import { decode, npubEncode, noteEncode } from 'nostr-tools/nip19'
-import { DecodeResult } from 'nostr-tools/nip19'
 
 /**
  * Regular expression to match nostr: URIs and bare NIP-19 identifiers
@@ -75,15 +73,17 @@ export function getNostrUriLabel(encoded: string): string {
     switch (decoded.type) {
       case 'npub':
         return `@${encoded.slice(0, 12)}...`
-      case 'nprofile':
+      case 'nprofile': {
         const npub = npubEncode(decoded.data.pubkey)
         return `@${npub.slice(0, 12)}...`
+      }
       case 'note':
         return `note:${encoded.slice(5, 12)}...`
-      case 'nevent':
+      case 'nevent': {
         const note = noteEncode(decoded.data.id)
         return `note:${note.slice(5, 12)}...`
-      case 'naddr':
+      }
+      case 'naddr': {
         // For articles, show the identifier if available
         const identifier = decoded.data.identifier
         if (identifier && identifier.length > 0) {
@@ -91,6 +91,7 @@ export function getNostrUriLabel(encoded: string): string {
           return identifier.length > 40 ? `${identifier.slice(0, 37)}...` : identifier
         }
         return 'nostr article'
+      }
       default:
         return encoded.slice(0, 16) + '...'
     }
@@ -166,11 +167,11 @@ export function replaceNostrUrisInHTML(html: string): string {
  */
 export function getNostrUriInfo(encoded: string): {
   type: string
-  decoded: DecodeResult | null
+  decoded: ReturnType<typeof decode> | null
   link: string
   label: string
 } {
-  let decoded: DecodeResult | null = null
+  let decoded: ReturnType<typeof decode> | null = null
   try {
     decoded = decode(encoded)
   } catch (error) {

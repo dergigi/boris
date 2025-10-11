@@ -113,22 +113,24 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
 
   // Handle ESC key to close sidebar or highlights
   useEffect(() => {
+    const { isSidebarOpen, isHighlightsCollapsed, onToggleSidebar, onToggleHighlightsPanel } = props
+    
     if (!isMobile) return
-    if (!props.isSidebarOpen && props.isHighlightsCollapsed) return
+    if (!isSidebarOpen && isHighlightsCollapsed) return
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (props.isSidebarOpen) {
-          props.onToggleSidebar()
-        } else if (!props.isHighlightsCollapsed) {
-          props.onToggleHighlightsPanel()
+        if (isSidebarOpen) {
+          onToggleSidebar()
+        } else if (!isHighlightsCollapsed) {
+          onToggleHighlightsPanel()
         }
       }
     }
 
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [isMobile, props.isSidebarOpen, props.isHighlightsCollapsed, props.onToggleSidebar, props.onToggleHighlightsPanel])
+  }, [isMobile, props])
 
   // Trap focus in sidebar when open on mobile
   useEffect(() => {
