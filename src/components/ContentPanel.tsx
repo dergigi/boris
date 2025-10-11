@@ -59,7 +59,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   onTextSelection,
   onClearSelection
 }) => {
-  const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef } = useMarkdownToHTML(markdown)
+  const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef, processedMarkdown } = useMarkdownToHTML(markdown)
   
   const { finalHtml, relevantHighlights } = useHighlightedContent({
     html,
@@ -116,7 +116,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       {markdown && (
         <div ref={markdownPreviewRef} style={{ display: 'none' }}>
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {markdown}
+            {processedMarkdown || markdown}
           </ReactMarkdown>
         </div>
       )}

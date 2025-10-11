@@ -479,6 +479,23 @@ body.mobile-sidebar-open {
   text-decoration: underline;
 }
 
+.nostr-uri-link {
+  color: #007bff;
+  text-decoration: none;
+  font-family: monospace;
+  background: #f8f9fa;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.nostr-uri-link:hover {
+  background: #e9ecef;
+  text-decoration: underline;
+}
+
 .logout-button {
   background: #dc3545;
   color: white;
