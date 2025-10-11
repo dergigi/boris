@@ -90,6 +90,14 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     setHighlightVisibility
   } = useBookmarksUI({ settings })
 
+  // Close sidebar on mobile when route changes (e.g., clicking on blog posts in Explore)
+  useEffect(() => {
+    if (isMobile && isSidebarOpen) {
+      toggleSidebar()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname])
+
   const {
     bookmarks,
     bookmarksLoading,
