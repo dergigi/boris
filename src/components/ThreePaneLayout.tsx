@@ -87,11 +87,14 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
   const isMobile = useIsMobile()
   const sidebarRef = useRef<HTMLDivElement>(null)
   const highlightsRef = useRef<HTMLDivElement>(null)
+  const mainPaneRef = useRef<HTMLDivElement>(null)
   
   // Detect scroll direction to hide/show mobile buttons
+  // On mobile, scroll happens in the main pane, not on window
   const scrollDirection = useScrollDirection({ 
     threshold: 10, 
-    enabled: isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed 
+    enabled: isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed,
+    elementRef: mainPaneRef
   })
   const showMobileButtons = scrollDirection !== 'down'
 
@@ -267,7 +270,10 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             isMobile={isMobile}
           />
         </div>
-        <div className={`pane main ${isMobile && (props.isSidebarOpen || !props.isHighlightsCollapsed) ? 'mobile-hidden' : ''}`}>
+        <div 
+          ref={mainPaneRef}
+          className={`pane main ${isMobile && (props.isSidebarOpen || !props.isHighlightsCollapsed) ? 'mobile-hidden' : ''}`}
+        >
           {props.showSettings ? (
             <Settings 
               settings={props.settings}
