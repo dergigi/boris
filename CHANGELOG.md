@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2025-10-11
+
+### Added
+- Mark as read functionality for articles (NIP-25)
+  - Button at the end of each article to mark as read with 📚 emoji
+  - Creates kind:7 reactions for nostr-native articles (`/a/` paths)
+  - Creates kind:17 reactions for external websites (`/r/` paths)
+  - Button shows loading state while publishing reaction
+  - Only visible when user is logged in
+- Highlight deletion with confirmation dialog (NIP-09)
+  - Small delete button (trash icon) on highlight items
+  - Only visible for user's own highlights
+  - Confirmation dialog prevents accidental deletions
+  - Styled to match relay indicator (subtle, same size)
+  - Removes highlights from UI immediately after deletion request
+- `/me` page showing user's recent highlights
+  - Accessible by clicking profile picture in bookmark sidebar
+  - Displays all highlights created by the logged-in user
+  - Uses same rendering as Settings and Explore pages
+  - Includes highlight count in header
+- Confirmation dialog component
+  - Reusable modal with danger/warning/info variants
+  - Backdrop blur effect
+  - Mobile-responsive design
+  - Prevents accidental destructive actions
+
+### Changed
+- Relay status indicator on mobile now displays in compact mode
+  - Shows only airplane icon by default (44x44px touch target)
+  - Tap to expand for full connection details
+  - Reduces screen clutter on mobile while keeping info accessible
+  - Smooth transition between compact and expanded states
+  - Desktop view remains unchanged (always shows full details)
+
 ## [0.4.2] - 2025-10-11
 
 ### Added
