@@ -28,6 +28,7 @@ interface ThreePaneLayoutProps {
   isSidebarOpen: boolean
   showSettings: boolean
   showExplore?: boolean
+  showMe?: boolean
   
   // Bookmarks pane
   bookmarks: Bookmark[]
@@ -81,6 +82,9 @@ interface ThreePaneLayoutProps {
   
   // Optional Explore content
   explore?: React.ReactNode
+  
+  // Optional Me content
+  me?: React.ReactNode
 }
 
 const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
@@ -287,6 +291,11 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             // Render Explore inside the main pane to keep side panels
             <>
               {props.explore}
+            </>
+          ) : props.showMe && props.me ? (
+            // Render Me inside the main pane to keep side panels
+            <>
+              {props.me}
             </>
           ) : (
             <ContentPanel 

@@ -14,6 +14,7 @@ import { useRelayStatus } from '../hooks/useRelayStatus'
 import { useOfflineSync } from '../hooks/useOfflineSync'
 import ThreePaneLayout from './ThreePaneLayout'
 import Explore from './Explore'
+import Me from './Me'
 import { classifyHighlights } from '../utils/highlightClassification'
 
 export type ViewMode = 'compact' | 'cards' | 'large'
@@ -35,13 +36,14 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   
   const showSettings = location.pathname === '/settings'
   const showExplore = location.pathname === '/explore'
+  const showMe = location.pathname === '/me'
   
-  // Track previous location for going back from settings
+  // Track previous location for going back from settings/me/explore
   useEffect(() => {
-    if (!showSettings) {
+    if (!showSettings && !showMe && !showExplore) {
       previousLocationRef.current = location.pathname
     }
-  }, [location.pathname, showSettings])
+  }, [location.pathname, showSettings, showMe, showExplore])
     
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
@@ -202,6 +204,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       isSidebarOpen={isSidebarOpen}
       showSettings={showSettings}
       showExplore={showExplore}
+      showMe={showMe}
       bookmarks={bookmarks}
       bookmarksLoading={bookmarksLoading}
       viewMode={viewMode}
@@ -256,6 +259,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       hasActiveAccount={!!(activeAccount && relayPool)}
       explore={showExplore ? (
         relayPool ? <Explore relayPool={relayPool} /> : null
+      ) : undefined}
+      me={showMe ? (
+        relayPool ? <Me relayPool={relayPool} /> : null
       ) : undefined}
       toastMessage={toastMessage ?? undefined}
       toastType={toastType}

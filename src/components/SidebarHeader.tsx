@@ -90,8 +90,12 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
         <div 
           className="profile-avatar" 
           title={activeAccount ? getUserDisplayName() : "Login"}
-          onClick={!activeAccount ? (isConnecting ? () => {} : handleLogin) : undefined}
-          style={{ cursor: !activeAccount ? 'pointer' : 'default' }}
+          onClick={
+            activeAccount 
+              ? () => navigate('/me')
+              : (isConnecting ? () => {} : handleLogin)
+          }
+          style={{ cursor: 'pointer' }}
         >
           {profileImage ? (
             <img src={profileImage} alt={getUserDisplayName()} />
