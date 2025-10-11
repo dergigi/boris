@@ -25,21 +25,21 @@ export function extractNostrUris(text: string): string[] {
 
 /**
  * Decode a NIP-19 identifier and return a human-readable link
+ * For articles (naddr), returns an internal app link
+ * For other types, returns an external njump.me link
  */
 export function createNostrLink(encoded: string): string {
   try {
     const decoded = decode(encoded)
     
     switch (decoded.type) {
-      case 'npub':
-        return `https://njump.me/${encoded}`
-      case 'nprofile':
-        return `https://njump.me/${encoded}`
-      case 'note':
-        return `https://njump.me/${encoded}`
-      case 'nevent':
-        return `https://njump.me/${encoded}`
       case 'naddr':
+        // For articles, link to our internal app route
+        return `/a/${encoded}`
+      case 'npub':
+      case 'nprofile':
+      case 'note':
+      case 'nevent':
         return `https://njump.me/${encoded}`
       default:
         return `https://njump.me/${encoded}`
@@ -69,7 +69,13 @@ export function getNostrUriLabel(encoded: string): string {
         const note = noteEncode(decoded.data.id)
         return `note:${note.slice(5, 12)}...`
       case 'naddr':
-        return `article:${decoded.data.identifier || 'untitled'}`
+        // For articles, show the identifier if available
+        const identifier = decoded.data.identifier
+        if (identifier && identifier.length > 0) {
+          // Truncate long identifiers but keep them readable
+          return identifier.length > 40 ? `${identifier.slice(0, 37)}...` : identifier
+        }
+        return 'nostr article'
       default:
         return encoded.slice(0, 16) + '...'
     }
