@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2025-10-11
+
+### Added
+- NIP-19 identifier resolution in article content (NIP-19, NIP-27)
+  - Support for `nostr:npub1...`, `nostr:note1...`, `nostr:nprofile1...`, `nostr:nevent1...`, `nostr:naddr1...`
+  - Converts nostr: URIs to clickable links with human-readable labels
+  - Automatically fetches and displays article titles for `naddr` references
+  - Falls back to identifier when title fetch fails
+- Auto-hide mobile UI buttons on scroll down
+  - Floating bookmark/highlights buttons hide when scrolling down
+  - Buttons reappear when scrolling up for distraction-free reading
+  - Smooth opacity transitions for better UX
+- Scroll direction detection hook (`useScrollDirection`)
+  - Supports both window and element-based scroll detection
+  - Configurable threshold and enable/disable options
+
+### Changed
+- Article references (`naddr`) now link internally to `/a/{naddr}` instead of external njump.me
+- Sidebar auto-closes on mobile when navigating to content via routes
+  - Handles clicking on blog posts in Explore view
+  - Complements existing sidebar auto-close for bookmarks
+- Markdown processing now async to support article title resolution
+- Article title resolution fetches titles in parallel for better performance
+
+### Fixed
+- Mobile button scroll detection now correctly monitors main pane element
+  - Previously monitored window scroll which didn't work on mobile
+  - Content scrolls within `.pane.main` div on mobile devices
+- All ESLint warnings and TypeScript type errors resolved
+  - Added react-hooks plugin to ESLint configuration
+  - Fixed exhaustive-deps warnings in components
+  - Added block scoping to switch case statements
+  - Corrected type references for nostr-tools decode result
+
 ## [0.4.1] - 2025-10-10
 
 ### Fixed
