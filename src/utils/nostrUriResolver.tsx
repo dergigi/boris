@@ -24,6 +24,21 @@ export function extractNostrUris(text: string): string[] {
 }
 
 /**
+ * Extract all naddr (article) identifiers from text
+ */
+export function extractNaddrUris(text: string): string[] {
+  const allUris = extractNostrUris(text)
+  return allUris.filter(uri => {
+    try {
+      const decoded = decode(uri)
+      return decoded.type === 'naddr'
+    } catch {
+      return false
+    }
+  })
+}
+
+/**
  * Decode a NIP-19 identifier and return a human-readable link
  * For articles (naddr), returns an internal app link
  * For other types, returns an external njump.me link
@@ -95,6 +110,38 @@ export function replaceNostrUrisInMarkdown(markdown: string): string {
     const link = createNostrLink(encoded)
     const label = getNostrUriLabel(encoded)
     
+    return `[${label}](${link})`
+  })
+}
+
+/**
+ * Replace nostr: URIs in markdown with proper markdown links, using resolved titles for articles
+ * This converts: nostr:naddr1... to [Article Title](link)
+ * @param markdown The markdown content to process
+ * @param articleTitles Map of naddr -> title for resolved articles
+ */
+export function replaceNostrUrisInMarkdownWithTitles(
+  markdown: string, 
+  articleTitles: Map<string, string>
+): string {
+  return markdown.replace(NOSTR_URI_REGEX, (match) => {
+    // Extract just the NIP-19 identifier (without nostr: prefix)
+    const encoded = match.replace(/^nostr:/, '')
+    const link = createNostrLink(encoded)
+    
+    // For articles, use the resolved title if available
+    try {
+      const decoded = decode(encoded)
+      if (decoded.type === 'naddr' && articleTitles.has(encoded)) {
+        const title = articleTitles.get(encoded)!
+        return `[${title}](${link})`
+      }
+    } catch (error) {
+      // Ignore decode errors, fall through to default label
+    }
+    
+    // For other types or if title not resolved, use default label
+    const label = getNostrUriLabel(encoded)
     return `[${label}](${link})`
   })
 }

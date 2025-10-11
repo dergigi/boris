@@ -302,6 +302,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
               currentUserPubkey={props.currentUserPubkey}
               followedPubkeys={props.followedPubkeys}
               settings={props.settings}
+              relayPool={props.relayPool}
             />
           )}
         </div>

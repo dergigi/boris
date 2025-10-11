@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { replaceNostrUrisInMarkdown } from '../utils/nostrUriResolver'
+import { RelayPool } from 'applesauce-relay'
+import { extractNaddrUris, replaceNostrUrisInMarkdown, replaceNostrUrisInMarkdownWithTitles } from '../utils/nostrUriResolver'
+import { fetchArticleTitles } from '../services/articleTitleResolver'
 
 /**
  * Hook to convert markdown to HTML using a hidden ReactMarkdown component
- * Also processes nostr: URIs in the markdown
+ * Also processes nostr: URIs in the markdown and resolves article titles
  */
-export const useMarkdownToHTML = (markdown?: string): { 
+export const useMarkdownToHTML = (
+  markdown?: string,
+  relayPool?: RelayPool | null
+): { 
   renderedHtml: string
   previewRef: React.RefObject<HTMLDivElement>
   processedMarkdown: string 
@@ -21,24 +26,59 @@ export const useMarkdownToHTML = (markdown?: string): {
       return
     }
 
-    // Process nostr: URIs in markdown before rendering
-    const processed = replaceNostrUrisInMarkdown(markdown)
-    setProcessedMarkdown(processed)
+    let isCancelled = false
 
-    console.log('📝 Converting markdown to HTML...')
-    
-    const rafId = requestAnimationFrame(() => {
-      if (previewRef.current) {
-        const html = previewRef.current.innerHTML
-        console.log('✅ Markdown converted to HTML:', html.length, 'chars')
-        setRenderedHtml(html)
+    const processMarkdown = async () => {
+      // Extract all naddr references
+      const naddrs = extractNaddrUris(markdown)
+      
+      let processed: string
+      
+      if (naddrs.length > 0 && relayPool) {
+        // Fetch article titles for all naddrs
+        try {
+          const articleTitles = await fetchArticleTitles(relayPool, naddrs)
+          
+          if (isCancelled) return
+          
+          // Replace nostr URIs with resolved titles
+          processed = replaceNostrUrisInMarkdownWithTitles(markdown, articleTitles)
+          console.log(`📚 Resolved ${articleTitles.size} article titles`)
+        } catch (error) {
+          console.warn('Failed to fetch article titles:', error)
+          // Fall back to basic replacement
+          processed = replaceNostrUrisInMarkdown(markdown)
+        }
       } else {
-        console.warn('⚠️ markdownPreviewRef.current is null')
+        // No articles to resolve, use basic replacement
+        processed = replaceNostrUrisInMarkdown(markdown)
       }
-    })
+      
+      if (isCancelled) return
+      
+      setProcessedMarkdown(processed)
 
-    return () => cancelAnimationFrame(rafId)
-  }, [markdown])
+      console.log('📝 Converting markdown to HTML...')
+      
+      const rafId = requestAnimationFrame(() => {
+        if (previewRef.current && !isCancelled) {
+          const html = previewRef.current.innerHTML
+          console.log('✅ Markdown converted to HTML:', html.length, 'chars')
+          setRenderedHtml(html)
+        } else if (!isCancelled) {
+          console.warn('⚠️ markdownPreviewRef.current is null')
+        }
+      })
+
+      return () => cancelAnimationFrame(rafId)
+    }
+
+    processMarkdown()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [markdown, relayPool])
 
   return { renderedHtml, previewRef, processedMarkdown }
 }

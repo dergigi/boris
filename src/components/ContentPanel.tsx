@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { RelayPool } from 'applesauce-relay'
 import { Highlight } from '../types/highlights'
 import { readingTime } from 'reading-time-estimator'
 import { hexToRgb } from '../utils/colorHelpers'
@@ -32,6 +33,7 @@ interface ContentPanelProps {
   currentUserPubkey?: string
   followedPubkeys?: Set<string>
   settings?: UserSettings
+  relayPool?: RelayPool | null
   // For highlight creation
   onTextSelection?: (text: string) => void
   onClearSelection?: () => void
@@ -51,6 +53,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   highlightStyle = 'marker',
   highlightColor = '#ffff00',
   settings,
+  relayPool,
   onHighlightClick,
   selectedHighlightId,
   highlightVisibility = { nostrverse: true, friends: true, mine: true },
@@ -59,7 +62,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   onTextSelection,
   onClearSelection
 }) => {
-  const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef, processedMarkdown } = useMarkdownToHTML(markdown)
+  const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef, processedMarkdown } = useMarkdownToHTML(markdown, relayPool)
   
   const { finalHtml, relevantHighlights } = useHighlightedContent({
     html,
