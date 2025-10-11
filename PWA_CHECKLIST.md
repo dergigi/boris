@@ -2,10 +2,10 @@
 
 ## Pre-Production
 
-- [ ] **Replace placeholder icons** with branded designs
-  - Create 192x192px and 512x512px icons
-  - Create maskable variants with safe area padding
-  - Use [Maskable.app](https://maskable.app/) to test maskable icons
+- [x] **Replace placeholder icons** with branded designs
+  - ✅ 192x192px and 512x512px icons from boris-favicon.zip
+  - ✅ Maskable variants (currently same as standard - can add padding if desired)
+  - Optional: Use [Maskable.app](https://maskable.app/) to test and refine maskable icons
   
 - [ ] **Test install flow**
   - [ ] Chrome/Edge on desktop

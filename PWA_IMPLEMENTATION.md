@@ -57,17 +57,21 @@ Boris has been successfully upgraded to a full Progressive Web App (PWA)!
 - `src/components/Settings.tsx` - Added PWA settings section
 - `package.json` - Added PWA dependencies
 
-## Icon Placeholders
+## Icons
 
-⚠️ **IMPORTANT**: Replace placeholder icons with proper branded designs!
+✅ **Branded icons now in place!**
 
-Current placeholders are minimal 1x1 pixel images. You need:
-- `public/icon-192.png` - 192x192px app icon
-- `public/icon-512.png` - 512x512px app icon
-- `public/icon-maskable-192.png` - 192x192px with safe area padding
-- `public/icon-maskable-512.png` - 512x512px with safe area padding
+The following icons have been extracted from `boris-favicon.zip` and are ready:
+- `public/icon-192.png` - 192x192px PWA icon (from android-chrome-192x192.png)
+- `public/icon-512.png` - 512x512px PWA icon (from android-chrome-512x512.png)
+- `public/icon-maskable-192.png` - 192x192px maskable variant
+- `public/icon-maskable-512.png` - 512x512px maskable variant
+- `public/favicon.ico` - Standard favicon
+- `public/favicon-16x16.png` - 16x16 favicon
+- `public/favicon-32x32.png` - 32x32 favicon
+- `public/apple-touch-icon.png` - iOS home screen icon
 
-**Maskable icons** should have ~20% padding on all sides to ensure they look good on all devices.
+**Note**: The maskable icons currently use the same images as standard icons. If you want optimal maskable appearance with safe area padding, consider creating dedicated maskable variants with ~20% padding on all sides.
 
 ## Testing PWA Functionality
 
