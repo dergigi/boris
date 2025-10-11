@@ -72,6 +72,11 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
     )
   }
   
+  const handleHighlightDelete = (highlightId: string) => {
+    // Remove highlight from local state
+    setLocalHighlights(prev => prev.filter(h => h.id !== highlightId))
+  }
+  
   const filteredHighlights = useFilteredHighlights({
     highlights: localHighlights,
     selectedUrl,
@@ -129,6 +134,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
               relayPool={relayPool}
               eventStore={eventStore}
               onHighlightUpdate={handleHighlightUpdate}
+              onHighlightDelete={handleHighlightDelete}
             />
           ))}
         </div>

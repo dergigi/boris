@@ -1,15 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models, IEventStore } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
+import { Hooks } from 'applesauce-react'
 import { onSyncStateChange, isEventSyncing } from '../services/offlineSyncService'
 import { RELAYS } from '../config/relays'
 import { areAllRelaysLocal } from '../utils/helpers'
 import { nip19 } from 'nostr-tools'
 import { formatDateCompact } from '../utils/bookmarkUtils'
+import { createDeletionRequest } from '../services/deletionService'
+import ConfirmDialog from './ConfirmDialog'
 
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
@@ -23,6 +26,7 @@ interface HighlightItemProps {
   relayPool?: RelayPool | null
   eventStore?: IEventStore | null
   onHighlightUpdate?: (highlight: Highlight) => void
+  onHighlightDelete?: (highlightId: string) => void
 }
 
 export const HighlightItem: React.FC<HighlightItemProps> = ({ 
@@ -32,12 +36,17 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   onHighlightClick,
   relayPool,
   eventStore,
-  onHighlightUpdate
+  onHighlightUpdate,
+  onHighlightDelete
 }) => {
   const itemRef = useRef<HTMLDivElement>(null)
   const [isSyncing, setIsSyncing] = useState(() => isEventSyncing(highlight.id))
   const [showOfflineIndicator, setShowOfflineIndicator] = useState(() => highlight.isOfflineCreated && !isSyncing)
   const [isRebroadcasting, setIsRebroadcasting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  
+  const activeAccount = Hooks.useActiveAccount()
   
   // Resolve the profile of the user who made the highlight
   const profile = useEventModel(Models.ProfileModel, [highlight.pubkey])
@@ -243,7 +252,51 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   
   const relayIndicator = getRelayIndicatorInfo()
   
+  // Check if current user can delete this highlight
+  const canDelete = activeAccount && highlight.pubkey === activeAccount.pubkey
+  
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowDeleteConfirm(true)
+  }
+  
+  const handleConfirmDelete = async () => {
+    if (!activeAccount || !relayPool) {
+      console.warn('Cannot delete: no account or relay pool')
+      return
+    }
+    
+    setIsDeleting(true)
+    setShowDeleteConfirm(false)
+    
+    try {
+      await createDeletionRequest(
+        highlight.id,
+        9802, // kind for highlights
+        'Deleted by user',
+        activeAccount,
+        relayPool
+      )
+      
+      console.log('✅ Highlight deletion request published')
+      
+      // Notify parent to remove this highlight from the list
+      if (onHighlightDelete) {
+        onHighlightDelete(highlight.id)
+      }
+    } catch (error) {
+      console.error('Failed to delete highlight:', error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+  
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false)
+  }
+  
   return (
+    <>
     <div 
       ref={itemRef} 
       className={`highlight-item ${isSelected ? 'selected' : ''} ${highlight.level ? `level-${highlight.level}` : ''}`} 
@@ -261,6 +314,15 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
             style={{ cursor: relayPool && eventStore ? 'pointer' : 'default' }}
           >
             <FontAwesomeIcon icon={relayIndicator.icon} spin={relayIndicator.spin} />
+          </div>
+        )}
+        {canDelete && (
+          <div 
+            className="highlight-delete-btn" 
+            title="Delete highlight"
+            onClick={handleDeleteClick}
+          >
+            <FontAwesomeIcon icon={isDeleting ? faSpinner : faTrash} spin={isDeleting} />
           </div>
         )}
       </div>
@@ -301,6 +363,18 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         </div>
       </div>
     </div>
+    
+    <ConfirmDialog
+      isOpen={showDeleteConfirm}
+      title="Delete Highlight?"
+      message="This will request deletion of your highlight. It may still be visible on some relays that don't honor deletion requests."
+      confirmText="Delete"
+      cancelText="Cancel"
+      variant="danger"
+      onConfirm={handleConfirmDelete}
+      onCancel={handleCancelDelete}
+    />
+    </>
   )
 }
 

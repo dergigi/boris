@@ -63,6 +63,11 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
     loadHighlights()
   }, [relayPool, activeAccount])
 
+  const handleHighlightDelete = (highlightId: string) => {
+    // Remove highlight from local state
+    setHighlights(prev => prev.filter(h => h.id !== highlightId))
+  }
+
   if (loading) {
     return (
       <div className="explore-container">
@@ -102,6 +107,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
             key={highlight.id}
             highlight={highlight}
             relayPool={relayPool}
+            onHighlightDelete={handleHighlightDelete}
           />
         ))}
       </div>
