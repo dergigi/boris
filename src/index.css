@@ -156,7 +156,18 @@ body.mobile-sidebar-open {
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.mobile-hamburger-btn.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.mobile-hamburger-btn.visible {
+  opacity: 1;
+  visibility: visible;
 }
 
 .mobile-hamburger-btn:active {
@@ -717,7 +728,18 @@ body.mobile-sidebar-open {
     justify-content: center;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .mobile-highlights-btn.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .mobile-highlights-btn.visible {
+    opacity: 1;
+    visibility: visible;
   }
   
   .mobile-highlights-btn:active {

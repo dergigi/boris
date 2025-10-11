@@ -19,6 +19,7 @@ import { HighlightVisibility } from './HighlightsPanel'
 import { HighlightButtonRef } from './HighlightButton'
 import { BookmarkReference } from '../utils/contentLoader'
 import { useIsMobile } from '../hooks/useMediaQuery'
+import { useScrollDirection } from '../hooks/useScrollDirection'
 
 interface ThreePaneLayoutProps {
   // Layout state
@@ -86,6 +87,13 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
   const isMobile = useIsMobile()
   const sidebarRef = useRef<HTMLDivElement>(null)
   const highlightsRef = useRef<HTMLDivElement>(null)
+  
+  // Detect scroll direction to hide/show mobile buttons
+  const scrollDirection = useScrollDirection({ 
+    threshold: 10, 
+    enabled: isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed 
+  })
+  const showMobileButtons = scrollDirection !== 'down'
 
   // Lock body scroll when mobile sidebar or highlights is open
   useEffect(() => {
@@ -204,7 +212,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
       {/* Mobile bookmark button - only show when viewing article */}
       {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
         <button
-          className="mobile-hamburger-btn"
+          className={`mobile-hamburger-btn ${showMobileButtons ? 'visible' : 'hidden'}`}
           onClick={props.onToggleSidebar}
           aria-label="Open bookmarks"
           aria-expanded={props.isSidebarOpen}
@@ -216,7 +224,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
       {/* Mobile highlights button - only show when viewing article */}
       {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
         <button
-          className="mobile-highlights-btn"
+          className={`mobile-highlights-btn ${showMobileButtons ? 'visible' : 'hidden'}`}
           onClick={props.onToggleHighlightsPanel}
           aria-label="Open highlights"
           aria-expanded={!props.isHighlightsCollapsed}
