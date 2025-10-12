@@ -1,4 +1,4 @@
-import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
+import { RelayPool, onlyEvents } from 'applesauce-relay'
 import { lastValueFrom, take, takeUntil, timer, toArray } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
@@ -103,7 +103,7 @@ export async function fetchArticleByNaddr(
       ? pointer.relays 
       : RELAYS
     const orderedRelays = prioritizeLocalRelays(baseRelays)
-    const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
+    const { local: localRelays } = partitionRelays(orderedRelays)
 
     // Fetch the article event
     const filter = {

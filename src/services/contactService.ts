@@ -20,19 +20,20 @@ export const fetchContacts = async (
     
     // Local-first quick attempt
     const localRelays = relayUrls.filter(url => url.includes('localhost') || url.includes('127.0.0.1'))
-    let events = [] as any[]
+    let events: Array<{ created_at: number; tags: string[][] }> = []
     if (localRelays.length > 0) {
       try {
-        events = await lastValueFrom(
+        const localEvents = await lastValueFrom(
           relayPool
             .req(localRelays, { kinds: [3], authors: [pubkey] })
             .pipe(completeOnEose(), takeUntil(timer(1200)), toArray())
         )
+        events = localEvents as Array<{ created_at: number; tags: string[][] }>
       } catch {
         events = []
       }
     }
-    let followed = new Set<string>()
+    const followed = new Set<string>()
     if (events.length > 0) {
       // Get the most recent contact list
       const sortedEvents = events.sort((a, b) => b.created_at - a.created_at)
@@ -55,8 +56,9 @@ export const fetchContacts = async (
             .pipe(completeOnEose(), takeUntil(timer(6000)), toArray())
         )
         if (remoteEvents.length > 0) {
-          const sortedEvents = remoteEvents.sort((a, b) => b.created_at - a.created_at)
-          const contactList = sortedEvents[0]
+          const sortedRemote = (remoteEvents as Array<{ created_at: number; tags: string[][] }>).
+            sort((a, b) => b.created_at - a.created_at)
+          const contactList = sortedRemote[0]
           for (const tag of contactList.tags) {
             if (tag[0] === 'p' && tag[1]) {
               followed.add(tag[1])

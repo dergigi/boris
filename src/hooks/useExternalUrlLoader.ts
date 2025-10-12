@@ -11,7 +11,7 @@ interface UseExternalUrlLoaderProps {
   setReaderContent: (content: ReadableContent | undefined) => void
   setReaderLoading: (loading: boolean) => void
   setIsCollapsed: (collapsed: boolean) => void
-  setHighlights: (highlights: Highlight[]) => void
+  setHighlights: (highlights: Highlight[] | ((prev: Highlight[]) => Highlight[])) => void
   setHighlightsLoading: (loading: boolean) => void
   setCurrentArticleCoordinate: (coord: string | undefined) => void
   setCurrentArticleEventId: (id: string | undefined) => void

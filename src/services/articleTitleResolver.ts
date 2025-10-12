@@ -1,4 +1,4 @@
-import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
+import { RelayPool, onlyEvents } from 'applesauce-relay'
 import { lastValueFrom, take, takeUntil, timer, toArray } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
@@ -40,7 +40,7 @@ export async function fetchArticleTitle(
     }
 
     // Try to get the first event quickly from local relays
-    let events = [] as any[]
+    let events: { created_at: number }[] = []
     if (localRelays.length > 0) {
       try {
         events = await lastValueFrom(
@@ -54,11 +54,12 @@ export async function fetchArticleTitle(
     }
     // Fallback to all relays if nothing from local quickly
     if (events.length === 0) {
-      events = await lastValueFrom(
+      const fallbackEvents = await lastValueFrom(
         relayPool
           .req(orderedRelays, filter)
           .pipe(onlyEvents(), take(1), takeUntil(timer(5000)), toArray())
       )
+      events = fallbackEvents as { created_at: number }[]
     }
 
     if (events.length === 0) {
@@ -67,7 +68,7 @@ export async function fetchArticleTitle(
 
     // Sort by created_at and take the most recent
     events.sort((a, b) => b.created_at - a.created_at)
-    const article = events[0]
+    const article = events[0] as unknown as Parameters<typeof getArticleTitle>[0]
 
     return getArticleTitle(article) || null
   } catch (err) {
