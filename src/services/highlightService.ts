@@ -251,29 +251,64 @@ export const fetchHighlights = async (
 ): Promise<Highlight[]> => {
   try {
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+    const ordered = prioritizeLocalRelays(relayUrls)
+    const { local: localRelays, remote: remoteRelays } = partitionRelays(ordered)
     
     console.log('🔍 Fetching highlights (kind 9802) by author:', pubkey)
     
     const seenIds = new Set<string>()
-    const rawEvents = await lastValueFrom(
-      relayPool
-        .req(relayUrls, { kinds: [9802], authors: [pubkey] })
-        .pipe(
-          onlyEvents(),
-          tap((event: NostrEvent) => {
-            if (!seenIds.has(event.id)) {
-              seenIds.add(event.id)
-              const highlight = eventToHighlight(event)
-              if (onHighlight) {
-                onHighlight(highlight)
-              }
-            }
-          }),
-          completeOnEose(),
-          takeUntil(timer(10000)),
-          toArray()
+    let rawEvents: NostrEvent[] = []
+    if (localRelays.length > 0) {
+      try {
+        rawEvents = await lastValueFrom(
+          relayPool
+            .req(localRelays, { kinds: [9802], authors: [pubkey] })
+            .pipe(
+              onlyEvents(),
+              tap((event: NostrEvent) => {
+                if (!seenIds.has(event.id)) {
+                  seenIds.add(event.id)
+                  const highlight = eventToHighlight(event)
+                  if (onHighlight) {
+                    onHighlight(highlight)
+                  }
+                }
+              }),
+              completeOnEose(),
+              takeUntil(timer(1200)),
+              toArray()
+            )
         )
-    )
+      } catch {
+        rawEvents = []
+      }
+    }
+    if (remoteRelays.length > 0) {
+      try {
+        const remoteEvents = await lastValueFrom(
+          relayPool
+            .req(remoteRelays, { kinds: [9802], authors: [pubkey] })
+            .pipe(
+              onlyEvents(),
+              tap((event: NostrEvent) => {
+                if (!seenIds.has(event.id)) {
+                  seenIds.add(event.id)
+                  const highlight = eventToHighlight(event)
+                  if (onHighlight) {
+                    onHighlight(highlight)
+                  }
+                }
+              }),
+              completeOnEose(),
+              takeUntil(timer(6000)),
+              toArray()
+            )
+        )
+        rawEvents = rawEvents.concat(remoteEvents)
+      } catch {
+        // ignore
+      }
+    }
     
     console.log('📊 Raw highlight events fetched:', rawEvents.length)
     

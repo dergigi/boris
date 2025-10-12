@@ -1,9 +1,10 @@
-import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
+import { lastValueFrom, take, takeUntil, timer, toArray } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
+import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 
 const { getArticleTitle } = Helpers
 
@@ -25,9 +26,11 @@ export async function fetchArticleTitle(
     const pointer = decoded.data as AddressPointer
 
     // Define relays to query
-    const relays = pointer.relays && pointer.relays.length > 0 
+    const baseRelays = pointer.relays && pointer.relays.length > 0 
       ? pointer.relays 
       : RELAYS
+    const orderedRelays = prioritizeLocalRelays(baseRelays)
+    const { local: localRelays } = partitionRelays(orderedRelays)
 
     // Fetch the article event
     const filter = {
@@ -36,11 +39,27 @@ export async function fetchArticleTitle(
       '#d': [pointer.identifier]
     }
 
-    const events = await lastValueFrom(
-      relayPool
-        .req(relays, filter)
-        .pipe(completeOnEose(), takeUntil(timer(5000)), toArray())
-    )
+    // Try to get the first event quickly from local relays
+    let events = [] as any[]
+    if (localRelays.length > 0) {
+      try {
+        events = await lastValueFrom(
+          relayPool
+            .req(localRelays, filter)
+            .pipe(onlyEvents(), take(1), takeUntil(timer(1200)), toArray())
+        )
+      } catch {
+        events = []
+      }
+    }
+    // Fallback to all relays if nothing from local quickly
+    if (events.length === 0) {
+      events = await lastValueFrom(
+        relayPool
+          .req(orderedRelays, filter)
+          .pipe(onlyEvents(), take(1), takeUntil(timer(5000)), toArray())
+      )
+    }
 
     if (events.length === 0) {
       return null
