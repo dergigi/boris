@@ -355,6 +355,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             followedPubkeys={props.followedPubkeys}
             relayPool={props.relayPool}
             eventStore={props.eventStore}
+            settings={props.settings}
           />
         </div>
       </div>

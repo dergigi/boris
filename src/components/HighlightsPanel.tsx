@@ -8,6 +8,7 @@ import HighlightsPanelCollapsed from './HighlightsPanel/HighlightsPanelCollapsed
 import HighlightsPanelHeader from './HighlightsPanel/HighlightsPanelHeader'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
+import { UserSettings } from '../services/settingsService'
 
 export interface HighlightVisibility {
   nostrverse: boolean
@@ -32,6 +33,7 @@ interface HighlightsPanelProps {
   followedPubkeys?: Set<string>
   relayPool?: RelayPool | null
   eventStore?: IEventStore | null
+  settings?: UserSettings
 }
 
 export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
@@ -50,7 +52,8 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   onHighlightVisibilityChange,
   followedPubkeys = new Set(),
   relayPool,
-  eventStore
+  eventStore,
+  settings
 }) => {
   const [showHighlights, setShowHighlights] = useState(true)
   const [localHighlights, setLocalHighlights] = useState(highlights)
@@ -90,6 +93,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
       <HighlightsPanelCollapsed 
         hasHighlights={filteredHighlights.length > 0} 
         onToggleCollapse={onToggleCollapse}
+        settings={settings}
       />
     )
   }
