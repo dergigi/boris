@@ -87,7 +87,8 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
                   <div 
                     className="highlight-indicator"
                     style={highlightIndicatorColor ? { 
-                      backgroundColor: highlightIndicatorColor,
+                      backgroundColor: `${highlightIndicatorColor}bf`,
+                      borderColor: highlightIndicatorColor,
                       color: '#000'
                     } : undefined}
                   >
@@ -130,7 +131,8 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
               <div 
                 className="highlight-indicator"
                 style={highlightIndicatorColor ? { 
-                  backgroundColor: highlightIndicatorColor,
+                  backgroundColor: `${highlightIndicatorColor}bf`,
+                  borderColor: highlightIndicatorColor,
                   color: '#000'
                 } : undefined}
               >
