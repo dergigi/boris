@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-10-12
+
+### Added
+- Upgrade to full PWA with `vite-plugin-pwa`
+- Replace placeholder icons with branded favicons
+- Author info card for nostr-native articles
+
+### Changed
+- Explore: shrink refresh spinner footprint; inline-sized loading row
+- Explore: preserve posts across navigations; seed from cache; merge streamed and final results
+- Explore: keep posts visible during refresh; inline spinner; no list wipe
+- Bookmarks: keep list visible during refresh; show spinner only; no wipe
+- Bookmarks: avoid clearing list when no new events; decouple refetch from route changes
+- Highlights: split service into smaller modules to keep files under 210 lines
+- Lint/TypeScript: satisfy react-hooks dependencies; fix worker typings; clear ESLint/TS issues
+
+### Fixed
+- Highlights: merge remote results after local for article/url
+- Explore: always query remote relays after local; stream merge into UI
+- Improve mobile touch targets for highlight icons
+- Color `/me` highlights with "my highlights" color setting
+
+### Performance
+- Local-first then remote follow-up across services (titles, bookmarks, highlights)
+- Run local and remote fetches concurrently; stream and dedupe results
+- Stream contacts and early posts from local; merge remote later
+- Relay queries use local-first with short timeouts; fallback to remote when needed
+- Stream results to UI; display cached/local immediately (articles, highlights, explore)
+
+### Documentation
+- PWA implementation summary and launch checklist updates
+- Update docs to reflect branded icons and final steps
+- Remove temporary PWA launch checklist and implementation summary
+
 ## [0.4.3] - 2025-10-11
 
 ### Added
@@ -658,6 +692,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/dergigi/boris/compare/v0.4.3...v0.5.0
 [0.4.0]: https://github.com/dergigi/boris/compare/v0.3.8...v0.4.0
 [0.3.8]: https://github.com/dergigi/boris/compare/v0.3.7...v0.3.8
 [0.3.7]: https://github.com/dergigi/boris/compare/v0.3.6...v0.3.7
