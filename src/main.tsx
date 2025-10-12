@@ -3,21 +3,31 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Register Service Worker for offline image caching
+// Register Service Worker for PWA functionality
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
-      .register('/sw.js')
+      .register('/sw.js', { type: 'module' })
       .then(registration => {
         console.log('✅ Service Worker registered:', registration.scope)
         
-        // Update service worker when a new version is available
+        // Check for updates periodically
+        setInterval(() => {
+          registration.update()
+        }, 60 * 60 * 1000) // Check every hour
+        
+        // Handle service worker updates
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'activated') {
-                console.log('🔄 Service Worker updated, page may need reload')
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New service worker available
+                console.log('🔄 New version available! Reload to update.')
+                
+                // Optionally show a toast notification
+                const updateAvailable = new CustomEvent('sw-update-available')
+                window.dispatchEvent(updateAvailable)
               }
             })
           }

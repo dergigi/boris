@@ -10,6 +10,7 @@ import StartupPreferencesSettings from './Settings/StartupPreferencesSettings'
 import ZapSettings from './Settings/ZapSettings'
 import OfflineModeSettings from './Settings/OfflineModeSettings'
 import RelaySettings from './Settings/RelaySettings'
+import PWASettings from './Settings/PWASettings'
 import { useRelayStatus } from '../hooks/useRelayStatus'
 
 const DEFAULT_SETTINGS: UserSettings = {
@@ -164,6 +165,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPoo
         <ZapSettings settings={localSettings} onUpdate={handleUpdate} />
         <OfflineModeSettings settings={localSettings} onUpdate={handleUpdate} onClose={onClose} />
         <RelaySettings relayStatuses={relayStatuses} onClose={onClose} />
+        <PWASettings />
       </div>
     </div>
   )

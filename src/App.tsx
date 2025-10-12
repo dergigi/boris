@@ -11,6 +11,7 @@ import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Bookmarks from './components/Bookmarks'
 import Toast from './components/Toast'
 import { useToast } from './hooks/useToast'
+import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { RELAYS } from './config/relays'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
@@ -88,6 +89,7 @@ function App() {
   const [accountManager, setAccountManager] = useState<AccountManager | null>(null)
   const [relayPool, setRelayPool] = useState<RelayPool | null>(null)
   const { toastMessage, toastType, showToast, clearToast } = useToast()
+  const isOnline = useOnlineStatus()
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -182,6 +184,25 @@ function App() {
       if (cleanup) cleanup()
     }
   }, [])
+
+  // Monitor online/offline status
+  useEffect(() => {
+    if (!isOnline) {
+      showToast('You are offline. Some features may be limited.')
+    }
+  }, [isOnline, showToast])
+
+  // Listen for service worker updates
+  useEffect(() => {
+    const handleSWUpdate = () => {
+      showToast('New version available! Refresh to update.')
+    }
+
+    window.addEventListener('sw-update-available', handleSWUpdate)
+    return () => {
+      window.removeEventListener('sw-update-available', handleSWUpdate)
+    }
+  }, [showToast])
 
   if (!eventStore || !accountManager || !relayPool) {
     return (

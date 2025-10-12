@@ -105,7 +105,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
         {highlights.map((highlight) => (
           <HighlightItem
             key={highlight.id}
-            highlight={highlight}
+            highlight={{ ...highlight, level: 'mine' }}
             relayPool={relayPool}
             onHighlightDelete={handleHighlightDelete}
           />

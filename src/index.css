@@ -1018,6 +1018,99 @@ body.mobile-sidebar-open {
   }
 }
 
+/* Author Card */
+.author-card-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.author-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+}
+
+.author-card-avatar {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #2a2a2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.author-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.author-card-avatar svg {
+  font-size: 2.5rem;
+}
+
+.author-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.author-card-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ddd;
+  margin-bottom: 0.5rem;
+}
+
+.author-card-bio {
+  font-size: 0.9rem;
+  color: #999;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .author-card-container {
+    padding: 1.5rem 1rem;
+  }
+  
+  .author-card {
+    padding: 1rem;
+  }
+  
+  .author-card-avatar {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .author-card-avatar svg {
+    font-size: 2rem;
+  }
+  
+  .author-card-name {
+    font-size: 0.95rem;
+  }
+  
+  .author-card-bio {
+    font-size: 0.85rem;
+    -webkit-line-clamp: 2;
+  }
+}
+
 .bookmark-item {
   background: #1a1a1a;
   padding: 1.5rem;
@@ -1991,13 +2084,19 @@ body.mobile-sidebar-open {
 
 .highlight-relay-indicator {
   position: absolute;
-  bottom: -2px;
-  left: 0;
+  bottom: -4px;
+  left: -6px;
   font-size: 0.7rem;
   color: #888;
   opacity: 0.7;
   transition: all 0.2s ease;
   cursor: pointer;
+  padding: 4px;
+  min-width: 20px;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .highlight-relay-indicator:hover {
@@ -2012,13 +2111,19 @@ body.mobile-sidebar-open {
 
 .highlight-delete-btn {
   position: absolute;
-  bottom: -2px;
-  right: 0;
+  bottom: -4px;
+  right: -6px;
   font-size: 0.7rem;
   color: #888;
   opacity: 0.7;
   transition: all 0.2s ease;
   cursor: pointer;
+  padding: 4px;
+  min-width: 20px;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .highlight-delete-btn:hover {
@@ -2029,6 +2134,31 @@ body.mobile-sidebar-open {
 
 .highlight-delete-btn:active {
   transform: scale(0.95);
+}
+
+/* Mobile: Larger touch targets and better spacing */
+@media (max-width: 768px) {
+  .highlight-quote-icon {
+    min-width: 100px; /* Ensure enough space for both touch targets */
+  }
+  
+  .highlight-relay-indicator {
+    bottom: -8px;
+    left: -8px;
+    padding: 8px;
+    min-width: var(--min-touch-target);
+    min-height: var(--min-touch-target);
+    font-size: 0.85rem;
+  }
+  
+  .highlight-delete-btn {
+    bottom: -8px;
+    right: -8px;
+    padding: 8px;
+    min-width: var(--min-touch-target);
+    min-height: var(--min-touch-target);
+    font-size: 0.85rem;
+  }
 }
 
 /* Level-colored quote icon */

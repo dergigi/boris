@@ -16,6 +16,7 @@ import { useHighlightedContent } from '../hooks/useHighlightedContent'
 import { useHighlightInteractions } from '../hooks/useHighlightInteractions'
 import { UserSettings } from '../services/settingsService'
 import { createEventReaction, createWebsiteReaction } from '../services/reactionService'
+import AuthorCard from './AuthorCard'
 
 interface ContentPanelProps {
   loading: boolean
@@ -220,6 +221,13 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 <FontAwesomeIcon icon={isMarkingAsRead ? faSpinner : faBook} spin={isMarkingAsRead} />
                 <span>{isMarkingAsRead ? 'Marking...' : 'Mark as Read'}</span>
               </button>
+            </div>
+          )}
+          
+          {/* Author info card for nostr-native articles */}
+          {isNostrArticle && currentArticle && (
+            <div className="author-card-container">
+              <AuthorCard authorPubkey={currentArticle.pubkey} />
             </div>
           )}
         </>
