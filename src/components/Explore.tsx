@@ -7,6 +7,7 @@ import { nip19 } from 'nostr-tools'
 import { fetchContacts } from '../services/contactService'
 import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
 import BlogPostCard from './BlogPostCard'
+import { getCachedPosts, upsertCachedPost, setCachedPosts } from '../services/exploreCache'
 
 interface ExploreProps {
   relayPool: RelayPool
@@ -27,8 +28,15 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
       }
 
       try {
+        // show spinner but keep existing posts
         setLoading(true)
         setError(null)
+
+        // Seed from in-memory cache if available to avoid empty flash
+        const cached = getCachedPosts(activeAccount.pubkey)
+        if (cached && cached.length > 0 && blogPosts.length === 0) {
+          setBlogPosts(cached)
+        }
 
         // Fetch the user's contacts (friends)
         const contacts = await fetchContacts(
@@ -43,6 +51,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
                 Array.from(partial),
                 relayUrls,
                 (post) => {
+                  // merge into UI and cache as we stream
                   setBlogPosts((prev) => {
                     const exists = prev.some(p => p.event.id === post.event.id)
                     if (exists) return prev
@@ -53,17 +62,20 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
                       return timeB - timeA
                     })
                   })
+                  setCachedPosts(activeAccount.pubkey, upsertCachedPost(activeAccount.pubkey, post))
                 }
               ).then((all) => {
                 // Ensure union of streamed + final is displayed
                 setBlogPosts((prev) => {
                   const byId = new Map(prev.map(p => [p.event.id, p]))
                   for (const post of all) byId.set(post.event.id, post)
-                  return Array.from(byId.values()).sort((a, b) => {
+                  const merged = Array.from(byId.values()).sort((a, b) => {
                     const timeA = a.published || a.event.created_at
                     const timeB = b.published || b.event.created_at
                     return timeB - timeA
                   })
+                  setCachedPosts(activeAccount.pubkey, merged)
+                  return merged
                 })
               })
             }
@@ -84,7 +96,17 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
           setError('No blog posts found from your friends yet')
         }
 
-        setBlogPosts(posts)
+        setBlogPosts((prev) => {
+          const byId = new Map(prev.map(p => [p.event.id, p]))
+          for (const post of posts) byId.set(post.event.id, post)
+          const merged = Array.from(byId.values()).sort((a, b) => {
+            const timeA = a.published || a.event.created_at
+            const timeB = b.published || b.event.created_at
+            return timeB - timeA
+          })
+          setCachedPosts(activeAccount.pubkey, merged)
+          return merged
+        })
       } catch (err) {
         console.error('Failed to load blog posts:', err)
         setError('Failed to load blog posts. Please try again.')
