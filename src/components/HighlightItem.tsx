@@ -32,7 +32,7 @@ interface HighlightItemProps {
 
 export const HighlightItem: React.FC<HighlightItemProps> = ({ 
   highlight, 
-  onSelectUrl, 
+  // onSelectUrl is not used but kept in props for API compatibility
   isSelected, 
   onHighlightClick,
   relayPool,
@@ -241,11 +241,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   
   // Check if current user can delete this highlight
   const canDelete = activeAccount && highlight.pubkey === activeAccount.pubkey
-  
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setShowDeleteConfirm(true)
-  }
   
   const handleConfirmDelete = async () => {
     if (!activeAccount || !relayPool) {
