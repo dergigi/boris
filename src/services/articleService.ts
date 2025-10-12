@@ -1,11 +1,12 @@
-import { RelayPool, onlyEvents } from 'applesauce-relay'
-import { lastValueFrom, take, takeUntil, timer, toArray } from 'rxjs'
+import { RelayPool } from 'applesauce-relay'
+import { lastValueFrom, take } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
-import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
+import { prioritizeLocalRelays, partitionRelays, createParallelReqStreams } from '../utils/helpers'
+import { merge, toArray as rxToArray } from 'rxjs'
 import { UserSettings } from './settingsService'
 import { rebroadcastEvents } from './rebroadcastService'
 
@@ -112,43 +113,10 @@ export async function fetchArticleByNaddr(
       '#d': [pointer.identifier]
     }
 
-    // Local-first: try local relays quickly, then ALWAYS query remote to merge
-    let events = [] as NostrEvent[]
-    if (localRelays.length > 0) {
-      try {
-        events = await lastValueFrom(
-          relayPool
-            .req(localRelays, filter)
-            .pipe(
-              onlyEvents(),
-              take(1),
-              takeUntil(timer(1200)),
-              toArray()
-            )
-        )
-      } catch {
-        events = []
-      }
-    }
-
-    // Always query remote to ensure we have the latest from the wider network
-    if (remoteRelays.length > 0) {
-      try {
-        const remoteEvents = await lastValueFrom(
-          relayPool
-            .req(remoteRelays, filter)
-            .pipe(
-              onlyEvents(),
-              take(1),
-              takeUntil(timer(6000)),
-              toArray()
-            )
-        )
-        events = events.concat(remoteEvents)
-      } catch {
-        // ignore
-      }
-    }
+    // Parallel local+remote, stream immediate, collect up to first from each
+    const { local$, remote$ } = createParallelReqStreams(relayPool, localRelays, remoteRelays, filter, 1200, 6000)
+    const collected = await lastValueFrom(merge(local$.pipe(take(1)), remote$.pipe(take(1))).pipe(rxToArray()))
+    const events = collected as NostrEvent[]
 
     if (events.length === 0) {
       throw new Error('Article not found')

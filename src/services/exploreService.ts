@@ -1,5 +1,5 @@
 import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+import { lastValueFrom, merge, Observable, takeUntil, timer, toArray } from 'rxjs'
 import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
@@ -66,49 +66,18 @@ export const fetchBlogPostsFromAuthors = async (
       }
     }
 
-    // Phase 1: local relays fast path
-    if (localRelays.length > 0) {
-      try {
-        const localEvents = await lastValueFrom(
-          relayPool
-            .req(localRelays, {
-              kinds: [30023],
-              authors: pubkeys,
-              limit: 100
-            })
-            .pipe(
-              completeOnEose(),
-              takeUntil(timer(1200)),
-              toArray()
-            )
-        )
-        processEvents(localEvents)
-      } catch {
-        // ignore
-      }
-    }
-
-    // Phase 2: always query remote relays to fill in missing content
-    if (remoteRelays.length > 0) {
-      try {
-        const remoteEvents = await lastValueFrom(
-          relayPool
-            .req(remoteRelays, {
-              kinds: [30023],
-              authors: pubkeys,
-              limit: 100
-            })
-            .pipe(
-              completeOnEose(),
-              takeUntil(timer(6000)),
-              toArray()
-            )
-        )
-        processEvents(remoteEvents)
-      } catch {
-        // ignore
-      }
-    }
+    const local$ = localRelays.length > 0
+      ? relayPool
+          .req(localRelays, { kinds: [30023], authors: pubkeys, limit: 100 })
+          .pipe(completeOnEose(), takeUntil(timer(1200)))
+      : new Observable<NostrEvent>((sub) => sub.complete())
+    const remote$ = remoteRelays.length > 0
+      ? relayPool
+          .req(remoteRelays, { kinds: [30023], authors: pubkeys, limit: 100 })
+          .pipe(completeOnEose(), takeUntil(timer(6000)))
+      : new Observable<NostrEvent>((sub) => sub.complete())
+    const events = await lastValueFrom(merge(local$, remote$).pipe(toArray()))
+    processEvents(events)
 
     console.log('📊 Blog post events fetched (unique):', uniqueEvents.size)
     

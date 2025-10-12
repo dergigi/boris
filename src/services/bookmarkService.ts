@@ -1,5 +1,5 @@
 import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+import { lastValueFrom, merge, Observable, takeUntil, timer, toArray } from 'rxjs'
 import {
   AccountWithExtension,
   NostrEvent,
@@ -37,30 +37,17 @@ export const fetchBookmarks = async (
     // Fetch bookmark events - NIP-51 standards, legacy formats, and web bookmarks (NIP-B0)
     console.log('🔍 Fetching bookmark events from relays:', relayUrls)
     // Try local-first quickly, then full set fallback
-    let rawEvents = [] as NostrEvent[]
-    if (localRelays.length > 0) {
-      try {
-        rawEvents = await lastValueFrom(
-          relayPool
-            .req(localRelays, { kinds: [10003, 30003, 30001, 39701], authors: [activeAccount.pubkey] })
-            .pipe(completeOnEose(), takeUntil(timer(1200)), toArray())
-        )
-      } catch {
-        rawEvents = []
-      }
-    }
-    if (remoteRelays.length > 0) {
-      try {
-        const remoteEvents = await lastValueFrom(
-          relayPool
-            .req(remoteRelays, { kinds: [10003, 30003, 30001, 39701], authors: [activeAccount.pubkey] })
-            .pipe(completeOnEose(), takeUntil(timer(6000)), toArray())
-        )
-        rawEvents = rawEvents.concat(remoteEvents)
-      } catch {
-        // ignore
-      }
-    }
+    const local$ = localRelays.length > 0
+      ? relayPool
+          .req(localRelays, { kinds: [10003, 30003, 30001, 39701], authors: [activeAccount.pubkey] })
+          .pipe(completeOnEose(), takeUntil(timer(1200)))
+      : new Observable<NostrEvent>((sub) => sub.complete())
+    const remote$ = remoteRelays.length > 0
+      ? relayPool
+          .req(remoteRelays, { kinds: [10003, 30003, 30001, 39701], authors: [activeAccount.pubkey] })
+          .pipe(completeOnEose(), takeUntil(timer(6000)))
+      : new Observable<NostrEvent>((sub) => sub.complete())
+    const rawEvents = await lastValueFrom(merge(local$, remote$).pipe(toArray()))
     console.log('📊 Raw events fetched:', rawEvents.length, 'events')
     
     // Rebroadcast bookmark events to local/all relays based on settings
@@ -125,30 +112,13 @@ export const fetchBookmarks = async (
     if (noteIds.length > 0) {
       try {
         const { local: localHydrate, remote: remoteHydrate } = partitionRelays(relayUrls)
-        let events: NostrEvent[] = []
-        if (localHydrate.length > 0) {
-          try {
-            events = await lastValueFrom(
-              relayPool
-                .req(localHydrate, { ids: noteIds })
-                .pipe(completeOnEose(), takeUntil(timer(800)), toArray())
-            )
-          } catch {
-            events = []
-          }
-        }
-        if (remoteHydrate.length > 0) {
-          try {
-            const remote = await lastValueFrom(
-              relayPool
-                .req(remoteHydrate, { ids: noteIds })
-                .pipe(completeOnEose(), takeUntil(timer(2500)), toArray())
-            )
-            events = events.concat(remote)
-          } catch {
-            // ignore
-          }
-        }
+        const localHydrate$ = localHydrate.length > 0
+          ? relayPool.req(localHydrate, { ids: noteIds }).pipe(completeOnEose(), takeUntil(timer(800)))
+          : new Observable<NostrEvent>((sub) => sub.complete())
+        const remoteHydrate$ = remoteHydrate.length > 0
+          ? relayPool.req(remoteHydrate, { ids: noteIds }).pipe(completeOnEose(), takeUntil(timer(2500)))
+          : new Observable<NostrEvent>((sub) => sub.complete())
+        const events: NostrEvent[] = await lastValueFrom(merge(localHydrate$, remoteHydrate$).pipe(toArray()))
         idToEvent = new Map(events.map((e: NostrEvent) => [e.id, e]))
       } catch (error) {
         console.warn('Failed to fetch events for hydration:', error)

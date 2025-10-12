@@ -94,3 +94,27 @@ export const prioritizeLocalRelays = (relayUrls: string[]): string[] => {
   return out
 }
 
+// Parallel request helper
+import { completeOnEose, onlyEvents, RelayPool } from 'applesauce-relay'
+import { Observable, takeUntil, timer } from 'rxjs'
+
+export function createParallelReqStreams(
+  relayPool: RelayPool,
+  localRelays: string[],
+  remoteRelays: string[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  filter: any,
+  localTimeoutMs = 1200,
+  remoteTimeoutMs = 6000
+): { local$: Observable<unknown>; remote$: Observable<unknown> } {
+  const local$ = (localRelays.length > 0)
+    ? relayPool.req(localRelays, filter).pipe(onlyEvents(), completeOnEose(), takeUntil(timer(localTimeoutMs)))
+    : new Observable<unknown>((sub) => { sub.complete() })
+
+  const remote$ = (remoteRelays.length > 0)
+    ? relayPool.req(remoteRelays, filter).pipe(onlyEvents(), completeOnEose(), takeUntil(timer(remoteTimeoutMs)))
+    : new Observable<unknown>((sub) => { sub.complete() })
+
+  return { local$, remote$ }
+}
+

@@ -1,5 +1,5 @@
 import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+import { lastValueFrom, merge, Observable, takeUntil, timer, toArray } from 'rxjs'
 import { prioritizeLocalRelays } from '../utils/helpers'
 
 /**
@@ -20,19 +20,20 @@ export const fetchContacts = async (
     
     // Local-first quick attempt
     const localRelays = relayUrls.filter(url => url.includes('localhost') || url.includes('127.0.0.1'))
-    let events: Array<{ created_at: number; tags: string[][] }> = []
-    if (localRelays.length > 0) {
-      try {
-        const localEvents = await lastValueFrom(
-          relayPool
-            .req(localRelays, { kinds: [3], authors: [pubkey] })
-            .pipe(completeOnEose(), takeUntil(timer(1200)), toArray())
-        )
-        events = localEvents as Array<{ created_at: number; tags: string[][] }>
-      } catch {
-        events = []
-      }
-    }
+    const remoteRelays = relayUrls.filter(url => !url.includes('localhost') && !url.includes('127.0.0.1'))
+    const local$ = localRelays.length > 0
+      ? relayPool
+          .req(localRelays, { kinds: [3], authors: [pubkey] })
+          .pipe(completeOnEose(), takeUntil(timer(1200)))
+      : new Observable<{ created_at: number; tags: string[][] }>((sub) => sub.complete())
+    const remote$ = remoteRelays.length > 0
+      ? relayPool
+          .req(remoteRelays, { kinds: [3], authors: [pubkey] })
+          .pipe(completeOnEose(), takeUntil(timer(6000)))
+      : new Observable<{ created_at: number; tags: string[][] }>((sub) => sub.complete())
+    const events = await lastValueFrom(
+      merge(local$, remote$).pipe(toArray())
+    )
     const followed = new Set<string>()
     if (events.length > 0) {
       // Get the most recent contact list
@@ -46,29 +47,7 @@ export const fetchContacts = async (
       }
       if (onPartial) onPartial(new Set(followed))
     }
-    // Always fetch remote to merge more contacts
-    const remoteRelays = relayUrls.filter(url => !url.includes('localhost') && !url.includes('127.0.0.1'))
-    if (remoteRelays.length > 0) {
-      try {
-        const remoteEvents = await lastValueFrom(
-          relayPool
-            .req(remoteRelays, { kinds: [3], authors: [pubkey] })
-            .pipe(completeOnEose(), takeUntil(timer(6000)), toArray())
-        )
-        if (remoteEvents.length > 0) {
-          const sortedRemote = (remoteEvents as Array<{ created_at: number; tags: string[][] }>).
-            sort((a, b) => b.created_at - a.created_at)
-          const contactList = sortedRemote[0]
-          for (const tag of contactList.tags) {
-            if (tag[0] === 'p' && tag[1]) {
-              followed.add(tag[1])
-            }
-          }
-        }
-      } catch {
-        // ignore
-      }
-    }
+    // merged already via streams
     
     console.log('📊 Contact events fetched:', events.length)
     

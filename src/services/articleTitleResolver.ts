@@ -1,10 +1,11 @@
-import { RelayPool, onlyEvents } from 'applesauce-relay'
-import { lastValueFrom, take, takeUntil, timer, toArray } from 'rxjs'
+import { RelayPool } from 'applesauce-relay'
+import { lastValueFrom, take } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
-import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
+import { prioritizeLocalRelays, partitionRelays, createParallelReqStreams } from '../utils/helpers'
+import { merge, toArray as rxToArray } from 'rxjs'
 
 const { getArticleTitle } = Helpers
 
@@ -39,28 +40,11 @@ export async function fetchArticleTitle(
       '#d': [pointer.identifier]
     }
 
-    // Try to get the first event quickly from local relays
-    let events: { created_at: number }[] = []
-    if (localRelays.length > 0) {
-      try {
-        events = await lastValueFrom(
-          relayPool
-            .req(localRelays, filter)
-            .pipe(onlyEvents(), take(1), takeUntil(timer(1200)), toArray())
-        )
-      } catch {
-        events = []
-      }
-    }
-    // Always follow up with remote relays to ensure we have latest network data
-    if (remoteRelays.length > 0) {
-      const remoteEvents = await lastValueFrom(
-        relayPool
-          .req(remoteRelays, filter)
-          .pipe(onlyEvents(), take(1), takeUntil(timer(5000)), toArray())
-      )
-      events = events.concat(remoteEvents as unknown as { created_at: number }[])
-    }
+    // Parallel local+remote: collect up to one event from each
+    const { local$, remote$ } = createParallelReqStreams(relayPool, localRelays, remoteRelays, filter, 1200, 5000)
+    const events = await lastValueFrom(
+      merge(local$.pipe(take(1)), remote$.pipe(take(1))).pipe(rxToArray())
+    ) as unknown as { created_at: number }[]
 
     if (events.length === 0) {
       return null

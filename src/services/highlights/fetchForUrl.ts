@@ -1,5 +1,5 @@
 import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
-import { lastValueFrom, takeUntil, timer, tap, toArray } from 'rxjs'
+import { lastValueFrom, merge, Observable, takeUntil, timer, tap, toArray } from 'rxjs'
 import { NostrEvent } from 'nostr-tools'
 import { Highlight } from '../../types/highlights'
 import { RELAYS } from '../../config/relays'
@@ -18,48 +18,33 @@ export const fetchHighlightsForUrl = async (
     const seenIds = new Set<string>()
     const orderedRelaysUrl = prioritizeLocalRelays(RELAYS)
     const { local: localRelaysUrl, remote: remoteRelaysUrl } = partitionRelays(orderedRelaysUrl)
-    let rawEvents: NostrEvent[] = []
-    if (localRelaysUrl.length > 0) {
-      try {
-        rawEvents = await lastValueFrom(
-          relayPool
-            .req(localRelaysUrl, { kinds: [9802], '#r': [url] })
-            .pipe(
-              onlyEvents(),
-              tap((event: NostrEvent) => {
-                seenIds.add(event.id)
-                if (onHighlight) onHighlight(eventToHighlight(event))
-              }),
-              completeOnEose(),
-              takeUntil(timer(1200)),
-              toArray()
-            )
-        )
-      } catch {
-        rawEvents = []
-      }
-    }
-    if (remoteRelaysUrl.length > 0) {
-      try {
-        const remote = await lastValueFrom(
-          relayPool
-            .req(remoteRelaysUrl, { kinds: [9802], '#r': [url] })
-            .pipe(
-              onlyEvents(),
-              tap((event: NostrEvent) => {
-                seenIds.add(event.id)
-                if (onHighlight) onHighlight(eventToHighlight(event))
-              }),
-              completeOnEose(),
-              takeUntil(timer(6000)),
-              toArray()
-            )
-        )
-        rawEvents = rawEvents.concat(remote)
-      } catch {
-        // ignore
-      }
-    }
+    const local$ = localRelaysUrl.length > 0
+      ? relayPool
+          .req(localRelaysUrl, { kinds: [9802], '#r': [url] })
+          .pipe(
+            onlyEvents(),
+            tap((event: NostrEvent) => {
+              seenIds.add(event.id)
+              if (onHighlight) onHighlight(eventToHighlight(event))
+            }),
+            completeOnEose(),
+            takeUntil(timer(1200))
+          )
+      : new Observable<NostrEvent>((sub) => sub.complete())
+    const remote$ = remoteRelaysUrl.length > 0
+      ? relayPool
+          .req(remoteRelaysUrl, { kinds: [9802], '#r': [url] })
+          .pipe(
+            onlyEvents(),
+            tap((event: NostrEvent) => {
+              seenIds.add(event.id)
+              if (onHighlight) onHighlight(eventToHighlight(event))
+            }),
+            completeOnEose(),
+            takeUntil(timer(6000))
+          )
+      : new Observable<NostrEvent>((sub) => sub.complete())
+    const rawEvents: NostrEvent[] = await lastValueFrom(merge(local$, remote$).pipe(toArray()))
     await rebroadcastEvents(rawEvents, relayPool, settings)
     const uniqueEvents = dedupeHighlights(rawEvents)
     const highlights: Highlight[] = uniqueEvents.map(eventToHighlight)
