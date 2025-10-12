@@ -73,7 +73,6 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
       <div className="explore-container">
         <div className="explore-loading">
           <FontAwesomeIcon icon={faSpinner} spin size="2x" />
-          <p>Loading your highlights...</p>
         </div>
       </div>
     )
