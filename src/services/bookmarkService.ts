@@ -16,6 +16,7 @@ import { Bookmark } from '../types/bookmarks'
 import { collectBookmarksFromEvents } from './bookmarkProcessing.ts'
 import { UserSettings } from './settingsService'
 import { rebroadcastEvents } from './rebroadcastService'
+import { prioritizeLocalRelays } from '../utils/helpers'
 
 
 
@@ -31,14 +32,30 @@ export const fetchBookmarks = async (
       throw new Error('Invalid account object provided')
     }
     // Get relay URLs from the pool
-    const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+    const relayUrls = prioritizeLocalRelays(Array.from(relayPool.relays.values()).map(relay => relay.url))
     // Fetch bookmark events - NIP-51 standards, legacy formats, and web bookmarks (NIP-B0)
     console.log('🔍 Fetching bookmark events from relays:', relayUrls)
-    const rawEvents = await lastValueFrom(
-      relayPool
-        .req(relayUrls, { kinds: [10003, 30003, 30001, 39701], authors: [activeAccount.pubkey] })
-        .pipe(completeOnEose(), takeUntil(timer(20000)), toArray())
-    )
+    // Try local-first quickly, then full set fallback
+    let rawEvents = [] as NostrEvent[]
+    const localRelays = relayUrls.filter(url => url.includes('localhost') || url.includes('127.0.0.1'))
+    if (localRelays.length > 0) {
+      try {
+        rawEvents = await lastValueFrom(
+          relayPool
+            .req(localRelays, { kinds: [10003, 30003, 30001, 39701], authors: [activeAccount.pubkey] })
+            .pipe(completeOnEose(), takeUntil(timer(1200)), toArray())
+        )
+      } catch {
+        rawEvents = []
+      }
+    }
+    if (rawEvents.length === 0) {
+      rawEvents = await lastValueFrom(
+        relayPool
+          .req(relayUrls, { kinds: [10003, 30003, 30001, 39701], authors: [activeAccount.pubkey] })
+          .pipe(completeOnEose(), takeUntil(timer(6000)), toArray())
+      )
+    }
     console.log('📊 Raw events fetched:', rawEvents.length, 'events')
     
     // Rebroadcast bookmark events to local/all relays based on settings
@@ -103,7 +120,9 @@ export const fetchBookmarks = async (
     if (noteIds.length > 0) {
       try {
         const events = await lastValueFrom(
-          relayPool.req(relayUrls, { ids: noteIds }).pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
+          relayPool
+            .req(relayUrls, { ids: noteIds })
+            .pipe(completeOnEose(), takeUntil(timer(4000)), toArray())
         )
         idToEvent = new Map(events.map((e: NostrEvent) => [e.id, e]))
       } catch (error) {

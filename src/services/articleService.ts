@@ -1,10 +1,11 @@
 import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+import { lastValueFrom, race, takeUntil, timer, toArray } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
+import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 import { UserSettings } from './settingsService'
 import { rebroadcastEvents } from './rebroadcastService'
 
@@ -98,9 +99,11 @@ export async function fetchArticleByNaddr(
     const pointer = decoded.data as AddressPointer
 
     // Define relays to query - prefer relays from naddr, fallback to configured relays (including local)
-    const relays = pointer.relays && pointer.relays.length > 0 
+    const baseRelays = pointer.relays && pointer.relays.length > 0 
       ? pointer.relays 
       : RELAYS
+    const orderedRelays = prioritizeLocalRelays(baseRelays)
+    const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
 
     // Fetch the article event
     const filter = {
@@ -109,12 +112,28 @@ export async function fetchArticleByNaddr(
       '#d': [pointer.identifier]
     }
 
-    // Use applesauce relay pool pattern
-    const events = await lastValueFrom(
-      relayPool
-        .req(relays, filter)
-        .pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
-    )
+    // Local-first: try local relays quickly, then fallback to remote if no result
+    let events = [] as NostrEvent[]
+    if (localRelays.length > 0) {
+      try {
+        events = await lastValueFrom(
+          relayPool
+            .req(localRelays, filter)
+            .pipe(completeOnEose(), takeUntil(timer(1200)), toArray())
+        )
+      } catch {
+        events = []
+      }
+    }
+
+    if (events.length === 0) {
+      // Fallback: query all relays, but still time-box
+      events = await lastValueFrom(
+        relayPool
+          .req(orderedRelays, filter)
+          .pipe(completeOnEose(), takeUntil(timer(6000)), toArray())
+      )
+    }
 
     if (events.length === 0) {
       throw new Error('Article not found')

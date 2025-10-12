@@ -1,5 +1,6 @@
 import { RelayPool, completeOnEose } from 'applesauce-relay'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+import { prioritizeLocalRelays } from '../utils/helpers'
 
 /**
  * Fetches the contact list (follows) for a specific user
@@ -12,15 +13,31 @@ export const fetchContacts = async (
   pubkey: string
 ): Promise<Set<string>> => {
   try {
-    const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+    const relayUrls = prioritizeLocalRelays(Array.from(relayPool.relays.values()).map(relay => relay.url))
     
     console.log('🔍 Fetching contacts (kind 3) for user:', pubkey)
     
-    const events = await lastValueFrom(
-      relayPool
-        .req(relayUrls, { kinds: [3], authors: [pubkey] })
-        .pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
-    )
+    // Local-first quick attempt
+    const localRelays = relayUrls.filter(url => url.includes('localhost') || url.includes('127.0.0.1'))
+    let events = [] as any[]
+    if (localRelays.length > 0) {
+      try {
+        events = await lastValueFrom(
+          relayPool
+            .req(localRelays, { kinds: [3], authors: [pubkey] })
+            .pipe(completeOnEose(), takeUntil(timer(1200)), toArray())
+        )
+      } catch {
+        events = []
+      }
+    }
+    if (events.length === 0) {
+      events = await lastValueFrom(
+        relayPool
+          .req(relayUrls, { kinds: [3], authors: [pubkey] })
+          .pipe(completeOnEose(), takeUntil(timer(6000)), toArray())
+      )
+    }
     
     console.log('📊 Contact events fetched:', events.length)
     

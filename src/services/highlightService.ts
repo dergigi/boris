@@ -3,6 +3,7 @@ import { lastValueFrom, takeUntil, timer, tap, toArray } from 'rxjs'
 import { NostrEvent } from 'nostr-tools'
 import { Highlight } from '../types/highlights'
 import { RELAYS } from '../config/relays'
+import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 import { eventToHighlight, dedupeHighlights, sortHighlights } from './highlightEventProcessor'
 import { UserSettings } from './settingsService'
 import { rebroadcastEvents } from './rebroadcastService'
@@ -34,32 +35,39 @@ export const fetchHighlightsForArticle = async (
       return eventToHighlight(event)
     }
     
+    // Local-first relay ordering
+    const orderedRelays = prioritizeLocalRelays(RELAYS)
+    const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
+
     // Query for highlights that reference this article via the 'a' tag
-    const aTagEvents = await lastValueFrom(
-      relayPool
-        .req(RELAYS, { kinds: [9802], '#a': [articleCoordinate] })
-        .pipe(
-          onlyEvents(),
-          tap((event: NostrEvent) => {
-            const highlight = processEvent(event)
-            if (highlight && onHighlight) {
-              onHighlight(highlight)
-            }
-          }),
-          completeOnEose(),
-          takeUntil(timer(10000)),
-          toArray()
+    let aTagEvents: NostrEvent[] = []
+    if (localRelays.length > 0) {
+      try {
+        aTagEvents = await lastValueFrom(
+          relayPool
+            .req(localRelays, { kinds: [9802], '#a': [articleCoordinate] })
+            .pipe(
+              onlyEvents(),
+              tap((event: NostrEvent) => {
+                const highlight = processEvent(event)
+                if (highlight && onHighlight) {
+                  onHighlight(highlight)
+                }
+              }),
+              completeOnEose(),
+              takeUntil(timer(1200)),
+              toArray()
+            )
         )
-    )
-    
-    console.log('📊 Highlights via a-tag:', aTagEvents.length)
-    
-    // If we have an event ID, also query for highlights that reference via the 'e' tag
-    let eTagEvents: NostrEvent[] = []
-    if (eventId) {
-      eTagEvents = await lastValueFrom(
+      } catch {
+        aTagEvents = []
+      }
+    }
+
+    if (aTagEvents.length === 0) {
+      aTagEvents = await lastValueFrom(
         relayPool
-          .req(RELAYS, { kinds: [9802], '#e': [eventId] })
+          .req(orderedRelays, { kinds: [9802], '#a': [articleCoordinate] })
           .pipe(
             onlyEvents(),
             tap((event: NostrEvent) => {
@@ -69,10 +77,59 @@ export const fetchHighlightsForArticle = async (
               }
             }),
             completeOnEose(),
-            takeUntil(timer(10000)),
+            takeUntil(timer(6000)),
             toArray()
           )
       )
+    }
+    
+    console.log('📊 Highlights via a-tag:', aTagEvents.length)
+    
+    // If we have an event ID, also query for highlights that reference via the 'e' tag
+    let eTagEvents: NostrEvent[] = []
+    if (eventId) {
+      // e-tag query local-first as well
+      if (localRelays.length > 0) {
+        try {
+          eTagEvents = await lastValueFrom(
+            relayPool
+              .req(localRelays, { kinds: [9802], '#e': [eventId] })
+              .pipe(
+                onlyEvents(),
+                tap((event: NostrEvent) => {
+                  const highlight = processEvent(event)
+                  if (highlight && onHighlight) {
+                    onHighlight(highlight)
+                  }
+                }),
+                completeOnEose(),
+                takeUntil(timer(1200)),
+                toArray()
+              )
+          )
+        } catch {
+          eTagEvents = []
+        }
+      }
+
+      if (eTagEvents.length === 0) {
+        eTagEvents = await lastValueFrom(
+          relayPool
+            .req(orderedRelays, { kinds: [9802], '#e': [eventId] })
+            .pipe(
+              onlyEvents(),
+              tap((event: NostrEvent) => {
+                const highlight = processEvent(event)
+                if (highlight && onHighlight) {
+                  onHighlight(highlight)
+                }
+              }),
+              completeOnEose(),
+              takeUntil(timer(6000)),
+              toArray()
+            )
+        )
+      }
       console.log('📊 Highlights via e-tag:', eTagEvents.length)
     }
     
@@ -118,19 +175,43 @@ export const fetchHighlightsForUrl = async (
     console.log('🔍 Fetching highlights (kind 9802) for URL:', url)
     
     const seenIds = new Set<string>()
-    const rawEvents = await lastValueFrom(
-      relayPool
-        .req(RELAYS, { kinds: [9802], '#r': [url] })
-        .pipe(
-          onlyEvents(),
-          tap((event: NostrEvent) => {
-            seenIds.add(event.id)
-          }),
-          completeOnEose(),
-          takeUntil(timer(10000)),
-          toArray()
+    const orderedRelaysUrl = prioritizeLocalRelays(RELAYS)
+    const { local: localRelaysUrl } = partitionRelays(orderedRelaysUrl)
+    let rawEvents: NostrEvent[] = []
+    if (localRelaysUrl.length > 0) {
+      try {
+        rawEvents = await lastValueFrom(
+          relayPool
+            .req(localRelaysUrl, { kinds: [9802], '#r': [url] })
+            .pipe(
+              onlyEvents(),
+              tap((event: NostrEvent) => {
+                seenIds.add(event.id)
+              }),
+              completeOnEose(),
+              takeUntil(timer(1200)),
+              toArray()
+            )
         )
-    )
+      } catch {
+        rawEvents = []
+      }
+    }
+    if (rawEvents.length === 0) {
+      rawEvents = await lastValueFrom(
+        relayPool
+          .req(orderedRelaysUrl, { kinds: [9802], '#r': [url] })
+          .pipe(
+            onlyEvents(),
+            tap((event: NostrEvent) => {
+              seenIds.add(event.id)
+            }),
+            completeOnEose(),
+            takeUntil(timer(6000)),
+            toArray()
+          )
+      )
+    }
     
     console.log('📊 Highlights for URL:', rawEvents.length)
     

@@ -1,5 +1,6 @@
 import { RelayPool, completeOnEose } from 'applesauce-relay'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+import { prioritizeLocalRelays } from '../utils/helpers'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 
@@ -34,15 +35,36 @@ export const fetchBlogPostsFromAuthors = async (
 
     console.log('📚 Fetching blog posts (kind 30023) from', pubkeys.length, 'authors')
     
-    const events = await lastValueFrom(
-      relayPool
-        .req(relayUrls, { 
-          kinds: [30023], 
-          authors: pubkeys,
-          limit: 100 // Fetch up to 100 recent posts
-        })
-        .pipe(completeOnEose(), takeUntil(timer(15000)), toArray())
-    )
+    const prioritized = prioritizeLocalRelays(relayUrls)
+    const localRelays = prioritized.filter(url => url.includes('localhost') || url.includes('127.0.0.1'))
+
+    let events = [] as NostrEvent[]
+    if (localRelays.length > 0) {
+      try {
+        events = await lastValueFrom(
+          relayPool
+            .req(localRelays, { 
+              kinds: [30023], 
+              authors: pubkeys,
+              limit: 100
+            })
+            .pipe(completeOnEose(), takeUntil(timer(1200)), toArray())
+        )
+      } catch {
+        events = []
+      }
+    }
+    if (events.length === 0) {
+      events = await lastValueFrom(
+        relayPool
+          .req(prioritized, { 
+            kinds: [30023], 
+            authors: pubkeys,
+            limit: 100
+          })
+          .pipe(completeOnEose(), takeUntil(timer(6000)), toArray())
+      )
+    }
     
     console.log('📊 Blog post events fetched:', events.length)
     
