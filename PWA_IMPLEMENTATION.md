@@ -47,7 +47,14 @@ Boris has been successfully upgraded to a full Progressive Web App (PWA)!
 - `src/hooks/useOnlineStatus.ts` - Online status monitoring
 - `src/components/Settings/PWASettings.tsx` - Install UI
 - `public/manifest.webmanifest` - Web app manifest
-- `public/icon-*.png` - PWA icons (placeholders)
+- `public/icon-192.png` - PWA icon (192x192)
+- `public/icon-512.png` - PWA icon (512x512)
+- `public/icon-maskable-192.png` - Maskable PWA icon (192x192)
+- `public/icon-maskable-512.png` - Maskable PWA icon (512x512)
+- `public/favicon-16x16.png` - Favicon (16x16)
+- `public/favicon-32x32.png` - Favicon (32x32)
+- `public/favicon.ico` - Multi-size favicon
+- `public/apple-touch-icon.png` - iOS home screen icon
 
 ### Modified Files
 - `vite.config.ts` - Added VitePWA plugin configuration
@@ -100,7 +107,6 @@ Expected scores:
 - ✅ Installable
 - ✅ PWA Optimized
 - ✅ Works offline
-- ⚠️ Icons (will pass after replacing placeholders)
 
 ## Build Output
 
@@ -137,11 +143,10 @@ npm run build
 
 ## Next Steps
 
-1. **Replace icon placeholders** with branded designs
-2. **Test install flow** on mobile devices (iOS Safari, Android Chrome)
-3. **Test offline experience** thoroughly
-4. **Monitor service worker** updates in production
-5. **Consider adding**:
+1. **Test install flow** on mobile devices (iOS Safari, Android Chrome)
+2. **Test offline experience** thoroughly
+3. **Monitor service worker** updates in production
+4. **Consider adding**:
    - Web Share Target (share to Boris from system share sheet)
    - Background Sync (queue writes when offline)
    - Badging API (unread counts on app icon)
