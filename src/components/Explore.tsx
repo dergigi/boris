@@ -31,7 +31,44 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
         setError(null)
 
         // Fetch the user's contacts (friends)
-        const contacts = await fetchContacts(relayPool, activeAccount.pubkey)
+        const contacts = await fetchContacts(
+          relayPool,
+          activeAccount.pubkey,
+          (partial) => {
+            // When local contacts are available, kick off early posts fetch
+            if (partial.size > 0) {
+              const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+              fetchBlogPostsFromAuthors(
+                relayPool,
+                Array.from(partial),
+                relayUrls,
+                (post) => {
+                  setBlogPosts((prev) => {
+                    const exists = prev.some(p => p.event.id === post.event.id)
+                    if (exists) return prev
+                    const next = [...prev, post]
+                    return next.sort((a, b) => {
+                      const timeA = a.published || a.event.created_at
+                      const timeB = b.published || b.event.created_at
+                      return timeB - timeA
+                    })
+                  })
+                }
+              ).then((all) => {
+                // Ensure union of streamed + final is displayed
+                setBlogPosts((prev) => {
+                  const byId = new Map(prev.map(p => [p.event.id, p]))
+                  for (const post of all) byId.set(post.event.id, post)
+                  return Array.from(byId.values()).sort((a, b) => {
+                    const timeA = a.published || a.event.created_at
+                    const timeB = b.published || b.event.created_at
+                    return timeB - timeA
+                  })
+                })
+              })
+            }
+          }
+        )
         
         if (contacts.size === 0) {
           setError('You are not following anyone yet. Follow some people to see their blog posts!')
@@ -39,29 +76,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
           return
         }
 
-        // Get relay URLs from pool
+        // After full contacts, do a final pass for completeness
         const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-        
-        // Fetch blog posts from friends
-        const posts = await fetchBlogPostsFromAuthors(
-          relayPool,
-          Array.from(contacts),
-          relayUrls,
-          (post) => {
-            // Stream posts as we get them
-            setBlogPosts((prev) => {
-              const exists = prev.some(p => p.event.id === post.event.id)
-              if (exists) return prev
-              const next = [...prev, post]
-              // Keep sorted by published or created_at
-              return next.sort((a, b) => {
-                const timeA = a.published || a.event.created_at
-                const timeB = b.published || b.event.created_at
-                return timeB - timeA
-              })
-            })
-          }
-        )
+        const posts = await fetchBlogPostsFromAuthors(relayPool, Array.from(contacts), relayUrls)
 
         if (posts.length === 0) {
           setError('No blog posts found from your friends yet')
