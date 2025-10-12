@@ -1,4 +1,6 @@
 /// <reference lib="webworker" />
+/* eslint-env worker */
+/* global ServiceWorkerGlobalScope, ExtendableMessageEvent, FetchEvent */
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
 import { registerRoute, NavigationRoute } from 'workbox-routing'
@@ -6,7 +8,8 @@ import { StaleWhileRevalidate } from 'workbox-strategies'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 
-declare let self: ServiceWorkerGlobalScope
+// Narrow the global service worker scope for proper typings
+const sw = self as unknown as ServiceWorkerGlobalScope
 
 // Precache all build assets (app shell)
 // @ts-ignore - __WB_MANIFEST is injected by vite-plugin-pwa
@@ -16,7 +19,7 @@ precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
 // Take control immediately
-self.skipWaiting()
+sw.skipWaiting()
 clientsClaim()
 
 console.log('[SW] Boris service worker loaded')
@@ -27,7 +30,7 @@ registerRoute(
   ({ request, url }) => {
     const isImage = request.destination === 'image' || 
                     /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url.pathname)
-    return isImage && url.origin !== self.location.origin
+    return isImage && url.origin !== sw.location.origin
   },
   new StaleWhileRevalidate({
     cacheName: 'boris-images',
@@ -49,7 +52,7 @@ registerRoute(
   ({ request, url }) => {
     const accept = request.headers.get('accept') || ''
     const isHTML = accept.includes('text/html')
-    const isCrossOrigin = url.origin !== self.location.origin
+    const isCrossOrigin = url.origin !== sw.location.origin
     // Exclude relay connections and local URLs
     const isNotRelay = !url.protocol.includes('ws')
     return isHTML && isCrossOrigin && isNotRelay
@@ -90,14 +93,14 @@ const navigationRoute = new NavigationRoute(
 registerRoute(navigationRoute)
 
 // Listen for messages from the app
-self.addEventListener('message', (event) => {
+sw.addEventListener('message', (event: ExtendableMessageEvent) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting()
+    sw.skipWaiting()
   }
 })
 
 // Log fetch errors for debugging (doesn't affect functionality)
-self.addEventListener('fetch', (event) => {
+sw.addEventListener('fetch', (event: FetchEvent) => {
   const url = new URL(event.request.url)
   
   // Don't interfere with WebSocket connections (relay traffic)
