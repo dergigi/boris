@@ -2,32 +2,26 @@
  * Nostr gateway URLs for viewing events and profiles on the web
  */
 
-export const NOSTR_GATEWAY = {
-  /** Primary gateway for general nostr content (events, notes, addresses) */
-  PRIMARY: 'https://njump.me',
-  
-  /** Search gateway for profiles and events */
-  SEARCH: 'https://search.dergigi.com',
-} as const
+export const NOSTR_GATEWAY = 'https://ants.sh' as const
 
 /**
- * Get a profile URL on the search gateway
+ * Get a profile URL on the gateway
  */
 export function getProfileUrl(npub: string): string {
-  return `${NOSTR_GATEWAY.SEARCH}/p/${npub}`
+  return `${NOSTR_GATEWAY}/p/${npub}`
 }
 
 /**
- * Get an event URL on the search gateway
+ * Get an event URL on the gateway
  */
 export function getEventUrl(nevent: string): string {
-  return `${NOSTR_GATEWAY.SEARCH}/e/${nevent}`
+  return `${NOSTR_GATEWAY}/e/${nevent}`
 }
 
 /**
- * Get a general nostr link on the primary gateway
+ * Get a general nostr link on the gateway
  */
 export function getNostrUrl(identifier: string): string {
-  return `${NOSTR_GATEWAY.PRIMARY}/${identifier}`
+  return `${NOSTR_GATEWAY}/${identifier}`
 }
 
