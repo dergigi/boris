@@ -1,6 +1,6 @@
 import { RelayPool, completeOnEose } from 'applesauce-relay'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
-import { prioritizeLocalRelays } from '../utils/helpers'
+import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 
@@ -37,15 +37,42 @@ export const fetchBlogPostsFromAuthors = async (
     console.log('📚 Fetching blog posts (kind 30023) from', pubkeys.length, 'authors')
     
     const prioritized = prioritizeLocalRelays(relayUrls)
-    const localRelays = prioritized.filter(url => url.includes('localhost') || url.includes('127.0.0.1'))
+    const { local: localRelays, remote: remoteRelays } = partitionRelays(prioritized)
 
-    let events = [] as NostrEvent[]
+    // Deduplicate replaceable events by keeping the most recent version
+    // Group by author + d-tag identifier
+    const uniqueEvents = new Map<string, NostrEvent>()
+
+    const processEvents = (incoming: NostrEvent[]) => {
+      for (const event of incoming) {
+        const dTag = event.tags.find(t => t[0] === 'd')?.[1] || ''
+        const key = `${event.pubkey}:${dTag}`
+        const existing = uniqueEvents.get(key)
+        if (!existing || event.created_at > existing.created_at) {
+          uniqueEvents.set(key, event)
+          // Emit as we incorporate
+          if (onPost) {
+            const post: BlogPostPreview = {
+              event,
+              title: getArticleTitle(event) || 'Untitled',
+              summary: getArticleSummary(event),
+              image: getArticleImage(event),
+              published: getArticlePublished(event),
+              author: event.pubkey
+            }
+            onPost(post)
+          }
+        }
+      }
+    }
+
+    // Phase 1: local relays fast path
     if (localRelays.length > 0) {
       try {
-        events = await lastValueFrom(
+        const localEvents = await lastValueFrom(
           relayPool
-            .req(localRelays, { 
-              kinds: [30023], 
+            .req(localRelays, {
+              kinds: [30023],
               authors: pubkeys,
               limit: 100
             })
@@ -55,37 +82,35 @@ export const fetchBlogPostsFromAuthors = async (
               toArray()
             )
         )
+        processEvents(localEvents)
       } catch {
-        events = []
+        // ignore
       }
     }
-    if (events.length === 0) {
-      events = await lastValueFrom(
-        relayPool
-          .req(prioritized, { 
-            kinds: [30023], 
-            authors: pubkeys,
-            limit: 100
-          })
-          .pipe(completeOnEose(), takeUntil(timer(6000)), toArray())
-      )
-    }
-    
-    console.log('📊 Blog post events fetched:', events.length)
-    
-    // Deduplicate replaceable events by keeping the most recent version
-    // Group by author + d-tag identifier
-    const uniqueEvents = new Map<string, NostrEvent>()
-    
-    for (const event of events) {
-      const dTag = event.tags.find(t => t[0] === 'd')?.[1] || ''
-      const key = `${event.pubkey}:${dTag}`
-      
-      const existing = uniqueEvents.get(key)
-      if (!existing || event.created_at > existing.created_at) {
-        uniqueEvents.set(key, event)
+
+    // Phase 2: always query remote relays to fill in missing content
+    if (remoteRelays.length > 0) {
+      try {
+        const remoteEvents = await lastValueFrom(
+          relayPool
+            .req(remoteRelays, {
+              kinds: [30023],
+              authors: pubkeys,
+              limit: 100
+            })
+            .pipe(
+              completeOnEose(),
+              takeUntil(timer(6000)),
+              toArray()
+            )
+        )
+        processEvents(remoteEvents)
+      } catch {
+        // ignore
       }
     }
+
+    console.log('📊 Blog post events fetched (unique):', uniqueEvents.size)
     
     // Convert to blog post previews and sort by published date (most recent first)
     const blogPosts: BlogPostPreview[] = Array.from(uniqueEvents.values())
