@@ -106,15 +106,21 @@ export const useBookmarksData = ({
     }
   }, [relayPool, activeAccount, isRefreshing, handleFetchBookmarks, handleFetchHighlights, handleFetchContacts])
 
-  // Load initial data
+  // Load initial data (avoid clearing on route-only changes)
   useEffect(() => {
     if (!relayPool || !activeAccount) return
+    // Only (re)fetch bookmarks when account or relayPool changes, not on naddr route changes
     handleFetchBookmarks()
+  }, [relayPool, activeAccount, handleFetchBookmarks])
+
+  // Fetch highlights/contacts independently to avoid disturbing bookmarks
+  useEffect(() => {
+    if (!relayPool || !activeAccount) return
     if (!naddr) {
       handleFetchHighlights()
     }
     handleFetchContacts()
-  }, [relayPool, activeAccount, naddr, handleFetchBookmarks, handleFetchHighlights, handleFetchContacts])
+  }, [relayPool, activeAccount, naddr, handleFetchHighlights, handleFetchContacts])
 
   return {
     bookmarks,

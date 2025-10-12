@@ -73,7 +73,7 @@ export const fetchBookmarks = async (
     const bookmarkListEvents = dedupeNip51Events(rawEvents)
     console.log('📋 After deduplication:', bookmarkListEvents.length, 'bookmark events')
     if (bookmarkListEvents.length === 0) {
-      setBookmarks([])
+      // Keep existing bookmarks visible; do not clear list if nothing new found
       return
     }
     // Aggregate across events
