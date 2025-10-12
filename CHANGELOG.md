@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2025-10-12
+
+### Added
+- Three-dot menu to highlight cards for more compact UI
+  - Combines "Open on Nostr" and "Delete" actions into dropdown menu
+  - Uses horizontal ellipsis icon (⋯)
+  - Click-outside functionality to close menu
+
+### Changed
+- Switch Nostr gateway from njump.me/search.dergigi.com to ants.sh
+  - Centralized gateway URLs in config file
+  - All profile and event links now use ants.sh
+  - Automatic detection of identifier type (profile vs event) for proper routing
+- Remove loading text from Explore and Me pages (spinner only)
+- "Open on Nostr" now links to the highlight event itself instead of the article
+
+### Fixed
+- Gateway URL routing for ants.sh requirements (/p/ for profiles, /e/ for events)
+- Linting errors in HighlightItem component
+
+## [0.5.1] - 2025-10-12
+
+### Added
+- Highlight color customization to UI elements
+  - Apply user's "my highlights" color to highlight creation buttons
+  - Apply highlight group colors to highlight count indicators
+  - Apply "my highlights" color to collapsed highlights panel button
+
+### Fixed
+- Highlight count indicator styling to match reading-time element
+- Brightness and border styling for highlight count indicator
+- User highlight color now applies to both marker and arrow icons
+- Highlight group color properly applied to count indicator background
+
+### Removed
+- MOBILE_IMPLEMENTATION.md documentation file
+
 ## [0.5.0] - 2025-10-12
 
 ### Added
@@ -692,7 +729,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/dergigi/boris/compare/v0.5.1...v0.5.2
+[0.5.1]: https://github.com/dergigi/boris/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/dergigi/boris/compare/v0.4.3...v0.5.0
 [0.4.0]: https://github.com/dergigi/boris/compare/v0.3.8...v0.4.0
 [0.3.8]: https://github.com/dergigi/boris/compare/v0.3.7...v0.3.8
