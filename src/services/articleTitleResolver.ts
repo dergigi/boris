@@ -30,7 +30,7 @@ export async function fetchArticleTitle(
       ? pointer.relays 
       : RELAYS
     const orderedRelays = prioritizeLocalRelays(baseRelays)
-    const { local: localRelays } = partitionRelays(orderedRelays)
+    const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
 
     // Fetch the article event
     const filter = {
@@ -52,14 +52,14 @@ export async function fetchArticleTitle(
         events = []
       }
     }
-    // Fallback to all relays if nothing from local quickly
-    if (events.length === 0) {
-      const fallbackEvents = await lastValueFrom(
+    // Always follow up with remote relays to ensure we have latest network data
+    if (remoteRelays.length > 0) {
+      const remoteEvents = await lastValueFrom(
         relayPool
-          .req(orderedRelays, filter)
+          .req(remoteRelays, filter)
           .pipe(onlyEvents(), take(1), takeUntil(timer(5000)), toArray())
       )
-      events = fallbackEvents as { created_at: number }[]
+      events = events.concat(remoteEvents as unknown as { created_at: number }[])
     }
 
     if (events.length === 0) {

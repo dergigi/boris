@@ -103,7 +103,7 @@ export async function fetchArticleByNaddr(
       ? pointer.relays 
       : RELAYS
     const orderedRelays = prioritizeLocalRelays(baseRelays)
-    const { local: localRelays } = partitionRelays(orderedRelays)
+    const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
 
     // Fetch the article event
     const filter = {
@@ -112,7 +112,7 @@ export async function fetchArticleByNaddr(
       '#d': [pointer.identifier]
     }
 
-    // Local-first: try local relays quickly, then fallback to remote if no result
+    // Local-first: try local relays quickly, then ALWAYS query remote to merge
     let events = [] as NostrEvent[]
     if (localRelays.length > 0) {
       try {
@@ -131,18 +131,23 @@ export async function fetchArticleByNaddr(
       }
     }
 
-    if (events.length === 0) {
-      // Fallback: query all relays, but still time-box
-      events = await lastValueFrom(
-        relayPool
-          .req(orderedRelays, filter)
-          .pipe(
-            onlyEvents(),
-            take(1),
-            takeUntil(timer(6000)),
-            toArray()
-          )
-      )
+    // Always query remote to ensure we have the latest from the wider network
+    if (remoteRelays.length > 0) {
+      try {
+        const remoteEvents = await lastValueFrom(
+          relayPool
+            .req(remoteRelays, filter)
+            .pipe(
+              onlyEvents(),
+              take(1),
+              takeUntil(timer(6000)),
+              toArray()
+            )
+        )
+        events = events.concat(remoteEvents)
+      } catch {
+        // ignore
+      }
     }
 
     if (events.length === 0) {
