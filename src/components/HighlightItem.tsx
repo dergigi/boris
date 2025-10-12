@@ -121,55 +121,23 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     }
   }
   
-  const handleLinkClick = (url: string, e: React.MouseEvent) => {
-    if (onSelectUrl) {
-      e.preventDefault()
-      onSelectUrl(url)
-    }
+  const getHighlightLink = () => {
+    // Encode the highlight event itself (kind 9802) as a nevent
+    // Get non-local relays for the hint
+    const relayHints = RELAYS.filter(r => 
+      !r.includes('localhost') && !r.includes('127.0.0.1')
+    ).slice(0, 3) // Include up to 3 relay hints
+    
+    const nevent = nip19.neventEncode({
+      id: highlight.id,
+      relays: relayHints,
+      author: highlight.pubkey,
+      kind: 9802
+    })
+    return `https://njump.me/${nevent}`
   }
   
-  const getSourceLink = () => {
-    if (highlight.eventReference) {
-      // Check if it's a coordinate string (kind:pubkey:identifier) or a simple event ID
-      if (highlight.eventReference.includes(':')) {
-        // It's an addressable event coordinate, encode as naddr
-        const parts = highlight.eventReference.split(':')
-        if (parts.length === 3) {
-          const [kindStr, pubkey, identifier] = parts
-          const kind = parseInt(kindStr, 10)
-          
-          // Get non-local relays for the hint
-          const relayHints = RELAYS.filter(r => 
-            !r.includes('localhost') && !r.includes('127.0.0.1')
-          ).slice(0, 3) // Include up to 3 relay hints
-          
-          const naddr = nip19.naddrEncode({
-            kind,
-            pubkey,
-            identifier,
-            relays: relayHints
-          })
-          return `https://njump.me/${naddr}`
-        }
-      } else {
-        // It's a simple event ID, encode as nevent
-        // Get non-local relays for the hint
-        const relayHints = RELAYS.filter(r => 
-          !r.includes('localhost') && !r.includes('127.0.0.1')
-        ).slice(0, 3) // Include up to 3 relay hints
-        
-        const nevent = nip19.neventEncode({
-          id: highlight.eventReference,
-          relays: relayHints,
-          author: highlight.author
-        })
-        return `https://njump.me/${nevent}`
-      }
-    }
-    return highlight.urlReference
-  }
-  
-  const sourceLink = getSourceLink()
+  const highlightLink = getHighlightLink()
   
   // Handle rebroadcast to all relays
   const handleRebroadcast = async (e: React.MouseEvent) => {
@@ -320,13 +288,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   
   const handleOpenExternal = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (sourceLink) {
-      if (highlight.urlReference && onSelectUrl) {
-        onSelectUrl(highlight.urlReference)
-      } else {
-        window.open(sourceLink, '_blank', 'noopener,noreferrer')
-      }
-    }
+    window.open(highlightLink, '_blank', 'noopener,noreferrer')
     setShowMenu(false)
   }
   
@@ -391,15 +353,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
             
             {showMenu && (
               <div className="highlight-menu">
-                {sourceLink && (
-                  <button
-                    className="highlight-menu-item"
-                    onClick={handleOpenExternal}
-                  >
-                    <FontAwesomeIcon icon={faExternalLinkAlt} />
-                    <span>{highlight.eventReference ? 'Open on Nostr' : 'Open source'}</span>
-                  </button>
-                )}
+                <button
+                  className="highlight-menu-item"
+                  onClick={handleOpenExternal}
+                >
+                  <FontAwesomeIcon icon={faExternalLinkAlt} />
+                  <span>Open on Nostr</span>
+                </button>
                 {canDelete && (
                   <button
                     className="highlight-menu-item highlight-menu-item-danger"
