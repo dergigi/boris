@@ -110,17 +110,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
     return `/a/${naddr}`
   }
 
-  if (loading) {
-    return (
-      <div className="explore-container">
-        <div className="explore-loading">
-          <FontAwesomeIcon icon={faSpinner} spin size="2x" />
-          <p>Loading blog posts from your friends...</p>
-        </div>
-      </div>
-    )
-  }
-
   if (error) {
     return (
       <div className="explore-container">
@@ -143,6 +132,12 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
           Discover blog posts from your friends on Nostr
         </p>
       </div>
+      {loading && (
+        <div className="explore-loading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0' }}>
+          <FontAwesomeIcon icon={faSpinner} spin />
+          <span>Refreshing posts…</span>
+        </div>
+      )}
       <div className="explore-grid">
         {blogPosts.map((post) => (
           <BlogPostCard
@@ -151,6 +146,11 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
             href={getPostUrl(post)}
           />
         ))}
+        {!loading && blogPosts.length === 0 && (
+          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)' }}>
+            <p>No blog posts found yet.</p>
+          </div>
+        )}
       </div>
     </div>
   )
