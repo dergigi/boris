@@ -111,16 +111,18 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         isMobile={isMobile}
       />
       
-      {loading ? (
-        <div className="loading">
-          <FontAwesomeIcon icon={faSpinner} spin />
-        </div>
-      ) : allIndividualBookmarks.length === 0 ? (
-        <div className="empty-state">
-          <p>No bookmarks found.</p>
-          <p>Add bookmarks using your nostr client to see them here.</p>
-          <p>If you aren't on nostr yet, start here: <a href="https://nstart.me/" target="_blank" rel="noopener noreferrer">nstart.me</a></p>
-        </div>
+      {allIndividualBookmarks.length === 0 ? (
+        loading ? (
+          <div className="loading">
+            <FontAwesomeIcon icon={faSpinner} spin />
+          </div>
+        ) : (
+          <div className="empty-state">
+            <p>No bookmarks found.</p>
+            <p>Add bookmarks using your nostr client to see them here.</p>
+            <p>If you aren't on nostr yet, start here: <a href="https://nstart.me/" target="_blank" rel="noopener noreferrer">nstart.me</a></p>
+          </div>
+        )
       ) : (
         <div className="bookmarks-list">
           <div className={`bookmarks-grid bookmarks-${viewMode}`}>

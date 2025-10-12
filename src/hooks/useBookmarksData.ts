@@ -44,10 +44,14 @@ export const useBookmarksData = ({
 
   const handleFetchBookmarks = useCallback(async () => {
     if (!relayPool || !activeAccount) return
+    // don't clear existing bookmarks: we keep UI stable and show spinner unobtrusively
     setBookmarksLoading(true)
     try {
       const fullAccount = accountManager.getActive()
-      await fetchBookmarks(relayPool, fullAccount || activeAccount, setBookmarks, settings)
+      // merge-friendly: updater form that preserves visible list until replacement
+      await fetchBookmarks(relayPool, fullAccount || activeAccount, (next) => {
+        setBookmarks(() => next)
+      }, settings)
     } finally {
       setBookmarksLoading(false)
     }
