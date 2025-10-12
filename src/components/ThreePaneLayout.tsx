@@ -241,6 +241,10 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
           onClick={props.onToggleHighlightsPanel}
           aria-label="Open highlights"
           aria-expanded={!props.isHighlightsCollapsed}
+          style={{ 
+            backgroundColor: props.settings.highlightColorMine || '#ffff00',
+            color: '#000'
+          }}
         >
           <FontAwesomeIcon icon={faHighlighter} />
         </button>
@@ -358,7 +362,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
         <HighlightButton 
           ref={props.highlightButtonRef} 
           onHighlight={props.onCreateHighlight}
-          highlightColor={props.settings.highlightColor || '#ffff00'}
+          highlightColor={props.settings.highlightColorMine || '#ffff00'}
         />
       )}
       <RelayStatusIndicator relayPool={props.relayPool} />
