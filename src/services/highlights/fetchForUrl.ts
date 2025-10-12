@@ -17,7 +17,7 @@ export const fetchHighlightsForUrl = async (
   try {
     const seenIds = new Set<string>()
     const orderedRelaysUrl = prioritizeLocalRelays(RELAYS)
-    const { local: localRelaysUrl } = partitionRelays(orderedRelaysUrl)
+    const { local: localRelaysUrl, remote: remoteRelaysUrl } = partitionRelays(orderedRelaysUrl)
     let rawEvents: NostrEvent[] = []
     if (localRelaysUrl.length > 0) {
       try {
@@ -39,21 +39,26 @@ export const fetchHighlightsForUrl = async (
         rawEvents = []
       }
     }
-    if (rawEvents.length === 0) {
-      rawEvents = await lastValueFrom(
-        relayPool
-          .req(orderedRelaysUrl, { kinds: [9802], '#r': [url] })
-          .pipe(
-            onlyEvents(),
-            tap((event: NostrEvent) => {
-              seenIds.add(event.id)
-              if (onHighlight) onHighlight(eventToHighlight(event))
-            }),
-            completeOnEose(),
-            takeUntil(timer(6000)),
-            toArray()
-          )
-      )
+    if (remoteRelaysUrl.length > 0) {
+      try {
+        const remote = await lastValueFrom(
+          relayPool
+            .req(remoteRelaysUrl, { kinds: [9802], '#r': [url] })
+            .pipe(
+              onlyEvents(),
+              tap((event: NostrEvent) => {
+                seenIds.add(event.id)
+                if (onHighlight) onHighlight(eventToHighlight(event))
+              }),
+              completeOnEose(),
+              takeUntil(timer(6000)),
+              toArray()
+            )
+        )
+        rawEvents = rawEvents.concat(remote)
+      } catch {
+        // ignore
+      }
     }
     await rebroadcastEvents(rawEvents, relayPool, settings)
     const uniqueEvents = dedupeHighlights(rawEvents)

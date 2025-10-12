@@ -24,7 +24,7 @@ export const fetchHighlightsForArticle = async (
     }
 
     const orderedRelays = prioritizeLocalRelays(RELAYS)
-    const { local: localRelays } = partitionRelays(orderedRelays)
+    const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
 
     let aTagEvents: NostrEvent[] = []
     if (localRelays.length > 0) {
@@ -48,21 +48,27 @@ export const fetchHighlightsForArticle = async (
       }
     }
 
-    if (aTagEvents.length === 0) {
-      aTagEvents = await lastValueFrom(
-        relayPool
-          .req(orderedRelays, { kinds: [9802], '#a': [articleCoordinate] })
-          .pipe(
-            onlyEvents(),
-            tap((event: NostrEvent) => {
-              const highlight = processEvent(event)
-              if (highlight && onHighlight) onHighlight(highlight)
-            }),
-            completeOnEose(),
-            takeUntil(timer(6000)),
-            toArray()
-          )
-      )
+    // Always query remote relays to merge additional highlights
+    if (remoteRelays.length > 0) {
+      try {
+        const aRemote = await lastValueFrom(
+          relayPool
+            .req(remoteRelays, { kinds: [9802], '#a': [articleCoordinate] })
+            .pipe(
+              onlyEvents(),
+              tap((event: NostrEvent) => {
+                const highlight = processEvent(event)
+                if (highlight && onHighlight) onHighlight(highlight)
+              }),
+              completeOnEose(),
+              takeUntil(timer(6000)),
+              toArray()
+            )
+        )
+        aTagEvents = aTagEvents.concat(aRemote)
+      } catch {
+        // ignore
+      }
     }
 
     let eTagEvents: NostrEvent[] = []
@@ -88,21 +94,27 @@ export const fetchHighlightsForArticle = async (
         }
       }
 
-      if (eTagEvents.length === 0) {
-        eTagEvents = await lastValueFrom(
-          relayPool
-            .req(orderedRelays, { kinds: [9802], '#e': [eventId] })
-            .pipe(
-              onlyEvents(),
-              tap((event: NostrEvent) => {
-                const highlight = processEvent(event)
-                if (highlight && onHighlight) onHighlight(highlight)
-              }),
-              completeOnEose(),
-              takeUntil(timer(6000)),
-              toArray()
-            )
-        )
+      // Always query remote for e-tag too
+      if (remoteRelays.length > 0) {
+        try {
+          const eRemote = await lastValueFrom(
+            relayPool
+              .req(remoteRelays, { kinds: [9802], '#e': [eventId] })
+              .pipe(
+                onlyEvents(),
+                tap((event: NostrEvent) => {
+                  const highlight = processEvent(event)
+                  if (highlight && onHighlight) onHighlight(highlight)
+                }),
+                completeOnEose(),
+                takeUntil(timer(6000)),
+                toArray()
+              )
+          )
+          eTagEvents = eTagEvents.concat(eRemote)
+        } catch {
+          // ignore
+        }
       }
     }
 
