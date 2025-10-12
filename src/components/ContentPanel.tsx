@@ -180,6 +180,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         hasHighlights={hasHighlights}
         highlightCount={relevantHighlights.length}
         settings={settings}
+        highlights={relevantHighlights}
+        highlightVisibility={highlightVisibility}
       />
       {markdown || html ? (
         <>

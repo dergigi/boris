@@ -1,9 +1,11 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter, faClock } from '@fortawesome/free-solid-svg-icons'
 import { format } from 'date-fns'
 import { useImageCache } from '../hooks/useImageCache'
 import { UserSettings } from '../services/settingsService'
+import { Highlight, HighlightLevel } from '../types/highlights'
+import { HighlightVisibility } from './HighlightsPanel'
 
 interface ReaderHeaderProps {
   title?: string
@@ -14,6 +16,8 @@ interface ReaderHeaderProps {
   hasHighlights: boolean
   highlightCount: number
   settings?: UserSettings
+  highlights?: Highlight[]
+  highlightVisibility?: HighlightVisibility
 }
 
 const ReaderHeader: React.FC<ReaderHeaderProps> = ({
@@ -24,11 +28,39 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   readingTimeText,
   hasHighlights,
   highlightCount,
-  settings
+  settings,
+  highlights = [],
+  highlightVisibility = { nostrverse: true, friends: true, mine: true }
 }) => {
   const cachedImage = useImageCache(image, settings)
   const formattedDate = published ? format(new Date(published * 1000), 'MMM d, yyyy') : null
   const isLongSummary = summary && summary.length > 150
+  
+  // Determine the dominant highlight color based on visibility and priority
+  const highlightIndicatorColor = useMemo(() => {
+    if (!highlights.length) return undefined
+    
+    // Count highlights by level that are visible
+    const visibleLevels = new Set<HighlightLevel>()
+    highlights.forEach(h => {
+      if (h.level && highlightVisibility[h.level]) {
+        visibleLevels.add(h.level)
+      }
+    })
+    
+    // Priority: nostrverse > friends > mine
+    if (visibleLevels.has('nostrverse') && highlightVisibility.nostrverse) {
+      return settings?.highlightColorNostrverse || '#9333ea'
+    }
+    if (visibleLevels.has('friends') && highlightVisibility.friends) {
+      return settings?.highlightColorFriends || '#f97316'
+    }
+    if (visibleLevels.has('mine') && highlightVisibility.mine) {
+      return settings?.highlightColorMine || '#ffff00'
+    }
+    
+    return undefined
+  }, [highlights, highlightVisibility, settings])
   
   if (cachedImage) {
     return (
@@ -52,7 +84,10 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
                   </div>
                 )}
                 {hasHighlights && (
-                  <div className="highlight-indicator">
+                  <div 
+                    className="highlight-indicator"
+                    style={highlightIndicatorColor ? { color: highlightIndicatorColor } : undefined}
+                  >
                     <FontAwesomeIcon icon={faHighlighter} />
                     <span>{highlightCount} highlight{highlightCount !== 1 ? 's' : ''}</span>
                   </div>
@@ -89,7 +124,10 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
               </div>
             )}
             {hasHighlights && (
-              <div className="highlight-indicator">
+              <div 
+                className="highlight-indicator"
+                style={highlightIndicatorColor ? { color: highlightIndicatorColor } : undefined}
+              >
                 <FontAwesomeIcon icon={faHighlighter} />
                 <span>{highlightCount} highlight{highlightCount !== 1 ? 's' : ''}</span>
               </div>
