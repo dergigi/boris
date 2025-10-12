@@ -116,7 +116,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
     }
 
     loadBlogPosts()
-  }, [relayPool, activeAccount])
+  }, [relayPool, activeAccount, blogPosts.length])
 
   const getPostUrl = (post: BlogPostPreview) => {
     // Get the d-tag identifier
