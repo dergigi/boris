@@ -1,9 +1,11 @@
-import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+import { RelayPool } from 'applesauce-relay'
+import { lastValueFrom, take } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
+import { prioritizeLocalRelays, partitionRelays, createParallelReqStreams } from '../utils/helpers'
+import { merge, toArray as rxToArray } from 'rxjs'
 
 const { getArticleTitle } = Helpers
 
@@ -25,9 +27,11 @@ export async function fetchArticleTitle(
     const pointer = decoded.data as AddressPointer
 
     // Define relays to query
-    const relays = pointer.relays && pointer.relays.length > 0 
+    const baseRelays = pointer.relays && pointer.relays.length > 0 
       ? pointer.relays 
       : RELAYS
+    const orderedRelays = prioritizeLocalRelays(baseRelays)
+    const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
 
     // Fetch the article event
     const filter = {
@@ -36,11 +40,11 @@ export async function fetchArticleTitle(
       '#d': [pointer.identifier]
     }
 
+    // Parallel local+remote: collect up to one event from each
+    const { local$, remote$ } = createParallelReqStreams(relayPool, localRelays, remoteRelays, filter, 1200, 5000)
     const events = await lastValueFrom(
-      relayPool
-        .req(relays, filter)
-        .pipe(completeOnEose(), takeUntil(timer(5000)), toArray())
-    )
+      merge(local$.pipe(take(1)), remote$.pipe(take(1))).pipe(rxToArray())
+    ) as unknown as { created_at: number }[]
 
     if (events.length === 0) {
       return null
@@ -48,7 +52,7 @@ export async function fetchArticleTitle(
 
     // Sort by created_at and take the most recent
     events.sort((a, b) => b.created_at - a.created_at)
-    const article = events[0]
+    const article = events[0] as unknown as Parameters<typeof getArticleTitle>[0]
 
     return getArticleTitle(article) || null
   } catch (err) {

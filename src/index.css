@@ -3260,8 +3260,13 @@ body.mobile-sidebar-open {
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  min-height: 50vh;
   color: rgba(255, 255, 255, 0.7);
+}
+
+/* Compact, inline loading row for Explore refresh */
+.explore-loading {
+  min-height: 0;
+  padding: 0.25rem 0;
 }
 
 .explore-error {

@@ -1,5 +1,6 @@
 import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+import { lastValueFrom, merge, Observable, takeUntil, timer, toArray } from 'rxjs'
+import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 
@@ -24,7 +25,8 @@ export interface BlogPostPreview {
 export const fetchBlogPostsFromAuthors = async (
   relayPool: RelayPool,
   pubkeys: string[],
-  relayUrls: string[]
+  relayUrls: string[],
+  onPost?: (post: BlogPostPreview) => void
 ): Promise<BlogPostPreview[]> => {
   try {
     if (pubkeys.length === 0) {
@@ -34,42 +36,65 @@ export const fetchBlogPostsFromAuthors = async (
 
     console.log('📚 Fetching blog posts (kind 30023) from', pubkeys.length, 'authors')
     
-    const events = await lastValueFrom(
-      relayPool
-        .req(relayUrls, { 
-          kinds: [30023], 
-          authors: pubkeys,
-          limit: 100 // Fetch up to 100 recent posts
-        })
-        .pipe(completeOnEose(), takeUntil(timer(15000)), toArray())
-    )
-    
-    console.log('📊 Blog post events fetched:', events.length)
-    
+    const prioritized = prioritizeLocalRelays(relayUrls)
+    const { local: localRelays, remote: remoteRelays } = partitionRelays(prioritized)
+
     // Deduplicate replaceable events by keeping the most recent version
     // Group by author + d-tag identifier
     const uniqueEvents = new Map<string, NostrEvent>()
-    
-    for (const event of events) {
-      const dTag = event.tags.find(t => t[0] === 'd')?.[1] || ''
-      const key = `${event.pubkey}:${dTag}`
-      
-      const existing = uniqueEvents.get(key)
-      if (!existing || event.created_at > existing.created_at) {
-        uniqueEvents.set(key, event)
+
+    const processEvents = (incoming: NostrEvent[]) => {
+      for (const event of incoming) {
+        const dTag = event.tags.find(t => t[0] === 'd')?.[1] || ''
+        const key = `${event.pubkey}:${dTag}`
+        const existing = uniqueEvents.get(key)
+        if (!existing || event.created_at > existing.created_at) {
+          uniqueEvents.set(key, event)
+          // Emit as we incorporate
+          if (onPost) {
+            const post: BlogPostPreview = {
+              event,
+              title: getArticleTitle(event) || 'Untitled',
+              summary: getArticleSummary(event),
+              image: getArticleImage(event),
+              published: getArticlePublished(event),
+              author: event.pubkey
+            }
+            onPost(post)
+          }
+        }
       }
     }
+
+    const local$ = localRelays.length > 0
+      ? relayPool
+          .req(localRelays, { kinds: [30023], authors: pubkeys, limit: 100 })
+          .pipe(completeOnEose(), takeUntil(timer(1200)))
+      : new Observable<NostrEvent>((sub) => sub.complete())
+    const remote$ = remoteRelays.length > 0
+      ? relayPool
+          .req(remoteRelays, { kinds: [30023], authors: pubkeys, limit: 100 })
+          .pipe(completeOnEose(), takeUntil(timer(6000)))
+      : new Observable<NostrEvent>((sub) => sub.complete())
+    const events = await lastValueFrom(merge(local$, remote$).pipe(toArray()))
+    processEvents(events)
+
+    console.log('📊 Blog post events fetched (unique):', uniqueEvents.size)
     
     // Convert to blog post previews and sort by published date (most recent first)
     const blogPosts: BlogPostPreview[] = Array.from(uniqueEvents.values())
-      .map(event => ({
-        event,
-        title: getArticleTitle(event) || 'Untitled',
-        summary: getArticleSummary(event),
-        image: getArticleImage(event),
-        published: getArticlePublished(event),
-        author: event.pubkey
-      }))
+      .map(event => {
+        const post: BlogPostPreview = {
+          event,
+          title: getArticleTitle(event) || 'Untitled',
+          summary: getArticleSummary(event),
+          image: getArticleImage(event),
+          published: getArticlePublished(event),
+          author: event.pubkey
+        }
+        if (onPost) onPost(post)
+        return post
+      })
       .sort((a, b) => {
         const timeA = a.published || a.event.created_at
         const timeB = b.published || b.event.created_at

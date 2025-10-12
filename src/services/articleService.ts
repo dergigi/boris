@@ -1,10 +1,12 @@
-import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
+import { RelayPool } from 'applesauce-relay'
+import { lastValueFrom, take } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
+import { prioritizeLocalRelays, partitionRelays, createParallelReqStreams } from '../utils/helpers'
+import { merge, toArray as rxToArray } from 'rxjs'
 import { UserSettings } from './settingsService'
 import { rebroadcastEvents } from './rebroadcastService'
 
@@ -98,9 +100,11 @@ export async function fetchArticleByNaddr(
     const pointer = decoded.data as AddressPointer
 
     // Define relays to query - prefer relays from naddr, fallback to configured relays (including local)
-    const relays = pointer.relays && pointer.relays.length > 0 
+    const baseRelays = pointer.relays && pointer.relays.length > 0 
       ? pointer.relays 
       : RELAYS
+    const orderedRelays = prioritizeLocalRelays(baseRelays)
+    const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
 
     // Fetch the article event
     const filter = {
@@ -109,12 +113,10 @@ export async function fetchArticleByNaddr(
       '#d': [pointer.identifier]
     }
 
-    // Use applesauce relay pool pattern
-    const events = await lastValueFrom(
-      relayPool
-        .req(relays, filter)
-        .pipe(completeOnEose(), takeUntil(timer(10000)), toArray())
-    )
+    // Parallel local+remote, stream immediate, collect up to first from each
+    const { local$, remote$ } = createParallelReqStreams(relayPool, localRelays, remoteRelays, filter, 1200, 6000)
+    const collected = await lastValueFrom(merge(local$.pipe(take(1)), remote$.pipe(take(1))).pipe(rxToArray()))
+    const events = collected as NostrEvent[]
 
     if (events.length === 0) {
       throw new Error('Article not found')

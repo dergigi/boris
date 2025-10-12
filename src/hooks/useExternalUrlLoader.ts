@@ -11,7 +11,7 @@ interface UseExternalUrlLoaderProps {
   setReaderContent: (content: ReadableContent | undefined) => void
   setReaderLoading: (loading: boolean) => void
   setIsCollapsed: (collapsed: boolean) => void
-  setHighlights: (highlights: Highlight[]) => void
+  setHighlights: (highlights: Highlight[] | ((prev: Highlight[]) => Highlight[])) => void
   setHighlightsLoading: (loading: boolean) => void
   setCurrentArticleCoordinate: (coord: string | undefined) => void
   setCurrentArticleEventId: (id: string | undefined) => void
@@ -57,7 +57,21 @@ export function useExternalUrlLoader({
           
           // Check if fetchHighlightsForUrl exists, otherwise skip
           if (typeof fetchHighlightsForUrl === 'function') {
-            const highlightsList = await fetchHighlightsForUrl(relayPool, url)
+            const seen = new Set<string>()
+            const highlightsList = await fetchHighlightsForUrl(
+              relayPool,
+              url,
+              (highlight) => {
+                if (seen.has(highlight.id)) return
+                seen.add(highlight.id)
+                setHighlights((prev) => {
+                  if (prev.some(h => h.id === highlight.id)) return prev
+                  const next = [...prev, highlight]
+                  return next.sort((a, b) => b.created_at - a.created_at)
+                })
+              }
+            )
+            // Ensure final list is sorted and contains all items
             setHighlights(highlightsList.sort((a, b) => b.created_at - a.created_at))
             console.log(`📌 Found ${highlightsList.length} highlights for URL`)
           } else {
