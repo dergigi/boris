@@ -157,7 +157,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
       {loading && (
         <div className="explore-loading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0' }}>
           <FontAwesomeIcon icon={faSpinner} spin />
-          <span>Refreshing posts…</span>
         </div>
       )}
       <div className="explore-grid">
