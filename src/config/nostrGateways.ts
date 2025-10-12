@@ -20,8 +20,15 @@ export function getEventUrl(nevent: string): string {
 
 /**
  * Get a general nostr link on the gateway
+ * Automatically detects if it's a profile (npub/nprofile) or event (note/nevent/naddr)
  */
 export function getNostrUrl(identifier: string): string {
-  return `${NOSTR_GATEWAY}/${identifier}`
+  // Check the prefix to determine if it's a profile or event
+  if (identifier.startsWith('npub') || identifier.startsWith('nprofile')) {
+    return `${NOSTR_GATEWAY}/p/${identifier}`
+  }
+  
+  // Everything else (note, nevent, naddr) goes to /e/
+  return `${NOSTR_GATEWAY}/e/${identifier}`
 }
 
