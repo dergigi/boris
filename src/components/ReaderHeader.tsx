@@ -6,6 +6,7 @@ import { useImageCache } from '../hooks/useImageCache'
 import { UserSettings } from '../services/settingsService'
 import { Highlight, HighlightLevel } from '../types/highlights'
 import { HighlightVisibility } from './HighlightsPanel'
+import { hexToRgb } from '../utils/colorHelpers'
 
 interface ReaderHeaderProps {
   title?: string
@@ -37,7 +38,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   const isLongSummary = summary && summary.length > 150
   
   // Determine the dominant highlight color based on visibility and priority
-  const highlightIndicatorColor = useMemo(() => {
+  const highlightIndicatorStyles = useMemo(() => {
     if (!highlights.length) return undefined
     
     // Count highlights by level that are visible
@@ -48,18 +49,24 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
       }
     })
     
+    let hexColor: string | undefined
     // Priority: nostrverse > friends > mine
     if (visibleLevels.has('nostrverse') && highlightVisibility.nostrverse) {
-      return settings?.highlightColorNostrverse || '#9333ea'
-    }
-    if (visibleLevels.has('friends') && highlightVisibility.friends) {
-      return settings?.highlightColorFriends || '#f97316'
-    }
-    if (visibleLevels.has('mine') && highlightVisibility.mine) {
-      return settings?.highlightColorMine || '#ffff00'
+      hexColor = settings?.highlightColorNostrverse || '#9333ea'
+    } else if (visibleLevels.has('friends') && highlightVisibility.friends) {
+      hexColor = settings?.highlightColorFriends || '#f97316'
+    } else if (visibleLevels.has('mine') && highlightVisibility.mine) {
+      hexColor = settings?.highlightColorMine || '#ffff00'
     }
     
-    return undefined
+    if (!hexColor) return undefined
+    
+    const rgb = hexToRgb(hexColor)
+    return {
+      backgroundColor: `rgba(${rgb}, 0.1)`,
+      borderColor: `rgba(${rgb}, 0.3)`,
+      color: '#fff'
+    }
   }, [highlights, highlightVisibility, settings])
   
   if (cachedImage) {
@@ -86,11 +93,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
                 {hasHighlights && (
                   <div 
                     className="highlight-indicator"
-                    style={highlightIndicatorColor ? { 
-                      backgroundColor: `${highlightIndicatorColor}bf`,
-                      borderColor: highlightIndicatorColor,
-                      color: '#000'
-                    } : undefined}
+                    style={highlightIndicatorStyles}
                   >
                     <FontAwesomeIcon icon={faHighlighter} />
                     <span>{highlightCount} highlight{highlightCount !== 1 ? 's' : ''}</span>
@@ -130,11 +133,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
             {hasHighlights && (
               <div 
                 className="highlight-indicator"
-                style={highlightIndicatorColor ? { 
-                  backgroundColor: `${highlightIndicatorColor}bf`,
-                  borderColor: highlightIndicatorColor,
-                  color: '#000'
-                } : undefined}
+                style={highlightIndicatorStyles}
               >
                 <FontAwesomeIcon icon={faHighlighter} />
                 <span>{highlightCount} highlight{highlightCount !== 1 ? 's' : ''}</span>
