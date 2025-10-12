@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer, faTrash, faEllipsisV } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer, faTrash, faEllipsisH } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models, IEventStore } from 'applesauce-core'
@@ -386,7 +386,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
               onClick={handleMenuToggle}
               title="More options"
             >
-              <FontAwesomeIcon icon={faEllipsisV} />
+              <FontAwesomeIcon icon={faEllipsisH} />
             </button>
             
             {showMenu && (
