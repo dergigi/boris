@@ -6,6 +6,7 @@ import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
 import { IconGetter } from './shared'
 import { useImageCache } from '../../hooks/useImageCache'
 import { UserSettings } from '../../services/settingsService'
+import { getProfileUrl, getEventUrl } from '../../config/nostrGateways'
 
 interface LargeViewProps {
   bookmark: IndividualBookmark
@@ -79,7 +80,7 @@ export const LargeView: React.FC<LargeViewProps> = ({
         <div className="large-footer">
           <span className="large-author">
             <a
-              href={`https://search.dergigi.com/p/${authorNpub}`}
+              href={getProfileUrl(authorNpub)}
               target="_blank"
               rel="noopener noreferrer"
               className="author-link-minimal"
@@ -90,7 +91,7 @@ export const LargeView: React.FC<LargeViewProps> = ({
           
           {eventNevent && (
             <a
-              href={`https://search.dergigi.com/e/${eventNevent}`}
+              href={getEventUrl(eventNevent)}
               target="_blank"
               rel="noopener noreferrer"
               className="bookmark-date-link"

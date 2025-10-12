@@ -1,4 +1,5 @@
 import { decode, npubEncode, noteEncode } from 'nostr-tools/nip19'
+import { getNostrUrl } from '../config/nostrGateways'
 
 /**
  * Regular expression to match nostr: URIs and bare NIP-19 identifiers
@@ -39,7 +40,7 @@ export function extractNaddrUris(text: string): string[] {
 /**
  * Decode a NIP-19 identifier and return a human-readable link
  * For articles (naddr), returns an internal app link
- * For other types, returns an external njump.me link
+ * For other types, returns an external gateway link
  */
 export function createNostrLink(encoded: string): string {
   try {
@@ -53,13 +54,13 @@ export function createNostrLink(encoded: string): string {
       case 'nprofile':
       case 'note':
       case 'nevent':
-        return `https://njump.me/${encoded}`
+        return getNostrUrl(encoded)
       default:
-        return `https://njump.me/${encoded}`
+        return getNostrUrl(encoded)
     }
   } catch (error) {
     console.warn('Failed to decode nostr URI:', encoded, error)
-    return `https://njump.me/${encoded}`
+    return getNostrUrl(encoded)
   }
 }
 

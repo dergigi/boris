@@ -2,6 +2,7 @@ import React from 'react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models, Helpers } from 'applesauce-core'
 import { decode, npubEncode } from 'nostr-tools/nip19'
+import { getProfileUrl } from '../config/nostrGateways'
 
 const { getPubkeyFromDecodeResult } = Helpers
 
@@ -25,7 +26,7 @@ const ResolvedMention: React.FC<ResolvedMentionProps> = ({ encoded }) => {
   if (npub) {
     return (
       <a
-        href={`https://search.dergigi.com/p/${npub}`}
+        href={getProfileUrl(npub)}
         className="nostr-mention"
         target="_blank"
         rel="noopener noreferrer"

@@ -9,6 +9,7 @@ import { classifyUrl } from '../../utils/helpers'
 import { IconGetter } from './shared'
 import { useImageCache } from '../../hooks/useImageCache'
 import { UserSettings } from '../../services/settingsService'
+import { getProfileUrl, getEventUrl } from '../../config/nostrGateways'
 
 interface CardViewProps {
   bookmark: IndividualBookmark
@@ -79,7 +80,7 @@ export const CardView: React.FC<CardViewProps> = ({
         
         {eventNevent ? (
           <a
-            href={`https://search.dergigi.com/e/${eventNevent}`}
+            href={getEventUrl(eventNevent)}
             target="_blank"
             rel="noopener noreferrer"
             className="bookmark-date-link"
@@ -159,7 +160,7 @@ export const CardView: React.FC<CardViewProps> = ({
       <div className="bookmark-footer">
         <div className="bookmark-meta-minimal">
           <a
-            href={`https://search.dergigi.com/p/${authorNpub}`}
+            href={getProfileUrl(authorNpub)}
             target="_blank"
             rel="noopener noreferrer"
             className="author-link-minimal"

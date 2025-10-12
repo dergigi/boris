@@ -13,6 +13,7 @@ import { nip19 } from 'nostr-tools'
 import { formatDateCompact } from '../utils/bookmarkUtils'
 import { createDeletionRequest } from '../services/deletionService'
 import ConfirmDialog from './ConfirmDialog'
+import { getNostrUrl } from '../config/nostrGateways'
 
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
@@ -134,7 +135,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       author: highlight.pubkey,
       kind: 9802
     })
-    return `https://njump.me/${nevent}`
+    return getNostrUrl(nevent)
   }
   
   const highlightLink = getHighlightLink()
