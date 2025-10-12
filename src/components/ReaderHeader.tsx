@@ -86,7 +86,10 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
                 {hasHighlights && (
                   <div 
                     className="highlight-indicator"
-                    style={highlightIndicatorColor ? { color: highlightIndicatorColor } : undefined}
+                    style={highlightIndicatorColor ? { 
+                      backgroundColor: highlightIndicatorColor,
+                      color: '#000'
+                    } : undefined}
                   >
                     <FontAwesomeIcon icon={faHighlighter} />
                     <span>{highlightCount} highlight{highlightCount !== 1 ? 's' : ''}</span>
@@ -126,7 +129,10 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
             {hasHighlights && (
               <div 
                 className="highlight-indicator"
-                style={highlightIndicatorColor ? { color: highlightIndicatorColor } : undefined}
+                style={highlightIndicatorColor ? { 
+                  backgroundColor: highlightIndicatorColor,
+                  color: '#000'
+                } : undefined}
               >
                 <FontAwesomeIcon icon={faHighlighter} />
                 <span>{highlightCount} highlight{highlightCount !== 1 ? 's' : ''}</span>
