@@ -169,6 +169,7 @@ export const fetchHighlightsForArticle = async (
 export const fetchHighlightsForUrl = async (
   relayPool: RelayPool,
   url: string,
+  onHighlight?: (highlight: Highlight) => void,
   settings?: UserSettings
 ): Promise<Highlight[]> => {
   try {
@@ -187,6 +188,10 @@ export const fetchHighlightsForUrl = async (
               onlyEvents(),
               tap((event: NostrEvent) => {
                 seenIds.add(event.id)
+                if (onHighlight) {
+                  const h = eventToHighlight(event)
+                  onHighlight(h)
+                }
               }),
               completeOnEose(),
               takeUntil(timer(1200)),
@@ -205,6 +210,10 @@ export const fetchHighlightsForUrl = async (
             onlyEvents(),
             tap((event: NostrEvent) => {
               seenIds.add(event.id)
+              if (onHighlight) {
+                const h = eventToHighlight(event)
+                onHighlight(h)
+              }
             }),
             completeOnEose(),
             takeUntil(timer(6000)),

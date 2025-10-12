@@ -46,7 +46,21 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
         const posts = await fetchBlogPostsFromAuthors(
           relayPool,
           Array.from(contacts),
-          relayUrls
+          relayUrls,
+          (post) => {
+            // Stream posts as we get them
+            setBlogPosts((prev) => {
+              const exists = prev.some(p => p.event.id === post.event.id)
+              if (exists) return prev
+              const next = [...prev, post]
+              // Keep sorted by published or created_at
+              return next.sort((a, b) => {
+                const timeA = a.published || a.event.created_at
+                const timeB = b.published || b.event.created_at
+                return timeB - timeA
+              })
+            })
+          }
         )
 
         if (posts.length === 0) {

@@ -1,5 +1,5 @@
-import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, race, takeUntil, timer, toArray } from 'rxjs'
+import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
+import { lastValueFrom, take, takeUntil, timer, toArray } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
@@ -119,7 +119,12 @@ export async function fetchArticleByNaddr(
         events = await lastValueFrom(
           relayPool
             .req(localRelays, filter)
-            .pipe(completeOnEose(), takeUntil(timer(1200)), toArray())
+            .pipe(
+              onlyEvents(),
+              take(1),
+              takeUntil(timer(1200)),
+              toArray()
+            )
         )
       } catch {
         events = []
@@ -131,7 +136,12 @@ export async function fetchArticleByNaddr(
       events = await lastValueFrom(
         relayPool
           .req(orderedRelays, filter)
-          .pipe(completeOnEose(), takeUntil(timer(6000)), toArray())
+          .pipe(
+            onlyEvents(),
+            take(1),
+            takeUntil(timer(6000)),
+            toArray()
+          )
       )
     }
 

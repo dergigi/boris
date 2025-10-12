@@ -25,7 +25,8 @@ export interface BlogPostPreview {
 export const fetchBlogPostsFromAuthors = async (
   relayPool: RelayPool,
   pubkeys: string[],
-  relayUrls: string[]
+  relayUrls: string[],
+  onPost?: (post: BlogPostPreview) => void
 ): Promise<BlogPostPreview[]> => {
   try {
     if (pubkeys.length === 0) {
@@ -48,7 +49,11 @@ export const fetchBlogPostsFromAuthors = async (
               authors: pubkeys,
               limit: 100
             })
-            .pipe(completeOnEose(), takeUntil(timer(1200)), toArray())
+            .pipe(
+              completeOnEose(),
+              takeUntil(timer(1200)),
+              toArray()
+            )
         )
       } catch {
         events = []
@@ -84,14 +89,18 @@ export const fetchBlogPostsFromAuthors = async (
     
     // Convert to blog post previews and sort by published date (most recent first)
     const blogPosts: BlogPostPreview[] = Array.from(uniqueEvents.values())
-      .map(event => ({
-        event,
-        title: getArticleTitle(event) || 'Untitled',
-        summary: getArticleSummary(event),
-        image: getArticleImage(event),
-        published: getArticlePublished(event),
-        author: event.pubkey
-      }))
+      .map(event => {
+        const post: BlogPostPreview = {
+          event,
+          title: getArticleTitle(event) || 'Untitled',
+          summary: getArticleSummary(event),
+          image: getArticleImage(event),
+          published: getArticlePublished(event),
+          author: event.pubkey
+        }
+        if (onPost) onPost(post)
+        return post
+      })
       .sort((a, b) => {
         const timeA = a.published || a.event.created_at
         const timeB = b.published || b.event.created_at
