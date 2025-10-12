@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer, faTrash, faEllipsisV } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models, IEventStore } from 'applesauce-core'
@@ -40,11 +40,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   onHighlightDelete
 }) => {
   const itemRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const [isSyncing, setIsSyncing] = useState(() => isEventSyncing(highlight.id))
   const [showOfflineIndicator, setShowOfflineIndicator] = useState(() => highlight.isOfflineCreated && !isSyncing)
   const [isRebroadcasting, setIsRebroadcasting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
   
   const activeAccount = Hooks.useActiveAccount()
   
@@ -96,6 +98,22 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }, [isSelected])
+  
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [showMenu])
   
   const handleItemClick = () => {
     if (onHighlightClick) {
@@ -295,6 +313,29 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     setShowDeleteConfirm(false)
   }
   
+  const handleMenuToggle = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(!showMenu)
+  }
+  
+  const handleOpenExternal = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (sourceLink) {
+      if (highlight.urlReference && onSelectUrl) {
+        onSelectUrl(highlight.urlReference)
+      } else {
+        window.open(sourceLink, '_blank', 'noopener,noreferrer')
+      }
+    }
+    setShowMenu(false)
+  }
+  
+  const handleMenuDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(false)
+    setShowDeleteConfirm(true)
+  }
+  
   return (
     <>
     <div 
@@ -314,15 +355,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
             style={{ cursor: relayPool && eventStore ? 'pointer' : 'default' }}
           >
             <FontAwesomeIcon icon={relayIndicator.icon} spin={relayIndicator.spin} />
-          </div>
-        )}
-        {canDelete && (
-          <div 
-            className="highlight-delete-btn" 
-            title="Delete highlight"
-            onClick={handleDeleteClick}
-          >
-            <FontAwesomeIcon icon={isDeleting ? faSpinner : faTrash} spin={isDeleting} />
           </div>
         )}
       </div>
@@ -348,18 +380,39 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
             {formatDateCompact(highlight.created_at)}
           </span>
           
-          {sourceLink && (
-            <a
-              href={sourceLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => highlight.urlReference && onSelectUrl ? handleLinkClick(highlight.urlReference, e) : undefined}
-              className="highlight-source"
-              title={highlight.eventReference ? 'Open on Nostr' : 'Open source'}
+          <div className="highlight-menu-wrapper" ref={menuRef}>
+            <button
+              className="highlight-menu-btn"
+              onClick={handleMenuToggle}
+              title="More options"
             >
-              <FontAwesomeIcon icon={faExternalLinkAlt} />
-            </a>
-          )}
+              <FontAwesomeIcon icon={faEllipsisV} />
+            </button>
+            
+            {showMenu && (
+              <div className="highlight-menu">
+                {sourceLink && (
+                  <button
+                    className="highlight-menu-item"
+                    onClick={handleOpenExternal}
+                  >
+                    <FontAwesomeIcon icon={faExternalLinkAlt} />
+                    <span>{highlight.eventReference ? 'Open on Nostr' : 'Open source'}</span>
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    className="highlight-menu-item highlight-menu-item-danger"
+                    onClick={handleMenuDeleteClick}
+                    disabled={isDeleting}
+                  >
+                    <FontAwesomeIcon icon={isDeleting ? faSpinner : faTrash} spin={isDeleting} />
+                    <span>Delete</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

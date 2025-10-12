@@ -1783,6 +1783,35 @@ body.mobile-sidebar-open {
   .highlight-text {
     color: #213547;
   }
+  
+  .highlight-menu-btn {
+    color: #666;
+  }
+  
+  .highlight-menu-btn:hover {
+    color: #646cff;
+    background: rgba(100, 108, 255, 0.08);
+  }
+  
+  .highlight-menu {
+    background: #fff;
+    border-color: #ddd;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .highlight-menu-item {
+    color: #213547;
+  }
+  
+  .highlight-menu-item:hover {
+    background: rgba(100, 108, 255, 0.08);
+    color: #000;
+  }
+  
+  .highlight-menu-item-danger:hover {
+    background: rgba(255, 68, 68, 0.08);
+    color: #cc0000;
+  }
 }
 
 /* Highlights Panel Styles */
@@ -2236,25 +2265,77 @@ body.mobile-sidebar-open {
   line-height: 1;
 }
 
-.highlight-source {
+.highlight-menu-wrapper {
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.highlight-menu-btn {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  color: #646cff;
-  text-decoration: none;
   transition: color 0.2s ease;
-  flex-shrink: 0;
-  margin-left: auto;
-  line-height: 1;
+  border-radius: 4px;
 }
 
-.highlight-source:hover {
-  color: #535bf2;
-  text-decoration: underline;
+.highlight-menu-btn:hover {
+  color: #646cff;
+  background: rgba(100, 108, 255, 0.1);
 }
 
-.highlight-source svg {
+.highlight-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.highlight-menu-item {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #ddd;
+  padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.highlight-menu-item:hover {
+  background: rgba(100, 108, 255, 0.15);
+  color: #fff;
+}
+
+.highlight-menu-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.highlight-menu-item-danger:hover {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff4444;
+}
+
+.highlight-menu-item svg {
+  font-size: 0.875rem;
+  flex-shrink: 0;
 }
 
 /* Inline content highlights - fluorescent marker style */
