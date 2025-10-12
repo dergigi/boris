@@ -23,10 +23,13 @@ const HighlightsPanelCollapsed: React.FC<HighlightsPanelCollapsedProps> = ({
         className={`toggle-highlights-btn with-icon ${hasHighlights ? 'has-highlights' : ''}`}
         title="Expand highlights panel"
         aria-label="Expand highlights panel"
-        style={{ color: highlightColor }}
       >
-        <FontAwesomeIcon icon={faHighlighter} className={hasHighlights ? 'glow' : ''} />
-        <FontAwesomeIcon icon={faChevronRight} />
+        <FontAwesomeIcon 
+          icon={faHighlighter} 
+          className={hasHighlights ? 'glow' : ''} 
+          style={{ color: highlightColor }}
+        />
+        <FontAwesomeIcon icon={faChevronRight} style={{ color: highlightColor }} />
       </button>
     </div>
   )

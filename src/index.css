@@ -1836,17 +1836,17 @@ body.mobile-sidebar-open {
 }
 
 .highlights-container.collapsed .toggle-highlights-btn .glow {
-  color: #ffff00;
-  filter: drop-shadow(0 0 4px rgba(255, 255, 0, 0.6));
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
 @keyframes pulse-glow {
   0%, 100% {
-    filter: drop-shadow(0 0 4px rgba(255, 255, 0, 0.6));
+    opacity: 0.8;
+    transform: scale(1);
   }
   50% {
-    filter: drop-shadow(0 0 8px rgba(255, 255, 0, 0.9));
+    opacity: 1;
+    transform: scale(1.1);
   }
 }
 
