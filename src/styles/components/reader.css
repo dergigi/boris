@@ -36,7 +36,7 @@
 .reader-html code { background: #1e1e1e; border: 1px solid #333; border-radius: 4px; padding: 0.15rem 0.4rem; font-size: 0.9em; font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace; }
 .reader-html pre code { background: transparent; border: none; padding: 0; display: block; }
 /* Article menu */
-.article-menu-container { display: flex; justify-content: flex-end; padding: 1.5rem 0 0.5rem; margin-top: 2rem; border-top: 1px solid #333; }
+.article-menu-container { display: flex; justify-content: flex-end; padding: 1.5rem 0 0.5rem; margin-top: 2rem; }
 .article-menu-wrapper { position: relative; }
 .article-menu-btn { background: none; border: 1px solid #444; color: #888; cursor: pointer; padding: 0.5rem 0.75rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease; border-radius: 6px; }
 .article-menu-btn:hover { color: #646cff; background: rgba(100, 108, 255, 0.1); border-color: #646cff; }
