@@ -129,39 +129,51 @@ function tryMultiNodeMatch(
   if (useNormalized) {
     // Build proper mapping from normalized to original positions
     let normPos = 0
-    let foundStart = false
-    let foundEnd = false
+    const posMap: number[] = [] // Maps normalized position to original position
     
-    for (let i = 0; i < combinedText.length && (!foundStart || !foundEnd); i++) {
+    for (let i = 0; i < combinedText.length; i++) {
       const char = combinedText[i]
       const isWhitespace = /\s/.test(char)
       
-      // In normalized text, consecutive whitespace becomes single space
       if (isWhitespace) {
+        // In normalized text, consecutive whitespace becomes one space
+        // Map this normalized position to the start of whitespace sequence
+        posMap[normPos] = i
         normPos++
-        // Skip consecutive whitespace in original
+        // Skip remaining consecutive whitespace
         while (i + 1 < combinedText.length && /\s/.test(combinedText[i + 1])) {
           i++
         }
       } else {
-        if (!foundStart && normPos === matchIndex) {
-          startIndex = i
-          foundStart = true
-        }
-        if (!foundEnd && normPos === matchIndex + searchFor.length) {
-          endIndex = i
-          foundEnd = true
-        }
+        // Non-whitespace character maps directly
+        posMap[normPos] = i
         normPos++
       }
     }
     
-    // If we didn't find exact positions, fall back to ratio (shouldn't happen often)
-    if (!foundStart || !foundEnd) {
-      console.warn('Could not map normalized positions exactly, using approximation')
-      const ratio = combinedText.length / searchIn.length
-      startIndex = Math.floor(matchIndex * ratio)
-      endIndex = Math.min(combinedText.length, startIndex + searchText.length)
+    // Add final position for end-of-text
+    posMap[normPos] = combinedText.length
+    
+    // Map the match indices
+    if (matchIndex >= 0 && matchIndex < posMap.length) {
+      startIndex = posMap[matchIndex]
+    }
+    
+    const endPos = matchIndex + searchFor.length
+    if (endPos >= 0 && endPos < posMap.length) {
+      endIndex = posMap[endPos]
+    }
+    
+    // Validate we got valid positions
+    if (startIndex < 0 || endIndex <= startIndex || endIndex > combinedText.length) {
+      console.warn('Could not map normalized positions:', { 
+        matchIndex, 
+        searchForLength: searchFor.length,
+        startIndex,
+        endIndex,
+        combinedTextLength: combinedText.length 
+      })
+      return false
     }
   }
   
