@@ -46,7 +46,7 @@
 .article-menu-item svg { font-size: 0.875rem; flex-shrink: 0; }
 
 /* Mark as Read button */
-.mark-as-read-container { display: flex; justify-content: center; align-items: center; padding: 2rem 1rem; margin-top: 1rem; border-top: 1px solid #333; }
+.mark-as-read-container { display: flex; justify-content: center; align-items: center; padding: 2rem 1rem; margin-top: 1rem; }
 .mark-as-read-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: #2a2a2a; color: #ddd; border: 1px solid #444; border-radius: 8px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; min-width: 160px; justify-content: center; }
 .mark-as-read-btn:hover:not(:disabled) { background: #333; border-color: #555; transform: translateY(-1px); }
 .mark-as-read-btn:active:not(:disabled) { transform: translateY(0); }
