@@ -100,13 +100,16 @@ const RelaySettings: React.FC<RelaySettingsProps> = ({ relayStatuses }) => {
                     }} 
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ 
-                      fontSize: '0.9rem',
-                      fontFamily: 'var(--font-mono, monospace)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}>
+                    <div 
+                      className="relay-url"
+                      style={{ 
+                        fontSize: '0.9rem',
+                        fontFamily: 'var(--font-mono, monospace)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
                       {formatRelayUrl(relay.url)}
                     </div>
                   </div>

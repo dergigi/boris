@@ -96,6 +96,15 @@
   color: rgb(161 161 170); /* zinc-400 */
 }
 
+/* Relay items */
+.relay-item {
+  max-width: 100%;
+}
+
+.relay-url {
+  max-width: 100%;
+}
+
 /* Mobile responsive styles */
 @media (max-width: 768px) {
   .settings-view {
@@ -121,6 +130,19 @@
   .zap-preset-btn {
     flex: 1 1 auto;
     min-width: 70px;
+  }
+  
+  .relay-item {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .relay-url {
+    white-space: normal !important;
+    word-break: break-all !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    line-height: 1.4;
   }
 }
 
