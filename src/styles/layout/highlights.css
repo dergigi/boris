@@ -130,8 +130,8 @@
 .highlight-item.level-nostrverse .highlight-header,
 .highlight-item.level-nostrverse .highlight-footer { border-color: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 60%, #333); }
 
-.highlight-quote-icon { position: absolute; top: 0.5rem; left: 0.5rem; color: #646cff; font-size: 0.85rem; opacity: 0.7; z-index: 10; }
-.highlight-relay-indicator { position: absolute; bottom: 0.5rem; left: 0.5rem; opacity: 0.7; z-index: 10; }
+.highlight-quote-icon { position: absolute; top: 0.5rem; left: 1rem; color: #646cff; font-size: 0.85rem; opacity: 0.7; z-index: 10; }
+.highlight-relay-indicator { position: absolute; bottom: 0.5rem; left: 1rem; opacity: 0.7; z-index: 10; }
 .highlight-relay-indicator:hover { opacity: 1; }
 
 /* Mobile: Larger touch targets and better spacing */
@@ -150,7 +150,7 @@
 .highlight-comment { margin-top: 0.5rem; padding: 0.75rem; background: rgba(100, 108, 255, 0.1); border-left: 3px solid #646cff; border-radius: 4px; font-size: 0.875rem; color: #ddd; line-height: 1.5; }
 
 .highlight-footer { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.8rem; color: #888; border-bottom: 1px solid #333; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; transition: border-color 0.2s ease; }
-.highlight-author { color: #aaa; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; display: flex; align-items: center; min-height: 28px; margin-right: auto; padding-left: 2rem; }
+.highlight-author { color: #aaa; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; display: flex; align-items: center; min-height: 28px; margin-right: auto; padding-left: 2.5rem; }
 .highlight-menu-wrapper { position: relative; flex-shrink: 0; display: flex; align-items: center; }
 .highlight-menu { position: absolute; right: 0; top: calc(100% + 4px); background: #2a2a2a; border: 1px solid #444; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); z-index: 1000; min-width: 160px; overflow: hidden; }
 .highlight-menu-item { width: 100%; background: none; border: none; color: #ddd; padding: 0.625rem 0.875rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.625rem; cursor: pointer; transition: all 0.15s ease; text-align: left; white-space: nowrap; }
