@@ -17,7 +17,7 @@
   min-width: 400px;  /* Minimum width */
   max-width: 1000px;   /* Maximum width */
   aspect-ratio: 16/9;
-  margin: 0 0 1rem 0; /* Remove left/right margins, keep bottom margin */
+  margin: 0 -0.75rem 1rem -0.75rem; /* Negative margins to counteract reader padding */
   background: #000;
 }
 .reader.empty { color: #888; }
