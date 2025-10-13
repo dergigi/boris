@@ -21,4 +21,12 @@
   75% { box-shadow: 0 0 20px rgba(var(--highlight-rgb, 255, 255, 0), 0.6); transform: scale(1.02); }
 }
 
+/* Reading progress bar positioning */
+@media (min-width: 769px) {
+  .reading-progress-bar {
+    left: var(--left-offset) !important;
+    right: var(--right-offset) !important;
+  }
+}
+
 

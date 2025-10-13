@@ -19,7 +19,7 @@ export const ReadingProgressIndicator: React.FC<ReadingProgressIndicatorProps> =
 }) => {
   const clampedProgress = Math.min(100, Math.max(0, progress))
   
-  // Calculate left and right offsets based on sidebar states
+  // Calculate left and right offsets based on sidebar states (desktop only)
   const leftOffset = isSidebarCollapsed 
     ? 'var(--sidebar-collapsed-width)' 
     : 'var(--sidebar-width)'
@@ -29,11 +29,11 @@ export const ReadingProgressIndicator: React.FC<ReadingProgressIndicatorProps> =
   
   return (
     <div 
-      className={`fixed bottom-0 z-[1102] bg-[rgba(26,26,26,0.85)] backdrop-blur-sm px-3 py-1 flex items-center gap-2 transition-all duration-300 md:block hidden ${className}`}
+      className={`reading-progress-bar fixed bottom-0 left-0 right-0 z-[1102] bg-[rgba(26,26,26,0.85)] backdrop-blur-sm px-3 py-1 flex items-center gap-2 transition-all duration-300 ${className}`}
       style={{
-        left: leftOffset,
-        right: rightOffset
-      }}
+        '--left-offset': leftOffset,
+        '--right-offset': rightOffset
+      } as React.CSSProperties}
     >
       <div className="flex-1 h-0.5 bg-white/10 rounded-full overflow-hidden relative">
         <div 
