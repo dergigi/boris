@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faBookmark, faSpinner, faList, faThLarge, faImage, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { formatDistanceToNow } from 'date-fns'
@@ -10,6 +10,8 @@ import IconButton from './IconButton'
 import { ViewMode } from './Bookmarks'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { UserSettings } from '../services/settingsService'
+import { usePullToRefresh } from '../hooks/usePullToRefresh'
+import PullToRefreshIndicator from './PullToRefreshIndicator'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -48,6 +50,19 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   settings,
   isMobile = false
 }) => {
+  const bookmarksListRef = useRef<HTMLDivElement>(null)
+
+  // Pull-to-refresh for bookmarks
+  const pullToRefreshState = usePullToRefresh(bookmarksListRef, {
+    onRefresh: () => {
+      if (onRefresh) {
+        onRefresh()
+      }
+    },
+    isRefreshing: isRefreshing || false,
+    disabled: !onRefresh
+  })
+
   // Helper to check if a bookmark has either content or a URL
   const hasContentOrUrl = (ib: IndividualBookmark) => {
     // Check if has content (text)
@@ -124,7 +139,16 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
           </div>
         )
       ) : (
-        <div className="bookmarks-list">
+        <div 
+          ref={bookmarksListRef}
+          className={`bookmarks-list pull-to-refresh-container ${pullToRefreshState.isPulling ? 'is-pulling' : ''}`}
+        >
+          <PullToRefreshIndicator
+            isPulling={pullToRefreshState.isPulling}
+            pullDistance={pullToRefreshState.pullDistance}
+            canRefresh={pullToRefreshState.canRefresh}
+            isRefreshing={isRefreshing || false}
+          />
           <div className={`bookmarks-grid bookmarks-${viewMode}`}>
             {allIndividualBookmarks.map((individualBookmark, index) => 
               <BookmarkItem 

@@ -12,6 +12,7 @@
 @import './styles/components/reader.css';
 @import './styles/components/settings.css';
 @import './styles/components/me.css';
+@import './styles/components/pull-to-refresh.css';
 @import './styles/utils/animations.css';
 @import './styles/utils/utilities.css';
 @import './styles/utils/legacy.css';

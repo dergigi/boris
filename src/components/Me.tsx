@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner, faExclamationCircle, faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
@@ -21,6 +21,8 @@ import { ViewMode } from './Bookmarks'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { getCachedMeData, setCachedMeData, updateCachedHighlights } from '../services/meCache'
 import { faBooks } from '../icons/customIcons'
+import { usePullToRefresh } from '../hooks/usePullToRefresh'
+import PullToRefreshIndicator from './PullToRefreshIndicator'
 
 interface MeProps {
   relayPool: RelayPool
@@ -40,6 +42,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
+  const meContainerRef = useRef<HTMLDivElement>(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   // Update local state when prop changes
   useEffect(() => {
@@ -102,7 +106,15 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
     }
 
     loadData()
-  }, [relayPool, activeAccount])
+  }, [relayPool, activeAccount, refreshTrigger])
+
+  // Pull-to-refresh
+  const pullToRefreshState = usePullToRefresh(meContainerRef, {
+    onRefresh: () => {
+      setRefreshTrigger(prev => prev + 1)
+    },
+    isRefreshing: loading
+  })
 
   const handleHighlightDelete = (highlightId: string) => {
     setHighlights(prev => {
@@ -301,7 +313,16 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
   }
 
   return (
-    <div className="explore-container">
+    <div 
+      ref={meContainerRef}
+      className={`explore-container pull-to-refresh-container ${pullToRefreshState.isPulling ? 'is-pulling' : ''}`}
+    >
+      <PullToRefreshIndicator
+        isPulling={pullToRefreshState.isPulling}
+        pullDistance={pullToRefreshState.pullDistance}
+        canRefresh={pullToRefreshState.canRefresh}
+        isRefreshing={loading && pullToRefreshState.canRefresh}
+      />
       <div className="explore-header">
         {activeAccount && <AuthorCard authorPubkey={activeAccount.pubkey} />}
         

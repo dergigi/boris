@@ -1,0 +1,53 @@
+/* Pull-to-refresh indicator styles */
+.pull-to-refresh-indicator {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  z-index: 100;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.pull-to-refresh-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-secondary);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.pull-to-refresh-text {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  font-weight: 500;
+  background: var(--background-secondary);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Container needs relative positioning for absolute indicator */
+.pull-to-refresh-container {
+  position: relative;
+}
+
+/* Ensure smooth transitions during pull */
+.pull-to-refresh-container.is-pulling {
+  overflow: visible;
+}
+

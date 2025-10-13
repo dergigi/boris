@@ -1,11 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { useFilteredHighlights } from '../hooks/useFilteredHighlights'
+import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import HighlightsPanelCollapsed from './HighlightsPanel/HighlightsPanelCollapsed'
 import HighlightsPanelHeader from './HighlightsPanel/HighlightsPanelHeader'
+import PullToRefreshIndicator from './PullToRefreshIndicator'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { UserSettings } from '../services/settingsService'
@@ -57,12 +59,24 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
 }) => {
   const [showHighlights, setShowHighlights] = useState(true)
   const [localHighlights, setLocalHighlights] = useState(highlights)
+  const highlightsListRef = useRef<HTMLDivElement>(null)
   
   const handleToggleHighlights = () => {
     const newValue = !showHighlights
     setShowHighlights(newValue)
     onToggleHighlights?.(newValue)
   }
+
+  // Pull-to-refresh for highlights
+  const pullToRefreshState = usePullToRefresh(highlightsListRef, {
+    onRefresh: () => {
+      if (onRefresh) {
+        onRefresh()
+      }
+    },
+    isRefreshing: loading,
+    disabled: !onRefresh
+  })
   
   // Keep track of highlight updates
   React.useEffect(() => {
@@ -127,7 +141,16 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           </p>
         </div>
       ) : (
-        <div className="highlights-list">
+        <div 
+          ref={highlightsListRef}
+          className={`highlights-list pull-to-refresh-container ${pullToRefreshState.isPulling ? 'is-pulling' : ''}`}
+        >
+          <PullToRefreshIndicator
+            isPulling={pullToRefreshState.isPulling}
+            pullDistance={pullToRefreshState.pullDistance}
+            canRefresh={pullToRefreshState.canRefresh}
+            isRefreshing={loading}
+          />
           {filteredHighlights.map((highlight) => (
             <HighlightItem
               key={highlight.id}

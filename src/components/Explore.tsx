@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner, faExclamationCircle, faNewspaper } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
@@ -8,6 +8,8 @@ import { fetchContacts } from '../services/contactService'
 import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
 import BlogPostCard from './BlogPostCard'
 import { getCachedPosts, upsertCachedPost, setCachedPosts } from '../services/exploreCache'
+import { usePullToRefresh } from '../hooks/usePullToRefresh'
+import PullToRefreshIndicator from './PullToRefreshIndicator'
 
 interface ExploreProps {
   relayPool: RelayPool
@@ -18,6 +20,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
   const [blogPosts, setBlogPosts] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const exploreContainerRef = useRef<HTMLDivElement>(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   useEffect(() => {
     const loadBlogPosts = async () => {
@@ -116,7 +120,15 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
     }
 
     loadBlogPosts()
-  }, [relayPool, activeAccount, blogPosts.length])
+  }, [relayPool, activeAccount, blogPosts.length, refreshTrigger])
+
+  // Pull-to-refresh
+  const pullToRefreshState = usePullToRefresh(exploreContainerRef, {
+    onRefresh: () => {
+      setRefreshTrigger(prev => prev + 1)
+    },
+    isRefreshing: loading
+  })
 
   const getPostUrl = (post: BlogPostPreview) => {
     // Get the d-tag identifier
@@ -144,7 +156,16 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
   }
 
   return (
-    <div className="explore-container">
+    <div 
+      ref={exploreContainerRef}
+      className={`explore-container pull-to-refresh-container ${pullToRefreshState.isPulling ? 'is-pulling' : ''}`}
+    >
+      <PullToRefreshIndicator
+        isPulling={pullToRefreshState.isPulling}
+        pullDistance={pullToRefreshState.pullDistance}
+        canRefresh={pullToRefreshState.canRefresh}
+        isRefreshing={loading && pullToRefreshState.canRefresh}
+      />
       <div className="explore-header">
         <h1>
           <FontAwesomeIcon icon={faNewspaper} />
