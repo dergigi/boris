@@ -40,11 +40,13 @@
   .pane.sidebar {
     position: sticky;
     top: 0;
+    height: 100vh;
     max-height: 100vh;
     overflow-y: auto;
     align-self: start;
     margin: 0;
     padding: 0;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
   }
   
   .pane.main {
@@ -58,11 +60,13 @@
   .pane.highlights {
     position: sticky;
     top: 0;
+    height: 100vh;
     max-height: 100vh;
     overflow-y: auto;
     align-self: start;
     margin: 0;
     padding: 0;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
   }
 }
 
