@@ -43,6 +43,12 @@
   border-bottom-color: var(--highlight-color-mine, #ffff00);
 }
 
+/* Reading List tab uses blue color to match bookmarks icon */
+.me-tab[data-tab="reading-list"].active {
+  color: #646cff;
+  border-bottom-color: #646cff;
+}
+
 .me-tab svg {
   font-size: 1rem;
 }
