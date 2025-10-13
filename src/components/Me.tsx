@@ -3,13 +3,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner, faExclamationCircle, faHighlighter, faBookmark, faBook } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
+import { nip19 } from 'nostr-tools'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
 import { fetchBookmarks } from '../services/bookmarkService'
-import { fetchReadArticles, ReadArticle } from '../services/libraryService'
+import { fetchReadArticlesWithData } from '../services/libraryService'
+import { BlogPostPreview } from '../services/exploreService'
 import { Bookmark } from '../types/bookmarks'
 import AuthorCard from './AuthorCard'
+import BlogPostCard from './BlogPostCard'
 
 interface MeProps {
   relayPool: RelayPool
@@ -22,7 +25,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
   const [activeTab, setActiveTab] = useState<TabType>('highlights')
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
-  const [readArticles, setReadArticles] = useState<ReadArticle[]>([])
+  const [readArticles, setReadArticles] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -41,7 +44,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
         // Fetch highlights and read articles
         const [userHighlights, userReadArticles] = await Promise.all([
           fetchHighlights(relayPool, activeAccount.pubkey),
-          fetchReadArticles(relayPool, activeAccount.pubkey)
+          fetchReadArticlesWithData(relayPool, activeAccount.pubkey)
         ])
 
         setHighlights(userHighlights)
@@ -67,6 +70,16 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
 
   const handleHighlightDelete = (highlightId: string) => {
     setHighlights(prev => prev.filter(h => h.id !== highlightId))
+  }
+
+  const getPostUrl = (post: BlogPostPreview) => {
+    const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+    const naddr = nip19.naddrEncode({
+      kind: 30023,
+      pubkey: post.author,
+      identifier: dTag
+    })
+    return `/a/${naddr}`
   }
 
   if (loading) {
@@ -134,22 +147,13 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
             <p>No read articles yet. Mark articles as read to see them here!</p>
           </div>
         ) : (
-          <div className="library-list">
-            {readArticles.map((article) => (
-              <div key={article.reactionId} className="library-item">
-                <p>
-                  {article.url ? (
-                    <a href={article.url} target="_blank" rel="noopener noreferrer">
-                      {article.url}
-                    </a>
-                  ) : (
-                    `Event: ${article.eventId?.slice(0, 12)}...`
-                  )}
-                </p>
-                <small>
-                  Marked as read: {new Date(article.markedAt * 1000).toLocaleDateString()}
-                </small>
-              </div>
+          <div className="explore-grid">
+            {readArticles.map((post) => (
+              <BlogPostCard
+                key={post.event.id}
+                post={post}
+                href={getPostUrl(post)}
+              />
             ))}
           </div>
         )
