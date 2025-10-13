@@ -400,9 +400,13 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             <ReactPlayer 
               url={selectedUrl as string} 
               controls 
-              width="100%" 
-              height="100%"
-              style={{ position: 'absolute', top: 0, left: 0 }}
+              width="100%"
+              height="auto"
+              style={{ 
+                width: '100%', 
+                height: 'auto', 
+                aspectRatio: '16/9' 
+              }}
               onDuration={(d) => setVideoDurationSec(Math.floor(d))}
             />
           </div>
