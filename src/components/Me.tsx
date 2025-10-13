@@ -267,7 +267,8 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
             onClick={() => setActiveTab('highlights')}
           >
             <FontAwesomeIcon icon={faHighlighter} />
-            Highlights ({highlights.length})
+            <span className="tab-label">Highlights</span>
+            <span className="tab-count">({highlights.length})</span>
           </button>
           <button
             className={`me-tab ${activeTab === 'reading-list' ? 'active' : ''}`}
@@ -275,7 +276,8 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
             onClick={() => setActiveTab('reading-list')}
           >
             <FontAwesomeIcon icon={faBookmark} />
-            Reading List ({allIndividualBookmarks.length})
+            <span className="tab-label">Reading List</span>
+            <span className="tab-count">({allIndividualBookmarks.length})</span>
           </button>
           <button
             className={`me-tab ${activeTab === 'archive' ? 'active' : ''}`}
@@ -283,7 +285,8 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
             onClick={() => setActiveTab('archive')}
           >
             <FontAwesomeIcon icon={faBooks} />
-            Archive ({readArticles.length})
+            <span className="tab-label">Archive</span>
+            <span className="tab-count">({readArticles.length})</span>
           </button>
         </div>
       </div>

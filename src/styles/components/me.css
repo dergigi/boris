@@ -119,6 +119,11 @@
     margin-right: 0.25rem;
   }
 
+  /* Hide counts on mobile to save space */
+  .me-tab .tab-count {
+    display: none;
+  }
+
   .me-tab-content {
     padding: 1.25rem 0.75rem;
   }
