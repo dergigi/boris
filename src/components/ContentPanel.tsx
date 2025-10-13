@@ -2,7 +2,9 @@ import React, { useMemo, useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
+import rehypePrism from 'rehype-prism-plus'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import 'prismjs/themes/prism-tomorrow.css'
 import { faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons'
 import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
@@ -219,7 +221,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         <div ref={markdownPreviewRef} style={{ display: 'none' }}>
           <ReactMarkdown 
             remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw]}
+            rehypePlugins={[rehypeRaw, rehypePrism]}
             components={{
               img: ({ src, alt, ...props }) => (
                 <img 

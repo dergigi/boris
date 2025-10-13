@@ -26,9 +26,15 @@
 .reader-html p, .reader-html div, .reader-html span, .reader-html li, .reader-html td, .reader-html th { font-size: 1em !important; }
 .reader-markdown a { color: #8ab4f8; text-decoration: none; }
 .reader-markdown a:hover { text-decoration: underline; }
-.reader-markdown pre, .reader-markdown code { background: #111; border: 1px solid #333; border-radius: 6px; }
-.reader-markdown pre { padding: 0.75rem; overflow: auto; }
-.reader-markdown code { padding: 0.1rem 0.3rem; }
+.reader-markdown code { background: #1e1e1e; border: 1px solid #333; border-radius: 4px; padding: 0.15rem 0.4rem; font-size: 0.9em; font-family: 'Monaco', 'Menlo', 'Consolas', monospace; }
+.reader-markdown pre { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 1rem 0; line-height: 1.5; }
+.reader-markdown pre code { background: transparent; border: none; padding: 0; font-size: 0.9em; display: block; }
+/* Prism.js enhancements */
+.reader-markdown pre[class*="language-"] { background: #1e1e1e; border: 1px solid #333; }
+.reader-markdown code[class*="language-"] { background: transparent; text-shadow: none; }
+.reader-html pre { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 1rem 0; }
+.reader-html code { background: #1e1e1e; border: 1px solid #333; border-radius: 4px; padding: 0.15rem 0.4rem; font-size: 0.9em; font-family: 'Monaco', 'Menlo', 'Consolas', monospace; }
+.reader-html pre code { background: transparent; border: none; padding: 0; display: block; }
 /* Mark as Read button */
 .mark-as-read-container { display: flex; justify-content: center; align-items: center; padding: 2rem 1rem; margin-top: 2rem; border-top: 1px solid #333; }
 .mark-as-read-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: #2a2a2a; color: #ddd; border: 1px solid #444; border-radius: 8px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; min-width: 160px; justify-content: center; }

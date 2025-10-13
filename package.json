@@ -23,11 +23,13 @@
     "applesauce-relay": "^4.0.0",
     "date-fns": "^4.1.0",
     "nostr-tools": "^2.4.0",
+    "prismjs": "^1.30.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.3",
     "reading-time-estimator": "^1.14.0",
+    "rehype-prism-plus": "^2.0.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1"
   },
