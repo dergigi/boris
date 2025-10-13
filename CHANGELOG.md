@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4] - 2025-10-13
+
+### Changed
+- Refactor CSS into modular structure
+  - Split 3600+ line monolithic `index.css` into organized modules
+  - Created `src/styles/` directory with base, layout, components, and utils subdirectories
+  - Each file kept under 210 lines for maintainability
+  - Preserved cascade order and selector specificity via ordered `@import` statements
+  - No functional changes to styling
+
+### Fixed
+- Mobile button positioning now uses safe area insets for symmetrical layout on notched devices
+
 ## [0.5.3] - 2025-10-13
 
 ### Changed

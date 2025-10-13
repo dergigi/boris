@@ -1,299 +1,20 @@
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import './styles/base/variables.css';
+@import './styles/base/global.css';
+@import './styles/layout/app.css';
+@import './styles/layout/sidebar.css';
+@import './styles/layout/highlights.css';
+@import './styles/components/icon-button.css';
+@import './styles/components/profile.css';
+@import './styles/components/cards.css';
+@import './styles/components/modals.css';
+@import './styles/components/toast.css';
+@import './styles/components/forms.css';
+@import './styles/components/reader.css';
+@import './styles/components/settings.css';
+@import './styles/components/me.css';
+@import './styles/utils/animations.css';
+@import './styles/utils/utilities.css';
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-  
-  --reading-font: 'Source Serif 4', serif;
-  --reading-font-size: 18px;
-  /* Layout variables */
-  --sidebar-width: 320px;
-  --sidebar-collapsed-width: 64px;
-  --highlights-width: 360px;
-  --highlights-collapsed-width: 56px;
-  --main-max-width: 900px;
-  --main-horizontal-padding: 1rem;
-  
-  /* Mobile breakpoints */
-  --mobile-breakpoint: 768px;
-  --tablet-breakpoint: 1024px;
-  
-  /* Mobile touch target minimum */
-  --min-touch-target: 44px;
-  
-  /* Safe area insets for notched devices */
-  --safe-area-top: env(safe-area-inset-top, 0px);
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-area-left: env(safe-area-inset-left, 0px);
-  --safe-area-right: env(safe-area-inset-right, 0px);
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Use dynamic viewport height if supported */
-@supports (height: 100dvh) {
-  body {
-    min-height: 100dvh;
-  }
-}
-
-body.mobile-sidebar-open {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-}
-
-#root {
-  max-width: none;
-  margin: 0;
-  padding: 1rem;
-}
-
-@media (max-width: 768px) {
-  #root {
-    padding: 0;
-  }
-}
-
-.app {
-  text-align: center;
-  position: relative;
-}
-
-.app header {
-  margin-bottom: 2rem;
-}
-
-.app header h1 {
-  font-size: 2.5rem;
-  margin: 0;
-  color: #646cff;
-}
-
-.app header p {
-  margin: 0.5rem 0 0 0;
-  color: #888;
-}
-
-/* Bookmarks Styles */
-.bookmarks-container {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-  text-align: left;
-  padding: 0;
-}
-
-.bookmarks-container .view-mode-controls {
-  margin-top: auto;
-  padding: 1rem;
-  border-top: 1px solid #333;
-  background: transparent;
-  border-radius: 0;
-}
-
-.bookmarks-container .bookmarks-list {
-  padding: 0.5rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  flex: 1;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.sidebar-header-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px 12px 0 0;
-  margin-bottom: 0;
-}
-
-.sidebar-header-right {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-left: auto;
-}
-
-.mobile-hamburger-btn {
-  display: none;
-  position: fixed;
-  top: calc(1rem + env(safe-area-inset-top));
-  left: calc(1rem + env(safe-area-inset-left));
-  z-index: 900;
-  background: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 8px;
-  color: #ddd;
-  width: var(--min-touch-target);
-  height: var(--min-touch-target);
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease, opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.mobile-hamburger-btn.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.mobile-hamburger-btn.visible {
-  opacity: 1;
-  visibility: visible;
-}
-
-.mobile-hamburger-btn:active {
-  transform: scale(0.95);
-}
-
-.mobile-close-btn {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .mobile-hamburger-btn {
-    display: flex;
-  }
-  
-  .sidebar-header-bar .toggle-sidebar-btn {
-    display: none;
-  }
-  
-  .mobile-close-btn {
-    display: flex;
-  }
-}
-
-.view-mode-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.profile-avatar {
-  width: 33px;
-  height: 33px;
-  border-radius: 6px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #2a2a2a;
-  border: 1px solid #444;
-  flex-shrink: 0;
-  color: #ddd;
-  box-sizing: border-box;
-}
-
-.profile-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profile-avatar svg {
-  font-size: 1.25rem;
-}
-
-.sidebar-header-bar .toggle-sidebar-btn {
-  background: transparent;
-  color: #ddd;
-  border: 1px solid #444;
-  padding: 0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 33px;
-  height: 33px;
-  flex-shrink: 0;
-  box-sizing: border-box;
-}
-
-.sidebar-header-bar .toggle-sidebar-btn:hover {
-  background: #2a2a2a;
-  color: #fff;
-}
-
-.sidebar-header-bar .toggle-sidebar-btn:active {
-  transform: translateY(1px);
-}
-
-.bookmarks-container.collapsed {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: 0;
-  background: transparent;
-  border: none;
-}
-
-.bookmarks-container.collapsed .toggle-sidebar-btn {
-  background: #2a2a2a;
-  color: #ddd;
-  border: none;
-  padding: 0;
-  border-radius: 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 36px;
-  flex-shrink: 0;
-}
-
-.bookmarks-container.collapsed .toggle-sidebar-btn:hover {
-  background: #333;
-  color: #fff;
-}
-
-.bookmarks-container.collapsed .toggle-sidebar-btn:active {
-  transform: translateY(1px);
-}
-
-.bookmarks-container.collapsed .toggle-sidebar-btn.with-icon {
-  width: auto;
-  padding: 0 0.5rem;
-  gap: 0.5rem;
-}
-
-.bookmarks-container.collapsed .toggle-sidebar-btn .glow-blue {
-  color: #646cff;
-  filter: drop-shadow(0 0 4px rgba(100, 108, 255, 0.6));
-}
 
 .user-info {
   margin: 0.5rem 0 0 0;
@@ -360,55 +81,6 @@ body.mobile-sidebar-open {
   background: #218838;
 }
 
-/* Generic IconButton styling */
-.icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #444;
-  border-radius: 6px;
-  background: #2a2a2a;
-  color: #ddd;
-  cursor: pointer;
-  min-width: 33px;
-  min-height: 33px;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.icon-button:hover { background: #333; }
-.icon-button:active { transform: translateY(1px); }
-
-.icon-button.primary { background: #646cff; color: white; border-color: #646cff; }
-.icon-button.primary:hover { filter: brightness(1.05); }
-
-.icon-button.success { background: #28a745; color: white; border-color: #28a745; }
-.icon-button.success:hover { filter: brightness(1.05); }
-
-.icon-button.ghost { background: #2a2a2a; }
-
-/* Mobile touch target improvements */
-@media (max-width: 768px) {
-  .icon-button {
-    min-width: var(--min-touch-target);
-    min-height: var(--min-touch-target);
-  }
-}
-
-/* Disable hover effects on touch devices */
-@media (pointer: coarse) {
-  .icon-button:hover {
-    background: #2a2a2a;
-  }
-  
-  .icon-button.ghost:hover {
-    background: #2a2a2a;
-  }
-  
-  .icon-button:active {
-    background: #333;
-  }
-}
 
 .bookmark-events {
   margin: 1rem 0;
@@ -1005,6 +677,39 @@ body.mobile-sidebar-open {
 
 .mark-as-read-btn svg {
   font-size: 1.1rem;
+  transition: transform 0.3s ease;
+}
+
+/* Marked as read state */
+.mark-as-read-btn.marked {
+  background: #1a4d1a;
+  border-color: #2d662d;
+  color: #90ee90;
+}
+
+.mark-as-read-btn.marked:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+/* Checkmark animation */
+.mark-as-read-btn.animating svg {
+  animation: checkmarkPop 0.6s ease;
+}
+
+@keyframes checkmarkPop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @media (max-width: 768px) {

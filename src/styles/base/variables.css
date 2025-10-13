@@ -1,0 +1,48 @@
+/* CSS variables and color-scheme */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  
+  --reading-font: 'Source Serif 4', serif;
+  --reading-font-size: 18px;
+  /* Layout variables */
+  --sidebar-width: 320px;
+  --sidebar-collapsed-width: 64px;
+  --highlights-width: 360px;
+  --highlights-collapsed-width: 56px;
+  --main-max-width: 900px;
+  --main-horizontal-padding: 1rem;
+  
+  /* Mobile breakpoints */
+  --mobile-breakpoint: 768px;
+  --tablet-breakpoint: 1024px;
+  
+  /* Mobile touch target minimum */
+  --min-touch-target: 44px;
+  
+  /* Safe area insets for notched devices */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+}
+
+

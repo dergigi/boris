@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faBook } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons'
 import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'
@@ -15,8 +15,14 @@ import { useMarkdownToHTML } from '../hooks/useMarkdownToHTML'
 import { useHighlightedContent } from '../hooks/useHighlightedContent'
 import { useHighlightInteractions } from '../hooks/useHighlightInteractions'
 import { UserSettings } from '../services/settingsService'
-import { createEventReaction, createWebsiteReaction } from '../services/reactionService'
+import { 
+  createEventReaction, 
+  createWebsiteReaction,
+  hasMarkedEventAsRead,
+  hasMarkedWebsiteAsRead
+} from '../services/reactionService'
 import AuthorCard from './AuthorCard'
+import { faBooks } from '../icons/customIcons'
 
 interface ContentPanelProps {
   loading: boolean
@@ -70,7 +76,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   onTextSelection,
   onClearSelection
 }) => {
-  const [isMarkingAsRead, setIsMarkingAsRead] = useState(false)
+  const [isMarkedAsRead, setIsMarkedAsRead] = useState(false)
+  const [isCheckingReadStatus, setIsCheckingReadStatus] = useState(false)
+  const [showCheckAnimation, setShowCheckAnimation] = useState(false)
   const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef, processedMarkdown } = useMarkdownToHTML(markdown, relayPool)
   
   const { finalHtml, relevantHighlights } = useHighlightedContent({
@@ -105,39 +113,82 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Determine if we're on a nostr-native article (/a/) or external URL (/r/)
   const isNostrArticle = selectedUrl && selectedUrl.startsWith('nostr:')
   
-  const handleMarkAsRead = async () => {
-    if (!activeAccount || !relayPool) {
-      console.warn('Cannot mark as read: no account or relay pool')
+  // Check if article is already marked as read when URL/article changes
+  useEffect(() => {
+    const checkReadStatus = async () => {
+      if (!activeAccount || !relayPool || !selectedUrl) {
+        setIsMarkedAsRead(false)
+        return
+      }
+
+      setIsCheckingReadStatus(true)
+
+      try {
+        let hasRead = false
+        if (isNostrArticle && currentArticle) {
+          hasRead = await hasMarkedEventAsRead(
+            currentArticle.id,
+            activeAccount.pubkey,
+            relayPool
+          )
+        } else {
+          hasRead = await hasMarkedWebsiteAsRead(
+            selectedUrl,
+            activeAccount.pubkey,
+            relayPool
+          )
+        }
+        setIsMarkedAsRead(hasRead)
+      } catch (error) {
+        console.error('Failed to check read status:', error)
+      } finally {
+        setIsCheckingReadStatus(false)
+      }
+    }
+
+    checkReadStatus()
+  }, [selectedUrl, currentArticle, activeAccount, relayPool, isNostrArticle])
+  
+  const handleMarkAsRead = () => {
+    if (!activeAccount || !relayPool || isMarkedAsRead) {
       return
     }
 
-    setIsMarkingAsRead(true)
+    // Instantly update UI with checkmark animation
+    setIsMarkedAsRead(true)
+    setShowCheckAnimation(true)
 
-    try {
-      if (isNostrArticle && currentArticle) {
-        // Kind 7 reaction for nostr-native articles
-        await createEventReaction(
-          currentArticle.id,
-          currentArticle.pubkey,
-          currentArticle.kind,
-          activeAccount,
-          relayPool
-        )
-        console.log('✅ Marked nostr article as read')
-      } else if (selectedUrl) {
-        // Kind 17 reaction for external websites
-        await createWebsiteReaction(
-          selectedUrl,
-          activeAccount,
-          relayPool
-        )
-        console.log('✅ Marked website as read')
+    // Reset animation after it completes
+    setTimeout(() => {
+      setShowCheckAnimation(false)
+    }, 600)
+
+    // Fire-and-forget: publish in background without blocking UI
+    ;(async () => {
+      try {
+        if (isNostrArticle && currentArticle) {
+          await createEventReaction(
+            currentArticle.id,
+            currentArticle.pubkey,
+            currentArticle.kind,
+            activeAccount,
+            relayPool
+          )
+          console.log('✅ Marked nostr article as read')
+        } else if (selectedUrl) {
+          await createWebsiteReaction(
+            selectedUrl,
+            activeAccount,
+            relayPool
+          )
+          console.log('✅ Marked website as read')
+        }
+      } catch (error) {
+        console.error('Failed to mark as read:', error)
+        // Revert UI state on error
+        setIsMarkedAsRead(false)
       }
-    } catch (error) {
-      console.error('Failed to mark as read:', error)
-    } finally {
-      setIsMarkingAsRead(false)
-    }
+    })()
   }
 
   if (!selectedUrl) {
@@ -215,13 +266,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           {activeAccount && (
             <div className="mark-as-read-container">
               <button
-                className="mark-as-read-btn"
+                className={`mark-as-read-btn ${isMarkedAsRead ? 'marked' : ''} ${showCheckAnimation ? 'animating' : ''}`}
                 onClick={handleMarkAsRead}
-                disabled={isMarkingAsRead}
-                title="Mark as Read"
+                disabled={isMarkedAsRead || isCheckingReadStatus}
+                title={isMarkedAsRead ? 'Already Marked as Read' : 'Mark as Read'}
               >
-                <FontAwesomeIcon icon={isMarkingAsRead ? faSpinner : faBook} spin={isMarkingAsRead} />
-                <span>{isMarkingAsRead ? 'Marking...' : 'Mark as Read'}</span>
+                <FontAwesomeIcon 
+                  icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheck : faBooks} 
+                  spin={isCheckingReadStatus} 
+                />
+                <span>
+                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Marked as Read' : 'Mark as Read'}
+                </span>
               </button>
             </div>
           )}

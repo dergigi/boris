@@ -1,0 +1,126 @@
+/* Me page tabs */
+.me-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-x: auto;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.me-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary, #999);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  margin-bottom: -1px;
+}
+
+.me-tab:hover {
+  color: var(--text-primary, #ddd);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.me-tab.active {
+  color: var(--primary-color, #8b5cf6);
+  border-bottom-color: var(--primary-color, #8b5cf6);
+}
+
+/* Highlights tab uses the user's custom "my highlights" color */
+.me-tab[data-tab="highlights"].active {
+  color: var(--highlight-color-mine, #ffff00);
+  border-bottom-color: var(--highlight-color-mine, #ffff00);
+}
+
+.me-tab svg {
+  font-size: 1rem;
+}
+
+.me-tab-content {
+  padding: 1.5rem 0;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Align highlight list width with profile card width on /me */
+.me-highlights-list { padding-left: 0; padding-right: 0; }
+.explore-header .author-card { max-width: 600px; margin: 0 auto; width: 100%; }
+
+/* Bookmarks list */
+.bookmarks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bookmark-item {
+  padding: 1rem;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.bookmark-item:hover {
+  border-color: var(--primary-color, #8b5cf6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bookmark-item a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.bookmark-item h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  color: var(--text-primary, #000);
+}
+
+.bookmark-item p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #666);
+  line-height: 1.5;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  /* Add top breathing room so floating sidebar buttons don't overlap header */
+  .explore-container .explore-header { 
+    margin-top: 2.25rem; 
+  }
+
+  .me-tabs {
+    gap: 0.25rem;
+    padding: 0 0.5rem;
+    margin-top: 0.5rem;
+  }
+  
+  .me-tab {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.82rem;
+  }
+  
+  .me-tab svg {
+    font-size: 0.9rem;
+    margin-right: 0.25rem;
+  }
+
+  .me-tab-content {
+    padding: 1.25rem 0.75rem;
+  }
+}
+

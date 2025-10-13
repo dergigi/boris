@@ -14,6 +14,7 @@ import { formatDateCompact } from '../utils/bookmarkUtils'
 import { createDeletionRequest } from '../services/deletionService'
 import ConfirmDialog from './ConfirmDialog'
 import { getNostrUrl } from '../config/nostrGateways'
+import CompactButton from './CompactButton'
 
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
@@ -303,19 +304,24 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       onClick={handleItemClick}
       style={{ cursor: onHighlightClick ? 'pointer' : 'default' }}
     >
-      <div className="highlight-quote-icon">
-        <FontAwesomeIcon icon={faQuoteLeft} />
-        {relayIndicator && (
-          <div 
-            className="highlight-relay-indicator" 
-            title={relayIndicator.tooltip}
-            onClick={handleRebroadcast}
-            style={{ cursor: relayPool && eventStore ? 'pointer' : 'default' }}
-          >
-            <FontAwesomeIcon icon={relayIndicator.icon} spin={relayIndicator.spin} />
-          </div>
-        )}
+      <div className="highlight-header">
+        <CompactButton
+          className="highlight-timestamp"
+          title={new Date(highlight.created_at * 1000).toLocaleString()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {formatDateCompact(highlight.created_at)}
+        </CompactButton>
       </div>
+      
+      <CompactButton
+        className="highlight-quote-button"
+        icon={faQuoteLeft}
+        title="Quote"
+        onClick={(e) => e.stopPropagation()}
+      />
+      
+      {/* relay indicator lives in footer for consistent padding/alignment */}
       
       <div className="highlight-content">
         <blockquote className="highlight-text">
@@ -329,23 +335,30 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         )}
         
         
-        <div className="highlight-meta">
-          <span className="highlight-author">
-            {getUserDisplayName()}
-          </span>
-          <span className="highlight-meta-separator">•</span>
-          <span className="highlight-time">
-            {formatDateCompact(highlight.created_at)}
-          </span>
+        <div className="highlight-footer">
+          <div className="highlight-footer-left">
+            {relayIndicator && (
+              <CompactButton
+                className="highlight-relay-indicator"
+                icon={relayIndicator.icon}
+                spin={relayIndicator.spin}
+                title={relayIndicator.tooltip}
+                onClick={handleRebroadcast}
+                disabled={!relayPool || !eventStore}
+              />
+            )}
+            
+            <span className="highlight-author">
+              {getUserDisplayName()}
+            </span>
+          </div>
           
           <div className="highlight-menu-wrapper" ref={menuRef}>
-            <button
-              className="highlight-menu-btn"
+            <CompactButton
+              icon={faEllipsisH}
               onClick={handleMenuToggle}
               title="More options"
-            >
-              <FontAwesomeIcon icon={faEllipsisH} />
-            </button>
+            />
             
             {showMenu && (
               <div className="highlight-menu">

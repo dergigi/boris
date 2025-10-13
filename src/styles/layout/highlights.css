@@ -1,0 +1,175 @@
+/* Highlights panel layout and interactions */
+.highlights-container {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.highlights-container.collapsed {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.highlights-container.collapsed .toggle-highlights-btn {
+  background: #2a2a2a;
+  color: #ddd;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.highlights-container.collapsed .toggle-highlights-btn:hover { background: #333; color: #fff; }
+.highlights-container.collapsed .toggle-highlights-btn:active { transform: translateY(1px); }
+.highlights-container.collapsed .toggle-highlights-btn.with-icon { width: auto; padding: 0 0.5rem; gap: 0.5rem; }
+
+.highlights-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #333;
+  background: #1a1a1a;
+  border-radius: 12px 12px 0 0;
+}
+
+.highlights-actions { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.highlights-actions-left { display: flex; align-items: center; gap: 0.5rem; }
+
+.highlights-title { display: flex; align-items: center; gap: 0.5rem; }
+.highlights-title h3 { margin: 0; font-size: 1rem; font-weight: 600; }
+.highlights-title .count { color: #888; font-size: 0.875rem; }
+
+.highlight-mode-toggle { display: flex; gap: 0.25rem; padding: 0.25rem; background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
+.highlight-mode-toggle .mode-btn { background: none; border: none; color: #888; cursor: pointer; padding: 0.375rem 0.5rem; border-radius: 3px; transition: all 0.2s; font-size: 0.9rem; }
+.highlight-mode-toggle .mode-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.highlight-mode-toggle .mode-btn.active { background: #646cff; color: #fff; }
+
+/* Three-level highlight toggles */
+.highlight-level-toggles { display: flex; gap: 0.25rem; padding: 0.25rem; background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
+.highlight-level-toggles .level-toggle-btn { background: none; border: none; color: #888; cursor: pointer; padding: 0.375rem 0.5rem; border-radius: 3px; transition: all 0.2s; font-size: 0.9rem; }
+.highlight-level-toggles .level-toggle-btn:hover { background: rgba(255, 255, 255, 0.1); }
+.highlight-level-toggles .level-toggle-btn.active { background: rgba(255, 255, 255, 0.1); opacity: 1; }
+.highlight-level-toggles .level-toggle-btn:not(.active) { opacity: 0.4; }
+.highlight-level-toggles .level-toggle-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.highlight-level-toggles .level-toggle-btn:disabled:hover { background: none; }
+
+.refresh-highlights-btn,
+.toggle-highlight-display-btn,
+.toggle-highlights-btn {
+  background: transparent;
+  color: #ddd;
+  border: 1px solid #444;
+  padding: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.refresh-highlights-btn:hover,
+.toggle-highlight-display-btn:hover,
+.toggle-highlights-btn:hover { background: #2a2a2a; color: #fff; }
+.refresh-highlights-btn:active,
+.toggle-highlight-display-btn:active,
+.toggle-highlights-btn:active { transform: translateY(1px); }
+.refresh-highlights-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.refresh-highlights-btn:disabled:hover { background: transparent; color: #ddd; }
+
+.highlights-loading,
+.highlights-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; color: #888; text-align: center; gap: 0.5rem; }
+.highlights-empty svg { color: #555; margin-bottom: 0.5rem; }
+.empty-hint { font-size: 0.875rem; color: #666; margin-top: 0.5rem; }
+
+.highlights-list { overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.highlight-item { background: #1e1e1e; border-left: 1px solid #333; border-right: 1px solid #333; padding: 0; display: flex; transition: border-color 0.2s ease; position: relative; }
+.highlight-item:hover { border-color: #646cff; }
+.highlight-item:hover .highlight-header,
+.highlight-item:hover .highlight-footer { border-color: #646cff; }
+.highlight-item.selected { border-color: #646cff; background: #252525; box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3); }
+.highlight-item.selected .highlight-header,
+.highlight-item.selected .highlight-footer { border-color: #646cff; }
+
+/* Compact button for highlight cards */
+.compact-button { background: none; border: none; color: #888; cursor: pointer; padding: 0.25rem; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem; transition: all 0.2s ease; border-radius: 4px; min-width: 20px; min-height: 20px; }
+.compact-button:hover { color: #aaa; background: rgba(255, 255, 255, 0.05); }
+.compact-button:active { transform: scale(0.95); }
+.compact-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.compact-button:disabled:hover { background: none; color: #888; transform: none; }
+
+.highlight-header { position: absolute; top: 0; left: 0; right: 0; padding: 0.25rem 0.5rem; display: flex; align-items: center; justify-content: flex-end; pointer-events: none; border-top: 1px solid #333; border-top-left-radius: 8px; border-top-right-radius: 8px; transition: border-color 0.2s ease; }
+.highlight-header .compact-button { pointer-events: auto; }
+.highlight-timestamp { font-size: 0.75rem; font-weight: 500; white-space: nowrap; }
+
+/* Level colors in sidebar items */
+.highlight-item.level-mine { border-color: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 60%, #333); box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight-color-mine, #ffff00) 25%, transparent); }
+.highlight-item.level-mine .highlight-header,
+.highlight-item.level-mine .highlight-footer { border-color: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 60%, #333); }
+.highlight-item.level-friends { border-color: color-mix(in srgb, var(--highlight-color-friends, #f97316) 60%, #333); box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight-color-friends, #f97316) 25%, transparent); }
+.highlight-item.level-friends .highlight-header,
+.highlight-item.level-friends .highlight-footer { border-color: color-mix(in srgb, var(--highlight-color-friends, #f97316) 60%, #333); }
+.highlight-item.level-nostrverse { border-color: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 60%, #333); box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 25%, transparent); }
+.highlight-item.level-nostrverse .highlight-header,
+.highlight-item.level-nostrverse .highlight-footer { border-color: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 60%, #333); }
+
+.highlight-quote-button { position: absolute; top: 0.25rem; left: 0.5rem; z-index: 10; }
+.highlight-item.level-mine .highlight-quote-button { color: var(--highlight-color-mine, #ffff00); }
+.highlight-item.level-friends .highlight-quote-button { color: var(--highlight-color-friends, #f97316); }
+.highlight-item.level-nostrverse .highlight-quote-button { color: var(--highlight-color-nostrverse, #9333ea); }
+.highlight-relay-indicator { flex-shrink: 0; }
+.highlight-relay-indicator:hover { opacity: 1; }
+
+/* Mobile: Larger touch targets and better spacing */
+@media (max-width: 768px) {
+  .highlight-relay-indicator { padding: 8px; min-width: var(--min-touch-target); min-height: var(--min-touch-target); }
+  .compact-button { padding: 0.5rem; min-width: var(--min-touch-target); min-height: var(--min-touch-target); }
+}
+
+/* Level-colored quote icon */
+.highlight-item.level-mine .highlight-quote-icon { color: var(--highlight-color-mine, #ffff00); }
+.highlight-item.level-friends .highlight-quote-icon { color: var(--highlight-color-friends, #f97316); }
+.highlight-item.level-nostrverse .highlight-quote-icon { color: var(--highlight-color-nostrverse, #9333ea); }
+
+.highlight-content { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; padding: 1.75rem 0.75rem; }
+.highlight-text { margin: 0; padding: 0; font-style: italic; color: #ddd; line-height: 1.6; border-left: none; font-size: 0.95rem; }
+.highlight-comment { margin-top: 0.5rem; padding: 0.75rem; background: rgba(100, 108, 255, 0.1); border-left: 3px solid #646cff; border-radius: 4px; font-size: 0.875rem; color: #ddd; line-height: 1.5; }
+
+.highlight-footer { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 0.25rem 0.5rem; font-size: 0.8rem; color: #888; border-bottom: 1px solid #333; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; transition: border-color 0.2s ease; }
+.highlight-footer-left { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
+.highlight-author { color: #aaa; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: inline-flex; align-items: center; min-height: 28px; }
+
+/* Ensure relay indicator in footer uses normal flow and matches CompactButton spacing */
+.highlight-item .highlight-footer .highlight-relay-indicator {
+  position: static; /* override any absolute rules from global styles */
+  bottom: auto;
+  left: auto;
+  margin: 0; /* rely on footer gap */
+  padding: 0.25rem; /* CompactButton base */
+}
+.highlight-menu-wrapper { position: relative; flex-shrink: 0; display: flex; align-items: center; }
+.highlight-menu { position: absolute; right: 0; top: calc(100% + 4px); background: #2a2a2a; border: 1px solid #444; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); z-index: 1000; min-width: 160px; overflow: hidden; }
+.highlight-menu-item { width: 100%; background: none; border: none; color: #ddd; padding: 0.625rem 0.875rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.625rem; cursor: pointer; transition: all 0.15s ease; text-align: left; white-space: nowrap; }
+.highlight-menu-item:hover { background: rgba(100, 108, 255, 0.15); color: #fff; }
+.highlight-menu-item:disabled { opacity: 0.5; cursor: not-allowed; }
+.highlight-menu-item-danger:hover { background: rgba(255, 68, 68, 0.15); color: #ff4444; }
+.highlight-menu-item svg { font-size: 0.875rem; flex-shrink: 0; }
+
+

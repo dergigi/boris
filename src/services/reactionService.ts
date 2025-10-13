@@ -1,10 +1,13 @@
 import { EventFactory } from 'applesauce-factory'
-import { RelayPool } from 'applesauce-relay'
+import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'
+import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
 import { RELAYS } from '../config/relays'
 
 const MARK_AS_READ_EMOJI = '📚'
+
+export { MARK_AS_READ_EMOJI }
 
 /**
  * Creates a kind:7 reaction to a nostr event (for nostr-native articles)
@@ -99,5 +102,98 @@ export async function createWebsiteReaction(
   console.log('✅ Website reaction published to', RELAYS.length, 'relay(s)')
 
   return signed
+}
+
+/**
+ * Checks if the user has already marked a nostr event as read
+ * @param eventId The ID of the event to check
+ * @param userPubkey The user's pubkey
+ * @param relayPool The relay pool for querying
+ * @returns True if the user has already reacted with the mark-as-read emoji
+ */
+export async function hasMarkedEventAsRead(
+  eventId: string,
+  userPubkey: string,
+  relayPool: RelayPool
+): Promise<boolean> {
+  try {
+    const filter = {
+      kinds: [7],
+      authors: [userPubkey],
+      '#e': [eventId]
+    }
+
+    const events$ = relayPool
+      .req(RELAYS, filter)
+      .pipe(
+        onlyEvents(),
+        completeOnEose(),
+        takeUntil(timer(2000)),
+        toArray()
+      )
+
+    const events: NostrEvent[] = await lastValueFrom(events$)
+    
+    // Check if any reaction has our mark-as-read emoji
+    const hasReadReaction = events.some((event: NostrEvent) => event.content === MARK_AS_READ_EMOJI)
+    
+    return hasReadReaction
+  } catch (error) {
+    console.error('Error checking read status:', error)
+    return false
+  }
+}
+
+/**
+ * Checks if the user has already marked a website as read
+ * @param url The URL to check
+ * @param userPubkey The user's pubkey
+ * @param relayPool The relay pool for querying
+ * @returns True if the user has already reacted with the mark-as-read emoji
+ */
+export async function hasMarkedWebsiteAsRead(
+  url: string,
+  userPubkey: string,
+  relayPool: RelayPool
+): Promise<boolean> {
+  try {
+    // Normalize URL the same way as when creating reactions
+    let normalizedUrl = url
+    try {
+      const parsed = new URL(url)
+      parsed.hash = ''
+      normalizedUrl = parsed.toString()
+      if (normalizedUrl.endsWith('/')) {
+        normalizedUrl = normalizedUrl.slice(0, -1)
+      }
+    } catch (error) {
+      console.warn('Failed to normalize URL:', error)
+    }
+
+    const filter = {
+      kinds: [17],
+      authors: [userPubkey],
+      '#r': [normalizedUrl]
+    }
+
+    const events$ = relayPool
+      .req(RELAYS, filter)
+      .pipe(
+        onlyEvents(),
+        completeOnEose(),
+        takeUntil(timer(2000)),
+        toArray()
+      )
+
+    const events: NostrEvent[] = await lastValueFrom(events$)
+    
+    // Check if any reaction has our mark-as-read emoji
+    const hasReadReaction = events.some((event: NostrEvent) => event.content === MARK_AS_READ_EMOJI)
+    
+    return hasReadReaction
+  } catch (error) {
+    console.error('Error checking read status:', error)
+    return false
+  }
 }
 

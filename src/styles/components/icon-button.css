@@ -1,0 +1,43 @@
+/* Generic IconButton styling */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: #2a2a2a;
+  color: #ddd;
+  cursor: pointer;
+  min-width: 33px;
+  min-height: 33px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.icon-button:hover { background: #333; }
+.icon-button:active { transform: translateY(1px); }
+
+.icon-button.primary { background: #646cff; color: white; border-color: #646cff; }
+.icon-button.primary:hover { filter: brightness(1.05); }
+
+.icon-button.success { background: #28a745; color: white; border-color: #28a745; }
+.icon-button.success:hover { filter: brightness(1.05); }
+
+.icon-button.ghost { background: #2a2a2a; }
+
+/* Mobile touch target improvements */
+@media (max-width: 768px) {
+  .icon-button {
+    min-width: var(--min-touch-target);
+    min-height: var(--min-touch-target);
+  }
+}
+
+/* Disable hover effects on touch devices */
+@media (pointer: coarse) {
+  .icon-button:hover { background: #2a2a2a; }
+  .icon-button.ghost:hover { background: #2a2a2a; }
+  .icon-button:active { background: #333; }
+}
+
+
