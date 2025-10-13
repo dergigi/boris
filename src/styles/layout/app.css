@@ -26,6 +26,9 @@
   transition: grid-template-columns 0.3s ease;
   position: relative;
   min-height: 100vh;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 .three-pane.sidebar-collapsed { grid-template-columns: var(--sidebar-collapsed-width) 1fr var(--highlights-width); }
@@ -46,6 +49,8 @@
     margin: 0 auto;
     padding: 0 var(--main-horizontal-padding);
     min-height: 100vh;
+    overflow: visible !important;
+    height: auto !important;
   }
   
   .pane.highlights {
