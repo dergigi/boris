@@ -318,16 +318,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         <FontAwesomeIcon icon={faQuoteLeft} />
       </div>
       
-      {relayIndicator && (
-        <CompactButton
-          className="highlight-relay-indicator"
-          icon={relayIndicator.icon}
-          spin={relayIndicator.spin}
-          title={relayIndicator.tooltip}
-          onClick={handleRebroadcast}
-          disabled={!relayPool || !eventStore}
-        />
-      )}
+      {/* relay indicator lives in footer for consistent padding/alignment */}
       
       <div className="highlight-content">
         <blockquote className="highlight-text">
@@ -342,6 +333,17 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         
         
         <div className="highlight-footer">
+          {relayIndicator && (
+            <CompactButton
+              className="highlight-relay-indicator"
+              icon={relayIndicator.icon}
+              spin={relayIndicator.spin}
+              title={relayIndicator.tooltip}
+              onClick={handleRebroadcast}
+              disabled={!relayPool || !eventStore}
+            />
+          )}
+          
           <span className="highlight-author">
             {getUserDisplayName()}
           </span>
