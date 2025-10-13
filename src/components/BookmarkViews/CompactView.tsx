@@ -4,7 +4,6 @@ import { faBookmark, faUserLock, faGlobe } from '@fortawesome/free-solid-svg-ico
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDateCompact } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
-import { IconGetter } from './shared'
 
 interface CompactViewProps {
   bookmark: IndividualBookmark
@@ -12,7 +11,6 @@ interface CompactViewProps {
   hasUrls: boolean
   extractedUrls: string[]
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
-  getIconForUrlType: IconGetter
   articleImage?: string
   articleSummary?: string
 }
@@ -23,7 +21,6 @@ export const CompactView: React.FC<CompactViewProps> = ({
   hasUrls,
   extractedUrls,
   onSelectUrl,
-  getIconForUrlType,
   articleSummary
 }) => {
   const isArticle = bookmark.kind === 30023

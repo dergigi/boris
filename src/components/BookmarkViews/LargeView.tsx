@@ -116,7 +116,7 @@ export const LargeView: React.FC<LargeViewProps> = ({
             </a>
           )}
           
-          {/* CTA removed */
+          {/* CTA removed */}
         </div>
       </div>
     </div>

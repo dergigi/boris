@@ -110,7 +110,6 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     hasUrls,
     extractedUrls,
     onSelectUrl,
-    getIconForUrlType,
     authorNpub,
     eventNevent,
     getAuthorDisplayName,
@@ -126,8 +125,8 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
 
   if (viewMode === 'large') {
     const previewImage = articleImage || instantPreview || ogImage
-    return <LargeView {...sharedProps} previewImage={previewImage} />
+    return <LargeView {...sharedProps} getIconForUrlType={getIconForUrlType} previewImage={previewImage} />
   }
 
-  return <CardView {...sharedProps} articleImage={articleImage} />
+  return <CardView {...sharedProps} getIconForUrlType={getIconForUrlType} articleImage={articleImage} />
 }
