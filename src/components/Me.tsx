@@ -4,6 +4,7 @@ import { faSpinner, faExclamationCircle, faHighlighter, faBookmark, faList, faTh
 import { Hooks } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
+import { useNavigate } from 'react-router-dom'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
@@ -28,6 +29,7 @@ type TabType = 'highlights' | 'reading-list' | 'archive'
 
 const Me: React.FC<MeProps> = ({ relayPool }) => {
   const activeAccount = Hooks.useActiveAccount()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>('highlights')
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
@@ -128,6 +130,25 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
     return hasContent || hasUrl
   }
 
+  const handleSelectUrl = (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => {
+    if (bookmark && bookmark.kind === 30023) {
+      // For kind:30023 articles, navigate to the article route
+      const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1] || ''
+      if (dTag && bookmark.pubkey) {
+        const pointer = {
+          identifier: dTag,
+          kind: 30023,
+          pubkey: bookmark.pubkey,
+        }
+        const naddr = nip19.naddrEncode(pointer)
+        navigate(`/a/${naddr}`)
+      }
+    } else if (url) {
+      // For regular URLs, navigate to the reader route
+      navigate(`/r/${encodeURIComponent(url)}`)
+    }
+  }
+
   // Merge and flatten all individual bookmarks (same logic as BookmarkList)
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(hasContentOrUrl)
@@ -191,6 +212,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
                   bookmark={individualBookmark}
                   index={index}
                   viewMode={viewMode}
+                  onSelectUrl={handleSelectUrl}
                 />
               ))}
             </div>
