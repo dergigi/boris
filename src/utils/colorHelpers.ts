@@ -6,11 +6,12 @@ export function hexToRgb(hex: string): string {
     : '255, 255, 0'
 }
 
+// Tailwind color palette for highlight colors
 export const HIGHLIGHT_COLORS = [
-  { name: 'Yellow', value: '#ffff00' },
-  { name: 'Orange', value: '#f97316' },
-  { name: 'Pink', value: '#ff69b4' },
-  { name: 'Green', value: '#00ff7f' },
-  { name: 'Blue', value: '#4da6ff' },
-  { name: 'Purple', value: '#9333ea' }
+  { name: 'Yellow', value: '#facc15' },  // yellow-400
+  { name: 'Orange', value: '#f97316' },  // orange-500
+  { name: 'Pink', value: '#ec4899' },    // pink-500
+  { name: 'Green', value: '#22c55e' },   // green-500
+  { name: 'Blue', value: '#3b82f6' },    // blue-500
+  { name: 'Purple', value: '#9333ea' }   // purple-600
 ]
