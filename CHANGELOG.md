@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2025-10-13
+
+### Added
+
+- Writings tab on `/me` page to display user's published articles
+- Comprehensive headline styling (h1-h6) with Tailwind typography
+- List styling for ordered and unordered lists in articles
+- Blockquote styling with indentation and italics
+- Vertical padding to blockquotes for better readability
+- Horizontal padding for reader text content on desktop
+- Drop-shadows to sidebars for visual depth
+- MutationObserver for tracking highlight DOM changes
+
+### Changed
+
+- Article titles now larger and more prominent
+- Article summaries now display properly in reader header
+- Zap splits settings UI with preset buttons and full-width sliders
+- Sidebars now extend to 100vh height
+- Blockquote styling simplified to minimal indent and italic
+- Improved zap splits settings visual design
+
+### Fixed
+
+- Horizontal overflow from code blocks and wide content on mobile
+- Settings view now mobile-friendly with proper width constraints
+- Long relay URLs no longer cause horizontal overflow on mobile
+- Sidebar/highlights toggle buttons hidden on settings/explore/me pages
+- Video titles now show filename instead of 'Error Loading Content'
+- AddBookmarkModal z-index issue fixed using React Portal
+- Highlight matching for text spanning multiple DOM nodes/inline elements
+- Highlights now appear as single continuous element across DOM nodes
+- Highlights display immediately after creation with synchronous render
+- Scroll-to-highlight functionality restored after DOM updates
+- Padding gaps around sidebars removed
+- TypeScript errors in video-meta.ts resolved
+
+### Refactored
+
+- Migrated entire color system to Tailwind v4 color palette
+- Migrated all CSS files (sidebar, highlights, cards, forms, reader, etc.) to Tailwind colors
+- Updated default highlight colors to yellow-400 for markers and yellow-300 for other contexts
+- Added comprehensive color system documentation (COLOR_SYSTEM.md)
+- Cleaned up legacy.css removing unused debugging styles
+
 ## [0.6.0] - 2025-10-13
 
 ### Added
