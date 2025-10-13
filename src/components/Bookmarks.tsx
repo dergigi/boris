@@ -36,7 +36,13 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   
   const showSettings = location.pathname === '/settings'
   const showExplore = location.pathname === '/explore'
-  const showMe = location.pathname === '/me'
+  const showMe = location.pathname.startsWith('/me')
+  
+  // Extract tab from me routes
+  const meTab = location.pathname === '/me' ? 'highlights' : 
+                location.pathname === '/me/highlights' ? 'highlights' :
+                location.pathname === '/me/reading-list' ? 'reading-list' :
+                location.pathname === '/me/archive' ? 'archive' : 'highlights'
   
   // Track previous location for going back from settings/me/explore
   useEffect(() => {
@@ -263,7 +269,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         relayPool ? <Explore relayPool={relayPool} /> : null
       ) : undefined}
       me={showMe ? (
-        relayPool ? <Me relayPool={relayPool} /> : null
+        relayPool ? <Me relayPool={relayPool} activeTab={meTab} /> : null
       ) : undefined}
       toastMessage={toastMessage ?? undefined}
       toastType={toastType}

@@ -23,20 +23,28 @@ import { faBooks } from '../icons/customIcons'
 
 interface MeProps {
   relayPool: RelayPool
+  activeTab?: TabType
 }
 
 type TabType = 'highlights' | 'reading-list' | 'archive'
 
-const Me: React.FC<MeProps> = ({ relayPool }) => {
+const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<TabType>('highlights')
+  const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [readArticles, setReadArticles] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
+
+  // Update local state when prop changes
+  useEffect(() => {
+    if (propActiveTab) {
+      setActiveTab(propActiveTab)
+    }
+  }, [propActiveTab])
 
   useEffect(() => {
     const loadData = async () => {
@@ -286,7 +294,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
           <button
             className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
             data-tab="highlights"
-            onClick={() => setActiveTab('highlights')}
+            onClick={() => navigate('/me/highlights')}
           >
             <FontAwesomeIcon icon={faHighlighter} />
             <span className="tab-label">Highlights</span>
@@ -295,7 +303,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
           <button
             className={`me-tab ${activeTab === 'reading-list' ? 'active' : ''}`}
             data-tab="reading-list"
-            onClick={() => setActiveTab('reading-list')}
+            onClick={() => navigate('/me/reading-list')}
           >
             <FontAwesomeIcon icon={faBookmark} />
             <span className="tab-label">Reading List</span>
@@ -304,7 +312,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
           <button
             className={`me-tab ${activeTab === 'archive' ? 'active' : ''}`}
             data-tab="archive"
-            onClick={() => setActiveTab('archive')}
+            onClick={() => navigate('/me/archive')}
           >
             <FontAwesomeIcon icon={faBooks} />
             <span className="tab-label">Archive</span>

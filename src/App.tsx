@@ -72,6 +72,28 @@ function AppRoutes({
       />
       <Route 
         path="/me" 
+        element={<Navigate to="/me/highlights" replace />} 
+      />
+      <Route 
+        path="/me/highlights" 
+        element={
+          <Bookmarks 
+            relayPool={relayPool}
+            onLogout={handleLogout}
+          />
+        } 
+      />
+      <Route 
+        path="/me/reading-list" 
+        element={
+          <Bookmarks 
+            relayPool={relayPool}
+            onLogout={handleLogout}
+          />
+        } 
+      />
+      <Route 
+        path="/me/archive" 
         element={
           <Bookmarks 
             relayPool={relayPool}
