@@ -117,13 +117,51 @@ function tryMultiNodeMatch(
   
   // Map normalized index back to original if needed
   let startIndex = matchIndex
-  let endIndex = matchIndex + searchText.length
+  let endIndex = matchIndex + searchFor.length
   
   if (useNormalized) {
-    // This is a simplified mapping - for normalized matches we approximate
-    const ratio = combinedText.length / searchIn.length
-    startIndex = Math.floor(matchIndex * ratio)
-    endIndex = Math.min(combinedText.length, startIndex + searchText.length)
+    // Build proper mapping from normalized to original positions
+    let normPos = 0
+    let foundStart = false
+    let foundEnd = false
+    
+    for (let i = 0; i < combinedText.length && (!foundStart || !foundEnd); i++) {
+      const char = combinedText[i]
+      const isWhitespace = /\s/.test(char)
+      
+      // In normalized text, consecutive whitespace becomes single space
+      if (isWhitespace) {
+        normPos++
+        // Skip consecutive whitespace in original
+        while (i + 1 < combinedText.length && /\s/.test(combinedText[i + 1])) {
+          i++
+        }
+      } else {
+        if (!foundStart && normPos === matchIndex) {
+          startIndex = i
+          foundStart = true
+        }
+        if (!foundEnd && normPos === matchIndex + searchFor.length) {
+          endIndex = i
+          foundEnd = true
+        }
+        normPos++
+      }
+    }
+    
+    // If we didn't find exact positions, fall back to ratio (shouldn't happen often)
+    if (!foundStart || !foundEnd) {
+      console.warn('Could not map normalized positions exactly, using approximation')
+      const ratio = combinedText.length / searchIn.length
+      startIndex = Math.floor(matchIndex * ratio)
+      endIndex = Math.min(combinedText.length, startIndex + searchText.length)
+    }
+  }
+  
+  // Validate indices
+  if (startIndex < 0 || endIndex > combinedText.length || startIndex >= endIndex) {
+    console.warn('Invalid highlight range:', { startIndex, endIndex, combinedTextLength: combinedText.length })
+    return false
   }
   
   // Find which nodes contain the match
@@ -133,37 +171,64 @@ function tryMultiNodeMatch(
     if (startIndex < nodeInfo.end && endIndex > nodeInfo.start) {
       const nodeStart = Math.max(0, startIndex - nodeInfo.start)
       const nodeEnd = Math.min(nodeInfo.originalText.length, endIndex - nodeInfo.start)
+      
+      // Validate node offsets
+      if (nodeStart < 0 || nodeEnd > nodeInfo.originalText.length || nodeStart > nodeEnd) {
+        console.warn('Invalid node offsets:', { nodeStart, nodeEnd, nodeLength: nodeInfo.originalText.length })
+        continue
+      }
+      
       affectedNodes.push({ node: nodeInfo.node, startOffset: nodeStart, endOffset: nodeEnd })
     }
   }
   
-  if (affectedNodes.length === 0) return false
+  if (affectedNodes.length === 0) {
+    console.warn('No affected nodes found for highlight')
+    return false
+  }
   
-  // Create a Range to wrap the entire selection in a single mark element
-  const range = document.createRange()
-  const firstNode = affectedNodes[0]
-  const lastNode = affectedNodes[affectedNodes.length - 1]
-  
-  range.setStart(firstNode.node, firstNode.startOffset)
-  range.setEnd(lastNode.node, lastNode.endOffset)
-  
-  // Extract the content from the range
-  const extractedContent = range.extractContents()
-  
-  // Create a single mark element
-  const mark = document.createElement('mark')
-  const levelClass = highlight.level ? ` level-${highlight.level}` : ''
-  mark.className = `content-highlight-${highlightStyle}${levelClass}`
-  mark.setAttribute('data-highlight-id', highlight.id)
-  mark.setAttribute('data-highlight-level', highlight.level || 'nostrverse')
-  mark.setAttribute('title', `Highlighted ${new Date(highlight.created_at * 1000).toLocaleDateString()}`)
-  
-  // Append the extracted content to the mark
-  mark.appendChild(extractedContent)
-  
-  // Insert the mark at the range position
-  range.insertNode(mark)
-  
-  return true
+  try {
+    // Create a Range to wrap the entire selection in a single mark element
+    const range = document.createRange()
+    const firstNode = affectedNodes[0]
+    const lastNode = affectedNodes[affectedNodes.length - 1]
+    
+    range.setStart(firstNode.node, firstNode.startOffset)
+    range.setEnd(lastNode.node, lastNode.endOffset)
+    
+    // Verify the range isn't collapsed or invalid
+    if (range.collapsed) {
+      console.warn('Range is collapsed, skipping highlight')
+      return false
+    }
+    
+    // Extract the content from the range
+    const extractedContent = range.extractContents()
+    
+    // Verify we actually extracted something
+    if (!extractedContent || extractedContent.childNodes.length === 0) {
+      console.warn('No content extracted from range')
+      return false
+    }
+    
+    // Create a single mark element
+    const mark = document.createElement('mark')
+    const levelClass = highlight.level ? ` level-${highlight.level}` : ''
+    mark.className = `content-highlight-${highlightStyle}${levelClass}`
+    mark.setAttribute('data-highlight-id', highlight.id)
+    mark.setAttribute('data-highlight-level', highlight.level || 'nostrverse')
+    mark.setAttribute('title', `Highlighted ${new Date(highlight.created_at * 1000).toLocaleDateString()}`)
+    
+    // Append the extracted content to the mark
+    mark.appendChild(extractedContent)
+    
+    // Insert the mark at the range position
+    range.insertNode(mark)
+    
+    return true
+  } catch (error) {
+    console.error('Error applying multi-node highlight:', error)
+    return false
+  }
 }
 
