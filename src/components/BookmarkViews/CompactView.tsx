@@ -4,6 +4,7 @@ import { faBookmark, faUserLock, faGlobe } from '@fortawesome/free-solid-svg-ico
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDateCompact } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
+import { useImageCache } from '../../hooks/useImageCache'
 
 interface CompactViewProps {
   bookmark: IndividualBookmark
@@ -13,6 +14,7 @@ interface CompactViewProps {
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   articleImage?: string
   articleSummary?: string
+  settings?: any
 }
 
 export const CompactView: React.FC<CompactViewProps> = ({
@@ -21,11 +23,16 @@ export const CompactView: React.FC<CompactViewProps> = ({
   hasUrls,
   extractedUrls,
   onSelectUrl,
-  articleSummary
+  articleImage,
+  articleSummary,
+  settings
 }) => {
   const isArticle = bookmark.kind === 30023
   const isWebBookmark = bookmark.kind === 39701
   const isClickable = hasUrls || isArticle || isWebBookmark
+  
+  // Get cached image for thumbnail
+  const cachedImage = useImageCache(articleImage || undefined, settings)
   
   const handleCompactClick = () => {
     if (!onSelectUrl) return
@@ -50,6 +57,13 @@ export const CompactView: React.FC<CompactViewProps> = ({
         role={isClickable ? 'button' : undefined}
         tabIndex={isClickable ? 0 : undefined}
       >
+        {/* Thumbnail image */}
+        {cachedImage && (
+          <div className="compact-thumbnail">
+            <img src={cachedImage} alt="" />
+          </div>
+        )}
+        
         <span className="bookmark-type-compact">
           {isWebBookmark ? (
             <span className="fa-layers fa-fw">
