@@ -252,7 +252,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             right: 'calc(1rem + env(safe-area-inset-right))',
             width: '40px',
             height: '40px',
-            backgroundColor: `${props.settings.highlightColorMine || '#ffff00'}B3`,
+            backgroundColor: `${props.settings.highlightColorMine || '#facc15'}B3`,
             color: '#000'
           }}
           onClick={props.onToggleHighlightsPanel}
