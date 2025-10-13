@@ -16,6 +16,13 @@
   
   --reading-font: 'Source Serif 4', serif;
   --reading-font-size: 18px;
+  
+  /* Highlight color variables (user-settable) */
+  --highlight-color-mine: #ffff00;
+  --highlight-color-friends: #f97316;
+  --highlight-color-nostrverse: #9333ea;
+  --highlight-color: #ffff00; /* Default highlight color */
+  
   /* Layout variables */
   --sidebar-width: 320px;
   --sidebar-collapsed-width: 64px;
