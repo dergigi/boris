@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faBook, faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons'
 import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'
@@ -22,6 +22,7 @@ import {
   hasMarkedWebsiteAsRead
 } from '../services/reactionService'
 import AuthorCard from './AuthorCard'
+import { faBooks } from '../icons/customIcons'
 
 interface ContentPanelProps {
   loading: boolean
@@ -271,7 +272,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 title={isMarkedAsRead ? 'Already Marked as Read' : 'Mark as Read'}
               >
                 <FontAwesomeIcon 
-                  icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheck : faBook} 
+                  icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheck : faBooks} 
                   spin={isCheckingReadStatus} 
                 />
                 <span>
