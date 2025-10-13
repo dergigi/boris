@@ -13,7 +13,6 @@ interface CompactViewProps {
   extractedUrls: string[]
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   getIconForUrlType: IconGetter
-  firstUrlClassification: { buttonText: string } | null
   articleImage?: string
   articleSummary?: string
 }
@@ -25,7 +24,6 @@ export const CompactView: React.FC<CompactViewProps> = ({
   extractedUrls,
   onSelectUrl,
   getIconForUrlType,
-  firstUrlClassification,
   articleSummary
 }) => {
   const isArticle = bookmark.kind === 30023
@@ -76,22 +74,7 @@ export const CompactView: React.FC<CompactViewProps> = ({
           </div>
         )}
         <span className="bookmark-date-compact">{formatDateCompact(bookmark.created_at)}</span>
-        {isClickable && (
-          <button
-            className="compact-read-btn"
-            onClick={(e) => { 
-              e.stopPropagation()
-              if (isArticle) {
-                onSelectUrl?.('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags, pubkey: bookmark.pubkey })
-              } else {
-                onSelectUrl?.(extractedUrls[0])
-              }
-            }}
-            title={isArticle ? 'Read Article' : firstUrlClassification?.buttonText}
-          >
-            <FontAwesomeIcon icon={isArticle ? getIconForUrlType('') : getIconForUrlType(extractedUrls[0])} />
-          </button>
-        )}
+        {/* CTA removed */}
       </div>
     </div>
   )

@@ -15,7 +15,6 @@ interface LargeViewProps {
   extractedUrls: string[]
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   getIconForUrlType: IconGetter
-  firstUrlClassification: { buttonText: string } | null
   previewImage: string | null
   authorNpub: string
   eventNevent?: string
@@ -32,7 +31,6 @@ export const LargeView: React.FC<LargeViewProps> = ({
   extractedUrls,
   onSelectUrl,
   getIconForUrlType,
-  firstUrlClassification,
   previewImage,
   authorNpub,
   eventNevent,
@@ -100,12 +98,7 @@ export const LargeView: React.FC<LargeViewProps> = ({
             </a>
           )}
           
-          {(hasUrls && firstUrlClassification) || isArticle ? (
-            <button className="large-read-button" onClick={handleReadNow}>
-              <FontAwesomeIcon icon={isArticle ? getIconForUrlType('') : getIconForUrlType(extractedUrls[0])} />
-              {isArticle ? 'Read Article' : firstUrlClassification?.buttonText}
-            </button>
-          ) : null}
+          {/* CTA removed */}
         </div>
       </div>
     </div>

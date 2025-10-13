@@ -111,7 +111,6 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     extractedUrls,
     onSelectUrl,
     getIconForUrlType,
-    firstUrlClassification,
     authorNpub,
     eventNevent,
     getAuthorDisplayName,

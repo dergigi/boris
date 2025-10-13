@@ -19,7 +19,6 @@ interface CardViewProps {
   extractedUrls: string[]
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   getIconForUrlType: IconGetter
-  firstUrlClassification: { buttonText: string } | null
   authorNpub: string
   eventNevent?: string
   getAuthorDisplayName: () => string
@@ -36,7 +35,6 @@ export const CardView: React.FC<CardViewProps> = ({
   extractedUrls,
   onSelectUrl,
   getIconForUrlType,
-  firstUrlClassification,
   authorNpub,
   eventNevent,
   getAuthorDisplayName,
@@ -113,7 +111,6 @@ export const CardView: React.FC<CardViewProps> = ({
       {extractedUrls.length > 0 && (
         <div className="bookmark-urls">
           {(urlsExpanded ? extractedUrls : extractedUrls.slice(0, 1)).map((url, urlIndex) => {
-            const classification = classifyUrl(url)
             return (
               <div key={urlIndex} className="url-row">
                 <button
@@ -125,8 +122,8 @@ export const CardView: React.FC<CardViewProps> = ({
                 </button>
                 <IconButton
                   icon={getIconForUrlType(url)}
-                  ariaLabel={classification.buttonText}
-                  title={classification.buttonText}
+                  ariaLabel="Open"
+                  title="Open"
                   variant="success"
                   size={32}
                   onClick={(e) => { e.preventDefault(); onSelectUrl?.(url) }}
@@ -186,11 +183,7 @@ export const CardView: React.FC<CardViewProps> = ({
             {getAuthorDisplayName()}
           </a>
         </div>
-        {(hasUrls && firstUrlClassification) || bookmark.kind === 30023 ? (
-          <button className="read-now-button-minimal" onClick={handleReadNow}>
-            {bookmark.kind === 30023 ? 'Read Article' : firstUrlClassification?.buttonText}
-          </button>
-        ) : null}
+        {/* CTA removed */}
       </div>
     </div>
   )
