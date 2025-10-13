@@ -56,8 +56,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const details = await getVideoDetails({ videoID: videoId, lang })
-    const title = details?.title || ''
-    const description = details?.description || ''
+    const title = (details as any)?.title || ''
+    const description = (details as any)?.description || (details as any)?.shortDescription || (details as any)?.descriptionText || ''
 
     // Language order: manual en -> uiLocale -> lang -> any manual, then auto with same order
     const langs: string[] = Array.from(new Set(['en', uiLocale, lang].filter(Boolean) as string[]))
