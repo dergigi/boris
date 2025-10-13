@@ -131,7 +131,8 @@ function tryMultiNodeMatch(
     let normPos = 0
     const posMap: number[] = [] // Maps normalized position to original position
     
-    for (let i = 0; i < combinedText.length; i++) {
+    let i = 0
+    while (i < combinedText.length) {
       const char = combinedText[i]
       const isWhitespace = /\s/.test(char)
       
@@ -139,14 +140,18 @@ function tryMultiNodeMatch(
         // In normalized text, consecutive whitespace becomes one space
         // Map this normalized position to the start of whitespace sequence
         posMap[normPos] = i
-        normPos++
+        
         // Skip remaining consecutive whitespace
         while (i + 1 < combinedText.length && /\s/.test(combinedText[i + 1])) {
           i++
         }
+        // Move past the last whitespace character
+        i++
+        normPos++
       } else {
         // Non-whitespace character maps directly
         posMap[normPos] = i
+        i++
         normPos++
       }
     }
@@ -155,14 +160,30 @@ function tryMultiNodeMatch(
     posMap[normPos] = combinedText.length
     
     // Map the match indices
-    if (matchIndex >= 0 && matchIndex < posMap.length) {
-      startIndex = posMap[matchIndex]
+    if (matchIndex < 0 || matchIndex >= posMap.length) {
+      console.warn('Start index out of bounds:', { matchIndex, posMapLength: posMap.length })
+      return false
     }
+    startIndex = posMap[matchIndex]
     
     const endPos = matchIndex + searchFor.length
-    if (endPos >= 0 && endPos < posMap.length) {
-      endIndex = posMap[endPos]
+    if (endPos < 0 || endPos >= posMap.length) {
+      console.warn('End index out of bounds:', { endPos, posMapLength: posMap.length })
+      return false
     }
+    endIndex = posMap[endPos]
+    
+    // Debug logging
+    console.log('Position mapping:', {
+      searchText: searchText.substring(0, 50),
+      searchFor: searchFor.substring(0, 50),
+      matchIndex,
+      endPos,
+      startIndex,
+      endIndex,
+      extractedText: combinedText.substring(startIndex, endIndex),
+      combinedTextSample: combinedText.substring(Math.max(0, startIndex - 10), Math.min(combinedText.length, endIndex + 10))
+    })
     
     // Validate we got valid positions
     if (startIndex < 0 || endIndex <= startIndex || endIndex > combinedText.length) {
