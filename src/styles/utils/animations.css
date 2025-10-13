@@ -1,0 +1,24 @@
+/* Reusable keyframes */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes toast-slide-in {
+  from { transform: translateX(400px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes highlight-pulse-animation {
+  0%, 100% { box-shadow: 0 0 8px rgba(var(--highlight-rgb, 255, 255, 0), 0.2); transform: scale(1); }
+  25% { box-shadow: 0 0 20px rgba(var(--highlight-rgb, 255, 255, 0), 0.6); transform: scale(1.02); }
+  50% { box-shadow: 0 0 8px rgba(var(--highlight-rgb, 255, 255, 0), 0.2); transform: scale(1); }
+  75% { box-shadow: 0 0 20px rgba(var(--highlight-rgb, 255, 255, 0), 0.6); transform: scale(1.02); }
+}
+
+

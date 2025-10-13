@@ -1,0 +1,68 @@
+/* Global element styles and app container */
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Use dynamic viewport height if supported */
+@supports (height: 100dvh) {
+  body {
+    min-height: 100dvh;
+  }
+}
+
+body.mobile-sidebar-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+#root {
+  max-width: none;
+  margin: 0;
+  padding: 1rem;
+}
+
+@media (max-width: 768px) {
+  #root {
+    padding: 0;
+  }
+}
+
+.app {
+  text-align: center;
+  position: relative;
+}
+
+.app header {
+  margin-bottom: 2rem;
+}
+
+.app header h1 {
+  font-size: 2.5rem;
+  margin: 0;
+  color: #646cff;
+}
+
+.app header p {
+  margin: 0.5rem 0 0 0;
+  color: #888;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #ccc;
+}
+
+.loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
