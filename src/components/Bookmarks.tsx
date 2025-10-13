@@ -42,7 +42,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const meTab = location.pathname === '/me' ? 'highlights' : 
                 location.pathname === '/me/highlights' ? 'highlights' :
                 location.pathname === '/me/reading-list' ? 'reading-list' :
-                location.pathname === '/me/archive' ? 'archive' : 'highlights'
+                location.pathname === '/me/archive' ? 'archive' :
+                location.pathname === '/me/writings' ? 'writings' : 'highlights'
   
   // Track previous location for going back from settings/me/explore
   useEffect(() => {

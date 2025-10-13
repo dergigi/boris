@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faExclamationCircle, faHighlighter, faBookmark, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faExclamationCircle, faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
@@ -10,7 +10,8 @@ import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
 import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchReadArticlesWithData } from '../services/libraryService'
-import { BlogPostPreview } from '../services/exploreService'
+import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
+import { RELAYS } from '../config/relays'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import AuthorCard from './AuthorCard'
 import BlogPostCard from './BlogPostCard'
@@ -26,7 +27,7 @@ interface MeProps {
   activeTab?: TabType
 }
 
-type TabType = 'highlights' | 'reading-list' | 'archive'
+type TabType = 'highlights' | 'reading-list' | 'archive' | 'writings'
 
 const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
   const activeAccount = Hooks.useActiveAccount()
@@ -35,6 +36,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [readArticles, setReadArticles] = useState<BlogPostPreview[]>([])
+  const [writings, setWritings] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
@@ -66,14 +68,16 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
           setReadArticles(cached.readArticles)
         }
 
-        // Fetch highlights and read articles
-        const [userHighlights, userReadArticles] = await Promise.all([
+        // Fetch highlights, read articles, and writings
+        const [userHighlights, userReadArticles, userWritings] = await Promise.all([
           fetchHighlights(relayPool, activeAccount.pubkey),
-          fetchReadArticlesWithData(relayPool, activeAccount.pubkey)
+          fetchReadArticlesWithData(relayPool, activeAccount.pubkey),
+          fetchBlogPostsFromAuthors(relayPool, [activeAccount.pubkey], RELAYS)
         ])
 
         setHighlights(userHighlights)
         setReadArticles(userReadArticles)
+        setWritings(userWritings)
 
         // Fetch bookmarks using callback pattern
         let fetchedBookmarks: Bookmark[] = []
@@ -163,7 +167,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
     .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
 
   // Only show full loading screen if we don't have any data yet
-  const hasData = highlights.length > 0 || bookmarks.length > 0 || readArticles.length > 0
+  const hasData = highlights.length > 0 || bookmarks.length > 0 || readArticles.length > 0 || writings.length > 0
   
   if (loading && !hasData) {
     return (
@@ -274,6 +278,23 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
           </div>
         )
 
+      case 'writings':
+        return writings.length === 0 ? (
+          <div className="explore-error">
+            <p>No articles written yet. Publish your first article to see it here!</p>
+          </div>
+        ) : (
+          <div className="explore-grid">
+            {writings.map((post) => (
+              <BlogPostCard
+                key={post.event.id}
+                post={post}
+                href={getPostUrl(post)}
+              />
+            ))}
+          </div>
+        )
+
       default:
         return null
     }
@@ -317,6 +338,15 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
             <FontAwesomeIcon icon={faBooks} />
             <span className="tab-label">Archive</span>
             <span className="tab-count">({readArticles.length})</span>
+          </button>
+          <button
+            className={`me-tab ${activeTab === 'writings' ? 'active' : ''}`}
+            data-tab="writings"
+            onClick={() => navigate('/me/writings')}
+          >
+            <FontAwesomeIcon icon={faPenToSquare} />
+            <span className="tab-label">Writings</span>
+            <span className="tab-count">({writings.length})</span>
           </button>
         </div>
       </div>

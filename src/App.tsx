@@ -101,6 +101,15 @@ function AppRoutes({
           />
         } 
       />
+      <Route 
+        path="/me/writings" 
+        element={
+          <Bookmarks 
+            relayPool={relayPool}
+            onLogout={handleLogout}
+          />
+        } 
+      />
       <Route path="/" element={<Navigate to={`/a/${DEFAULT_ARTICLE}`} replace />} />
     </Routes>
   )
