@@ -10,7 +10,6 @@ import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchReadArticles, ReadArticle } from '../services/libraryService'
 import { Bookmark } from '../types/bookmarks'
 import AuthorCard from './AuthorCard'
-import { useSettings } from '../hooks/useSettings'
 
 interface MeProps {
   relayPool: RelayPool
@@ -20,7 +19,6 @@ type TabType = 'highlights' | 'reading-list' | 'library'
 
 const Me: React.FC<MeProps> = ({ relayPool }) => {
   const activeAccount = Hooks.useActiveAccount()
-  const settings = useSettings()
   const [activeTab, setActiveTab] = useState<TabType>('highlights')
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
@@ -51,7 +49,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
 
         // Fetch bookmarks using callback pattern
         try {
-          await fetchBookmarks(relayPool, activeAccount, setBookmarks, settings)
+          await fetchBookmarks(relayPool, activeAccount, setBookmarks)
         } catch (err) {
           console.warn('Failed to load bookmarks:', err)
           setBookmarks([])
@@ -65,7 +63,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
     }
 
     loadData()
-  }, [relayPool, activeAccount, settings])
+  }, [relayPool, activeAccount])
 
   const handleHighlightDelete = (highlightId: string) => {
     setHighlights(prev => prev.filter(h => h.id !== highlightId))
