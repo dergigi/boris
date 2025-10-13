@@ -73,7 +73,7 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
         <label className="setting-label">My Highlights</label>
         <div className="setting-control">
           <ColorPicker
-            selectedColor={settings.highlightColorMine || '#facc15'}
+            selectedColor={settings.highlightColorMine || '#fde047'}
             onColorChange={(color) => onUpdate({ highlightColorMine: color })}
           />
         </div>

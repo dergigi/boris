@@ -39,8 +39,8 @@
 
 /* Highlights tab uses the user's custom "my highlights" color */
 .me-tab[data-tab="highlights"].active {
-  color: var(--highlight-color-mine, rgb(250 204 21)); /* yellow-400 */
-  border-bottom-color: var(--highlight-color-mine, rgb(250 204 21)); /* yellow-400 */
+  color: var(--highlight-color-mine, rgb(253 224 71)); /* yellow-300 */
+  border-bottom-color: var(--highlight-color-mine, rgb(253 224 71)); /* yellow-300 */
 }
 
 /* Reading List tab uses blue color to match bookmarks icon */

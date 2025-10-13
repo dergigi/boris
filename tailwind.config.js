@@ -18,6 +18,9 @@ export default {
         'app-text-muted': '#71717a',   // zinc-500
         'primary': '#6366f1',          // indigo-500
         'primary-hover': '#4f46e5',    // indigo-600
+        'highlight-mine': '#fde047',   // yellow-300
+        'highlight-friends': '#f97316', // orange-500
+        'highlight-nostrverse': '#9333ea', // purple-600
       },
       keyframes: {
         shimmer: {

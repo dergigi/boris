@@ -8,7 +8,7 @@ export function hexToRgb(hex: string): string {
 
 // Tailwind color palette for highlight colors
 export const HIGHLIGHT_COLORS = [
-  { name: 'Yellow', value: '#facc15' },  // yellow-400
+  { name: 'Yellow', value: '#fde047' },  // yellow-300
   { name: 'Orange', value: '#f97316' },  // orange-500
   { name: 'Pink', value: '#ec4899' },    // pink-500
   { name: 'Green', value: '#22c55e' },   // green-500

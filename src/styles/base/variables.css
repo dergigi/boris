@@ -18,11 +18,11 @@
   --reading-font-size: 18px;
   
   /* Highlight color variables (user-settable) */
-  /* Defaults use Tailwind color palette: yellow-400, orange-500, purple-600 */
-  --highlight-color-mine: #facc15;      /* yellow-400 (was #ffff00) */
-  --highlight-color-friends: #f97316;   /* orange-500 (Tailwind native) */
-  --highlight-color-nostrverse: #9333ea; /* purple-600 (Tailwind native) */
-  --highlight-color: #facc15;           /* Default highlight color */
+  /* Defaults use Tailwind color palette: yellow-300, orange-500, purple-600 */
+  --highlight-color-mine: #fde047;      /* yellow-300 */
+  --highlight-color-friends: #f97316;   /* orange-500 */
+  --highlight-color-nostrverse: #9333ea; /* purple-600 */
+  --highlight-color: #fde047;           /* Default highlight color */
   
   /* Layout variables */
   --sidebar-width: 320px;
