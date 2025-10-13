@@ -40,16 +40,22 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
         setLoading(true)
         setError(null)
 
-        // Fetch all data in parallel
-        const [userHighlights, userBookmarks, userReadArticles] = await Promise.all([
+        // Fetch highlights and read articles
+        const [userHighlights, userReadArticles] = await Promise.all([
           fetchHighlights(relayPool, activeAccount.pubkey),
-          fetchBookmarks(relayPool, activeAccount, settings).catch(() => ({ bookmarks: [] })),
           fetchReadArticles(relayPool, activeAccount.pubkey)
         ])
 
         setHighlights(userHighlights)
-        setBookmarks(Array.isArray(userBookmarks) ? userBookmarks : userBookmarks?.bookmarks || [])
         setReadArticles(userReadArticles)
+
+        // Fetch bookmarks using callback pattern
+        try {
+          await fetchBookmarks(relayPool, activeAccount, setBookmarks, settings)
+        } catch (err) {
+          console.warn('Failed to load bookmarks:', err)
+          setBookmarks([])
+        }
       } catch (err) {
         console.error('Failed to load data:', err)
         setError('Failed to load data. Please try again.')
