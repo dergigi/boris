@@ -1,6 +1,8 @@
 /* Profile UI fragments */
 .author-card-container { display: flex; justify-content: center; padding: 2rem 1rem; }
-.author-card { display: flex; gap: 1rem; padding: 1.5rem; background: rgb(24 24 27); /* zinc-900 */ border: 1px solid rgb(63 63 70); /* zinc-700 */ border-radius: 12px; max-width: 600px; width: 100%; }
+.author-card { display: flex; gap: 1rem; padding: 1.5rem; background: rgb(24 24 27); /* zinc-900 */ border: 1px solid rgb(63 63 70); /* zinc-700 */ border-radius: 12px; max-width: 600px; width: 100%; transition: all 0.2s ease; }
+.author-card-clickable:hover { border-color: rgb(99 102 241); /* indigo-500 */ background: rgb(30 30 33); /* slightly lighter */ transform: translateY(-1px); }
+.author-card-clickable:active { transform: translateY(0); }
 .author-card-avatar { flex-shrink: 0; width: 60px; height: 60px; border-radius: 50%; overflow: hidden; background: rgb(39 39 42); /* zinc-800 */ display: flex; align-items: center; justify-content: center; color: rgb(113 113 122); /* zinc-500 */ }
 .author-card-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .author-card-avatar svg { font-size: 2.5rem; }

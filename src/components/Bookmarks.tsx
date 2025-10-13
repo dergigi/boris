@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { Hooks } from 'applesauce-react'
 import { useEventStore } from 'applesauce-react/hooks'
 import { RelayPool } from 'applesauce-relay'
+import { nip19 } from 'nostr-tools'
 import { useSettings } from '../hooks/useSettings'
 import { useArticleLoader } from '../hooks/useArticleLoader'
 import { useExternalUrlLoader } from '../hooks/useExternalUrlLoader'
@@ -25,7 +26,7 @@ interface BookmarksProps {
 }
 
 const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
-  const { naddr } = useParams<{ naddr?: string }>()
+  const { naddr, npub } = useParams<{ naddr?: string; npub?: string }>()
   const location = useLocation()
   const navigate = useNavigate()
   const previousLocationRef = useRef<string>()
@@ -37,6 +38,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const showSettings = location.pathname === '/settings'
   const showExplore = location.pathname === '/explore'
   const showMe = location.pathname.startsWith('/me')
+  const showProfile = location.pathname.startsWith('/p/')
   
   // Extract tab from me routes
   const meTab = location.pathname === '/me' ? 'highlights' : 
@@ -45,12 +47,28 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
                 location.pathname === '/me/archive' ? 'archive' :
                 location.pathname === '/me/writings' ? 'writings' : 'highlights'
   
-  // Track previous location for going back from settings/me/explore
+  // Extract tab from profile routes
+  const profileTab = location.pathname.endsWith('/writings') ? 'writings' : 'highlights'
+  
+  // Decode npub to pubkey for profile view
+  let profilePubkey: string | undefined
+  if (npub && showProfile) {
+    try {
+      const decoded = nip19.decode(npub)
+      if (decoded.type === 'npub') {
+        profilePubkey = decoded.data
+      }
+    } catch (err) {
+      console.error('Failed to decode npub:', err)
+    }
+  }
+  
+  // Track previous location for going back from settings/me/explore/profile
   useEffect(() => {
-    if (!showSettings && !showMe && !showExplore) {
+    if (!showSettings && !showMe && !showExplore && !showProfile) {
       previousLocationRef.current = location.pathname
     }
-  }, [location.pathname, showSettings, showMe, showExplore])
+  }, [location.pathname, showSettings, showMe, showExplore, showProfile])
     
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
@@ -212,6 +230,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       showSettings={showSettings}
       showExplore={showExplore}
       showMe={showMe}
+      showProfile={showProfile}
       bookmarks={bookmarks}
       bookmarksLoading={bookmarksLoading}
       viewMode={viewMode}
@@ -271,6 +290,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       ) : undefined}
       me={showMe ? (
         relayPool ? <Me relayPool={relayPool} activeTab={meTab} /> : null
+      ) : undefined}
+      profile={showProfile && profilePubkey ? (
+        relayPool ? <Me relayPool={relayPool} activeTab={profileTab} pubkey={profilePubkey} /> : null
       ) : undefined}
       toastMessage={toastMessage ?? undefined}
       toastType={toastType}

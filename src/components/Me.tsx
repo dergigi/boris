@@ -27,14 +27,19 @@ import PullToRefreshIndicator from './PullToRefreshIndicator'
 interface MeProps {
   relayPool: RelayPool
   activeTab?: TabType
+  pubkey?: string // Optional pubkey for viewing other users' profiles
 }
 
 type TabType = 'highlights' | 'reading-list' | 'archive' | 'writings'
 
-const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
+const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: propPubkey }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
+  
+  // Use provided pubkey or fall back to active account
+  const viewingPubkey = propPubkey || activeAccount?.pubkey
+  const isOwnProfile = !propPubkey || (activeAccount?.pubkey === propPubkey)
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [readArticles, setReadArticles] = useState<BlogPostPreview[]>([])
@@ -54,8 +59,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!activeAccount) {
-        setError('Please log in to view your data')
+      if (!viewingPubkey) {
+        setError(isOwnProfile ? 'Please log in to view your data' : 'Invalid profile')
         setLoading(false)
         return
       }
@@ -64,39 +69,48 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
         setLoading(true)
         setError(null)
 
-        // Seed from cache if available to avoid empty flash
-        const cached = getCachedMeData(activeAccount.pubkey)
-        if (cached) {
-          setHighlights(cached.highlights)
-          setBookmarks(cached.bookmarks)
-          setReadArticles(cached.readArticles)
+        // Seed from cache if available to avoid empty flash (own profile only)
+        if (isOwnProfile) {
+          const cached = getCachedMeData(viewingPubkey)
+          if (cached) {
+            setHighlights(cached.highlights)
+            setBookmarks(cached.bookmarks)
+            setReadArticles(cached.readArticles)
+          }
         }
 
-        // Fetch highlights, read articles, and writings
-        const [userHighlights, userReadArticles, userWritings] = await Promise.all([
-          fetchHighlights(relayPool, activeAccount.pubkey),
-          fetchReadArticlesWithData(relayPool, activeAccount.pubkey),
-          fetchBlogPostsFromAuthors(relayPool, [activeAccount.pubkey], RELAYS)
+        // Fetch highlights and writings (public data)
+        const [userHighlights, userWritings] = await Promise.all([
+          fetchHighlights(relayPool, viewingPubkey),
+          fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
         ])
 
         setHighlights(userHighlights)
-        setReadArticles(userReadArticles)
         setWritings(userWritings)
 
-        // Fetch bookmarks using callback pattern
-        let fetchedBookmarks: Bookmark[] = []
-        try {
-          await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
-            fetchedBookmarks = newBookmarks
-            setBookmarks(newBookmarks)
-          })
-        } catch (err) {
-          console.warn('Failed to load bookmarks:', err)
-          setBookmarks([])
-        }
+        // Only fetch private data for own profile
+        if (isOwnProfile && activeAccount) {
+          const userReadArticles = await fetchReadArticlesWithData(relayPool, viewingPubkey)
+          setReadArticles(userReadArticles)
 
-        // Update cache with all fetched data
-        setCachedMeData(activeAccount.pubkey, userHighlights, fetchedBookmarks, userReadArticles)
+          // Fetch bookmarks using callback pattern
+          let fetchedBookmarks: Bookmark[] = []
+          try {
+            await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
+              fetchedBookmarks = newBookmarks
+              setBookmarks(newBookmarks)
+            })
+          } catch (err) {
+            console.warn('Failed to load bookmarks:', err)
+            setBookmarks([])
+          }
+
+          // Update cache with all fetched data
+          setCachedMeData(viewingPubkey, userHighlights, fetchedBookmarks, userReadArticles)
+        } else {
+          setBookmarks([])
+          setReadArticles([])
+        }
       } catch (err) {
         console.error('Failed to load data:', err)
         setError('Failed to load data. Please try again.')
@@ -106,7 +120,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
     }
 
     loadData()
-  }, [relayPool, activeAccount, refreshTrigger])
+  }, [relayPool, viewingPubkey, isOwnProfile, activeAccount, refreshTrigger])
 
   // Pull-to-refresh
   const pullToRefreshState = usePullToRefresh(meContainerRef, {
@@ -119,9 +133,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
   const handleHighlightDelete = (highlightId: string) => {
     setHighlights(prev => {
       const updated = prev.filter(h => h.id !== highlightId)
-      // Update cache when highlight is deleted
-      if (activeAccount) {
-        updateCachedHighlights(activeAccount.pubkey, updated)
+      // Update cache when highlight is deleted (own profile only)
+      if (isOwnProfile && viewingPubkey) {
+        updateCachedHighlights(viewingPubkey, updated)
       }
       return updated
     })
@@ -324,7 +338,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
         isRefreshing={loading && pullToRefreshState.canRefresh}
       />
       <div className="explore-header">
-        {activeAccount && <AuthorCard authorPubkey={activeAccount.pubkey} />}
+        {viewingPubkey && <AuthorCard authorPubkey={viewingPubkey} clickable={false} />}
         
         {loading && hasData && (
           <div className="explore-loading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0' }}>
@@ -336,34 +350,38 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab }) => {
           <button
             className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
             data-tab="highlights"
-            onClick={() => navigate('/me/highlights')}
+            onClick={() => navigate(isOwnProfile ? '/me/highlights' : `/p/${propPubkey && nip19.npubEncode(propPubkey)}`)}
           >
             <FontAwesomeIcon icon={faHighlighter} />
             <span className="tab-label">Highlights</span>
             <span className="tab-count">({highlights.length})</span>
           </button>
-          <button
-            className={`me-tab ${activeTab === 'reading-list' ? 'active' : ''}`}
-            data-tab="reading-list"
-            onClick={() => navigate('/me/reading-list')}
-          >
-            <FontAwesomeIcon icon={faBookmark} />
-            <span className="tab-label">Reading List</span>
-            <span className="tab-count">({allIndividualBookmarks.length})</span>
-          </button>
-          <button
-            className={`me-tab ${activeTab === 'archive' ? 'active' : ''}`}
-            data-tab="archive"
-            onClick={() => navigate('/me/archive')}
-          >
-            <FontAwesomeIcon icon={faBooks} />
-            <span className="tab-label">Archive</span>
-            <span className="tab-count">({readArticles.length})</span>
-          </button>
+          {isOwnProfile && (
+            <>
+              <button
+                className={`me-tab ${activeTab === 'reading-list' ? 'active' : ''}`}
+                data-tab="reading-list"
+                onClick={() => navigate('/me/reading-list')}
+              >
+                <FontAwesomeIcon icon={faBookmark} />
+                <span className="tab-label">Reading List</span>
+                <span className="tab-count">({allIndividualBookmarks.length})</span>
+              </button>
+              <button
+                className={`me-tab ${activeTab === 'archive' ? 'active' : ''}`}
+                data-tab="archive"
+                onClick={() => navigate('/me/archive')}
+              >
+                <FontAwesomeIcon icon={faBooks} />
+                <span className="tab-label">Archive</span>
+                <span className="tab-count">({readArticles.length})</span>
+              </button>
+            </>
+          )}
           <button
             className={`me-tab ${activeTab === 'writings' ? 'active' : ''}`}
             data-tab="writings"
-            onClick={() => navigate('/me/writings')}
+            onClick={() => navigate(isOwnProfile ? '/me/writings' : `/p/${propPubkey && nip19.npubEncode(propPubkey)}/writings`)}
           >
             <FontAwesomeIcon icon={faPenToSquare} />
             <span className="tab-label">Writings</span>
