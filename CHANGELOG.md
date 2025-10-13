@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2025-10-13
+
+### Changed
+- Relay status indicator is now more compact
+  - Smaller padding and font sizes on desktop
+  - Auto-collapsed on mobile (icon-only by default, tap to expand)
+  - Matches size of sidebar toggle buttons (44px touch target)
+  - Hides when scrolling down, shows when scrolling up (consistent with other mobile controls)
+
+### Fixed
+- Invalid bookmarks without IDs no longer appear in bookmark list
+  - Previously showed as "Now" timestamp with no content
+  - Bookmarks without valid IDs are now filtered out entirely
+  - Use bookmark's original timestamp instead of always generating new ones
+- Profile icon size when logged out now matches other icon buttons in sidebar header
+
 ## [0.5.2] - 2025-10-12
 
 ### Added
