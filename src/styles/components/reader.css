@@ -2,9 +2,20 @@
 .reader { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 0.75rem; text-align: left; overflow: hidden; contain: layout style; }
 /* Video container in reader - break out of padding to use full width */
 .reader-video { 
+  width: 100%;
   margin: -0.75rem -0.75rem 1rem -0.75rem; 
-  border-radius: 8px 8px 0 0; 
-  overflow: hidden; 
+  border-radius: 0;
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 16 / 9;
+}
+/* Make ReactPlayer fill the container */
+.reader-video > div {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
 }
 .reader.empty { color: #888; }
 .loading-spinner { display: flex; align-items: center; gap: 0.5rem; color: #888; }

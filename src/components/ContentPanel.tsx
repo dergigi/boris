@@ -412,7 +412,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               url={selectedUrl as string} 
               controls 
               width="100%" 
-              height="60vh" 
+              height="100%" 
               onDuration={(d) => setVideoDurationSec(Math.floor(d))}
             />
           </div>
