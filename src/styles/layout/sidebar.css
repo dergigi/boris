@@ -72,6 +72,12 @@
 @media (max-width: 768px) {
   .sidebar-header-bar .toggle-sidebar-btn { display: none; }
   .mobile-close-btn { display: flex; }
+  
+  /* Keep icon sizes consistent to prevent blurriness */
+  .sidebar-header-bar svg {
+    width: 1em;
+    height: 1em;
+  }
 }
 
 .view-mode-controls {

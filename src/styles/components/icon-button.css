@@ -31,6 +31,13 @@
     min-width: var(--min-touch-target);
     min-height: var(--min-touch-target);
   }
+  
+  /* Keep icon size consistent to prevent blurriness */
+  .icon-button svg {
+    font-size: 1rem;
+    width: 1em;
+    height: 1em;
+  }
 }
 
 /* Disable hover effects on touch devices */

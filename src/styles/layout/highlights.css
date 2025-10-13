@@ -144,6 +144,13 @@
 @media (max-width: 768px) {
   .highlight-relay-indicator { padding: 8px; min-width: var(--min-touch-target); min-height: var(--min-touch-target); }
   .compact-button { padding: 0.5rem; min-width: var(--min-touch-target); min-height: var(--min-touch-target); }
+  
+  /* Keep icon size consistent to prevent blurriness */
+  .compact-button svg {
+    font-size: 0.875rem;
+    width: 1em;
+    height: 1em;
+  }
 }
 
 /* Level-colored quote icon */
