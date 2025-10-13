@@ -39,8 +39,8 @@
 @media (min-width: 769px) {
   .pane.sidebar {
     position: sticky;
-    top: 1rem;
-    max-height: calc(100vh - 2rem);
+    top: 0;
+    max-height: 100vh;
     overflow-y: auto;
     align-self: start;
   }
@@ -55,8 +55,8 @@
   
   .pane.highlights {
     position: sticky;
-    top: 1rem;
-    max-height: calc(100vh - 2rem);
+    top: 0;
+    max-height: 100vh;
     overflow-y: auto;
     align-self: start;
   }

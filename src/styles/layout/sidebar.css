@@ -1,14 +1,20 @@
 /* Bookmarks and sidebar layout */
 .bookmarks-container {
   background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
   text-align: left;
   padding: 0;
+}
+
+/* Desktop: no border or rounded corners for edge-to-edge sidebars */
+@media (min-width: 769px) {
+  .bookmarks-container {
+    border: none;
+    border-radius: 0;
+  }
 }
 
 .bookmarks-container .view-mode-controls {
@@ -39,6 +45,15 @@
   border: 1px solid #333;
   border-radius: 12px 12px 0 0;
   margin-bottom: 0;
+}
+
+/* Desktop: no border or rounded corners for edge-to-edge header */
+@media (min-width: 769px) {
+  .sidebar-header-bar {
+    border: none;
+    border-radius: 0;
+    border-bottom: 1px solid #333;
+  }
 }
 
 .sidebar-header-right {
