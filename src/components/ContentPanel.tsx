@@ -33,6 +33,8 @@ import { faBooks } from '../icons/customIcons'
 import { extractYouTubeId, getYouTubeMeta } from '../services/youtubeMetaService'
 import { classifyUrl } from '../utils/helpers'
 import { buildNativeVideoUrl } from '../utils/videoHelpers'
+import { useReadingPosition } from '../hooks/useReadingPosition'
+import { ReadingProgressIndicator } from './ReadingProgressIndicator'
 
 interface ContentPanelProps {
   loading: boolean
@@ -113,6 +115,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     selectedHighlightId,
     onTextSelection,
     onClearSelection
+  })
+
+  // Reading position tracking - only for text content, not videos
+  const isTextContent = !loading && !!(markdown || html) && !selectedUrl?.includes('youtube') && !selectedUrl?.includes('vimeo')
+  const { isReadingComplete, progressPercentage } = useReadingPosition({
+    enabled: isTextContent,
+    onReadingComplete: () => {
+      // Optional: Auto-mark as read when reading is complete
+      if (activeAccount && !isMarkedAsRead) {
+        // Could trigger auto-mark as read here if desired
+      }
+    }
   })
 
   // Close menu when clicking outside
@@ -361,6 +375,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   return (
     <div className="reader" style={{ '--highlight-rgb': highlightRgb } as React.CSSProperties}>
+      {/* Reading Progress Indicator */}
+      {isTextContent && (
+        <ReadingProgressIndicator 
+          progress={progressPercentage}
+          isComplete={isReadingComplete}
+          showPercentage={true}
+        />
+      )}
+      
       {/* Hidden markdown preview to convert markdown to HTML */}
       {markdown && (
         <div ref={markdownPreviewRef} style={{ display: 'none' }}>
