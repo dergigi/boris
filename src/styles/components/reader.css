@@ -93,6 +93,33 @@
 }
 .reader-markdown p { margin: 0.5rem 0; }
 .reader-html p, .reader-html div, .reader-html span, .reader-html li, .reader-html td, .reader-html th { font-size: 1em !important; }
+/* Lists */
+.reader-markdown ul, .reader-html ul {
+  list-style-type: disc;
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+.reader-markdown ol, .reader-html ol {
+  list-style-type: decimal;
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+.reader-markdown li, .reader-html li {
+  margin: 0.375rem 0;
+  line-height: 1.6;
+  color: rgb(228 228 231); /* zinc-200 */
+}
+.reader-markdown ul ul, .reader-markdown ol ul, .reader-html ul ul, .reader-html ol ul {
+  list-style-type: circle;
+  margin: 0.25rem 0;
+}
+.reader-markdown ul ol, .reader-markdown ol ol, .reader-html ul ol, .reader-html ol ol {
+  list-style-type: lower-alpha;
+  margin: 0.25rem 0;
+}
+.reader-markdown li p, .reader-html li p {
+  margin: 0.25rem 0;
+}
 .reader-markdown blockquote, .reader-html blockquote { 
   margin: 1.5rem 0; 
   padding-left: 2rem;
