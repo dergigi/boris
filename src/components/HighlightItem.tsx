@@ -338,7 +338,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         )}
         
         
-        <div className="highlight-meta">
+        <div className="highlight-footer">
           <span className="highlight-author">
             {getUserDisplayName()}
           </span>
