@@ -18,7 +18,7 @@ interface MeProps {
   relayPool: RelayPool
 }
 
-type TabType = 'highlights' | 'reading-list' | 'library'
+type TabType = 'highlights' | 'reading-list' | 'archive'
 
 const Me: React.FC<MeProps> = ({ relayPool }) => {
   const activeAccount = Hooks.useActiveAccount()
@@ -141,7 +141,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
           </div>
         )
 
-      case 'library':
+      case 'archive':
         return readArticles.length === 0 ? (
           <div className="explore-error">
             <p>No read articles yet. Mark articles as read to see them here!</p>
@@ -186,12 +186,12 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
             Reading List ({bookmarks.length})
           </button>
           <button
-            className={`me-tab ${activeTab === 'library' ? 'active' : ''}`}
-            data-tab="library"
-            onClick={() => setActiveTab('library')}
+            className={`me-tab ${activeTab === 'archive' ? 'active' : ''}`}
+            data-tab="archive"
+            onClick={() => setActiveTab('archive')}
           >
             <FontAwesomeIcon icon={faBook} />
-            Library ({readArticles.length})
+            Archive ({readArticles.length})
           </button>
         </div>
       </div>
