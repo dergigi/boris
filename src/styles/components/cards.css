@@ -19,8 +19,8 @@
   .bookmarks-grid.bookmarks-large { gap: 1rem; }
 }
 
-.individual-bookmark { background: transparent; padding: 1rem; border-radius: 8px; transition: all 0.2s ease; border: 1px solid transparent; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; overflow: hidden; }
-.individual-bookmark:hover { border-color: transparent; background: #2a2a2a; }
+.individual-bookmark { background: transparent; padding: 1rem; border-radius: 8px; transition: all 0.2s ease; border: 1px solid #2a2a2a; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; overflow: hidden; }
+.individual-bookmark:hover { border-color: #3a3a3a; background: #252525; }
 
 /* Compact view */
 .individual-bookmark.compact { padding: 0.5rem 0.5rem; background: transparent; border: none; border-bottom: 1px solid #2a2a2a; border-radius: 0; box-shadow: none; width: 100%; max-width: 100%; overflow: hidden; }
@@ -48,13 +48,13 @@
 .bookmark-meta-minimal { font-size: 0.8rem; color: #888; }
 .author-link-minimal { color: #888; text-decoration: none; transition: color 0.2s ease; }
 .author-link-minimal:hover { color: #aaa; }
-.read-now-button-minimal { background: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease; white-space: nowrap; }
-.read-now-button-minimal:hover { background: #218838; }
+.read-now-button-minimal { background: #646cff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease; white-space: nowrap; }
+.read-now-button-minimal:hover { background: #535bf2; }
 .expand-toggle-urls { margin-top: 0.5rem; background: transparent; border: none; color: #646cff; cursor: pointer; font-size: 0.8rem; padding: 0.25rem 0; text-decoration: underline; }
 .expand-toggle-urls:hover { color: #8088ff; }
 
 /* Large preview view */
-.individual-bookmark.large { padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+.individual-bookmark.large { padding: 0; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #2a2a2a; }
 .large-preview-image { width: 100%; height: 180px; background: #1a1a1a; background-size: cover; background-position: center; background-repeat: no-repeat; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; border-bottom: 1px solid #333; position: relative; }
 .large-preview-image:hover { opacity: 0.9; }
 .large-preview-image::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.3) 100%); pointer-events: none; }
@@ -63,8 +63,8 @@
 .large-text { color: #ccc; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .large-footer { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; font-size: 0.8rem; color: #888; padding-top: 0.75rem; border-top: 1px solid #333; }
 .large-author { flex: 1; }
-.large-read-button { background: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.5rem; }
-.large-read-button:hover { background: #218838; }
+.large-read-button { background: #646cff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.5rem; }
+.large-read-button:hover { background: #535bf2; }
 
 /* Blog cards (Explore) */
 .explore-container { padding: 2rem; max-width: 1400px; margin: 0 auto; min-height: 100vh; }

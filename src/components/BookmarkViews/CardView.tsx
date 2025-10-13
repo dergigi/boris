@@ -8,6 +8,7 @@ import IconButton from '../IconButton'
 import { classifyUrl } from '../../utils/helpers'
 import { IconGetter } from './shared'
 import { useImageCache } from '../../hooks/useImageCache'
+import { getPreviewImage, fetchOgImage } from '../../utils/imagePreview'
 import { UserSettings } from '../../services/settingsService'
 import { getProfileUrl, getEventUrl } from '../../config/nostrGateways'
 
@@ -44,17 +45,33 @@ export const CardView: React.FC<CardViewProps> = ({
   articleSummary,
   settings
 }) => {
-  const cachedImage = useImageCache(articleImage, settings)
+  const firstUrl = hasUrls ? extractedUrls[0] : null
+  const firstUrlClassificationType = firstUrl ? classifyUrl(firstUrl)?.type : null
+  const instantPreview = firstUrl ? getPreviewImage(firstUrl, firstUrlClassificationType || '') : null
+  
+  const [ogImage, setOgImage] = useState<string | null>(null)
   const [expanded, setExpanded] = useState(false)
   const [urlsExpanded, setUrlsExpanded] = useState(false)
+  
   const contentLength = (bookmark.content || '').length
   const shouldTruncate = !expanded && contentLength > 210
   const isArticle = bookmark.kind === 30023
   const isWebBookmark = bookmark.kind === 39701
+  
+  // Determine which image to use (article image, instant preview, or OG image)
+  const previewImage = articleImage || instantPreview || ogImage
+  const cachedImage = useImageCache(previewImage || undefined, settings)
+  
+  // Fetch OG image if we don't have any other image
+  React.useEffect(() => {
+    if (firstUrl && !articleImage && !instantPreview && !ogImage) {
+      fetchOgImage(firstUrl).then(setOgImage)
+    }
+  }, [firstUrl, articleImage, instantPreview, ogImage])
 
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
-      {isArticle && cachedImage && (
+      {cachedImage && (
         <div 
           className="article-hero-image"
           style={{ backgroundImage: `url(${cachedImage})` }}
