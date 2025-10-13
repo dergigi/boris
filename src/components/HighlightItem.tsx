@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer, faTrash, faEllipsisH } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer, faTrash, faEllipsisH, faClock } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models, IEventStore } from 'applesauce-core'
@@ -14,6 +14,7 @@ import { formatDateCompact } from '../utils/bookmarkUtils'
 import { createDeletionRequest } from '../services/deletionService'
 import ConfirmDialog from './ConfirmDialog'
 import { getNostrUrl } from '../config/nostrGateways'
+import CompactButton from './CompactButton'
 
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
@@ -303,21 +304,26 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       onClick={handleItemClick}
       style={{ cursor: onHighlightClick ? 'pointer' : 'default' }}
     >
-      <span className="highlight-timestamp">
+      <CompactButton
+        className="highlight-timestamp"
+        icon={faClock}
+        title={new Date(highlight.created_at * 1000).toLocaleString()}
+        onClick={(e) => e.stopPropagation()}
+      >
         {formatDateCompact(highlight.created_at)}
-      </span>
+      </CompactButton>
       
       <div className="highlight-quote-icon">
         <FontAwesomeIcon icon={faQuoteLeft} />
         {relayIndicator && (
-          <div 
-            className="highlight-relay-indicator" 
+          <CompactButton
+            className="highlight-relay-indicator"
+            icon={relayIndicator.icon}
+            spin={relayIndicator.spin}
             title={relayIndicator.tooltip}
             onClick={handleRebroadcast}
-            style={{ cursor: relayPool && eventStore ? 'pointer' : 'default' }}
-          >
-            <FontAwesomeIcon icon={relayIndicator.icon} spin={relayIndicator.spin} />
-          </div>
+            disabled={!relayPool || !eventStore}
+          />
         )}
       </div>
       
@@ -339,13 +345,11 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
           </span>
           
           <div className="highlight-menu-wrapper" ref={menuRef}>
-            <button
-              className="highlight-menu-btn"
+            <CompactButton
+              icon={faEllipsisH}
               onClick={handleMenuToggle}
               title="More options"
-            >
-              <FontAwesomeIcon icon={faEllipsisH} />
-            </button>
+            />
             
             {showMenu && (
               <div className="highlight-menu">

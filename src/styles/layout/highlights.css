@@ -104,7 +104,14 @@
 .highlight-item:hover { border-color: #646cff; }
 .highlight-item.selected { border-color: #646cff; background: #252525; box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3); }
 
-.highlight-timestamp { position: absolute; top: 0.5rem; right: 0.75rem; font-size: 0.75rem; color: #888; font-weight: 500; white-space: nowrap; pointer-events: none; }
+/* Compact button for highlight cards */
+.compact-button { background: none; border: none; color: #888; cursor: pointer; padding: 0.25rem; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem; transition: all 0.2s ease; border-radius: 4px; min-width: 20px; min-height: 20px; }
+.compact-button:hover { color: #aaa; background: rgba(255, 255, 255, 0.05); }
+.compact-button:active { transform: scale(0.95); }
+.compact-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.compact-button:disabled:hover { background: none; color: #888; transform: none; }
+
+.highlight-timestamp { position: absolute; top: 0.5rem; right: 0.75rem; font-size: 0.75rem; font-weight: 500; white-space: nowrap; }
 
 /* Level colors in sidebar items */
 .highlight-item.level-mine { border-color: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 60%, #333); box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight-color-mine, #ffff00) 25%, transparent); }
@@ -112,18 +119,14 @@
 .highlight-item.level-nostrverse { border-color: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 60%, #333); box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 25%, transparent); }
 
 .highlight-quote-icon { color: #646cff; font-size: 1.2rem; flex-shrink: 0; margin-top: 0.25rem; position: relative; }
-.highlight-relay-indicator { position: absolute; bottom: -4px; left: -6px; font-size: 0.7rem; color: #888; opacity: 0.7; transition: all 0.2s ease; cursor: pointer; padding: 4px; min-width: 20px; min-height: 20px; display: flex; align-items: center; justify-content: center; }
-.highlight-relay-indicator:hover { opacity: 1; color: #aaa; transform: scale(1.1); }
-.highlight-relay-indicator:active { transform: scale(0.95); }
-.highlight-delete-btn { position: absolute; bottom: -4px; right: -6px; font-size: 0.7rem; color: #888; opacity: 0.7; transition: all 0.2s ease; cursor: pointer; padding: 4px; min-width: 20px; min-height: 20px; display: flex; align-items: center; justify-content: center; }
-.highlight-delete-btn:hover { opacity: 1; color: #ff4444; transform: scale(1.1); }
-.highlight-delete-btn:active { transform: scale(0.95); }
+.highlight-relay-indicator { position: absolute; bottom: -4px; left: -6px; opacity: 0.7; }
+.highlight-relay-indicator:hover { opacity: 1; }
 
 /* Mobile: Larger touch targets and better spacing */
 @media (max-width: 768px) {
   .highlight-quote-icon { min-width: 100px; }
-  .highlight-relay-indicator { bottom: -8px; left: -8px; padding: 8px; min-width: var(--min-touch-target); min-height: var(--min-touch-target); font-size: 0.85rem; }
-  .highlight-delete-btn { bottom: -8px; right: -8px; padding: 8px; min-width: var(--min-touch-target); min-height: var(--min-touch-target); font-size: 0.85rem; }
+  .highlight-relay-indicator { bottom: -8px; left: -8px; padding: 8px; min-width: var(--min-touch-target); min-height: var(--min-touch-target); }
+  .compact-button { padding: 0.5rem; min-width: var(--min-touch-target); min-height: var(--min-touch-target); }
 }
 
 /* Level-colored quote icon */
@@ -137,11 +140,7 @@
 
 .highlight-meta { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #888; flex-wrap: nowrap; min-height: 20px; }
 .highlight-author { color: #aaa; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; line-height: 1; }
-.highlight-meta-separator { color: #666; flex-shrink: 0; line-height: 1; }
-.highlight-time { color: #888; white-space: nowrap; flex-shrink: 0; line-height: 1; }
 .highlight-menu-wrapper { position: relative; margin-left: auto; flex-shrink: 0; }
-.highlight-menu-btn { background: none; border: none; color: #888; cursor: pointer; padding: 0.25rem 0.5rem; font-size: 0.875rem; display: flex; align-items: center; transition: color 0.2s ease; border-radius: 4px; }
-.highlight-menu-btn:hover { color: #646cff; background: rgba(100, 108, 255, 0.1); }
 .highlight-menu { position: absolute; right: 0; top: calc(100% + 4px); background: #2a2a2a; border: 1px solid #444; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); z-index: 1000; min-width: 160px; overflow: hidden; }
 .highlight-menu-item { width: 100%; background: none; border: none; color: #ddd; padding: 0.625rem 0.875rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.625rem; cursor: pointer; transition: all 0.15s ease; text-align: left; white-space: nowrap; }
 .highlight-menu-item:hover { background: rgba(100, 108, 255, 0.15); color: #fff; }
