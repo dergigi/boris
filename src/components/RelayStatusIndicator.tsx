@@ -85,7 +85,29 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({
         ) : undefined
       }
       onClick={handleClick}
-      style={{ cursor: isMobile ? 'pointer' : 'default' }}
+      style={{ 
+        position: 'fixed',
+        bottom: '32px',
+        left: '32px',
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: showDetails ? '0.75rem 1rem' : '0.75rem',
+        backgroundColor: 'rgba(39, 39, 42, 0.9)',
+        backdropFilter: 'blur(8px)',
+        border: '1px solid rgb(82, 82, 91)',
+        borderRadius: '12px',
+        color: 'rgb(228, 228, 231)',
+        fontSize: '0.875rem',
+        fontWeight: 500,
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+        cursor: isMobile ? 'pointer' : 'default',
+        opacity: isMobile && !showOnMobile ? 0 : 1,
+        visibility: isMobile && !showOnMobile ? 'hidden' : 'visible',
+        transition: 'all 0.3s ease',
+        userSelect: 'none'
+      }}
     >
       <div className="relay-status-icon">
         <FontAwesomeIcon icon={isConnecting ? faSpinner : offlineMode ? faCircle : faPlane} spin={isConnecting} />
