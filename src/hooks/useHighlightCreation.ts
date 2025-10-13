@@ -77,6 +77,12 @@ export const useHighlightCreation = ({
         publishedRelays: newHighlight.publishedRelays
       })
       
+      // Clear the browser's text selection immediately to allow DOM update
+      const selection = window.getSelection()
+      if (selection) {
+        selection.removeAllRanges()
+      }
+      
       highlightButtonRef.current?.clearSelection()
       onHighlightCreated(newHighlight)
     } catch (error) {
