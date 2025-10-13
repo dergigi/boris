@@ -140,6 +140,19 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const isNostrArticle = selectedUrl && selectedUrl.startsWith('nostr:')
   const isExternalVideo = !isNostrArticle && !!selectedUrl && ['youtube', 'video'].includes(classifyUrl(selectedUrl).type)
 
+  // Track external video duration (in seconds) for display in header
+  const [videoDurationSec, setVideoDurationSec] = useState<number | null>(null)
+
+  const formatDuration = (totalSeconds: number): string => {
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = Math.floor(totalSeconds % 60)
+    const mm = hours > 0 ? String(minutes).padStart(2, '0') : String(minutes)
+    const ss = String(seconds).padStart(2, '0')
+    return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`
+  }
+  const isExternalVideo = !isNostrArticle && !!selectedUrl && ['youtube', 'video'].includes(classifyUrl(selectedUrl).type)
+
   // Get article links for menu
   const getArticleLinks = () => {
     if (!currentArticle) return null
@@ -308,7 +321,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         image={image}
         summary={summary}
         published={published}
-        readingTimeText={readingStats ? readingStats.text : null}
+        readingTimeText={isExternalVideo ? (videoDurationSec !== null ? formatDuration(videoDurationSec) : null) : (readingStats ? readingStats.text : null)}
         hasHighlights={hasHighlights}
         highlightCount={relevantHighlights.length}
         settings={settings}
@@ -318,7 +331,13 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       {isExternalVideo ? (
         <>
           <div className="reader-video">
-            <ReactPlayer url={selectedUrl as string} controls width="100%" height="60vh" />
+            <ReactPlayer 
+              url={selectedUrl as string} 
+              controls 
+              width="100%" 
+              height="60vh" 
+              onDuration={(d) => setVideoDurationSec(Math.floor(d))}
+            />
           </div>
           {activeAccount && (
             <div className="mark-as-read-container">
