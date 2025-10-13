@@ -70,7 +70,11 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({
     }
   }
 
+  // On mobile, default to collapsed (icon only). On desktop, always show details.
   const showDetails = !isMobile || isExpanded
+  
+  // On mobile when collapsed, make it circular like the highlight button
+  const isCollapsedOnMobile = isMobile && !isExpanded
   
   return (
     <div 
@@ -92,12 +96,14 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
-        gap: '0.5rem',
-        padding: showDetails ? '0.75rem 1rem' : '0.75rem',
+        gap: showDetails ? '0.5rem' : '0',
+        padding: isCollapsedOnMobile ? '0.875rem' : (showDetails ? '0.75rem 1rem' : '0.75rem'),
+        width: isCollapsedOnMobile ? '56px' : 'auto',
+        height: isCollapsedOnMobile ? '56px' : 'auto',
         backgroundColor: 'rgba(39, 39, 42, 0.9)',
         backdropFilter: 'blur(8px)',
         border: '1px solid rgb(82, 82, 91)',
-        borderRadius: '12px',
+        borderRadius: isCollapsedOnMobile ? '50%' : '12px',
         color: 'rgb(228, 228, 231)',
         fontSize: '0.875rem',
         fontWeight: 500,
@@ -106,7 +112,8 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({
         opacity: isMobile && !showOnMobile ? 0 : 1,
         visibility: isMobile && !showOnMobile ? 'hidden' : 'visible',
         transition: 'all 0.3s ease',
-        userSelect: 'none'
+        userSelect: 'none',
+        justifyContent: isCollapsedOnMobile ? 'center' : 'flex-start'
       }}
     >
       <div className="relay-status-icon">
