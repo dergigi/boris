@@ -173,18 +173,6 @@ function tryMultiNodeMatch(
     }
     endIndex = posMap[endPos]
     
-    // Debug logging
-    console.log('Position mapping:', {
-      searchText: searchText.substring(0, 50),
-      searchFor: searchFor.substring(0, 50),
-      matchIndex,
-      endPos,
-      startIndex,
-      endIndex,
-      extractedText: combinedText.substring(startIndex, endIndex),
-      combinedTextSample: combinedText.substring(Math.max(0, startIndex - 10), Math.min(combinedText.length, endIndex + 10))
-    })
-    
     // Validate we got valid positions
     if (startIndex < 0 || endIndex <= startIndex || endIndex > combinedText.length) {
       console.warn('Could not map normalized positions:', { 

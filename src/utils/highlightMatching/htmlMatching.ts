@@ -22,6 +22,17 @@ export function applyHighlightsToHTML(
   const tempDiv = document.createElement('div')
   tempDiv.innerHTML = html
   
+  // CRITICAL: Remove any existing highlight marks to start with clean HTML
+  // This prevents old broken highlights from corrupting the new rendering
+  const existingMarks = tempDiv.querySelectorAll('mark[data-highlight-id]')
+  existingMarks.forEach(mark => {
+    // Replace the mark with its text content
+    const textNode = document.createTextNode(mark.textContent || '')
+    mark.parentNode?.replaceChild(textNode, mark)
+  })
+  
+  console.log('🧹 Removed', existingMarks.length, 'existing highlight marks')
+  
   let appliedCount = 0
   
   for (const highlight of highlights) {
