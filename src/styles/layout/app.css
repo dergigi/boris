@@ -105,7 +105,7 @@
     max-width: 320px;
     height: 100vh;
     height: 100dvh;
-    background: #1a1a1a;
+    background: rgb(24 24 27); /* zinc-900 */
     z-index: 1001; /* Above backdrop */
     transition: transform 0.3s ease;
     box-shadow: none;
