@@ -109,7 +109,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 1102; /* Above mobile sidepanes (1001) and backdrop (999) */
   background: rgba(26, 26, 26, 0.95);
   backdrop-filter: blur(8px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);

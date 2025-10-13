@@ -98,11 +98,10 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
   const mainPaneRef = useRef<HTMLDivElement>(null)
   
   // Detect scroll direction to hide/show mobile buttons
-  // On mobile, scroll happens in the main pane, not on window
+  // Now using window scroll (document scroll) instead of pane scroll
   const scrollDirection = useScrollDirection({ 
     threshold: 10, 
-    enabled: isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed,
-    elementRef: mainPaneRef
+    enabled: isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed
   })
   const showMobileButtons = scrollDirection !== 'down'
 

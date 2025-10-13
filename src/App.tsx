@@ -238,7 +238,7 @@ function App() {
     <EventStoreProvider eventStore={eventStore}>
       <AccountsProvider manager={accountManager}>
         <BrowserRouter>
-          <div className="app">
+          <div className="min-h-screen p-0 md:p-4 max-w-none m-0 relative">
             <AppRoutes relayPool={relayPool} showToast={showToast} />
           </div>
         </BrowserRouter>
