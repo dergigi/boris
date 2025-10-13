@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5] - 2025-01-27
+
+### Added
+- `/me` page with tabbed layout featuring Highlights, Reading List, and Library tabs
+- Two-pane layout for `/me` page with article sources and highlights
+- Custom FontAwesome Pro books icon for Archive tab
+- CompactButton component for highlight cards
+- Instant mark-as-read functionality with checkmark animation and read status checking
+
+### Changed
+- Rename Library tab to Archive
+- Move highlight timestamp to top-right corner of cards
+- Replace username with AuthorCard component on `/me` page
+- Use user's custom highlight color for Highlights tab
+- Render library articles using BlogPostCard component for consistency
+- Use faBooks icon for Mark as Read button
+- Make quote icon a CompactButton in top-left corner
+
+### Fixed
+- Include currentArticle in useEffect deps to satisfy lint
+- Deduplicate article events in library to prevent showing duplicates
+- Remove incorrect useSettings hook usage in Me component
+- Correct fetchBookmarks usage with callback pattern in Me component
+- Add padding to prevent quote text from overlapping timestamp
+- Improve spacing and alignment of highlight card elements
+- Align corner elements symmetrically with proper margins
+- Group relay icon and author in footer-left for consistent alignment
+- Position relay indicator in bottom-left corner to prevent overlap with author
+
+### Style
+- Match `/me` profile card width to highlight cards
+- Improve Me page mobile tabs and avoid overlap with sidebar buttons
+- Reduce margins/paddings to make highlight cards more compact
+- Tighten vertical spacing on highlight cards
+- Left-align text inside author card
+- Constrain `/me` page content width to match author card (600px)
+- Improve tab border styling for dark theme
+- Make relay indicator match CompactButton (same look as menu)
+- Align relay indicator within footer with symmetric spacing
+- Make header and footer full-width with borders and corners
+
 ## [0.5.4] - 2025-10-13
 
 ### Changed
@@ -758,7 +799,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.5.5...HEAD
+[0.5.5]: https://github.com/dergigi/boris/compare/v0.5.4...v0.5.5
 [0.5.2]: https://github.com/dergigi/boris/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/dergigi/boris/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/dergigi/boris/compare/v0.4.3...v0.5.0
