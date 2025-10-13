@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6] - 2025-10-13
+
+### Added
+- Three-dot menu for articles and enhanced highlight menus
+- Prism.js syntax highlighting for code blocks
+- Inline image rendering in nostr-native blog posts
+- Image placeholders on blog post cards in `/explore`
+- Caching on `/me` page for faster loading
+
+### Changed
+- Reading List on `/me` now uses the same components as the bookmarks sidebar
+- Improve bookmarks sidebar visual design
+- Make article menu button more subtle by removing border
+
+### Fixed
+- Use round checkmark icon (faCheckCircle) for Mark as Read button
+- Remove extra horizontal divider above article menu
+- Ensure code blocks consistently use monospace fonts
+- Preserve reading font settings in markdown images
+
+### Style
+- Remove horizontal divider above Mark as Read button
+- Remove horizontal divider below article menu button
+
 ## [0.5.5] - 2025-01-27
 
 ### Added
