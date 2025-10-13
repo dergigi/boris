@@ -39,7 +39,7 @@ export function extractNaddrUris(text: string): string[] {
 
 /**
  * Decode a NIP-19 identifier and return a human-readable link
- * For articles (naddr), returns an internal app link
+ * For articles (naddr) and profiles (npub/nprofile), returns internal app links
  * For other types, returns an external gateway link
  */
 export function createNostrLink(encoded: string): string {
@@ -51,7 +51,13 @@ export function createNostrLink(encoded: string): string {
         // For articles, link to our internal app route
         return `/a/${encoded}`
       case 'npub':
-      case 'nprofile':
+        // For profiles, link to our internal app route
+        return `/p/${encoded}`
+      case 'nprofile': {
+        // For nprofile, convert to npub and link to our internal app route
+        const npub = npubEncode(decoded.data.pubkey)
+        return `/p/${npub}`
+      }
       case 'note':
       case 'nevent':
         return getNostrUrl(encoded)

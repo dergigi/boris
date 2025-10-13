@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBookmark, faUserLock, faChevronDown, faChevronUp, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { IndividualBookmark } from '../../types/bookmarks'
@@ -10,7 +11,7 @@ import { IconGetter } from './shared'
 import { useImageCache } from '../../hooks/useImageCache'
 import { getPreviewImage, fetchOgImage } from '../../utils/imagePreview'
 import { UserSettings } from '../../services/settingsService'
-import { getProfileUrl, getEventUrl } from '../../config/nostrGateways'
+import { getEventUrl } from '../../config/nostrGateways'
 
 interface CardViewProps {
   bookmark: IndividualBookmark
@@ -190,16 +191,14 @@ export const CardView: React.FC<CardViewProps> = ({
       
       <div className="bookmark-footer">
         <div className="bookmark-meta-minimal">
-          <a
-            href={getProfileUrl(authorNpub)}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to={`/p/${authorNpub}`}
             className="author-link-minimal"
-            title="Open author in search"
+            title="Open author profile"
             onClick={(e) => e.stopPropagation()}
           >
             {getAuthorDisplayName()}
-          </a>
+          </Link>
         </div>
         {/* CTA removed */}
       </div>

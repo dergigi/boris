@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate } from '../../utils/bookmarkUtils'
@@ -6,7 +7,7 @@ import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
 import { IconGetter } from './shared'
 import { useImageCache } from '../../hooks/useImageCache'
 import { UserSettings } from '../../services/settingsService'
-import { getProfileUrl, getEventUrl } from '../../config/nostrGateways'
+import { getEventUrl } from '../../config/nostrGateways'
 
 interface LargeViewProps {
   bookmark: IndividualBookmark
@@ -93,15 +94,13 @@ export const LargeView: React.FC<LargeViewProps> = ({
         
         <div className="large-footer">
           <span className="large-author">
-            <a
-              href={getProfileUrl(authorNpub)}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to={`/p/${authorNpub}`}
               className="author-link-minimal"
               onClick={(e) => e.stopPropagation()}
             >
               {getAuthorDisplayName()}
-            </a>
+            </Link>
           </span>
           
           {eventNevent && (
