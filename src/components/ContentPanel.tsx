@@ -68,7 +68,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   markdown, 
   selectedUrl,
   image,
-  summary,
   published,
   highlights = [],
   showHighlights = true,
@@ -94,7 +93,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const articleMenuRef = useRef<HTMLDivElement>(null)
   const videoMenuRef = useRef<HTMLDivElement>(null)
   const [ytMeta, setYtMeta] = useState<{ title?: string; description?: string; transcript?: string } | null>(null)
-  const [showTranscript, setShowTranscript] = useState(false)
   const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef, processedMarkdown } = useMarkdownToHTML(markdown, relayPool)
   
   const { finalHtml, relevantHighlights } = useHighlightedContent({
@@ -387,7 +385,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       <ReaderHeader 
         title={ytMeta?.title || title}
         image={image}
-        summary={ytMeta?.description || summary}
+        summary={undefined}
         published={published}
         readingTimeText={isExternalVideo ? (videoDurationSec !== null ? formatDuration(videoDurationSec) : null) : (readingStats ? readingStats.text : null)}
         hasHighlights={hasHighlights}
@@ -408,16 +406,17 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               onDuration={(d) => setVideoDurationSec(Math.floor(d))}
             />
           </div>
+          {ytMeta?.description && (
+            <div className="large-text" style={{ color: '#ddd', padding: '0 0.75rem', whiteSpace: 'pre-wrap', marginBottom: '0.75rem' }}>
+              {ytMeta.description}
+            </div>
+          )}
           {ytMeta?.transcript && (
-            <div style={{ padding: '0 0.75rem' }}>
-              <button className="article-menu-btn" onClick={() => setShowTranscript(v => !v)} title="Toggle transcript">
-                Transcript {showTranscript ? '▲' : '▼'}
-              </button>
-              {showTranscript && (
-                <div className="large-text" style={{ whiteSpace: 'pre-wrap', color: '#ddd', marginTop: '0.5rem' }}>
-                  {ytMeta.transcript}
-                </div>
-              )}
+            <div style={{ padding: '0 0.75rem 1rem 0.75rem' }}>
+              <h3 style={{ margin: '1rem 0 0.5rem 0', fontSize: '1rem', color: '#aaa' }}>Transcript</h3>
+              <div className="large-text" style={{ whiteSpace: 'pre-wrap', color: '#ddd' }}>
+                {ytMeta.transcript}
+              </div>
             </div>
           )}
           <div className="article-menu-container">
