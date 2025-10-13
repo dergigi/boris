@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 
 interface UseHighlightInteractionsParams {
   onHighlightClick?: (highlightId: string) => void
@@ -14,6 +14,25 @@ export const useHighlightInteractions = ({
   onClearSelection
 }: UseHighlightInteractionsParams) => {
   const contentRef = useRef<HTMLDivElement>(null)
+  const [contentVersion, setContentVersion] = useState(0)
+
+  // Watch for DOM changes (highlights being added/removed)
+  useEffect(() => {
+    if (!contentRef.current) return
+    
+    const observer = new MutationObserver(() => {
+      // Increment version to trigger re-attachment of handlers
+      setContentVersion(prev => prev + 1)
+    })
+    
+    observer.observe(contentRef.current, {
+      childList: true,
+      subtree: true,
+      characterData: false
+    })
+    
+    return () => observer.disconnect()
+  }, [])
 
   // Attach click handlers to highlight marks
   useEffect(() => {
@@ -37,24 +56,33 @@ export const useHighlightInteractions = ({
         mark.removeEventListener('click', handler)
       })
     }
-  }, [onHighlightClick])
+  }, [onHighlightClick, contentVersion])
 
   // Scroll to selected highlight
   useEffect(() => {
     if (!selectedHighlightId || !contentRef.current) return
     
-    const markElement = contentRef.current.querySelector(`mark[data-highlight-id="${selectedHighlightId}"]`)
-    
-    if (markElement) {
-      markElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // Use a small delay to ensure DOM is updated
+    const timeoutId = setTimeout(() => {
+      if (!contentRef.current) return
       
-      const htmlElement = markElement as HTMLElement
-      setTimeout(() => {
-        htmlElement.classList.add('highlight-pulse')
-        setTimeout(() => htmlElement.classList.remove('highlight-pulse'), 1500)
-      }, 500)
-    }
-  }, [selectedHighlightId])
+      const markElement = contentRef.current.querySelector(`mark[data-highlight-id="${selectedHighlightId}"]`)
+      
+      if (markElement) {
+        markElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        
+        const htmlElement = markElement as HTMLElement
+        setTimeout(() => {
+          htmlElement.classList.add('highlight-pulse')
+          setTimeout(() => htmlElement.classList.remove('highlight-pulse'), 1500)
+        }, 500)
+      } else {
+        console.warn('Could not find mark element for highlight:', selectedHighlightId)
+      }
+    }, 100)
+    
+    return () => clearTimeout(timeoutId)
+  }, [selectedHighlightId, contentVersion])
 
   // Handle text selection (works for both mouse and touch)
   const handleSelectionEnd = useCallback(() => {
