@@ -304,13 +304,15 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       onClick={handleItemClick}
       style={{ cursor: onHighlightClick ? 'pointer' : 'default' }}
     >
-      <CompactButton
-        className="highlight-timestamp"
-        title={new Date(highlight.created_at * 1000).toLocaleString()}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {formatDateCompact(highlight.created_at)}
-      </CompactButton>
+      <div className="highlight-header">
+        <CompactButton
+          className="highlight-timestamp"
+          title={new Date(highlight.created_at * 1000).toLocaleString()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {formatDateCompact(highlight.created_at)}
+        </CompactButton>
+      </div>
       
       <div className="highlight-quote-icon">
         <FontAwesomeIcon icon={faQuoteLeft} />
