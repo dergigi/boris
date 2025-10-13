@@ -345,6 +345,8 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
               relayPool={props.relayPool}
               activeAccount={props.activeAccount}
               currentArticle={props.currentArticle}
+              isSidebarCollapsed={props.isCollapsed}
+              isHighlightsCollapsed={props.isHighlightsCollapsed}
             />
           )}
         </div>

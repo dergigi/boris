@@ -43,6 +43,8 @@
     max-height: 100vh;
     overflow-y: auto;
     align-self: start;
+    margin: 0;
+    padding: 0;
   }
   
   .pane.main {
@@ -59,6 +61,8 @@
     max-height: 100vh;
     overflow-y: auto;
     align-self: start;
+    margin: 0;
+    padding: 0;
   }
 }
 
