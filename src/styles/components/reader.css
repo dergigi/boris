@@ -8,6 +8,7 @@
   overflow: hidden; 
   max-width: 900px;
   margin: 0 auto;
+  padding-bottom: 4rem; /* Add space for progress indicator */
 }
 
 /* Video container - responsive wrapper following react-player docs */
@@ -105,18 +106,19 @@
 /* Reading Progress Indicator */
 .reading-progress-indicator {
   position: fixed;
-  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(26, 26, 26, 0.9);
+  background: rgba(26, 26, 26, 0.95);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.5rem 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;
   transition: all 0.3s ease;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .reading-progress-bar {
@@ -170,7 +172,7 @@
 
 /* Hide progress indicator when not needed */
 .reading-progress-indicator.hidden {
-  transform: translateY(-100%);
+  transform: translateY(100%);
   opacity: 0;
 }
 
