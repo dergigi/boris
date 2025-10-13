@@ -100,9 +100,13 @@
 .empty-hint { font-size: 0.875rem; color: #666; margin-top: 0.5rem; }
 
 .highlights-list { overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
-.highlight-item { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 1rem; display: flex; gap: 0.75rem; transition: border-color 0.2s ease; position: relative; }
+.highlight-item { background: #1e1e1e; border-left: 1px solid #333; border-right: 1px solid #333; padding: 1rem; display: flex; gap: 0.75rem; transition: border-color 0.2s ease; position: relative; }
 .highlight-item:hover { border-color: #646cff; }
+.highlight-item:hover .highlight-header,
+.highlight-item:hover .highlight-footer { border-color: #646cff; }
 .highlight-item.selected { border-color: #646cff; background: #252525; box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3); }
+.highlight-item.selected .highlight-header,
+.highlight-item.selected .highlight-footer { border-color: #646cff; }
 
 /* Compact button for highlight cards */
 .compact-button { background: none; border: none; color: #888; cursor: pointer; padding: 0.25rem; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem; transition: all 0.2s ease; border-radius: 4px; min-width: 20px; min-height: 20px; }
@@ -111,16 +115,22 @@
 .compact-button:disabled { opacity: 0.5; cursor: not-allowed; }
 .compact-button:disabled:hover { background: none; color: #888; transform: none; }
 
-.highlight-header { position: absolute; top: 0; right: 0; padding: 0.5rem 0.75rem; display: flex; align-items: center; justify-content: flex-end; pointer-events: none; }
+.highlight-header { position: absolute; top: 0; left: -1rem; right: -1rem; padding: 0.5rem 1rem; display: flex; align-items: center; justify-content: flex-end; pointer-events: none; border-top: 1px solid #333; border-top-left-radius: 8px; border-top-right-radius: 8px; transition: border-color 0.2s ease; }
 .highlight-header .compact-button { pointer-events: auto; }
 .highlight-timestamp { font-size: 0.75rem; font-weight: 500; white-space: nowrap; }
 
 /* Level colors in sidebar items */
 .highlight-item.level-mine { border-color: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 60%, #333); box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight-color-mine, #ffff00) 25%, transparent); }
+.highlight-item.level-mine .highlight-header,
+.highlight-item.level-mine .highlight-footer { border-color: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 60%, #333); }
 .highlight-item.level-friends { border-color: color-mix(in srgb, var(--highlight-color-friends, #f97316) 60%, #333); box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight-color-friends, #f97316) 25%, transparent); }
+.highlight-item.level-friends .highlight-header,
+.highlight-item.level-friends .highlight-footer { border-color: color-mix(in srgb, var(--highlight-color-friends, #f97316) 60%, #333); }
 .highlight-item.level-nostrverse { border-color: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 60%, #333); box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 25%, transparent); }
+.highlight-item.level-nostrverse .highlight-header,
+.highlight-item.level-nostrverse .highlight-footer { border-color: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 60%, #333); }
 
-.highlight-quote-icon { color: #646cff; font-size: 1.2rem; flex-shrink: 0; margin-top: 0.25rem; position: relative; }
+.highlight-quote-icon { color: #646cff; font-size: 1.2rem; flex-shrink: 0; margin-top: 2.25rem; position: relative; }
 .highlight-relay-indicator { position: absolute; bottom: -4px; left: -6px; opacity: 0.7; }
 .highlight-relay-indicator:hover { opacity: 1; }
 
@@ -136,11 +146,11 @@
 .highlight-item.level-friends .highlight-quote-icon { color: var(--highlight-color-friends, #f97316); }
 .highlight-item.level-nostrverse .highlight-quote-icon { color: var(--highlight-color-nostrverse, #9333ea); }
 
-.highlight-content { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
+.highlight-content { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; padding-top: 2rem; padding-bottom: 3rem; }
 .highlight-text { margin: 0; padding: 0; font-style: italic; color: #ddd; line-height: 1.6; border-left: none; font-size: 0.95rem; }
 .highlight-comment { margin-top: 0.5rem; padding: 0.75rem; background: rgba(100, 108, 255, 0.1); border-left: 3px solid #646cff; border-radius: 4px; font-size: 0.875rem; color: #ddd; line-height: 1.5; }
 
-.highlight-footer { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.8rem; color: #888; }
+.highlight-footer { position: absolute; bottom: 0; left: -1rem; right: -1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.8rem; color: #888; border-bottom: 1px solid #333; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; transition: border-color 0.2s ease; }
 .highlight-author { color: #aaa; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; display: flex; align-items: center; min-height: 28px; }
 .highlight-menu-wrapper { position: relative; flex-shrink: 0; display: flex; align-items: center; }
 .highlight-menu { position: absolute; right: 0; top: calc(100% + 4px); background: #2a2a2a; border: 1px solid #444; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); z-index: 1000; min-width: 160px; overflow: hidden; }
