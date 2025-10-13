@@ -623,7 +623,7 @@
   border-radius: 4px;
   padding: 0.15rem 0.4rem;
   font-size: 0.9em;
-  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
 }
 
 .reader-markdown pre {
@@ -634,6 +634,7 @@
   overflow-x: auto;
   margin: 1rem 0;
   line-height: 1.5;
+  font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
 }
 
 .reader-markdown pre code {
@@ -662,6 +663,7 @@
   padding: 1rem;
   overflow-x: auto;
   margin: 1rem 0;
+  font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
 }
 
 .reader-html code {
@@ -670,7 +672,7 @@
   border-radius: 4px;
   padding: 0.15rem 0.4rem;
   font-size: 0.9em;
-  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
 }
 
 .reader-html pre code {
