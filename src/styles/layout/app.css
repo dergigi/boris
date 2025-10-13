@@ -60,9 +60,9 @@
   contain: layout style;
 }
 
-/* When the reader contains a video, allow a wider main pane */
+/* When the reader contains a video, let the main pane use full available width */
 .pane.main:has(.reader-video) {
-  max-width: var(--main-max-width-video);
+  max-width: none;
 }
 
 /* Remove padding when sidebar is collapsed for zero gap */
