@@ -67,8 +67,24 @@ export const CardView: React.FC<CardViewProps> = ({
     }
   }, [firstUrl, articleImage, instantPreview, ogImage])
 
+  const triggerOpen = () => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)
+
+  const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      triggerOpen()
+    }
+  }
+
   return (
-    <div key={`${bookmark.id}-${index}`} className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
+    <div 
+      key={`${bookmark.id}-${index}`}
+      className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}
+      onClick={triggerOpen}
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       {cachedImage && (
         <div 
           className="article-hero-image"
@@ -100,6 +116,7 @@ export const CardView: React.FC<CardViewProps> = ({
             rel="noopener noreferrer"
             className="bookmark-date-link"
             title="Open event in search"
+            onClick={(e) => e.stopPropagation()}
           >
             {formatDate(bookmark.created_at)}
           </a>
@@ -115,7 +132,7 @@ export const CardView: React.FC<CardViewProps> = ({
               <div key={urlIndex} className="url-row">
                 <button
                   className="bookmark-url"
-                  onClick={() => onSelectUrl?.(url)}
+                  onClick={(e) => { e.stopPropagation(); onSelectUrl?.(url) }}
                   title="Open in reader"
                 >
                   {url}
@@ -126,7 +143,7 @@ export const CardView: React.FC<CardViewProps> = ({
                   title="Open"
                   variant="success"
                   size={32}
-                  onClick={(e) => { e.preventDefault(); onSelectUrl?.(url) }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSelectUrl?.(url) }}
                 />
               </div>
             )
@@ -134,7 +151,7 @@ export const CardView: React.FC<CardViewProps> = ({
           {extractedUrls.length > 1 && (
             <button
               className="expand-toggle-urls"
-              onClick={() => setUrlsExpanded(v => !v)}
+              onClick={(e) => { e.stopPropagation(); setUrlsExpanded(v => !v) }}
               aria-label={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
               title={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
             >
@@ -163,7 +180,7 @@ export const CardView: React.FC<CardViewProps> = ({
       {contentLength > 210 && (
         <button
           className="expand-toggle"
-          onClick={() => setExpanded(v => !v)}
+          onClick={(e) => { e.stopPropagation(); setExpanded(v => !v) }}
           aria-label={expanded ? 'Collapse' : 'Expand'}
           title={expanded ? 'Collapse' : 'Expand'}
         >
@@ -179,6 +196,7 @@ export const CardView: React.FC<CardViewProps> = ({
             rel="noopener noreferrer"
             className="author-link-minimal"
             title="Open author in search"
+            onClick={(e) => e.stopPropagation()}
           >
             {getAuthorDisplayName()}
           </a>

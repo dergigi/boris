@@ -42,12 +42,28 @@ export const LargeView: React.FC<LargeViewProps> = ({
   const cachedImage = useImageCache(previewImage || undefined, settings)
   const isArticle = bookmark.kind === 30023
   
+  const triggerOpen = () => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)
+  const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      triggerOpen()
+    }
+  }
+
   return (
-    <div key={`${bookmark.id}-${index}`} className={`individual-bookmark large ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
+    <div 
+      key={`${bookmark.id}-${index}`} 
+      className={`individual-bookmark large ${bookmark.isPrivate ? 'private-bookmark' : ''}`}
+      onClick={triggerOpen}
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       {(hasUrls || (isArticle && cachedImage)) && (
         <div 
           className="large-preview-image" 
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation()
             if (isArticle) {
               handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)
             } else {
@@ -82,6 +98,7 @@ export const LargeView: React.FC<LargeViewProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               className="author-link-minimal"
+              onClick={(e) => e.stopPropagation()}
             >
               {getAuthorDisplayName()}
             </a>
@@ -93,12 +110,13 @@ export const LargeView: React.FC<LargeViewProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               className="bookmark-date-link"
+              onClick={(e) => e.stopPropagation()}
             >
               {formatDate(bookmark.created_at)}
             </a>
           )}
           
-          {/* CTA removed */}
+          {/* CTA removed */
         </div>
       </div>
     </div>
