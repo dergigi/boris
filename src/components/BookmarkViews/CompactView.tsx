@@ -5,6 +5,7 @@ import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDateCompact } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
 import { useImageCache } from '../../hooks/useImageCache'
+import { UserSettings } from '../../services/settingsService'
 
 interface CompactViewProps {
   bookmark: IndividualBookmark
@@ -14,7 +15,7 @@ interface CompactViewProps {
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   articleImage?: string
   articleSummary?: string
-  settings?: any
+  settings?: UserSettings
 }
 
 export const CompactView: React.FC<CompactViewProps> = ({
