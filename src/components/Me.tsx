@@ -220,7 +220,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     switch (activeTab) {
       case 'highlights':
         return highlights.length === 0 ? (
-          <div className="explore-error">
+          <div className="explore-empty">
             <p>
               {isOwnProfile 
                 ? 'No highlights yet. Start highlighting content to see them here!'
@@ -242,7 +242,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
 
       case 'reading-list':
         return allIndividualBookmarks.length === 0 ? (
-          <div className="explore-error">
+          <div className="explore-empty">
             <p>No bookmarks yet. Bookmark articles to see them here!</p>
           </div>
         ) : (
@@ -293,7 +293,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
 
       case 'archive':
         return readArticles.length === 0 ? (
-          <div className="explore-error">
+          <div className="explore-empty">
             <p>No read articles yet. Mark articles as read to see them here!</p>
           </div>
         ) : (
@@ -310,7 +310,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
 
       case 'writings':
         return writings.length === 0 ? (
-          <div className="explore-error">
+          <div className="explore-empty">
             <p>No articles written yet. Publish your first article to see it here!</p>
           </div>
         ) : (
