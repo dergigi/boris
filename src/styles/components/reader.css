@@ -95,11 +95,7 @@
 .reader-html p, .reader-html div, .reader-html span, .reader-html li, .reader-html td, .reader-html th { font-size: 1em !important; }
 .reader-markdown blockquote, .reader-html blockquote { 
   margin: 1.5rem 0; 
-  padding: 1rem 1.5rem; 
-  border-left: 4px solid rgb(99 102 241); /* indigo-500 */
-  background: rgb(39 39 42); /* zinc-800 */
-  border-radius: 0 8px 8px 0;
-  color: rgb(212 212 216); /* zinc-300 */
+  padding-left: 2rem;
   font-style: italic;
 }
 .reader-markdown blockquote p, .reader-html blockquote p { margin: 0.5rem 0; }
