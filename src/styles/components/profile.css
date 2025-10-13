@@ -9,8 +9,17 @@
 .author-card-bio { font-size: 0.9rem; color: #999; line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; text-align: left; }
 
 @media (max-width: 768px) {
-  .author-card-container { padding: 1.5rem 1rem; }
-  .author-card { padding: 1rem; }
+  .author-card-container { 
+    padding: 1.5rem 1rem; 
+    margin: 0 1rem; /* Add horizontal margin to prevent bleeding */
+    max-width: calc(100vw - 2rem); /* Ensure it doesn't exceed screen width */
+    box-sizing: border-box;
+  }
+  .author-card { 
+    padding: 1rem; 
+    max-width: 100%; /* Ensure card doesn't exceed container */
+    box-sizing: border-box;
+  }
   .author-card-avatar { width: 48px; height: 48px; }
   .author-card-avatar svg { font-size: 2rem; }
   .author-card-name { font-size: 0.95rem; }
