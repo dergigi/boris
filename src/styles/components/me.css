@@ -5,6 +5,9 @@
   margin-top: 1rem;
   border-bottom: 2px solid var(--border-color, #e0e0e0);
   overflow-x: auto;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .me-tab {
@@ -39,6 +42,9 @@
 
 .me-tab-content {
   padding: 1.5rem 0;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* Bookmarks list */
@@ -123,6 +129,7 @@
 @media (max-width: 768px) {
   .me-tabs {
     gap: 0.25rem;
+    padding: 0 1rem;
   }
   
   .me-tab {
@@ -132,6 +139,10 @@
   
   .me-tab svg {
     font-size: 0.9rem;
+  }
+
+  .me-tab-content {
+    padding: 1.5rem 1rem;
   }
 }
 
