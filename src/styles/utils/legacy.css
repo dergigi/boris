@@ -15,10 +15,10 @@
 
 .nostr-mention,
 .nostr-uri-link {
-  color: #007bff;
+  color: rgb(59 130 246); /* blue-500 */
   text-decoration: none;
   font-family: monospace;
-  background: #f8f9fa;
+  background: rgb(248 250 252); /* slate-50 */
   padding: 0.2rem 0.4rem;
   border-radius: 3px;
   font-size: 0.9rem;
@@ -31,12 +31,12 @@
 
 .nostr-mention:hover,
 .nostr-uri-link:hover {
-  background: #e9ecef;
+  background: rgb(226 232 240); /* slate-200 */
   text-decoration: underline;
 }
 
 .nostr-link {
-  color: #007bff;
+  color: rgb(59 130 246); /* blue-500 */
   text-decoration: none;
 }
 
@@ -48,7 +48,7 @@
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #888;
+  color: rgb(161 161 170); /* zinc-400 */
   flex: 1;
   display: flex;
   flex-direction: column;
