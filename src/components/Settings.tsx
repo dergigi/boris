@@ -58,7 +58,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPoo
     return migrated
   })
   const isInitialMount = useRef(true)
-  const saveTimeoutRef = useRef<number | null>(null)
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isLocallyUpdating = useRef(false)
   
   // Poll for relay status updates
