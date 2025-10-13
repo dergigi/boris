@@ -453,14 +453,14 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 className={`mark-as-read-btn ${isMarkedAsRead ? 'marked' : ''} ${showCheckAnimation ? 'animating' : ''}`}
                 onClick={handleMarkAsRead}
                 disabled={isMarkedAsRead || isCheckingReadStatus}
-                title={isMarkedAsRead ? 'Already Marked as Read' : 'Mark as Read'}
+                title={isMarkedAsRead ? 'Already Marked as Watched' : 'Mark as Watched'}
               >
                 <FontAwesomeIcon 
                   icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheckCircle : faBooks} 
                   spin={isCheckingReadStatus} 
                 />
                 <span>
-                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Marked as Read' : 'Mark as Read'}
+                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Marked as Watched' : 'Mark as Watched'}
                 </span>
               </button>
             </div>
