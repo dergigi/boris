@@ -78,6 +78,17 @@
   text-align: left;
 }
 
+/* Enhanced border styling for reading list cards */
+.bookmarks-list .individual-bookmark {
+  border: 1px solid #444 !important;
+  background: #1a1a1a !important;
+}
+
+.bookmarks-list .individual-bookmark:hover {
+  border-color: #555 !important;
+  background: #252525 !important;
+}
+
 .bookmark-item {
   padding: 1rem;
   background: var(--card-bg, #fff);
