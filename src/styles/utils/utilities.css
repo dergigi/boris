@@ -1,18 +1,18 @@
 /* Inline content highlights - utilities */
-.content-highlight, .content-highlight-marker { background: rgba(var(--highlight-rgb, 255, 255, 0), 0.35); padding: 0.1rem 0; cursor: pointer; transition: all 0.2s ease; position: relative; border-radius: 0; box-shadow: none; contain: layout style; }
-.content-highlight:hover, .content-highlight-marker:hover { background: rgba(var(--highlight-rgb, 255, 255, 0), 0.5); }
+.content-highlight, .content-highlight-marker { background: rgba(var(--highlight-rgb, 255, 255, 0), 0.35); padding: 0.125rem 0.25rem; cursor: pointer; transition: all 0.2s ease; position: relative; border-radius: 2px; box-shadow: 0 0 8px rgba(var(--highlight-rgb, 255, 255, 0), 0.2); contain: layout style; }
+.content-highlight:hover, .content-highlight-marker:hover { background: rgba(var(--highlight-rgb, 255, 255, 0), 0.5); box-shadow: 0 0 12px rgba(var(--highlight-rgb, 255, 255, 0), 0.3); }
 .content-highlight-underline { background: transparent; padding: 0; cursor: pointer; transition: all 0.2s ease; position: relative; text-decoration: underline; text-decoration-color: rgba(var(--highlight-rgb, 255, 255, 0), 0.8); text-decoration-thickness: 2px; text-underline-offset: 2px; contain: layout style; }
 .content-highlight-underline:hover { text-decoration-color: rgba(var(--highlight-rgb, 255, 255, 0), 1); text-decoration-thickness: 3px; }
 .content-highlight.highlight-pulse, .content-highlight-marker.highlight-pulse, .content-highlight-underline.highlight-pulse { animation: highlight-pulse-animation 1.5s ease-in-out; }
 .reader-html .content-highlight, .reader-markdown .content-highlight, .reader-html .content-highlight-marker, .reader-markdown .content-highlight-marker, .reader-html .content-highlight-underline, .reader-markdown .content-highlight-underline { color: inherit; }
 .reader-html .content-highlight, .reader-markdown .content-highlight, .reader-html .content-highlight-marker, .reader-markdown .content-highlight-marker { text-decoration: none; }
 /* Three-level highlight colors */
-.content-highlight-marker.level-mine, .content-highlight.level-mine { background: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 35%, transparent); }
-.content-highlight-marker.level-mine:hover, .content-highlight.level-mine:hover { background: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 50%, transparent); }
-.content-highlight-marker.level-friends, .content-highlight.level-friends { background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 35%, transparent); }
-.content-highlight-marker.level-friends:hover, .content-highlight.level-friends:hover { background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 50%, transparent); }
-.content-highlight-marker.level-nostrverse, .content-highlight.level-nostrverse { background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 35%, transparent); }
-.content-highlight-marker.level-nostrverse:hover, .content-highlight.level-nostrverse:hover { background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 50%, transparent); }
+.content-highlight-marker.level-mine, .content-highlight.level-mine { background: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 35%, transparent); box-shadow: 0 0 8px color-mix(in srgb, var(--highlight-color-mine, #ffff00) 20%, transparent); }
+.content-highlight-marker.level-mine:hover, .content-highlight.level-mine:hover { background: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 50%, transparent); box-shadow: 0 0 12px color-mix(in srgb, var(--highlight-color-mine, #ffff00) 30%, transparent); }
+.content-highlight-marker.level-friends, .content-highlight.level-friends { background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 35%, transparent); box-shadow: 0 0 8px color-mix(in srgb, var(--highlight-color-friends, #f97316) 20%, transparent); }
+.content-highlight-marker.level-friends:hover, .content-highlight.level-friends:hover { background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 50%, transparent); box-shadow: 0 0 12px color-mix(in srgb, var(--highlight-color-friends, #f97316) 30%, transparent); }
+.content-highlight-marker.level-nostrverse, .content-highlight.level-nostrverse { background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 35%, transparent); box-shadow: 0 0 8px color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 20%, transparent); }
+.content-highlight-marker.level-nostrverse:hover, .content-highlight.level-nostrverse:hover { background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 50%, transparent); box-shadow: 0 0 12px color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 30%, transparent); }
 /* Underline styles for three levels */
 .content-highlight-underline.level-mine { text-decoration-color: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 80%, transparent); }
 .content-highlight-underline.level-mine:hover { text-decoration-color: var(--highlight-color-mine, #ffff00); }
@@ -22,17 +22,17 @@
 .content-highlight-underline.level-nostrverse:hover { text-decoration-color: var(--highlight-color-nostrverse, #9333ea); }
 /* Ensure highlights work in both light and dark mode */
 @media (prefers-color-scheme: light) {
-  .content-highlight, .content-highlight-marker { background: rgba(var(--highlight-rgb, 255, 255, 0), 0.4); }
-  .content-highlight:hover, .content-highlight-marker:hover { background: rgba(var(--highlight-rgb, 255, 255, 0), 0.55); }
+  .content-highlight, .content-highlight-marker { background: rgba(var(--highlight-rgb, 255, 255, 0), 0.4); box-shadow: 0 0 6px rgba(var(--highlight-rgb, 255, 255, 0), 0.15); }
+  .content-highlight:hover, .content-highlight-marker:hover { background: rgba(var(--highlight-rgb, 255, 255, 0), 0.55); box-shadow: 0 0 10px rgba(var(--highlight-rgb, 255, 255, 0), 0.25); }
   .content-highlight-underline { text-decoration-color: rgba(var(--highlight-rgb, 255, 255, 0), 0.9); }
   .content-highlight-underline:hover { text-decoration-color: rgba(var(--highlight-rgb, 255, 255, 0), 1); }
   /* Three-level overrides for light mode */
-  .content-highlight-marker.level-mine, .content-highlight.level-mine { background: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 40%, transparent); }
-  .content-highlight-marker.level-mine:hover, .content-highlight.level-mine:hover { background: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 55%, transparent); }
-  .content-highlight-marker.level-friends, .content-highlight.level-friends { background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 40%, transparent); }
-  .content-highlight-marker.level-friends:hover, .content-highlight.level-friends:hover { background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 55%, transparent); }
-  .content-highlight-marker.level-nostrverse, .content-highlight.level-nostrverse { background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 40%, transparent); }
-  .content-highlight-marker.level-nostrverse:hover, .content-highlight.level-nostrverse:hover { background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 55%, transparent); }
+  .content-highlight-marker.level-mine, .content-highlight.level-mine { background: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 40%, transparent); box-shadow: 0 0 6px color-mix(in srgb, var(--highlight-color-mine, #ffff00) 15%, transparent); }
+  .content-highlight-marker.level-mine:hover, .content-highlight.level-mine:hover { background: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 55%, transparent); box-shadow: 0 0 10px color-mix(in srgb, var(--highlight-color-mine, #ffff00) 25%, transparent); }
+  .content-highlight-marker.level-friends, .content-highlight.level-friends { background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 40%, transparent); box-shadow: 0 0 6px color-mix(in srgb, var(--highlight-color-friends, #f97316) 15%, transparent); }
+  .content-highlight-marker.level-friends:hover, .content-highlight.level-friends:hover { background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 55%, transparent); box-shadow: 0 0 10px color-mix(in srgb, var(--highlight-color-friends, #f97316) 25%, transparent); }
+  .content-highlight-marker.level-nostrverse, .content-highlight.level-nostrverse { background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 40%, transparent); box-shadow: 0 0 6px color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 15%, transparent); }
+  .content-highlight-marker.level-nostrverse:hover, .content-highlight.level-nostrverse:hover { background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 55%, transparent); box-shadow: 0 0 10px color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 25%, transparent); }
   .content-highlight-underline.level-mine { text-decoration-color: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 90%, transparent); }
   .content-highlight-underline.level-friends { text-decoration-color: color-mix(in srgb, var(--highlight-color-friends, #f97316) 90%, transparent); }
   .content-highlight-underline.level-nostrverse { text-decoration-color: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 90%, transparent); }

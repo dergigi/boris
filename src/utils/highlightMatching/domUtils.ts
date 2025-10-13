@@ -139,36 +139,30 @@ function tryMultiNodeMatch(
   
   if (affectedNodes.length === 0) return false
   
-  // Apply highlighting across multiple nodes
-  for (let i = 0; i < affectedNodes.length; i++) {
-    const { node, startOffset, endOffset } = affectedNodes[i]
-    const text = node.textContent || ''
-    
-    if (i === 0 && i === affectedNodes.length - 1) {
-      // Single node (shouldn't happen as this is the multi-node case, but handle it)
-      const before = text.substring(0, startOffset)
-      const match = text.substring(startOffset, endOffset)
-      const after = text.substring(endOffset)
-      const mark = createMarkElement(highlight, match, highlightStyle)
-      replaceTextWithMark(node, before, after, mark)
-    } else if (i === 0) {
-      // First node
-      const before = text.substring(0, startOffset)
-      const match = text.substring(startOffset)
-      const mark = createMarkElement(highlight, match, highlightStyle)
-      replaceTextWithMark(node, before, '', mark)
-    } else if (i === affectedNodes.length - 1) {
-      // Last node
-      const match = text.substring(0, endOffset)
-      const after = text.substring(endOffset)
-      const mark = createMarkElement(highlight, match, highlightStyle)
-      replaceTextWithMark(node, '', after, mark)
-    } else {
-      // Middle nodes - wrap entire text
-      const mark = createMarkElement(highlight, text, highlightStyle)
-      replaceTextWithMark(node, '', '', mark)
-    }
-  }
+  // Create a Range to wrap the entire selection in a single mark element
+  const range = document.createRange()
+  const firstNode = affectedNodes[0]
+  const lastNode = affectedNodes[affectedNodes.length - 1]
+  
+  range.setStart(firstNode.node, firstNode.startOffset)
+  range.setEnd(lastNode.node, lastNode.endOffset)
+  
+  // Extract the content from the range
+  const extractedContent = range.extractContents()
+  
+  // Create a single mark element
+  const mark = document.createElement('mark')
+  const levelClass = highlight.level ? ` level-${highlight.level}` : ''
+  mark.className = `content-highlight-${highlightStyle}${levelClass}`
+  mark.setAttribute('data-highlight-id', highlight.id)
+  mark.setAttribute('data-highlight-level', highlight.level || 'nostrverse')
+  mark.setAttribute('title', `Highlighted ${new Date(highlight.created_at * 1000).toLocaleDateString()}`)
+  
+  // Append the extracted content to the mark
+  mark.appendChild(extractedContent)
+  
+  // Insert the mark at the range position
+  range.insertNode(mark)
   
   return true
 }
