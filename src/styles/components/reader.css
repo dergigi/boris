@@ -122,7 +122,7 @@
 }
 .reader-markdown blockquote, .reader-html blockquote { 
   margin: 1.5rem 0; 
-  padding-left: 2rem;
+  padding: 1rem 0 1rem 2rem;
   font-style: italic;
 }
 .reader-markdown blockquote p, .reader-html blockquote p { margin: 0.5rem 0; }
