@@ -3,7 +3,7 @@
   display: flex;
   gap: 0.5rem;
   margin-top: 1rem;
-  border-bottom: 2px solid var(--border-color, #e0e0e0);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   overflow-x: auto;
   max-width: 600px;
   margin-left: auto;
@@ -17,18 +17,19 @@
   padding: 0.75rem 1.25rem;
   background: none;
   border: none;
-  border-bottom: 3px solid transparent;
-  color: var(--text-secondary, #666);
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary, #999);
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  margin-bottom: -1px;
 }
 
 .me-tab:hover {
-  color: var(--text-primary, #000);
-  background: var(--hover-bg, rgba(0, 0, 0, 0.03));
+  color: var(--text-primary, #ddd);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .me-tab.active {
