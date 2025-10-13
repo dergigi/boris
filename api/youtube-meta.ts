@@ -55,9 +55,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const details = await getVideoDetails({ videoID: videoId, lang })
-    const title = (details as any)?.title || ''
-    const description = (details as any)?.description || (details as any)?.shortDescription || (details as any)?.descriptionText || ''
+    const details: unknown = await getVideoDetails({ videoID: videoId, lang })
+    // Be tolerant to possible shapes returned by the extractor
+    const title = (details as { title?: string } | undefined)?.title || ''
+    const d1 = (details as { description?: string } | undefined)?.description
+    const d2 = (details as { shortDescription?: string } | undefined)?.shortDescription
+    const d3 = (details as { descriptionText?: string } | undefined)?.descriptionText
+    const description = d1 || d2 || d3 || ''
 
     // Language order: manual en -> uiLocale -> lang -> any manual, then auto with same order
     const langs: string[] = Array.from(new Set(['en', uiLocale, lang].filter(Boolean) as string[]))
