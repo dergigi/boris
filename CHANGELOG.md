@@ -7,9 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.7] - 2025-01-14
+
+### Added
+
+- Vimeo video metadata extraction support
+- YouTube video metadata extraction with title, description, and captions
+- Responsive video player with aspect ratio support
+- Thumbnail images in compact view
+- URL routing for /me page tabs
+- Bookmark navigation in reading list
+- Video duration display for video URLs
+- Three-dot menu for videos with open/native/copy/share actions
+- External video embedding in reader using react-player
+- Video detection for Vimeo, Dailymotion, and other platforms
+
+### Changed
+
+- Enhanced borders for reading list cards
+- Reading list tab colored blue to match bookmarks icon
+- Left-aligned text in reading list elements
+- Increased spacing between mobile buttons and profile element
+- Main pane now full width when displaying videos
+- Video container breaks out of reader padding for full width
+- Simplified video container layout
+
+### Fixed
+
+- Video player edge-to-edge display with negative margins
+- Prevent profile element from bleeding off screen on mobile
+- Resolved TypeScript errors in youtube-meta.ts
+- Improved type safety in youtube-meta handler
+- More lenient YouTube description extraction
+- Corrected setTimeout ref type in Settings
+- Proper react-player responsive pattern implementation
+- Removed unused getIconForUrlType in CompactView
+
+### Style
+
+- Hide tab counts on mobile for /me page
+- Remove max-width on main pane, constrain reader instead
+- Full width layout for videos
+- Reader-video specific styles
+
 ## [0.5.6] - 2025-10-13
 
 ### Added
+
 - Three-dot menu for articles and enhanced highlight menus
 - Prism.js syntax highlighting for code blocks
 - Inline image rendering in nostr-native blog posts
@@ -17,23 +61,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Caching on `/me` page for faster loading
 
 ### Changed
+
 - Reading List on `/me` now uses the same components as the bookmarks sidebar
 - Improve bookmarks sidebar visual design
 - Make article menu button more subtle by removing border
 
 ### Fixed
+
 - Use round checkmark icon (faCheckCircle) for Mark as Read button
 - Remove extra horizontal divider above article menu
 - Ensure code blocks consistently use monospace fonts
 - Preserve reading font settings in markdown images
 
 ### Style
+
 - Remove horizontal divider above Mark as Read button
 - Remove horizontal divider below article menu button
 
 ## [0.5.5] - 2025-01-27
 
 ### Added
+
 - `/me` page with tabbed layout featuring Highlights, Reading List, and Library tabs
 - Two-pane layout for `/me` page with article sources and highlights
 - Custom FontAwesome Pro books icon for Archive tab
@@ -41,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Instant mark-as-read functionality with checkmark animation and read status checking
 
 ### Changed
+
 - Rename Library tab to Archive
 - Move highlight timestamp to top-right corner of cards
 - Replace username with AuthorCard component on `/me` page
@@ -50,6 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make quote icon a CompactButton in top-left corner
 
 ### Fixed
+
 - Include currentArticle in useEffect deps to satisfy lint
 - Deduplicate article events in library to prevent showing duplicates
 - Remove incorrect useSettings hook usage in Me component
@@ -61,6 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Position relay indicator in bottom-left corner to prevent overlap with author
 
 ### Style
+
 - Match `/me` profile card width to highlight cards
 - Improve Me page mobile tabs and avoid overlap with sidebar buttons
 - Reduce margins/paddings to make highlight cards more compact
@@ -75,6 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.4] - 2025-10-13
 
 ### Changed
+
 - Refactor CSS into modular structure
   - Split 3600+ line monolithic `index.css` into organized modules
   - Created `src/styles/` directory with base, layout, components, and utils subdirectories
@@ -83,11 +135,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - No functional changes to styling
 
 ### Fixed
+
 - Mobile button positioning now uses safe area insets for symmetrical layout on notched devices
 
 ## [0.5.3] - 2025-10-13
 
 ### Changed
+
 - Relay status indicator is now more compact
   - Smaller padding and font sizes on desktop
   - Auto-collapsed on mobile (icon-only by default, tap to expand)
@@ -95,6 +149,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Hides when scrolling down, shows when scrolling up (consistent with other mobile controls)
 
 ### Fixed
+
 - Invalid bookmarks without IDs no longer appear in bookmark list
   - Previously showed as "Now" timestamp with no content
   - Bookmarks without valid IDs are now filtered out entirely
@@ -104,12 +159,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.2] - 2025-10-12
 
 ### Added
+
 - Three-dot menu to highlight cards for more compact UI
   - Combines "Open on Nostr" and "Delete" actions into dropdown menu
   - Uses horizontal ellipsis icon (⋯)
   - Click-outside functionality to close menu
 
 ### Changed
+
 - Switch Nostr gateway from njump.me/search.dergigi.com to ants.sh
   - Centralized gateway URLs in config file
   - All profile and event links now use ants.sh
@@ -118,34 +175,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Open on Nostr" now links to the highlight event itself instead of the article
 
 ### Fixed
+
 - Gateway URL routing for ants.sh requirements (/p/ for profiles, /e/ for events)
 - Linting errors in HighlightItem component
 
 ## [0.5.1] - 2025-10-12
 
 ### Added
+
 - Highlight color customization to UI elements
   - Apply user's "my highlights" color to highlight creation buttons
   - Apply highlight group colors to highlight count indicators
   - Apply "my highlights" color to collapsed highlights panel button
 
 ### Fixed
+
 - Highlight count indicator styling to match reading-time element
 - Brightness and border styling for highlight count indicator
 - User highlight color now applies to both marker and arrow icons
 - Highlight group color properly applied to count indicator background
 
 ### Removed
+
 - MOBILE_IMPLEMENTATION.md documentation file
 
 ## [0.5.0] - 2025-10-12
 
 ### Added
+
 - Upgrade to full PWA with `vite-plugin-pwa`
 - Replace placeholder icons with branded favicons
 - Author info card for nostr-native articles
 
 ### Changed
+
 - Explore: shrink refresh spinner footprint; inline-sized loading row
 - Explore: preserve posts across navigations; seed from cache; merge streamed and final results
 - Explore: keep posts visible during refresh; inline spinner; no list wipe
@@ -155,12 +218,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Lint/TypeScript: satisfy react-hooks dependencies; fix worker typings; clear ESLint/TS issues
 
 ### Fixed
+
 - Highlights: merge remote results after local for article/url
 - Explore: always query remote relays after local; stream merge into UI
 - Improve mobile touch targets for highlight icons
 - Color `/me` highlights with "my highlights" color setting
 
 ### Performance
+
 - Local-first then remote follow-up across services (titles, bookmarks, highlights)
 - Run local and remote fetches concurrently; stream and dedupe results
 - Stream contacts and early posts from local; merge remote later
@@ -168,6 +233,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stream results to UI; display cached/local immediately (articles, highlights, explore)
 
 ### Documentation
+
 - PWA implementation summary and launch checklist updates
 - Update docs to reflect branded icons and final steps
 - Remove temporary PWA launch checklist and implementation summary
@@ -175,6 +241,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.3] - 2025-10-11
 
 ### Added
+
 - Mark as read functionality for articles (NIP-25)
   - Button at the end of each article to mark as read with 📚 emoji
   - Creates kind:7 reactions for nostr-native articles (`/a/` paths)
@@ -199,6 +266,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Prevents accidental destructive actions
 
 ### Changed
+
 - Relay status indicator on mobile now displays in compact mode
   - Shows only airplane icon by default (44x44px touch target)
   - Tap to expand for full connection details
@@ -209,6 +277,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.2] - 2025-10-11
 
 ### Added
+
 - NIP-19 identifier resolution in article content (NIP-19, NIP-27)
   - Support for `nostr:npub1...`, `nostr:note1...`, `nostr:nprofile1...`, `nostr:nevent1...`, `nostr:naddr1...`
   - Converts nostr: URIs to clickable links with human-readable labels
@@ -223,6 +292,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Configurable threshold and enable/disable options
 
 ### Changed
+
 - Article references (`naddr`) now link internally to `/a/{naddr}` instead of external njump.me
 - Sidebar auto-closes on mobile when navigating to content via routes
   - Handles clicking on blog posts in Explore view
@@ -231,6 +301,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Article title resolution fetches titles in parallel for better performance
 
 ### Fixed
+
 - Mobile button scroll detection now correctly monitors main pane element
   - Previously monitored window scroll which didn't work on mobile
   - Content scrolls within `.pane.main` div on mobile devices
@@ -243,11 +314,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.1] - 2025-10-10
 
 ### Fixed
+
 - Long article summaries overlapping with hero image content on mobile devices
 - Article summary now moves below hero image on mobile when longer than 150 characters
 - Article summary line clamp reduced from 3 to 2 lines on mobile for better space utilization
 
 ### Changed
+
 - Hero image rendering on mobile now uses zoom-to-fit approach with viewport-based sizing
 - Hero image height on mobile set to 50vh (constrained between 280px-400px)
 - Improved image cropping with center positioning for better visual presentation
@@ -256,6 +329,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2025-10-10
 
 ### Added
+
 - Mobile-responsive design with overlay sidebar drawer
 - Media query hooks for responsive behavior (`useIsMobile`, `useIsTablet`, `useIsCoarsePointer`)
 - Auto-collapse sidebar setting for mobile devices
@@ -270,6 +344,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mobile highlights panel as overlay with toggle button
 
 ### Changed
+
 - Sidebar now displays as overlay drawer on mobile (≤768px)
 - Highlights panel hidden on mobile for better content focus
 - Sidebar auto-closes when selecting content on mobile
@@ -277,6 +352,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace hamburger icon with bookmark icon on mobile
 
 ### Fixed
+
 - Ensure bookmarks container fills mobile sidepane properly
 - Restore desktop grid layout for highlights panel
 - Improve empty state and loading visibility in mobile sidepanes
@@ -288,22 +364,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.8] - 2025-10-10
 
 ### Fixed
+
 - Add vercel.json configuration to properly handle SPA routing on Vercel deployments (fixes 404 errors on page refresh)
 
 ## [0.3.7] - 2025-10-10
 
 ### Fixed
+
 - Logout button functionality - now properly clears active account using clearActive() method
 
 ## [0.3.6] - 2025-10-10
 
 ### Added
+
 - Compact date format for highlights (now, 5m, 3h, 2d, 1mo, 1y)
 - Ultra-compact date format for bookmarks sidebar
 - Encode event links as nevent/naddr per NIP-19 for better client compatibility
 - Render /explore within ThreePaneLayout to keep side panels visible
 
 ### Fixed
+
 - Remove incorrect padding-right from highlights container
 - Reduce font size of highlight metadata for cleaner look
 - Position highlight FAB button relative to article pane instead of viewport
@@ -315,6 +395,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change explore header icon from compass to newspaper
 
 ### Changed
+
 - Make connecting notification more subtle with muted blue background
 - Update Boris pubkey for zap splits to npub19802see0gnk3vjlus0dnmfdagusqrtmsxpl5yfmkwn9uvnfnqylqduhr0x
 - Update domain references to read.withboris.com (URLs, SEO metadata, and documentation)
@@ -322,20 +403,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.5] - 2025-10-09
 
 ### Fixed
+
 - Ensure connecting state shows for minimum 15 seconds to prevent premature offline display
 - Add Cloudflare Pages routing config for SPA paths
 
 ### Changed
+
 - Extend connecting state duration and remove subtitle text for cleaner UI
 
 ## [0.3.4] - 2025-10-09
 
 ### Fixed
+
 - Add p tag (author tag) to highlights of nostr-native content for proper attribution
 
 ## [0.3.3] - 2025-10-09
 
 ### Added
+
 - Service Worker for robust offline image caching
 - /explore route to discover blog posts from friends on Nostr
 - Explore button (newspaper icon) in bookmarks header
@@ -343,12 +428,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Last fetch time display with relative timestamps in bookmarks list
 
 ### Changed
+
 - Simplify image caching to use Service Worker transparently
 - Move refresh button from top bar to end of bookmarks list
 - Make explore page article cards proper links (supports CMD+click to open in new tab)
 - Reorganize bookmarks UI for better UX
 
 ### Fixed
+
 - Improve image cache resilience for offline viewing and hard reloads
 - Correct TypeScript types for cache stats state
 - Resolve linter errors for unused parameters
@@ -359,6 +446,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - 2025-10-09
 
 ### Added
+
 - Flight Mode with offline highlight creation and local relay support
 - Automatic offline sync - rebroadcast local events when back online
 - Relay indicator icon on highlight items showing sync status
@@ -371,6 +459,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 6th font size option for better UI scaling
 
 ### Fixed
+
 - Highlight creation resilient to offline/flight mode
 - TypeScript type errors in offline sync
 - Relay indicator tooltip accuracy and reliability
@@ -385,6 +474,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Include local relays in relay indicator tooltip
 
 ### Changed
+
 - Rename 'Offline Mode' to 'Flight Mode' throughout UI
 - Move publication date to top-right corner with subtle border styling
 - Consolidate relay/status indicators into single unified icon
@@ -398,6 +488,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simplify rebroadcast settings UI with consistent checkbox style
 
 ### Performance
+
 - Make highlight creation instant with non-blocking relay publish
 - Reduce relay status polling interval to 20 seconds
 - Show sync progress and hide indicator after successful sync
@@ -405,6 +496,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.10] - 2025-10-09
 
 ### Added
+
 - URL-based settings navigation with /settings route
 - Active zap split preset highlighting
 - Educational links about relays in reader view
@@ -413,10 +505,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Relays section showing active and recently connected relays
 
 ### Fixed
+
 - Remove trailing slash from relay URLs
 - Constrain Reading Font dropdown width
 
 ### Changed
+
 - Rename 'Default View Mode' to 'Default Bookmark View' in settings
 - Reorganize settings layout for better UX
 - Use sidebar-style colored buttons for highlight visibility
@@ -425,26 +519,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.9] - 2025-10-09
 
 ### Fixed
+
 - Deduplicate highlights in streaming callbacks
 
 ## [0.2.8] - 2025-10-09
 
 ### Added
+
 - Display article summary in header
 - Overlay title and metadata on hero images
 - Apply reading font to article titles
 
 ### Fixed
+
 - Pass article summary through to ReadableContent
 - Correct Jina AI Reader proxy URL format
 
 ### Changed
+
 - Update homepage URL to read.withboris.com
 - Reorder toolbar buttons for better UX
 
 ## [0.2.7] - 2025-10-08
 
 ### Added
+
 - Web bookmark creation (NIP-B0, kind:39701)
 - Tags support for web bookmarks per NIP-B0
 - Auto-fetch title and description when URL is pasted
@@ -455,6 +554,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Respect existing zap tags in source content when creating highlights
 
 ### Fixed
+
 - Revert to fetchReadableContent to avoid CORS issues
 - Improve modal spacing with proper box-sizing
 - Prevent sliders from jumping when resetting settings
@@ -462,6 +562,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Correct type signature for addZapTags function
 
 ### Changed
+
 - Reorder toolbar buttons for better UX
 - DRY up tag extraction with normalizeTags helper
 - Use url-metadata package for robust metadata extraction
@@ -472,16 +573,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.6] - 2025-10-08
 
 ### Added
+
 - Home button to bookmark bar
 - Configurable zap split for highlights on nostr-native content
 
 ## [0.2.5] - 2025-10-07
 
 ### Fixed
+
 - Wire preview ref to markdown conversion hook
 - Add missing useEffect dependencies for article loading
 
 ### Changed
+
 - DRY up highlight classification and URL normalization
 - Split highlighting utilities into modules
 - Extract highlights panel components
@@ -493,14 +597,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.4] - 2025-10-07
 
 ### Added
-- Domain configuration for https://xn--bris-v0b.com/
+
+- Domain configuration for <https://xn--bris-v0b.com/>
 - Public assets and deployment configuration
 - Hide bookmarks without content or URL
 
 ### Fixed
+
 - Encode/decode URLs in /r/ route to preserve special characters
 
 ### Changed
+
 - Cleanup after build fixes (remove shims, update locks)
 - Stop tracking node_modules/dist
 - Update dependencies and dedupe
@@ -509,39 +616,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.3] - 2025-10-07
 
 ### Added
+
 - Parse and display summary tag for nostr articles
 - Merge and flatten bookmarks from multiple lists
 - Update URL path when opening bookmarks from sidebar
 
 ### Fixed
+
 - Ensure bookmarks are sorted newest first after merging lists
 - Hide empty bookmarks without content
 - Remove encrypted cyphertext display from bookmark list
 
 ### Changed
+
 - Remove created date from bookmark list display
 
 ## [0.2.2] - 2025-10-06
 
 ### Added
+
 - Support for web bookmarks (NIP-B0, kind:39701)
 - Default highlight visibility settings
 - Proxy.nostr-relay.app relay to configuration
 - Comprehensive logging to settings service
 
 ### Fixed
+
 - Handle web bookmarks with URLs in d tag and prevent crash
 - Load settings from local cache first to eliminate FOUT
 - Ensure fonts are fully loaded before applying styles
 - Improve highlight rendering pipeline with comprehensive debugging
 
 ### Changed
+
 - Use icon toggle buttons for highlight visibility settings
 - Change nostrverse icon from fa-globe to fa-network-wired
 
 ## [0.2.1] - 2025-10-05
 
 ### Added
+
 - Local relay support and centralize relay configuration
 - Optimistic updates for highlight creation
 - Enable highlight creation from external URLs
@@ -550,28 +664,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Boris branding to highlight alt tag
 
 ### Fixed
+
 - Properly await account loading from localStorage on refresh
 - Add protected routes to prevent logout on page refresh
 - Use undo icon for reset to defaults button
 - Update local relay port to 10547
 
 ### Changed
+
 - Remove dedicated login page, handle login through main UI
 - Simplify to single RELAYS constant (DRY)
 
 ## [0.2.0] - 2025-10-05
 
 ### Added
+
 - Simple highlight creation feature (FAB style)
 - Reset to defaults button in settings
 - Load and apply settings upon login
 
 ### Fixed
+
 - Replace any types with proper NostrEvent types
 - Move FAB to Bookmarks component for proper floating
 - Highlight button positioning with scroll
 
 ### Changed
+
 - Update color palette to include default friends/nostrverse colors
 - Show author name in highlight cards
 - Sync highlight level toggles between sidebar and main article text
@@ -580,67 +699,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.11] - 2025-10-05
 
 ### Added
+
 - Stream highlights progressively as they arrive from relays
 
 ### Fixed
+
 - Display article immediately without waiting for highlights to load
 - Show highlights immediately when opening panel if already loaded
 - Prevent bookmark text from being cut off in compact view
 - Correct default highlight color for 'mine' to yellow (#ffff00)
 
 ### Changed
+
 - Reduce padding between bookmark items and panel edge
 - Update default highlight colors to orange for friends and purple for nostrverse
 
 ## [0.1.10] - 2025-10-05
 
 ### Added
+
 - Three-level highlight system (mine/friends/nostrverse)
 
 ### Fixed
+
 - Ensure highlights always render on markdown content
 - Classify highlights before passing to ContentPanel
 - Position toggle buttons directly adjacent to main panel
 - Remove redundant setReaderLoading call in error handler
 
 ### Changed
+
 - Always show friends and user highlight buttons
 - Remove Highlights title and count from panel
 
 ## [0.1.9] - 2025-10-05
 
 ### Fixed
+
 - Show markdown content immediately when finalHtml is empty
 - Prevent highlight bleeding into sidebar
 
 ## [0.1.8] - 2025-10-05
 
 ### Fixed
+
 - Prevent 'No readable content' flash for markdown articles
 - Enable highlights display and scroll-to for markdown content
 
 ### Added
+
 - Persist accounts to localStorage
 
 ### Changed
+
 - Simplify login by handling it directly in sidebar
 
 ## [0.1.7] - 2025-10-05
 
 ### Added
+
 - Show highlights in article content and add mode toggle
 
 ### Fixed
+
 - Show highlights for nostr articles by skipping URL filter
 - Refresh button now works without login for article highlights
 - Query highlights using both a-tag and e-tag
 
 ### Changed
+
 - Keep Bookmarks.tsx under 210 lines by extracting logic
 
 ## [0.1.6] - 2025-10-03
 
 ### Added
+
 - Native support for rendering Nostr long-form articles (NIP-23)
 - Display article titles for kind:30023 bookmarks
 - Enable clicking on kind:30023 articles to open in reader
@@ -649,10 +782,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Highlight style setting (marker & underline)
 
 ### Fixed
+
 - Use bookmark pubkey for article author instead of tag lookup
 - Ensure highlight color CSS variable inherits from parent
 
 ### Changed
+
 - Integrate long-form article rendering into existing reader view
 - Extract components to keep files under 210 lines
 - Make font size and color buttons match icon button size (33px)
@@ -660,6 +795,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.5] - 2025-10-03
 
 ### Added
+
 - Settings panel with NIP-78 storage
 - Auto-save for settings with toast notifications
 - Reading time estimate to articles
@@ -669,12 +805,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Settings subscription to watch for Nostr updates
 
 ### Fixed
+
 - Prevent settings from saving unnecessarily
 - Prevent save settings button from being cut off
 - Replace custom reading time with reading-time-estimator package
 - Update originalHtmlRef when content changes
 
 ### Changed
+
 - Reduce file sizes to meet 210 line limit
 - Extract settings logic into custom hook
 - Consolidate settings initialization on login
@@ -683,6 +821,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.4] - 2025-10-03
 
 ### Added
+
 - Inline highlight annotations in content panel
 - NIP-84 highlights panel with three-pane layout
 - Toggle button to show/hide highlight underlines
@@ -690,12 +829,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pulsing animation when scrolling to highlight
 
 ### Fixed
+
 - Apply highlights to markdown content as well as HTML
 - Use requestAnimationFrame for highlight DOM manipulation
 - Improve HTML highlight matching with DOM manipulation
 - Filter highlights panel to show only current article
 
 ### Changed
+
 - Use applesauce helpers for highlight parsing
 - DRY up highlightMatching to stay under 210 lines
 - Change highlights to fluorescent marker style
@@ -704,12 +845,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.3] - 2025-10-03
 
 ### Added
+
 - View mode switching for bookmarks with compact list view
 - Large preview view mode
 - Image preview for large view cards
 - Hero images using free CORS proxy
 
 ### Changed
+
 - Make entire compact list row clickable to open reader
 - Make card view timestamp clickable to open event
 - Enhance card view design with modern styling
@@ -717,15 +860,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.2] - 2025-10-03
 
 ### Added
+
 - Open bookmark URLs in reader instead of new window
 - localStorage caching for fetched articles
 - Collapsible bookmarks sidebar
 
 ### Fixed
+
 - Make sidebar and reader scroll independently
 - Replace relative-time with date-fns for timestamp formatting
 
 ### Changed
+
 - Display timestamps as relative time
 - Replace user text with profile image in sidebar header
 - Move user info and logout to sidebar header bar
@@ -734,16 +880,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1] - 2025-10-03
 
 ### Added
+
 - Classify URLs by type and adjust action buttons
 - Collapse/expand functionality for bookmarks sidebar
 - IconButton component with square styling
 - Resolve nprofile/npub mentions to names in content
 
 ### Fixed
+
 - Enforce 210-char truncation for both plain and parsed content
 - Use Rules of Hooks correctly
 
 ### Changed
+
 - Use IconButton for all icon-only actions to enforce square sizing
 - Sort bookmarks by added_at (recently added first)
 - Make kind icon square to match IconButton sizing
@@ -752,6 +901,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2025-10-03
 
 ### Added
+
 - Two-pane layout and content fetching pipeline
 - ContentPanel component to render readable HTML
 - Lightweight readability fetcher via r.jina.ai proxy
@@ -761,11 +911,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - FontAwesome icons for event kinds
 
 ### Fixed
+
 - Show bookmarked event author instead of list signer
 - Enable reactive profile fetch via address loader
 - Left-align content and constrain images in content panel
 
 ### Changed
+
 - Resolve author names using applesauce ProfileModel
 - Propagate URL selection through BookmarkList to parent
 - Display URLs clearly in individual bookmarks
@@ -773,16 +925,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.3] - 2025-10-02
 
 ### Added
+
 - Manual decryption for unrecognized event kinds
 - Try NIP-44 then NIP-04 for manual decryption
 - Detailed debugging for decryption process
 - Support for hidden bookmarks decryption
 
 ### Fixed
+
 - Surface manually decrypted hidden tags in UI
 - Dedupe individual bookmarks by id
 
 ### Changed
+
 - Sort individual bookmarks by timestamp (newest first)
 - Increase bookmark loading timeout by 2x
 - Extract helpers and event processing
@@ -790,6 +945,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.2] - 2025-10-02
 
 ### Added
+
 - Fetch all NIP-51 events
 - Unlock private bookmarks via applesauce helpers
 - Copy-to-clipboard icons for event id and author pubkey
@@ -797,12 +953,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Display content identically for private/public bookmarks
 
 ### Fixed
+
 - Properly configure browser extension signer
 - Aggregate list(10003) + set(30001)
 - Handle applesauce bookmark structure correctly
 - Resolve loading state stuck issue
 
 ### Changed
+
 - Change bookmarks display from grid to social feed list layout
 - Simplify bookmark service using applesauce helpers
 - Extract components and utilities to keep files under 210 lines
@@ -810,6 +968,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.1] - 2025-10-02
 
 ### Added
+
 - Initial release
 - Browser extension login support
 - NIP-51 bookmark fetching from nostr relays
@@ -818,6 +977,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic UI with profile resolution
 
 ### Changed
+
 - Migrate to applesauce-accounts for proper account management
 - Use proper applesauce-loaders for NIP-51 bookmark fetching
 - Optimize relay usage following applesauce-relay best practices
@@ -835,8 +995,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.3.5]: https://github.com/dergigi/boris/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/dergigi/boris/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/dergigi/boris/compare/v0.3.2...v0.3.3
-[0.3.2]: https://github.com/dergigi/boris/compare/v0.3.1...v0.3.2
-[0.3.1]: https://github.com/dergigi/boris/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/dergigi/boris/compare/v0.2.10...v0.3.0
 [0.2.10]: https://github.com/dergigi/boris/compare/v0.2.9...v0.2.10
 [0.2.9]: https://github.com/dergigi/boris/compare/v0.2.8...v0.2.9
@@ -864,4 +1022,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.0.3]: https://github.com/dergigi/boris/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/dergigi/boris/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/dergigi/boris/releases/tag/v0.0.1
-
