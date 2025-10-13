@@ -224,7 +224,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
       {/* Mobile bookmark button - only show when viewing article */}
       {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
         <button
-          className={`fixed z-[900] bg-[#2a2a2a]/70 border border-[#444]/40 rounded-lg text-[#ddd] flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm md:hidden ${
+          className={`fixed z-[900] bg-zinc-800/70 border border-zinc-600/40 rounded-lg text-zinc-200 flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm md:hidden ${
             showMobileButtons ? 'opacity-90 visible' : 'opacity-0 invisible pointer-events-none'
           }`}
           style={{
@@ -244,7 +244,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
       {/* Mobile highlights button - only show when viewing article */}
       {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
         <button
-          className={`fixed z-[900] border border-[#444]/40 rounded-lg flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm md:hidden ${
+          className={`fixed z-[900] border border-zinc-600/40 rounded-lg flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm md:hidden ${
             showMobileButtons ? 'opacity-90 visible' : 'opacity-0 invisible pointer-events-none'
           }`}
           style={{ 
