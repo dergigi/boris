@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Tailwind CSS integration with preflight enabled
+- Reading position tracking with visual progress indicator
+- Document-level scrolling with sticky sidebars on desktop
+
+### Changed
+
+- Refactored layout system to use document scroll instead of pane scroll
+- Migrated reading progress indicator to Tailwind utilities
+- Simplified global CSS to work with Tailwind preflight
+- Added CSS variables for user-settable theme colors
+
+### Fixed
+
+- Reading position indicator now always visible at bottom of screen
+- Progress tracking now accurately reflects reading position
+- Scroll behavior consistent across desktop and mobile
+
 ## [0.5.7] - 2025-01-14
 
 ### Added
