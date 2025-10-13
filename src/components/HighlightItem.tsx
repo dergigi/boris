@@ -333,20 +333,22 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         
         
         <div className="highlight-footer">
-          {relayIndicator && (
-            <CompactButton
-              className="highlight-relay-indicator"
-              icon={relayIndicator.icon}
-              spin={relayIndicator.spin}
-              title={relayIndicator.tooltip}
-              onClick={handleRebroadcast}
-              disabled={!relayPool || !eventStore}
-            />
-          )}
-          
-          <span className="highlight-author">
-            {getUserDisplayName()}
-          </span>
+          <div className="highlight-footer-left">
+            {relayIndicator && (
+              <CompactButton
+                className="highlight-relay-indicator"
+                icon={relayIndicator.icon}
+                spin={relayIndicator.spin}
+                title={relayIndicator.tooltip}
+                onClick={handleRebroadcast}
+                disabled={!relayPool || !eventStore}
+              />
+            )}
+            
+            <span className="highlight-author">
+              {getUserDisplayName()}
+            </span>
+          </div>
           
           <div className="highlight-menu-wrapper" ref={menuRef}>
             <CompactButton
