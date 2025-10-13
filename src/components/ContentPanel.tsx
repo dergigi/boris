@@ -6,7 +6,7 @@ import rehypeRaw from 'rehype-raw'
 import rehypePrism from 'rehype-prism-plus'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import 'prismjs/themes/prism-tomorrow.css'
-import { faSpinner, faCheckCircle, faEllipsisH, faExternalLinkAlt, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faCheckCircle, faEllipsisH, faExternalLinkAlt, faMobileAlt, faCopy, faShare } from '@fortawesome/free-solid-svg-icons'
 import { nip19 } from 'nostr-tools'
 import { getNostrUrl } from '../config/nostrGateways'
 import { RELAYS } from '../config/relays'
@@ -88,7 +88,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const [isCheckingReadStatus, setIsCheckingReadStatus] = useState(false)
   const [showCheckAnimation, setShowCheckAnimation] = useState(false)
   const [showArticleMenu, setShowArticleMenu] = useState(false)
+  const [showVideoMenu, setShowVideoMenu] = useState(false)
   const articleMenuRef = useRef<HTMLDivElement>(null)
+  const videoMenuRef = useRef<HTMLDivElement>(null)
   const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef, processedMarkdown } = useMarkdownToHTML(markdown, relayPool)
   
   const { finalHtml, relevantHighlights } = useHighlightedContent({
@@ -114,18 +116,22 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (articleMenuRef.current && !articleMenuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (articleMenuRef.current && !articleMenuRef.current.contains(target)) {
         setShowArticleMenu(false)
+      }
+      if (videoMenuRef.current && !videoMenuRef.current.contains(target)) {
+        setShowVideoMenu(false)
       }
     }
     
-    if (showArticleMenu) {
+    if (showArticleMenu || showVideoMenu) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => {
         document.removeEventListener('mousedown', handleClickOutside)
       }
     }
-  }, [showArticleMenu])
+  }, [showArticleMenu, showVideoMenu])
 
   const readingStats = useMemo(() => {
     const content = markdown || html || ''
@@ -151,7 +157,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     const ss = String(seconds).padStart(2, '0')
     return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`
   }
-  const isExternalVideo = !isNostrArticle && !!selectedUrl && ['youtube', 'video'].includes(classifyUrl(selectedUrl).type)
+  
 
   // Get article links for menu
   const getArticleLinks = () => {
@@ -181,6 +187,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     setShowArticleMenu(!showArticleMenu)
   }
 
+  const toggleVideoMenu = () => setShowVideoMenu(v => !v)
+
   const handleOpenPortal = () => {
     if (articleLinks) {
       window.open(articleLinks.portal, '_blank', 'noopener,noreferrer')
@@ -193,6 +201,75 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       window.location.href = articleLinks.native
     }
     setShowArticleMenu(false)
+  }
+  
+  // Video actions
+  const buildNativeVideoUrl = (url: string): string | null => {
+    try {
+      const u = new URL(url)
+      const host = u.hostname
+      if (host.includes('youtube.com')) {
+        const id = u.searchParams.get('v')
+        return id ? `youtube://watch?v=${id}` : `youtube://${u.pathname}${u.search}`
+      }
+      if (host === 'youtu.be') {
+        const id = u.pathname.replace('/', '')
+        return id ? `youtube://watch?v=${id}` : 'youtube://'
+      }
+      if (host.includes('vimeo.com')) {
+        const id = u.pathname.split('/').filter(Boolean)[0]
+        return id ? `vimeo://app.vimeo.com/videos/${id}` : 'vimeo://'
+      }
+      if (host.includes('dailymotion.com') || host === 'dai.ly') {
+        // dailymotion.com/video/<id> or dai.ly/<id>
+        const parts = u.pathname.split('/').filter(Boolean)
+        const id = host === 'dai.ly' ? parts[0] : (parts[1] || '')
+        return id ? `dailymotion://video/${id}` : 'dailymotion://'
+      }
+      return null
+    } catch {
+      return null
+    }
+  }
+
+  const handleOpenVideoExternal = () => {
+    if (selectedUrl) window.open(selectedUrl, '_blank', 'noopener,noreferrer')
+    setShowVideoMenu(false)
+  }
+
+  const handleOpenVideoNative = () => {
+    if (!selectedUrl) return
+    const native = buildNativeVideoUrl(selectedUrl)
+    if (native) {
+      window.location.href = native
+    } else {
+      window.location.href = selectedUrl
+    }
+    setShowVideoMenu(false)
+  }
+
+  const handleCopyVideoUrl = async () => {
+    try {
+      if (selectedUrl) await navigator.clipboard.writeText(selectedUrl)
+    } catch (e) {
+      console.warn('Clipboard copy failed', e)
+    } finally {
+      setShowVideoMenu(false)
+    }
+  }
+
+  const handleShareVideoUrl = async () => {
+    try {
+      if (selectedUrl && (navigator as unknown as { share?: (d: ShareData) => Promise<void> }).share) {
+        await (navigator as unknown as { share: (d: ShareData) => Promise<void> }).share({ title: title || 'Video', url: selectedUrl })
+      } else if (selectedUrl) {
+        await navigator.clipboard.writeText(selectedUrl)
+      }
+    } catch (e) {
+      console.warn('Share failed', e)
+    } finally {
+      setShowVideoMenu(false)
+    }
   }
   
   // Check if article is already marked as read when URL/article changes
@@ -338,6 +415,37 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               height="60vh" 
               onDuration={(d) => setVideoDurationSec(Math.floor(d))}
             />
+          </div>
+          <div className="article-menu-container">
+            <div className="article-menu-wrapper" ref={videoMenuRef}>
+              <button
+                className="article-menu-btn"
+                onClick={toggleVideoMenu}
+                title="More options"
+              >
+                <FontAwesomeIcon icon={faEllipsisH} />
+              </button>
+              {showVideoMenu && (
+                <div className="article-menu">
+                  <button className="article-menu-item" onClick={handleOpenVideoExternal}>
+                    <FontAwesomeIcon icon={faExternalLinkAlt} />
+                    <span>Open Link</span>
+                  </button>
+                  <button className="article-menu-item" onClick={handleOpenVideoNative}>
+                    <FontAwesomeIcon icon={faMobileAlt} />
+                    <span>Open in Native App</span>
+                  </button>
+                  <button className="article-menu-item" onClick={handleCopyVideoUrl}>
+                    <FontAwesomeIcon icon={faCopy} />
+                    <span>Copy URL</span>
+                  </button>
+                  <button className="article-menu-item" onClick={handleShareVideoUrl}>
+                    <FontAwesomeIcon icon={faShare} />
+                    <span>Share</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           {activeAccount && (
             <div className="mark-as-read-container">
