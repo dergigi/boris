@@ -94,22 +94,29 @@
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
+  /* Add top breathing room so floating sidebar buttons don't overlap header */
+  .explore-container .explore-header { 
+    margin-top: 2.25rem; 
+  }
+
   .me-tabs {
     gap: 0.25rem;
-    padding: 0 1rem;
+    padding: 0 0.5rem;
+    margin-top: 0.5rem;
   }
   
   .me-tab {
-    padding: 0.6rem 0.9rem;
-    font-size: 0.85rem;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.82rem;
   }
   
   .me-tab svg {
     font-size: 0.9rem;
+    margin-right: 0.25rem;
   }
 
   .me-tab-content {
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 0.75rem;
   }
 }
 
