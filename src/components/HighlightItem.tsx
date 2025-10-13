@@ -303,6 +303,10 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       onClick={handleItemClick}
       style={{ cursor: onHighlightClick ? 'pointer' : 'default' }}
     >
+      <span className="highlight-timestamp">
+        {formatDateCompact(highlight.created_at)}
+      </span>
+      
       <div className="highlight-quote-icon">
         <FontAwesomeIcon icon={faQuoteLeft} />
         {relayIndicator && (
@@ -332,10 +336,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         <div className="highlight-meta">
           <span className="highlight-author">
             {getUserDisplayName()}
-          </span>
-          <span className="highlight-meta-separator">•</span>
-          <span className="highlight-time">
-            {formatDateCompact(highlight.created_at)}
           </span>
           
           <div className="highlight-menu-wrapper" ref={menuRef}>
