@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2025-01-27
+
+### Added
+
+- Pull-to-refresh gesture on mobile for all scrollable views
+  - HighlightsPanel (right sidebar) - refresh highlights for current article
+  - Explore page - refresh blog posts from friends
+  - Me pages (all tabs) - refresh user data
+  - BookmarkList (left sidebar) - refresh bookmarks
+  - Touch-only activation using coarse pointer detection
+  - Visual indicator with rotating arrow and contextual messages
+- Three-dot menu for external URLs in reader (`/r/` path)
+  - Open in browser, Copy URL, Share URL actions
+  - Consistent with article menu functionality
+
+### Changed
+
+- Bookmark refresh button moved to footer alongside view mode controls
+  - Last update time now shown in button tooltip
+  - Cleaner UI with all controls consolidated in footer
+- Unified button styles across left and right sidebars
+  - All sidebar buttons now use IconButton component for consistency
+  - Removed 73 lines of redundant CSS for old button classes
+  - Highlights panel buttons match bookmark sidebar styling
+
+### Fixed
+
+- Reader content alignment on desktop
+  - Title, summary, metadata, and body text now properly aligned
+  - All reader elements now have consistent 2rem horizontal padding
+  - Mobile layout retains compact padding
+- Highlight text matching with multiple improvements
+  - Precise normalized-to-original character position mapping
+  - Remove existing highlight marks before applying new ones
+  - Robust validation and error handling for multi-node highlights
+  - Prevent character spacing issues in highlighted text
+  - Add text validation before applying highlights
+  - Eliminate intra-word spaces in highlighted text
+
 ## [0.6.1] - 2025-10-13
 
 ### Added
@@ -1057,7 +1096,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.5.5...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/dergigi/boris/compare/v0.6.1...v0.6.2
+[0.6.1]: https://github.com/dergigi/boris/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/dergigi/boris/compare/v0.5.7...v0.6.0
+[0.5.7]: https://github.com/dergigi/boris/compare/v0.5.6...v0.5.7
+[0.5.6]: https://github.com/dergigi/boris/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/dergigi/boris/compare/v0.5.4...v0.5.5
 [0.5.2]: https://github.com/dergigi/boris/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/dergigi/boris/compare/v0.5.0...v0.5.1
