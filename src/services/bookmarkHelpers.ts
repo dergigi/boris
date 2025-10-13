@@ -60,8 +60,27 @@ export const processApplesauceBookmarks = (
     if (applesauceBookmarks.articles) allItems.push(...applesauceBookmarks.articles)
     if (applesauceBookmarks.hashtags) allItems.push(...applesauceBookmarks.hashtags)
     if (applesauceBookmarks.urls) allItems.push(...applesauceBookmarks.urls)
-    return allItems.map((bookmark: BookmarkData) => ({
-      id: bookmark.id || `${isPrivate ? 'private' : 'public'}-${Date.now()}`,
+    return allItems
+      .filter((bookmark: BookmarkData) => bookmark.id) // Skip bookmarks without valid IDs
+      .map((bookmark: BookmarkData) => ({
+        id: bookmark.id!,
+        content: bookmark.content || '',
+        created_at: bookmark.created_at || Math.floor(Date.now() / 1000),
+        pubkey: activeAccount.pubkey,
+        kind: bookmark.kind || 30001,
+        tags: bookmark.tags || [],
+        parsedContent: bookmark.content ? (getParsedContent(bookmark.content) as ParsedContent) : undefined,
+        type: 'event' as const,
+        isPrivate,
+        added_at: bookmark.created_at || Math.floor(Date.now() / 1000)
+      }))
+  }
+
+  const bookmarkArray = Array.isArray(bookmarks) ? bookmarks : [bookmarks]
+  return bookmarkArray
+    .filter((bookmark: BookmarkData) => bookmark.id) // Skip bookmarks without valid IDs
+    .map((bookmark: BookmarkData) => ({
+      id: bookmark.id!,
       content: bookmark.content || '',
       created_at: bookmark.created_at || Math.floor(Date.now() / 1000),
       pubkey: activeAccount.pubkey,
@@ -70,23 +89,8 @@ export const processApplesauceBookmarks = (
       parsedContent: bookmark.content ? (getParsedContent(bookmark.content) as ParsedContent) : undefined,
       type: 'event' as const,
       isPrivate,
-      added_at: Math.floor(Date.now() / 1000)
+      added_at: bookmark.created_at || Math.floor(Date.now() / 1000)
     }))
-  }
-
-  const bookmarkArray = Array.isArray(bookmarks) ? bookmarks : [bookmarks]
-  return bookmarkArray.map((bookmark: BookmarkData) => ({
-    id: bookmark.id || `${isPrivate ? 'private' : 'public'}-${Date.now()}`,
-    content: bookmark.content || '',
-    created_at: bookmark.created_at || Math.floor(Date.now() / 1000),
-    pubkey: activeAccount.pubkey,
-    kind: bookmark.kind || 30001,
-    tags: bookmark.tags || [],
-    parsedContent: bookmark.content ? (getParsedContent(bookmark.content) as ParsedContent) : undefined,
-    type: 'event' as const,
-    isPrivate,
-    added_at: Math.floor(Date.now() / 1000)
-  }))
 }
 
 // Types and guards around signer/decryption APIs
