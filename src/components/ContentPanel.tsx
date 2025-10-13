@@ -374,8 +374,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const highlightRgb = hexToRgb(highlightColor)
 
   return (
-    <div className="reader" style={{ '--highlight-rgb': highlightRgb } as React.CSSProperties}>
-      {/* Reading Progress Indicator */}
+    <>
+      {/* Reading Progress Indicator - Outside reader for fixed positioning */}
       {isTextContent && (
         <ReadingProgressIndicator 
           progress={progressPercentage}
@@ -384,7 +384,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         />
       )}
       
-      {/* Hidden markdown preview to convert markdown to HTML */}
+      <div className="reader" style={{ '--highlight-rgb': highlightRgb } as React.CSSProperties}>
+        {/* Hidden markdown preview to convert markdown to HTML */}
       {markdown && (
         <div ref={markdownPreviewRef} style={{ display: 'none' }}>
           <ReactMarkdown 
@@ -590,7 +591,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           <p>No readable content found for this URL.</p>
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
 

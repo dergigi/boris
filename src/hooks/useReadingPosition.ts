@@ -1,19 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-// @ts-ignore - position-indicator types issue
-import { createPositionIndicator } from 'position-indicator'
-
-interface ReadingPositionData {
-  position: number // 0 to 1
-  prevPosition: number
-  hasUpdated: boolean
-  hasScroll: boolean
-  eventType: 'scroll' | 'resize' | 'heightChange' | 'init'
-  eventDate: number
-}
 
 interface UseReadingPositionOptions {
   enabled?: boolean
-  onPositionChange?: (data: ReadingPositionData) => void
+  onPositionChange?: (position: number) => void
   onReadingComplete?: () => void
   readingCompleteThreshold?: number // Default 0.9 (90%)
 }
@@ -26,44 +15,45 @@ export const useReadingPosition = ({
 }: UseReadingPositionOptions = {}) => {
   const [position, setPosition] = useState(0)
   const [isReadingComplete, setIsReadingComplete] = useState(false)
-  const positionIndicatorRef = useRef<any>(null)
   const hasTriggeredComplete = useRef(false)
 
   useEffect(() => {
     if (!enabled) return
 
-    const handleInit = (data: ReadingPositionData) => {
-      setPosition(data.position)
-      onPositionChange?.(data)
-    }
+    const handleScroll = () => {
+      // Get the main content area (reader content)
+      const readerContent = document.querySelector('.reader-html, .reader-markdown')
+      if (!readerContent) return
 
-    const handleUpdate = (data: ReadingPositionData) => {
-      setPosition(data.position)
-      onPositionChange?.(data)
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+      const windowHeight = window.innerHeight
+      const documentHeight = document.documentElement.scrollHeight
+      
+      // Calculate position based on how much of the content has been scrolled through
+      const scrollProgress = Math.min(scrollTop / (documentHeight - windowHeight), 1)
+      const clampedProgress = Math.max(0, Math.min(1, scrollProgress))
+      
+      setPosition(clampedProgress)
+      onPositionChange?.(clampedProgress)
 
       // Check if reading is complete
-      if (data.position >= readingCompleteThreshold && !hasTriggeredComplete.current) {
+      if (clampedProgress >= readingCompleteThreshold && !hasTriggeredComplete.current) {
         setIsReadingComplete(true)
         hasTriggeredComplete.current = true
         onReadingComplete?.()
       }
     }
 
-    const positionIndicator = createPositionIndicator({
-      onInit: handleInit,
-      onUpdate: handleUpdate,
-      useResizeListener: true,
-      useResizeObserver: true
-    })
+    // Initial calculation
+    handleScroll()
 
-    positionIndicator.init()
-    positionIndicatorRef.current = positionIndicator
+    // Add scroll listener
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('resize', handleScroll, { passive: true })
 
     return () => {
-      if (positionIndicatorRef.current) {
-        positionIndicatorRef.current.destroy()
-        positionIndicatorRef.current = null
-      }
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleScroll)
     }
   }, [enabled, onPositionChange, onReadingComplete, readingCompleteThreshold])
 
