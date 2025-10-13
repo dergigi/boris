@@ -314,6 +314,17 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         </CompactButton>
       </div>
       
+      {relayIndicator && (
+        <CompactButton
+          className="highlight-relay-indicator"
+          icon={relayIndicator.icon}
+          spin={relayIndicator.spin}
+          title={relayIndicator.tooltip}
+          onClick={handleRebroadcast}
+          disabled={!relayPool || !eventStore}
+        />
+      )}
+      
       <div className="highlight-quote-icon">
         <FontAwesomeIcon icon={faQuoteLeft} />
       </div>
@@ -331,17 +342,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         
         
         <div className="highlight-footer">
-          {relayIndicator && (
-            <CompactButton
-              className="highlight-relay-indicator"
-              icon={relayIndicator.icon}
-              spin={relayIndicator.spin}
-              title={relayIndicator.tooltip}
-              onClick={handleRebroadcast}
-              disabled={!relayPool || !eventStore}
-            />
-          )}
-          
           <span className="highlight-author">
             {getUserDisplayName()}
           </span>
