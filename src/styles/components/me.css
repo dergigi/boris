@@ -18,7 +18,7 @@
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  color: var(--text-secondary, #999);
+  color: var(--text-secondary, rgb(161 161 170)); /* zinc-400 */
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
@@ -28,25 +28,25 @@
 }
 
 .me-tab:hover {
-  color: var(--text-primary, #ddd);
+  color: var(--text-primary, rgb(228 228 231)); /* zinc-200 */
   background: rgba(255, 255, 255, 0.05);
 }
 
 .me-tab.active {
-  color: var(--primary-color, #8b5cf6);
-  border-bottom-color: var(--primary-color, #8b5cf6);
+  color: var(--primary-color, rgb(139 92 246)); /* purple-500 */
+  border-bottom-color: var(--primary-color, rgb(139 92 246)); /* purple-500 */
 }
 
 /* Highlights tab uses the user's custom "my highlights" color */
 .me-tab[data-tab="highlights"].active {
-  color: var(--highlight-color-mine, #ffff00);
-  border-bottom-color: var(--highlight-color-mine, #ffff00);
+  color: var(--highlight-color-mine, rgb(250 204 21)); /* yellow-400 */
+  border-bottom-color: var(--highlight-color-mine, rgb(250 204 21)); /* yellow-400 */
 }
 
 /* Reading List tab uses blue color to match bookmarks icon */
 .me-tab[data-tab="reading-list"].active {
-  color: #646cff;
-  border-bottom-color: #646cff;
+  color: rgb(99 102 241); /* indigo-500 */
+  border-bottom-color: rgb(99 102 241); /* indigo-500 */
 }
 
 .me-tab svg {
@@ -80,25 +80,25 @@
 
 /* Enhanced border styling for reading list cards */
 .bookmarks-list .individual-bookmark {
-  border: 1px solid #444 !important;
-  background: #1a1a1a !important;
+  border: 1px solid rgb(82 82 91) !important; /* zinc-600 */
+  background: rgb(24 24 27) !important; /* zinc-900 */
 }
 
 .bookmarks-list .individual-bookmark:hover {
-  border-color: #555 !important;
-  background: #252525 !important;
+  border-color: rgb(113 113 122) !important; /* zinc-500 */
+  background: rgb(39 39 42) !important; /* zinc-800 */
 }
 
 .bookmark-item {
   padding: 1rem;
-  background: var(--card-bg, #fff);
-  border: 1px solid var(--border-color, #e0e0e0);
+  background: var(--card-bg, rgb(255 255 255)); /* white */
+  border: 1px solid var(--border-color, rgb(228 228 231)); /* zinc-200 */
   border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .bookmark-item:hover {
-  border-color: var(--primary-color, #8b5cf6);
+  border-color: var(--primary-color, rgb(139 92 246)); /* purple-500 */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -110,13 +110,13 @@
 .bookmark-item h3 {
   margin: 0 0 0.5rem 0;
   font-size: 1.1rem;
-  color: var(--text-primary, #000);
+  color: var(--text-primary, rgb(0 0 0)); /* black */
 }
 
 .bookmark-item p {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary, rgb(113 113 122)); /* zinc-500 */
   line-height: 1.5;
 }
 
