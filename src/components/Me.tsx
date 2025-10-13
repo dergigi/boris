@@ -17,6 +17,7 @@ import { BookmarkItem } from './BookmarkItem'
 import IconButton from './IconButton'
 import { ViewMode } from './Bookmarks'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
+import { getCachedMeData, setCachedMeData, updateCachedHighlights } from '../services/meCache'
 import { faBooks } from '../icons/customIcons'
 
 interface MeProps {
@@ -47,6 +48,14 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
         setLoading(true)
         setError(null)
 
+        // Seed from cache if available to avoid empty flash
+        const cached = getCachedMeData(activeAccount.pubkey)
+        if (cached) {
+          setHighlights(cached.highlights)
+          setBookmarks(cached.bookmarks)
+          setReadArticles(cached.readArticles)
+        }
+
         // Fetch highlights and read articles
         const [userHighlights, userReadArticles] = await Promise.all([
           fetchHighlights(relayPool, activeAccount.pubkey),
@@ -57,12 +66,19 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
         setReadArticles(userReadArticles)
 
         // Fetch bookmarks using callback pattern
+        let fetchedBookmarks: Bookmark[] = []
         try {
-          await fetchBookmarks(relayPool, activeAccount, setBookmarks)
+          await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
+            fetchedBookmarks = newBookmarks
+            setBookmarks(newBookmarks)
+          })
         } catch (err) {
           console.warn('Failed to load bookmarks:', err)
           setBookmarks([])
         }
+
+        // Update cache with all fetched data
+        setCachedMeData(activeAccount.pubkey, userHighlights, fetchedBookmarks, userReadArticles)
       } catch (err) {
         console.error('Failed to load data:', err)
         setError('Failed to load data. Please try again.')
@@ -75,7 +91,14 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
   }, [relayPool, activeAccount])
 
   const handleHighlightDelete = (highlightId: string) => {
-    setHighlights(prev => prev.filter(h => h.id !== highlightId))
+    setHighlights(prev => {
+      const updated = prev.filter(h => h.id !== highlightId)
+      // Update cache when highlight is deleted
+      if (activeAccount) {
+        updateCachedHighlights(activeAccount.pubkey, updated)
+      }
+      return updated
+    })
   }
 
   const getPostUrl = (post: BlogPostPreview) => {
@@ -110,7 +133,10 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
     .filter(hasContentOrUrl)
     .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
 
-  if (loading) {
+  // Only show full loading screen if we don't have any data yet
+  const hasData = highlights.length > 0 || bookmarks.length > 0 || readArticles.length > 0
+  
+  if (loading && !hasData) {
     return (
       <div className="explore-container">
         <div className="explore-loading">
@@ -227,6 +253,12 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
     <div className="explore-container">
       <div className="explore-header">
         {activeAccount && <AuthorCard authorPubkey={activeAccount.pubkey} />}
+        
+        {loading && hasData && (
+          <div className="explore-loading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0' }}>
+            <FontAwesomeIcon icon={faSpinner} spin />
+          </div>
+        )}
         
         <div className="me-tabs">
           <button
