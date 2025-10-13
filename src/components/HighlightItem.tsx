@@ -314,6 +314,10 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         </CompactButton>
       </div>
       
+      <div className="highlight-quote-icon">
+        <FontAwesomeIcon icon={faQuoteLeft} />
+      </div>
+      
       {relayIndicator && (
         <CompactButton
           className="highlight-relay-indicator"
@@ -324,10 +328,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
           disabled={!relayPool || !eventStore}
         />
       )}
-      
-      <div className="highlight-quote-icon">
-        <FontAwesomeIcon icon={faQuoteLeft} />
-      </div>
       
       <div className="highlight-content">
         <blockquote className="highlight-text">

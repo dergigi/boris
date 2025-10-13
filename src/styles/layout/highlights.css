@@ -100,7 +100,7 @@
 .empty-hint { font-size: 0.875rem; color: #666; margin-top: 0.5rem; }
 
 .highlights-list { overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
-.highlight-item { background: #1e1e1e; border-left: 1px solid #333; border-right: 1px solid #333; padding: 0; display: flex; gap: 0.75rem; transition: border-color 0.2s ease; position: relative; }
+.highlight-item { background: #1e1e1e; border-left: 1px solid #333; border-right: 1px solid #333; padding: 0; display: flex; transition: border-color 0.2s ease; position: relative; }
 .highlight-item:hover { border-color: #646cff; }
 .highlight-item:hover .highlight-header,
 .highlight-item:hover .highlight-footer { border-color: #646cff; }
@@ -130,13 +130,12 @@
 .highlight-item.level-nostrverse .highlight-header,
 .highlight-item.level-nostrverse .highlight-footer { border-color: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 60%, #333); }
 
-.highlight-quote-icon { color: #646cff; font-size: 1.2rem; flex-shrink: 0; padding: 3rem 0 3rem 1rem; }
+.highlight-quote-icon { position: absolute; top: 0.5rem; left: 0.5rem; color: #646cff; font-size: 0.85rem; opacity: 0.7; z-index: 10; }
 .highlight-relay-indicator { position: absolute; bottom: 0.5rem; left: 0.5rem; opacity: 0.7; z-index: 10; }
 .highlight-relay-indicator:hover { opacity: 1; }
 
 /* Mobile: Larger touch targets and better spacing */
 @media (max-width: 768px) {
-  .highlight-quote-icon { min-width: 100px; }
   .highlight-relay-indicator { padding: 8px; min-width: var(--min-touch-target); min-height: var(--min-touch-target); }
   .compact-button { padding: 0.5rem; min-width: var(--min-touch-target); min-height: var(--min-touch-target); }
 }
@@ -146,7 +145,7 @@
 .highlight-item.level-friends .highlight-quote-icon { color: var(--highlight-color-friends, #f97316); }
 .highlight-item.level-nostrverse .highlight-quote-icon { color: var(--highlight-color-nostrverse, #9333ea); }
 
-.highlight-content { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; padding: 3rem 1rem 3rem 0; }
+.highlight-content { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; padding: 3rem 1rem; }
 .highlight-text { margin: 0; padding: 0; font-style: italic; color: #ddd; line-height: 1.6; border-left: none; font-size: 0.95rem; }
 .highlight-comment { margin-top: 0.5rem; padding: 0.75rem; background: rgba(100, 108, 255, 0.1); border-left: 3px solid #646cff; border-radius: 4px; font-size: 0.875rem; color: #ddd; line-height: 1.5; }
 
