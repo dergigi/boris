@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react'
+import ReactPlayer from 'react-player'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
@@ -29,6 +30,7 @@ import {
 } from '../services/reactionService'
 import AuthorCard from './AuthorCard'
 import { faBooks } from '../icons/customIcons'
+import { classifyUrl } from '../utils/helpers'
 
 interface ContentPanelProps {
   loading: boolean
@@ -136,6 +138,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Determine if we're on a nostr-native article (/a/) or external URL (/r/)
   const isNostrArticle = selectedUrl && selectedUrl.startsWith('nostr:')
+  const isExternalVideo = !isNostrArticle && !!selectedUrl && ['youtube', 'video'].includes(classifyUrl(selectedUrl).type)
 
   // Get article links for menu
   const getArticleLinks = () => {
@@ -312,7 +315,31 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         highlights={relevantHighlights}
         highlightVisibility={highlightVisibility}
       />
-      {markdown || html ? (
+      {isExternalVideo ? (
+        <>
+          <div className="reader-video">
+            <ReactPlayer url={selectedUrl as string} controls width="100%" height="60vh" />
+          </div>
+          {activeAccount && (
+            <div className="mark-as-read-container">
+              <button
+                className={`mark-as-read-btn ${isMarkedAsRead ? 'marked' : ''} ${showCheckAnimation ? 'animating' : ''}`}
+                onClick={handleMarkAsRead}
+                disabled={isMarkedAsRead || isCheckingReadStatus}
+                title={isMarkedAsRead ? 'Already Marked as Read' : 'Mark as Read'}
+              >
+                <FontAwesomeIcon 
+                  icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheckCircle : faBooks} 
+                  spin={isCheckingReadStatus} 
+                />
+                <span>
+                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Marked as Read' : 'Mark as Read'}
+                </span>
+              </button>
+            </div>
+          )}
+        </>
+      ) : markdown || html ? (
         <>
           {markdown ? (
             renderedMarkdownHtml && finalHtml ? (

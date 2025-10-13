@@ -23,6 +23,12 @@ export const classifyUrl = (url: string | undefined): UrlClassification => {
     return { type: 'youtube' }
   }
   
+  // Check for popular video hosts
+  const videoHosts = ['vimeo.com', 'dailymotion.com', 'dai.ly', 'video.twimg.com']
+  if (videoHosts.some(host => urlLower.includes(host))) {
+    return { type: 'video' }
+  }
+  
   // Check for video extensions
   const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv', '.m4v']
   if (videoExtensions.some(ext => urlLower.includes(ext))) {
