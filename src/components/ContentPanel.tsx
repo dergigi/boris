@@ -260,8 +260,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   const handleShareVideoUrl = async () => {
     try {
-      if (selectedUrl && (navigator as unknown as { share?: (d: ShareData) => Promise<void> }).share) {
-        await (navigator as unknown as { share: (d: ShareData) => Promise<void> }).share({ title: title || 'Video', url: selectedUrl })
+      if (selectedUrl && (navigator as { share?: (d: { title?: string; url?: string }) => Promise<void> }).share) {
+        await (navigator as { share: (d: { title?: string; url?: string }) => Promise<void> }).share({ title: title || 'Video', url: selectedUrl })
       } else if (selectedUrl) {
         await navigator.clipboard.writeText(selectedUrl)
       }
