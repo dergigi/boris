@@ -5,7 +5,7 @@ import rehypeRaw from 'rehype-raw'
 import rehypePrism from 'rehype-prism-plus'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import 'prismjs/themes/prism-tomorrow.css'
-import { faSpinner, faCheck, faEllipsisH, faExternalLinkAlt, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faCheckCircle, faEllipsisH, faExternalLinkAlt, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
 import { nip19 } from 'nostr-tools'
 import { getNostrUrl } from '../config/nostrGateways'
 import { RELAYS } from '../config/relays'
@@ -384,7 +384,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 title={isMarkedAsRead ? 'Already Marked as Read' : 'Mark as Read'}
               >
                 <FontAwesomeIcon 
-                  icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheck : faBooks} 
+                  icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheckCircle : faBooks} 
                   spin={isCheckingReadStatus} 
                 />
                 <span>
