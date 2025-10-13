@@ -221,8 +221,8 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
 
   return (
     <>
-      {/* Mobile bookmark button - only show when viewing article */}
-      {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
+      {/* Mobile bookmark button - only show when viewing article (not on settings/explore/me) */}
+      {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && !props.showSettings && !props.showExplore && !props.showMe && (
         <button
           className={`fixed z-[900] bg-zinc-800/70 border border-zinc-600/40 rounded-lg text-zinc-200 flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm md:hidden ${
             showMobileButtons ? 'opacity-90 visible' : 'opacity-0 invisible pointer-events-none'
@@ -241,8 +241,8 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
         </button>
       )}
 
-      {/* Mobile highlights button - only show when viewing article */}
-      {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
+      {/* Mobile highlights button - only show when viewing article (not on settings/explore/me) */}
+      {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && !props.showSettings && !props.showExplore && !props.showMe && (
         <button
           className={`fixed z-[900] border border-zinc-600/40 rounded-lg flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm md:hidden ${
             showMobileButtons ? 'opacity-90 visible' : 'opacity-0 invisible pointer-events-none'
