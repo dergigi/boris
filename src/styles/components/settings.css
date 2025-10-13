@@ -96,4 +96,32 @@
   color: rgb(161 161 170); /* zinc-400 */
 }
 
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .settings-view {
+    padding: 0.5rem;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  .settings-content {
+    padding: 0 0.25rem 2rem 0.25rem;
+    max-width: 100%;
+  }
+  
+  .settings-section {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .zap-preset-buttons {
+    width: 100%;
+  }
+  
+  .zap-preset-btn {
+    flex: 1 1 auto;
+    min-width: 70px;
+  }
+}
+
 
