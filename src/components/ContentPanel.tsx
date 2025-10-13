@@ -73,6 +73,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   markdown, 
   selectedUrl,
   image,
+  summary,
   published,
   highlights = [],
   showHighlights = true,
@@ -416,7 +417,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       <ReaderHeader 
         title={ytMeta?.title || title}
         image={image}
-        summary={undefined}
+        summary={summary}
         published={published}
         readingTimeText={isExternalVideo ? (videoDurationSec !== null ? formatDuration(videoDurationSec) : null) : (readingStats ? readingStats.text : null)}
         hasHighlights={hasHighlights}
