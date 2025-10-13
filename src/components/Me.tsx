@@ -221,7 +221,11 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       case 'highlights':
         return highlights.length === 0 ? (
           <div className="explore-error">
-            <p>No highlights yet. Start highlighting content to see them here!</p>
+            <p>
+              {isOwnProfile 
+                ? 'No highlights yet. Start highlighting content to see them here!'
+                : 'No highlights yet. You should shame them on nostr!'}
+            </p>
           </div>
         ) : (
           <div className="highlights-list me-highlights-list">
