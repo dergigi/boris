@@ -1,5 +1,4 @@
 import React from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter, faUnderline, faNetworkWired, faUserGroup, faUser } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../../services/settingsService'
 import IconButton from '../IconButton'
@@ -102,33 +101,39 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
       <div className="setting-group setting-inline">
         <label>Default Highlight Visibility</label>
         <div className="highlight-level-toggles">
-          <button
+          <IconButton
+            icon={faNetworkWired}
             onClick={() => onUpdate({ defaultHighlightVisibilityNostrverse: !(settings.defaultHighlightVisibilityNostrverse !== false) })}
-            className={`level-toggle-btn ${(settings.defaultHighlightVisibilityNostrverse !== false) ? 'active' : ''}`}
             title="Nostrverse highlights"
-            aria-label="Toggle nostrverse highlights by default"
-            style={{ color: (settings.defaultHighlightVisibilityNostrverse !== false) ? 'var(--highlight-color-nostrverse, #9333ea)' : undefined }}
-          >
-            <FontAwesomeIcon icon={faNetworkWired} />
-          </button>
-          <button
+            ariaLabel="Toggle nostrverse highlights by default"
+            variant="ghost"
+            style={{ 
+              color: (settings.defaultHighlightVisibilityNostrverse !== false) ? 'var(--highlight-color-nostrverse, #9333ea)' : undefined,
+              opacity: (settings.defaultHighlightVisibilityNostrverse !== false) ? 1 : 0.4
+            }}
+          />
+          <IconButton
+            icon={faUserGroup}
             onClick={() => onUpdate({ defaultHighlightVisibilityFriends: !(settings.defaultHighlightVisibilityFriends !== false) })}
-            className={`level-toggle-btn ${(settings.defaultHighlightVisibilityFriends !== false) ? 'active' : ''}`}
             title="Friends highlights"
-            aria-label="Toggle friends highlights by default"
-            style={{ color: (settings.defaultHighlightVisibilityFriends !== false) ? 'var(--highlight-color-friends, #f97316)' : undefined }}
-          >
-            <FontAwesomeIcon icon={faUserGroup} />
-          </button>
-          <button
+            ariaLabel="Toggle friends highlights by default"
+            variant="ghost"
+            style={{ 
+              color: (settings.defaultHighlightVisibilityFriends !== false) ? 'var(--highlight-color-friends, #f97316)' : undefined,
+              opacity: (settings.defaultHighlightVisibilityFriends !== false) ? 1 : 0.4
+            }}
+          />
+          <IconButton
+            icon={faUser}
             onClick={() => onUpdate({ defaultHighlightVisibilityMine: !(settings.defaultHighlightVisibilityMine !== false) })}
-            className={`level-toggle-btn ${(settings.defaultHighlightVisibilityMine !== false) ? 'active' : ''}`}
             title="My highlights"
-            aria-label="Toggle my highlights by default"
-            style={{ color: (settings.defaultHighlightVisibilityMine !== false) ? 'var(--highlight-color-mine, #eab308)' : undefined }}
-          >
-            <FontAwesomeIcon icon={faUser} />
-          </button>
+            ariaLabel="Toggle my highlights by default"
+            variant="ghost"
+            style={{ 
+              color: (settings.defaultHighlightVisibilityMine !== false) ? 'var(--highlight-color-mine, #eab308)' : undefined,
+              opacity: (settings.defaultHighlightVisibilityMine !== false) ? 1 : 0.4
+            }}
+          />
         </div>
       </div>
 

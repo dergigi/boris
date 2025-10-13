@@ -40,8 +40,11 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
                 })}
                 title="Toggle nostrverse highlights"
                 ariaLabel="Toggle nostrverse highlights"
-                variant={highlightVisibility.nostrverse ? 'primary' : 'ghost'}
-                style={{ color: highlightVisibility.nostrverse ? 'var(--highlight-color-nostrverse, #9333ea)' : undefined }}
+                variant="ghost"
+                style={{ 
+                  color: highlightVisibility.nostrverse ? 'var(--highlight-color-nostrverse, #9333ea)' : undefined,
+                  opacity: highlightVisibility.nostrverse ? 1 : 0.4 
+                }}
               />
               <IconButton
                 icon={faUserGroup}
@@ -51,9 +54,12 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
                 })}
                 title={currentUserPubkey ? "Toggle friends highlights" : "Login to see friends highlights"}
                 ariaLabel="Toggle friends highlights"
-                variant={highlightVisibility.friends ? 'primary' : 'ghost'}
+                variant="ghost"
                 disabled={!currentUserPubkey}
-                style={{ color: highlightVisibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined }}
+                style={{ 
+                  color: highlightVisibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined,
+                  opacity: highlightVisibility.friends ? 1 : 0.4 
+                }}
               />
               <IconButton
                 icon={faUser}
@@ -63,9 +69,12 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
                 })}
                 title={currentUserPubkey ? "Toggle my highlights" : "Login to see your highlights"}
                 ariaLabel="Toggle my highlights"
-                variant={highlightVisibility.mine ? 'primary' : 'ghost'}
+                variant="ghost"
                 disabled={!currentUserPubkey}
-                style={{ color: highlightVisibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined }}
+                style={{ 
+                  color: highlightVisibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined,
+                  opacity: highlightVisibility.mine ? 1 : 0.4 
+                }}
               />
             </div>
           )}
