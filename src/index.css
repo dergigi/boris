@@ -143,8 +143,8 @@ body.mobile-sidebar-open {
 .mobile-hamburger-btn {
   display: none;
   position: fixed;
-  top: 1rem;
-  left: 1rem;
+  top: calc(1rem + env(safe-area-inset-top));
+  left: calc(1rem + env(safe-area-inset-left));
   z-index: 900;
   background: #2a2a2a;
   border: 1px solid #444;
@@ -732,8 +732,8 @@ body.mobile-sidebar-open {
   .mobile-highlights-btn {
     display: none;
     position: fixed;
-    top: 1rem;
-    right: 1rem;
+    top: calc(1rem + env(safe-area-inset-top));
+    right: calc(1rem + env(safe-area-inset-right));
     z-index: 900;
     background: #2a2a2a;
     border: 1px solid #444;
@@ -3208,8 +3208,8 @@ body.mobile-sidebar-open {
     display: flex;
     align-items: center;
     justify-content: center;
-    bottom: 1rem;
-    left: 1rem;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    left: calc(1rem + env(safe-area-inset-left));
     gap: 0;
   }
 
