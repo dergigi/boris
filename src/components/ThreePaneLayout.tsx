@@ -366,7 +366,10 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
           highlightColor={props.settings.highlightColorMine || '#ffff00'}
         />
       )}
-      <RelayStatusIndicator relayPool={props.relayPool} />
+      <RelayStatusIndicator 
+        relayPool={props.relayPool}
+        showOnMobile={showMobileButtons}
+      />
       {props.toastMessage && (
         <Toast
           message={props.toastMessage}

@@ -8,9 +8,13 @@ import { useIsMobile } from '../hooks/useMediaQuery'
 
 interface RelayStatusIndicatorProps {
   relayPool: RelayPool | null
+  showOnMobile?: boolean // Control visibility based on scroll
 }
 
-export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ relayPool }) => {
+export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ 
+  relayPool,
+  showOnMobile = true
+}) => {
   // Poll frequently for responsive offline indicator (5s instead of default 20s)
   const relayStatuses = useRelayStatus({ relayPool, pollingInterval: 5000 })
   const [isConnecting, setIsConnecting] = useState(true)
@@ -70,7 +74,7 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({ rela
   
   return (
     <div 
-      className={`relay-status-indicator ${isConnecting ? 'connecting' : ''} ${isMobile ? 'mobile' : ''} ${isExpanded ? 'expanded' : ''}`}
+      className={`relay-status-indicator ${isConnecting ? 'connecting' : ''} ${isMobile ? 'mobile' : ''} ${isExpanded ? 'expanded' : ''} ${isMobile && !showOnMobile ? 'hidden' : 'visible'}`}
       title={
         !isMobile ? (
           isConnecting
