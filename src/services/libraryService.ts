@@ -187,8 +187,16 @@ export async function fetchReadArticlesWithData(
       merge(local$, remote$).pipe(toArray())
     )
 
+    // Deduplicate article events by ID
+    const uniqueArticleEvents = new Map<string, NostrEvent>()
+    articleEvents.forEach(event => {
+      if (!uniqueArticleEvents.has(event.id)) {
+        uniqueArticleEvents.set(event.id, event)
+      }
+    })
+
     // Convert to BlogPostPreview format
-    const blogPosts: BlogPostPreview[] = articleEvents.map(event => ({
+    const blogPosts: BlogPostPreview[] = Array.from(uniqueArticleEvents.values()).map(event => ({
       event,
       title: getArticleTitle(event) || 'Untitled Article',
       summary: getArticleSummary(event),
