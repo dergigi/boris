@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowDown, faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { faArrowDown } from '@fortawesome/free-solid-svg-icons'
 
 interface PullToRefreshIndicatorProps {
   isPulling: boolean
@@ -17,8 +17,8 @@ const PullToRefreshIndicator: React.FC<PullToRefreshIndicatorProps> = ({
   isRefreshing,
   threshold = 80
 }) => {
-  // Don't show if not pulling and not refreshing
-  if (!isPulling && !isRefreshing) return null
+  // Only show when actively pulling, not when refreshing
+  if (!isPulling) return null
 
   const opacity = Math.min(pullDistance / threshold, 1)
   const rotation = (pullDistance / threshold) * 180
@@ -27,31 +27,23 @@ const PullToRefreshIndicator: React.FC<PullToRefreshIndicatorProps> = ({
     <div 
       className="pull-to-refresh-indicator"
       style={{
-        opacity: isRefreshing ? 1 : opacity,
-        transform: `translateY(${isRefreshing ? 0 : -20 + pullDistance / 2}px)`
+        opacity,
+        transform: `translateY(${-20 + pullDistance / 2}px)`
       }}
     >
       <div 
         className="pull-to-refresh-icon"
         style={{
-          transform: isRefreshing ? 'none' : `rotate(${rotation}deg)`
+          transform: `rotate(${rotation}deg)`
         }}
       >
-        {isRefreshing ? (
-          <FontAwesomeIcon icon={faSpinner} spin />
-        ) : (
-          <FontAwesomeIcon 
-            icon={faArrowDown} 
-            style={{ color: canRefresh ? 'var(--accent-color, #3b82f6)' : 'var(--text-secondary)' }}
-          />
-        )}
+        <FontAwesomeIcon 
+          icon={faArrowDown} 
+          style={{ color: canRefresh ? 'var(--accent-color, #3b82f6)' : 'var(--text-secondary)' }}
+        />
       </div>
       <div className="pull-to-refresh-text">
-        {isRefreshing 
-          ? 'Refreshing...' 
-          : canRefresh 
-            ? 'Release to refresh' 
-            : 'Pull to refresh'}
+        {canRefresh ? 'Release to refresh' : 'Pull to refresh'}
       </div>
     </div>
   )
