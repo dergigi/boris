@@ -12,6 +12,7 @@ interface IconButtonProps {
   disabled?: boolean
   spin?: boolean
   className?: string
+  style?: React.CSSProperties
 }
 
 const IconButton: React.FC<IconButtonProps> = ({
@@ -23,7 +24,8 @@ const IconButton: React.FC<IconButtonProps> = ({
   size = 33,
   disabled = false,
   spin = false,
-  className = ''
+  className = '',
+  style
 }) => {
   return (
     <button
@@ -31,7 +33,7 @@ const IconButton: React.FC<IconButtonProps> = ({
       onClick={onClick}
       title={title}
       aria-label={ariaLabel || title}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, ...style }}
       disabled={disabled}
     >
       <FontAwesomeIcon icon={icon} spin={spin} />

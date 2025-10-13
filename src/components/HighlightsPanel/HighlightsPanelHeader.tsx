@@ -1,7 +1,7 @@
 import React from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight, faEye, faEyeSlash, faRotate, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 import { HighlightVisibility } from '../HighlightsPanel'
+import IconButton from '../IconButton'
 
 interface HighlightsPanelHeaderProps {
   loading: boolean
@@ -32,76 +32,72 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
         <div className="highlights-actions-left">
           {onHighlightVisibilityChange && (
             <div className="highlight-level-toggles">
-              <button
+              <IconButton
+                icon={faNetworkWired}
                 onClick={() => onHighlightVisibilityChange({ 
                   ...highlightVisibility, 
                   nostrverse: !highlightVisibility.nostrverse 
                 })}
-                className={`level-toggle-btn ${highlightVisibility.nostrverse ? 'active' : ''}`}
                 title="Toggle nostrverse highlights"
-                aria-label="Toggle nostrverse highlights"
+                ariaLabel="Toggle nostrverse highlights"
+                variant={highlightVisibility.nostrverse ? 'primary' : 'ghost'}
                 style={{ color: highlightVisibility.nostrverse ? 'var(--highlight-color-nostrverse, #9333ea)' : undefined }}
-              >
-                <FontAwesomeIcon icon={faNetworkWired} />
-              </button>
-              <button
+              />
+              <IconButton
+                icon={faUserGroup}
                 onClick={() => onHighlightVisibilityChange({ 
                   ...highlightVisibility, 
                   friends: !highlightVisibility.friends 
                 })}
-                className={`level-toggle-btn ${highlightVisibility.friends ? 'active' : ''}`}
                 title={currentUserPubkey ? "Toggle friends highlights" : "Login to see friends highlights"}
-                aria-label="Toggle friends highlights"
-                style={{ color: highlightVisibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined }}
+                ariaLabel="Toggle friends highlights"
+                variant={highlightVisibility.friends ? 'primary' : 'ghost'}
                 disabled={!currentUserPubkey}
-              >
-                <FontAwesomeIcon icon={faUserGroup} />
-              </button>
-              <button
+                style={{ color: highlightVisibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined }}
+              />
+              <IconButton
+                icon={faUser}
                 onClick={() => onHighlightVisibilityChange({ 
                   ...highlightVisibility, 
                   mine: !highlightVisibility.mine 
                 })}
-                className={`level-toggle-btn ${highlightVisibility.mine ? 'active' : ''}`}
                 title={currentUserPubkey ? "Toggle my highlights" : "Login to see your highlights"}
-                aria-label="Toggle my highlights"
-                style={{ color: highlightVisibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined }}
+                ariaLabel="Toggle my highlights"
+                variant={highlightVisibility.mine ? 'primary' : 'ghost'}
                 disabled={!currentUserPubkey}
-              >
-                <FontAwesomeIcon icon={faUser} />
-              </button>
+                style={{ color: highlightVisibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined }}
+              />
             </div>
           )}
           {onRefresh && (
-            <button
+            <IconButton
+              icon={faRotate}
               onClick={onRefresh}
-              className="refresh-highlights-btn"
               title="Refresh highlights"
-              aria-label="Refresh highlights"
+              ariaLabel="Refresh highlights"
+              variant="ghost"
               disabled={loading}
-            >
-              <FontAwesomeIcon icon={faRotate} spin={loading} />
-            </button>
+              spin={loading}
+            />
           )}
           {hasHighlights && (
-            <button
+            <IconButton
+              icon={showHighlights ? faEye : faEyeSlash}
               onClick={onToggleHighlights}
-              className="toggle-highlight-display-btn"
               title={showHighlights ? 'Hide highlights' : 'Show highlights'}
-              aria-label={showHighlights ? 'Hide highlights' : 'Show highlights'}
-            >
-              <FontAwesomeIcon icon={showHighlights ? faEye : faEyeSlash} />
-            </button>
+              ariaLabel={showHighlights ? 'Hide highlights' : 'Show highlights'}
+              variant="ghost"
+            />
           )}
         </div>
-        <button
+        <IconButton
+          icon={faChevronRight}
           onClick={onToggleCollapse}
-          className="toggle-highlights-btn"
           title="Collapse highlights panel"
-          aria-label="Collapse highlights panel"
-        >
-          <FontAwesomeIcon icon={faChevronRight} rotation={180} />
-        </button>
+          ariaLabel="Collapse highlights panel"
+          variant="ghost"
+          style={{ transform: 'rotate(180deg)' }}
+        />
       </div>
     </div>
   )
