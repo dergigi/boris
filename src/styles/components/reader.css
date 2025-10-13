@@ -13,9 +13,9 @@
 /* Video container - responsive wrapper following react-player docs */
 .reader-video { 
   position: relative;
-  width: 100%;
-  min-width: 300px;  /* Minimum width */
-  max-width: 800px;   /* Maximum width */
+  width: 80vw;  /* 80% of viewport width */
+  min-width: 400px;  /* Minimum width */
+  max-width: 1000px;   /* Maximum width */
   aspect-ratio: 16/9;
   margin: 0 auto 1rem auto; /* Center it */
   background: #000;
