@@ -1,7 +1,11 @@
 /* Reader view */
 .reader { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 0.75rem; text-align: left; overflow: hidden; contain: layout style; }
-/* Video container in reader */
-.reader-video { margin: 0 0 1rem 0; border-radius: 8px; overflow: hidden; }
+/* Video container in reader - break out of padding to use full width */
+.reader-video { 
+  margin: -0.75rem -0.75rem 1rem -0.75rem; 
+  border-radius: 8px 8px 0 0; 
+  overflow: hidden; 
+}
 .reader.empty { color: #888; }
 .loading-spinner { display: flex; align-items: center; gap: 0.5rem; color: #888; }
 .loading-spinner svg { font-size: 1.2rem; }
