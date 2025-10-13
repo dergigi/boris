@@ -127,61 +127,70 @@ function tryMultiNodeMatch(
   let endIndex = matchIndex + searchFor.length
   
   if (useNormalized) {
-    // Build proper mapping from normalized to original positions
+    // Build precise mapping by walking original text and advancing a normalized counter
+    const endPos = matchIndex + searchFor.length // end position in normalized text (exclusive)
     let normPos = 0
-    const posMap: number[] = [] // Maps normalized position to original position
-    
-    let i = 0
-    while (i < combinedText.length) {
-      const char = combinedText[i]
-      const isWhitespace = /\s/.test(char)
-      
-      if (isWhitespace) {
-        // In normalized text, consecutive whitespace becomes one space
-        // Map this normalized position to the start of whitespace sequence
-        posMap[normPos] = i
-        
-        // Skip remaining consecutive whitespace
-        while (i + 1 < combinedText.length && /\s/.test(combinedText[i + 1])) {
-          i++
+    let foundStart = false
+    let foundEnd = false
+    let startNode: Text | null = null
+    let startOffset = 0
+    let endNode: Text | null = null
+    let endOffset = 0
+
+    for (const nodeInfo of nodeMap) {
+      const text = nodeInfo.originalText
+      let prevWasWs = false
+      for (let i = 0; i < text.length && (!foundStart || !foundEnd); i++) {
+        const ch = text[i]
+        const isWs = /\s/.test(ch)
+
+        if (isWs) {
+          if (!prevWasWs) {
+            // This whitespace sequence counts as one in normalized text
+            if (!foundStart && normPos === matchIndex) {
+              startNode = nodeInfo.node
+              startOffset = i
+              foundStart = true
+            }
+            if (!foundEnd && normPos === endPos) {
+              endNode = nodeInfo.node
+              endOffset = i
+              foundEnd = true
+            }
+            normPos++
+          }
+          prevWasWs = true
+        } else {
+          if (!foundStart && normPos === matchIndex) {
+            startNode = nodeInfo.node
+            startOffset = i
+            foundStart = true
+          }
+          normPos++
+          if (!foundEnd && normPos === endPos) {
+            endNode = nodeInfo.node
+            endOffset = i + 1 // end after this character
+            foundEnd = true
+          }
+          prevWasWs = false
         }
-        // Move past the last whitespace character
-        i++
-        normPos++
-      } else {
-        // Non-whitespace character maps directly
-        posMap[normPos] = i
-        i++
-        normPos++
       }
+      if (foundStart && foundEnd) break
     }
-    
-    // Add final position for end-of-text
-    posMap[normPos] = combinedText.length
-    
-    // Map the match indices
-    if (matchIndex < 0 || matchIndex >= posMap.length) {
-      console.warn('Start index out of bounds:', { matchIndex, posMapLength: posMap.length })
+
+    if (!foundStart || !foundEnd || !startNode || !endNode) {
+      console.warn('Failed to map normalized positions to nodes', { matchIndex, endPos, normPos })
       return false
     }
-    startIndex = posMap[matchIndex]
-    
-    const endPos = matchIndex + searchFor.length
-    if (endPos < 0 || endPos >= posMap.length) {
-      console.warn('End index out of bounds:', { endPos, posMapLength: posMap.length })
-      return false
-    }
-    endIndex = posMap[endPos]
-    
-    // Validate we got valid positions
+
+    // Set indices relative to combinedText by reconstructing start/end using nodeMap
+    const startNodeInfo = nodeMap.find(n => n.node === startNode)!
+    const endNodeInfo = nodeMap.find(n => n.node === endNode)!
+    startIndex = startNodeInfo.start + startOffset
+    endIndex = endNodeInfo.start + endOffset
+
     if (startIndex < 0 || endIndex <= startIndex || endIndex > combinedText.length) {
-      console.warn('Could not map normalized positions:', { 
-        matchIndex, 
-        searchForLength: searchFor.length,
-        startIndex,
-        endIndex,
-        combinedTextLength: combinedText.length 
-      })
+      console.warn('Mapped indices invalid', { startIndex, endIndex, combinedTextLength: combinedText.length })
       return false
     }
   }
