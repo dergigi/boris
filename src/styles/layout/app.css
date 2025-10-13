@@ -123,8 +123,9 @@
   .pane.main { 
     grid-column: 1; 
     grid-row: 1; 
-    padding: 0.5rem; 
+    padding: 0; 
     max-width: 100%; 
+    width: 100%;
     transition: opacity 0.2s ease;
   }
   /* Hide main content when sidepanes are open on mobile */
