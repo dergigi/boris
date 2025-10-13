@@ -314,9 +314,12 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         </CompactButton>
       </div>
       
-      <div className="highlight-quote-icon">
-        <FontAwesomeIcon icon={faQuoteLeft} />
-      </div>
+      <CompactButton
+        className="highlight-quote-button"
+        icon={faQuoteLeft}
+        title="Quote"
+        onClick={(e) => e.stopPropagation()}
+      />
       
       {/* relay indicator lives in footer for consistent padding/alignment */}
       
