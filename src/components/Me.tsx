@@ -23,6 +23,7 @@ import { getCachedMeData, setCachedMeData, updateCachedHighlights } from '../ser
 import { faBooks } from '../icons/customIcons'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from './PullToRefreshIndicator'
+import { getProfileUrl } from '../config/nostrGateways'
 
 interface MeProps {
   relayPool: RelayPool
@@ -311,7 +312,24 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       case 'writings':
         return writings.length === 0 ? (
           <div className="explore-empty">
-            <p>No articles written yet. Publish your first article to see it here!</p>
+            <p>
+              {isOwnProfile 
+                ? 'No articles written yet. Publish your first article to see it here!'
+                : (
+                  <>
+                    No articles written. You can find other stuff from this user using{' '}
+                    <a 
+                      href={viewingPubkey ? getProfileUrl(nip19.npubEncode(viewingPubkey)) : '#'} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ color: 'rgb(99 102 241)', textDecoration: 'underline' }}
+                    >
+                      ants
+                    </a>
+                    .
+                  </>
+                )}
+            </p>
           </div>
         ) : (
           <div className="explore-grid">
