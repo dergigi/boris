@@ -74,6 +74,13 @@ export function tryMarkInTextNodes(
     const before = text.substring(0, actualIndex)
     const match = text.substring(actualIndex, actualIndex + searchText.length)
     const after = text.substring(actualIndex + searchText.length)
+    
+    // Validate the match makes sense (not just whitespace or empty)
+    if (!match || match.trim().length === 0) {
+      console.warn('Invalid match (empty or whitespace only)')
+      continue
+    }
+    
     const mark = createMarkElement(highlight, match, highlightStyle)
     
     replaceTextWithMark(textNode, before, after, mark)
@@ -199,6 +206,24 @@ function tryMultiNodeMatch(
     // Verify the range isn't collapsed or invalid
     if (range.collapsed) {
       console.warn('Range is collapsed, skipping highlight')
+      return false
+    }
+    
+    // Get the text content before extraction to verify it matches
+    const rangeText = range.toString()
+    const normalizedRangeText = normalizeWhitespace(rangeText)
+    const normalizedSearchText = normalizeWhitespace(searchText)
+    
+    // Validate that the extracted text matches what we're searching for
+    if (!rangeText.includes(searchText) && 
+        !normalizedRangeText.includes(normalizedSearchText) &&
+        normalizedRangeText !== normalizedSearchText) {
+      console.warn('Range text does not match search text:', {
+        rangeText: rangeText.substring(0, 100),
+        searchText: searchText.substring(0, 100),
+        rangeLength: rangeText.length,
+        searchLength: searchText.length
+      })
       return false
     }
     
