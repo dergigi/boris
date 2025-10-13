@@ -134,7 +134,7 @@
 .highlight-item.level-friends .highlight-quote-icon { color: var(--highlight-color-friends, #f97316); }
 .highlight-item.level-nostrverse .highlight-quote-icon { color: var(--highlight-color-nostrverse, #9333ea); }
 
-.highlight-content { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
+.highlight-content { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; padding-right: 3.5rem; }
 .highlight-text { margin: 0; padding: 0; font-style: italic; color: #ddd; line-height: 1.6; border-left: none; font-size: 0.95rem; }
 .highlight-comment { margin-top: 0.5rem; padding: 0.75rem; background: rgba(100, 108, 255, 0.1); border-left: 3px solid #646cff; border-radius: 4px; font-size: 0.875rem; color: #ddd; line-height: 1.5; }
 
