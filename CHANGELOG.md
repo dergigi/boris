@@ -7,24 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-10-13
+
 ### Added
 
-- Tailwind CSS integration with preflight enabled
+- Tailwind CSS v4 integration with preflight enabled
 - Reading position tracking with visual progress indicator
 - Document-level scrolling with sticky sidebars on desktop
+- Dedicated legacy styles file for better organization
 
 ### Changed
 
 - Refactored layout system to use document scroll instead of pane scroll
 - Migrated reading progress indicator to Tailwind utilities
+- Migrated mobile buttons to Tailwind utilities
 - Simplified global CSS to work with Tailwind preflight
-- Added CSS variables for user-settable theme colors
+- Updated PostCSS configuration for Tailwind v4
+- Reconciled base styles with Tailwind preflight
+- Reorganized and cleaned up duplicate styles in index.css
+- Made reading progress indicator smaller and more subtle
 
 ### Fixed
 
 - Reading position indicator now always visible at bottom of screen
 - Progress tracking now accurately reflects reading position
 - Scroll behavior consistent across desktop and mobile
+- Removed padding on mobile main pane for edge-to-edge content
+- Removed mobile content pane gap for better layout
+- Document scroll with important overrides for consistent behavior
 
 ## [0.5.7] - 2025-01-14
 
