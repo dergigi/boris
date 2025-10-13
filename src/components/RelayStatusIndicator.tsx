@@ -114,18 +114,43 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({
       </div>
       {showDetails && (
         <>
-          <div className="relay-status-text">
+          <div 
+            className="relay-status-text"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.125rem'
+            }}
+          >
             {isConnecting ? (
               <span className="relay-status-title">Connecting</span>
             ) : offlineMode ? (
               <>
                 <span className="relay-status-title">Offline</span>
-                <span className="relay-status-subtitle">No relays connected</span>
+                <span 
+                  className="relay-status-subtitle"
+                  style={{
+                    fontSize: '0.75rem',
+                    opacity: 0.7,
+                    fontWeight: 400
+                  }}
+                >
+                  No relays connected
+                </span>
               </>
             ) : (
               <>
                 <span className="relay-status-title">Flight Mode</span>
-                <span className="relay-status-subtitle">{connectedUrls.length} local relay{connectedUrls.length !== 1 ? 's' : ''}</span>
+                <span 
+                  className="relay-status-subtitle"
+                  style={{
+                    fontSize: '0.75rem',
+                    opacity: 0.7,
+                    fontWeight: 400
+                  }}
+                >
+                  {connectedUrls.length} local relay{connectedUrls.length !== 1 ? 's' : ''}
+                </span>
               </>
             )}
           </div>
