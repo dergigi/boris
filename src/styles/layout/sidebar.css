@@ -48,46 +48,13 @@
   margin-left: auto;
 }
 
-.mobile-hamburger-btn {
-  display: none;
-  position: fixed;
-  top: calc(1rem + env(safe-area-inset-top));
-  left: calc(1rem + env(safe-area-inset-left));
-  z-index: 900;
-  background: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 8px;
-  color: #ddd;
-  width: var(--min-touch-target);
-  height: var(--min-touch-target);
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease, opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.mobile-hamburger-btn.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.mobile-hamburger-btn.visible {
-  opacity: 1;
-  visibility: visible;
-}
-
-.mobile-hamburger-btn:active {
-  transform: scale(0.95);
-}
+/* Mobile hamburger button now uses Tailwind utilities in ThreePaneLayout */
 
 .mobile-close-btn {
   display: none;
 }
 
 @media (max-width: 768px) {
-  .mobile-hamburger-btn { display: flex; }
   .sidebar-header-bar .toggle-sidebar-btn { display: none; }
   .mobile-close-btn { display: flex; }
 }

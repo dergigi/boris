@@ -124,40 +124,7 @@
   }
   /* Hide main content when sidepanes are open on mobile */
   .three-pane .pane.main.mobile-hidden { opacity: 0; pointer-events: none; }
-  .mobile-sidebar-backdrop {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.45);
-    z-index: 999; /* Below sidepanes */
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  .mobile-sidebar-backdrop.visible { display: block; opacity: 1; }
-  .mobile-highlights-btn {
-    display: none;
-    position: fixed;
-    top: calc(1rem + env(safe-area-inset-top));
-    right: calc(1rem + env(safe-area-inset-right));
-    z-index: 900;
-    background: #2a2a2a;
-    border: 1px solid #444;
-    border-radius: 8px;
-    color: #ddd;
-    width: var(--min-touch-target);
-    height: var(--min-touch-target);
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s ease, opacity 0.3s ease, visibility 0.3s ease;
-  }
-  .mobile-highlights-btn.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-  .mobile-highlights-btn.visible { opacity: 1; visibility: visible; }
-  @media (max-width: 768px) { .mobile-highlights-btn { display: flex; } }
+  /* Mobile buttons and backdrop now use Tailwind utilities in component */
 }
 
 
