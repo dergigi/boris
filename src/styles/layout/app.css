@@ -53,16 +53,10 @@
 .pane.main {
   overflow-y: auto;
   height: 100%;
-  max-width: var(--main-max-width);
   margin: 0 auto;
   padding: 0 var(--main-horizontal-padding);
   overflow-x: hidden;
   contain: layout style;
-}
-
-/* When the reader contains a video, let the main pane use full available width */
-.pane.main:has(.reader-video) {
-  max-width: none;
 }
 
 /* Remove padding when sidebar is collapsed for zero gap */

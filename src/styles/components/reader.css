@@ -1,5 +1,20 @@
 /* Reader view */
-.reader { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 0.75rem; text-align: left; overflow: hidden; contain: layout style; }
+.reader { 
+  background: #1a1a1a; 
+  border: 1px solid #333; 
+  border-radius: 8px; 
+  padding: 0.75rem; 
+  text-align: left; 
+  overflow: hidden; 
+  contain: layout style;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Wider reader for videos */
+.reader:has(.reader-video) {
+  max-width: 100%;
+}
 /* Video container in reader - break out of padding to use full width */
 .reader-video { 
   width: 100%;
