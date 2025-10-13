@@ -147,7 +147,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }
 
     checkReadStatus()
-  }, [selectedUrl, currentArticle?.id, activeAccount, relayPool, isNostrArticle])
+  }, [selectedUrl, currentArticle, activeAccount, relayPool, isNostrArticle])
   
   const handleMarkAsRead = () => {
     if (!activeAccount || !relayPool || isMarkedAsRead) {
