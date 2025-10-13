@@ -4,6 +4,8 @@
 body {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 body.mobile-sidebar-open {

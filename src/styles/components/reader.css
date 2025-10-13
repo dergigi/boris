@@ -139,6 +139,34 @@
 .reader-html pre { background: rgb(30 30 30); /* ~zinc-850 */ border: 1px solid rgb(63 63 70); /* zinc-700 */ border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 1rem 0; font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace; }
 .reader-html code { background: rgb(30 30 30); /* ~zinc-850 */ border: 1px solid rgb(63 63 70); /* zinc-700 */ border-radius: 4px; padding: 0.15rem 0.4rem; font-size: 0.9em; font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace; }
 .reader-html pre code { background: transparent; border: none; padding: 0; display: block; }
+/* Mobile: prevent code blocks from causing horizontal overflow */
+@media (max-width: 768px) {
+  .reader-markdown pre, .reader-html pre {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .reader-markdown code, .reader-html code {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Also handle tables and other wide elements */
+  .reader-markdown table, .reader-html table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  
+  .reader-markdown img, .reader-html img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
 /* Desktop: increase horizontal padding for text content */
 @media (min-width: 769px) {
   .reader-html, .reader-markdown {
