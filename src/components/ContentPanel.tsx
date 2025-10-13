@@ -30,6 +30,7 @@ import {
 } from '../services/reactionService'
 import AuthorCard from './AuthorCard'
 import { faBooks } from '../icons/customIcons'
+import { extractYouTubeId, getYouTubeMeta } from '../services/youtubeMetaService'
 import { classifyUrl } from '../utils/helpers'
 import { buildNativeVideoUrl } from '../utils/videoHelpers'
 
@@ -92,6 +93,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const [showVideoMenu, setShowVideoMenu] = useState(false)
   const articleMenuRef = useRef<HTMLDivElement>(null)
   const videoMenuRef = useRef<HTMLDivElement>(null)
+  const [ytMeta, setYtMeta] = useState<{ title?: string; description?: string; transcript?: string } | null>(null)
+  const [showTranscript, setShowTranscript] = useState(false)
   const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef, processedMarkdown } = useMarkdownToHTML(markdown, relayPool)
   
   const { finalHtml, relevantHighlights } = useHighlightedContent({
@@ -149,6 +152,21 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Track external video duration (in seconds) for display in header
   const [videoDurationSec, setVideoDurationSec] = useState<number | null>(null)
+  // Load YouTube metadata/captions when applicable
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!selectedUrl) return setYtMeta(null)
+        const id = extractYouTubeId(selectedUrl)
+        if (!id) return setYtMeta(null)
+        const locale = navigator?.language?.split('-')[0] || 'en'
+        const data = await getYouTubeMeta(id, locale)
+        if (data) setYtMeta({ title: data.title, description: data.description, transcript: data.transcript })
+      } catch {
+        setYtMeta(null)
+      }
+    })()
+  }, [selectedUrl])
 
   const formatDuration = (totalSeconds: number): string => {
     const hours = Math.floor(totalSeconds / 3600)
@@ -367,9 +385,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       )}
       
       <ReaderHeader 
-        title={title}
+        title={ytMeta?.title || title}
         image={image}
-        summary={summary}
+        summary={ytMeta?.description || summary}
         published={published}
         readingTimeText={isExternalVideo ? (videoDurationSec !== null ? formatDuration(videoDurationSec) : null) : (readingStats ? readingStats.text : null)}
         hasHighlights={hasHighlights}
@@ -390,6 +408,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               onDuration={(d) => setVideoDurationSec(Math.floor(d))}
             />
           </div>
+          {ytMeta?.transcript && (
+            <div style={{ padding: '0 0.75rem' }}>
+              <button className="article-menu-btn" onClick={() => setShowTranscript(v => !v)} title="Toggle transcript">
+                Transcript {showTranscript ? '▲' : '▼'}
+              </button>
+              {showTranscript && (
+                <div className="large-text" style={{ whiteSpace: 'pre-wrap', color: '#ddd', marginTop: '0.5rem' }}>
+                  {ytMeta.transcript}
+                </div>
+              )}
+            </div>
+          )}
           <div className="article-menu-container">
             <div className="article-menu-wrapper" ref={videoMenuRef}>
               <button
