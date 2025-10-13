@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faExclamationCircle, faHighlighter, faBookmark } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faExclamationCircle, faHighlighter, faBookmark, faList, faThLarge, faImage } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
@@ -10,9 +10,13 @@ import { fetchHighlights } from '../services/highlightService'
 import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchReadArticlesWithData } from '../services/libraryService'
 import { BlogPostPreview } from '../services/exploreService'
-import { Bookmark } from '../types/bookmarks'
+import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import AuthorCard from './AuthorCard'
 import BlogPostCard from './BlogPostCard'
+import { BookmarkItem } from './BookmarkItem'
+import IconButton from './IconButton'
+import { ViewMode } from './Bookmarks'
+import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { faBooks } from '../icons/customIcons'
 
 interface MeProps {
@@ -29,6 +33,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
   const [readArticles, setReadArticles] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<ViewMode>('cards')
 
   useEffect(() => {
     const loadData = async () => {
@@ -83,6 +88,28 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
     return `/a/${naddr}`
   }
 
+  // Helper to check if a bookmark has either content or a URL (same logic as BookmarkList)
+  const hasContentOrUrl = (ib: IndividualBookmark) => {
+    const hasContent = ib.content && ib.content.trim().length > 0
+    
+    let hasUrl = false
+    if (ib.kind === 39701) {
+      const dTag = ib.tags?.find((t: string[]) => t[0] === 'd')?.[1]
+      hasUrl = !!dTag && dTag.trim().length > 0
+    } else {
+      const urls = extractUrlsFromContent(ib.content || '')
+      hasUrl = urls.length > 0
+    }
+    
+    if (ib.kind === 30023) return true
+    return hasContent || hasUrl
+  }
+
+  // Merge and flatten all individual bookmarks (same logic as BookmarkList)
+  const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
+    .filter(hasContentOrUrl)
+    .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
+
   if (loading) {
     return (
       <div className="explore-container">
@@ -125,20 +152,52 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
         )
 
       case 'reading-list':
-        return bookmarks.length === 0 ? (
+        return allIndividualBookmarks.length === 0 ? (
           <div className="explore-error">
             <p>No bookmarks yet. Bookmark articles to see them here!</p>
           </div>
         ) : (
           <div className="bookmarks-list">
-            {bookmarks.map((bookmark) => (
-              <div key={bookmark.id} className="bookmark-item">
-                <a href={bookmark.url} target="_blank" rel="noopener noreferrer">
-                  <h3>{bookmark.title || 'Untitled'}</h3>
-                  {bookmark.content && <p>{bookmark.content.slice(0, 150)}...</p>}
-                </a>
-              </div>
-            ))}
+            <div className={`bookmarks-grid bookmarks-${viewMode}`}>
+              {allIndividualBookmarks.map((individualBookmark, index) => (
+                <BookmarkItem
+                  key={`${individualBookmark.id}-${index}`}
+                  bookmark={individualBookmark}
+                  index={index}
+                  viewMode={viewMode}
+                />
+              ))}
+            </div>
+            <div className="view-mode-controls" style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              padding: '1rem',
+              marginTop: '1rem',
+              borderTop: '1px solid var(--border-color)'
+            }}>
+              <IconButton
+                icon={faList}
+                onClick={() => setViewMode('compact')}
+                title="Compact list view"
+                ariaLabel="Compact list view"
+                variant={viewMode === 'compact' ? 'primary' : 'ghost'}
+              />
+              <IconButton
+                icon={faThLarge}
+                onClick={() => setViewMode('cards')}
+                title="Cards view"
+                ariaLabel="Cards view"
+                variant={viewMode === 'cards' ? 'primary' : 'ghost'}
+              />
+              <IconButton
+                icon={faImage}
+                onClick={() => setViewMode('large')}
+                title="Large preview view"
+                ariaLabel="Large preview view"
+                variant={viewMode === 'large' ? 'primary' : 'ghost'}
+              />
+            </div>
           </div>
         )
 
@@ -184,7 +243,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
             onClick={() => setActiveTab('reading-list')}
           >
             <FontAwesomeIcon icon={faBookmark} />
-            Reading List ({bookmarks.length})
+            Reading List ({allIndividualBookmarks.length})
           </button>
           <button
             className={`me-tab ${activeTab === 'archive' ? 'active' : ''}`}
