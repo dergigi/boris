@@ -128,7 +128,12 @@
 
 .highlight-content { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; padding: 2.25rem 0.75rem; }
 .highlight-text { margin: 0; padding: 0; font-style: italic; color: rgb(228 228 231); /* zinc-200 */ line-height: 1.6; border-left: none; font-size: 0.95rem; }
-.highlight-comment { margin-top: 0.5rem; padding: 0.75rem; background: rgba(99, 102, 241, 0.1); border-left: 3px solid rgb(99 102 241); /* indigo-500 */ border-radius: 4px; font-size: 0.875rem; color: rgb(228 228 231); /* zinc-200 */ line-height: 1.5; }
+.highlight-comment { margin-top: 0.5rem; padding: 0.75rem; border-left: 3px solid; border-radius: 4px; font-size: 0.875rem; color: rgb(228 228 231); /* zinc-200 */ line-height: 1.5; }
+
+/* Level-colored comments */
+.highlight-item.level-mine .highlight-comment { background: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 10%, transparent); border-left-color: var(--highlight-color-mine, #ffff00); }
+.highlight-item.level-friends .highlight-comment { background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 10%, transparent); border-left-color: var(--highlight-color-friends, #f97316); }
+.highlight-item.level-nostrverse .highlight-comment { background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 10%, transparent); border-left-color: var(--highlight-color-nostrverse, #9333ea); }
 
 .highlight-footer { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 0.25rem 0.5rem; font-size: 0.8rem; color: rgb(161 161 170); /* zinc-400 */ border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; transition: border-color 0.2s ease; }
 .highlight-footer-left { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
