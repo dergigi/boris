@@ -54,6 +54,10 @@
   width: 100%;
 }
 
+/* Align highlight list width with profile card width on /me */
+.me-highlights-list { padding-left: 0; padding-right: 0; }
+.explore-header .author-card { max-width: 600px; margin: 0 auto; width: 100%; }
+
 /* Bookmarks list */
 .bookmarks-list {
   display: flex;
