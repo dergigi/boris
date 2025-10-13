@@ -169,7 +169,12 @@
 
 /* Desktop: increase horizontal padding for text content */
 @media (min-width: 769px) {
-  .reader-html, .reader-markdown {
+  .reader-header,
+  .reader-summary-below-image,
+  .reader-html, 
+  .reader-markdown,
+  .article-menu-container,
+  .mark-as-read-container {
     padding-left: 2rem;
     padding-right: 2rem;
   }
