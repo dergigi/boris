@@ -8,7 +8,7 @@
   overflow: hidden; 
   max-width: 900px;
   margin: 0 auto;
-  padding-bottom: 4rem; /* Add space for progress indicator */
+  padding-bottom: 2rem; /* Add space for progress indicator */
 }
 
 /* Video container - responsive wrapper following react-player docs */
