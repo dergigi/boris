@@ -3,10 +3,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #444;
+  border: 1px solid rgb(82 82 91); /* zinc-600 */
   border-radius: 6px;
-  background: #2a2a2a;
-  color: #ddd;
+  background: rgb(39 39 42); /* zinc-800 */
+  color: rgb(228 228 231); /* zinc-200 */
   cursor: pointer;
   min-width: 33px;
   min-height: 33px;
@@ -14,16 +14,16 @@
   box-sizing: border-box;
 }
 
-.icon-button:hover { background: #333; }
+.icon-button:hover { background: rgb(63 63 70); /* zinc-700 */ }
 .icon-button:active { transform: translateY(1px); }
 
-.icon-button.primary { background: #646cff; color: white; border-color: #646cff; }
+.icon-button.primary { background: rgb(99 102 241); /* indigo-500 */ color: white; border-color: rgb(99 102 241); /* indigo-500 */ }
 .icon-button.primary:hover { filter: brightness(1.05); }
 
-.icon-button.success { background: #646cff; color: white; border-color: #646cff; }
+.icon-button.success { background: rgb(99 102 241); /* indigo-500 */ color: white; border-color: rgb(99 102 241); /* indigo-500 */ }
 .icon-button.success:hover { filter: brightness(1.1); }
 
-.icon-button.ghost { background: #2a2a2a; }
+.icon-button.ghost { background: rgb(39 39 42); /* zinc-800 */ }
 
 /* Mobile touch target improvements */
 @media (max-width: 768px) {
@@ -42,9 +42,9 @@
 
 /* Disable hover effects on touch devices */
 @media (pointer: coarse) {
-  .icon-button:hover { background: #2a2a2a; }
-  .icon-button.ghost:hover { background: #2a2a2a; }
-  .icon-button:active { background: #333; }
+  .icon-button:hover { background: rgb(39 39 42); /* zinc-800 */ }
+  .icon-button.ghost:hover { background: rgb(39 39 42); /* zinc-800 */ }
+  .icon-button:active { background: rgb(63 63 70); /* zinc-700 */ }
 }
 
 
