@@ -1,27 +1,37 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faExclamationCircle, faHighlighter } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faExclamationCircle, faHighlighter, faBookmark, faBook } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
+import { fetchBookmarks } from '../services/bookmarkService'
+import { fetchReadArticles, ReadArticle } from '../services/libraryService'
+import { Bookmark } from '../types/bookmarks'
 import AuthorCard from './AuthorCard'
+import { useSettings } from '../hooks/useSettings'
 
 interface MeProps {
   relayPool: RelayPool
 }
 
+type TabType = 'highlights' | 'reading-list' | 'library'
+
 const Me: React.FC<MeProps> = ({ relayPool }) => {
   const activeAccount = Hooks.useActiveAccount()
+  const settings = useSettings()
+  const [activeTab, setActiveTab] = useState<TabType>('highlights')
   const [highlights, setHighlights] = useState<Highlight[]>([])
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
+  const [readArticles, setReadArticles] = useState<ReadArticle[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const loadHighlights = async () => {
+    const loadData = async () => {
       if (!activeAccount) {
-        setError('Please log in to view your highlights')
+        setError('Please log in to view your data')
         setLoading(false)
         return
       }
@@ -30,30 +40,28 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
         setLoading(true)
         setError(null)
 
-        // Fetch highlights created by the user
-        const userHighlights = await fetchHighlights(
-          relayPool,
-          activeAccount.pubkey
-        )
-
-        if (userHighlights.length === 0) {
-          setError('No highlights yet. Start highlighting content to see them here!')
-        }
+        // Fetch all data in parallel
+        const [userHighlights, userBookmarks, userReadArticles] = await Promise.all([
+          fetchHighlights(relayPool, activeAccount.pubkey),
+          fetchBookmarks(relayPool, activeAccount, settings).catch(() => ({ bookmarks: [] })),
+          fetchReadArticles(relayPool, activeAccount.pubkey)
+        ])
 
         setHighlights(userHighlights)
+        setBookmarks(Array.isArray(userBookmarks) ? userBookmarks : userBookmarks?.bookmarks || [])
+        setReadArticles(userReadArticles)
       } catch (err) {
-        console.error('Failed to load highlights:', err)
-        setError('Failed to load highlights. Please try again.')
+        console.error('Failed to load data:', err)
+        setError('Failed to load data. Please try again.')
       } finally {
         setLoading(false)
       }
     }
 
-    loadHighlights()
-  }, [relayPool, activeAccount])
+    loadData()
+  }, [relayPool, activeAccount, settings])
 
   const handleHighlightDelete = (highlightId: string) => {
-    // Remove highlight from local state
     setHighlights(prev => prev.filter(h => h.id !== highlightId))
   }
 
@@ -78,23 +86,107 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
     )
   }
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'highlights':
+        return highlights.length === 0 ? (
+          <div className="explore-error">
+            <p>No highlights yet. Start highlighting content to see them here!</p>
+          </div>
+        ) : (
+          <div className="highlights-list me-highlights-list">
+            {highlights.map((highlight) => (
+              <HighlightItem
+                key={highlight.id}
+                highlight={{ ...highlight, level: 'mine' }}
+                relayPool={relayPool}
+                onHighlightDelete={handleHighlightDelete}
+              />
+            ))}
+          </div>
+        )
+
+      case 'reading-list':
+        return bookmarks.length === 0 ? (
+          <div className="explore-error">
+            <p>No bookmarks yet. Bookmark articles to see them here!</p>
+          </div>
+        ) : (
+          <div className="bookmarks-list">
+            {bookmarks.map((bookmark) => (
+              <div key={bookmark.id} className="bookmark-item">
+                <a href={bookmark.url} target="_blank" rel="noopener noreferrer">
+                  <h3>{bookmark.title || 'Untitled'}</h3>
+                  {bookmark.content && <p>{bookmark.content.slice(0, 150)}...</p>}
+                </a>
+              </div>
+            ))}
+          </div>
+        )
+
+      case 'library':
+        return readArticles.length === 0 ? (
+          <div className="explore-error">
+            <p>No read articles yet. Mark articles as read to see them here!</p>
+          </div>
+        ) : (
+          <div className="library-list">
+            {readArticles.map((article) => (
+              <div key={article.reactionId} className="library-item">
+                <p>
+                  {article.url ? (
+                    <a href={article.url} target="_blank" rel="noopener noreferrer">
+                      {article.url}
+                    </a>
+                  ) : (
+                    `Event: ${article.eventId?.slice(0, 12)}...`
+                  )}
+                </p>
+                <small>
+                  Marked as read: {new Date(article.markedAt * 1000).toLocaleDateString()}
+                </small>
+              </div>
+            ))}
+          </div>
+        )
+
+      default:
+        return null
+    }
+  }
+
   return (
     <div className="explore-container">
       <div className="explore-header">
         {activeAccount && <AuthorCard authorPubkey={activeAccount.pubkey} />}
-        <p className="explore-subtitle">
-          <FontAwesomeIcon icon={faHighlighter} /> {highlights.length} highlight{highlights.length !== 1 ? 's' : ''}
-        </p>
+        
+        <div className="me-tabs">
+          <button
+            className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
+            onClick={() => setActiveTab('highlights')}
+          >
+            <FontAwesomeIcon icon={faHighlighter} />
+            Highlights ({highlights.length})
+          </button>
+          <button
+            className={`me-tab ${activeTab === 'reading-list' ? 'active' : ''}`}
+            onClick={() => setActiveTab('reading-list')}
+          >
+            <FontAwesomeIcon icon={faBookmark} />
+            Reading List ({bookmarks.length})
+          </button>
+          <button
+            className={`me-tab ${activeTab === 'library' ? 'active' : ''}`}
+            onClick={() => setActiveTab('library')}
+          >
+            <FontAwesomeIcon icon={faBook} />
+            Library ({readArticles.length})
+          </button>
+        </div>
       </div>
-      <div className="highlights-list me-highlights-list">
-        {highlights.map((highlight) => (
-          <HighlightItem
-            key={highlight.id}
-            highlight={{ ...highlight, level: 'mine' }}
-            relayPool={relayPool}
-            onHighlightDelete={handleHighlightDelete}
-          />
-        ))}
+
+      <div className="me-tab-content">
+        {renderTabContent()}
       </div>
     </div>
   )
