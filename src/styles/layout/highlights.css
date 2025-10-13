@@ -131,7 +131,7 @@
 .highlight-item.level-nostrverse .highlight-footer { border-color: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 60%, #333); }
 
 .highlight-quote-icon { position: absolute; top: 0.5rem; left: 1rem; color: #646cff; font-size: 0.85rem; opacity: 0.7; z-index: 10; }
-.highlight-relay-indicator { opacity: 0.7; flex-shrink: 0; }
+.highlight-relay-indicator { flex-shrink: 0; }
 .highlight-relay-indicator:hover { opacity: 1; }
 
 /* Mobile: Larger touch targets and better spacing */
