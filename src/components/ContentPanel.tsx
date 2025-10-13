@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons'
 import { RelayPool } from 'applesauce-relay'
@@ -216,7 +217,25 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       {/* Hidden markdown preview to convert markdown to HTML */}
       {markdown && (
         <div ref={markdownPreviewRef} style={{ display: 'none' }}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          <ReactMarkdown 
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw]}
+            components={{
+              img: ({ src, alt, ...props }) => (
+                <img 
+                  src={src} 
+                  alt={alt} 
+                  {...props}
+                  style={{ 
+                    maxWidth: '100%', 
+                    height: 'auto',
+                    display: 'block',
+                    margin: '1rem auto'
+                  }}
+                />
+              )
+            }}
+          >
             {processedMarkdown || markdown}
           </ReactMarkdown>
         </div>
