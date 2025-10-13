@@ -100,7 +100,7 @@
 @media (max-width: 768px) {
   /* Add top breathing room so floating sidebar buttons don't overlap header */
   .explore-container .explore-header { 
-    margin-top: 2.25rem; 
+    margin-top: 3.5rem; 
   }
 
   .me-tabs {
