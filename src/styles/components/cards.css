@@ -77,9 +77,10 @@
 .explore-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem; margin-top: 2rem; }
 .blog-post-card { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; overflow: hidden; transition: all 0.3s ease; cursor: pointer; display: flex; flex-direction: column; height: 100%; }
 .blog-post-card:hover { border-color: #646cff; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(100, 108, 255, 0.15); }
-.blog-post-card-image { width: 100%; height: 200px; overflow: hidden; background: #0f0f0f; }
+.blog-post-card-image { width: 100%; height: 200px; overflow: hidden; background: #0f0f0f; display: flex; align-items: center; justify-content: center; }
 .blog-post-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
 .blog-post-card:hover .blog-post-card-image img { transform: scale(1.05); }
+.blog-post-image-placeholder { font-size: 3rem; color: #444; display: flex; align-items: center; justify-content: center; }
 .blog-post-card-content { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; flex: 1; }
 .blog-post-card-title { font-size: 1.25rem; font-weight: 600; margin: 0; color: rgba(255, 255, 255, 0.95); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .blog-post-card-summary { font-size: 0.875rem; color: rgba(255, 255, 255, 0.6); margin: 0; line-height: 1.6; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; flex: 1; }

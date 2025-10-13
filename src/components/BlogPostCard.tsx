@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCalendar, faUser } from '@fortawesome/free-solid-svg-icons'
+import { faCalendar, faUser, faNewspaper } from '@fortawesome/free-solid-svg-icons'
 import { formatDistance } from 'date-fns'
 import { BlogPostPreview } from '../services/exploreService'
 import { useEventModel } from 'applesauce-react/hooks'
@@ -28,15 +28,19 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href }) => {
       className="blog-post-card"
       style={{ textDecoration: 'none', color: 'inherit' }}
     >
-      {post.image && (
-        <div className="blog-post-card-image">
+      <div className="blog-post-card-image">
+        {post.image ? (
           <img 
             src={post.image} 
             alt={post.title}
             loading="lazy"
           />
-        </div>
-      )}
+        ) : (
+          <div className="blog-post-image-placeholder">
+            <FontAwesomeIcon icon={faNewspaper} />
+          </div>
+        )}
+      </div>
       <div className="blog-post-card-content">
         <h3 className="blog-post-card-title">{post.title}</h3>
         {post.summary && (
