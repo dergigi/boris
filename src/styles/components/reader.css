@@ -10,21 +10,12 @@
   margin: 0 auto;
 }
 
-/* Video container - simple responsive wrapper */
+/* Video container - responsive wrapper following react-player docs */
 .reader-video { 
-  width: 100%;
-  aspect-ratio: 16 / 9;
   position: relative;
-  background: #000;
+  padding-top: 56.25%; /* 16:9 aspect ratio */
   margin-bottom: 1rem;
-}
-/* Make ReactPlayer fill the aspect ratio container */
-.reader-video > div {
-  position: absolute !important;
-  top: 0;
-  left: 0;
-  width: 100% !important;
-  height: 100% !important;
+  background: #000;
 }
 .reader.empty { color: #888; }
 .loading-spinner { display: flex; align-items: center; gap: 0.5rem; color: #888; }
