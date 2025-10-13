@@ -14,7 +14,6 @@ const PullToRefreshIndicator: React.FC<PullToRefreshIndicatorProps> = ({
   isPulling,
   pullDistance,
   canRefresh,
-  isRefreshing,
   threshold = 80
 }) => {
   // Only show when actively pulling, not when refreshing
