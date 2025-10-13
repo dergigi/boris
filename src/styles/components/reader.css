@@ -6,25 +6,19 @@
   padding: 0.75rem; 
   text-align: left; 
   overflow: hidden; 
-  contain: layout style;
   max-width: 900px;
   margin: 0 auto;
 }
 
-/* Wider reader for videos */
-.reader:has(.reader-video) {
-  max-width: 100%;
-}
-/* Video container in reader - break out of padding to use full width */
+/* Video container - simple responsive wrapper */
 .reader-video { 
   width: 100%;
-  margin: -0.75rem -0.75rem 1rem -0.75rem; 
-  border-radius: 0;
-  overflow: hidden;
-  position: relative;
   aspect-ratio: 16 / 9;
+  position: relative;
+  background: #000;
+  margin-bottom: 1rem;
 }
-/* Make ReactPlayer fill the container */
+/* Make ReactPlayer fill the aspect ratio container */
 .reader-video > div {
   position: absolute !important;
   top: 0;
