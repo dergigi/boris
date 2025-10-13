@@ -224,42 +224,42 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
       {/* Mobile bookmark button - only show when viewing article */}
       {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
         <button
-          className={`fixed z-[900] bg-[#2a2a2a] border border-[#444] rounded-lg text-[#ddd] flex items-center justify-center transition-all duration-300 active:scale-95 md:hidden ${
-            showMobileButtons ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+          className={`fixed z-[900] bg-[#2a2a2a]/70 border border-[#444]/40 rounded-lg text-[#ddd] flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm md:hidden ${
+            showMobileButtons ? 'opacity-90 visible' : 'opacity-0 invisible pointer-events-none'
           }`}
           style={{
             top: 'calc(1rem + env(safe-area-inset-top))',
             left: 'calc(1rem + env(safe-area-inset-left))',
-            width: 'var(--min-touch-target)',
-            height: 'var(--min-touch-target)'
+            width: '40px',
+            height: '40px'
           }}
           onClick={props.onToggleSidebar}
           aria-label="Open bookmarks"
           aria-expanded={props.isSidebarOpen}
         >
-          <FontAwesomeIcon icon={faBookmark} />
+          <FontAwesomeIcon icon={faBookmark} size="sm" />
         </button>
       )}
 
       {/* Mobile highlights button - only show when viewing article */}
       {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
         <button
-          className={`fixed z-[900] border border-[#444] rounded-lg flex items-center justify-center transition-all duration-300 active:scale-95 md:hidden ${
-            showMobileButtons ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+          className={`fixed z-[900] border border-[#444]/40 rounded-lg flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm md:hidden ${
+            showMobileButtons ? 'opacity-90 visible' : 'opacity-0 invisible pointer-events-none'
           }`}
           style={{ 
             top: 'calc(1rem + env(safe-area-inset-top))',
             right: 'calc(1rem + env(safe-area-inset-right))',
-            width: 'var(--min-touch-target)',
-            height: 'var(--min-touch-target)',
-            backgroundColor: props.settings.highlightColorMine || '#ffff00',
+            width: '40px',
+            height: '40px',
+            backgroundColor: `${props.settings.highlightColorMine || '#ffff00'}B3`,
             color: '#000'
           }}
           onClick={props.onToggleHighlightsPanel}
           aria-label="Open highlights"
           aria-expanded={!props.isHighlightsCollapsed}
         >
-          <FontAwesomeIcon icon={faHighlighter} />
+          <FontAwesomeIcon icon={faHighlighter} size="sm" />
         </button>
       )}
 
