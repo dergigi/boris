@@ -171,6 +171,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
         <div className="me-tabs">
           <button
             className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
+            data-tab="highlights"
             onClick={() => setActiveTab('highlights')}
           >
             <FontAwesomeIcon icon={faHighlighter} />
@@ -178,6 +179,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
           </button>
           <button
             className={`me-tab ${activeTab === 'reading-list' ? 'active' : ''}`}
+            data-tab="reading-list"
             onClick={() => setActiveTab('reading-list')}
           >
             <FontAwesomeIcon icon={faBookmark} />
@@ -185,6 +187,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
           </button>
           <button
             className={`me-tab ${activeTab === 'library' ? 'active' : ''}`}
+            data-tab="library"
             onClick={() => setActiveTab('library')}
           >
             <FontAwesomeIcon icon={faBook} />

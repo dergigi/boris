@@ -37,6 +37,12 @@
   border-bottom-color: var(--primary-color, #8b5cf6);
 }
 
+/* Highlights tab uses the user's custom "my highlights" color */
+.me-tab[data-tab="highlights"].active {
+  color: var(--highlight-color-mine, #ffff00);
+  border-bottom-color: var(--highlight-color-mine, #ffff00);
+}
+
 .me-tab svg {
   font-size: 1rem;
 }
