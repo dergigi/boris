@@ -98,11 +98,10 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
   const mainPaneRef = useRef<HTMLDivElement>(null)
   
   // Detect scroll direction to hide/show mobile buttons
-  // On mobile, scroll happens in the main pane, not on window
+  // Now using window scroll (document scroll) instead of pane scroll
   const scrollDirection = useScrollDirection({ 
     threshold: 10, 
-    enabled: isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed,
-    elementRef: mainPaneRef
+    enabled: isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed
   })
   const showMobileButtons = scrollDirection !== 'down'
 
@@ -225,7 +224,15 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
       {/* Mobile bookmark button - only show when viewing article */}
       {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
         <button
-          className={`mobile-hamburger-btn ${showMobileButtons ? 'visible' : 'hidden'}`}
+          className={`fixed z-[900] bg-[#2a2a2a] border border-[#444] rounded-lg text-[#ddd] flex items-center justify-center transition-all duration-300 active:scale-95 md:hidden ${
+            showMobileButtons ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+          }`}
+          style={{
+            top: 'calc(1rem + env(safe-area-inset-top))',
+            left: 'calc(1rem + env(safe-area-inset-left))',
+            width: 'var(--min-touch-target)',
+            height: 'var(--min-touch-target)'
+          }}
           onClick={props.onToggleSidebar}
           aria-label="Open bookmarks"
           aria-expanded={props.isSidebarOpen}
@@ -237,14 +244,20 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
       {/* Mobile highlights button - only show when viewing article */}
       {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && (
         <button
-          className={`mobile-highlights-btn ${showMobileButtons ? 'visible' : 'hidden'}`}
-          onClick={props.onToggleHighlightsPanel}
-          aria-label="Open highlights"
-          aria-expanded={!props.isHighlightsCollapsed}
+          className={`fixed z-[900] border border-[#444] rounded-lg flex items-center justify-center transition-all duration-300 active:scale-95 md:hidden ${
+            showMobileButtons ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+          }`}
           style={{ 
+            top: 'calc(1rem + env(safe-area-inset-top))',
+            right: 'calc(1rem + env(safe-area-inset-right))',
+            width: 'var(--min-touch-target)',
+            height: 'var(--min-touch-target)',
             backgroundColor: props.settings.highlightColorMine || '#ffff00',
             color: '#000'
           }}
+          onClick={props.onToggleHighlightsPanel}
+          aria-label="Open highlights"
+          aria-expanded={!props.isHighlightsCollapsed}
         >
           <FontAwesomeIcon icon={faHighlighter} />
         </button>
@@ -253,7 +266,9 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
       {/* Mobile backdrop */}
       {isMobile && (
         <div
-          className={`mobile-sidebar-backdrop ${(props.isSidebarOpen || !props.isHighlightsCollapsed) ? 'visible' : ''}`}
+          className={`fixed inset-0 bg-black/45 z-[999] transition-opacity duration-300 ${
+            (props.isSidebarOpen || !props.isHighlightsCollapsed) ? 'block opacity-100' : 'hidden opacity-0'
+          }`}
           onClick={handleBackdropClick}
           aria-hidden="true"
         />

@@ -8,6 +8,7 @@
   overflow: hidden; 
   max-width: 900px;
   margin: 0 auto;
+  padding-bottom: 2rem; /* Add space for progress indicator */
 }
 
 /* Video container - responsive wrapper following react-player docs */
@@ -73,6 +74,15 @@
 .mark-as-read-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .mark-as-read-btn svg { font-size: 1.1rem; }
 @media (max-width: 768px) {
+  .reader {
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0.5rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
   .mark-as-read-container { padding: 1.5rem 1rem; }
   .mark-as-read-btn { width: 100%; max-width: 300px; }
 }
@@ -101,5 +111,7 @@
   .reader-header-overlay { padding: 1.5rem 1rem 1rem; }
   .reader-header-overlay .reader-title { font-size: 1.5rem; line-height: 1.3; }
 }
+
+/* Reading Progress Indicator - now using Tailwind utilities in component */
 
 
