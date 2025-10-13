@@ -31,7 +31,8 @@
     "reading-time-estimator": "^1.14.0",
     "rehype-prism-plus": "^2.0.1",
     "rehype-raw": "^7.0.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "react-player": "^2.16.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
