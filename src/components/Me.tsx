@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faExclamationCircle, faHighlighter, faBookmark, faBook } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faExclamationCircle, faHighlighter, faBookmark } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
@@ -13,6 +13,7 @@ import { BlogPostPreview } from '../services/exploreService'
 import { Bookmark } from '../types/bookmarks'
 import AuthorCard from './AuthorCard'
 import BlogPostCard from './BlogPostCard'
+import { faBooks } from '../icons/customIcons'
 
 interface MeProps {
   relayPool: RelayPool
@@ -190,7 +191,7 @@ const Me: React.FC<MeProps> = ({ relayPool }) => {
             data-tab="archive"
             onClick={() => setActiveTab('archive')}
           >
-            <FontAwesomeIcon icon={faBook} />
+            <FontAwesomeIcon icon={faBooks} />
             Archive ({readArticles.length})
           </button>
         </div>
