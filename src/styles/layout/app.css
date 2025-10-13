@@ -60,6 +60,11 @@
   contain: layout style;
 }
 
+/* When the reader contains a video, allow a wider main pane */
+.pane.main:has(.reader-video) {
+  max-width: var(--main-max-width-video);
+}
+
 /* Remove padding when sidebar is collapsed for zero gap */
 .three-pane.sidebar-collapsed .pane.main { padding-left: 0; }
 .three-pane.sidebar-collapsed.highlights-collapsed .pane.main { padding-left: 0; }
