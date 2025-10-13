@@ -1,4 +1,5 @@
 import { useCallback, useRef } from 'react'
+import { flushSync } from 'react-dom'
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { IEventStore } from 'applesauce-core'
@@ -84,7 +85,11 @@ export const useHighlightCreation = ({
       }
       
       highlightButtonRef.current?.clearSelection()
-      onHighlightCreated(newHighlight)
+      
+      // Force synchronous render to show highlight immediately
+      flushSync(() => {
+        onHighlightCreated(newHighlight)
+      })
     } catch (error) {
       console.error('❌ Failed to create highlight:', error)
       // Re-throw to allow parent to handle
