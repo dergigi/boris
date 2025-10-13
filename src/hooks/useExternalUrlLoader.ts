@@ -4,6 +4,19 @@ import { fetchReadableContent, ReadableContent } from '../services/readerService
 import { fetchHighlightsForUrl } from '../services/highlightService'
 import { Highlight } from '../types/highlights'
 
+// Helper to extract filename from URL
+function getFilenameFromUrl(url: string): string {
+  try {
+    const urlObj = new URL(url)
+    const pathname = urlObj.pathname
+    const filename = pathname.substring(pathname.lastIndexOf('/') + 1)
+    // Decode URI component to handle special characters
+    return decodeURIComponent(filename) || url
+  } catch {
+    return url
+  }
+}
+
 interface UseExternalUrlLoaderProps {
   url: string | undefined
   relayPool: RelayPool | null
@@ -84,8 +97,10 @@ export function useExternalUrlLoader({
         }
       } catch (err) {
         console.error('Failed to load external URL:', err)
+        // For videos and other media files, use the filename as the title
+        const filename = getFilenameFromUrl(url)
         setReaderContent({
-          title: 'Error Loading Content',
+          title: filename,
           html: `<p>Failed to load content: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
           url
         })
