@@ -1,11 +1,14 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import rehypePrism from 'rehype-prism-plus'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import 'prismjs/themes/prism-tomorrow.css'
-import { faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faCheck, faEllipsisH, faExternalLinkAlt, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
+import { nip19 } from 'nostr-tools'
+import { getNostrUrl } from '../config/nostrGateways'
+import { RELAYS } from '../config/relays'
 import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'
@@ -82,6 +85,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const [isMarkedAsRead, setIsMarkedAsRead] = useState(false)
   const [isCheckingReadStatus, setIsCheckingReadStatus] = useState(false)
   const [showCheckAnimation, setShowCheckAnimation] = useState(false)
+  const [showArticleMenu, setShowArticleMenu] = useState(false)
+  const articleMenuRef = useRef<HTMLDivElement>(null)
   const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef, processedMarkdown } = useMarkdownToHTML(markdown, relayPool)
   
   const { finalHtml, relevantHighlights } = useHighlightedContent({
@@ -104,6 +109,22 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     onClearSelection
   })
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (articleMenuRef.current && !articleMenuRef.current.contains(event.target as Node)) {
+        setShowArticleMenu(false)
+      }
+    }
+    
+    if (showArticleMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [showArticleMenu])
+
   const readingStats = useMemo(() => {
     const content = markdown || html || ''
     if (!content) return null
@@ -115,6 +136,48 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Determine if we're on a nostr-native article (/a/) or external URL (/r/)
   const isNostrArticle = selectedUrl && selectedUrl.startsWith('nostr:')
+
+  // Get article links for menu
+  const getArticleLinks = () => {
+    if (!currentArticle) return null
+
+    const dTag = currentArticle.tags.find(t => t[0] === 'd')?.[1] || ''
+    const relayHints = RELAYS.filter(r => 
+      !r.includes('localhost') && !r.includes('127.0.0.1')
+    ).slice(0, 3)
+
+    const naddr = nip19.naddrEncode({
+      kind: 30023,
+      pubkey: currentArticle.pubkey,
+      identifier: dTag,
+      relays: relayHints
+    })
+
+    return {
+      portal: getNostrUrl(naddr),
+      native: `nostr:${naddr}`
+    }
+  }
+
+  const articleLinks = getArticleLinks()
+
+  const handleMenuToggle = () => {
+    setShowArticleMenu(!showArticleMenu)
+  }
+
+  const handleOpenPortal = () => {
+    if (articleLinks) {
+      window.open(articleLinks.portal, '_blank', 'noopener,noreferrer')
+    }
+    setShowArticleMenu(false)
+  }
+
+  const handleOpenNative = () => {
+    if (articleLinks) {
+      window.location.href = articleLinks.native
+    }
+    setShowArticleMenu(false)
+  }
   
   // Check if article is already marked as read when URL/article changes
   useEffect(() => {
@@ -275,6 +338,40 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               onMouseUp={handleSelectionEnd}
               onTouchEnd={handleSelectionEnd}
             />
+          )}
+          
+          {/* Article menu for nostr-native articles */}
+          {isNostrArticle && currentArticle && articleLinks && (
+            <div className="article-menu-container">
+              <div className="article-menu-wrapper" ref={articleMenuRef}>
+                <button
+                  className="article-menu-btn"
+                  onClick={handleMenuToggle}
+                  title="More options"
+                >
+                  <FontAwesomeIcon icon={faEllipsisH} />
+                </button>
+                
+                {showArticleMenu && (
+                  <div className="article-menu">
+                    <button
+                      className="article-menu-item"
+                      onClick={handleOpenPortal}
+                    >
+                      <FontAwesomeIcon icon={faExternalLinkAlt} />
+                      <span>Open on Nostr</span>
+                    </button>
+                    <button
+                      className="article-menu-item"
+                      onClick={handleOpenNative}
+                    >
+                      <FontAwesomeIcon icon={faMobileAlt} />
+                      <span>Open with Native App</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
           
           {/* Mark as Read button */}

@@ -35,8 +35,18 @@
 .reader-html pre { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 1rem 0; font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace; }
 .reader-html code { background: #1e1e1e; border: 1px solid #333; border-radius: 4px; padding: 0.15rem 0.4rem; font-size: 0.9em; font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace; }
 .reader-html pre code { background: transparent; border: none; padding: 0; display: block; }
+/* Article menu */
+.article-menu-container { display: flex; justify-content: flex-end; padding: 1.5rem 0 0.5rem; margin-top: 2rem; border-top: 1px solid #333; }
+.article-menu-wrapper { position: relative; }
+.article-menu-btn { background: none; border: 1px solid #444; color: #888; cursor: pointer; padding: 0.5rem 0.75rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease; border-radius: 6px; }
+.article-menu-btn:hover { color: #646cff; background: rgba(100, 108, 255, 0.1); border-color: #646cff; }
+.article-menu { position: absolute; right: 0; top: calc(100% + 4px); background: #2a2a2a; border: 1px solid #444; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); z-index: 1000; min-width: 180px; overflow: hidden; }
+.article-menu-item { width: 100%; background: none; border: none; color: #ddd; padding: 0.75rem 1rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; transition: all 0.15s ease; text-align: left; white-space: nowrap; }
+.article-menu-item:hover { background: rgba(100, 108, 255, 0.15); color: #fff; }
+.article-menu-item svg { font-size: 0.875rem; flex-shrink: 0; }
+
 /* Mark as Read button */
-.mark-as-read-container { display: flex; justify-content: center; align-items: center; padding: 2rem 1rem; margin-top: 2rem; border-top: 1px solid #333; }
+.mark-as-read-container { display: flex; justify-content: center; align-items: center; padding: 2rem 1rem; margin-top: 1rem; border-top: 1px solid #333; }
 .mark-as-read-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: #2a2a2a; color: #ddd; border: 1px solid #444; border-radius: 8px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; min-width: 160px; justify-content: center; }
 .mark-as-read-btn:hover:not(:disabled) { background: #333; border-color: #555; transform: translateY(-1px); }
 .mark-as-read-btn:active:not(:disabled) { transform: translateY(0); }

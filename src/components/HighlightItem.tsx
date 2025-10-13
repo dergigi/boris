@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer, faTrash, faEllipsisH } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer, faTrash, faEllipsisH, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models, IEventStore } from 'applesauce-core'
@@ -123,7 +123,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     }
   }
   
-  const getHighlightLink = () => {
+  const getHighlightLinks = () => {
     // Encode the highlight event itself (kind 9802) as a nevent
     // Get non-local relays for the hint
     const relayHints = RELAYS.filter(r => 
@@ -136,10 +136,14 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       author: highlight.pubkey,
       kind: 9802
     })
-    return getNostrUrl(nevent)
+    
+    return {
+      portal: getNostrUrl(nevent),
+      native: `nostr:${nevent}`
+    }
   }
   
-  const highlightLink = getHighlightLink()
+  const highlightLinks = getHighlightLinks()
   
   // Handle rebroadcast to all relays
   const handleRebroadcast = async (e: React.MouseEvent) => {
@@ -283,9 +287,15 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     setShowMenu(!showMenu)
   }
   
-  const handleOpenExternal = (e: React.MouseEvent) => {
+  const handleOpenPortal = (e: React.MouseEvent) => {
     e.stopPropagation()
-    window.open(highlightLink, '_blank', 'noopener,noreferrer')
+    window.open(highlightLinks.portal, '_blank', 'noopener,noreferrer')
+    setShowMenu(false)
+  }
+
+  const handleOpenNative = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    window.location.href = highlightLinks.native
     setShowMenu(false)
   }
   
@@ -364,10 +374,17 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
               <div className="highlight-menu">
                 <button
                   className="highlight-menu-item"
-                  onClick={handleOpenExternal}
+                  onClick={handleOpenPortal}
                 >
                   <FontAwesomeIcon icon={faExternalLinkAlt} />
                   <span>Open on Nostr</span>
+                </button>
+                <button
+                  className="highlight-menu-item"
+                  onClick={handleOpenNative}
+                >
+                  <FontAwesomeIcon icon={faMobileAlt} />
+                  <span>Open with Native App</span>
                 </button>
                 {canDelete && (
                   <button
