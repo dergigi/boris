@@ -98,8 +98,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const [showCheckAnimation, setShowCheckAnimation] = useState(false)
   const [showArticleMenu, setShowArticleMenu] = useState(false)
   const [showVideoMenu, setShowVideoMenu] = useState(false)
+  const [showExternalMenu, setShowExternalMenu] = useState(false)
   const articleMenuRef = useRef<HTMLDivElement>(null)
   const videoMenuRef = useRef<HTMLDivElement>(null)
+  const externalMenuRef = useRef<HTMLDivElement>(null)
   const [ytMeta, setYtMeta] = useState<{ title?: string; description?: string; transcript?: string } | null>(null)
   const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef, processedMarkdown } = useMarkdownToHTML(markdown, relayPool)
   
@@ -145,15 +147,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       if (videoMenuRef.current && !videoMenuRef.current.contains(target)) {
         setShowVideoMenu(false)
       }
+      if (externalMenuRef.current && !externalMenuRef.current.contains(target)) {
+        setShowExternalMenu(false)
+      }
     }
     
-    if (showArticleMenu || showVideoMenu) {
+    if (showArticleMenu || showVideoMenu || showExternalMenu) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => {
         document.removeEventListener('mousedown', handleClickOutside)
       }
     }
-  }, [showArticleMenu, showVideoMenu])
+  }, [showArticleMenu, showVideoMenu, showExternalMenu])
 
   const readingStats = useMemo(() => {
     const content = markdown || html || ''
@@ -278,6 +283,38 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       console.warn('Share failed', e)
     } finally {
       setShowVideoMenu(false)
+    }
+  }
+
+  // External article actions
+  const toggleExternalMenu = () => setShowExternalMenu(v => !v)
+
+  const handleOpenExternalUrl = () => {
+    if (selectedUrl) window.open(selectedUrl, '_blank', 'noopener,noreferrer')
+    setShowExternalMenu(false)
+  }
+
+  const handleCopyExternalUrl = async () => {
+    try {
+      if (selectedUrl) await navigator.clipboard.writeText(selectedUrl)
+    } catch (e) {
+      console.warn('Clipboard copy failed', e)
+    } finally {
+      setShowExternalMenu(false)
+    }
+  }
+
+  const handleShareExternalUrl = async () => {
+    try {
+      if (selectedUrl && (navigator as { share?: (d: { title?: string; url?: string }) => Promise<void> }).share) {
+        await (navigator as { share: (d: { title?: string; url?: string }) => Promise<void> }).share({ title: title || 'Article', url: selectedUrl })
+      } else if (selectedUrl) {
+        await navigator.clipboard.writeText(selectedUrl)
+      }
+    } catch (e) {
+      console.warn('Share failed', e)
+    } finally {
+      setShowExternalMenu(false)
     }
   }
   
@@ -531,6 +568,47 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               onMouseUp={handleSelectionEnd}
               onTouchEnd={handleSelectionEnd}
             />
+          )}
+          
+          {/* Article menu for external URLs */}
+          {!isNostrArticle && !isExternalVideo && selectedUrl && (
+            <div className="article-menu-container">
+              <div className="article-menu-wrapper" ref={externalMenuRef}>
+                <button
+                  className="article-menu-btn"
+                  onClick={toggleExternalMenu}
+                  title="More options"
+                >
+                  <FontAwesomeIcon icon={faEllipsisH} />
+                </button>
+                
+                {showExternalMenu && (
+                  <div className="article-menu">
+                    <button
+                      className="article-menu-item"
+                      onClick={handleOpenExternalUrl}
+                    >
+                      <FontAwesomeIcon icon={faExternalLinkAlt} />
+                      <span>Open Original URL</span>
+                    </button>
+                    <button
+                      className="article-menu-item"
+                      onClick={handleCopyExternalUrl}
+                    >
+                      <FontAwesomeIcon icon={faCopy} />
+                      <span>Copy URL</span>
+                    </button>
+                    <button
+                      className="article-menu-item"
+                      onClick={handleShareExternalUrl}
+                    >
+                      <FontAwesomeIcon icon={faShare} />
+                      <span>Share</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
           
           {/* Article menu for nostr-native articles */}
