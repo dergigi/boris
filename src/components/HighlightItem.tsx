@@ -320,7 +320,10 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         <CompactButton
           className="highlight-timestamp"
           title={new Date(highlight.created_at * 1000).toLocaleString()}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation()
+            window.location.href = highlightLinks.native
+          }}
         >
           {formatDateCompact(highlight.created_at)}
         </CompactButton>
