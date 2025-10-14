@@ -37,16 +37,12 @@
   border-bottom-color: var(--color-primary);
 }
 
-/* Highlights tab uses the user's custom "my highlights" color for the border */
-/* But uses semantic text color for better readability */
+/* Highlights tab uses the user's custom "my highlights" color */
+/* With a darker background for better contrast in light mode */
 .me-tab[data-tab="highlights"].active {
-  color: var(--color-text);
-  border-bottom-color: var(--highlight-color-mine, rgb(253 224 71)); /* yellow-300 */
-}
-
-/* Icon gets the highlight color for visual identity */
-.me-tab[data-tab="highlights"].active svg {
   color: var(--highlight-color-mine, rgb(253 224 71)); /* yellow-300 */
+  border-bottom-color: var(--highlight-color-mine, rgb(253 224 71)); /* yellow-300 */
+  background: var(--color-bg-elevated);
 }
 
 /* Reading List tab uses blue color to match bookmarks icon */
