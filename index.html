@@ -26,21 +26,9 @@
     <meta name="twitter:title" content="Boris - Nostr Bookmarks" />
     <meta name="twitter:description" content="Your reading list for the Nostr world. A minimal nostr client for bookmark management with highlights." />
     
-    <!-- Early theme application to prevent FOUC -->
+    <!-- Default to system theme until settings load from Nostr -->
     <script>
-      (function() {
-        try {
-          var theme = localStorage.getItem('theme') || 'system';
-          if (theme === 'system') {
-            var systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            document.documentElement.className = 'theme-system';
-          } else {
-            document.documentElement.className = 'theme-' + theme;
-          }
-        } catch (e) {
-          document.documentElement.className = 'theme-system';
-        }
-      })();
+      document.documentElement.className = 'theme-system';
     </script>
   </head>
   <body>

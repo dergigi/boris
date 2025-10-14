@@ -32,33 +32,13 @@ export function applyTheme(theme: Theme): void {
     // Listen for system theme changes
     mediaQueryListener = (e: MediaQueryListEvent) => {
       console.log('🎨 System theme changed to:', e.matches ? 'dark' : 'light')
-      // The CSS media query handles the color changes
-      // We just need to update localStorage for no-FOUC on next load
-      localStorage.setItem('theme-system-current', e.matches ? 'dark' : 'light')
+      // The CSS media query handles the color changes automatically
     }
     
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', mediaQueryListener)
-    
-    // Store current system theme for no-FOUC on next boot
-    localStorage.setItem('theme-system-current', getSystemTheme())
   } else {
     root.classList.add(`theme-${theme}`)
   }
   
-  // Persist to localStorage for early boot application
-  localStorage.setItem('theme', theme)
-  
   console.log('🎨 Applied theme:', theme)
 }
-
-/**
- * Get the current theme from localStorage or default to 'system'
- */
-export function getStoredTheme(): Theme {
-  const stored = localStorage.getItem('theme')
-  if (stored === 'dark' || stored === 'light' || stored === 'system') {
-    return stored
-  }
-  return 'system'
-}
-
