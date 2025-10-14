@@ -139,9 +139,9 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
                 className="underline hover:no-underline"
                 style={{ color: 'var(--color-primary)' }}
               >
-                meaningful amount of sats
-              </a>
-              {' '}and your avatar will show up above.
+              meaningful amount of sats
+            </a>
+            {' '}and your avatar will show above.
             </p>
             <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
               Total supporters: {supporters.length} • 
