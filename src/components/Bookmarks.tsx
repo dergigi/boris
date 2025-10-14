@@ -31,6 +31,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const navigate = useNavigate()
   const previousLocationRef = useRef<string>()
   
+  // Check for highlight navigation state
+  const navigationState = location.state as { highlightId?: string; openHighlights?: boolean } | null
+  
   const externalUrl = location.pathname.startsWith('/r/') 
     ? decodeURIComponent(location.pathname.slice(3))
     : undefined
@@ -127,6 +130,19 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname])
+
+  // Handle highlight navigation from explore page
+  useEffect(() => {
+    if (navigationState?.highlightId && navigationState?.openHighlights) {
+      // Open the highlights sidebar
+      setIsHighlightsCollapsed(false)
+      // Select the highlight (scroll happens automatically in useHighlightInteractions)
+      setSelectedHighlightId(navigationState.highlightId)
+      
+      // Clear the state after handling to avoid re-triggering
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [navigationState, setIsHighlightsCollapsed, setSelectedHighlightId, navigate, location.pathname])
 
   const {
     bookmarks,

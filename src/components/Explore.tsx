@@ -219,15 +219,15 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
           pubkey,
           identifier
         })
-        navigate(`/a/${naddr}`)
+        navigate(`/a/${naddr}`, { state: { highlightId, openHighlights: true } })
       } else {
         // Already an naddr
-        navigate(`/a/${highlight.eventReference}`)
+        navigate(`/a/${highlight.eventReference}`, { state: { highlightId, openHighlights: true } })
       }
     } 
     // For web URLs
     else if (highlight.urlReference) {
-      navigate(`/r/${encodeURIComponent(highlight.urlReference)}`)
+      navigate(`/r/${encodeURIComponent(highlight.urlReference)}`, { state: { highlightId, openHighlights: true } })
     }
   }
 
