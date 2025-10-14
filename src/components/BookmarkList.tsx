@@ -1,6 +1,6 @@
 import React, { useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faBookmark, faSpinner, faList, faThLarge, faImage, faRotate } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { formatDistanceToNow } from 'date-fns'
 import { RelayPool } from 'applesauce-relay'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
@@ -12,6 +12,7 @@ import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { UserSettings } from '../services/settingsService'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from './PullToRefreshIndicator'
+import { BookmarkSkeleton } from './Skeletons'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -128,8 +129,12 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
       
       {allIndividualBookmarks.length === 0 ? (
         loading ? (
-          <div className="loading">
-            <FontAwesomeIcon icon={faSpinner} spin />
+          <div className={`bookmarks-list ${viewMode}`} aria-busy="true">
+            <div className={`bookmarks-grid bookmarks-${viewMode}`}>
+              {Array.from({ length: viewMode === 'large' ? 4 : viewMode === 'cards' ? 6 : 8 }).map((_, i) => (
+                <BookmarkSkeleton key={i} viewMode={viewMode} />
+              ))}
+            </div>
           </div>
         ) : (
           <div className="empty-state">

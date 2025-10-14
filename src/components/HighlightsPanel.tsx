@@ -11,6 +11,7 @@ import PullToRefreshIndicator from './PullToRefreshIndicator'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { UserSettings } from '../services/settingsService'
+import { HighlightSkeleton } from './Skeletons'
 
 export interface HighlightVisibility {
   nostrverse: boolean
@@ -127,8 +128,10 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
       />
 
       {loading && filteredHighlights.length === 0 ? (
-        <div className="highlights-loading">
-          <FontAwesomeIcon icon={faHighlighter} spin />
+        <div className="highlights-list" aria-busy="true">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <HighlightSkeleton key={i} />
+          ))}
         </div>
       ) : filteredHighlights.length === 0 ? (
         <div className="highlights-empty">
