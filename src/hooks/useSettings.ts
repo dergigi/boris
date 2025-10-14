@@ -50,8 +50,12 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       
       console.log('🎨 Applying settings styles:', { fontKey, fontSize: settings.fontSize, theme: settings.theme })
       
-      // Apply theme (defaults to 'system' if not set)
-      applyTheme(settings.theme ?? 'system')
+      // Apply theme with color variants (defaults to 'system' if not set)
+      applyTheme(
+        settings.theme ?? 'system',
+        settings.darkColorTheme ?? 'midnight',
+        settings.lightColorTheme ?? 'paper-white'
+      )
       
       // Load font first and wait for it to be ready
       if (fontKey !== 'system') {

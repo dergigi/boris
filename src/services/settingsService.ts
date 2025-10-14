@@ -49,6 +49,8 @@ export interface UserSettings {
   autoCollapseSidebarOnMobile?: boolean // Auto-collapse sidebar on mobile (default: true)
   // Theme preference
   theme?: 'dark' | 'light' | 'system' // default: system
+  darkColorTheme?: 'black' | 'midnight' | 'charcoal' // default: midnight
+  lightColorTheme?: 'paper-white' | 'sepia' | 'ivory' // default: paper-white
 }
 
 export async function loadSettings(
