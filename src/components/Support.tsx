@@ -118,10 +118,13 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
           </>
         )}
 
-        <div className="mt-12 md:mt-16 text-center">
+        <div className="mt-12 md:mt-16 text-center space-y-4">
           <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
             Total supporters: {supporters.length} • 
             Total zaps: {supporters.reduce((sum, s) => sum + s.zapCount, 0)}
+          </p>
+          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+            Want to show up here? Zap Boris a meaningful amount of sats and your avatar will show up above.
           </p>
         </div>
       </div>
