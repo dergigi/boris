@@ -63,7 +63,7 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({ settings, onUpdate }) => 
 
       {showDarkColors && (
         <div className="setting-group setting-inline">
-          <label>Dark Colors</label>
+          <label>Dark Theme</label>
           <div className="color-picker">
             {Object.entries(darkColors).map(([key, color]) => (
               <div
@@ -80,7 +80,7 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({ settings, onUpdate }) => 
 
       {showLightColors && (
         <div className="setting-group setting-inline">
-          <label>Light Colors</label>
+          <label>Light Theme</label>
           <div className="color-picker">
             {Object.entries(lightColors).map(([key, color]) => (
               <div
