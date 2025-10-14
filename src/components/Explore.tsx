@@ -10,7 +10,7 @@ import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreS
 import { fetchHighlightsFromAuthors } from '../services/highlightService'
 import { Highlight } from '../types/highlights'
 import BlogPostCard from './BlogPostCard'
-import { HighlightCard } from './HighlightCard'
+import { HighlightItem } from './HighlightItem'
 import { getCachedPosts, upsertCachedPost, setCachedPosts, getCachedHighlights, upsertCachedHighlight, setCachedHighlights } from '../services/exploreCache'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from './PullToRefreshIndicator'
@@ -228,15 +228,10 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
         ) : (
           <div className="explore-grid">
             {highlights.map((highlight) => (
-              <HighlightCard
+              <HighlightItem
                 key={highlight.id}
                 highlight={highlight}
-                onClick={() => {
-                  // Navigate to the highlighted article if available
-                  if (highlight.urlReference) {
-                    navigate(`/r/${encodeURIComponent(highlight.urlReference)}`)
-                  }
-                }}
+                relayPool={relayPool}
               />
             ))}
           </div>

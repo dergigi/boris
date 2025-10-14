@@ -90,22 +90,11 @@
 .blog-post-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--color-border); font-size: 0.75rem; color: var(--color-text-muted); flex-wrap: wrap; }
 .blog-post-card-author, .blog-post-card-date { display: flex; align-items: center; gap: 0.5rem; }
 .blog-post-card-author svg, .blog-post-card-date svg { opacity: 0.7; }
-/* Highlight cards in grid view */
-.highlight-card { position: relative; }
-.highlight-card-header { width: 100%; height: 120px; background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-bg-elevated) 100%); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--color-border); }
-.highlight-card-icon { font-size: 2.5rem; color: rgba(255, 255, 255, 0.9); opacity: 0.8; }
-.highlight-card-text { font-size: 0.9rem; color: var(--color-text); line-height: 1.6; font-style: italic; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; margin-bottom: 0.5rem; }
-.highlight-card-comment { font-size: 0.8rem; color: var(--color-text-secondary); line-height: 1.5; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; padding: 0.5rem; background: var(--color-bg-subtle); border-radius: 4px; margin-bottom: 0.5rem; border-left: 3px solid var(--color-primary); }
-.blog-post-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.5rem; margin-top: auto; border-top: 1px solid var(--color-border); font-size: 0.75rem; color: var(--color-text-muted); }
-
 @media (max-width: 768px) {
   .explore-container { padding: 1rem; }
   .explore-header h1 { font-size: 2rem; }
   .explore-grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .blog-post-card-summary { -webkit-line-clamp: 2; font-size: 0.8rem; }
   .blog-post-card-content { padding: 1rem; }
-  .highlight-card-header { height: 100px; }
-  .highlight-card-icon { font-size: 2rem; }
-  .highlight-card-text { -webkit-line-clamp: 3; font-size: 0.85rem; }
 }
 
