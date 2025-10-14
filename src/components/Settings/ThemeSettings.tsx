@@ -17,6 +17,19 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({ settings, onUpdate }) => 
   const showDarkColors = currentTheme === 'dark' || currentTheme === 'system'
   const showLightColors = currentTheme === 'light' || currentTheme === 'system'
 
+  // Color definitions for swatches
+  const darkColors = {
+    black: '#000000',
+    midnight: '#18181b',
+    charcoal: '#1c1c1e'
+  }
+
+  const lightColors = {
+    'paper-white': '#ffffff',
+    sepia: '#f4f1ea',
+    ivory: '#fffff0'
+  }
+
   return (
     <div className="settings-section">
       <h3 className="section-title">Theme</h3>
@@ -50,58 +63,37 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({ settings, onUpdate }) => 
 
       {showDarkColors && (
         <div className="setting-group setting-inline">
-          <label>Dark Color Theme</label>
-          <div className="setting-buttons">
-            <button
-              onClick={() => onUpdate({ darkColorTheme: 'black' })}
-              className={`font-size-btn ${currentDarkColor === 'black' ? 'active' : ''}`}
-              title="Black"
-            >
-              Black
-            </button>
-            <button
-              onClick={() => onUpdate({ darkColorTheme: 'midnight' })}
-              className={`font-size-btn ${currentDarkColor === 'midnight' ? 'active' : ''}`}
-              title="Midnight"
-            >
-              Midnight
-            </button>
-            <button
-              onClick={() => onUpdate({ darkColorTheme: 'charcoal' })}
-              className={`font-size-btn ${currentDarkColor === 'charcoal' ? 'active' : ''}`}
-              title="Charcoal"
-            >
-              Charcoal
-            </button>
+          <label>Dark Colors</label>
+          <div className="color-picker">
+            {Object.entries(darkColors).map(([key, color]) => (
+              <div
+                key={key}
+                className={`color-swatch ${currentDarkColor === key ? 'active' : ''}`}
+                style={{ backgroundColor: color }}
+                onClick={() => onUpdate({ darkColorTheme: key as any })}
+                title={key.charAt(0).toUpperCase() + key.slice(1)}
+              />
+            ))}
           </div>
         </div>
       )}
 
       {showLightColors && (
         <div className="setting-group setting-inline">
-          <label>Light Color Theme</label>
-          <div className="setting-buttons">
-            <button
-              onClick={() => onUpdate({ lightColorTheme: 'paper-white' })}
-              className={`font-size-btn ${currentLightColor === 'paper-white' ? 'active' : ''}`}
-              title="Paper White"
-            >
-              Paper
-            </button>
-            <button
-              onClick={() => onUpdate({ lightColorTheme: 'sepia' })}
-              className={`font-size-btn ${currentLightColor === 'sepia' ? 'active' : ''}`}
-              title="Sepia"
-            >
-              Sepia
-            </button>
-            <button
-              onClick={() => onUpdate({ lightColorTheme: 'ivory' })}
-              className={`font-size-btn ${currentLightColor === 'ivory' ? 'active' : ''}`}
-              title="Ivory"
-            >
-              Ivory
-            </button>
+          <label>Light Colors</label>
+          <div className="color-picker">
+            {Object.entries(lightColors).map(([key, color]) => (
+              <div
+                key={key}
+                className={`color-swatch ${currentLightColor === key ? 'active' : ''}`}
+                style={{ 
+                  backgroundColor: color,
+                  border: color === '#ffffff' ? '2px solid #e5e7eb' : '1px solid #e5e7eb'
+                }}
+                onClick={() => onUpdate({ lightColorTheme: key as any })}
+                title={key.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+              />
+            ))}
           </div>
         </div>
       )}
