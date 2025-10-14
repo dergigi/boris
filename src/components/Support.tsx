@@ -118,11 +118,7 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
           </>
         )}
 
-        <div className="mt-12 md:mt-16 text-center space-y-4">
-          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-            Total supporters: {supporters.length} • 
-            Total zaps: {supporters.reduce((sum, s) => sum + s.zapCount, 0)}
-          </p>
+        <div className="mt-12 md:mt-16 text-center space-y-3">
           <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
             Zap{' '}
             <a 
@@ -145,6 +141,10 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
               meaningful amount of sats
             </a>
             {' '}and your avatar will show up above.
+          </p>
+          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            Total supporters: {supporters.length} • 
+            Total zaps: {supporters.reduce((sum, s) => sum + s.zapCount, 0)}
           </p>
         </div>
       </div>
