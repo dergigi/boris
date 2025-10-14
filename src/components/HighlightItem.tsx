@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faHighlighter, faTrash, faEllipsisH, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faHighlighter, faTrash, faEllipsisH, faMobileAlt, faComment } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models, IEventStore } from 'applesauce-core'
@@ -346,6 +346,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         
         {highlight.comment && (
           <div className="highlight-comment">
+            <FontAwesomeIcon icon={faComment} className="highlight-comment-icon" />
             {highlight.comment}
           </div>
         )}
