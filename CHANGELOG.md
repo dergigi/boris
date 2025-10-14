@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.9] - 2025-10-14
+
+### Documentation
+
+- Minor changelog formatting updates
+
 ## [0.6.8] - 2025-10-14
 
 ### Changed
@@ -1293,7 +1299,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.8...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.9...HEAD
+[0.6.9]: https://github.com/dergigi/boris/compare/v0.6.8...v0.6.9
 [0.6.8]: https://github.com/dergigi/boris/compare/v0.6.7...v0.6.8
 [0.6.7]: https://github.com/dergigi/boris/compare/v0.6.6...v0.6.7
 [0.6.6]: https://github.com/dergigi/boris/compare/v0.6.5...v0.6.6
