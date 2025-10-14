@@ -18,6 +18,58 @@ import { getNostrUrl } from '../config/nostrGateways'
 import CompactButton from './CompactButton'
 import { HighlightCitation } from './HighlightCitation'
 
+// Helper to detect if a URL is an image
+const isImageUrl = (url: string): boolean => {
+  try {
+    const urlObj = new URL(url)
+    const pathname = urlObj.pathname.toLowerCase()
+    return /\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)(\?.*)?$/.test(pathname)
+  } catch {
+    return false
+  }
+}
+
+// Component to render comment with links and inline images
+const CommentContent: React.FC<{ text: string }> = ({ text }) => {
+  // URL regex pattern
+  const urlPattern = /(https?:\/\/[^\s]+)/g
+  const parts = text.split(urlPattern)
+  
+  return (
+    <>
+      {parts.map((part, index) => {
+        if (part.match(urlPattern)) {
+          if (isImageUrl(part)) {
+            return (
+              <img
+                key={index}
+                src={part}
+                alt="Comment attachment"
+                className="highlight-comment-image"
+                loading="lazy"
+              />
+            )
+          } else {
+            return (
+              <a
+                key={index}
+                href={part}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="highlight-comment-link"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {part}
+              </a>
+            )
+          }
+        }
+        return <span key={index}>{part}</span>
+      })}
+    </>
+  )
+}
+
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
 }
@@ -355,7 +407,9 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         {highlight.comment && (
           <div className="highlight-comment">
             <FontAwesomeIcon icon={faComments} flip="horizontal" className="highlight-comment-icon" />
-            {highlight.comment}
+            <div className="highlight-comment-text">
+              <CommentContent text={highlight.comment} />
+            </div>
           </div>
         )}
         

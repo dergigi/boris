@@ -131,6 +131,10 @@
 .highlight-citation { margin-left: 1.25rem; font-size: 0.8rem; color: var(--color-text-secondary); font-style: normal; padding-top: 0.25rem; }
 .highlight-comment { margin-top: 0.5rem; padding: 0.75rem; border-radius: 4px; font-size: 0.875rem; color: var(--color-text); line-height: 1.5; display: flex; gap: 0.5rem; align-items: flex-start; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; min-width: 0; }
 .highlight-comment-icon { flex-shrink: 0; margin-top: 0.125rem; }
+.highlight-comment-text { flex: 1; min-width: 0; }
+.highlight-comment-link { color: var(--color-primary); text-decoration: underline; word-wrap: break-word; overflow-wrap: break-word; }
+.highlight-comment-link:hover { opacity: 0.8; }
+.highlight-comment-image { display: block; max-width: 100%; height: auto; margin-top: 0.5rem; border-radius: 6px; border: 1px solid var(--color-border); }
 
 /* Level-colored comment icons */
 .highlight-item.level-mine .highlight-comment-icon { color: var(--highlight-color-mine, #ffff00); }
