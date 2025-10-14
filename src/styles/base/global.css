@@ -2,7 +2,7 @@
 
 /* Body - keep only app-specific overrides */
 body {
-  background: var(--color-bg);
+  background: var(--color-bg-subtle);
   color: var(--color-text);
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
