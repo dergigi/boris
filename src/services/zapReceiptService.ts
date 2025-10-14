@@ -86,7 +86,7 @@ export async function fetchBorisZappers(
 
     // Filter >= 2100 sats, mark whales >= 69420 sats, sort by total desc
     const zappers: ZapSender[] = Array.from(senderTotals.entries())
-      .filter(([_, data]) => data.totalSats >= 2100)
+      .filter(([, data]) => data.totalSats >= 2100)
       .map(([pubkey, data]) => ({
         pubkey,
         totalSats: data.totalSats,

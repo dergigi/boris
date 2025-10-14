@@ -15,10 +15,7 @@ interface SupportProps {
   settings: UserSettings
 }
 
-interface SupporterProfile extends ZapSender {
-  name?: string
-  picture?: string
-}
+type SupporterProfile = ZapSender
 
 const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) => {
   const [supporters, setSupporters] = useState<SupporterProfile[]>([])
@@ -33,19 +30,9 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
         if (zappers.length > 0) {
           const pubkeys = zappers.map(z => z.pubkey)
           await fetchProfiles(relayPool, eventStore, pubkeys, settings)
-          
-          // Map zappers with profile data
-          const withProfiles = zappers.map(zapper => {
-            const profile = eventStore.getProfile(zapper.pubkey)
-            return {
-              ...zapper,
-              name: profile?.name || profile?.display_name || `${zapper.pubkey.slice(0, 8)}...`,
-              picture: profile?.picture
-            }
-          })
-          
-          setSupporters(withProfiles)
         }
+        
+        setSupporters(zappers)
       } catch (error) {
         console.error('Failed to load supporters:', error)
       } finally {
@@ -130,8 +117,8 @@ interface SupporterCardProps {
 const SupporterCard: React.FC<SupporterCardProps> = ({ supporter, isWhale }) => {
   const profile = useEventModel(Models.ProfileModel, [supporter.pubkey])
 
-  const picture = profile?.picture || supporter.picture
-  const name = profile?.name || profile?.display_name || supporter.name
+  const picture = profile?.picture
+  const name = profile?.name || profile?.display_name || `${supporter.pubkey.slice(0, 8)}...`
 
   return (
     <div className="flex flex-col items-center">
