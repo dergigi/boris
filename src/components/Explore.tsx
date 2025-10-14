@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faExclamationCircle, faNewspaper, faPenToSquare, faHighlighter } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faExclamationCircle, faNewspaper, faPenToSquare, faHighlighter, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
+import IconButton from './IconButton'
 import { Hooks } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
@@ -10,6 +11,7 @@ import { fetchContacts } from '../services/contactService'
 import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
 import { fetchHighlightsFromAuthors } from '../services/highlightService'
 import { fetchProfiles } from '../services/profileService'
+import { fetchNostrverseBlogPosts, fetchNostrverseHighlights } from '../services/nostrverseService'
 import { Highlight } from '../types/highlights'
 import { UserSettings } from '../services/settingsService'
 import BlogPostCard from './BlogPostCard'
@@ -18,6 +20,7 @@ import { getCachedPosts, upsertCachedPost, setCachedPosts, getCachedHighlights, 
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from './PullToRefreshIndicator'
 import { classifyHighlights } from '../utils/highlightClassification'
+import { HighlightVisibility } from './HighlightsPanel'
 
 interface ExploreProps {
   relayPool: RelayPool
@@ -39,6 +42,13 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [error, setError] = useState<string | null>(null)
   const exploreContainerRef = useRef<HTMLDivElement>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  
+  // Visibility filters (defaults from settings)
+  const [visibility, setVisibility] = useState<HighlightVisibility>({
+    nostrverse: settings?.defaultHighlightVisibilityNostrverse !== false,
+    friends: settings?.defaultHighlightVisibilityFriends !== false,
+    mine: settings?.defaultHighlightVisibilityMine !== false
+  })
 
   // Update local state when prop changes
   useEffect(() => {
@@ -149,45 +159,57 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         // Store final followed pubkeys
         setFollowedPubkeys(contacts)
 
-        // After full contacts, do a final pass for completeness
+        // Fetch both friends content and nostrverse content in parallel
         const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
         const contactsArray = Array.from(contacts)
-        const [posts, userHighlights] = await Promise.all([
+        const [friendsPosts, friendsHighlights, nostrversePosts, nostriverseHighlights] = await Promise.all([
           fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls),
-          fetchHighlightsFromAuthors(relayPool, contactsArray)
+          fetchHighlightsFromAuthors(relayPool, contactsArray),
+          fetchNostrverseBlogPosts(relayPool, relayUrls, 50),
+          fetchNostrverseHighlights(relayPool, 100)
         ])
 
+        // Merge and deduplicate all posts
+        const allPosts = [...friendsPosts, ...nostrversePosts]
+        const postsByKey = new Map<string, BlogPostPreview>()
+        for (const post of allPosts) {
+          const key = `${post.author}:${post.event.tags.find(t => t[0] === 'd')?.[1] || ''}`
+          const existing = postsByKey.get(key)
+          if (!existing || post.event.created_at > existing.event.created_at) {
+            postsByKey.set(key, post)
+          }
+        }
+        const uniquePosts = Array.from(postsByKey.values()).sort((a, b) => {
+          const timeA = a.published || a.event.created_at
+          const timeB = b.published || b.event.created_at
+          return timeB - timeA
+        })
+
+        // Merge and deduplicate all highlights
+        const allHighlights = [...friendsHighlights, ...nostriverseHighlights]
+        const highlightsByKey = new Map<string, Highlight>()
+        for (const highlight of allHighlights) {
+          highlightsByKey.set(highlight.id, highlight)
+        }
+        const uniqueHighlights = Array.from(highlightsByKey.values()).sort((a, b) => b.created_at - a.created_at)
+
         // Fetch profiles for all blog post authors to cache them
-        if (posts.length > 0) {
-          const authorPubkeys = Array.from(new Set(posts.map(p => p.author)))
+        if (uniquePosts.length > 0) {
+          const authorPubkeys = Array.from(new Set(uniquePosts.map(p => p.author)))
           fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch(err => {
             console.error('Failed to fetch author profiles:', err)
           })
         }
 
-        if (posts.length === 0 && userHighlights.length === 0) {
-          setError('No content found from your friends yet')
+        if (uniquePosts.length === 0 && uniqueHighlights.length === 0) {
+          setError('No content found yet')
         }
 
-        setBlogPosts((prev) => {
-          const byId = new Map(prev.map(p => [p.event.id, p]))
-          for (const post of posts) byId.set(post.event.id, post)
-          const merged = Array.from(byId.values()).sort((a, b) => {
-            const timeA = a.published || a.event.created_at
-            const timeB = b.published || b.event.created_at
-            return timeB - timeA
-          })
-          setCachedPosts(activeAccount.pubkey, merged)
-          return merged
-        })
+        setBlogPosts(uniquePosts)
+        setCachedPosts(activeAccount.pubkey, uniquePosts)
 
-        setHighlights((prev) => {
-          const byId = new Map(prev.map(h => [h.id, h]))
-          for (const highlight of userHighlights) byId.set(highlight.id, highlight)
-          const merged = Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
-          setCachedHighlights(activeAccount.pubkey, merged)
-          return merged
-        })
+        setHighlights(uniqueHighlights)
+        setCachedHighlights(activeAccount.pubkey, uniqueHighlights)
       } catch (err) {
         console.error('Failed to load data:', err)
         setError('Failed to load content. Please try again.')
@@ -251,19 +273,37 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
   }
 
-  // Classify highlights with levels based on user context
+  // Classify highlights with levels based on user context and apply visibility filters
   const classifiedHighlights = useMemo(() => {
-    return classifyHighlights(highlights, activeAccount?.pubkey, followedPubkeys)
-  }, [highlights, activeAccount?.pubkey, followedPubkeys])
+    const classified = classifyHighlights(highlights, activeAccount?.pubkey, followedPubkeys)
+    return classified.filter(h => {
+      if (h.level === 'mine' && !visibility.mine) return false
+      if (h.level === 'friends' && !visibility.friends) return false
+      if (h.level === 'nostrverse' && !visibility.nostrverse) return false
+      return true
+    })
+  }, [highlights, activeAccount?.pubkey, followedPubkeys, visibility])
 
-  // Filter out blog posts with unreasonable future dates (allow 1 day for clock skew)
+  // Filter blog posts by future dates and visibility
   const filteredBlogPosts = useMemo(() => {
     const maxFutureTime = Date.now() / 1000 + (24 * 60 * 60) // 1 day from now
     return blogPosts.filter(post => {
+      // Filter out future dates
       const publishedTime = post.published || post.event.created_at
-      return publishedTime <= maxFutureTime
+      if (publishedTime > maxFutureTime) return false
+      
+      // Apply visibility filters
+      const isMine = activeAccount && post.author === activeAccount.pubkey
+      const isFriend = followedPubkeys.has(post.author)
+      const isNostrverse = !isMine && !isFriend
+      
+      if (isMine && !visibility.mine) return false
+      if (isFriend && !visibility.friends) return false
+      if (isNostrverse && !visibility.nostrverse) return false
+      
+      return true
     })
-  }, [blogPosts])
+  }, [blogPosts, activeAccount, followedPubkeys, visibility])
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -374,6 +414,45 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
             <FontAwesomeIcon icon={faPenToSquare} />
             <span className="tab-label">Writings</span>
           </button>
+        </div>
+        
+        {/* Visibility filters */}
+        <div className="highlight-level-toggles" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+          <IconButton
+            icon={faNetworkWired}
+            onClick={() => setVisibility({ ...visibility, nostrverse: !visibility.nostrverse })}
+            title="Toggle nostrverse content"
+            ariaLabel="Toggle nostrverse content"
+            variant="ghost"
+            style={{ 
+              color: visibility.nostrverse ? 'var(--highlight-color-nostrverse, #9333ea)' : undefined,
+              opacity: visibility.nostrverse ? 1 : 0.4 
+            }}
+          />
+          <IconButton
+            icon={faUserGroup}
+            onClick={() => setVisibility({ ...visibility, friends: !visibility.friends })}
+            title={activeAccount ? "Toggle friends content" : "Login to see friends content"}
+            ariaLabel="Toggle friends content"
+            variant="ghost"
+            disabled={!activeAccount}
+            style={{ 
+              color: visibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined,
+              opacity: visibility.friends ? 1 : 0.4 
+            }}
+          />
+          <IconButton
+            icon={faUser}
+            onClick={() => setVisibility({ ...visibility, mine: !visibility.mine })}
+            title={activeAccount ? "Toggle my content" : "Login to see your content"}
+            ariaLabel="Toggle my content"
+            variant="ghost"
+            disabled={!activeAccount}
+            style={{ 
+              color: visibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined,
+              opacity: visibility.mine ? 1 : 0.4 
+            }}
+          />
         </div>
       </div>
 
