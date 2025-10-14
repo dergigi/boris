@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner, faExclamationCircle, faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
+import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
 import { useNavigate } from 'react-router-dom'
@@ -198,9 +199,24 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   
   if (loading && !hasData) {
     return (
-      <div className="explore-container">
-        <div className="explore-loading">
-          <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+      <div className="explore-container" aria-busy="true">
+        <div className="explore-header">
+          <AuthorCard pubkey={viewingPubkey} isOwnProfile={isOwnProfile} />
+        </div>
+        <div className="explore-grid">
+          {activeTab === 'writings' ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <BlogPostSkeleton key={i} />
+            ))
+          ) : activeTab === 'highlights' ? (
+            Array.from({ length: 8 }).map((_, i) => (
+              <HighlightSkeleton key={i} />
+            ))
+          ) : (
+            Array.from({ length: 6 }).map((_, i) => (
+              <BookmarkSkeleton key={i} viewMode={viewMode} />
+            ))
+          )}
         </div>
       </div>
     )
