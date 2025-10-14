@@ -3,6 +3,9 @@ import { faSun, faMoon, faDesktop } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../../services/settingsService'
 import IconButton from '../IconButton'
 
+type DarkColorTheme = 'black' | 'midnight' | 'charcoal'
+type LightColorTheme = 'paper-white' | 'sepia' | 'ivory'
+
 interface ThemeSettingsProps {
   settings: UserSettings
   onUpdate: (updates: Partial<UserSettings>) => void
@@ -70,7 +73,7 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({ settings, onUpdate }) => 
                 key={key}
                 className={`color-swatch ${currentDarkColor === key ? 'active' : ''}`}
                 style={{ backgroundColor: color }}
-                onClick={() => onUpdate({ darkColorTheme: key as any })}
+                onClick={() => onUpdate({ darkColorTheme: key as DarkColorTheme })}
                 title={key.charAt(0).toUpperCase() + key.slice(1)}
               />
             ))}
@@ -90,7 +93,7 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({ settings, onUpdate }) => 
                   backgroundColor: color,
                   border: color === '#ffffff' ? '2px solid #e5e7eb' : '1px solid #e5e7eb'
                 }}
-                onClick={() => onUpdate({ lightColorTheme: key as any })}
+                onClick={() => onUpdate({ lightColorTheme: key as LightColorTheme })}
                 title={key.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
               />
             ))}
