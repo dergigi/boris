@@ -21,21 +21,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--background-secondary);
+  background: var(--color-bg-elevated);
   border-radius: 50%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
   font-size: 1rem;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .pull-to-refresh-text {
   font-size: 0.75rem;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   text-align: center;
   white-space: nowrap;
   font-weight: 500;
-  background: var(--background-secondary);
+  background: var(--color-bg-elevated);
   padding: 0.25rem 0.75rem;
   border-radius: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
