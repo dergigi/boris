@@ -55,19 +55,19 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
-      <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
-        <div className="text-center mb-8 md:mb-12">
-          <div className="flex justify-center mb-6">
+      <div className="max-w-5xl mx-auto px-4 py-12 md:py-16">
+        <div className="text-center mb-16 md:mb-20">
+          <div className="flex justify-center mb-8">
             <img 
               src="/thank-you.svg" 
               alt="Thank you" 
-              className="w-48 h-48 md:w-64 md:h-64 opacity-90"
+              className="w-56 h-56 md:w-72 md:h-72 opacity-90"
             />
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: 'var(--color-text)' }}>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: 'var(--color-text)' }}>
             Thank You!
           </h1>
-          <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: 'var(--color-text-secondary)' }}>
+          <p className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
             Your{' '}
             <a 
               href="https://www.readwithboris.com/#pricing" 
@@ -90,11 +90,11 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
           <>
             {/* Whales Section */}
             {supporters.filter(s => s.isWhale).length > 0 && (
-              <div className="mb-12">
-                <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--color-text)' }}>
-                  Absolute Legends
+              <div className="mb-16 md:mb-20">
+                <h2 className="text-2xl md:text-3xl font-semibold mb-8 md:mb-10 text-center" style={{ color: 'var(--color-text)' }}>
+                  Legends
                 </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-10">
                   {supporters.filter(s => s.isWhale).map(supporter => (
                     <SupporterCard key={supporter.pubkey} supporter={supporter} isWhale={true} />
                   ))}
@@ -104,11 +104,11 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
 
             {/* Regular Supporters Section */}
             {supporters.filter(s => !s.isWhale).length > 0 && (
-              <div>
-                <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--color-text)' }}>
+              <div className="mb-12">
+                <h2 className="text-xl md:text-2xl font-semibold mb-8 text-center" style={{ color: 'var(--color-text)' }}>
                   Supporters
                 </h2>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 md:gap-6">
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4 md:gap-5">
                   {supporters.filter(s => !s.isWhale).map(supporter => (
                     <SupporterCard key={supporter.pubkey} supporter={supporter} isWhale={false} />
                   ))}
@@ -118,34 +118,36 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
           </>
         )}
 
-        <div className="mt-12 md:mt-16 text-center space-y-3">
-          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-            Zap{' '}
-            <a 
-              href="https://njump.me/npub19802see0gnk3vjlus0dnmfdagusqrtmsxpl5yfmkwn9uvnfnqylqduhr0x" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="underline hover:no-underline"
-              style={{ color: 'var(--color-primary)' }}
-            >
-              Boris
-            </a>
-            {' '}a{' '}
-            <a 
-              href="https://www.readwithboris.com/#pricing" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="underline hover:no-underline"
-              style={{ color: 'var(--color-primary)' }}
-            >
-              meaningful amount of sats
-            </a>
-            {' '}and your avatar will show up above.
-          </p>
-          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            Total supporters: {supporters.length} • 
-            Total zaps: {supporters.reduce((sum, s) => sum + s.zapCount, 0)}
-          </p>
+        <div className="mt-16 md:mt-20 pt-8 border-t" style={{ borderColor: 'var(--color-border-subtle)' }}>
+          <div className="text-center space-y-4">
+            <p className="text-base" style={{ color: 'var(--color-text-secondary)' }}>
+              Zap{' '}
+              <a 
+                href="https://njump.me/npub19802see0gnk3vjlus0dnmfdagusqrtmsxpl5yfmkwn9uvnfnqylqduhr0x" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="underline hover:no-underline"
+                style={{ color: 'var(--color-primary)' }}
+              >
+                Boris
+              </a>
+              {' '}a{' '}
+              <a 
+                href="https://www.readwithboris.com/#pricing" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="underline hover:no-underline"
+                style={{ color: 'var(--color-primary)' }}
+              >
+                meaningful amount of sats
+              </a>
+              {' '}and your avatar will show up above.
+            </p>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              Total supporters: {supporters.length} • 
+              Total zaps: {supporters.reduce((sum, s) => sum + s.zapCount, 0)}
+            </p>
+          </div>
         </div>
       </div>
     </div>
