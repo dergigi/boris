@@ -1,0 +1,35 @@
+/* Skeleton loading animations - respects prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .react-loading-skeleton {
+    animation: none !important;
+  }
+}
+
+/* Ensure skeletons have proper border radius to match design */
+.react-loading-skeleton {
+  border-radius: 4px;
+  line-height: 1.2;
+}
+
+/* Image skeleton aspect ratio boxes to prevent CLS */
+.blog-post-card-image .react-loading-skeleton,
+.bookmark-card .react-loading-skeleton:first-child {
+  aspect-ratio: 16 / 9;
+}
+
+/* Skeleton spacing adjustments */
+.highlights-list .react-loading-skeleton,
+.bookmarks-list .react-loading-skeleton {
+  margin-bottom: 0.5rem;
+}
+
+/* Ensure skeletons inherit theme colors properly */
+.react-loading-skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-border-subtle, rgba(255, 255, 255, 0.05)),
+    transparent
+  );
+}
+

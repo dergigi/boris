@@ -13,6 +13,7 @@ import Toast from './components/Toast'
 import { useToast } from './hooks/useToast'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { RELAYS } from './config/relays'
+import { SkeletonThemeProvider } from './components/Skeletons'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -271,22 +272,24 @@ function App() {
   }
 
   return (
-    <EventStoreProvider eventStore={eventStore}>
-      <AccountsProvider manager={accountManager}>
-        <BrowserRouter>
-          <div className="min-h-screen p-0 max-w-none m-0 relative">
-            <AppRoutes relayPool={relayPool} showToast={showToast} />
-          </div>
-        </BrowserRouter>
-        {toastMessage && (
-          <Toast
-            message={toastMessage}
-            type={toastType}
-            onClose={clearToast}
-          />
-        )}
-      </AccountsProvider>
-    </EventStoreProvider>
+    <SkeletonThemeProvider>
+      <EventStoreProvider eventStore={eventStore}>
+        <AccountsProvider manager={accountManager}>
+          <BrowserRouter>
+            <div className="min-h-screen p-0 max-w-none m-0 relative">
+              <AppRoutes relayPool={relayPool} showToast={showToast} />
+            </div>
+          </BrowserRouter>
+          {toastMessage && (
+            <Toast
+              message={toastMessage}
+              type={toastType}
+              onClose={clearToast}
+            />
+          )}
+        </AccountsProvider>
+      </EventStoreProvider>
+    </SkeletonThemeProvider>
   )
 }
 
