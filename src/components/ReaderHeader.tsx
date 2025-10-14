@@ -38,7 +38,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   const isLongSummary = summary && summary.length > 150
   
   // Determine the dominant highlight color based on visibility and priority
-  const highlightIndicatorStyles = useMemo(() => {
+  const getHighlightIndicatorStyles = useMemo(() => (isOverlay: boolean) => {
     if (!highlights.length) return undefined
     
     // Count highlights by level that are visible
@@ -65,7 +65,8 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
     return {
       backgroundColor: `rgba(${rgb}, 0.1)`,
       borderColor: `rgba(${rgb}, 0.3)`,
-      color: '#fff'
+      // Only force white color in overlay context, otherwise let CSS handle it
+      ...(isOverlay && { color: '#fff' })
     }
   }, [highlights, highlightVisibility, settings])
   
@@ -93,7 +94,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
                 {hasHighlights && (
                   <div 
                     className="highlight-indicator"
-                    style={highlightIndicatorStyles}
+                    style={getHighlightIndicatorStyles(true)}
                   >
                     <FontAwesomeIcon icon={faHighlighter} />
                     <span>{highlightCount} highlight{highlightCount !== 1 ? 's' : ''}</span>
@@ -133,7 +134,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
             {hasHighlights && (
               <div 
                 className="highlight-indicator"
-                style={highlightIndicatorStyles}
+                style={getHighlightIndicatorStyles(false)}
               >
                 <FontAwesomeIcon icon={faHighlighter} />
                 <span>{highlightCount} highlight{highlightCount !== 1 ? 's' : ''}</span>
