@@ -21,6 +21,14 @@ export const HighlightCitation: React.FC<HighlightCitationProps> = ({
   const [articleTitle, setArticleTitle] = useState<string>()
   const authorProfile = useEventModel(Models.ProfileModel, authorPubkey ? [authorPubkey] : null)
   
+  // Debug: log the authorPubkey and profile
+  useEffect(() => {
+    if (authorPubkey) {
+      console.log('📝 HighlightCitation - authorPubkey:', authorPubkey)
+      console.log('📝 HighlightCitation - authorProfile:', authorProfile)
+    }
+  }, [authorPubkey, authorProfile])
+  
   useEffect(() => {
     if (!eventReference || !relayPool) {
       return
