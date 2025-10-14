@@ -36,9 +36,12 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     : undefined
   
   const showSettings = location.pathname === '/settings'
-  const showExplore = location.pathname === '/explore'
+  const showExplore = location.pathname.startsWith('/explore')
   const showMe = location.pathname.startsWith('/me')
   const showProfile = location.pathname.startsWith('/p/')
+  
+  // Extract tab from explore routes
+  const exploreTab = location.pathname === '/explore/highlights' ? 'highlights' : 'writings'
   
   // Extract tab from me routes
   const meTab = location.pathname === '/me' ? 'highlights' : 
@@ -286,7 +289,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       onCreateHighlight={handleCreateHighlight}
       hasActiveAccount={!!(activeAccount && relayPool)}
       explore={showExplore ? (
-        relayPool ? <Explore relayPool={relayPool} /> : null
+        relayPool ? <Explore relayPool={relayPool} activeTab={exploreTab} /> : null
       ) : undefined}
       me={showMe ? (
         relayPool ? <Me relayPool={relayPool} activeTab={meTab} /> : null

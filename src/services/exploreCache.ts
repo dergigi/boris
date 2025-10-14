@@ -1,4 +1,5 @@
 import { NostrEvent } from 'nostr-tools'
+import { Highlight } from '../types/highlights'
 
 export interface CachedBlogPostPreview {
   event: NostrEvent
@@ -11,6 +12,7 @@ export interface CachedBlogPostPreview {
 
 type CacheValue = {
   posts: CachedBlogPostPreview[]
+  highlights: Highlight[]
   timestamp: number
 }
 
@@ -22,8 +24,28 @@ export function getCachedPosts(pubkey: string): CachedBlogPostPreview[] | null {
   return entry.posts
 }
 
+export function getCachedHighlights(pubkey: string): Highlight[] | null {
+  const entry = exploreCache.get(pubkey)
+  if (!entry) return null
+  return entry.highlights
+}
+
 export function setCachedPosts(pubkey: string, posts: CachedBlogPostPreview[]): void {
-  exploreCache.set(pubkey, { posts, timestamp: Date.now() })
+  const current = exploreCache.get(pubkey)
+  exploreCache.set(pubkey, { 
+    posts, 
+    highlights: current?.highlights || [],
+    timestamp: Date.now() 
+  })
+}
+
+export function setCachedHighlights(pubkey: string, highlights: Highlight[]): void {
+  const current = exploreCache.get(pubkey)
+  exploreCache.set(pubkey, { 
+    posts: current?.posts || [],
+    highlights,
+    timestamp: Date.now() 
+  })
 }
 
 export function upsertCachedPost(pubkey: string, post: CachedBlogPostPreview): CachedBlogPostPreview[] {
@@ -36,6 +58,15 @@ export function upsertCachedPost(pubkey: string, post: CachedBlogPostPreview): C
     return tb - ta
   })
   setCachedPosts(pubkey, merged)
+  return merged
+}
+
+export function upsertCachedHighlight(pubkey: string, highlight: Highlight): Highlight[] {
+  const current = exploreCache.get(pubkey)?.highlights || []
+  const byId = new Map(current.map(h => [h.id, h]))
+  byId.set(highlight.id, highlight)
+  const merged = Array.from(byId.values()).sort((a, b) => b.timestamp - a.timestamp)
+  setCachedHighlights(pubkey, merged)
   return merged
 }
 

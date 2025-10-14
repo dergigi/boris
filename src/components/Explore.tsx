@@ -1,30 +1,47 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faExclamationCircle, faNewspaper } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faExclamationCircle, faNewspaper, faPenToSquare, faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
+import { useNavigate } from 'react-router-dom'
 import { fetchContacts } from '../services/contactService'
 import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
+import { fetchHighlightsFromAuthors } from '../services/highlightService'
+import { Highlight } from '../types/highlights'
 import BlogPostCard from './BlogPostCard'
-import { getCachedPosts, upsertCachedPost, setCachedPosts } from '../services/exploreCache'
+import { HighlightItem } from './HighlightItem'
+import { getCachedPosts, upsertCachedPost, setCachedPosts, getCachedHighlights, upsertCachedHighlight, setCachedHighlights } from '../services/exploreCache'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from './PullToRefreshIndicator'
 
 interface ExploreProps {
   relayPool: RelayPool
+  activeTab?: TabType
 }
 
-const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
+type TabType = 'writings' | 'highlights'
+
+const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }) => {
   const activeAccount = Hooks.useActiveAccount()
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'writings')
   const [blogPosts, setBlogPosts] = useState<BlogPostPreview[]>([])
+  const [highlights, setHighlights] = useState<Highlight[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const exploreContainerRef = useRef<HTMLDivElement>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
+  // Update local state when prop changes
   useEffect(() => {
-    const loadBlogPosts = async () => {
+    if (propActiveTab) {
+      setActiveTab(propActiveTab)
+    }
+  }, [propActiveTab])
+
+  useEffect(() => {
+    const loadData = async () => {
       if (!activeAccount) {
         setError('Please log in to explore content from your friends')
         setLoading(false)
@@ -32,14 +49,18 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
       }
 
       try {
-        // show spinner but keep existing posts
+        // show spinner but keep existing data
         setLoading(true)
         setError(null)
 
         // Seed from in-memory cache if available to avoid empty flash
-        const cached = getCachedPosts(activeAccount.pubkey)
-        if (cached && cached.length > 0 && blogPosts.length === 0) {
-          setBlogPosts(cached)
+        const cachedPosts = getCachedPosts(activeAccount.pubkey)
+        if (cachedPosts && cachedPosts.length > 0 && blogPosts.length === 0) {
+          setBlogPosts(cachedPosts)
+        }
+        const cachedHighlights = getCachedHighlights(activeAccount.pubkey)
+        if (cachedHighlights && cachedHighlights.length > 0 && highlights.length === 0) {
+          setHighlights(cachedHighlights)
         }
 
         // Fetch the user's contacts (friends)
@@ -47,15 +68,17 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
           relayPool,
           activeAccount.pubkey,
           (partial) => {
-            // When local contacts are available, kick off early posts fetch
+            // When local contacts are available, kick off early fetch
             if (partial.size > 0) {
               const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+              const partialArray = Array.from(partial)
+              
+              // Fetch blog posts
               fetchBlogPostsFromAuthors(
                 relayPool,
-                Array.from(partial),
+                partialArray,
                 relayUrls,
                 (post) => {
-                  // merge into UI and cache as we stream
                   setBlogPosts((prev) => {
                     const exists = prev.some(p => p.event.id === post.event.id)
                     if (exists) return prev
@@ -69,7 +92,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
                   setCachedPosts(activeAccount.pubkey, upsertCachedPost(activeAccount.pubkey, post))
                 }
               ).then((all) => {
-                // Ensure union of streamed + final is displayed
                 setBlogPosts((prev) => {
                   const byId = new Map(prev.map(p => [p.event.id, p]))
                   for (const post of all) byId.set(post.event.id, post)
@@ -82,22 +104,49 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
                   return merged
                 })
               })
+              
+              // Fetch highlights
+              fetchHighlightsFromAuthors(
+                relayPool,
+                partialArray,
+                (highlight) => {
+                  setHighlights((prev) => {
+                    const exists = prev.some(h => h.id === highlight.id)
+                    if (exists) return prev
+                    const next = [...prev, highlight]
+                    return next.sort((a, b) => b.timestamp - a.timestamp)
+                  })
+                  setCachedHighlights(activeAccount.pubkey, upsertCachedHighlight(activeAccount.pubkey, highlight))
+                }
+              ).then((all) => {
+                setHighlights((prev) => {
+                  const byId = new Map(prev.map(h => [h.id, h]))
+                  for (const highlight of all) byId.set(highlight.id, highlight)
+                  const merged = Array.from(byId.values()).sort((a, b) => b.timestamp - a.timestamp)
+                  setCachedHighlights(activeAccount.pubkey, merged)
+                  return merged
+                })
+              })
             }
           }
         )
         
         if (contacts.size === 0) {
-          setError('You are not following anyone yet. Follow some people to see their blog posts!')
+          setError('You are not following anyone yet. Follow some people to see their content!')
           setLoading(false)
           return
         }
 
         // After full contacts, do a final pass for completeness
         const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-        const posts = await fetchBlogPostsFromAuthors(relayPool, Array.from(contacts), relayUrls)
+        const contactsArray = Array.from(contacts)
+        const [posts, userHighlights] = await Promise.all([
+          fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls),
+          fetchHighlightsFromAuthors(relayPool, contactsArray)
+        ])
 
-        if (posts.length === 0) {
-          setError('No blog posts found from your friends yet')
+        if (posts.length === 0 && userHighlights.length === 0) {
+          setError('No content found from your friends yet')
         }
 
         setBlogPosts((prev) => {
@@ -111,16 +160,24 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
           setCachedPosts(activeAccount.pubkey, merged)
           return merged
         })
+
+        setHighlights((prev) => {
+          const byId = new Map(prev.map(h => [h.id, h]))
+          for (const highlight of userHighlights) byId.set(highlight.id, highlight)
+          const merged = Array.from(byId.values()).sort((a, b) => b.timestamp - a.timestamp)
+          setCachedHighlights(activeAccount.pubkey, merged)
+          return merged
+        })
       } catch (err) {
-        console.error('Failed to load blog posts:', err)
-        setError('Failed to load blog posts. Please try again.')
+        console.error('Failed to load data:', err)
+        setError('Failed to load content. Please try again.')
       } finally {
         setLoading(false)
       }
     }
 
-    loadBlogPosts()
-  }, [relayPool, activeAccount, blogPosts.length, refreshTrigger])
+    loadData()
+  }, [relayPool, activeAccount, blogPosts.length, highlights.length, refreshTrigger])
 
   // Pull-to-refresh
   const pullToRefreshState = usePullToRefresh(exploreContainerRef, {
@@ -129,6 +186,16 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
     },
     isRefreshing: loading
   })
+
+  const handleHighlightDelete = (highlightId: string) => {
+    setHighlights(prev => {
+      const updated = prev.filter(h => h.id !== highlightId)
+      if (activeAccount) {
+        setCachedHighlights(activeAccount.pubkey, updated)
+      }
+      return updated
+    })
+  }
 
   const getPostUrl = (post: BlogPostPreview) => {
     // Get the d-tag identifier
@@ -142,6 +209,61 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
     })
     
     return `/a/${naddr}`
+  }
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'writings':
+        return blogPosts.length === 0 ? (
+          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)' }}>
+            <p>No blog posts found yet.</p>
+          </div>
+        ) : (
+          <div className="explore-grid">
+            {blogPosts.map((post) => (
+              <BlogPostCard
+                key={`${post.author}:${post.event.tags.find(t => t[0] === 'd')?.[1]}`}
+                post={post}
+                href={getPostUrl(post)}
+              />
+            ))}
+          </div>
+        )
+
+      case 'highlights':
+        return highlights.length === 0 ? (
+          <div className="explore-empty">
+            <p>No highlights yet. Your friends should start highlighting content!</p>
+          </div>
+        ) : (
+          <div className="highlights-list me-highlights-list">
+            {highlights.map((highlight) => (
+              <HighlightItem
+                key={highlight.id}
+                highlight={highlight}
+                relayPool={relayPool}
+                onHighlightDelete={handleHighlightDelete}
+              />
+            ))}
+          </div>
+        )
+
+      default:
+        return null
+    }
+  }
+
+  // Only show full loading screen if we don't have any data yet
+  const hasData = highlights.length > 0 || blogPosts.length > 0
+
+  if (loading && !hasData) {
+    return (
+      <div className="explore-container">
+        <div className="explore-loading">
+          <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+        </div>
+      </div>
+    )
   }
 
   if (error) {
@@ -172,27 +294,37 @@ const Explore: React.FC<ExploreProps> = ({ relayPool }) => {
           Explore
         </h1>
         <p className="explore-subtitle">
-          Discover blog posts from your friends on Nostr
+          Discover content from your friends on Nostr
         </p>
-      </div>
-      {loading && (
-        <div className="explore-loading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0' }}>
-          <FontAwesomeIcon icon={faSpinner} spin />
-        </div>
-      )}
-      <div className="explore-grid">
-        {blogPosts.map((post) => (
-          <BlogPostCard
-            key={`${post.author}:${post.event.tags.find(t => t[0] === 'd')?.[1]}`}
-            post={post}
-            href={getPostUrl(post)}
-          />
-        ))}
-        {!loading && blogPosts.length === 0 && (
-          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>No blog posts found yet.</p>
+        
+        {loading && hasData && (
+          <div className="explore-loading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0' }}>
+            <FontAwesomeIcon icon={faSpinner} spin />
           </div>
         )}
+        
+        <div className="me-tabs">
+          <button
+            className={`me-tab ${activeTab === 'writings' ? 'active' : ''}`}
+            data-tab="writings"
+            onClick={() => navigate('/explore')}
+          >
+            <FontAwesomeIcon icon={faPenToSquare} />
+            <span className="tab-label">Writings</span>
+          </button>
+          <button
+            className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
+            data-tab="highlights"
+            onClick={() => navigate('/explore/highlights')}
+          >
+            <FontAwesomeIcon icon={faHighlighter} />
+            <span className="tab-label">Highlights</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="me-tab-content">
+        {renderTabContent()}
       </div>
     </div>
   )
