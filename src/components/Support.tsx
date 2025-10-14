@@ -63,10 +63,10 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
             />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: 'var(--color-text)' }}>
-            Thank You
+            Thank You!
           </h1>
           <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: 'var(--color-text-secondary)' }}>
-            Thank you to everyone who has supported Boris! Your zaps help keep this project alive.
+            Your zaps help keep this project alive.
           </p>
         </div>
 
@@ -81,7 +81,7 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
               <div className="mb-12">
                 <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--color-text)' }}>
                   <FontAwesomeIcon icon={faBolt} className="text-yellow-400 mr-2" />
-                  Mega Supporters
+                  Absolute Legends
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8">
                   {supporters.filter(s => s.isWhale).map(supporter => (
