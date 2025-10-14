@@ -63,7 +63,7 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
             />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: 'var(--color-text)' }}>
-            Support Boris
+            Thank You
           </h1>
           <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: 'var(--color-text-secondary)' }}>
             Thank you to everyone who has supported Boris! Your zaps help keep this project alive.
