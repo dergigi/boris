@@ -58,12 +58,15 @@ export const useHighlightInteractions = ({
     }
   }, [onHighlightClick, contentVersion])
 
-  // Scroll to selected highlight
+  // Scroll to selected highlight with retry mechanism
   useEffect(() => {
     if (!selectedHighlightId || !contentRef.current) return
     
-    // Use a small delay to ensure DOM is updated
-    const timeoutId = setTimeout(() => {
+    let attempts = 0
+    const maxAttempts = 20 // Try for up to 2 seconds
+    const retryDelay = 100
+    
+    const tryScroll = () => {
       if (!contentRef.current) return
       
       const markElement = contentRef.current.querySelector(`mark[data-highlight-id="${selectedHighlightId}"]`)
@@ -76,10 +79,16 @@ export const useHighlightInteractions = ({
           htmlElement.classList.add('highlight-pulse')
           setTimeout(() => htmlElement.classList.remove('highlight-pulse'), 1500)
         }, 500)
+      } else if (attempts < maxAttempts) {
+        attempts++
+        setTimeout(tryScroll, retryDelay)
       } else {
-        console.warn('Could not find mark element for highlight:', selectedHighlightId)
+        console.warn('Could not find mark element for highlight after', maxAttempts, 'attempts:', selectedHighlightId)
       }
-    }, 100)
+    }
+    
+    // Start trying after a small initial delay
+    const timeoutId = setTimeout(tryScroll, 100)
     
     return () => clearTimeout(timeoutId)
   }, [selectedHighlightId, contentVersion])
