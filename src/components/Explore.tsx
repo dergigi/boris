@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner, faExclamationCircle, faNewspaper, faPenToSquare, faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
@@ -14,6 +14,7 @@ import { HighlightItem } from './HighlightItem'
 import { getCachedPosts, upsertCachedPost, setCachedPosts, getCachedHighlights, upsertCachedHighlight, setCachedHighlights } from '../services/exploreCache'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import PullToRefreshIndicator from './PullToRefreshIndicator'
+import { classifyHighlights } from '../utils/highlightClassification'
 
 interface ExploreProps {
   relayPool: RelayPool
@@ -28,6 +29,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
   const [blogPosts, setBlogPosts] = useState<BlogPostPreview[]>([])
   const [highlights, setHighlights] = useState<Highlight[]>([])
+  const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const exploreContainerRef = useRef<HTMLDivElement>(null)
@@ -68,6 +70,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
           relayPool,
           activeAccount.pubkey,
           (partial) => {
+            // Store followed pubkeys for highlight classification
+            setFollowedPubkeys(partial)
             // When local contacts are available, kick off early fetch
             if (partial.size > 0) {
               const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
@@ -136,6 +140,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
           setLoading(false)
           return
         }
+
+        // Store final followed pubkeys
+        setFollowedPubkeys(contacts)
 
         // After full contacts, do a final pass for completeness
         const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
@@ -231,6 +238,11 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
     }
   }
 
+  // Classify highlights with levels based on user context
+  const classifiedHighlights = useMemo(() => {
+    return classifyHighlights(highlights, activeAccount?.pubkey, followedPubkeys)
+  }, [highlights, activeAccount?.pubkey, followedPubkeys])
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'writings':
@@ -251,13 +263,13 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
         )
 
       case 'highlights':
-        return highlights.length === 0 ? (
+        return classifiedHighlights.length === 0 ? (
           <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <p>No highlights yet. Your friends should start highlighting content!</p>
           </div>
         ) : (
           <div className="explore-grid">
-            {highlights.map((highlight) => (
+            {classifiedHighlights.map((highlight) => (
               <HighlightItem
                 key={highlight.id}
                 highlight={highlight}
