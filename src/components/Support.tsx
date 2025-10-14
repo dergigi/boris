@@ -124,7 +124,17 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
             Total zaps: {supporters.reduce((sum, s) => sum + s.zapCount, 0)}
           </p>
           <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-            Want to show up here? Zap Boris a{' '}
+            Want to show up here? Zap{' '}
+            <a 
+              href="https://njump.me/npub19802see0gnk3vjlus0dnmfdagusqrtmsxpl5yfmkwn9uvnfnqylqduhr0x" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="underline hover:no-underline"
+              style={{ color: 'var(--color-primary)' }}
+            >
+              Boris
+            </a>
+            {' '}a{' '}
             <a 
               href="https://www.readwithboris.com/#pricing" 
               target="_blank" 
