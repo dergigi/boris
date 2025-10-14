@@ -37,12 +37,17 @@
   border-bottom-color: var(--color-primary);
 }
 
-/* Highlights tab uses the user's custom "my highlights" color */
-/* With a darker background for better contrast in light mode */
+/* Highlights tab uses the actual highlight style when active */
 .me-tab[data-tab="highlights"].active {
-  color: var(--highlight-color-mine, rgb(253 224 71)); /* yellow-300 */
+  color: var(--color-text);
   border-bottom-color: var(--highlight-color-mine, rgb(253 224 71)); /* yellow-300 */
-  background: var(--color-bg-elevated);
+  background: color-mix(in srgb, var(--highlight-color-mine, rgb(253 224 71)) 35%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--highlight-color-mine, rgb(253 224 71)) 20%, transparent);
+}
+
+.me-tab[data-tab="highlights"].active:hover {
+  background: color-mix(in srgb, var(--highlight-color-mine, rgb(253 224 71)) 50%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--highlight-color-mine, rgb(253 224 71)) 30%, transparent);
 }
 
 /* Reading List tab uses blue color to match bookmarks icon */
