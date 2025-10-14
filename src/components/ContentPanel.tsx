@@ -7,6 +7,7 @@ import rehypePrism from 'rehype-prism-plus'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import 'prismjs/themes/prism-tomorrow.css'
 import { faSpinner, faCheckCircle, faEllipsisH, faExternalLinkAlt, faMobileAlt, faCopy, faShare } from '@fortawesome/free-solid-svg-icons'
+import { ContentSkeleton } from './Skeletons'
 import { nip19 } from 'nostr-tools'
 import { getNostrUrl } from '../config/nostrGateways'
 import { RELAYS } from '../config/relays'
@@ -406,10 +407,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   if (loading) {
     return (
-      <div className="reader loading">
-        <div className="loading-spinner">
-          <FontAwesomeIcon icon={faSpinner} spin />
-        </div>
+      <div className="reader" aria-busy="true">
+        <ContentSkeleton />
       </div>
     )
   }
