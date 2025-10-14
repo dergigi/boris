@@ -197,7 +197,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
 
     loadData()
-  }, [relayPool, activeAccount, blogPosts.length, highlights.length, refreshTrigger])
+  }, [relayPool, activeAccount, blogPosts.length, highlights.length, refreshTrigger, eventStore, settings])
 
   // Pull-to-refresh
   const pullToRefreshState = usePullToRefresh(exploreContainerRef, {

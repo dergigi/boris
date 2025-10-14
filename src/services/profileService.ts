@@ -1,5 +1,5 @@
-import { RelayPool, completeOnEose, onlyEvents, mapEventsToStore } from 'applesauce-relay'
-import { lastValueFrom, merge, Observable, takeUntil, timer, toArray } from 'rxjs'
+import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
+import { lastValueFrom, merge, Observable, takeUntil, timer, toArray, tap } from 'rxjs'
 import { NostrEvent } from 'nostr-tools'
 import { IEventStore } from 'applesauce-core'
 import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
@@ -35,6 +35,8 @@ export const fetchProfiles = async (
       const existing = profilesByPubkey.get(event.pubkey)
       if (!existing || event.created_at > existing.created_at) {
         profilesByPubkey.set(event.pubkey, event)
+        // Store in event store immediately
+        eventStore.add(event)
       }
     }
 
@@ -43,9 +45,9 @@ export const fetchProfiles = async (
           .req(localRelays, { kinds: [0], authors: uniquePubkeys })
           .pipe(
             onlyEvents(),
+            tap((event: NostrEvent) => processEvent(event)),
             completeOnEose(),
-            takeUntil(timer(1200)),
-            mapEventsToStore(eventStore)
+            takeUntil(timer(1200))
           )
       : new Observable<NostrEvent>((sub) => sub.complete())
 
@@ -54,15 +56,13 @@ export const fetchProfiles = async (
           .req(remoteRelays, { kinds: [0], authors: uniquePubkeys })
           .pipe(
             onlyEvents(),
+            tap((event: NostrEvent) => processEvent(event)),
             completeOnEose(),
-            takeUntil(timer(6000)),
-            mapEventsToStore(eventStore)
+            takeUntil(timer(6000))
           )
       : new Observable<NostrEvent>((sub) => sub.complete())
 
-    const events = await lastValueFrom(merge(local$, remote$).pipe(toArray()))
-    
-    events.forEach(processEvent)
+    await lastValueFrom(merge(local$, remote$).pipe(toArray()))
 
     const profiles = Array.from(profilesByPubkey.values())
     console.log('✅ Fetched', profiles.length, 'unique profiles')
