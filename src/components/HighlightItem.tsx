@@ -30,7 +30,7 @@ const isImageUrl = (url: string): boolean => {
 }
 
 // Helper to render a nostr identifier
-const renderNostrId = (nostrUri: string, index: number): JSX.Element => {
+const renderNostrId = (nostrUri: string, index: number): React.ReactElement => {
   try {
     // Remove nostr: prefix
     const identifier = nostrUri.replace(/^nostr:/, '')
