@@ -25,7 +25,7 @@ type TabType = 'writings' | 'highlights'
 const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'writings')
+  const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
   const [blogPosts, setBlogPosts] = useState<BlogPostPreview[]>([])
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [loading, setLoading] = useState(true)
@@ -294,20 +294,20 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
         
         <div className="me-tabs">
           <button
-            className={`me-tab ${activeTab === 'writings' ? 'active' : ''}`}
-            data-tab="writings"
-            onClick={() => navigate('/explore')}
-          >
-            <FontAwesomeIcon icon={faPenToSquare} />
-            <span className="tab-label">Writings</span>
-          </button>
-          <button
             className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
             data-tab="highlights"
-            onClick={() => navigate('/explore/highlights')}
+            onClick={() => navigate('/explore')}
           >
             <FontAwesomeIcon icon={faHighlighter} />
             <span className="tab-label">Highlights</span>
+          </button>
+          <button
+            className={`me-tab ${activeTab === 'writings' ? 'active' : ''}`}
+            data-tab="writings"
+            onClick={() => navigate('/explore/writings')}
+          >
+            <FontAwesomeIcon icon={faPenToSquare} />
+            <span className="tab-label">Writings</span>
           </button>
         </div>
       </div>

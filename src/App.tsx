@@ -71,7 +71,7 @@ function AppRoutes({
         } 
       />
       <Route 
-        path="/explore/highlights" 
+        path="/explore/writings" 
         element={
           <Bookmarks 
             relayPool={relayPool}
