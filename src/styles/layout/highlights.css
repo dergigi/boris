@@ -132,12 +132,9 @@
 .highlight-comment { margin-top: 0.5rem; margin-left: 1.25rem; padding: 0.75rem; border-radius: 4px; font-size: 0.875rem; color: var(--color-text); line-height: 1.5; display: flex; gap: 0.5rem; align-items: flex-start; }
 .highlight-comment-icon { flex-shrink: 0; margin-top: 0.125rem; }
 
-/* Level-colored comments */
-.highlight-item.level-mine .highlight-comment { background: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 10%, transparent); }
+/* Level-colored comment icons */
 .highlight-item.level-mine .highlight-comment-icon { color: var(--highlight-color-mine, #ffff00); }
-.highlight-item.level-friends .highlight-comment { background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 10%, transparent); }
 .highlight-item.level-friends .highlight-comment-icon { color: var(--highlight-color-friends, #f97316); }
-.highlight-item.level-nostrverse .highlight-comment { background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 10%, transparent); }
 .highlight-item.level-nostrverse .highlight-comment-icon { color: var(--highlight-color-nostrverse, #9333ea); }
 
 .highlight-footer { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 0.25rem 0.5rem; font-size: 0.8rem; color: var(--color-text-secondary); border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; transition: border-color 0.2s ease; }
