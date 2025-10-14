@@ -54,6 +54,13 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
       <div className="text-center mb-8 md:mb-12">
+        <div className="flex justify-center mb-6">
+          <img 
+            src="/thank-you.svg" 
+            alt="Thank you" 
+            className="w-48 h-48 md:w-64 md:h-64 opacity-90"
+          />
+        </div>
         <h1 className="text-3xl md:text-4xl font-bold mb-3 text-zinc-100">
           Support Boris
         </h1>
