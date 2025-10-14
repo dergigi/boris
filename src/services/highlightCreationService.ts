@@ -12,7 +12,7 @@ import { markEventAsOfflineCreated } from './offlineSyncService'
 
 // Boris pubkey for zap splits
 // npub19802see0gnk3vjlus0dnmfdagusqrtmsxpl5yfmkwn9uvnfnqylqduhr0x
-const BORIS_PUBKEY = '29dea8672f44ed164bfc83db3da5bd472001af70307f42277674cbc64d33013e'
+export const BORIS_PUBKEY = '29dea8672f44ed164bfc83db3da5bd472001af70307f42277674cbc64d33013e'
 
 const {
   getHighlightText,
