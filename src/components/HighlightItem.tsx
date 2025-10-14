@@ -31,6 +31,7 @@ interface HighlightItemProps {
   eventStore?: IEventStore | null
   onHighlightUpdate?: (highlight: Highlight) => void
   onHighlightDelete?: (highlightId: string) => void
+  showCitation?: boolean
 }
 
 export const HighlightItem: React.FC<HighlightItemProps> = ({ 
@@ -41,7 +42,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   relayPool,
   eventStore,
   onHighlightUpdate,
-  onHighlightDelete
+  onHighlightDelete,
+  showCitation = true
 }) => {
   const itemRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -343,10 +345,12 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
           {highlight.content}
         </blockquote>
         
-        <HighlightCitation
-          highlight={highlight}
-          relayPool={relayPool}
-        />
+        {showCitation && (
+          <HighlightCitation
+            highlight={highlight}
+            relayPool={relayPool}
+          />
+        )}
         
         {highlight.comment && (
           <div className="highlight-comment">

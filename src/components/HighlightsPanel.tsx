@@ -162,6 +162,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
               eventStore={eventStore}
               onHighlightUpdate={handleHighlightUpdate}
               onHighlightDelete={handleHighlightDelete}
+              showCitation={false}
             />
           ))}
         </div>
