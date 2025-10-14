@@ -134,6 +134,7 @@
 .highlight-comment-text { flex: 1; min-width: 0; }
 .highlight-comment-link { color: var(--color-primary); text-decoration: underline; word-wrap: break-word; overflow-wrap: break-word; }
 .highlight-comment-link:hover { opacity: 0.8; }
+.highlight-comment-nostr-id { font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace; font-size: 0.8em; color: var(--color-text-secondary); background: rgba(255, 255, 255, 0.05); padding: 0.125rem 0.375rem; border-radius: 3px; word-wrap: break-word; overflow-wrap: break-word; }
 .highlight-comment-image { display: block; max-width: 100%; height: auto; margin-top: 0.5rem; border-radius: 6px; border: 1px solid var(--color-border); }
 
 /* Level-colored comment icons */
