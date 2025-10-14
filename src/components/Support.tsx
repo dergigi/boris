@@ -82,7 +82,7 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
             {supporters.filter(s => s.isWhale).length > 0 && (
               <div className="mb-12">
                 <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--color-text)' }}>
-                  Legends
+                  Absolute Legends
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8">
                   {supporters.filter(s => s.isWhale).map(supporter => (
