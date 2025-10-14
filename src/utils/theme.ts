@@ -19,7 +19,7 @@ export function getSystemTheme(): 'dark' | 'light' {
 export function applyTheme(
   theme: Theme,
   darkColorTheme: DarkColorTheme = 'midnight',
-  lightColorTheme: LightColorTheme = 'paper-white'
+  lightColorTheme: LightColorTheme = 'sepia'
 ): void {
   const root = document.documentElement
   

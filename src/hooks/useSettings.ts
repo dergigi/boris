@@ -54,7 +54,7 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       applyTheme(
         settings.theme ?? 'system',
         settings.darkColorTheme ?? 'midnight',
-        settings.lightColorTheme ?? 'paper-white'
+        settings.lightColorTheme ?? 'sepia'
       )
       
       // Load font first and wait for it to be ready

@@ -50,7 +50,7 @@ export interface UserSettings {
   // Theme preference
   theme?: 'dark' | 'light' | 'system' // default: system
   darkColorTheme?: 'black' | 'midnight' | 'charcoal' // default: midnight
-  lightColorTheme?: 'paper-white' | 'sepia' | 'ivory' // default: paper-white
+  lightColorTheme?: 'paper-white' | 'sepia' | 'ivory' // default: sepia
 }
 
 export async function loadSettings(

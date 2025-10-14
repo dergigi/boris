@@ -11,7 +11,7 @@ interface ThemeSettingsProps {
 const ThemeSettings: React.FC<ThemeSettingsProps> = ({ settings, onUpdate }) => {
   const currentTheme = settings.theme ?? 'system'
   const currentDarkColor = settings.darkColorTheme ?? 'midnight'
-  const currentLightColor = settings.lightColorTheme ?? 'paper-white'
+  const currentLightColor = settings.lightColorTheme ?? 'sepia'
   
   // Determine which color picker to show based on current theme
   const showDarkColors = currentTheme === 'dark' || currentTheme === 'system'
