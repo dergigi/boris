@@ -16,6 +16,7 @@ import { useOfflineSync } from '../hooks/useOfflineSync'
 import ThreePaneLayout from './ThreePaneLayout'
 import Explore from './Explore'
 import Me from './Me'
+import Support from './Support'
 import { classifyHighlights } from '../utils/highlightClassification'
 
 export type ViewMode = 'compact' | 'cards' | 'large'
@@ -42,6 +43,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const showExplore = location.pathname.startsWith('/explore')
   const showMe = location.pathname.startsWith('/me')
   const showProfile = location.pathname.startsWith('/p/')
+  const showSupport = location.pathname === '/support'
   
   // Extract tab from explore routes
   const exploreTab = location.pathname === '/explore/writings' ? 'writings' : 'highlights'
@@ -250,6 +252,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       showExplore={showExplore}
       showMe={showMe}
       showProfile={showProfile}
+      showSupport={showSupport}
       bookmarks={bookmarks}
       bookmarksLoading={bookmarksLoading}
       viewMode={viewMode}
@@ -312,6 +315,9 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       ) : undefined}
       profile={showProfile && profilePubkey ? (
         relayPool ? <Me relayPool={relayPool} activeTab={profileTab} pubkey={profilePubkey} /> : null
+      ) : undefined}
+      support={showSupport ? (
+        relayPool ? <Support relayPool={relayPool} eventStore={eventStore} settings={settings} /> : null
       ) : undefined}
       toastMessage={toastMessage ?? undefined}
       toastType={toastType}
