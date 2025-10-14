@@ -201,6 +201,36 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
     return `/a/${naddr}`
   }
 
+  const handleHighlightClick = (highlightId: string) => {
+    const highlight = highlights.find(h => h.id === highlightId)
+    if (!highlight) return
+
+    // For nostr-native articles
+    if (highlight.eventReference) {
+      // Convert eventReference to naddr
+      if (highlight.eventReference.includes(':')) {
+        const parts = highlight.eventReference.split(':')
+        const kind = parseInt(parts[0])
+        const pubkey = parts[1]
+        const identifier = parts[2] || ''
+        
+        const naddr = nip19.naddrEncode({
+          kind,
+          pubkey,
+          identifier
+        })
+        navigate(`/a/${naddr}`)
+      } else {
+        // Already an naddr
+        navigate(`/a/${highlight.eventReference}`)
+      }
+    } 
+    // For web URLs
+    else if (highlight.urlReference) {
+      navigate(`/r/${encodeURIComponent(highlight.urlReference)}`)
+    }
+  }
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'writings':
@@ -232,6 +262,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
                 key={highlight.id}
                 highlight={highlight}
                 relayPool={relayPool}
+                onHighlightClick={handleHighlightClick}
               />
             ))}
           </div>
