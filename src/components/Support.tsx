@@ -142,7 +142,7 @@ const SupporterCard: React.FC<SupporterCardProps> = ({ supporter, isWhale }) => 
         {/* Avatar */}
         <div
           className={`rounded-full overflow-hidden flex items-center justify-center cursor-pointer transition-transform hover:scale-105
-            ${isWhale ? 'w-24 h-24 md:w-28 md:h-28' : 'w-16 h-16 md:w-20 md:h-20'}
+            ${isWhale ? 'w-24 h-24 md:w-28 md:h-28' : 'w-12 h-12 md:w-16 md:h-16'}
             ${isWhale ? 'ring-4 ring-yellow-400' : 'ring-2'}
           `}
           style={{ 
