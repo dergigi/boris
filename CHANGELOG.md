@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.7] - 2025-10-14
+
+### Added
+
+- Skeleton loading placeholders using `react-loading-skeleton` package
+  - Replaced loading spinners with skeleton loaders across all major components
+  - BookmarkList, Explore, Me, ContentPanel, and HighlightsPanel now use skeleton placeholders
+  - Theme-aware skeleton animations matching app color scheme
+- Nostr identifier parsing and rendering in highlight comments
+  - Support for `nostr:npub`, `nostr:nprofile`, `nostr:naddr`, `nostr:note`, `nostr:nevent`
+  - Clickable links to profiles and articles from highlight comments
+  - Shortened display format for better readability
+- Visibility filters for explore page content
+  - Toggle filters for nostrverse, friends, and own content
+  - Icon buttons with color coding matching highlight levels
+  - Filter state persists across tab switches
+
+### Changed
+
+- Loading states now use skeleton placeholders instead of spinners for more polished UX
+- Removed incremental loading spinner from explore page refresh
+  - Pull-to-refresh indicator provides refresh state feedback
+
+### Fixed
+
+- Type error in `HighlightItem.tsx` using `React.ReactElement` instead of `JSX.Element`
+- Me page skeleton loading now handles undefined `viewingPubkey` gracefully
+
+### Documentation
+
+- Updated FontAwesome rule to prefer skeleton placeholders over loading text or spinners
+
 ## [0.6.6] - 2025-10-14
 
 ### Added
@@ -1253,7 +1285,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.6...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.7...HEAD
+[0.6.7]: https://github.com/dergigi/boris/compare/v0.6.6...v0.6.7
 [0.6.6]: https://github.com/dergigi/boris/compare/v0.6.5...v0.6.6
 [0.6.5]: https://github.com/dergigi/boris/compare/v0.6.4...v0.6.5
 [0.6.4]: https://github.com/dergigi/boris/compare/v0.6.3...v0.6.4
