@@ -346,7 +346,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         
         {highlight.comment && (
           <div className="highlight-comment">
-            <FontAwesomeIcon icon={faComment} className="highlight-comment-icon" />
+            <FontAwesomeIcon icon={faComment} flip="horizontal" className="highlight-comment-icon" />
             {highlight.comment}
           </div>
         )}
