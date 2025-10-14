@@ -243,16 +243,25 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
     return classifyHighlights(highlights, activeAccount?.pubkey, followedPubkeys)
   }, [highlights, activeAccount?.pubkey, followedPubkeys])
 
+  // Filter out blog posts with unreasonable future dates (allow 1 day for clock skew)
+  const filteredBlogPosts = useMemo(() => {
+    const maxFutureTime = Date.now() / 1000 + (24 * 60 * 60) // 1 day from now
+    return blogPosts.filter(post => {
+      const publishedTime = post.published || post.event.created_at
+      return publishedTime <= maxFutureTime
+    })
+  }, [blogPosts])
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'writings':
-        return blogPosts.length === 0 ? (
+        return filteredBlogPosts.length === 0 ? (
           <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <p>No blog posts found yet.</p>
           </div>
         ) : (
           <div className="explore-grid">
-            {blogPosts.map((post) => (
+            {filteredBlogPosts.map((post) => (
               <BlogPostCard
                 key={`${post.author}:${post.event.tags.find(t => t[0] === 'd')?.[1]}`}
                 post={post}
