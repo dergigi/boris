@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faExclamationCircle, faNewspaper, faPenToSquare, faHighlighter, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
+import { faExclamationCircle, faNewspaper, faPenToSquare, faHighlighter, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { Hooks } from 'applesauce-react'
@@ -405,12 +405,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         <p className="explore-subtitle">
           Discover highlights and blog posts from your friends and others
         </p>
-        
-        {loading && hasData && (
-          <div className="explore-loading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0' }}>
-            <FontAwesomeIcon icon={faSpinner} spin />
-          </div>
-        )}
         
         <div className="me-tabs">
           <button
