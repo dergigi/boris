@@ -376,7 +376,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           >
             <FontAwesomeIcon icon={faHighlighter} />
             <span className="tab-label">Highlights</span>
-            <span className="tab-count">({highlights.length})</span>
           </button>
           {isOwnProfile && (
             <>
@@ -386,8 +385,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
                 onClick={() => navigate('/me/reading-list')}
               >
                 <FontAwesomeIcon icon={faBookmark} />
-                <span className="tab-label">Reading List</span>
-                <span className="tab-count">({allIndividualBookmarks.length})</span>
+                <span className="tab-label">Bookmarks</span>
               </button>
               <button
                 className={`me-tab ${activeTab === 'archive' ? 'active' : ''}`}
@@ -396,7 +394,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
               >
                 <FontAwesomeIcon icon={faBooks} />
                 <span className="tab-label">Archive</span>
-                <span className="tab-count">({readArticles.length})</span>
               </button>
             </>
           )}
@@ -407,7 +404,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           >
             <FontAwesomeIcon icon={faPenToSquare} />
             <span className="tab-label">Writings</span>
-            <span className="tab-count">({writings.length})</span>
           </button>
         </div>
       </div>
