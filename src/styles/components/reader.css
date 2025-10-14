@@ -33,7 +33,7 @@
 .publish-date-topright { position: absolute; top: 1rem; right: 1rem; font-size: 0.813rem; color: var(--color-text); padding: 0.4rem 0.75rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); z-index: 10; }
 .reading-time { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.75rem; background: var(--color-bg-elevated); border: 1px solid var(--color-border); border-radius: 6px; font-size: 0.875rem; color: var(--color-text-secondary); }
 .reading-time svg { font-size: 0.875rem; }
-.highlight-indicator { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.75rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 6px; font-size: 0.875rem; color: var(--color-text-secondary); }
+.highlight-indicator { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.75rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 6px; font-size: 0.875rem; color: var(--color-text); }
 .highlight-indicator svg { font-size: 0.875rem; }
 .reader-html { color: var(--color-text); line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; font-family: var(--reading-font); font-size: var(--reading-font-size); }
 .reader-markdown { color: var(--color-text); line-height: 1.7; font-family: var(--reading-font); font-size: var(--reading-font-size); }
