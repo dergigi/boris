@@ -1,8 +1,10 @@
 import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
 import { lastValueFrom, merge, Observable, takeUntil, timer, toArray } from 'rxjs'
 import { NostrEvent } from 'nostr-tools'
+import { isValidZap, getZapSender, getZapAmount } from 'applesauce-core/helpers'
 import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 import { BORIS_PUBKEY } from './highlightCreationService'
+import { RELAYS } from '../config/relays'
 
 export interface ZapSender {
   pubkey: string
@@ -20,10 +22,15 @@ export async function fetchBorisZappers(
   relayPool: RelayPool
 ): Promise<ZapSender[]> {
   try {
-    console.log('⚡ Fetching zap receipts for Boris...')
+    console.log('⚡ Fetching zap receipts for Boris...', BORIS_PUBKEY)
     
-    const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-    const prioritized = prioritizeLocalRelays(relayUrls)
+    // Use all configured relays plus specific zap-heavy relays
+    const zapRelays = [
+      ...RELAYS,
+      'wss://nostr.mutinywallet.com', // Common zap relay
+      'wss://relay.getalby.com/v1', // Alby zap relay
+    ]
+    const prioritized = prioritizeLocalRelays(zapRelays)
     const { local: localRelays, remote: remoteRelays } = partitionRelays(prioritized)
 
     // Fetch zap receipts with Boris as recipient
@@ -56,26 +63,37 @@ export async function fetchBorisZappers(
       merge(local$, remote$).pipe(toArray())
     )
 
-    console.log(`📊 Fetched ${zapReceipts.length} zap receipts`)
+    console.log(`📊 Fetched ${zapReceipts.length} raw zap receipts`)
 
-    // Dedupe by event ID
+    // Dedupe by event ID and validate
     const uniqueReceipts = new Map<string, NostrEvent>()
+    let invalidCount = 0
+    
     zapReceipts.forEach(receipt => {
       if (!uniqueReceipts.has(receipt.id)) {
-        uniqueReceipts.set(receipt.id, receipt)
+        if (isValidZap(receipt)) {
+          uniqueReceipts.set(receipt.id, receipt)
+        } else {
+          invalidCount++
+        }
       }
     })
 
-    // Aggregate by sender
+    console.log(`✅ ${uniqueReceipts.size} valid zap receipts (${invalidCount} invalid)`)
+
+    // Aggregate by sender using applesauce helpers
     const senderTotals = new Map<string, { totalSats: number; zapCount: number }>()
 
     for (const receipt of uniqueReceipts.values()) {
-      const senderPubkey = extractSenderPubkey(receipt)
-      const amountSats = extractAmountSats(receipt)
+      const senderPubkey = getZapSender(receipt)
+      const amountMsats = getZapAmount(receipt)
 
-      if (!senderPubkey || amountSats === null) {
+      if (!senderPubkey || !amountMsats || amountMsats === 0) {
+        console.warn('Invalid zap receipt - missing sender or amount:', receipt.id)
         continue
       }
+
+      const amountSats = Math.floor(amountMsats / 1000)
 
       const existing = senderTotals.get(senderPubkey) || { totalSats: 0, zapCount: 0 }
       senderTotals.set(senderPubkey, {
@@ -83,6 +101,8 @@ export async function fetchBorisZappers(
         zapCount: existing.zapCount + 1
       })
     }
+
+    console.log(`👥 Found ${senderTotals.size} unique senders`)
 
     // Filter >= 2100 sats, mark whales >= 69420 sats, sort by total desc
     const zappers: ZapSender[] = Array.from(senderTotals.entries())
@@ -104,48 +124,4 @@ export async function fetchBorisZappers(
   }
 }
 
-/**
- * Extract sender pubkey from zap receipt
- * Try description.pubkey first, fallback to P tag
- */
-function extractSenderPubkey(receipt: NostrEvent): string | null {
-  // Try description tag (JSON-encoded zap request)
-  const descTag = receipt.tags.find(t => t[0] === 'description')
-  if (descTag && descTag[1]) {
-    try {
-      const zapRequest = JSON.parse(descTag[1])
-      if (zapRequest.pubkey) {
-        return zapRequest.pubkey
-      }
-    } catch {
-      // Invalid JSON, continue
-    }
-  }
-
-  // Fallback to P tag (sender from zap request)
-  const pTag = receipt.tags.find(t => t[0] === 'P')
-  if (pTag && pTag[1]) {
-    return pTag[1]
-  }
-
-  return null
-}
-
-/**
- * Extract amount in sats from zap receipt
- * Use amount tag (millisats), skip if missing
- */
-function extractAmountSats(receipt: NostrEvent): number | null {
-  const amountTag = receipt.tags.find(t => t[0] === 'amount')
-  if (!amountTag || !amountTag[1]) {
-    return null
-  }
-
-  const millisats = parseInt(amountTag[1], 10)
-  if (isNaN(millisats) || millisats <= 0) {
-    return null
-  }
-
-  return Math.floor(millisats / 1000)
-}
 
