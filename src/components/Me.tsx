@@ -200,9 +200,11 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   if (loading && !hasData) {
     return (
       <div className="explore-container" aria-busy="true">
-        <div className="explore-header">
-          <AuthorCard pubkey={viewingPubkey} isOwnProfile={isOwnProfile} />
-        </div>
+        {viewingPubkey && (
+          <div className="explore-header">
+            <AuthorCard authorPubkey={viewingPubkey} />
+          </div>
+        )}
         <div className="explore-grid">
           {activeTab === 'writings' ? (
             Array.from({ length: 6 }).map((_, i) => (
