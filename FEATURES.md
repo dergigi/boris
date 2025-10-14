@@ -37,9 +37,16 @@
 
 ## Explore & Profiles
 
-- **Explore**: Discover friends’ highlights and writings, plus a “nostrverse” feed.
+- **Explore**: Discover friends' highlights and writings, plus a "nostrverse" feed.
 - **Filters**: Visibility toggles (mine, friends, nostrverse) apply to Explore highlights.
 - **Profiles**: View your own (`/me`) or other users (`/p/:npub`) with tabs for Highlights, Bookmarks, Archive, and Writings.
+
+## Support
+
+- **Supporter page**: Displays avatars of users who zapped Boris (kind:9735 receipts).
+- **Thresholds**: Shows supporters who sent ≥ 2100 sats; whales (≥ 69420 sats) get special styling with a bolt badge.
+- **Profile integration**: Fetches and displays profile pictures and names for all supporters.
+- **Stats**: Total supporter count and zap count displayed at the bottom.
 
 ## Video
 
