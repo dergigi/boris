@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner, faExclamationCircle, faNewspaper, faPenToSquare, faHighlighter, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
+import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { Hooks } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
@@ -352,9 +353,23 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
 
   if (loading && !hasData) {
     return (
-      <div className="explore-container">
-        <div className="explore-loading">
-          <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+      <div className="explore-container" aria-busy="true">
+        <div className="explore-header">
+          <h1>
+            <FontAwesomeIcon icon={faNewspaper} />
+            Explore
+          </h1>
+        </div>
+        <div className="explore-grid">
+          {activeTab === 'writings' ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <BlogPostSkeleton key={i} />
+            ))
+          ) : (
+            Array.from({ length: 8 }).map((_, i) => (
+              <HighlightSkeleton key={i} />
+            ))
+          )}
         </div>
       </div>
     )
