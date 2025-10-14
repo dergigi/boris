@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.4] - 2025-10-14
+
+### Added
+
+- Color theme variants for light and dark modes
+  - Sepia, Classic (white/black), Rose, Sky, Mint, and Lavender themes
+  - Color swatches shown in theme selector instead of text labels
+  - CSS variable tokens and theme classes for consistent theming
+- Playful empty state message for other users' profiles
+- Profile links now open within app instead of external portals
+
+### Changed
+
+- Default light theme changed to sepia for better readability
+- Theme setting labels renamed from 'Colors' to 'Theme'
+- Highlight text now aligns properly with footer icons
+- Increased spacing between highlight cards for better visual separation
+- Increased bottom padding in highlight cards
+- Simplified Me page tab labels for cleaner UI
+- Highlight marker style applied to active Highlights tab
+- All profile links open internally instead of via external Nostr portals
+- Match highlight comment color to highlight level color
+
+### Fixed
+
+- Consistent yellow-300 highlight color across all themes
+- Highlight contrast improved in light themes
+- Text contrast improved in dark color themes
+- Darker background for app body in dark themes
+- Reading progress indicator now uses theme colors
+- Highlights tab readability improved in light mode with proper background
+- Empty state text color changed from red to gray for better aesthetics
+- Replaced 'any' types with proper type definitions for better type safety
+
+### Refactored
+
+- Migrated entire codebase to semantic token system
+  - Pull-to-refresh components updated to use semantic tokens
+  - Cards, forms, and layout components migrated to semantic tokens
+  - All remaining components converted to semantic token usage
+- Removed localStorage for theme persistence, using only Nostr (NIP-78)
+- Theme colors applied to body element for consistent theming
+
+## [0.6.3] - 2025-10-14
+
+### Added
+
+- Ants link to empty writings state for other users
+
+### Changed
+
+- Empty state text color from red to gray
+
+### Fixed
+
+- Match highlight comment color to highlight level color
+- Open all profile links within app instead of external portals
+- Playful empty state message for other users' profiles
+
 ## [0.6.2] - 2025-01-27
 
 ### Added
@@ -1096,7 +1155,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.2...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.4...HEAD
+[0.6.4]: https://github.com/dergigi/boris/compare/v0.6.3...v0.6.4
+[0.6.3]: https://github.com/dergigi/boris/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/dergigi/boris/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/dergigi/boris/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/dergigi/boris/compare/v0.5.7...v0.6.0
