@@ -68,7 +68,17 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
             Thank You!
           </h1>
           <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: 'var(--color-text-secondary)' }}>
-            Your zaps help keep this project alive.
+            Your{' '}
+            <a 
+              href="https://www.readwithboris.com/#pricing" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="underline hover:no-underline"
+              style={{ color: 'var(--color-primary)' }}
+            >
+              zaps
+            </a>
+            {' '}help keep this project alive.
           </p>
         </div>
 
