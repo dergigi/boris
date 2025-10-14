@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faServer, faTrash, faEllipsisH, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faHighlighter, faTrash, faEllipsisH, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models, IEventStore } from 'applesauce-core'
@@ -209,13 +209,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     // Always show relay list, use plane icon for local-only
     const isLocalOrOffline = highlight.isLocalOnly || showOfflineIndicator
     
-    // Show server icon with relay info if available
+    // Show highlighter icon with relay info if available
     if (highlight.publishedRelays && highlight.publishedRelays.length > 0) {
       const relayNames = highlight.publishedRelays.map(url => 
         url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
       )
       return {
-        icon: isLocalOrOffline ? faPlane : faServer,
+        icon: isLocalOrOffline ? faPlane : faHighlighter,
         tooltip: relayNames.join('\n'),
         spin: false
       }
@@ -226,7 +226,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
       )
       return {
-        icon: faServer,
+        icon: faHighlighter,
         tooltip: relayNames.join('\n'),
         spin: false
       }
@@ -237,7 +237,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
     )
     return {
-      icon: faServer,
+      icon: faHighlighter,
       tooltip: relayNames.join('\n'),
       spin: false
     }
