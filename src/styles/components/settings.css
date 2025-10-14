@@ -6,37 +6,37 @@
 .settings-content { overflow-y: auto; flex: 1; margin-bottom: 1rem; text-align: left; padding: 0 0.25rem 2rem 0.25rem; }
 .settings-section { margin-bottom: 2.5rem; }
 .settings-section:last-child { margin-bottom: 0; }
-.section-title { font-size: 1rem; font-weight: 600; color: rgb(255 255 255); /* white */ margin: 0 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid rgb(63 63 70); /* zinc-700 */ text-transform: uppercase; letter-spacing: 0.05em; }
+.section-title { font-size: 1rem; font-weight: 600; color: var(--color-text); margin: 0 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); text-transform: uppercase; letter-spacing: 0.05em; }
 .settings-footer { display: flex; justify-content: flex-start; padding: 1rem 0 0.5rem 0; flex-shrink: 0; }
-.settings-footer .btn-primary { background: rgb(99 102 241); /* indigo-500 */ color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; font-size: 1rem; cursor: pointer; transition: background-color 0.2s; display: flex; align-items: center; gap: 0.5rem; }
-.settings-footer .btn-primary:hover:not(:disabled) { background: rgb(79 70 229); /* indigo-600 */ }
+.settings-footer .btn-primary { background: var(--color-primary); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; font-size: 1rem; cursor: pointer; transition: background-color 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+.settings-footer .btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); }
 .settings-footer .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Setting groups */
 .setting-group { margin-bottom: 1.5rem; }
-.setting-label { display: block; margin-bottom: 0.75rem; font-size: 0.9rem; font-weight: 500; color: rgb(212 212 216); /* zinc-300 */ }
+.setting-label { display: block; margin-bottom: 0.75rem; font-size: 0.9rem; font-weight: 500; color: var(--color-text); }
 
 /* Zap splits preset buttons */
 .zap-preset-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .zap-preset-btn {
   padding: 0.625rem 1.25rem;
-  background: rgb(39 39 42); /* zinc-800 */
-  border: 1px solid rgb(82 82 91); /* zinc-600 */
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 6px;
-  color: rgb(212 212 216); /* zinc-300 */
+  color: var(--color-text);
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: 500;
 }
 .zap-preset-btn:hover {
-  background: rgb(63 63 70); /* zinc-700 */
-  border-color: rgb(99 102 241); /* indigo-500 */
-  color: rgb(255 255 255); /* white */
+  background: var(--color-border);
+  border-color: var(--color-primary);
+  color: var(--color-text);
 }
 .zap-preset-btn.active {
-  background: rgb(99 102 241); /* indigo-500 */
-  border-color: rgb(99 102 241); /* indigo-500 */
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: rgb(255 255 255); /* white */
 }
 
@@ -47,14 +47,14 @@
   justify-content: space-between;
   margin-bottom: 0.5rem;
   font-size: 0.85rem;
-  color: rgb(161 161 170); /* zinc-400 */
+  color: var(--color-text-secondary);
 }
 .zap-split-label { font-weight: 500; }
 .zap-split-slider {
   width: 100%;
   height: 8px;
   border-radius: 4px;
-  background: rgb(39 39 42); /* zinc-800 */
+  background: var(--color-bg-elevated);
   outline: none;
   -webkit-appearance: none;
 }
@@ -64,36 +64,36 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: rgb(99 102 241); /* indigo-500 */
+  background: var(--color-primary);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 .zap-split-slider::-webkit-slider-thumb:hover {
-  background: rgb(79 70 229); /* indigo-600 */
+  background: var(--color-primary-hover);
   transform: scale(1.1);
 }
 .zap-split-slider::-moz-range-thumb {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: rgb(99 102 241); /* indigo-500 */
+  background: var(--color-primary);
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;
 }
 .zap-split-slider::-moz-range-thumb:hover {
-  background: rgb(79 70 229); /* indigo-600 */
+  background: var(--color-primary-hover);
   transform: scale(1.1);
 }
 .zap-split-description {
   margin-top: 1.5rem;
   padding: 1rem;
-  background: rgb(39 39 42); /* zinc-800 */
-  border: 1px solid rgb(63 63 70); /* zinc-700 */
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: rgb(161 161 170); /* zinc-400 */
+  color: var(--color-text-secondary);
 }
 
 /* Relay items */
@@ -145,5 +145,4 @@
     line-height: 1.4;
   }
 }
-
 

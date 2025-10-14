@@ -1,14 +1,14 @@
 /* Profile UI fragments */
 .author-card-container { display: flex; justify-content: center; padding: 2rem 1rem; }
-.author-card { display: flex; gap: 1rem; padding: 1.5rem; background: rgb(24 24 27); /* zinc-900 */ border: 1px solid rgb(63 63 70); /* zinc-700 */ border-radius: 12px; max-width: 600px; width: 100%; transition: all 0.2s ease; }
-.author-card-clickable:hover { border-color: rgb(99 102 241); /* indigo-500 */ background: rgb(30 30 33); /* slightly lighter */ transform: translateY(-1px); }
+.author-card { display: flex; gap: 1rem; padding: 1.5rem; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 12px; max-width: 600px; width: 100%; transition: all 0.2s ease; }
+.author-card-clickable:hover { border-color: var(--color-primary); background: var(--color-bg-elevated); transform: translateY(-1px); }
 .author-card-clickable:active { transform: translateY(0); }
-.author-card-avatar { flex-shrink: 0; width: 60px; height: 60px; border-radius: 50%; overflow: hidden; background: rgb(39 39 42); /* zinc-800 */ display: flex; align-items: center; justify-content: center; color: rgb(113 113 122); /* zinc-500 */ }
+.author-card-avatar { flex-shrink: 0; width: 60px; height: 60px; border-radius: 50%; overflow: hidden; background: var(--color-bg-elevated); display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); }
 .author-card-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .author-card-avatar svg { font-size: 2.5rem; }
 .author-card-content { flex: 1; min-width: 0; text-align: left; }
-.author-card-name { font-size: 1rem; font-weight: 600; color: rgb(228 228 231); /* zinc-200 */ margin-bottom: 0.5rem; text-align: left; }
-.author-card-bio { font-size: 0.9rem; color: rgb(161 161 170); /* zinc-400 */ line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+.author-card-name { font-size: 1rem; font-weight: 600; color: var(--color-text); margin-bottom: 0.5rem; text-align: left; }
+.author-card-bio { font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; text-align: left; }
 
 @media (max-width: 768px) {
   .author-card-container { 
@@ -27,5 +27,4 @@
   .author-card-name { font-size: 0.95rem; }
   .author-card-bio { font-size: 0.85rem; -webkit-line-clamp: 2; }
 }
-
 

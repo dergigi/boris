@@ -4,6 +4,7 @@ import { RelayPool } from 'applesauce-relay'
 import { UserSettings } from '../services/settingsService'
 import IconButton from './IconButton'
 import { loadFont } from '../utils/fontLoader'
+import ThemeSettings from './Settings/ThemeSettings'
 import ReadingDisplaySettings from './Settings/ReadingDisplaySettings'
 import LayoutNavigationSettings from './Settings/LayoutNavigationSettings'
 import StartupPreferencesSettings from './Settings/StartupPreferencesSettings'
@@ -159,6 +160,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPoo
       </div>
 
       <div className="settings-content">
+        <ThemeSettings settings={localSettings} onUpdate={handleUpdate} />
         <ReadingDisplaySettings settings={localSettings} onUpdate={handleUpdate} />
         <LayoutNavigationSettings settings={localSettings} onUpdate={handleUpdate} />
         <StartupPreferencesSettings settings={localSettings} onUpdate={handleUpdate} />

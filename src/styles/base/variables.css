@@ -4,10 +4,6 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -47,10 +43,246 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
+/* Dark theme (default) */
+:root.theme-dark {
+  color-scheme: dark;
+  
+  --color-bg: #18181b;           /* zinc-900 */
+  --color-bg-elevated: #27272a;  /* zinc-800 */
+  --color-bg-subtle: #1e1e1e;    /* between zinc-800 and zinc-900 */
+  --color-border: #3f3f46;       /* zinc-700 */
+  --color-border-subtle: #52525b; /* zinc-600 */
+  --color-text: #e4e4e7;         /* zinc-200 */
+  --color-text-secondary: #a1a1aa; /* zinc-400 */
+  --color-text-muted: #71717a;   /* zinc-500 */
+  --color-primary: #6366f1;      /* indigo-500 */
+  --color-primary-hover: #4f46e5; /* indigo-600 */
+}
+
+/* Light theme */
+:root.theme-light {
+  color-scheme: light;
+  
+  --color-bg: #ffffff;           /* white */
+  --color-bg-elevated: #f5f5f5;  /* gray-100 */
+  --color-bg-subtle: #fafafa;    /* gray-50 */
+  --color-border: #e5e7eb;       /* gray-200 */
+  --color-border-subtle: #d1d5db; /* gray-300 */
+  --color-text: #111827;         /* gray-900 */
+  --color-text-secondary: #374151; /* gray-700 */
+  --color-text-muted: #6b7280;   /* gray-500 */
+  --color-primary: #4f46e5;      /* indigo-600 */
+  --color-primary-hover: #4338ca; /* indigo-700 */
+  
+  /* Highlight colors for light theme - use same Tailwind colors */
+  --highlight-color-mine: #fde047;      /* yellow-300 */
+  --highlight-color-friends: #f97316;   /* orange-500 */
+  --highlight-color-nostrverse: #9333ea; /* purple-600 */
+}
+
+/* System theme - follow OS preference */
+:root.theme-system {
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root.theme-system {
+    --color-bg: #18181b;
+    --color-bg-elevated: #27272a;
+    --color-bg-subtle: #1e1e1e;
+    --color-border: #3f3f46;
+    --color-border-subtle: #52525b;
+    --color-text: #e4e4e7;
+    --color-text-secondary: #a1a1aa;
+    --color-text-muted: #71717a;
+    --color-primary: #6366f1;
+    --color-primary-hover: #4f46e5;
+  }
+}
+
 @media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+  :root.theme-system {
+    --color-bg: #ffffff;
+    --color-bg-elevated: #f5f5f5;
+    --color-bg-subtle: #fafafa;
+    --color-border: #e5e7eb;
+    --color-border-subtle: #d1d5db;
+    --color-text: #111827;
+    --color-text-secondary: #374151;
+    --color-text-muted: #6b7280;
+    --color-primary: #4f46e5;
+    --color-primary-hover: #4338ca;
+    
+    /* Standard highlight colors */
+    --highlight-color-mine: #fde047;
+    --highlight-color-friends: #f97316;
+    --highlight-color-nostrverse: #9333ea;
+  }
+}
+
+/* Dark Color Theme Variants */
+/* Midnight (default) - current zinc palette */
+:root.dark-midnight {
+  --color-bg: #18181b;           /* zinc-900 */
+  --color-bg-elevated: #27272a;  /* zinc-800 */
+  --color-bg-subtle: #0f0f11;    /* darker than zinc-900 */
+  --color-border: #3f3f46;       /* zinc-700 */
+  --color-border-subtle: #52525b; /* zinc-600 */
+  --color-text: #e4e4e7;         /* zinc-200 */
+  --color-text-secondary: #a1a1aa; /* zinc-400 */
+  --color-text-muted: #71717a;   /* zinc-500 */
+}
+
+/* Black - true black for OLED */
+:root.dark-black {
+  --color-bg: #000000;           /* true black */
+  --color-bg-elevated: #0a0a0a;  /* very dark gray */
+  --color-bg-subtle: #000000;    /* true black for body */
+  --color-border: #1a1a1a;
+  --color-border-subtle: #2a2a2a;
+  --color-text: #e4e4e7;         /* zinc-200 */
+  --color-text-secondary: #a1a1aa; /* zinc-400 */
+  --color-text-muted: #71717a;   /* zinc-500 */
+}
+
+/* Charcoal - warmer, softer dark */
+:root.dark-charcoal {
+  --color-bg: #1c1c1e;           /* warmer dark */
+  --color-bg-elevated: #2c2c2e;
+  --color-bg-subtle: #16161a;    /* darker charcoal */
+  --color-border: #3a3a3c;
+  --color-border-subtle: #48484a;
+  --color-text: #e4e4e7;         /* zinc-200 */
+  --color-text-secondary: #a1a1aa; /* zinc-400 */
+  --color-text-muted: #71717a;   /* zinc-500 */
+}
+
+/* Light Color Theme Variants */
+/* Paper White (default) - pure white */
+:root.light-paper-white {
+  --color-bg: #ffffff;           /* white */
+  --color-bg-elevated: #f5f5f5;  /* gray-100 */
+  --color-bg-subtle: #fafafa;    /* gray-50 */
+  --color-border: #e5e7eb;       /* gray-200 */
+  --color-border-subtle: #d1d5db; /* gray-300 */
+  
+  /* Standard highlight colors */
+  --highlight-color-mine: #fde047;
+  --highlight-color-friends: #f97316;
+  --highlight-color-nostrverse: #9333ea;
+}
+
+/* Sepia - warm, reading-friendly */
+:root.light-sepia {
+  --color-bg: #f4f1ea;           /* warm beige */
+  --color-bg-elevated: #ebe6db;  /* darker beige */
+  --color-bg-subtle: #f9f6f0;    /* lighter beige */
+  --color-border: #d4cfc4;       /* warm gray border */
+  --color-border-subtle: #c4bfb4;
+  --color-text: #2d2a24;         /* warm dark brown */
+  --color-text-secondary: #5d5a54;
+  --color-text-muted: #8d8a84;
+  
+  /* Standard highlight colors */
+  --highlight-color-mine: #fde047;      /* yellow-300 */
+  --highlight-color-friends: #f97316;   /* orange-500 */
+  --highlight-color-nostrverse: #9333ea; /* purple-600 */
+}
+
+/* Ivory - soft, creamy */
+:root.light-ivory {
+  --color-bg: #fffff0;           /* ivory */
+  --color-bg-elevated: #faf8f0;  /* cream */
+  --color-bg-subtle: #fefef8;
+  --color-border: #e8e6de;
+  --color-border-subtle: #d8d6ce;
+  --color-text: #1a1a18;         /* near black with warm tint */
+  --color-text-secondary: #4a4a48;
+  --color-text-muted: #7a7a78;
+  
+  /* Standard highlight colors */
+  --highlight-color-mine: #fde047;
+  --highlight-color-friends: #f97316;
+  --highlight-color-nostrverse: #9333ea;
+}
+
+/* System theme color variants */
+@media (prefers-color-scheme: dark) {
+  :root.theme-system.dark-midnight {
+    --color-bg: #18181b;
+    --color-bg-elevated: #27272a;
+    --color-bg-subtle: #0f0f11;
+    --color-border: #3f3f46;
+    --color-border-subtle: #52525b;
+    --color-text: #e4e4e7;
+    --color-text-secondary: #a1a1aa;
+    --color-text-muted: #71717a;
+  }
+  
+  :root.theme-system.dark-black {
+    --color-bg: #000000;
+    --color-bg-elevated: #0a0a0a;
+    --color-bg-subtle: #000000;
+    --color-border: #1a1a1a;
+    --color-border-subtle: #2a2a2a;
+    --color-text: #e4e4e7;
+    --color-text-secondary: #a1a1aa;
+    --color-text-muted: #71717a;
+  }
+  
+  :root.theme-system.dark-charcoal {
+    --color-bg: #1c1c1e;
+    --color-bg-elevated: #2c2c2e;
+    --color-bg-subtle: #16161a;
+    --color-border: #3a3a3c;
+    --color-border-subtle: #48484a;
+    --color-text: #e4e4e7;
+    --color-text-secondary: #a1a1aa;
+    --color-text-muted: #71717a;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root.theme-system.light-paper-white {
+    --color-bg: #ffffff;
+    --color-bg-elevated: #f5f5f5;
+    --color-bg-subtle: #fafafa;
+    --color-border: #e5e7eb;
+    --color-border-subtle: #d1d5db;
+    
+    --highlight-color-mine: #fde047;
+    --highlight-color-friends: #f97316;
+    --highlight-color-nostrverse: #9333ea;
+  }
+  
+  :root.theme-system.light-sepia {
+    --color-bg: #f4f1ea;
+    --color-bg-elevated: #ebe6db;
+    --color-bg-subtle: #f9f6f0;
+    --color-border: #d4cfc4;
+    --color-border-subtle: #c4bfb4;
+    --color-text: #2d2a24;
+    --color-text-secondary: #5d5a54;
+    --color-text-muted: #8d8a84;
+    
+    --highlight-color-mine: #fde047;
+    --highlight-color-friends: #f97316;
+    --highlight-color-nostrverse: #9333ea;
+  }
+  
+  :root.theme-system.light-ivory {
+    --color-bg: #fffff0;
+    --color-bg-elevated: #faf8f0;
+    --color-bg-subtle: #fefef8;
+    --color-border: #e8e6de;
+    --color-border-subtle: #d8d6ce;
+    --color-text: #1a1a18;
+    --color-text-secondary: #4a4a48;
+    --color-text-muted: #7a7a78;
+    
+    --highlight-color-mine: #fde047;
+    --highlight-color-friends: #f97316;
+    --highlight-color-nostrverse: #9333ea;
   }
 }
 

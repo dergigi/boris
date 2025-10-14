@@ -29,28 +29,39 @@ export const ReadingProgressIndicator: React.FC<ReadingProgressIndicatorProps> =
   
   return (
     <div 
-      className={`reading-progress-bar fixed bottom-0 left-0 right-0 z-[1102] bg-[rgba(26,26,26,0.85)] backdrop-blur-sm px-3 py-1 flex items-center gap-2 transition-all duration-300 ${className}`}
+      className={`reading-progress-bar fixed bottom-0 left-0 right-0 z-[1102] backdrop-blur-sm px-3 py-1 flex items-center gap-2 transition-all duration-300 ${className}`}
       style={{
         '--left-offset': leftOffset,
-        '--right-offset': rightOffset
+        '--right-offset': rightOffset,
+        backgroundColor: 'var(--color-bg-elevated)',
+        opacity: 0.95
       } as React.CSSProperties}
     >
-      <div className="flex-1 h-0.5 bg-white/10 rounded-full overflow-hidden relative">
+      <div 
+        className="flex-1 h-0.5 rounded-full overflow-hidden relative"
+        style={{ backgroundColor: 'var(--color-border)' }}
+      >
         <div 
           className={`h-full rounded-full transition-all duration-300 relative ${
             isComplete 
               ? 'bg-green-500' 
-              : 'bg-indigo-500'
+              : ''
           }`}
-          style={{ width: `${clampedProgress}%` }}
+          style={{ 
+            width: `${clampedProgress}%`,
+            backgroundColor: isComplete ? undefined : 'var(--color-primary)'
+          }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]" />
         </div>
       </div>
       {showPercentage && (
-        <div className={`text-[0.625rem] font-normal min-w-[32px] text-right tabular-nums ${
-          isComplete ? 'text-green-500' : 'text-gray-500'
-        }`}>
+        <div 
+          className={`text-[0.625rem] font-normal min-w-[32px] text-right tabular-nums ${
+            isComplete ? 'text-green-500' : ''
+          }`}
+          style={{ color: isComplete ? undefined : 'var(--color-text-muted)' }}
+        >
           {isComplete ? '✓' : `${clampedProgress}%`}
         </div>
       )}

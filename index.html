@@ -25,6 +25,11 @@
     <meta name="twitter:url" content="https://read.withboris.com/" />
     <meta name="twitter:title" content="Boris - Nostr Bookmarks" />
     <meta name="twitter:description" content="Your reading list for the Nostr world. A minimal nostr client for bookmark management with highlights." />
+    
+    <!-- Default to system theme until settings load from Nostr -->
+    <script>
+      document.documentElement.className = 'theme-system';
+    </script>
   </head>
   <body>
     <div id="root"></div>

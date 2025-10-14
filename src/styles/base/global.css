@@ -2,6 +2,8 @@
 
 /* Body - keep only app-specific overrides */
 body {
+  background: var(--color-bg-subtle);
+  color: var(--color-text);
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
   overflow-x: hidden;
@@ -22,7 +24,7 @@ body.mobile-sidebar-open {
   justify-content: center;
   text-align: center;
   padding: 2rem;
-  color: rgb(212 212 216); /* zinc-300 */
+  color: var(--color-text);
 }
 
 

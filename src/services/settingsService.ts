@@ -47,6 +47,10 @@ export interface UserSettings {
   imageCacheSizeMB?: number // Maximum cache size in megabytes (default: 210MB)
   // Mobile settings
   autoCollapseSidebarOnMobile?: boolean // Auto-collapse sidebar on mobile (default: true)
+  // Theme preference
+  theme?: 'dark' | 'light' | 'system' // default: system
+  darkColorTheme?: 'black' | 'midnight' | 'charcoal' // default: midnight
+  lightColorTheme?: 'paper-white' | 'sepia' | 'ivory' // default: sepia
 }
 
 export async function loadSettings(
