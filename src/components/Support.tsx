@@ -52,65 +52,67 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
-      <div className="text-center mb-8 md:mb-12">
-        <div className="flex justify-center mb-6">
-          <img 
-            src="/thank-you.svg" 
-            alt="Thank you" 
-            className="w-48 h-48 md:w-64 md:h-64 opacity-90"
-          />
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
+      <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
+        <div className="text-center mb-8 md:mb-12">
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/thank-you.svg" 
+              alt="Thank you" 
+              className="w-48 h-48 md:w-64 md:h-64 opacity-90"
+            />
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: 'var(--color-text)' }}>
+            Support Boris
+          </h1>
+          <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: 'var(--color-text-secondary)' }}>
+            Thank you to everyone who has supported Boris! Your zaps help keep this project alive.
+          </p>
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold mb-3 text-zinc-100">
-          Support Boris
-        </h1>
-        <p className="text-base md:text-lg text-zinc-400 max-w-2xl mx-auto">
-          Thank you to everyone who has supported Boris! Your zaps help keep this project alive.
-        </p>
-      </div>
 
-      {supporters.length === 0 ? (
-        <div className="text-center text-zinc-500 py-12">
-          <p>No supporters yet. Be the first to zap Boris!</p>
+        {supporters.length === 0 ? (
+          <div className="text-center py-12" style={{ color: 'var(--color-text-muted)' }}>
+            <p>No supporters yet. Be the first to zap Boris!</p>
+          </div>
+        ) : (
+          <>
+            {/* Whales Section */}
+            {supporters.filter(s => s.isWhale).length > 0 && (
+              <div className="mb-12">
+                <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--color-text)' }}>
+                  <FontAwesomeIcon icon={faBolt} className="text-yellow-400 mr-2" />
+                  Mega Supporters
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8">
+                  {supporters.filter(s => s.isWhale).map(supporter => (
+                    <SupporterCard key={supporter.pubkey} supporter={supporter} isWhale={true} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Regular Supporters Section */}
+            {supporters.filter(s => !s.isWhale).length > 0 && (
+              <div>
+                <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center" style={{ color: 'var(--color-text)' }}>
+                  Supporters
+                </h2>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 md:gap-6">
+                  {supporters.filter(s => !s.isWhale).map(supporter => (
+                    <SupporterCard key={supporter.pubkey} supporter={supporter} isWhale={false} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        <div className="mt-12 md:mt-16 text-center">
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            Total supporters: {supporters.length} • 
+            Total zaps: {supporters.reduce((sum, s) => sum + s.zapCount, 0)}
+          </p>
         </div>
-      ) : (
-        <>
-          {/* Whales Section */}
-          {supporters.filter(s => s.isWhale).length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center text-zinc-200">
-                <FontAwesomeIcon icon={faBolt} className="text-yellow-400 mr-2" />
-                Mega Supporters
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8">
-                {supporters.filter(s => s.isWhale).map(supporter => (
-                  <SupporterCard key={supporter.pubkey} supporter={supporter} isWhale={true} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Regular Supporters Section */}
-          {supporters.filter(s => !s.isWhale).length > 0 && (
-            <div>
-              <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center text-zinc-200">
-                Supporters
-              </h2>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 md:gap-6">
-                {supporters.filter(s => !s.isWhale).map(supporter => (
-                  <SupporterCard key={supporter.pubkey} supporter={supporter} isWhale={false} />
-                ))}
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      <div className="mt-12 md:mt-16 text-center">
-        <p className="text-sm text-zinc-500">
-          Total supporters: {supporters.length} • 
-          Total zaps: {supporters.reduce((sum, s) => sum + s.zapCount, 0)}
-        </p>
       </div>
     </div>
   )
@@ -132,10 +134,14 @@ const SupporterCard: React.FC<SupporterCardProps> = ({ supporter, isWhale }) => 
       <div className="relative">
         {/* Avatar */}
         <div
-          className={`rounded-full overflow-hidden bg-zinc-800 flex items-center justify-center
+          className={`rounded-full overflow-hidden flex items-center justify-center
             ${isWhale ? 'w-24 h-24 md:w-28 md:h-28' : 'w-16 h-16 md:w-20 md:h-20'}
-            ${isWhale ? 'ring-4 ring-yellow-400' : 'ring-2 ring-zinc-700'}
+            ${isWhale ? 'ring-4 ring-yellow-400' : 'ring-2'}
           `}
+          style={{ 
+            backgroundColor: 'var(--color-bg-elevated)',
+            borderColor: isWhale ? undefined : 'var(--color-border)'
+          }}
           title={`${name} • ${supporter.totalSats.toLocaleString()} sats`}
         >
           {picture ? (
@@ -148,14 +154,18 @@ const SupporterCard: React.FC<SupporterCardProps> = ({ supporter, isWhale }) => 
           ) : (
             <FontAwesomeIcon
               icon={faUserCircle}
-              className={`text-zinc-600 ${isWhale ? 'text-5xl' : 'text-3xl'}`}
+              className={isWhale ? 'text-5xl' : 'text-3xl'}
+              style={{ color: 'var(--color-border)' }}
             />
           )}
         </div>
 
         {/* Whale Badge */}
         {isWhale && (
-          <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center border-2 border-zinc-900">
+          <div 
+            className="absolute -bottom-1 -right-1 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center border-2"
+            style={{ borderColor: 'var(--color-bg)' }}
+          >
             <FontAwesomeIcon icon={faBolt} className="text-zinc-900 text-sm" />
           </div>
         )}
@@ -163,10 +173,16 @@ const SupporterCard: React.FC<SupporterCardProps> = ({ supporter, isWhale }) => 
 
       {/* Name and Total */}
       <div className="mt-2 text-center">
-        <p className={`font-medium text-zinc-200 truncate max-w-full ${isWhale ? 'text-sm' : 'text-xs'}`}>
+        <p 
+          className={`font-medium truncate max-w-full ${isWhale ? 'text-sm' : 'text-xs'}`}
+          style={{ color: 'var(--color-text)' }}
+        >
           {name}
         </p>
-        <p className={`text-zinc-500 ${isWhale ? 'text-xs' : 'text-[10px]'}`}>
+        <p 
+          className={isWhale ? 'text-xs' : 'text-[10px]'}
+          style={{ color: 'var(--color-text-muted)' }}
+        >
           {supporter.totalSats.toLocaleString()} sats
         </p>
       </div>
