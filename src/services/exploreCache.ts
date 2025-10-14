@@ -65,7 +65,7 @@ export function upsertCachedHighlight(pubkey: string, highlight: Highlight): Hig
   const current = exploreCache.get(pubkey)?.highlights || []
   const byId = new Map(current.map(h => [h.id, h]))
   byId.set(highlight.id, highlight)
-  const merged = Array.from(byId.values()).sort((a, b) => b.timestamp - a.timestamp)
+  const merged = Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
   setCachedHighlights(pubkey, merged)
   return merged
 }

@@ -39,7 +39,7 @@ export const HighlightCard: React.FC<HighlightCardProps> = ({
       </div>
       <div className="blog-post-card-content">
         <div className="highlight-card-text">
-          {truncateText(highlight.text, 200)}
+          {truncateText(highlight.content, 200)}
         </div>
         {highlight.comment && (
           <div className="highlight-card-comment">
@@ -53,7 +53,7 @@ export const HighlightCard: React.FC<HighlightCardProps> = ({
             {getUserDisplayName()}
           </div>
           <div className="blog-post-card-date">
-            {formatDateCompact(highlight.timestamp)}
+            {formatDateCompact(highlight.created_at)}
           </div>
         </div>
       </div>

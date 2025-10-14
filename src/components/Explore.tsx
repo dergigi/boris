@@ -114,7 +114,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
                     const exists = prev.some(h => h.id === highlight.id)
                     if (exists) return prev
                     const next = [...prev, highlight]
-                    return next.sort((a, b) => b.timestamp - a.timestamp)
+                    return next.sort((a, b) => b.created_at - a.created_at)
                   })
                   setCachedHighlights(activeAccount.pubkey, upsertCachedHighlight(activeAccount.pubkey, highlight))
                 }
@@ -122,7 +122,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
                 setHighlights((prev) => {
                   const byId = new Map(prev.map(h => [h.id, h]))
                   for (const highlight of all) byId.set(highlight.id, highlight)
-                  const merged = Array.from(byId.values()).sort((a, b) => b.timestamp - a.timestamp)
+                  const merged = Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
                   setCachedHighlights(activeAccount.pubkey, merged)
                   return merged
                 })
@@ -164,7 +164,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
         setHighlights((prev) => {
           const byId = new Map(prev.map(h => [h.id, h]))
           for (const highlight of userHighlights) byId.set(highlight.id, highlight)
-          const merged = Array.from(byId.values()).sort((a, b) => b.timestamp - a.timestamp)
+          const merged = Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
           setCachedHighlights(activeAccount.pubkey, merged)
           return merged
         })
@@ -186,16 +186,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
     },
     isRefreshing: loading
   })
-
-  const handleHighlightDelete = (highlightId: string) => {
-    setHighlights(prev => {
-      const updated = prev.filter(h => h.id !== highlightId)
-      if (activeAccount) {
-        setCachedHighlights(activeAccount.pubkey, updated)
-      }
-      return updated
-    })
-  }
 
   const getPostUrl = (post: BlogPostPreview) => {
     // Get the d-tag identifier
@@ -243,8 +233,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
                 highlight={highlight}
                 onClick={() => {
                   // Navigate to the highlighted article if available
-                  if (highlight.url) {
-                    navigate(`/r/${encodeURIComponent(highlight.url)}`)
+                  if (highlight.urlReference) {
+                    navigate(`/r/${encodeURIComponent(highlight.urlReference)}`)
                   }
                 }}
               />
