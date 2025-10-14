@@ -7,6 +7,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.5] - 2025-10-14
+
+### Added
+
+- Highlights tab on `/explore` page
+  - View highlights from friends and followed users
+  - Tab structure matching `/me` and profile pages
+  - Grid layout for highlights with cards
+  - Highlights shown first, writings second
+  - Clicking highlight opens source article and scrolls to position
+  - Opens highlights sidebar automatically when clicking from explore
+- Citation attribution on highlight items
+  - Shows "— Author, Article Title" for Nostr-native content
+  - Shows "— domain.com" for web URLs
+  - Resolves author profiles and article titles automatically
+- Comment icon (fa-comments) for highlights with comments
+  - Flipped horizontally for better visual alignment
+  - Colored based on highlight level (mine/friends/nostrverse)
+  - No background or extra indent for cleaner look
+- Click timestamp to open highlight in native Nostr app
+  - Uses nostr:nevent links for native app integration
+
+### Changed
+
+- Highlight counter text color now matches article text (var(--color-text))
+  - Better readability in both light and dark modes
+  - Only forces white in overlay context (hero images)
+- Highlight level colors applied to explore page highlights
+  - Yellow for own highlights
+  - Orange for friends' highlights
+  - Purple for nostrverse highlights
+- Explore page tab order: Highlights first, Writings second
+- Explore page tabs now extend full width to match content grid
+
+### Fixed
+
+- Highlight counter readability in light mode
+  - Theme-aware text color instead of hardcoded blue
+  - Consistent with reading time indicator styling
+- Scroll-to-highlight reliability in article view
+  - Added retry mechanism for asynchronous content loading
+  - Attempts to find highlight element up to 20 times over 2 seconds
+- Author attribution in highlight citations
+  - Correctly extracts author pubkey from highlight's p tag
+  - No more "Unknown" author names
+- Explore page grid layout
+  - Removed max-width constraint blocking full-width display
+  - Tabs and content now properly aligned
+
+### Style
+
+- Replaced server icon with highlighter icon in highlight items
+- Switch from solid comment icon to outlined comments icon (fa-regular)
+- Removed background from highlight comments for cleaner appearance
+- Removed extra left margin from comments (icon provides sufficient indent)
+- Comment icon colored by highlight level with no opacity
+
+### Dependencies
+
+- Added @fortawesome/free-regular-svg-icons package for outlined icons
+
 ## [0.6.4] - 2025-10-14
 
 ### Added
@@ -1155,7 +1216,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.4...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.5...HEAD
+[0.6.5]: https://github.com/dergigi/boris/compare/v0.6.4...v0.6.5
 [0.6.4]: https://github.com/dergigi/boris/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/dergigi/boris/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/dergigi/boris/compare/v0.6.1...v0.6.2
