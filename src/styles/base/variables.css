@@ -73,6 +73,11 @@
   --color-text-muted: #6b7280;   /* gray-500 */
   --color-primary: #4f46e5;      /* indigo-600 */
   --color-primary-hover: #4338ca; /* indigo-700 */
+  
+  /* Darker highlight colors for light theme - better contrast */
+  --highlight-color-mine: #facc15;      /* yellow-400 - darker than yellow-300 */
+  --highlight-color-friends: #ea580c;   /* orange-600 - darker than orange-500 */
+  --highlight-color-nostrverse: #7c3aed; /* purple-600 - same as dark */
 }
 
 /* System theme - follow OS preference */
@@ -107,6 +112,11 @@
     --color-text-muted: #6b7280;
     --color-primary: #4f46e5;
     --color-primary-hover: #4338ca;
+    
+    /* Darker highlight colors for light theme */
+    --highlight-color-mine: #facc15;
+    --highlight-color-friends: #ea580c;
+    --highlight-color-nostrverse: #7c3aed;
   }
 }
 
@@ -155,6 +165,11 @@
   --color-bg-subtle: #fafafa;    /* gray-50 */
   --color-border: #e5e7eb;       /* gray-200 */
   --color-border-subtle: #d1d5db; /* gray-300 */
+  
+  /* Darker highlights for better contrast */
+  --highlight-color-mine: #facc15;
+  --highlight-color-friends: #ea580c;
+  --highlight-color-nostrverse: #7c3aed;
 }
 
 /* Sepia - warm, reading-friendly */
@@ -167,6 +182,11 @@
   --color-text: #2d2a24;         /* warm dark brown */
   --color-text-secondary: #5d5a54;
   --color-text-muted: #8d8a84;
+  
+  /* Darker highlights for better contrast on warm bg */
+  --highlight-color-mine: #eab308;      /* yellow-500 - even darker for sepia */
+  --highlight-color-friends: #dc2626;   /* red-600 - darker for warm bg */
+  --highlight-color-nostrverse: #7c3aed; /* purple-600 */
 }
 
 /* Ivory - soft, creamy */
@@ -179,6 +199,11 @@
   --color-text: #1a1a18;         /* near black with warm tint */
   --color-text-secondary: #4a4a48;
   --color-text-muted: #7a7a78;
+  
+  /* Darker highlights for better contrast on ivory */
+  --highlight-color-mine: #facc15;
+  --highlight-color-friends: #ea580c;
+  --highlight-color-nostrverse: #7c3aed;
 }
 
 /* System theme color variants */
@@ -224,6 +249,10 @@
     --color-bg-subtle: #fafafa;
     --color-border: #e5e7eb;
     --color-border-subtle: #d1d5db;
+    
+    --highlight-color-mine: #facc15;
+    --highlight-color-friends: #ea580c;
+    --highlight-color-nostrverse: #7c3aed;
   }
   
   :root.theme-system.light-sepia {
@@ -235,6 +264,10 @@
     --color-text: #2d2a24;
     --color-text-secondary: #5d5a54;
     --color-text-muted: #8d8a84;
+    
+    --highlight-color-mine: #eab308;
+    --highlight-color-friends: #dc2626;
+    --highlight-color-nostrverse: #7c3aed;
   }
   
   :root.theme-system.light-ivory {
@@ -246,6 +279,10 @@
     --color-text: #1a1a18;
     --color-text-secondary: #4a4a48;
     --color-text-muted: #7a7a78;
+    
+    --highlight-color-mine: #facc15;
+    --highlight-color-friends: #ea580c;
+    --highlight-color-nostrverse: #7c3aed;
   }
 }
 
