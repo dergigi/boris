@@ -298,7 +298,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
           Explore
         </h1>
         <p className="explore-subtitle">
-          Discover content from your friends on Nostr
+          Discover highlights and blog posts from your friends and others
         </p>
         
         {loading && hasData && (
