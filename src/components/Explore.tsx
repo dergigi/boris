@@ -232,11 +232,11 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
 
       case 'highlights':
         return highlights.length === 0 ? (
-          <div className="explore-empty">
+          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <p>No highlights yet. Your friends should start highlighting content!</p>
           </div>
         ) : (
-          <div className="highlights-list me-highlights-list">
+          <div className="explore-grid">
             {highlights.map((highlight) => (
               <HighlightItem
                 key={highlight.id}
