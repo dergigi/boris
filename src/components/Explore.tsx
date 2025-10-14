@@ -3,12 +3,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner, faExclamationCircle, faNewspaper, faPenToSquare, faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
+import { IEventStore } from 'applesauce-core'
 import { nip19 } from 'nostr-tools'
 import { useNavigate } from 'react-router-dom'
 import { fetchContacts } from '../services/contactService'
 import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
 import { fetchHighlightsFromAuthors } from '../services/highlightService'
+import { fetchProfiles } from '../services/profileService'
 import { Highlight } from '../types/highlights'
+import { UserSettings } from '../services/settingsService'
 import BlogPostCard from './BlogPostCard'
 import { HighlightItem } from './HighlightItem'
 import { getCachedPosts, upsertCachedPost, setCachedPosts, getCachedHighlights, upsertCachedHighlight, setCachedHighlights } from '../services/exploreCache'
@@ -18,12 +21,14 @@ import { classifyHighlights } from '../utils/highlightClassification'
 
 interface ExploreProps {
   relayPool: RelayPool
+  eventStore: IEventStore
+  settings?: UserSettings
   activeTab?: TabType
 }
 
 type TabType = 'writings' | 'highlights'
 
-const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }) => {
+const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, activeTab: propActiveTab }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
@@ -151,6 +156,14 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, activeTab: propActiveTab }
           fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls),
           fetchHighlightsFromAuthors(relayPool, contactsArray)
         ])
+
+        // Fetch profiles for all blog post authors to cache them
+        if (posts.length > 0) {
+          const authorPubkeys = Array.from(new Set(posts.map(p => p.author)))
+          fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch(err => {
+            console.error('Failed to fetch author profiles:', err)
+          })
+        }
 
         if (posts.length === 0 && userHighlights.length === 0) {
           setError('No content found from your friends yet')

@@ -305,7 +305,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       onCreateHighlight={handleCreateHighlight}
       hasActiveAccount={!!(activeAccount && relayPool)}
       explore={showExplore ? (
-        relayPool ? <Explore relayPool={relayPool} activeTab={exploreTab} /> : null
+        relayPool ? <Explore relayPool={relayPool} eventStore={eventStore} settings={settings} activeTab={exploreTab} /> : null
       ) : undefined}
       me={showMe ? (
         relayPool ? <Me relayPool={relayPool} activeTab={meTab} /> : null
