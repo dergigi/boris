@@ -15,6 +15,7 @@ import { createDeletionRequest } from '../services/deletionService'
 import ConfirmDialog from './ConfirmDialog'
 import { getNostrUrl } from '../config/nostrGateways'
 import CompactButton from './CompactButton'
+import { HighlightCitation } from './HighlightCitation'
 
 interface HighlightWithLevel extends Highlight {
   level?: 'mine' | 'friends' | 'nostrverse'
@@ -337,6 +338,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         <blockquote className="highlight-text">
           {highlight.content}
         </blockquote>
+        
+        <HighlightCitation
+          eventReference={highlight.eventReference}
+          urlReference={highlight.urlReference}
+          authorPubkey={highlight.author}
+          relayPool={relayPool}
+        />
         
         {highlight.comment && (
           <div className="highlight-comment">
