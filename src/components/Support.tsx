@@ -8,6 +8,8 @@ import { fetchProfiles } from '../services/profileService'
 import { UserSettings } from '../services/settingsService'
 import { Models } from 'applesauce-core'
 import { useEventModel } from 'applesauce-react/hooks'
+import { useNavigate } from 'react-router-dom'
+import { nip19 } from 'nostr-tools'
 
 interface SupportProps {
   relayPool: RelayPool
@@ -123,17 +125,23 @@ interface SupporterCardProps {
 }
 
 const SupporterCard: React.FC<SupporterCardProps> = ({ supporter, isWhale }) => {
+  const navigate = useNavigate()
   const profile = useEventModel(Models.ProfileModel, [supporter.pubkey])
 
   const picture = profile?.picture
   const name = profile?.name || profile?.display_name || `${supporter.pubkey.slice(0, 8)}...`
+
+  const handleClick = () => {
+    const npub = nip19.npubEncode(supporter.pubkey)
+    navigate(`/p/${npub}`)
+  }
 
   return (
     <div className="flex flex-col items-center">
       <div className="relative">
         {/* Avatar */}
         <div
-          className={`rounded-full overflow-hidden flex items-center justify-center
+          className={`rounded-full overflow-hidden flex items-center justify-center cursor-pointer transition-transform hover:scale-105
             ${isWhale ? 'w-24 h-24 md:w-28 md:h-28' : 'w-16 h-16 md:w-20 md:h-20'}
             ${isWhale ? 'ring-4 ring-yellow-400' : 'ring-2'}
           `}
@@ -142,6 +150,7 @@ const SupporterCard: React.FC<SupporterCardProps> = ({ supporter, isWhale }) => 
             borderColor: isWhale ? undefined : 'var(--color-border)'
           }}
           title={`${name} • ${supporter.totalSats.toLocaleString()} sats`}
+          onClick={handleClick}
         >
           {picture ? (
             <img
