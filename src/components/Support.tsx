@@ -175,12 +175,10 @@ const SupporterCard: React.FC<SupporterCardProps> = ({ supporter, isWhale }) => 
         {/* Avatar */}
         <div
           className={`rounded-full overflow-hidden flex items-center justify-center cursor-pointer transition-transform hover:scale-105
-            ${isWhale ? 'w-24 h-24 md:w-28 md:h-28' : 'w-12 h-12 md:w-16 md:h-16'}
-            ${isWhale ? 'ring-4 ring-yellow-400' : 'ring-2'}
+            ${isWhale ? 'w-24 h-24 md:w-28 md:h-28 ring-4 ring-yellow-400' : 'w-10 h-10 md:w-12 md:h-12'}
           `}
           style={{ 
-            backgroundColor: 'var(--color-bg-elevated)',
-            borderColor: isWhale ? undefined : 'var(--color-border)'
+            backgroundColor: 'var(--color-bg-elevated)'
           }}
           title={`${name} • ${supporter.totalSats.toLocaleString()} sats`}
           onClick={handleClick}
