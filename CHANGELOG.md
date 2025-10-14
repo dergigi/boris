@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.8] - 2025-10-14
+
+### Changed
+
+- Updated favicon and app icons to purple theme
+  - Replaced all 8 icon files (apple-touch-icon, favicon variants, and Android Chrome icons)
+  - New purple color scheme for better brand recognition
+
 ## [0.6.7] - 2025-10-14
 
 ### Added
@@ -1285,7 +1293,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.7...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.8...HEAD
+[0.6.8]: https://github.com/dergigi/boris/compare/v0.6.7...v0.6.8
 [0.6.7]: https://github.com/dergigi/boris/compare/v0.6.6...v0.6.7
 [0.6.6]: https://github.com/dergigi/boris/compare/v0.6.5...v0.6.6
 [0.6.5]: https://github.com/dergigi/boris/compare/v0.6.4...v0.6.5
