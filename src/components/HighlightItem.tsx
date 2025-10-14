@@ -340,9 +340,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         </blockquote>
         
         <HighlightCitation
-          eventReference={highlight.eventReference}
-          urlReference={highlight.urlReference}
-          authorPubkey={highlight.author}
+          highlight={highlight}
           relayPool={relayPool}
         />
         
