@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.6] - 2025-10-14
+
+### Added
+
+- Profile fetching and caching for explore page
+  - Automatically fetches kind:0 metadata for all blog post authors
+  - Stores profiles in event store for instant access across app
+  - Rebroadcasts profiles to local/all relays per user settings
+  - Fixes "Unknown" author names by proactively caching profiles
+- Rich content rendering in highlight comments
+  - URLs automatically detected and rendered as clickable links
+  - Image URLs (jpg, png, gif, webp, etc.) render as inline images
+  - Images lazy-load with responsive sizing and rounded borders
+  - Links open in new tab with security attributes
+
+### Changed
+
+- Hide citation in highlights sidebar when viewing article
+  - Citation removed from sidebar since all highlights are from same source
+  - Citation still shown in Explore and Me pages where context is needed
+  - Reduces visual clutter and redundant information
+
+### Fixed
+
+- Blog posts with far-future publication dates no longer appear in explore
+  - Filter excludes posts with dates more than 1 day in future
+  - Allows 1 day tolerance for clock skew between systems
+  - Prevents spam posts with unrealistic dates (e.g., "53585 years from now")
+- Layout breaks from long URLs in highlight comments
+  - Added word-wrap, overflow-wrap, and word-break CSS properties
+  - Set min-width: 0 to allow flex child to shrink properly
+  - Long URLs now wrap correctly instead of causing horizontal overflow
+- Profile fetching implementation
+  - Use eventStore.add() directly for immediate profile storage
+  - Use tap() operator to process events as they arrive
+  - Correct TypeScript types and dependency array
+
 ## [0.6.5] - 2025-10-14
 
 ### Added
@@ -1216,7 +1253,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.5...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.6...HEAD
+[0.6.6]: https://github.com/dergigi/boris/compare/v0.6.5...v0.6.6
 [0.6.5]: https://github.com/dergigi/boris/compare/v0.6.4...v0.6.5
 [0.6.4]: https://github.com/dergigi/boris/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/dergigi/boris/compare/v0.6.2...v0.6.3
