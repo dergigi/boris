@@ -10,13 +10,13 @@ export interface ZapSender {
   pubkey: string
   totalSats: number
   zapCount: number
-  isWhale: boolean // >= 69420 sats
+  isWhale: boolean // >= 21 sats (testing: normally 69420)
 }
 
 /**
  * Fetches zap receipts (kind:9735) for Boris and aggregates by sender
  * @param relayPool - The relay pool to query
- * @returns Array of senders who zapped >= 2100 sats, sorted by total desc
+ * @returns Array of senders who zapped >= 2 sats, sorted by total desc
  */
 export async function fetchBorisZappers(
   relayPool: RelayPool
@@ -104,14 +104,15 @@ export async function fetchBorisZappers(
 
     console.log(`👥 Found ${senderTotals.size} unique senders`)
 
-    // Filter >= 2100 sats, mark whales >= 69420 sats, sort by total desc
+    // Filter >= 2 sats, mark whales >= 21 sats, sort by total desc
+    // TODO: Restore to >= 2100 sats and >= 69420 sats for production
     const zappers: ZapSender[] = Array.from(senderTotals.entries())
-      .filter(([, data]) => data.totalSats >= 2100)
+      .filter(([, data]) => data.totalSats >= 2)
       .map(([pubkey, data]) => ({
         pubkey,
         totalSats: data.totalSats,
         zapCount: data.zapCount,
-        isWhale: data.totalSats >= 69420
+        isWhale: data.totalSats >= 21
       }))
       .sort((a, b) => b.totalSats - a.totalSats)
 
