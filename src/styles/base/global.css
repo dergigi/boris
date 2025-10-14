@@ -22,7 +22,7 @@ body.mobile-sidebar-open {
   justify-content: center;
   text-align: center;
   padding: 2rem;
-  color: rgb(212 212 216); /* zinc-300 */
+  color: var(--color-text);
 }
 
 

@@ -5,6 +5,7 @@ import { EventFactory } from 'applesauce-factory'
 import { AccountManager } from 'applesauce-accounts'
 import { UserSettings, loadSettings, saveSettings, watchSettings } from '../services/settingsService'
 import { loadFont, getFontFamily } from '../utils/fontLoader'
+import { applyTheme } from '../utils/theme'
 import { RELAYS } from '../config/relays'
 
 interface UseSettingsParams {
@@ -47,7 +48,10 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       const root = document.documentElement.style
       const fontKey = settings.readingFont || 'system'
       
-      console.log('🎨 Applying settings styles:', { fontKey, fontSize: settings.fontSize })
+      console.log('🎨 Applying settings styles:', { fontKey, fontSize: settings.fontSize, theme: settings.theme })
+      
+      // Apply theme (defaults to 'system' if not set)
+      applyTheme(settings.theme ?? 'system')
       
       // Load font first and wait for it to be ready
       if (fontKey !== 'system') {

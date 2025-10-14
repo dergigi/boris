@@ -4,10 +4,6 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -47,10 +43,70 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
+/* Dark theme (default) */
+:root.theme-dark {
+  color-scheme: dark;
+  
+  --color-bg: #18181b;           /* zinc-900 */
+  --color-bg-elevated: #27272a;  /* zinc-800 */
+  --color-bg-subtle: #1e1e1e;    /* between zinc-800 and zinc-900 */
+  --color-border: #3f3f46;       /* zinc-700 */
+  --color-border-subtle: #52525b; /* zinc-600 */
+  --color-text: #e4e4e7;         /* zinc-200 */
+  --color-text-secondary: #a1a1aa; /* zinc-400 */
+  --color-text-muted: #71717a;   /* zinc-500 */
+  --color-primary: #6366f1;      /* indigo-500 */
+  --color-primary-hover: #4f46e5; /* indigo-600 */
+}
+
+/* Light theme */
+:root.theme-light {
+  color-scheme: light;
+  
+  --color-bg: #ffffff;           /* white */
+  --color-bg-elevated: #f5f5f5;  /* gray-100 */
+  --color-bg-subtle: #fafafa;    /* gray-50 */
+  --color-border: #e5e7eb;       /* gray-200 */
+  --color-border-subtle: #d1d5db; /* gray-300 */
+  --color-text: #111827;         /* gray-900 */
+  --color-text-secondary: #374151; /* gray-700 */
+  --color-text-muted: #6b7280;   /* gray-500 */
+  --color-primary: #4f46e5;      /* indigo-600 */
+  --color-primary-hover: #4338ca; /* indigo-700 */
+}
+
+/* System theme - follow OS preference */
+:root.theme-system {
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root.theme-system {
+    --color-bg: #18181b;
+    --color-bg-elevated: #27272a;
+    --color-bg-subtle: #1e1e1e;
+    --color-border: #3f3f46;
+    --color-border-subtle: #52525b;
+    --color-text: #e4e4e7;
+    --color-text-secondary: #a1a1aa;
+    --color-text-muted: #71717a;
+    --color-primary: #6366f1;
+    --color-primary-hover: #4f46e5;
+  }
+}
+
 @media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+  :root.theme-system {
+    --color-bg: #ffffff;
+    --color-bg-elevated: #f5f5f5;
+    --color-bg-subtle: #fafafa;
+    --color-border: #e5e7eb;
+    --color-border-subtle: #d1d5db;
+    --color-text: #111827;
+    --color-text-secondary: #374151;
+    --color-text-muted: #6b7280;
+    --color-primary: #4f46e5;
+    --color-primary-hover: #4338ca;
   }
 }
 
