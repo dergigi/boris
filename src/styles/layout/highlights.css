@@ -127,8 +127,8 @@
 .highlight-item.level-nostrverse .highlight-quote-icon { color: var(--highlight-color-nostrverse, #9333ea); }
 
 .highlight-content { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; padding: 2.25rem 0.75rem; }
-.highlight-text { margin: 0; padding: 0; font-style: italic; color: var(--color-text); line-height: 1.6; border-left: none; font-size: 0.95rem; }
-.highlight-comment { margin-top: 0.5rem; padding: 0.75rem; border-left: 3px solid; border-radius: 4px; font-size: 0.875rem; color: var(--color-text); line-height: 1.5; }
+.highlight-text { margin: 0; padding: 0 0 0 1.25rem; font-style: italic; color: var(--color-text); line-height: 1.6; border-left: none; font-size: 0.95rem; }
+.highlight-comment { margin-top: 0.5rem; margin-left: 1.25rem; padding: 0.75rem; border-left: 3px solid; border-radius: 4px; font-size: 0.875rem; color: var(--color-text); line-height: 1.5; }
 
 /* Level-colored comments */
 .highlight-item.level-mine .highlight-comment { background: color-mix(in srgb, var(--highlight-color-mine, #ffff00) 10%, transparent); border-left-color: var(--highlight-color-mine, #ffff00); }
