@@ -60,35 +60,6 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
       </div>
 
       <div className="setting-group setting-inline">
-        <label htmlFor="readingFont">Reading Font</label>
-        <div className="setting-control">
-          <FontSelector
-            value={settings.readingFont || 'source-serif-4'}
-            onChange={(font) => onUpdate({ readingFont: font })}
-          />
-        </div>
-      </div>
-
-      <div className="setting-group setting-inline">
-        <label className="setting-label">Font Size</label>
-        <div className="setting-control">
-          <div className="setting-buttons">
-            {[16, 18, 21, 24, 28, 32].map(size => (
-              <button
-                key={size}
-                onClick={() => onUpdate({ fontSize: size })}
-                className={`font-size-btn ${(settings.fontSize || 21) === size ? 'active' : ''}`}
-                title={`${size}px`}
-                style={{ fontSize: `${size - 2}px` }}
-              >
-                A
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="setting-group setting-inline">
         <label>Default Highlight Visibility</label>
         <div className="highlight-level-toggles">
           <IconButton
@@ -124,6 +95,35 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
               opacity: (settings.defaultHighlightVisibilityMine !== false) ? 1 : 0.4
             }}
           />
+        </div>
+      </div>
+
+      <div className="setting-group setting-inline">
+        <label htmlFor="readingFont">Reading Font</label>
+        <div className="setting-control">
+          <FontSelector
+            value={settings.readingFont || 'source-serif-4'}
+            onChange={(font) => onUpdate({ readingFont: font })}
+          />
+        </div>
+      </div>
+
+      <div className="setting-group setting-inline">
+        <label className="setting-label">Font Size</label>
+        <div className="setting-control">
+          <div className="setting-buttons">
+            {[16, 18, 21, 24, 28, 32].map(size => (
+              <button
+                key={size}
+                onClick={() => onUpdate({ fontSize: size })}
+                className={`font-size-btn ${(settings.fontSize || 21) === size ? 'active' : ''}`}
+                title={`${size}px`}
+                style={{ fontSize: `${size - 2}px` }}
+              >
+                A
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
