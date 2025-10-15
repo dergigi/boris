@@ -2,20 +2,21 @@
  * Nostr gateway URLs for viewing events and profiles on the web
  */
 
-export const NOSTR_GATEWAY = 'https://ants.sh' as const
+export const NOSTR_GATEWAY = 'https://nostr.at' as const
+export const SEARCH_PORTAL = 'https://ants.sh' as const
 
 /**
  * Get a profile URL on the gateway
  */
 export function getProfileUrl(npub: string): string {
-  return `${NOSTR_GATEWAY}/p/${npub}`
+  return `${NOSTR_GATEWAY}/${npub}`
 }
 
 /**
  * Get an event URL on the gateway
  */
 export function getEventUrl(nevent: string): string {
-  return `${NOSTR_GATEWAY}/e/${nevent}`
+  return `${NOSTR_GATEWAY}/${nevent}`
 }
 
 /**
@@ -23,12 +24,14 @@ export function getEventUrl(nevent: string): string {
  * Automatically detects if it's a profile (npub/nprofile) or event (note/nevent/naddr)
  */
 export function getNostrUrl(identifier: string): string {
-  // Check the prefix to determine if it's a profile or event
-  if (identifier.startsWith('npub') || identifier.startsWith('nprofile')) {
-    return `${NOSTR_GATEWAY}/p/${identifier}`
-  }
-  
-  // Everything else (note, nevent, naddr) goes to /e/
-  return `${NOSTR_GATEWAY}/e/${identifier}`
+  // nostr.at uses simple /{identifier} format for all types
+  return `${NOSTR_GATEWAY}/${identifier}`
+}
+
+/**
+ * Get a search portal URL with a query
+ */
+export function getSearchUrl(query: string): string {
+  return `${SEARCH_PORTAL}/?q=${encodeURIComponent(query)}`
 }
 

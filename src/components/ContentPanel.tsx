@@ -9,7 +9,7 @@ import 'prismjs/themes/prism-tomorrow.css'
 import { faSpinner, faCheckCircle, faEllipsisH, faExternalLinkAlt, faMobileAlt, faCopy, faShare, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { ContentSkeleton } from './Skeletons'
 import { nip19 } from 'nostr-tools'
-import { getNostrUrl } from '../config/nostrGateways'
+import { getNostrUrl, getSearchUrl, SEARCH_PORTAL } from '../config/nostrGateways'
 import { RELAYS } from '../config/relays'
 import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
@@ -346,7 +346,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   const handleOpenSearch = () => {
     if (articleLinks) {
-      window.open(articleLinks.portal, '_blank', 'noopener,noreferrer')
+      window.open(getSearchUrl(articleLinks.naddr), '_blank', 'noopener,noreferrer')
     }
     setShowArticleMenu(false)
   }
@@ -432,8 +432,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   const handleSearchExternalUrl = () => {
     if (selectedUrl) {
-      const searchUrl = `https://ants.sh/?q=${encodeURIComponent(selectedUrl)}`
-      window.open(searchUrl, '_blank', 'noopener,noreferrer')
+      window.open(getSearchUrl(selectedUrl), '_blank', 'noopener,noreferrer')
     }
     setShowExternalMenu(false)
   }
