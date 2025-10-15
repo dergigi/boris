@@ -24,6 +24,7 @@ import { getCachedMeData, setCachedMeData, updateCachedHighlights } from '../ser
 import { faBooks } from '../icons/customIcons'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
+import { groupIndividualBookmarks } from '../utils/bookmarkUtils'
 
 interface MeProps {
   relayPool: RelayPool
@@ -189,7 +190,13 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   // Merge and flatten all individual bookmarks (same logic as BookmarkList)
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(hasContentOrUrl)
-    .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
+  const groups = groupIndividualBookmarks(allIndividualBookmarks)
+  const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
+    { key: 'private', title: `Private bookmarks (${groups.privateItems.length})`, items: groups.privateItems },
+    { key: 'public', title: `Public bookmarks (${groups.publicItems.length})`, items: groups.publicItems },
+    { key: 'web', title: `Web bookmarks (${groups.web.length})`, items: groups.web },
+    { key: 'amethyst', title: `Amethyst-style bookmarks (${groups.amethyst.length})`, items: groups.amethyst }
+  ]
 
   // Show content progressively - no blocking error screens
   const hasData = highlights.length > 0 || bookmarks.length > 0 || readArticles.length > 0 || writings.length > 0
@@ -246,17 +253,22 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           </div>
         ) : (
           <div className="bookmarks-list">
-            <div className={`bookmarks-grid bookmarks-${viewMode}`}>
-              {allIndividualBookmarks.map((individualBookmark, index) => (
-                <BookmarkItem
-                  key={`${individualBookmark.id}-${index}`}
-                  bookmark={individualBookmark}
-                  index={index}
-                  viewMode={viewMode}
-                  onSelectUrl={handleSelectUrl}
-                />
-              ))}
-            </div>
+            {sections.filter(s => s.items.length > 0).map(section => (
+              <div key={section.key} className="bookmarks-section">
+                <h3 className="bookmarks-section-title">{section.title}</h3>
+                <div className={`bookmarks-grid bookmarks-${viewMode}`}>
+                  {section.items.map((individualBookmark, index) => (
+                    <BookmarkItem
+                      key={`${section.key}-${individualBookmark.id}-${index}`}
+                      bookmark={individualBookmark}
+                      index={index}
+                      viewMode={viewMode}
+                      onSelectUrl={handleSelectUrl}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
             <div className="view-mode-controls" style={{
               display: 'flex',
               justifyContent: 'center',
