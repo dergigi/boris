@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.15] - 2025-10-15
+
+### Added
+
+- Paragraph alignment setting with left-aligned and justified text options
+  - Icon buttons in Reading & Display settings for switching alignment
+  - CSS variable system for applying alignment to reader content
+  - Real-time preview of alignment changes in settings
+  - Headings remain left-aligned for optimal readability
+
+### Changed
+
+- Default paragraph alignment changed to justified for improved reading experience
+  - Applies to paragraphs, list items, divs, and blockquotes
+  - Settings stored and synced via Nostr (NIP-78)
+
 ## [0.6.14] - 2025-10-15
 
 ### Added
@@ -1466,7 +1482,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.14...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.15...HEAD
+[0.6.15]: https://github.com/dergigi/boris/compare/v0.6.14...v0.6.15
 [0.6.14]: https://github.com/dergigi/boris/compare/v0.6.13...v0.6.14
 [0.6.13]: https://github.com/dergigi/boris/compare/v0.6.12...v0.6.13
 [0.6.12]: https://github.com/dergigi/boris/compare/v0.6.11...v0.6.12
