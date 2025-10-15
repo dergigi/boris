@@ -7,30 +7,14 @@ const PWASettings: React.FC = () => {
   const { isInstallable, isInstalled, installApp } = usePWAInstall()
 
   const handleInstall = async () => {
+    if (isInstalled) return
     const success = await installApp()
     if (success) {
       console.log('App installed successfully')
     }
   }
 
-  if (isInstalled) {
-    return (
-      <div className="settings-section">
-        <h3 className="section-title">App</h3>
-        <div className="setting-item">
-          <div className="setting-info">
-            <FontAwesomeIcon icon={faCheckCircle} style={{ color: '#22c55e', marginRight: '8px' }} />
-            <span>Boris is installed as an app</span>
-          </div>
-          <p className="setting-description">
-            You can launch Boris from your home screen or app drawer.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isInstallable) {
+  if (!isInstallable && !isInstalled) {
     return null
   }
 
@@ -50,9 +34,10 @@ const PWASettings: React.FC = () => {
             onClick={handleInstall}
             className="zap-preset-btn"
             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            disabled={isInstalled}
           >
-            <FontAwesomeIcon icon={faDownload} />
-            Install App
+            <FontAwesomeIcon icon={isInstalled ? faCheckCircle : faDownload} />
+            {isInstalled ? 'Installed' : 'Install App'}
           </button>
         </div>
         <img 
