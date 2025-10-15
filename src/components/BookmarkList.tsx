@@ -120,8 +120,8 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         // 0-10% reading progress (has tracking data)
         return position !== undefined && position >= 0 && position <= 0.10
       case 'reading':
-        // Has some progress but not completed (10% < position < 95%)
-        return position !== undefined && position > 0.10 && position < 0.95
+        // Has some progress but not completed (11% - 94%)
+        return position !== undefined && position > 0.10 && position <= 0.94
       case 'completed':
         // 95% or more read
         return position !== undefined && position >= 0.95
