@@ -162,8 +162,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPoo
       <div className="settings-content">
         <ThemeSettings settings={localSettings} onUpdate={handleUpdate} />
         <ReadingDisplaySettings settings={localSettings} onUpdate={handleUpdate} />
-        <LayoutNavigationSettings settings={localSettings} onUpdate={handleUpdate} />
         <ZapSettings settings={localSettings} onUpdate={handleUpdate} />
+        <LayoutNavigationSettings settings={localSettings} onUpdate={handleUpdate} />
         <StartupPreferencesSettings settings={localSettings} onUpdate={handleUpdate} />
         <PWASettings settings={localSettings} onUpdate={handleUpdate} onClose={onClose} />
         <RelaySettings relayStatuses={relayStatuses} onClose={onClose} />
