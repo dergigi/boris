@@ -29,11 +29,15 @@ export const useReadingPosition = ({
   const scheduleSave = useCallback((currentPosition: number) => {
     if (!syncEnabled || !onSave) return
     
-    // Don't save if position is too low (< 5%) or too high (> 95%)
-    if (currentPosition < 0.05 || currentPosition > 0.95) return
+    // Don't save if position is too low (< 5%)
+    if (currentPosition < 0.05) return
     
     // Don't save if position hasn't changed significantly (less than 1%)
-    if (Math.abs(currentPosition - lastSavedPosition.current) < 0.01) return
+    // But always save if we've reached 100% (completion)
+    const hasSignificantChange = Math.abs(currentPosition - lastSavedPosition.current) >= 0.01
+    const hasReachedCompletion = currentPosition === 1 && lastSavedPosition.current < 1
+    
+    if (!hasSignificantChange && !hasReachedCompletion) return
 
     // Clear existing timer
     if (saveTimerRef.current) {
@@ -57,8 +61,8 @@ export const useReadingPosition = ({
       saveTimerRef.current = null
     }
 
-    // Save if position is meaningful
-    if (position >= 0.05 && position <= 0.95) {
+    // Save if position is meaningful (>= 5%)
+    if (position >= 0.05) {
       lastSavedPosition.current = position
       onSave(position)
     }
@@ -77,8 +81,13 @@ export const useReadingPosition = ({
       const documentHeight = document.documentElement.scrollHeight
       
       // Calculate position based on how much of the content has been scrolled through
-      const scrollProgress = Math.min(scrollTop / (documentHeight - windowHeight), 1)
-      const clampedProgress = Math.max(0, Math.min(1, scrollProgress))
+      // Add a small threshold (5px) to account for rounding and make it easier to reach 100%
+      const maxScroll = documentHeight - windowHeight
+      const scrollProgress = maxScroll > 0 ? scrollTop / maxScroll : 0
+      
+      // If we're within 5px of the bottom, consider it 100%
+      const isAtBottom = scrollTop + windowHeight >= documentHeight - 5
+      const clampedProgress = isAtBottom ? 1 : Math.max(0, Math.min(1, scrollProgress))
       
       setPosition(clampedProgress)
       onPositionChange?.(clampedProgress)

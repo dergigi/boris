@@ -224,7 +224,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           articleIdentifier
         )
 
-        if (savedPosition && savedPosition.position > 0.05 && savedPosition.position < 0.95) {
+        if (savedPosition && savedPosition.position > 0.05 && savedPosition.position < 1) {
           console.log('🎯 [ContentPanel] Restoring position:', Math.round(savedPosition.position * 100) + '%')
           // Wait for content to be fully rendered before scrolling
           setTimeout(() => {
@@ -240,7 +240,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             console.log('✅ [ContentPanel] Restored to position:', Math.round(savedPosition.position * 100) + '%', 'scrollTop:', scrollTop)
           }, 500) // Give content time to render
         } else if (savedPosition) {
-          console.log('⏭️ [ContentPanel] Position out of range (5-95%):', Math.round(savedPosition.position * 100) + '%')
+          if (savedPosition.position === 1) {
+            console.log('✅ [ContentPanel] Article completed (100%), starting from top')
+          } else {
+            console.log('⏭️ [ContentPanel] Position too early (<5%):', Math.round(savedPosition.position * 100) + '%')
+          }
         }
       } catch (error) {
         console.error('❌ [ContentPanel] Failed to load reading position:', error)
