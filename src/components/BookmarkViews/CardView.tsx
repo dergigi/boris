@@ -55,7 +55,6 @@ export const CardView: React.FC<CardViewProps> = ({
   const contentLength = (bookmark.content || '').length
   const shouldTruncate = !expanded && contentLength > 210
   const isArticle = bookmark.kind === 30023
-  const isWebBookmark = bookmark.kind === 39701
   
   // Determine which image to use (article image, instant preview, or OG image)
   const previewImage = articleImage || instantPreview || ogImage

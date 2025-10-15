@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { faBookOpen, faNewspaper, faStickyNote, faCirclePlay, faEye } from '@fortawesome/free-regular-svg-icons'
-import { faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faNewspaper, faStickyNote, faCirclePlay, faEye } from '@fortawesome/free-regular-svg-icons'
+import { faBook, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -89,7 +89,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     
     if (!hasUrls) return faStickyNote // Just a text note
     if (firstUrlClassification?.type === 'youtube' || firstUrlClassification?.type === 'video') return faCirclePlay
-    return faBookOpen
+    return faBook
   }
 
   const getIconForUrlType = (url: string) => {
@@ -101,7 +101,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       case 'image':
         return faEye
       default:
-        return faBookOpen
+        return faBook
     }
   }
 
