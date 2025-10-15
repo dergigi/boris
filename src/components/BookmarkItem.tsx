@@ -71,7 +71,22 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   // Get content type icon based on bookmark kind and URL classification
   const getContentTypeIcon = (): IconDefinition => {
     if (isArticle) return faNewspaper
-    if (isWebBookmark) return faGlobe
+    
+    // For web bookmarks, classify the URL to determine icon
+    if (isWebBookmark && firstUrlClassification) {
+      switch (firstUrlClassification.type) {
+        case 'youtube':
+        case 'video':
+          return faPlay
+        case 'image':
+          return faEye
+        case 'article':
+          return faNewspaper
+        default:
+          return faGlobe
+      }
+    }
+    
     if (!hasUrls) return faStickyNote // Just a text note
     if (firstUrlClassification?.type === 'youtube' || firstUrlClassification?.type === 'video') return faPlay
     return faBookOpen
