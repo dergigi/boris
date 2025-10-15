@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react'
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import ReactPlayer from 'react-player'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -36,6 +36,14 @@ import { classifyUrl } from '../utils/helpers'
 import { buildNativeVideoUrl } from '../utils/videoHelpers'
 import { useReadingPosition } from '../hooks/useReadingPosition'
 import { ReadingProgressIndicator } from './ReadingProgressIndicator'
+import { EventFactory } from 'applesauce-factory'
+import { IEventStore } from 'applesauce-core'
+import { Hooks } from 'applesauce-react'
+import { 
+  generateArticleIdentifier, 
+  loadReadingPosition, 
+  saveReadingPosition 
+} from '../services/readingPositionService'
 
 interface ContentPanelProps {
   loading: boolean
@@ -129,10 +137,45 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     onClearSelection
   })
 
+  // Get event store for reading position service
+  const eventStore = Hooks.useEventStore()
+  
   // Reading position tracking - only for text content, not videos
   const isTextContent = !loading && !!(markdown || html) && !selectedUrl?.includes('youtube') && !selectedUrl?.includes('vimeo')
-  const { isReadingComplete, progressPercentage } = useReadingPosition({
+  
+  // Generate article identifier for saving/loading position
+  const articleIdentifier = useMemo(() => {
+    if (!selectedUrl) return null
+    return generateArticleIdentifier(selectedUrl)
+  }, [selectedUrl])
+
+  // Callback to save reading position
+  const handleSavePosition = useCallback(async (position: number) => {
+    if (!activeAccount || !relayPool || !eventStore || !articleIdentifier) return
+    if (!settings?.syncReadingPosition) return
+
+    try {
+      const factory = new EventFactory({ signer: activeAccount })
+      await saveReadingPosition(
+        relayPool,
+        eventStore,
+        factory,
+        articleIdentifier,
+        {
+          position,
+          timestamp: Math.floor(Date.now() / 1000),
+          scrollTop: window.pageYOffset || document.documentElement.scrollTop
+        }
+      )
+    } catch (error) {
+      console.error('Failed to save reading position:', error)
+    }
+  }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition])
+
+  const { isReadingComplete, progressPercentage, saveNow } = useReadingPosition({
     enabled: isTextContent,
+    syncEnabled: settings?.syncReadingPosition,
+    onSave: handleSavePosition,
     onReadingComplete: () => {
       // Optional: Auto-mark as read when reading is complete
       if (activeAccount && !isMarkedAsRead) {
@@ -140,6 +183,52 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       }
     }
   })
+
+  // Load saved reading position when article loads
+  useEffect(() => {
+    if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) return
+    if (!settings?.syncReadingPosition) return
+
+    const loadPosition = async () => {
+      try {
+        const savedPosition = await loadReadingPosition(
+          relayPool,
+          eventStore,
+          activeAccount.pubkey,
+          articleIdentifier
+        )
+
+        if (savedPosition && savedPosition.position > 0.05 && savedPosition.position < 0.95) {
+          // Wait for content to be fully rendered before scrolling
+          setTimeout(() => {
+            const documentHeight = document.documentElement.scrollHeight
+            const windowHeight = window.innerHeight
+            const scrollTop = savedPosition.position * (documentHeight - windowHeight)
+            
+            window.scrollTo({
+              top: scrollTop,
+              behavior: 'smooth'
+            })
+            
+            console.log('📖 Restored reading position:', Math.round(savedPosition.position * 100) + '%')
+          }, 500) // Give content time to render
+        }
+      } catch (error) {
+        console.error('Failed to load reading position:', error)
+      }
+    }
+
+    loadPosition()
+  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition])
+
+  // Save position before unmounting or changing article
+  useEffect(() => {
+    return () => {
+      if (saveNow) {
+        saveNow()
+      }
+    }
+  }, [saveNow, selectedUrl])
 
   // Close menu when clicking outside
   useEffect(() => {

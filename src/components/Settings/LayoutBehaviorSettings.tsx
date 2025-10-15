@@ -104,6 +104,19 @@ const LayoutBehaviorSettings: React.FC<LayoutBehaviorSettingsProps> = ({ setting
           <span>Auto-collapse sidebar on small screens</span>
         </label>
       </div>
+
+      <div className="setting-group">
+        <label htmlFor="syncReadingPosition" className="checkbox-label">
+          <input
+            id="syncReadingPosition"
+            type="checkbox"
+            checked={settings.syncReadingPosition ?? false}
+            onChange={(e) => onUpdate({ syncReadingPosition: e.target.checked })}
+            className="setting-checkbox"
+          />
+          <span>Sync reading position across devices</span>
+        </label>
+      </div>
     </div>
   )
 }

@@ -54,6 +54,8 @@ export interface UserSettings {
   lightColorTheme?: 'paper-white' | 'sepia' | 'ivory' // default: sepia
   // Reading settings
   paragraphAlignment?: 'left' | 'justify' // default: justify
+  // Reading position sync
+  syncReadingPosition?: boolean // default: false (opt-in)
 }
 
 export async function loadSettings(

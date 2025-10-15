@@ -34,6 +34,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   useLocalRelayAsCache: true,
   rebroadcastToAllRelays: false,
   paragraphAlignment: 'justify',
+  syncReadingPosition: false,
 }
 
 interface SettingsProps {
