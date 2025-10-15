@@ -1,13 +1,12 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookmark, faUserLock, faChevronDown, faChevronUp, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faUserLock, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate, renderParsedContent } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
-import IconButton from '../IconButton'
 import { classifyUrl } from '../../utils/helpers'
-import { IconGetter } from './shared'
 import { useImageCache } from '../../hooks/useImageCache'
 import { getPreviewImage, fetchOgImage } from '../../utils/imagePreview'
 import { getEventUrl } from '../../config/nostrGateways'
@@ -18,13 +17,13 @@ interface CardViewProps {
   hasUrls: boolean
   extractedUrls: string[]
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
-  getIconForUrlType: IconGetter
   authorNpub: string
   eventNevent?: string
   getAuthorDisplayName: () => string
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
   articleImage?: string
   articleSummary?: string
+  contentTypeIcon: IconDefinition
 }
 
 export const CardView: React.FC<CardViewProps> = ({
@@ -33,13 +32,13 @@ export const CardView: React.FC<CardViewProps> = ({
   hasUrls,
   extractedUrls,
   onSelectUrl,
-  getIconForUrlType,
   authorNpub,
   eventNevent,
   getAuthorDisplayName,
   handleReadNow,
   articleImage,
-  articleSummary
+  articleSummary,
+  contentTypeIcon
 }) => {
   const firstUrl = hasUrls ? extractedUrls[0] : null
   const firstUrlClassificationType = firstUrl ? classifyUrl(firstUrl)?.type : null
@@ -52,7 +51,6 @@ export const CardView: React.FC<CardViewProps> = ({
   const contentLength = (bookmark.content || '').length
   const shouldTruncate = !expanded && contentLength > 210
   const isArticle = bookmark.kind === 30023
-  const isWebBookmark = bookmark.kind === 39701
   
   // Determine which image to use (article image, instant preview, or OG image)
   const previewImage = articleImage || instantPreview || ogImage
@@ -92,18 +90,9 @@ export const CardView: React.FC<CardViewProps> = ({
       )}
       <div className="bookmark-header">
         <span className="bookmark-type">
-          {isWebBookmark ? (
-            <span className="fa-layers fa-fw">
-              <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
-              <FontAwesomeIcon icon={faGlobe} className="bookmark-visibility public" transform="shrink-8 down-2" />
-            </span>
-          ) : bookmark.isPrivate ? (
-            <>
-              <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
-              <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />
-            </>
-          ) : (
-            <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
+          <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
+          {bookmark.isPrivate && (
+            <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />
           )}
         </span>
         
@@ -127,23 +116,14 @@ export const CardView: React.FC<CardViewProps> = ({
         <div className="bookmark-urls">
           {(urlsExpanded ? extractedUrls : extractedUrls.slice(0, 1)).map((url, urlIndex) => {
             return (
-              <div key={urlIndex} className="url-row">
-                <button
-                  className="bookmark-url"
-                  onClick={(e) => { e.stopPropagation(); onSelectUrl?.(url) }}
-                  title="Open in reader"
-                >
-                  {url}
-                </button>
-                <IconButton
-                  icon={getIconForUrlType(url)}
-                  ariaLabel="Open"
-                  title="Open"
-                  variant="success"
-                  size={32}
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSelectUrl?.(url) }}
-                />
-              </div>
+              <button
+                key={urlIndex}
+                className="bookmark-url"
+                onClick={(e) => { e.stopPropagation(); onSelectUrl?.(url) }}
+                title="Open in reader"
+              >
+                {url}
+              </button>
             )
           })}
           {extractedUrls.length > 1 && (

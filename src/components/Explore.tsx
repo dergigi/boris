@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired, faArrowsRotate } from '@fortawesome/free-solid-svg-icons'
+import { faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired, faArrowsRotate, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { Hooks } from 'applesauce-react'
@@ -320,8 +320,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           )
         }
         return filteredBlogPosts.length === 0 ? (
-          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
-            <p>No blog posts yet. Pull to refresh!</p>
+          <div className="explore-loading" style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
           </div>
         ) : (
           <div className="explore-grid">
@@ -347,8 +347,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           )
         }
         return classifiedHighlights.length === 0 ? (
-          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
-            <p>No highlights yet. Pull to refresh!</p>
+          <div className="explore-loading" style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
           </div>
         ) : (
           <div className="explore-grid">

@@ -19,11 +19,11 @@ import BlogPostCard from './BlogPostCard'
 import { BookmarkItem } from './BookmarkItem'
 import IconButton from './IconButton'
 import { ViewMode } from './Bookmarks'
-import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { getCachedMeData, setCachedMeData, updateCachedHighlights } from '../services/meCache'
 import { faBooks } from '../icons/customIcons'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
+import { groupIndividualBookmarks, hasContent } from '../utils/bookmarkUtils'
 
 interface MeProps {
   relayPool: RelayPool
@@ -150,23 +150,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     return `/a/${naddr}`
   }
 
-  // Helper to check if a bookmark has either content or a URL (same logic as BookmarkList)
-  const hasContentOrUrl = (ib: IndividualBookmark) => {
-    const hasContent = ib.content && ib.content.trim().length > 0
-    
-    let hasUrl = false
-    if (ib.kind === 39701) {
-      const dTag = ib.tags?.find((t: string[]) => t[0] === 'd')?.[1]
-      hasUrl = !!dTag && dTag.trim().length > 0
-    } else {
-      const urls = extractUrlsFromContent(ib.content || '')
-      hasUrl = urls.length > 0
-    }
-    
-    if (ib.kind === 30023) return true
-    return hasContent || hasUrl
-  }
-
   const handleSelectUrl = (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => {
     if (bookmark && bookmark.kind === 30023) {
       // For kind:30023 articles, navigate to the article route
@@ -186,10 +169,16 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     }
   }
 
-  // Merge and flatten all individual bookmarks (same logic as BookmarkList)
+  // Merge and flatten all individual bookmarks
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
-    .filter(hasContentOrUrl)
-    .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
+    .filter(hasContent)
+  const groups = groupIndividualBookmarks(allIndividualBookmarks)
+  const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
+    { key: 'private', title: 'Private bookmarks', items: groups.privateItems },
+    { key: 'public', title: 'Public bookmarks', items: groups.publicItems },
+    { key: 'web', title: 'Web bookmarks', items: groups.web },
+    { key: 'amethyst', title: 'Old Bookmarks (Legacy)', items: groups.amethyst }
+  ]
 
   // Show content progressively - no blocking error screens
   const hasData = highlights.length > 0 || bookmarks.length > 0 || readArticles.length > 0 || writings.length > 0
@@ -208,12 +197,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           )
         }
         return highlights.length === 0 ? (
-          <div className="explore-empty" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>
-              {isOwnProfile 
-                ? 'No highlights yet. Pull to refresh!'
-                : 'No highlights yet. Pull to refresh!'}
-            </p>
+          <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
           </div>
         ) : (
           <div className="highlights-list me-highlights-list">
@@ -241,22 +226,27 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           )
         }
         return allIndividualBookmarks.length === 0 ? (
-          <div className="explore-empty" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>No bookmarks yet. Pull to refresh!</p>
+          <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
           </div>
         ) : (
           <div className="bookmarks-list">
-            <div className={`bookmarks-grid bookmarks-${viewMode}`}>
-              {allIndividualBookmarks.map((individualBookmark, index) => (
-                <BookmarkItem
-                  key={`${individualBookmark.id}-${index}`}
-                  bookmark={individualBookmark}
-                  index={index}
-                  viewMode={viewMode}
-                  onSelectUrl={handleSelectUrl}
-                />
-              ))}
-            </div>
+            {sections.filter(s => s.items.length > 0).map(section => (
+              <div key={section.key} className="bookmarks-section">
+                <h3 className="bookmarks-section-title">{section.title}</h3>
+                <div className={`bookmarks-grid bookmarks-${viewMode}`}>
+                  {section.items.map((individualBookmark, index) => (
+                    <BookmarkItem
+                      key={`${section.key}-${individualBookmark.id}-${index}`}
+                      bookmark={individualBookmark}
+                      index={index}
+                      viewMode={viewMode}
+                      onSelectUrl={handleSelectUrl}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
             <div className="view-mode-controls" style={{
               display: 'flex',
               justifyContent: 'center',
@@ -301,8 +291,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           )
         }
         return readArticles.length === 0 ? (
-          <div className="explore-empty" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>No read articles yet. Pull to refresh!</p>
+          <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
           </div>
         ) : (
           <div className="explore-grid">
@@ -327,12 +317,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           )
         }
         return writings.length === 0 ? (
-          <div className="explore-empty" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>
-              {isOwnProfile 
-                ? 'No articles written yet. Pull to refresh!'
-                : 'No articles written yet. Pull to refresh!'}
-            </p>
+          <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
           </div>
         ) : (
           <div className="explore-grid">
@@ -359,12 +345,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       />
       <div className="explore-header">
         {viewingPubkey && <AuthorCard authorPubkey={viewingPubkey} clickable={false} />}
-        
-        {loading && hasData && (
-          <div className="explore-loading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0' }}>
-            <FontAwesomeIcon icon={faSpinner} spin />
-          </div>
-        )}
         
         <div className="me-tabs">
           <button

@@ -1,10 +1,10 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookmark, faUserLock, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faUserLock } from '@fortawesome/free-solid-svg-icons'
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDateCompact } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
-import { useImageCache } from '../../hooks/useImageCache'
 
 interface CompactViewProps {
   bookmark: IndividualBookmark
@@ -12,8 +12,8 @@ interface CompactViewProps {
   hasUrls: boolean
   extractedUrls: string[]
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
-  articleImage?: string
   articleSummary?: string
+  contentTypeIcon: IconDefinition
 }
 
 export const CompactView: React.FC<CompactViewProps> = ({
@@ -22,15 +22,12 @@ export const CompactView: React.FC<CompactViewProps> = ({
   hasUrls,
   extractedUrls,
   onSelectUrl,
-  articleImage,
-  articleSummary
+  articleSummary,
+  contentTypeIcon
 }) => {
   const isArticle = bookmark.kind === 30023
   const isWebBookmark = bookmark.kind === 39701
   const isClickable = hasUrls || isArticle || isWebBookmark
-  
-  // Get cached image for thumbnail
-  const cachedImage = useImageCache(articleImage || undefined)
   
   const handleCompactClick = () => {
     if (!onSelectUrl) return
@@ -55,26 +52,10 @@ export const CompactView: React.FC<CompactViewProps> = ({
         role={isClickable ? 'button' : undefined}
         tabIndex={isClickable ? 0 : undefined}
       >
-        {/* Thumbnail image */}
-        {cachedImage && (
-          <div className="compact-thumbnail">
-            <img src={cachedImage} alt="" />
-          </div>
-        )}
-        
         <span className="bookmark-type-compact">
-          {isWebBookmark ? (
-            <span className="fa-layers fa-fw">
-              <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
-              <FontAwesomeIcon icon={faGlobe} className="bookmark-visibility public" transform="shrink-8 down-2" />
-            </span>
-          ) : bookmark.isPrivate ? (
-            <>
-              <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
-              <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />
-            </>
-          ) : (
-            <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
+          <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
+          {bookmark.isPrivate && (
+            <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />
           )}
         </span>
         {displayText && (

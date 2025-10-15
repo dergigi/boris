@@ -1,28 +1,22 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faHome, faPlus, faNewspaper, faTimes, faBolt } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faHome, faNewspaper, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { Accounts } from 'applesauce-accounts'
-import { RelayPool } from 'applesauce-relay'
 import IconButton from './IconButton'
-import AddBookmarkModal from './AddBookmarkModal'
-import { createWebBookmark } from '../services/webBookmarkService'
-import { RELAYS } from '../config/relays'
 
 interface SidebarHeaderProps {
   onToggleCollapse: () => void
   onLogout: () => void
   onOpenSettings: () => void
-  relayPool: RelayPool | null
   isMobile?: boolean
 }
 
-const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onOpenSettings, relayPool, isMobile = false }) => {
+const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onOpenSettings, isMobile = false }) => {
   const [isConnecting, setIsConnecting] = useState(false)
-  const [showAddModal, setShowAddModal] = useState(false)
   const navigate = useNavigate()
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
@@ -52,14 +46,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
     if (profile?.display_name) return profile.display_name
     if (profile?.nip05) return profile.nip05
     return `${activeAccount.pubkey.slice(0, 8)}...${activeAccount.pubkey.slice(-8)}`
-  }
-
-  const handleSaveBookmark = async (url: string, title?: string, description?: string, tags?: string[]) => {
-    if (!activeAccount || !relayPool) {
-      throw new Error('Please login to create bookmarks')
-    }
-
-    await createWebBookmark(url, title, description, tags, activeAccount, relayPool, RELAYS)
   }
 
   const profileImage = getProfileImage()
@@ -118,28 +104,12 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           variant="ghost"
         />
         <IconButton
-          icon={faBolt}
-          onClick={() => navigate('/support')}
-          title="Support"
-          ariaLabel="Support"
-          variant="ghost"
-        />
-        <IconButton
           icon={faGear}
           onClick={onOpenSettings}
           title="Settings"
           ariaLabel="Settings"
           variant="ghost"
         />
-        {activeAccount && (
-          <IconButton
-            icon={faPlus}
-            onClick={() => setShowAddModal(true)}
-            title="Add bookmark"
-            ariaLabel="Add bookmark"
-            variant="ghost"
-          />
-        )}
         {activeAccount ? (
           <IconButton
             icon={faRightFromBracket}
@@ -159,12 +129,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
         )}
         </div>
       </div>
-      {showAddModal && (
-        <AddBookmarkModal
-          onClose={() => setShowAddModal(false)}
-          onSave={handleSaveBookmark}
-        />
-      )}
     </>
   )
 }

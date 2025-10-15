@@ -33,6 +33,12 @@ export async function collectBookmarksFromEvents(
     if (!latestContent && evt.content && !Helpers.hasHiddenContent(evt)) latestContent = evt.content
     if (Array.isArray(evt.tags)) allTags = allTags.concat(evt.tags)
 
+    // Extract the 'd' tag and metadata for bookmark sets (kind 30003)
+    const dTag = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] : undefined
+    const setTitle = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'title')?.[1] : undefined
+    const setDescription = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'description')?.[1] : undefined
+    const setImage = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'image')?.[1] : undefined
+
     // Handle web bookmarks (kind:39701) as individual bookmarks
     if (evt.kind === 39701) {
       publicItemsAll.push({
@@ -45,13 +51,27 @@ export async function collectBookmarksFromEvents(
         parsedContent: undefined,
         type: 'web' as const,
         isPrivate: false,
-        added_at: evt.created_at || Math.floor(Date.now() / 1000)
+        added_at: evt.created_at || Math.floor(Date.now() / 1000),
+        sourceKind: 39701,
+        setName: dTag,
+        setTitle,
+        setDescription,
+        setImage
       })
       continue
     }
 
     const pub = Helpers.getPublicBookmarks(evt)
-    publicItemsAll.push(...processApplesauceBookmarks(pub, activeAccount, false))
+    publicItemsAll.push(
+      ...processApplesauceBookmarks(pub, activeAccount, false).map(i => ({
+        ...i,
+        sourceKind: evt.kind,
+        setName: dTag,
+        setTitle,
+        setDescription,
+        setImage
+      }))
+    )
 
     try {
       if (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt) && signerCandidate) {
@@ -94,7 +114,16 @@ export async function collectBookmarksFromEvents(
           try {
             const hiddenTags = JSON.parse(decryptedContent) as string[][]
             const manualPrivate = Helpers.parseBookmarkTags(hiddenTags)
-            privateItemsAll.push(...processApplesauceBookmarks(manualPrivate, activeAccount, true))
+            privateItemsAll.push(
+              ...processApplesauceBookmarks(manualPrivate, activeAccount, true).map(i => ({
+                ...i,
+                sourceKind: evt.kind,
+                setName: dTag,
+                setTitle,
+                setDescription,
+                setImage
+              }))
+            )
             Reflect.set(evt, BookmarkHiddenSymbol, manualPrivate)
             Reflect.set(evt, 'EncryptedContentSymbol', decryptedContent)
             // Don't set latestContent to decrypted JSON - it's not user-facing content
@@ -106,7 +135,16 @@ export async function collectBookmarksFromEvents(
 
       const priv = Helpers.getHiddenBookmarks(evt)
       if (priv) {
-        privateItemsAll.push(...processApplesauceBookmarks(priv, activeAccount, true))
+        privateItemsAll.push(
+          ...processApplesauceBookmarks(priv, activeAccount, true).map(i => ({
+            ...i,
+            sourceKind: evt.kind,
+            setName: dTag,
+            setTitle,
+            setDescription,
+            setImage
+          }))
+        )
       }
     } catch {
       // ignore individual event failures

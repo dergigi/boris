@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
-import { faBookOpen, faPlay, faEye } from '@fortawesome/free-solid-svg-icons'
+import { faNewspaper, faStickyNote, faCirclePlay, faCamera, faFileLines } from '@fortawesome/free-regular-svg-icons'
+import { faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { npubEncode, neventEncode } from 'nostr-tools/nip19'
@@ -66,18 +68,40 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     return short(bookmark.pubkey) // fallback to short pubkey
   }
 
-  // use helper from kindIcon.ts
+  // Get content type icon based on bookmark kind and URL classification
+  const getContentTypeIcon = (): IconDefinition => {
+    if (isArticle) return faNewspaper
+    
+    // For web bookmarks, classify the URL to determine icon
+    if (isWebBookmark && firstUrlClassification) {
+      switch (firstUrlClassification.type) {
+        case 'youtube':
+        case 'video':
+          return faCirclePlay
+        case 'image':
+          return faCamera
+        case 'article':
+          return faNewspaper
+        default:
+          return faGlobe
+      }
+    }
+    
+    if (!hasUrls) return faStickyNote // Just a text note
+    if (firstUrlClassification?.type === 'youtube' || firstUrlClassification?.type === 'video') return faCirclePlay
+    return faFileLines
+  }
 
   const getIconForUrlType = (url: string) => {
     const classification = classifyUrl(url)
     switch (classification.type) {
       case 'youtube':
       case 'video':
-        return faPlay
+        return faCirclePlay
       case 'image':
-        return faEye
+        return faCamera
       default:
-        return faBookOpen
+        return faFileLines
     }
   }
 
@@ -113,11 +137,13 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     getAuthorDisplayName,
     handleReadNow,
     articleImage,
-    articleSummary
+    articleSummary,
+    contentTypeIcon: getContentTypeIcon()
   }
 
   if (viewMode === 'compact') {
-    return <CompactView {...sharedProps} />
+    const { articleImage: _articleImage, ...compactProps } = sharedProps
+    return <CompactView {...compactProps} />
   }
 
   if (viewMode === 'large') {
@@ -125,5 +151,5 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     return <LargeView {...sharedProps} getIconForUrlType={getIconForUrlType} previewImage={previewImage} />
   }
 
-  return <CardView {...sharedProps} getIconForUrlType={getIconForUrlType} articleImage={articleImage} />
+  return <CardView {...sharedProps} articleImage={articleImage} />
 }

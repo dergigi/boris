@@ -324,6 +324,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             loading={props.bookmarksLoading}
             relayPool={props.relayPool}
             isMobile={isMobile}
+            settings={props.settings}
           />
         </div>
         <div 

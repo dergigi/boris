@@ -81,7 +81,14 @@
 .view-mode-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.view-mode-left,
+.view-mode-right {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 

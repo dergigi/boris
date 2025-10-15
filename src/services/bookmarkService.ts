@@ -5,7 +5,6 @@ import {
   dedupeNip51Events,
   hydrateItems,
   isAccountWithExtension,
-  isHexId,
   hasNip04Decrypt,
   hasNip44Decrypt,
   dedupeBookmarksById,
@@ -57,11 +56,28 @@ export const fetchBookmarks = async (
     rawEvents.forEach((evt, i) => {
       const dTag = evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] || 'none'
       const contentPreview = evt.content ? evt.content.slice(0, 50) + (evt.content.length > 50 ? '...' : '') : 'empty'
-      console.log(`  Event ${i}: kind=${evt.kind}, id=${evt.id?.slice(0, 8)}, dTag=${dTag}, contentLength=${evt.content?.length || 0}, contentPreview=${contentPreview}`)
+      const eTags = evt.tags?.filter((t: string[]) => t[0] === 'e').length || 0
+      const aTags = evt.tags?.filter((t: string[]) => t[0] === 'a').length || 0
+      console.log(`  Event ${i}: kind=${evt.kind}, id=${evt.id?.slice(0, 8)}, dTag=${dTag}, contentLength=${evt.content?.length || 0}, eTags=${eTags}, aTags=${aTags}, contentPreview=${contentPreview}`)
     })
 
     const bookmarkListEvents = dedupeNip51Events(rawEvents)
     console.log('📋 After deduplication:', bookmarkListEvents.length, 'bookmark events')
+    
+    // Log which events made it through deduplication
+    bookmarkListEvents.forEach((evt, i) => {
+      const dTag = evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] || 'none'
+      console.log(`  Dedupe ${i}: kind=${evt.kind}, id=${evt.id?.slice(0, 8)}, dTag="${dTag}"`)
+    })
+    
+    // Check specifically for Primal's "reads" list
+    const primalReads = rawEvents.find(e => e.kind === 10003 && e.tags?.find((t: string[]) => t[0] === 'd' && t[1] === 'reads'))
+    if (primalReads) {
+      console.log('✅ Found Primal reads list:', primalReads.id.slice(0, 8))
+    } else {
+      console.log('❌ No Primal reads list found (kind:10003 with d="reads")')
+    }
+    
     if (bookmarkListEvents.length === 0) {
       // Keep existing bookmarks visible; do not clear list if nothing new found
       return
@@ -97,20 +113,88 @@ export const fetchBookmarks = async (
     )
 
     const allItems = [...publicItemsAll, ...privateItemsAll]
-    const noteIds = Array.from(new Set(allItems.map(i => i.id).filter(isHexId)))
-    let idToEvent: Map<string, NostrEvent> = new Map()
+    
+    // Separate hex IDs (regular events) from coordinates (addressable events)
+    const noteIds: string[] = []
+    const coordinates: string[] = []
+    
+    allItems.forEach(i => {
+      // Check if it's a hex ID (64 character hex string)
+      if (/^[0-9a-f]{64}$/i.test(i.id)) {
+        noteIds.push(i.id)
+      } else if (i.id.includes(':')) {
+        // Coordinate format: kind:pubkey:identifier
+        coordinates.push(i.id)
+      }
+    })
+    
+    const idToEvent: Map<string, NostrEvent> = new Map()
+    
+    // Fetch regular events by ID
     if (noteIds.length > 0) {
       try {
         const events = await queryEvents(
           relayPool,
-          { ids: noteIds },
+          { ids: Array.from(new Set(noteIds)) },
           { localTimeoutMs: 800, remoteTimeoutMs: 2500 }
         )
-        idToEvent = new Map(events.map((e: NostrEvent) => [e.id, e]))
+        events.forEach((e: NostrEvent) => {
+          idToEvent.set(e.id, e)
+          // Also store by coordinate if it's an addressable event
+          if (e.kind && e.kind >= 30000 && e.kind < 40000) {
+            const dTag = e.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+            const coordinate = `${e.kind}:${e.pubkey}:${dTag}`
+            idToEvent.set(coordinate, e)
+          }
+        })
       } catch (error) {
-        console.warn('Failed to fetch events for hydration:', error)
+        console.warn('Failed to fetch events by ID:', error)
       }
     }
+    
+    // Fetch addressable events by coordinates
+    if (coordinates.length > 0) {
+      try {
+        // Group by kind for more efficient querying
+        const byKind = new Map<number, Array<{ pubkey: string; identifier: string }>>()
+        
+        coordinates.forEach(coord => {
+          const parts = coord.split(':')
+          const kind = parseInt(parts[0])
+          const pubkey = parts[1]
+          const identifier = parts[2] || ''
+          
+          if (!byKind.has(kind)) {
+            byKind.set(kind, [])
+          }
+          byKind.get(kind)!.push({ pubkey, identifier })
+        })
+        
+        // Query each kind group
+        for (const [kind, items] of byKind.entries()) {
+          const authors = Array.from(new Set(items.map(i => i.pubkey)))
+          const identifiers = Array.from(new Set(items.map(i => i.identifier)))
+          
+          const events = await queryEvents(
+            relayPool,
+            { kinds: [kind], authors, '#d': identifiers },
+            { localTimeoutMs: 800, remoteTimeoutMs: 2500 }
+          )
+          
+          events.forEach((e: NostrEvent) => {
+            const dTag = e.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+            const coordinate = `${e.kind}:${e.pubkey}:${dTag}`
+            idToEvent.set(coordinate, e)
+            // Also store by event ID
+            idToEvent.set(e.id, e)
+          })
+        }
+      } catch (error) {
+        console.warn('Failed to fetch addressable events:', error)
+      }
+    }
+    
+    console.log(`📦 Hydration: fetched ${idToEvent.size} events for ${allItems.length} bookmarks (${noteIds.length} notes, ${coordinates.length} articles)`)
     const allBookmarks = dedupeBookmarksById([
       ...hydrateItems(publicItemsAll, idToEvent),
       ...hydrateItems(privateItemsAll, idToEvent)

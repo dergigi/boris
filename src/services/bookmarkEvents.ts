@@ -19,7 +19,7 @@ export function dedupeNip51Events(events: NostrEvent[]): NostrEvent[] {
   const webBookmarks = unique.filter(e => e.kind === 39701)
 
   const bookmarkLists = unique
-    .filter(e => e.kind === 10003 || e.kind === 30001)
+    .filter(e => e.kind === 10003 || e.kind === 30003 || e.kind === 30001)
     .sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
   const latestBookmarkList = bookmarkLists.find(list => !list.tags?.some((t: string[]) => t[0] === 'd'))
 

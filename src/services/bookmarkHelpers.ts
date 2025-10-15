@@ -16,11 +16,24 @@ export interface BookmarkData {
   tags?: string[][]
 }
 
+export interface AddressPointer {
+  kind: number
+  pubkey: string
+  identifier: string
+  relays?: string[]
+}
+
+export interface EventPointer {
+  id: string
+  relays?: string[]
+  author?: string
+}
+
 export interface ApplesauceBookmarks {
-  notes?: BookmarkData[]
-  articles?: BookmarkData[]
-  hashtags?: BookmarkData[]
-  urls?: BookmarkData[]
+  notes?: EventPointer[]
+  articles?: AddressPointer[]
+  hashtags?: string[]
+  urls?: string[]
 }
 
 export interface AccountWithExtension {
@@ -55,25 +68,83 @@ export const processApplesauceBookmarks = (
 
   if (typeof bookmarks === 'object' && bookmarks !== null && !Array.isArray(bookmarks)) {
     const applesauceBookmarks = bookmarks as ApplesauceBookmarks
-    const allItems: BookmarkData[] = []
-    if (applesauceBookmarks.notes) allItems.push(...applesauceBookmarks.notes)
-    if (applesauceBookmarks.articles) allItems.push(...applesauceBookmarks.articles)
-    if (applesauceBookmarks.hashtags) allItems.push(...applesauceBookmarks.hashtags)
-    if (applesauceBookmarks.urls) allItems.push(...applesauceBookmarks.urls)
+    const allItems: IndividualBookmark[] = []
+    
+    // Process notes (EventPointer[])
+    if (applesauceBookmarks.notes) {
+      applesauceBookmarks.notes.forEach((note: EventPointer) => {
+        allItems.push({
+          id: note.id,
+          content: '',
+          created_at: Math.floor(Date.now() / 1000),
+          pubkey: note.author || activeAccount.pubkey,
+          kind: 1, // Short note kind
+          tags: [],
+          parsedContent: undefined,
+          type: 'event' as const,
+          isPrivate,
+          added_at: Math.floor(Date.now() / 1000)
+        })
+      })
+    }
+    
+    // Process articles (AddressPointer[])
+    if (applesauceBookmarks.articles) {
+      applesauceBookmarks.articles.forEach((article: AddressPointer) => {
+        // Convert AddressPointer to coordinate format: kind:pubkey:identifier
+        const coordinate = `${article.kind}:${article.pubkey}:${article.identifier || ''}`
+        allItems.push({
+          id: coordinate,
+          content: '',
+          created_at: Math.floor(Date.now() / 1000),
+          pubkey: article.pubkey,
+          kind: article.kind, // Usually 30023 for long-form articles
+          tags: [],
+          parsedContent: undefined,
+          type: 'event' as const,
+          isPrivate,
+          added_at: Math.floor(Date.now() / 1000)
+        })
+      })
+    }
+    
+    // Process hashtags (string[])
+    if (applesauceBookmarks.hashtags) {
+      applesauceBookmarks.hashtags.forEach((hashtag: string) => {
+        allItems.push({
+          id: `hashtag-${hashtag}`,
+          content: `#${hashtag}`,
+          created_at: Math.floor(Date.now() / 1000),
+          pubkey: activeAccount.pubkey,
+          kind: 1,
+          tags: [['t', hashtag]],
+          parsedContent: undefined,
+          type: 'event' as const,
+          isPrivate,
+          added_at: Math.floor(Date.now() / 1000)
+        })
+      })
+    }
+    
+    // Process URLs (string[])
+    if (applesauceBookmarks.urls) {
+      applesauceBookmarks.urls.forEach((url: string) => {
+        allItems.push({
+          id: `url-${url}`,
+          content: url,
+          created_at: Math.floor(Date.now() / 1000),
+          pubkey: activeAccount.pubkey,
+          kind: 1,
+          tags: [['r', url]],
+          parsedContent: undefined,
+          type: 'event' as const,
+          isPrivate,
+          added_at: Math.floor(Date.now() / 1000)
+        })
+      })
+    }
+    
     return allItems
-      .filter((bookmark: BookmarkData) => bookmark.id) // Skip bookmarks without valid IDs
-      .map((bookmark: BookmarkData) => ({
-        id: bookmark.id!,
-        content: bookmark.content || '',
-        created_at: bookmark.created_at || Math.floor(Date.now() / 1000),
-        pubkey: activeAccount.pubkey,
-        kind: bookmark.kind || 30001,
-        tags: bookmark.tags || [],
-        parsedContent: bookmark.content ? (getParsedContent(bookmark.content) as ParsedContent) : undefined,
-        type: 'event' as const,
-        isPrivate,
-        added_at: bookmark.created_at || Math.floor(Date.now() / 1000)
-      }))
   }
 
   const bookmarkArray = Array.isArray(bookmarks) ? bookmarks : [bookmarks]

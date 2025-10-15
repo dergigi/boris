@@ -1,6 +1,6 @@
 import React from 'react'
 import { formatDistanceToNow, differenceInSeconds, differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths, differenceInYears } from 'date-fns'
-import { ParsedContent, ParsedNode } from '../types/bookmarks'
+import { ParsedContent, ParsedNode, IndividualBookmark } from '../types/bookmarks'
 import ResolvedMention from '../components/ResolvedMention'
 // Note: ContentWithResolvedProfiles is imported by components directly to keep this file component-only for fast refresh
 
@@ -81,4 +81,72 @@ export const renderParsedContent = (parsedContent: ParsedContent) => {
       )}
     </div>
   )
+}
+
+// Sorting and grouping for bookmarks
+export const sortIndividualBookmarks = (items: IndividualBookmark[]) => {
+  return items
+    .slice()
+    .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
+}
+
+export function groupIndividualBookmarks(items: IndividualBookmark[]) {
+  const sorted = sortIndividualBookmarks(items)
+  const amethyst = sorted.filter(i => i.sourceKind === 30001)
+  const web = sorted.filter(i => i.kind === 39701 || i.type === 'web')
+  const isIn = (list: IndividualBookmark[], x: IndividualBookmark) => list.some(i => i.id === x.id)
+  const privateItems = sorted.filter(i => i.isPrivate && !isIn(amethyst, i) && !isIn(web, i))
+  const publicItems = sorted.filter(i => !i.isPrivate && !isIn(amethyst, i) && !isIn(web, i))
+  return { privateItems, publicItems, web, amethyst }
+}
+
+// Simple filter: only exclude bookmarks with empty/whitespace-only content
+export function hasContent(bookmark: IndividualBookmark): boolean {
+  return !!(bookmark.content && bookmark.content.trim().length > 0)
+}
+
+// Bookmark sets helpers (kind 30003)
+export interface BookmarkSet {
+  name: string
+  title?: string
+  description?: string
+  image?: string
+  bookmarks: IndividualBookmark[]
+}
+
+export function getBookmarkSets(items: IndividualBookmark[]): BookmarkSet[] {
+  // Group bookmarks by setName
+  const setMap = new Map<string, IndividualBookmark[]>()
+  
+  items.forEach(bookmark => {
+    if (bookmark.setName) {
+      const existing = setMap.get(bookmark.setName) || []
+      existing.push(bookmark)
+      setMap.set(bookmark.setName, existing)
+    }
+  })
+  
+  // Convert to array and extract metadata from the bookmarks
+  const sets: BookmarkSet[] = []
+  setMap.forEach((bookmarks, name) => {
+    // Get metadata from the first bookmark (all bookmarks in a set share the same metadata)
+    const firstBookmark = bookmarks[0]
+    const title = firstBookmark?.setTitle
+    const description = firstBookmark?.setDescription
+    const image = firstBookmark?.setImage
+    
+    sets.push({
+      name,
+      title,
+      description,
+      image,
+      bookmarks: sortIndividualBookmarks(bookmarks)
+    })
+  })
+  
+  return sets.sort((a, b) => a.name.localeCompare(b.name))
+}
+
+export function getBookmarksWithoutSet(items: IndividualBookmark[]): IndividualBookmark[] {
+  return sortIndividualBookmarks(items.filter(b => !b.setName))
 }

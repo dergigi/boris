@@ -25,6 +25,7 @@
     "applesauce-react": "^4.0.0",
     "applesauce-relay": "^4.0.0",
     "date-fns": "^4.1.0",
+    "fast-average-color": "^9.5.0",
     "nostr-tools": "^2.4.0",
     "prismjs": "^1.30.0",
     "react": "^18.2.0",
