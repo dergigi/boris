@@ -3,6 +3,7 @@ import { EventFactory } from 'applesauce-factory'
 import { RelayPool, onlyEvents } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { firstValueFrom } from 'rxjs'
+import { publishEvent } from './writeService'
 
 const SETTINGS_IDENTIFIER = 'com.dergigi.boris.user-settings'
 const APP_DATA_KIND = 30078 // NIP-78 Application Data
@@ -148,10 +149,10 @@ export async function saveSettings(
   eventStore: IEventStore,
   factory: EventFactory,
   settings: UserSettings,
-  relays: string[]
+  _relays: string[]
 ): Promise<void> {
   console.log('💾 Saving settings to nostr:', settings)
-  
+
   // Create NIP-78 application data event manually
   // Note: AppDataBlueprint is not available in the npm package
   const draft = await factory.create(async () => ({
@@ -160,14 +161,12 @@ export async function saveSettings(
     tags: [['d', SETTINGS_IDENTIFIER]],
     created_at: Math.floor(Date.now() / 1000)
   }))
-  
+
   const signed = await factory.sign(draft)
-  
-  console.log('📤 Publishing settings event:', signed.id, 'to', relays.length, 'relays')
-  
-  eventStore.add(signed)
-  await relayPool.publish(relays, signed)
-  
+
+  // Use unified write service
+  await publishEvent(relayPool, eventStore, signed, settings)
+
   console.log('✅ Settings published successfully')
 }
 
