@@ -218,9 +218,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       relays: relayHints
     })
 
+    // Check for source URL in 'r' tags
+    const sourceUrl = currentArticle.tags.find(t => t[0] === 'r')?.[1]
+
     return {
       portal: getNostrUrl(naddr),
-      native: `nostr:${naddr}`
+      native: `nostr:${naddr}`,
+      naddr,
+      sourceUrl,
+      borisUrl: `${window.location.origin}/a/${naddr}`
     }
   }
 
@@ -244,6 +250,44 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       window.location.href = articleLinks.native
     }
     setShowArticleMenu(false)
+  }
+
+  const handleShareBoris = async () => {
+    try {
+      if (!articleLinks) return
+      
+      if ((navigator as { share?: (d: { title?: string; url?: string }) => Promise<void> }).share) {
+        await (navigator as { share: (d: { title?: string; url?: string }) => Promise<void> }).share({ 
+          title: title || 'Article', 
+          url: articleLinks.borisUrl 
+        })
+      } else {
+        await navigator.clipboard.writeText(articleLinks.borisUrl)
+      }
+    } catch (e) {
+      console.warn('Share failed', e)
+    } finally {
+      setShowArticleMenu(false)
+    }
+  }
+
+  const handleShareOriginal = async () => {
+    try {
+      if (!articleLinks?.sourceUrl) return
+      
+      if ((navigator as { share?: (d: { title?: string; url?: string }) => Promise<void> }).share) {
+        await (navigator as { share: (d: { title?: string; url?: string }) => Promise<void> }).share({ 
+          title: title || 'Article', 
+          url: articleLinks.sourceUrl 
+        })
+      } else {
+        await navigator.clipboard.writeText(articleLinks.sourceUrl)
+      }
+    } catch (e) {
+      console.warn('Share failed', e)
+    } finally {
+      setShowArticleMenu(false)
+    }
   }
   
   // Video actions
@@ -624,6 +668,22 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 
                 {showArticleMenu && (
                   <div className="article-menu">
+                    <button
+                      className="article-menu-item"
+                      onClick={handleShareBoris}
+                    >
+                      <FontAwesomeIcon icon={faShare} />
+                      <span>Share</span>
+                    </button>
+                    {articleLinks.sourceUrl && (
+                      <button
+                        className="article-menu-item"
+                        onClick={handleShareOriginal}
+                      >
+                        <FontAwesomeIcon icon={faShare} />
+                        <span>Share Original</span>
+                      </button>
+                    )}
                     <button
                       className="article-menu-item"
                       onClick={handleOpenPortal}
