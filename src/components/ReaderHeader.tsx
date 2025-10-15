@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter, faClock, faNewspaper } from '@fortawesome/free-solid-svg-icons'
 import { format } from 'date-fns'
 import { useImageCache } from '../hooks/useImageCache'
+import { useAdaptiveTextColor } from '../hooks/useAdaptiveTextColor'
 import { UserSettings } from '../services/settingsService'
 import { Highlight, HighlightLevel } from '../types/highlights'
 import { HighlightVisibility } from './HighlightsPanel'
@@ -34,6 +35,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   highlightVisibility = { nostrverse: true, friends: true, mine: true }
 }) => {
   const cachedImage = useImageCache(image)
+  const { textColor, shadowColor } = useAdaptiveTextColor(cachedImage)
   const formattedDate = published ? format(new Date(published * 1000), 'MMM d, yyyy') : null
   const isLongSummary = summary && summary.length > 150
   
@@ -83,7 +85,13 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
             </div>
           )}
           {formattedDate && (
-            <div className="publish-date-topright">
+            <div 
+              className="publish-date-topright"
+              style={{ 
+                color: textColor,
+                textShadow: `0 2px 4px ${shadowColor}`
+              }}
+            >
               {formattedDate}
             </div>
           )}
@@ -125,7 +133,13 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
       {title && (
         <div className="reader-header">
           {formattedDate && (
-            <div className="publish-date-topright">
+            <div 
+              className="publish-date-topright"
+              style={{ 
+                color: textColor,
+                textShadow: `0 2px 4px ${shadowColor}`
+              }}
+            >
               {formattedDate}
             </div>
           )}
