@@ -197,12 +197,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           )
         }
         return highlights.length === 0 ? (
-          <div className="explore-empty" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>
-              {isOwnProfile 
-                ? 'No highlights yet. Pull to refresh!'
-                : 'No highlights yet. Pull to refresh!'}
-            </p>
+          <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
           </div>
         ) : (
           <div className="highlights-list me-highlights-list">
@@ -230,8 +226,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           )
         }
         return allIndividualBookmarks.length === 0 ? (
-          <div className="explore-empty" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>No bookmarks yet. Pull to refresh!</p>
+          <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
           </div>
         ) : (
           <div className="bookmarks-list">
@@ -295,8 +291,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           )
         }
         return readArticles.length === 0 ? (
-          <div className="explore-empty" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>No read articles yet. Pull to refresh!</p>
+          <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
           </div>
         ) : (
           <div className="explore-grid">
@@ -321,12 +317,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           )
         }
         return writings.length === 0 ? (
-          <div className="explore-empty" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>
-              {isOwnProfile 
-                ? 'No articles written yet. Pull to refresh!'
-                : 'No articles written yet. Pull to refresh!'}
-            </p>
+          <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
           </div>
         ) : (
           <div className="explore-grid">
