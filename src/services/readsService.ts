@@ -259,6 +259,14 @@ export async function fetchAllReads(
                             (item.markedAt && item.markedAt > 0)
         if (!hasTimestamp) return false
         
+        // Filter out items without titles
+        if (!item.title || item.title === 'Untitled') {
+          // For Nostr articles, we need the title from the event
+          if (item.type === 'article' && !item.event) return false
+          // For external URLs, we need a proper title
+          if (item.type === 'external' && !item.title) return false
+        }
+        
         // For external URLs, only include if there's reading progress or marked as read
         if (item.type === 'external') {
           const hasProgress = (item.readingProgress && item.readingProgress > 0) || item.markedAsRead
