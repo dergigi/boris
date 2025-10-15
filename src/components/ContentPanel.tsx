@@ -258,7 +258,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }
 
     loadPosition()
-  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl])
+  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, settings?.autoScrollToPosition, selectedUrl])
 
   // Save position before unmounting or changing article
   useEffect(() => {
