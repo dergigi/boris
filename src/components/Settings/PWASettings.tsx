@@ -37,22 +37,29 @@ const PWASettings: React.FC = () => {
   return (
     <div className="settings-section">
       <h3 className="section-title">Progressive Web App</h3>
-      <div className="setting-group">
-        <div className="setting-info">
-          <FontAwesomeIcon icon={faMobileAlt} style={{ marginRight: '8px' }} />
-          <span>Install Boris as an app</span>
+      <div className="setting-group" style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+        <div style={{ flex: 1 }}>
+          <div className="setting-info">
+            <FontAwesomeIcon icon={faMobileAlt} style={{ marginRight: '8px' }} />
+            <span>Install Boris as an app</span>
+          </div>
+          <p className="setting-description" style={{ marginTop: '0.5rem', marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+            Install Boris on your device for a native app experience with offline support.
+          </p>
+          <button
+            onClick={handleInstall}
+            className="zap-preset-btn"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <FontAwesomeIcon icon={faDownload} />
+            Install App
+          </button>
         </div>
-        <p className="setting-description" style={{ marginTop: '0.5rem', marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
-          Install Boris on your device for a native app experience with offline support.
-        </p>
-        <button
-          onClick={handleInstall}
-          className="zap-preset-btn"
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <FontAwesomeIcon icon={faDownload} />
-          Install App
-        </button>
+        <img 
+          src="/pwa.svg" 
+          alt="Progressive Web App" 
+          style={{ width: '120px', height: 'auto', flexShrink: 0, opacity: 0.8 }}
+        />
       </div>
     </div>
   )
