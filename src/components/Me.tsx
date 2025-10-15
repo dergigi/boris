@@ -254,15 +254,11 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         // 0-5% reading progress (has tracking data, not manually marked)
         return position !== undefined && position >= 0 && position <= 0.05
       case 'reading':
-        // Has some progress but not completed (0 < position < 1)
-        return position !== undefined && position > 0 && position < 0.95
+        // Has some progress but not completed (5% < position < 95%)
+        return position !== undefined && position > 0.05 && position < 0.95
       case 'completed':
-        // 95% or more read (we consider 95%+ as completed)
-        return position !== undefined && position >= 0.95
-      case 'marked':
-        // Manually marked as read (in archive but no reading position data)
-        // These are articles that were marked via the emoji reaction
-        return !position || position === 0
+        // 95% or more read, OR manually marked as read (no position data or 0%)
+        return (position !== undefined && position >= 0.95) || !position || position === 0
       case 'all':
       default:
         return true
