@@ -190,7 +190,7 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
               onClick={handleInstall}
               className="zap-preset-btn"
               style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-              disabled={isInstalled}
+              disabled={isInstalled || !isInstallable}
             >
               <FontAwesomeIcon icon={isInstalled ? faCheckCircle : faDownload} />
               {isInstalled ? 'Installed' : 'Install App'}
