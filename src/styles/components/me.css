@@ -67,6 +67,10 @@
   width: 100%;
 }
 
+.me-tab-content:has(.bookmark-filters) {
+  padding-top: 0.75rem;
+}
+
 /* Align highlight list width with profile card width on /me */
 .me-highlights-list { padding-left: 0; padding-right: 0; }
 .explore-header .author-card { max-width: 600px; margin: 0 auto; width: 100%; }
@@ -83,8 +87,9 @@
 .me-tab-content .bookmark-filters {
   background: transparent;
   border: none;
-  padding: 0 0 1rem 0;
+  padding: 0 0 0.5rem 0;
   justify-content: center;
+  margin-bottom: 0.5rem;
 }
 
 /* Ensure all reading list elements are left-aligned */
