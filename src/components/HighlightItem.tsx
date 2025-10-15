@@ -13,7 +13,6 @@ import { areAllRelaysLocal } from '../utils/helpers'
 import { nip19 } from 'nostr-tools'
 import { formatDateCompact } from '../utils/bookmarkUtils'
 import { createDeletionRequest } from '../services/deletionService'
-import ConfirmDialog from './ConfirmDialog'
 import { getNostrUrl } from '../config/nostrGateways'
 import CompactButton from './CompactButton'
 import { HighlightCitation } from './HighlightCitation'
@@ -257,21 +256,22 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     }
   }, [isSelected])
   
-  // Close menu when clicking outside
+  // Close menu and reset delete confirm when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowMenu(false)
+        setShowDeleteConfirm(false)
       }
     }
     
-    if (showMenu) {
+    if (showMenu || showDeleteConfirm) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => {
         document.removeEventListener('mousedown', handleClickOutside)
       }
     }
-  }, [showMenu])
+  }, [showMenu, showDeleteConfirm])
   
   const handleItemClick = () => {
     if (onHighlightClick) {
@@ -440,6 +440,10 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   
   const handleMenuToggle = (e: React.MouseEvent) => {
     e.stopPropagation()
+    // Reset delete confirm state when opening/closing menu
+    if (!showMenu) {
+      setShowDeleteConfirm(false)
+    }
     setShowMenu(!showMenu)
   }
   
@@ -459,6 +463,11 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     e.stopPropagation()
     setShowMenu(false)
     setShowDeleteConfirm(true)
+  }
+  
+  const handleConfirmDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    handleConfirmDelete()
   }
   
   return (
@@ -533,6 +542,23 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
           </div>
           
           <div className="highlight-menu-wrapper" ref={menuRef}>
+            {showDeleteConfirm && canDelete && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '0.5rem' }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgb(220 38 38)', fontWeight: 500 }}>Confirm?</span>
+                <CompactButton
+                  icon={faTrash}
+                  onClick={handleConfirmDeleteClick}
+                  title="Confirm deletion"
+                  disabled={isDeleting}
+                  style={{ 
+                    color: 'rgb(220 38 38)',
+                    background: 'rgba(220, 38, 38, 0.1)',
+                    borderColor: 'rgb(220 38 38)'
+                  }}
+                />
+              </div>
+            )}
+            
             <CompactButton
               icon={faEllipsisH}
               onClick={handleMenuToggle}
@@ -571,17 +597,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         </div>
       </div>
     </div>
-    
-    <ConfirmDialog
-      isOpen={showDeleteConfirm}
-      title="Delete Highlight?"
-      message="This will delete your highlight."
-      confirmText="Delete"
-      cancelText="Cancel"
-      variant="danger"
-      onConfirm={handleConfirmDelete}
-      onCancel={handleCancelDelete}
-    />
     </>
   )
 }
