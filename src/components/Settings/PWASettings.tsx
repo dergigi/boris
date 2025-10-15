@@ -16,7 +16,7 @@ const PWASettings: React.FC = () => {
   if (isInstalled) {
     return (
       <div className="settings-section">
-        <h3 className="section-title">Progressive Web App</h3>
+        <h3 className="section-title">Boris as an App</h3>
         <div className="setting-item">
           <div className="setting-info">
             <FontAwesomeIcon icon={faCheckCircle} style={{ color: '#22c55e', marginRight: '8px' }} />
@@ -36,7 +36,7 @@ const PWASettings: React.FC = () => {
 
   return (
     <div className="settings-section">
-      <h3 className="section-title">Progressive Web App</h3>
+      <h3 className="section-title">Boris as an App</h3>
       <div className="setting-group" style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
         <div style={{ flex: 1 }}>
           <div className="setting-info">
