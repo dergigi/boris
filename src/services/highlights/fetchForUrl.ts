@@ -14,10 +14,11 @@ export const fetchHighlightsForUrl = async (
   onHighlight?: (highlight: Highlight) => void,
   settings?: UserSettings
 ): Promise<Highlight[]> => {
+  const seenIds = new Set<string>()
+  const orderedRelaysUrl = prioritizeLocalRelays(RELAYS)
+  const { local: localRelaysUrl, remote: remoteRelaysUrl } = partitionRelays(orderedRelaysUrl)
+  
   try {
-    const seenIds = new Set<string>()
-    const orderedRelaysUrl = prioritizeLocalRelays(RELAYS)
-    const { local: localRelaysUrl, remote: remoteRelaysUrl } = partitionRelays(orderedRelaysUrl)
     const local$ = localRelaysUrl.length > 0
       ? relayPool
           .req(localRelaysUrl, { kinds: [9802], '#r': [url] })
@@ -45,11 +46,23 @@ export const fetchHighlightsForUrl = async (
           )
       : new Observable<NostrEvent>((sub) => sub.complete())
     const rawEvents: NostrEvent[] = await lastValueFrom(merge(local$, remote$).pipe(toArray()))
-    await rebroadcastEvents(rawEvents, relayPool, settings)
+    
+    console.log(`📌 Fetched ${rawEvents.length} highlight events for URL:`, url)
+    
+    // Rebroadcast events - but don't let errors here break the highlight display
+    try {
+      await rebroadcastEvents(rawEvents, relayPool, settings)
+    } catch (err) {
+      console.warn('Failed to rebroadcast highlight events:', err)
+    }
+    
     const uniqueEvents = dedupeHighlights(rawEvents)
     const highlights: Highlight[] = uniqueEvents.map(eventToHighlight)
     return sortHighlights(highlights)
-  } catch {
+  } catch (err) {
+    console.error('Error fetching highlights for URL:', err)
+    // Return highlights that were already streamed via callback
+    // Don't return empty array as that would clear already-displayed highlights
     return []
   }
 }

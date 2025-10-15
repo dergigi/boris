@@ -71,7 +71,7 @@ export function useExternalUrlLoader({
           // Check if fetchHighlightsForUrl exists, otherwise skip
           if (typeof fetchHighlightsForUrl === 'function') {
             const seen = new Set<string>()
-            const highlightsList = await fetchHighlightsForUrl(
+            await fetchHighlightsForUrl(
               relayPool,
               url,
               (highlight) => {
@@ -84,9 +84,9 @@ export function useExternalUrlLoader({
                 })
               }
             )
-            // Ensure final list is sorted and contains all items
-            setHighlights(highlightsList.sort((a, b) => b.created_at - a.created_at))
-            console.log(`📌 Found ${highlightsList.length} highlights for URL`)
+            // Highlights are already set via the streaming callback
+            // No need to set them again as that could cause a flash/disappearance
+            console.log(`📌 Finished fetching highlights for URL`)
           } else {
             console.log('📌 Highlight fetching for URLs not yet implemented')
           }
