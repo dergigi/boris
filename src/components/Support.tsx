@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBolt, faSpinner, faUserCircle } from '@fortawesome/free-solid-svg-icons'
+import { faHeart, faSpinner, faUserCircle } from '@fortawesome/free-solid-svg-icons'
 import { fetchBorisZappers, ZapSender } from '../services/zapReceiptService'
 import { fetchProfiles } from '../services/profileService'
 import { UserSettings } from '../services/settingsService'
@@ -207,7 +207,7 @@ const SupporterCard: React.FC<SupporterCardProps> = ({ supporter, isWhale }) => 
             className="absolute -bottom-1 -right-1 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center border-2"
             style={{ borderColor: 'var(--color-bg)' }}
           >
-            <FontAwesomeIcon icon={faBolt} className="text-zinc-900 text-sm" />
+            <FontAwesomeIcon icon={faHeart} className="text-zinc-900 text-sm" />
           </div>
         )}
       </div>
