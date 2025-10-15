@@ -1,11 +1,10 @@
-import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
-import { lastValueFrom, merge, Observable, takeUntil, timer, toArray } from 'rxjs'
+import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
-import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 import { MARK_AS_READ_EMOJI } from './reactionService'
 import { BlogPostPreview } from './exploreService'
+import { queryEvents } from './dataFetch'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -28,58 +27,11 @@ export async function fetchReadArticles(
   userPubkey: string
 ): Promise<ReadArticle[]> {
   try {
-    const orderedRelays = prioritizeLocalRelays(RELAYS)
-    const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
-
-    // Fetch kind:7 reactions (nostr-native articles)
-    const kind7Local$ = localRelays.length > 0
-      ? relayPool
-          .req(localRelays, { kinds: [7], authors: [userPubkey] })
-          .pipe(
-            onlyEvents(),
-            completeOnEose(),
-            takeUntil(timer(1200))
-          )
-      : new Observable<NostrEvent>((sub) => sub.complete())
-
-    const kind7Remote$ = remoteRelays.length > 0
-      ? relayPool
-          .req(remoteRelays, { kinds: [7], authors: [userPubkey] })
-          .pipe(
-            onlyEvents(),
-            completeOnEose(),
-            takeUntil(timer(6000))
-          )
-      : new Observable<NostrEvent>((sub) => sub.complete())
-
-    const kind7Events: NostrEvent[] = await lastValueFrom(
-      merge(kind7Local$, kind7Remote$).pipe(toArray())
-    )
-
-    // Fetch kind:17 reactions (external URLs)
-    const kind17Local$ = localRelays.length > 0
-      ? relayPool
-          .req(localRelays, { kinds: [17], authors: [userPubkey] })
-          .pipe(
-            onlyEvents(),
-            completeOnEose(),
-            takeUntil(timer(1200))
-          )
-      : new Observable<NostrEvent>((sub) => sub.complete())
-
-    const kind17Remote$ = remoteRelays.length > 0
-      ? relayPool
-          .req(remoteRelays, { kinds: [17], authors: [userPubkey] })
-          .pipe(
-            onlyEvents(),
-            completeOnEose(),
-            takeUntil(timer(6000))
-          )
-      : new Observable<NostrEvent>((sub) => sub.complete())
-
-    const kind17Events: NostrEvent[] = await lastValueFrom(
-      merge(kind17Local$, kind17Remote$).pipe(toArray())
-    )
+    // Fetch kind:7 and kind:17 reactions in parallel
+    const [kind7Events, kind17Events] = await Promise.all([
+      queryEvents(relayPool, { kinds: [7], authors: [userPubkey] }, { relayUrls: RELAYS }),
+      queryEvents(relayPool, { kinds: [17], authors: [userPubkey] }, { relayUrls: RELAYS })
+    ])
 
     const readArticles: ReadArticle[] = []
 
@@ -157,34 +109,13 @@ export async function fetchReadArticlesWithData(
       return []
     }
 
-    const orderedRelays = prioritizeLocalRelays(RELAYS)
-    const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
-
     // Fetch the actual article events
     const eventIds = nostrArticles.map(a => a.eventId!).filter(Boolean)
     
-    const local$ = localRelays.length > 0
-      ? relayPool
-          .req(localRelays, { kinds: [30023], ids: eventIds })
-          .pipe(
-            onlyEvents(),
-            completeOnEose(),
-            takeUntil(timer(1200))
-          )
-      : new Observable<NostrEvent>((sub) => sub.complete())
-
-    const remote$ = remoteRelays.length > 0
-      ? relayPool
-          .req(remoteRelays, { kinds: [30023], ids: eventIds })
-          .pipe(
-            onlyEvents(),
-            completeOnEose(),
-            takeUntil(timer(6000))
-          )
-      : new Observable<NostrEvent>((sub) => sub.complete())
-
-    const articleEvents: NostrEvent[] = await lastValueFrom(
-      merge(local$, remote$).pipe(toArray())
+    const articleEvents = await queryEvents(
+      relayPool,
+      { kinds: [30023], ids: eventIds },
+      { relayUrls: RELAYS }
     )
 
     // Deduplicate article events by ID
