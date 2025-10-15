@@ -32,7 +32,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
     <Link 
       to={href}
       className={`blog-post-card ${level ? `level-${level}` : ''}`}
-      style={{ textDecoration: 'none', color: 'inherit', position: 'relative' }}
+      style={{ textDecoration: 'none', color: 'inherit' }}
     >
       <div className="blog-post-card-image">
         {post.image ? (
@@ -52,7 +52,37 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
         {post.summary && (
           <p className="blog-post-card-summary">{post.summary}</p>
         )}
-        <div className="blog-post-card-meta">
+        
+        {/* Reading progress indicator - replaces the dividing line */}
+        {readingProgress !== undefined && readingProgress > 0 ? (
+          <div 
+            className="blog-post-reading-progress"
+            style={{
+              height: '3px',
+              width: '100%',
+              background: 'var(--color-border)',
+              overflow: 'hidden',
+              marginTop: '1rem'
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                width: `${progressPercent}%`,
+                background: progressColor,
+                transition: 'width 0.3s ease, background 0.3s ease'
+              }}
+            />
+          </div>
+        ) : (
+          <div style={{ 
+            height: '1px', 
+            background: 'var(--color-border)', 
+            marginTop: '1rem' 
+          }} />
+        )}
+        
+        <div className="blog-post-card-meta" style={{ borderTop: 'none', paddingTop: '0.75rem' }}>
           <span className="blog-post-card-author">
             <FontAwesomeIcon icon={faUser} />
             {displayName}
@@ -63,31 +93,6 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
           </span>
         </div>
       </div>
-      
-      {/* Reading progress indicator */}
-      {readingProgress !== undefined && readingProgress > 0 && (
-        <div 
-          className="blog-post-reading-progress"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            height: '4px',
-            width: '100%',
-            background: 'var(--color-border)',
-            overflow: 'hidden'
-          }}
-        >
-          <div
-            style={{
-              height: '100%',
-              width: `${progressPercent}%`,
-              background: progressColor,
-              transition: 'width 0.3s ease, background 0.3s ease'
-            }}
-          />
-        </div>
-      )}
     </Link>
   )
 }
