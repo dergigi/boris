@@ -256,6 +256,16 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         return true
     }
   })
+
+  // Debug logging
+  if (activeTab === 'reads' && reads.length > 0) {
+    console.log('📊 [Me/Reads] Debug:', {
+      totalReads: reads.length,
+      filteredReads: filteredReads.length,
+      currentFilter: readingProgressFilter,
+      sampleRead: reads[0]
+    })
+  }
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
     { key: 'private', title: 'Private Bookmarks', items: groups.privateItems },
     { key: 'public', title: 'Public Bookmarks', items: groups.publicItems },
