@@ -174,10 +174,10 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     .filter(hasContent)
   const groups = groupIndividualBookmarks(allIndividualBookmarks)
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
-    { key: 'private', title: 'Private bookmarks', items: groups.privateItems },
-    { key: 'public', title: 'Public bookmarks', items: groups.publicItems },
-    { key: 'web', title: 'Web bookmarks', items: groups.web },
-    { key: 'amethyst', title: 'Old Bookmarks (Legacy)', items: groups.amethyst }
+    { key: 'private', title: 'Private Bookmarks', items: groups.privateItems },
+    { key: 'public', title: 'Public Bookmarks', items: groups.publicItems },
+    { key: 'web', title: 'Web Bookmarks', items: groups.web },
+    { key: 'amethyst', title: 'Legacy Bookmarks', items: groups.amethyst }
   ]
 
   // Show content progressively - no blocking error screens

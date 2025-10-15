@@ -94,10 +94,10 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   // Group non-set bookmarks as before
   const groups = groupIndividualBookmarks(bookmarksWithoutSet)
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
-    { key: 'private', title: 'Private bookmarks', items: groups.privateItems },
-    { key: 'public', title: 'Public bookmarks', items: groups.publicItems },
-    { key: 'web', title: 'Web bookmarks', items: groups.web },
-    { key: 'amethyst', title: 'Old Bookmarks (Legacy)', items: groups.amethyst }
+    { key: 'private', title: 'Private Bookmarks', items: groups.privateItems },
+    { key: 'public', title: 'Public Bookmarks', items: groups.publicItems },
+    { key: 'web', title: 'Web Bookmarks', items: groups.web },
+    { key: 'amethyst', title: 'Legacy Bookmarks', items: groups.amethyst }
   ]
   
   // Add bookmark sets as additional sections
