@@ -374,9 +374,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           <FontAwesomeIcon icon={faNewspaper} />
           Explore
         </h1>
-        <p className="explore-subtitle">
-          Discover highlights and blog posts from your friends and others
-        </p>
         
         {/* Visibility filters */}
         <div className="highlight-level-toggles" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
