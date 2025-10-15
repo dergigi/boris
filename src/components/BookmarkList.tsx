@@ -19,6 +19,8 @@ import AddBookmarkModal from './AddBookmarkModal'
 import { createWebBookmark } from '../services/webBookmarkService'
 import { RELAYS } from '../config/relays'
 import { Hooks } from 'applesauce-react'
+import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
+import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -61,6 +63,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const bookmarksListRef = useRef<HTMLDivElement>(null)
   const friendsColor = settings?.highlightColorFriends || '#f97316'
   const [showAddModal, setShowAddModal] = useState(false)
+  const [selectedFilter, setSelectedFilter] = useState<BookmarkFilterType>('all')
   const activeAccount = Hooks.useActiveAccount()
 
   const handleSaveBookmark = async (url: string, title?: string, description?: string, tags?: string[]) => {
@@ -87,9 +90,12 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(hasContent)
   
+  // Apply filter
+  const filteredBookmarks = filterBookmarksByType(allIndividualBookmarks, selectedFilter)
+  
   // Separate bookmarks with setName (kind 30003) from regular bookmarks
-  const bookmarksWithoutSet = getBookmarksWithoutSet(allIndividualBookmarks)
-  const bookmarkSets = getBookmarkSets(allIndividualBookmarks)
+  const bookmarksWithoutSet = getBookmarksWithoutSet(filteredBookmarks)
+  const bookmarkSets = getBookmarkSets(filteredBookmarks)
   
   // Group non-set bookmarks as before
   const groups = groupIndividualBookmarks(bookmarksWithoutSet)
@@ -140,7 +146,18 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         isMobile={isMobile}
       />
       
-      {allIndividualBookmarks.length === 0 ? (
+      {allIndividualBookmarks.length > 0 && (
+        <BookmarkFilters
+          selectedFilter={selectedFilter}
+          onFilterChange={setSelectedFilter}
+        />
+      )}
+      
+      {filteredBookmarks.length === 0 && allIndividualBookmarks.length > 0 ? (
+        <div className="empty-state">
+          <p>No bookmarks match this filter.</p>
+        </div>
+      ) : allIndividualBookmarks.length === 0 ? (
         loading ? (
           <div className={`bookmarks-list ${viewMode}`} aria-busy="true">
             <div className={`bookmarks-grid bookmarks-${viewMode}`}>
