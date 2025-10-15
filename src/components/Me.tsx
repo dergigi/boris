@@ -251,8 +251,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     
     switch (archiveFilter) {
       case 'to-read':
-        // No position or 0% progress
-        return !position || position === 0
+        // 0-5% reading progress (has tracking data, not manually marked)
+        return position !== undefined && position >= 0 && position <= 0.05
       case 'reading':
         // Has some progress but not completed (0 < position < 1)
         return position !== undefined && position > 0 && position < 0.95
