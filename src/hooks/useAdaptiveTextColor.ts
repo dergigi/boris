@@ -58,13 +58,13 @@ export function useAdaptiveTextColor(imageUrl: string | undefined): AdaptiveText
           console.log('Light background detected, using black text')
           setColors({
             textColor: '#000000',
-            shadowColor: 'rgba(255, 255, 255, 0.5)'
+            shadowColor: 'rgba(255, 255, 255, 0.8)'
           })
         } else {
           console.log('Dark background detected, using white text')
           setColors({
             textColor: '#ffffff',
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
+            shadowColor: 'rgba(0, 0, 0, 0.8)'
           })
         }
       } catch (error) {
