@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faNewspaper, faPenToSquare, faHighlighter, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
+import { faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { Hooks } from 'applesauce-react'
@@ -392,7 +392,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
             data-tab="writings"
             onClick={() => navigate('/explore/writings')}
           >
-            <FontAwesomeIcon icon={faPenToSquare} />
+            <FontAwesomeIcon icon={faNewspaper} />
             <span className="tab-label">Writings</span>
           </button>
         </div>
