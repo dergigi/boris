@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.18] - 2025-10-15
+
+### Changed
+
+- Zap split labels simplified and terminology updated
+  - Removed redundant "Weight: xy" label to save space
+  - Changed "Author(s) Share" to "Author's Share" (possessive singular)
+  - Changed "Support Boris" to "Boris' Share" for consistency
+  - Weight value now shown directly in label (e.g., "Your Share: 50")
+  - Share and percentage now displayed on same line for cleaner layout
+- Zap preset buttons on desktop now expand to match slider width
+  - Added `flex: 1` to buttons for equal width distribution
+  - Buttons still wrap properly on smaller screens
+- PWA install section now always visible in settings
+  - Section shows regardless of installation or device capability status
+  - Button adapts with proper disabled states and visual feedback
+  - "Installed" state shows checkmark icon and disabled button
+  - Non-installable state shows disabled button
+
+### Fixed
+
+- PWA install button now properly disabled when installation is not possible on device
+  - Button only enabled when browser fires `beforeinstallprompt` event
+  - Removed hardcoded testing state that always showed button as installable
+- App & Airplane Mode section now always visible regardless of PWA status
+  - Image cache and local relay settings always accessible
+  - Previously entire section was hidden if PWA not installable/installed
+  - Only PWA-specific install button is conditionally affected
+
 ## [0.6.17] - 2025-10-15
 
 ### Added
@@ -1566,7 +1595,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.17...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.18...HEAD
+[0.6.18]: https://github.com/dergigi/boris/compare/v0.6.17...v0.6.18
 [0.6.17]: https://github.com/dergigi/boris/compare/v0.6.16...v0.6.17
 [0.6.16]: https://github.com/dergigi/boris/compare/v0.6.15...v0.6.16
 [0.6.15]: https://github.com/dergigi/boris/compare/v0.6.14...v0.6.15
