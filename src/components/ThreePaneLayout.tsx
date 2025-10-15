@@ -359,42 +359,33 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
               {props.support}
             </>
           ) : (
-            <>
-              <ContentPanel 
-                loading={props.readerLoading}
-                title={props.readerContent?.title}
-                html={props.readerContent?.html}
-                markdown={props.readerContent?.markdown}
-                image={props.readerContent?.image}
-                summary={props.readerContent?.summary}
-                published={props.readerContent?.published}
-                selectedUrl={props.selectedUrl}
-                highlights={props.classifiedHighlights}
-                showHighlights={props.showHighlights}
-                highlightStyle={props.settings.highlightStyle || 'marker'}
-                highlightColor={props.settings.highlightColor || '#ffff00'}
-                onHighlightClick={props.onHighlightClick}
-                selectedHighlightId={props.selectedHighlightId}
-                highlightVisibility={props.highlightVisibility}
-                onTextSelection={props.onTextSelection}
-                onClearSelection={props.onClearSelection}
-                currentUserPubkey={props.currentUserPubkey}
-                followedPubkeys={props.followedPubkeys}
-                settings={props.settings}
-                relayPool={props.relayPool}
-                activeAccount={props.activeAccount}
-                currentArticle={props.currentArticle}
-                isSidebarCollapsed={props.isCollapsed}
-                isHighlightsCollapsed={props.isHighlightsCollapsed}
-              />
-              {props.hasActiveAccount && (
-                <HighlightButton 
-                  ref={props.highlightButtonRef} 
-                  onHighlight={props.onCreateHighlight}
-                  highlightColor={props.settings.highlightColorMine || '#ffff00'}
-                />
-              )}
-            </>
+            <ContentPanel 
+              loading={props.readerLoading}
+              title={props.readerContent?.title}
+              html={props.readerContent?.html}
+              markdown={props.readerContent?.markdown}
+              image={props.readerContent?.image}
+              summary={props.readerContent?.summary}
+              published={props.readerContent?.published}
+              selectedUrl={props.selectedUrl}
+              highlights={props.classifiedHighlights}
+              showHighlights={props.showHighlights}
+              highlightStyle={props.settings.highlightStyle || 'marker'}
+              highlightColor={props.settings.highlightColor || '#ffff00'}
+              onHighlightClick={props.onHighlightClick}
+              selectedHighlightId={props.selectedHighlightId}
+              highlightVisibility={props.highlightVisibility}
+              onTextSelection={props.onTextSelection}
+              onClearSelection={props.onClearSelection}
+              currentUserPubkey={props.currentUserPubkey}
+              followedPubkeys={props.followedPubkeys}
+              settings={props.settings}
+              relayPool={props.relayPool}
+              activeAccount={props.activeAccount}
+              currentArticle={props.currentArticle}
+              isSidebarCollapsed={props.isCollapsed}
+              isHighlightsCollapsed={props.isHighlightsCollapsed}
+            />
           )}
         </div>
         <div 
@@ -423,6 +414,13 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
           />
         </div>
       </div>
+      {props.hasActiveAccount && (
+        <HighlightButton 
+          ref={props.highlightButtonRef} 
+          onHighlight={props.onCreateHighlight}
+          highlightColor={props.settings.highlightColorMine || '#ffff00'}
+        />
+      )}
       <RelayStatusIndicator 
         relayPool={props.relayPool}
         showOnMobile={showBookmarkButton}

@@ -55,7 +55,6 @@
     min-height: 100vh;
     overflow: visible !important;
     height: auto !important;
-    position: relative;
   }
   
   .pane.highlights {
@@ -138,7 +137,6 @@
     max-width: 100%; 
     width: 100%;
     transition: opacity 0.2s ease;
-    position: relative;
   }
   /* Hide main content when sidepanes are open on mobile */
   .three-pane .pane.main.mobile-hidden { opacity: 0; pointer-events: none; }
