@@ -42,11 +42,11 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   
-  // Visibility filters (defaults from settings)
+  // Visibility filters (defaults from settings, or friends only)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
-    nostrverse: settings?.defaultHighlightVisibilityNostrverse !== false,
-    friends: settings?.defaultHighlightVisibilityFriends !== false,
-    mine: settings?.defaultHighlightVisibilityMine !== false
+    nostrverse: settings?.defaultHighlightVisibilityNostrverse ?? false,
+    friends: settings?.defaultHighlightVisibilityFriends ?? true,
+    mine: settings?.defaultHighlightVisibilityMine ?? false
   })
 
   // Update local state when prop changes
