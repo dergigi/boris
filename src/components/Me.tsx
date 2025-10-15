@@ -129,8 +129,17 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   useEffect(() => {
     const loadPositions = async () => {
       if (!isOwnProfile || !activeAccount || !relayPool || !eventStore || readArticles.length === 0) {
+        console.log('🔍 [Archive] Skipping position load:', {
+          isOwnProfile,
+          hasAccount: !!activeAccount,
+          hasRelayPool: !!relayPool,
+          hasEventStore: !!eventStore,
+          articlesCount: readArticles.length
+        })
         return
       }
+
+      console.log('📊 [Archive] Loading reading positions for', readArticles.length, 'articles')
 
       const positions = new Map<string, number>()
 
@@ -147,6 +156,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             const articleUrl = `nostr:${naddr}`
             const identifier = generateArticleIdentifier(articleUrl)
 
+            console.log('🔍 [Archive] Loading position for:', post.title?.slice(0, 50), 'identifier:', identifier.slice(0, 32))
+
             const savedPosition = await loadReadingPosition(
               relayPool,
               eventStore,
@@ -155,14 +166,18 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             )
 
             if (savedPosition && savedPosition.position > 0) {
+              console.log('✅ [Archive] Found position:', Math.round(savedPosition.position * 100) + '%', 'for', post.title?.slice(0, 50))
               positions.set(post.event.id, savedPosition.position)
+            } else {
+              console.log('❌ [Archive] No position found for:', post.title?.slice(0, 50))
             }
           } catch (error) {
-            console.warn('Failed to load reading position for article:', error)
+            console.warn('⚠️ [Archive] Failed to load reading position for article:', error)
           }
         })
       )
 
+      console.log('📊 [Archive] Loaded positions for', positions.size, '/', readArticles.length, 'articles')
       setReadingPositions(positions)
     }
 

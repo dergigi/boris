@@ -52,10 +52,12 @@ export async function saveReadingPosition(
   articleIdentifier: string,
   position: ReadingPosition
 ): Promise<void> {
-  console.log('💾 Saving reading position:', {
+  console.log('💾 [ReadingPosition] Saving position:', {
     identifier: articleIdentifier.slice(0, 32) + '...',
     position: position.position,
-    timestamp: position.timestamp
+    positionPercent: Math.round(position.position * 100) + '%',
+    timestamp: position.timestamp,
+    scrollTop: position.scrollTop
   })
 
   const dTag = `${READING_POSITION_PREFIX}${articleIdentifier}`
@@ -75,7 +77,7 @@ export async function saveReadingPosition(
   // Use unified write service
   await publishEvent(relayPool, eventStore, signed)
 
-  console.log('✅ Reading position saved successfully')
+  console.log('✅ [ReadingPosition] Position saved successfully, event ID:', signed.id.slice(0, 8))
 }
 
 /**
@@ -89,9 +91,10 @@ export async function loadReadingPosition(
 ): Promise<ReadingPosition | null> {
   const dTag = `${READING_POSITION_PREFIX}${articleIdentifier}`
 
-  console.log('📖 Loading reading position:', {
+  console.log('📖 [ReadingPosition] Loading position:', {
     pubkey: pubkey.slice(0, 8) + '...',
-    identifier: articleIdentifier.slice(0, 32) + '...'
+    identifier: articleIdentifier.slice(0, 32) + '...',
+    dTag: dTag.slice(0, 50) + '...'
   })
 
   // First, check if we already have the position in the local event store
@@ -102,7 +105,11 @@ export async function loadReadingPosition(
     if (localEvent) {
       const content = getReadingPositionContent(localEvent)
       if (content) {
-        console.log('✅ Reading position loaded from local store:', content.position)
+        console.log('✅ [ReadingPosition] Loaded from local store:', {
+          position: content.position,
+          positionPercent: Math.round(content.position * 100) + '%',
+          timestamp: content.timestamp
+        })
         
         // Still fetch from relays in the background to get any updates
         relayPool
@@ -151,13 +158,18 @@ export async function loadReadingPosition(
               if (event) {
                 const content = getReadingPositionContent(event)
                 if (content) {
-                  console.log('✅ Reading position loaded from relays:', content.position)
+                  console.log('✅ [ReadingPosition] Loaded from relays:', {
+                    position: content.position,
+                    positionPercent: Math.round(content.position * 100) + '%',
+                    timestamp: content.timestamp
+                  })
                   resolve(content)
                 } else {
+                  console.log('⚠️ [ReadingPosition] Event found but no valid content')
                   resolve(null)
                 }
               } else {
-                console.log('📭 No reading position found')
+                console.log('📭 [ReadingPosition] No position found on relays')
                 resolve(null)
               }
             } catch (err) {

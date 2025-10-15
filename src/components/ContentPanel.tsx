@@ -150,8 +150,21 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Callback to save reading position
   const handleSavePosition = useCallback(async (position: number) => {
-    if (!activeAccount || !relayPool || !eventStore || !articleIdentifier) return
-    if (!settings?.syncReadingPosition) return
+    if (!activeAccount || !relayPool || !eventStore || !articleIdentifier) {
+      console.log('⏭️ [ContentPanel] Skipping save - missing requirements:', {
+        hasAccount: !!activeAccount,
+        hasRelayPool: !!relayPool,
+        hasEventStore: !!eventStore,
+        hasIdentifier: !!articleIdentifier
+      })
+      return
+    }
+    if (!settings?.syncReadingPosition) {
+      console.log('⏭️ [ContentPanel] Sync disabled in settings')
+      return
+    }
+
+    console.log('💾 [ContentPanel] Saving position:', Math.round(position * 100) + '%', 'for article:', selectedUrl?.slice(0, 50))
 
     try {
       const factory = new EventFactory({ signer: activeAccount })
@@ -167,9 +180,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         }
       )
     } catch (error) {
-      console.error('Failed to save reading position:', error)
+      console.error('❌ [ContentPanel] Failed to save reading position:', error)
     }
-  }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition])
+  }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl])
 
   const { isReadingComplete, progressPercentage, saveNow } = useReadingPosition({
     enabled: isTextContent,
@@ -185,8 +198,22 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Load saved reading position when article loads
   useEffect(() => {
-    if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) return
-    if (!settings?.syncReadingPosition) return
+    if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) {
+      console.log('⏭️ [ContentPanel] Skipping position restore - missing requirements:', {
+        isTextContent,
+        hasAccount: !!activeAccount,
+        hasRelayPool: !!relayPool,
+        hasEventStore: !!eventStore,
+        hasIdentifier: !!articleIdentifier
+      })
+      return
+    }
+    if (!settings?.syncReadingPosition) {
+      console.log('⏭️ [ContentPanel] Sync disabled - not restoring position')
+      return
+    }
+
+    console.log('📖 [ContentPanel] Loading position for article:', selectedUrl?.slice(0, 50))
 
     const loadPosition = async () => {
       try {
@@ -198,6 +225,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         )
 
         if (savedPosition && savedPosition.position > 0.05 && savedPosition.position < 0.95) {
+          console.log('🎯 [ContentPanel] Restoring position:', Math.round(savedPosition.position * 100) + '%')
           // Wait for content to be fully rendered before scrolling
           setTimeout(() => {
             const documentHeight = document.documentElement.scrollHeight
@@ -209,16 +237,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               behavior: 'smooth'
             })
             
-            console.log('📖 Restored reading position:', Math.round(savedPosition.position * 100) + '%')
+            console.log('✅ [ContentPanel] Restored to position:', Math.round(savedPosition.position * 100) + '%', 'scrollTop:', scrollTop)
           }, 500) // Give content time to render
+        } else if (savedPosition) {
+          console.log('⏭️ [ContentPanel] Position out of range (5-95%):', Math.round(savedPosition.position * 100) + '%')
         }
       } catch (error) {
-        console.error('Failed to load reading position:', error)
+        console.error('❌ [ContentPanel] Failed to load reading position:', error)
       }
     }
 
     loadPosition()
-  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition])
+  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl])
 
   // Save position before unmounting or changing article
   useEffect(() => {
