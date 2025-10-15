@@ -5,7 +5,6 @@ import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDateCompact } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
-import { useImageCache } from '../../hooks/useImageCache'
 
 interface CompactViewProps {
   bookmark: IndividualBookmark
@@ -32,9 +31,6 @@ export const CompactView: React.FC<CompactViewProps> = ({
   const isWebBookmark = bookmark.kind === 39701
   const isClickable = hasUrls || isArticle || isWebBookmark
   
-  // Get cached image for thumbnail
-  const cachedImage = useImageCache(articleImage || undefined)
-  
   const handleCompactClick = () => {
     if (!onSelectUrl) return
     
@@ -58,13 +54,6 @@ export const CompactView: React.FC<CompactViewProps> = ({
         role={isClickable ? 'button' : undefined}
         tabIndex={isClickable ? 0 : undefined}
       >
-        {/* Thumbnail image */}
-        {cachedImage && (
-          <div className="compact-thumbnail">
-            <img src={cachedImage} alt="" />
-          </div>
-        )}
-        
         <span className="bookmark-type-compact">
           <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
           {bookmark.isPrivate && (
