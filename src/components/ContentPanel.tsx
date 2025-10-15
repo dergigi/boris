@@ -203,10 +203,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     setIsMarkedAsRead(true)
     setShowCheckAnimation(true)
 
-    // Reset animation after it completes
+    // Reset animation after it completes (2.5s for full fancy animation)
     setTimeout(() => {
       setShowCheckAnimation(false)
-    }, 600)
+    }, 2500)
 
     // Fire-and-forget: publish in background without blocking UI
     ;(async () => {
