@@ -19,65 +19,6 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
     <div className="settings-section">
       <h3 className="section-title">Reading & Display</h3>
       
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-        <div className="setting-group setting-inline" style={{ flex: '1 1 auto', minWidth: '200px' }}>
-          <label htmlFor="readingFont">Reading Font</label>
-          <div className="setting-control">
-            <FontSelector
-              value={settings.readingFont || 'source-serif-4'}
-              onChange={(font) => onUpdate({ readingFont: font })}
-            />
-          </div>
-        </div>
-
-        <div className="setting-group setting-inline" style={{ flex: '0 1 auto' }}>
-          <label>Font Size</label>
-          <div className="setting-buttons">
-            {[16, 18, 21, 24, 28, 32].map(size => (
-              <button
-                key={size}
-                onClick={() => onUpdate({ fontSize: size })}
-                className={`font-size-btn ${(settings.fontSize || 21) === size ? 'active' : ''}`}
-                title={`${size}px`}
-                style={{ fontSize: `${size - 2}px` }}
-              >
-                A
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="setting-group setting-inline">
-        <label className="setting-label">My Highlights</label>
-        <div className="setting-control">
-          <ColorPicker
-            selectedColor={settings.highlightColorMine || '#fde047'}
-            onColorChange={(color) => onUpdate({ highlightColorMine: color })}
-          />
-        </div>
-      </div>
-
-      <div className="setting-group setting-inline">
-        <label className="setting-label">Friends Highlights</label>
-        <div className="setting-control">
-          <ColorPicker
-            selectedColor={settings.highlightColorFriends || '#f97316'}
-            onColorChange={(color) => onUpdate({ highlightColorFriends: color })}
-          />
-        </div>
-      </div>
-
-      <div className="setting-group setting-inline">
-        <label className="setting-label">Nostrverse Highlights</label>
-        <div className="setting-control">
-          <ColorPicker
-            selectedColor={settings.highlightColorNostrverse || '#9333ea'}
-            onColorChange={(color) => onUpdate({ highlightColorNostrverse: color })}
-          />
-        </div>
-      </div>
-
       <div className="setting-group setting-inline">
         <label>Highlight Style</label>
         <div className="setting-buttons">
@@ -153,6 +94,65 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
               color: (settings.defaultHighlightVisibilityMine !== false) ? 'var(--highlight-color-mine, #eab308)' : undefined,
               opacity: (settings.defaultHighlightVisibilityMine !== false) ? 1 : 0.4
             }}
+          />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+        <div className="setting-group setting-inline" style={{ flex: '1 1 auto', minWidth: '200px' }}>
+          <label htmlFor="readingFont">Reading Font</label>
+          <div className="setting-control">
+            <FontSelector
+              value={settings.readingFont || 'source-serif-4'}
+              onChange={(font) => onUpdate({ readingFont: font })}
+            />
+          </div>
+        </div>
+
+        <div className="setting-group setting-inline" style={{ flex: '0 1 auto' }}>
+          <label>Font Size</label>
+          <div className="setting-buttons">
+            {[16, 18, 21, 24, 28, 32].map(size => (
+              <button
+                key={size}
+                onClick={() => onUpdate({ fontSize: size })}
+                className={`font-size-btn ${(settings.fontSize || 21) === size ? 'active' : ''}`}
+                title={`${size}px`}
+                style={{ fontSize: `${size - 2}px` }}
+              >
+                A
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="setting-group setting-inline">
+        <label className="setting-label">My Highlights</label>
+        <div className="setting-control">
+          <ColorPicker
+            selectedColor={settings.highlightColorMine || '#fde047'}
+            onColorChange={(color) => onUpdate({ highlightColorMine: color })}
+          />
+        </div>
+      </div>
+
+      <div className="setting-group setting-inline">
+        <label className="setting-label">Friends Highlights</label>
+        <div className="setting-control">
+          <ColorPicker
+            selectedColor={settings.highlightColorFriends || '#f97316'}
+            onColorChange={(color) => onUpdate({ highlightColorFriends: color })}
+          />
+        </div>
+      </div>
+
+      <div className="setting-group setting-inline">
+        <label className="setting-label">Nostrverse Highlights</label>
+        <div className="setting-control">
+          <ColorPicker
+            selectedColor={settings.highlightColorNostrverse || '#9333ea'}
+            onColorChange={(color) => onUpdate({ highlightColorNostrverse: color })}
           />
         </div>
       </div>
