@@ -21,6 +21,12 @@
   border-top: none; 
   padding-top: 0.5rem !important; 
 }
+.bookmark-section-action {
+  padding: 1.5rem 0.5rem 0.75rem;
+}
+.bookmarks-section:first-of-type .bookmark-section-action {
+  padding-top: 0.5rem;
+}
 
 .individual-bookmarks { margin: 1rem 0; }
 .individual-bookmarks h4 { margin: 0 0 1rem 0; font-size: 1rem; color: var(--color-text); }
