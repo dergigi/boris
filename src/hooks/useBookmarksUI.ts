@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { NostrEvent } from 'nostr-tools'
 import { HighlightVisibility } from '../components/HighlightsPanel'
 import { UserSettings } from '../services/settingsService'
@@ -47,9 +47,9 @@ export const useBookmarksUI = ({ settings }: UseBookmarksUIParams) => {
     })
   }, [settings])
 
-  const toggleSidebar = () => {
+  const toggleSidebar = useCallback(() => {
     setIsSidebarOpen(prev => !prev)
-  }
+  }, [])
 
   return {
     isMobile,

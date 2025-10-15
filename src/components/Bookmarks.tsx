@@ -126,10 +126,13 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   } = useBookmarksUI({ settings })
 
   // Close sidebar on mobile when route changes (e.g., clicking on blog posts in Explore)
+  const prevPathnameRef = useRef<string>(location.pathname)
   useEffect(() => {
-    if (isMobile && isSidebarOpen) {
+    // Only close if pathname actually changed, not on initial render or other state changes
+    if (isMobile && isSidebarOpen && prevPathnameRef.current !== location.pathname) {
       toggleSidebar()
     }
+    prevPathnameRef.current = location.pathname
   }, [location.pathname, isMobile, isSidebarOpen, toggleSidebar])
 
   // Handle highlight navigation from explore page
