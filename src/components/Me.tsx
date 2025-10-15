@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
 import { RelayPool } from 'applesauce-relay'
@@ -347,9 +347,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             </div>
           )
         }
-        return highlights.length === 0 ? (
+        return highlights.length === 0 && !loading ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+            No highlights yet.
           </div>
         ) : (
           <div className="highlights-list me-highlights-list">
@@ -376,9 +376,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             </div>
           )
         }
-        return allIndividualBookmarks.length === 0 ? (
+        return allIndividualBookmarks.length === 0 && !loading ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+            No bookmarks yet.
           </div>
         ) : (
           <div className="bookmarks-list">
