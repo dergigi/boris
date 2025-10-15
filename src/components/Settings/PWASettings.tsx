@@ -6,7 +6,6 @@ import { usePWAInstall } from '../../hooks/usePWAInstall'
 import { useIsMobile } from '../../hooks/useMediaQuery'
 import { UserSettings } from '../../services/settingsService'
 import { getImageCacheStatsAsync, clearImageCache } from '../../services/imageCacheService'
-import IconButton from '../IconButton'
 
 interface PWASettingsProps {
   settings: UserSettings
@@ -111,12 +110,11 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
                   />
                   MB used )
                 </span>
-                <IconButton
+                <FontAwesomeIcon 
                   icon={faTrash}
                   onClick={handleClearCache}
                   title="Clear cache"
-                  variant="ghost"
-                  size={20}
+                  style={{ cursor: 'pointer', fontSize: '0.85rem', opacity: 0.7 }}
                 />
               </div>
             )}
