@@ -128,7 +128,10 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [isMobile, isViewingArticle])
   
-  const showMobileButtons = scrollDirection !== 'down' && !isAtTop
+  // Bookmark button: hide only when scrolling down
+  const showBookmarkButton = scrollDirection !== 'down'
+  // Highlights button: hide when scrolling down OR at the top
+  const showHighlightsButton = scrollDirection !== 'down' && !isAtTop
 
   // Lock body scroll when mobile sidebar or highlights is open
   useEffect(() => {
@@ -250,7 +253,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
       {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && !props.showSettings && (
         <button
           className={`fixed z-[900] bg-zinc-800/70 border border-zinc-600/40 rounded-lg text-zinc-200 flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm md:hidden ${
-            showMobileButtons ? 'opacity-90 visible' : 'opacity-0 invisible pointer-events-none'
+            showBookmarkButton ? 'opacity-90 visible' : 'opacity-0 invisible pointer-events-none'
           }`}
           style={{
             top: 'calc(1rem + env(safe-area-inset-top))',
@@ -270,7 +273,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
       {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && !props.showSettings && isViewingArticle && (
         <button
           className={`fixed z-[900] border border-zinc-600/40 rounded-lg flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm md:hidden ${
-            showMobileButtons ? 'opacity-90 visible' : 'opacity-0 invisible pointer-events-none'
+            showHighlightsButton ? 'opacity-90 visible' : 'opacity-0 invisible pointer-events-none'
           }`}
           style={{ 
             top: 'calc(1rem + env(safe-area-inset-top))',
@@ -419,7 +422,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
       )}
       <RelayStatusIndicator 
         relayPool={props.relayPool}
-        showOnMobile={showMobileButtons}
+        showOnMobile={showBookmarkButton}
       />
       {props.toastMessage && (
         <Toast
