@@ -10,7 +10,7 @@ import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
 import { fetchBookmarks } from '../services/bookmarkService'
-import { fetchReadArticlesWithData } from '../services/libraryService'
+import { fetchAllReads, ReadItem } from '../services/readsService'
 import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
 import { RELAYS } from '../config/relays'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
@@ -34,7 +34,7 @@ interface MeProps {
   pubkey?: string // Optional pubkey for viewing other users' profiles
 }
 
-type TabType = 'highlights' | 'reading-list' | 'archive' | 'writings'
+type TabType = 'highlights' | 'reading-list' | 'reads' | 'writings'
 
 const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: propPubkey }) => {
   const activeAccount = Hooks.useActiveAccount()
@@ -46,7 +46,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const isOwnProfile = !propPubkey || (activeAccount?.pubkey === propPubkey)
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
-  const [readArticles, setReadArticles] = useState<BlogPostPreview[]>([])
+  const [reads, setReads] = useState<ReadItem[]>([])
   const [writings, setWritings] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
@@ -77,7 +77,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           if (cached) {
             setHighlights(cached.highlights)
             setBookmarks(cached.bookmarks)
-            setReadArticles(cached.readArticles)
+            setReads(cached.reads || [])
           }
         }
 
@@ -92,9 +92,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
 
         // Only fetch private data for own profile
         if (isOwnProfile && activeAccount) {
-          const userReadArticles = await fetchReadArticlesWithData(relayPool, viewingPubkey)
-          setReadArticles(userReadArticles)
-
           // Fetch bookmarks using callback pattern
           let fetchedBookmarks: Bookmark[] = []
           try {
@@ -107,11 +104,15 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             setBookmarks([])
           }
 
+          // Fetch all reads
+          const userReads = await fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks)
+          setReads(userReads)
+          
           // Update cache with all fetched data
-          setCachedMeData(viewingPubkey, userHighlights, fetchedBookmarks, userReadArticles)
+          setCachedMeData(viewingPubkey, userHighlights, fetchedBookmarks, userReads)
         } else {
           setBookmarks([])
-          setReadArticles([])
+          setReads([])
         }
       } catch (err) {
         console.error('Failed to load data:', err)
@@ -156,6 +157,54 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     return `/a/${naddr}`
   }
 
+  const getReadItemUrl = (item: ReadItem) => {
+    if (item.type === 'article' && item.event) {
+      const dTag = item.event.tags.find(t => t[0] === 'd')?.[1] || ''
+      const naddr = nip19.naddrEncode({
+        kind: 30023,
+        pubkey: item.event.pubkey,
+        identifier: dTag
+      })
+      return `/a/${naddr}`
+    } else if (item.url) {
+      return `/r/${encodeURIComponent(item.url)}`
+    }
+    return '#'
+  }
+
+  const convertReadItemToBlogPostPreview = (item: ReadItem): BlogPostPreview => {
+    if (item.event) {
+      return {
+        event: item.event,
+        title: item.title || 'Untitled',
+        summary: item.summary,
+        image: item.image,
+        published: item.published,
+        author: item.author || item.event.pubkey
+      }
+    }
+    
+    // Create a mock event for external URLs
+    const mockEvent = {
+      id: item.id,
+      pubkey: item.author || '',
+      created_at: item.readingTimestamp || Math.floor(Date.now() / 1000),
+      kind: 1,
+      tags: [] as string[][],
+      content: item.title || item.url || 'Untitled',
+      sig: ''
+    } as const
+    
+    return {
+      event: mockEvent as unknown as import('nostr-tools').NostrEvent,
+      title: item.title || item.url || 'Untitled',
+      summary: item.summary,
+      image: item.image,
+      published: item.published,
+      author: item.author || ''
+    }
+  }
+
   const handleSelectUrl = (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => {
     if (bookmark && bookmark.kind === 30023) {
       // For kind:30023 articles, navigate to the article route
@@ -185,24 +234,23 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const groups = groupIndividualBookmarks(filteredBookmarks)
 
   // Apply reading progress filter
-  const filteredReadArticles = readArticles.filter(() => {
-    // All articles in readArticles are marked as read, so they're treated as 100% complete
-    // The filters are only useful for distinguishing between different completion states
-    // but since these are all marked as read, we only care about the 'all' and 'completed' filters
+  const filteredReads = reads.filter((item) => {
+    const progress = item.readingProgress || 0
+    const isMarked = item.markedAsRead || false
     
     switch (readingProgressFilter) {
       case 'unopened':
-        // Marked articles are never "unopened"
-        return false
+        // No reading progress
+        return progress === 0 && !isMarked
       case 'started':
-        // Marked articles are never "started"
-        return false
+        // 0-10% reading progress
+        return progress > 0 && progress <= 0.10 && !isMarked
       case 'reading':
-        // Marked articles are never "in progress"
-        return false
+        // 11-94% reading progress
+        return progress > 0.10 && progress <= 0.94 && !isMarked
       case 'completed':
-        // All marked articles are considered completed
-        return true
+        // 95%+ or marked as read
+        return progress >= 0.95 || isMarked
       case 'all':
       default:
         return true
@@ -216,7 +264,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   ]
 
   // Show content progressively - no blocking error screens
-  const hasData = highlights.length > 0 || bookmarks.length > 0 || readArticles.length > 0 || writings.length > 0
+  const hasData = highlights.length > 0 || bookmarks.length > 0 || reads.length > 0 || writings.length > 0
   const showSkeletons = loading && !hasData
 
   const renderTabContent = () => {
@@ -326,7 +374,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           </div>
         )
 
-      case 'archive':
+      case 'reads':
         if (showSkeletons) {
           return (
             <div className="explore-grid">
@@ -336,32 +384,32 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             </div>
           )
         }
-        return readArticles.length === 0 && !loading ? (
+        return reads.length === 0 && !loading ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            No articles in your archive.
+            No articles in your reads.
           </div>
         ) : (
           <>
-            {readArticles.length > 0 && (
+            {reads.length > 0 && (
               <ReadingProgressFilters
                 selectedFilter={readingProgressFilter}
                 onFilterChange={setReadingProgressFilter}
               />
             )}
-            {filteredReadArticles.length === 0 ? (
+            {filteredReads.length === 0 ? (
               <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
                 No articles match this filter.
               </div>
             ) : (
               <div className="explore-grid">
-                {filteredReadArticles.map((post) => (
-                  <BlogPostCard
-                    key={post.event.id}
-                    post={post}
-                    href={getPostUrl(post)}
-                    readingProgress={1.0}
-                  />
-                ))}
+              {filteredReads.map((item) => (
+                <BlogPostCard
+                  key={item.id}
+                  post={convertReadItemToBlogPostPreview(item)}
+                  href={getReadItemUrl(item)}
+                  readingProgress={item.readingProgress}
+                />
+              ))}
               </div>
             )}
           </>
@@ -427,12 +475,12 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
                 <span className="tab-label">Bookmarks</span>
               </button>
               <button
-                className={`me-tab ${activeTab === 'archive' ? 'active' : ''}`}
-                data-tab="archive"
-                onClick={() => navigate('/me/archive')}
+                className={`me-tab ${activeTab === 'reads' ? 'active' : ''}`}
+                data-tab="reads"
+                onClick={() => navigate('/me/reads')}
               >
                 <FontAwesomeIcon icon={faBooks} />
-                <span className="tab-label">Archive</span>
+                <span className="tab-label">Reads</span>
               </button>
             </>
           )}

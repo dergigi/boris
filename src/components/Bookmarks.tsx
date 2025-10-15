@@ -52,7 +52,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const meTab = location.pathname === '/me' ? 'highlights' : 
                 location.pathname === '/me/highlights' ? 'highlights' :
                 location.pathname === '/me/reading-list' ? 'reading-list' :
-                location.pathname === '/me/archive' ? 'archive' :
+                location.pathname === '/me/reads' ? 'reads' :
                 location.pathname === '/me/writings' ? 'writings' : 'highlights'
   
   // Extract tab from profile routes

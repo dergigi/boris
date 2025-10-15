@@ -112,7 +112,7 @@ function AppRoutes({
         } 
       />
       <Route 
-        path="/me/archive" 
+        path="/me/reads" 
         element={
           <Bookmarks 
             relayPool={relayPool}
