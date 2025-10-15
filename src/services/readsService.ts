@@ -251,8 +251,14 @@ export async function fetchAllReads(
       }
     }
 
-    // 5. Sort by most recent reading activity
+    // 5. Filter out items without timestamps and sort by most recent reading activity
     const sortedReads = Array.from(readsMap.values())
+      .filter(item => {
+        // Only include items that have a timestamp
+        const hasTimestamp = (item.readingTimestamp && item.readingTimestamp > 0) || 
+                            (item.markedAt && item.markedAt > 0)
+        return hasTimestamp
+      })
       .sort((a, b) => {
         const timeA = a.readingTimestamp || a.markedAt || 0
         const timeB = b.readingTimestamp || b.markedAt || 0
