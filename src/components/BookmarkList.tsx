@@ -13,6 +13,7 @@ import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { BookmarkSkeleton } from './Skeletons'
 import { groupIndividualBookmarks, hasContent } from '../utils/bookmarkUtils'
+import { UserSettings } from '../services/settingsService'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -30,6 +31,7 @@ interface BookmarkListProps {
   loading?: boolean
   relayPool: RelayPool | null
   isMobile?: boolean
+  settings?: UserSettings
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({
@@ -47,10 +49,12 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   lastFetchTime,
   loading = false,
   relayPool,
-  isMobile = false
+  isMobile = false,
+  settings
 }) => {
   const navigate = useNavigate()
   const bookmarksListRef = useRef<HTMLDivElement>(null)
+  const friendsColor = settings?.highlightColorFriends || '#f97316'
 
   // Pull-to-refresh for bookmarks
   const { isRefreshing: isPulling, pullPosition } = usePullToRefresh({
@@ -157,6 +161,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
           title="Support Boris"
           ariaLabel="Support"
           variant="ghost"
+          style={{ color: friendsColor }}
         />
         {onRefresh && (
           <IconButton
