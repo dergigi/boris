@@ -10,8 +10,8 @@ import IconButton from './IconButton'
 import { ViewMode } from './Bookmarks'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { UserSettings } from '../services/settingsService'
-import { usePullToRefresh } from '../hooks/usePullToRefresh'
-import PullToRefreshIndicator from './PullToRefreshIndicator'
+import { usePullToRefresh } from 'use-pull-to-refresh'
+import RefreshIndicator from './RefreshIndicator'
 import { BookmarkSkeleton } from './Skeletons'
 
 interface BookmarkListProps {
@@ -54,14 +54,15 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const bookmarksListRef = useRef<HTMLDivElement>(null)
 
   // Pull-to-refresh for bookmarks
-  const pullToRefreshState = usePullToRefresh(bookmarksListRef, {
+  const { isRefreshing: isPulling, pullPosition } = usePullToRefresh({
     onRefresh: () => {
       if (onRefresh) {
         onRefresh()
       }
     },
-    isRefreshing: isRefreshing || false,
-    disabled: !onRefresh
+    maximumPullLength: 240,
+    refreshThreshold: 80,
+    isDisabled: !onRefresh
   })
 
   // Helper to check if a bookmark has either content or a URL
@@ -146,13 +147,11 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
       ) : (
         <div 
           ref={bookmarksListRef}
-          className={`bookmarks-list pull-to-refresh-container ${pullToRefreshState.isPulling ? 'is-pulling' : ''}`}
+          className="bookmarks-list"
         >
-          <PullToRefreshIndicator
-            isPulling={pullToRefreshState.isPulling}
-            pullDistance={pullToRefreshState.pullDistance}
-            canRefresh={pullToRefreshState.canRefresh}
-            isRefreshing={isRefreshing || false}
+          <RefreshIndicator
+            isRefreshing={isPulling || isRefreshing || false}
+            pullPosition={pullPosition}
           />
           <div className={`bookmarks-grid bookmarks-${viewMode}`}>
             {allIndividualBookmarks.map((individualBookmark, index) => 

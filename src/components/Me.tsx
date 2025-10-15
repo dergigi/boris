@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faExclamationCircle, faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
 import { RelayPool } from 'applesauce-relay'
@@ -24,7 +24,6 @@ import { getCachedMeData, setCachedMeData, updateCachedHighlights } from '../ser
 import { faBooks } from '../icons/customIcons'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
-import { getProfileUrl } from '../config/nostrGateways'
 
 interface MeProps {
   relayPool: RelayPool
@@ -47,7 +46,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [readArticles, setReadArticles] = useState<BlogPostPreview[]>([])
   const [writings, setWritings] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
@@ -61,14 +59,12 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   useEffect(() => {
     const loadData = async () => {
       if (!viewingPubkey) {
-        setError(isOwnProfile ? 'Please log in to view your data' : 'Invalid profile')
         setLoading(false)
         return
       }
 
       try {
         setLoading(true)
-        setError(null)
 
         // Seed from cache if available to avoid empty flash (own profile only)
         if (isOwnProfile) {
@@ -114,7 +110,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         }
       } catch (err) {
         console.error('Failed to load data:', err)
-        setError('Failed to load data. Please try again.')
+        // No blocking error - user can pull-to-refresh
       } finally {
         setLoading(false)
       }

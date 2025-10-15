@@ -26,7 +26,7 @@ export const fetchNostrverseBlogPosts = async (
     // Deduplicate replaceable events by keeping the most recent version
     const uniqueEvents = new Map<string, NostrEvent>()
 
-    const events = await queryEvents(
+    await queryEvents(
       relayPool,
       { kinds: [30023], limit },
       {

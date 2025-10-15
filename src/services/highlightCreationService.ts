@@ -119,7 +119,7 @@ export async function createHighlight(
   const signedEvent = await factory.sign(highlightEvent)
 
   // Use unified write service to store and publish
-  await publishEvent(relayPool, eventStore, signedEvent, settings)
+  await publishEvent(relayPool, eventStore, signedEvent)
 
   // Check current connection status for UI feedback
   const connectedRelays = Array.from(relayPool.relays.values())

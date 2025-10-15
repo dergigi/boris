@@ -39,7 +39,7 @@ export const fetchBlogPostsFromAuthors = async (
     // Group by author + d-tag identifier
     const uniqueEvents = new Map<string, NostrEvent>()
 
-    const events = await queryEvents(
+    await queryEvents(
       relayPool,
       { kinds: [30023], authors: pubkeys, limit: 100 },
       {

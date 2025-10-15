@@ -85,7 +85,7 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       const fullAccount = accountManager.getActive()
       if (!fullAccount) throw new Error('No active account')
       const factory = new EventFactory({ signer: fullAccount })
-      await saveSettings(relayPool, eventStore, factory, newSettings, RELAYS)
+      await saveSettings(relayPool, eventStore, factory, newSettings)
       setSettings(newSettings)
       setToastType('success')
       setToastMessage('Settings saved')

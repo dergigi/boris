@@ -1,5 +1,4 @@
 import { RelayPool } from 'applesauce-relay'
-import { Observable } from 'rxjs'
 import { prioritizeLocalRelays } from '../utils/helpers'
 import { queryEvents } from './dataFetch'
 import { CONTACTS_REMOTE_TIMEOUT_MS } from '../config/network'

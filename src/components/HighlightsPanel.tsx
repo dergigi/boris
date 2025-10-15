@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { Highlight } from '../types/highlights'

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExclamationCircle, faNewspaper, faPenToSquare, faHighlighter, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
+import { faNewspaper, faPenToSquare, faHighlighter, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { Hooks } from 'applesauce-react'
@@ -40,7 +40,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   
   // Visibility filters (defaults from settings)
@@ -60,7 +59,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   useEffect(() => {
     const loadData = async () => {
       if (!activeAccount) {
-        setError('Please log in to explore content from your friends')
         setLoading(false)
         return
       }
@@ -68,7 +66,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       try {
         // show spinner but keep existing data
         setLoading(true)
-        setError(null)
 
         // Seed from in-memory cache if available to avoid empty flash
         const cachedPosts = getCachedPosts(activeAccount.pubkey)
@@ -150,15 +147,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           }
         )
         
-        if (contacts.size === 0) {
-          // If we already have any cached or previously shown data, do not block the UI.
-          const hasAnyData = (blogPosts.length > 0) || (highlights.length > 0)
-          if (!hasAnyData) {
-            // No friends and no cached content: set a soft hint, but still proceed to load nostrverse.
-            setError(null)
-          }
-          // Continue without returning: still fetch nostrverse content below.
-        }
+        // Always proceed to load nostrverse content even if no contacts
+        // (removed blocking error for empty contacts)
 
         // Store final followed pubkeys
         setFollowedPubkeys(contacts)
@@ -205,12 +195,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           })
         }
 
-        if (contacts.size === 0 && uniquePosts.length === 0 && uniqueHighlights.length === 0) {
-          setError('You are not following anyone yet. Follow some people to see their content!')
-        } else if (uniquePosts.length === 0 && uniqueHighlights.length === 0) {
-          setError('No content found yet')
-        }
-
+        // No blocking errors - let empty states handle messaging
         setBlogPosts(uniquePosts)
         setCachedPosts(activeAccount.pubkey, uniquePosts)
 
@@ -218,13 +203,15 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         setCachedHighlights(activeAccount.pubkey, uniqueHighlights)
       } catch (err) {
         console.error('Failed to load data:', err)
-        setError('Failed to load content. Please try again.')
+        // No blocking error - user can pull-to-refresh
       } finally {
         setLoading(false)
       }
     }
 
     loadData()
+    // Note: intentionally not including blogPosts/highlights length to avoid re-fetch loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
 
   // Pull-to-refresh

@@ -148,8 +148,7 @@ export async function saveSettings(
   relayPool: RelayPool,
   eventStore: IEventStore,
   factory: EventFactory,
-  settings: UserSettings,
-  _relays: string[]
+  settings: UserSettings
 ): Promise<void> {
   console.log('💾 Saving settings to nostr:', settings)
 
@@ -165,7 +164,7 @@ export async function saveSettings(
   const signed = await factory.sign(draft)
 
   // Use unified write service
-  await publishEvent(relayPool, eventStore, signed, settings)
+  await publishEvent(relayPool, eventStore, signed)
 
   console.log('✅ Settings published successfully')
 }

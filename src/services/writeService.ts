@@ -1,7 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { IEventStore } from 'applesauce-core'
-import { UserSettings } from './settingsService'
 import { RELAYS } from '../config/relays'
 import { isLocalRelay, areAllRelaysLocal } from '../utils/helpers'
 import { markEventAsOfflineCreated } from './offlineSyncService'
@@ -13,8 +12,7 @@ import { markEventAsOfflineCreated } from './offlineSyncService'
 export async function publishEvent(
   relayPool: RelayPool,
   eventStore: IEventStore,
-  event: NostrEvent,
-  settings?: UserSettings
+  event: NostrEvent
 ): Promise<void> {
   // Store the event in the local EventStore FIRST for immediate UI display
   eventStore.add(event)
