@@ -57,6 +57,7 @@ export interface UserSettings {
   // Reading position sync
   syncReadingPosition?: boolean // default: false (opt-in)
   autoScrollToPosition?: boolean // default: true (auto-scroll to last reading position)
+  autoMarkAsReadAt100?: boolean // default: false (auto-mark as read when reaching 100% for 2 seconds)
 }
 
 export async function loadSettings(
