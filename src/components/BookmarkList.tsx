@@ -21,6 +21,7 @@ import { RELAYS } from '../config/relays'
 import { Hooks } from 'applesauce-react'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
+import ArchiveFilters, { ArchiveFilterType } from './ArchiveFilters'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -66,6 +67,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const friendsColor = settings?.highlightColorFriends || '#f97316'
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState<BookmarkFilterType>('all')
+  const [archiveFilter, setArchiveFilter] = useState<ArchiveFilterType>('all')
   const activeAccount = Hooks.useActiveAccount()
 
   const handleSaveBookmark = async (url: string, title?: string, description?: string, tags?: string[]) => {
@@ -92,8 +94,37 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(hasContent)
   
-  // Apply filter
-  const filteredBookmarks = filterBookmarksByType(allIndividualBookmarks, selectedFilter)
+  // Apply type filter
+  const typeFilteredBookmarks = filterBookmarksByType(allIndividualBookmarks, selectedFilter)
+  
+  // Apply archive filter (only affects kind:30023 articles)
+  const filteredBookmarks = typeFilteredBookmarks.filter(bookmark => {
+    // Only apply archive filter to kind:30023 articles
+    if (bookmark.kind !== 30023) return true
+    
+    // If archive filter is 'all', show all articles
+    if (archiveFilter === 'all') return true
+    
+    const position = readingPositions?.get(bookmark.id)
+    
+    switch (archiveFilter) {
+      case 'to-read':
+        // 0-5% reading progress (has tracking data, not manually marked)
+        return position !== undefined && position >= 0 && position <= 0.05
+      case 'reading':
+        // Has some progress but not completed (5% < position < 95%)
+        return position !== undefined && position > 0.05 && position < 0.95
+      case 'completed':
+        // 95% or more read
+        return position !== undefined && position >= 0.95
+      case 'marked':
+        // Manually marked as read (in archive but no reading position data)
+        // For bookmarks, this would be articles without position data
+        return !position || position === 0
+      default:
+        return true
+    }
+  })
   
   // Separate bookmarks with setName (kind 30003) from regular bookmarks
   const bookmarksWithoutSet = getBookmarksWithoutSet(filteredBookmarks)
@@ -214,6 +245,17 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
           ))}
         </div>
       )}
+      
+      {/* Archive filters - only show if there are kind:30023 articles */}
+      {typeFilteredBookmarks.some(b => b.kind === 30023) && (
+        <div style={{ padding: '0.5rem 0.5rem 0', borderTop: '1px solid var(--color-border)' }}>
+          <ArchiveFilters
+            selectedFilter={archiveFilter}
+            onFilterChange={setArchiveFilter}
+          />
+        </div>
+      )}
+      
       <div className="view-mode-controls">
         <div className="view-mode-left">
           <IconButton
