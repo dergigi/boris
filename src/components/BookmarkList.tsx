@@ -248,7 +248,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
       
       {/* Archive filters - only show if there are kind:30023 articles */}
       {typeFilteredBookmarks.some(b => b.kind === 30023) && (
-        <div style={{ padding: '0.5rem 0.5rem 0' }}>
+        <div className="archive-filters-wrapper">
           <ArchiveFilters
             selectedFilter={archiveFilter}
             onFilterChange={setArchiveFilter}
