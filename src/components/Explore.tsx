@@ -18,8 +18,8 @@ import { UserSettings } from '../services/settingsService'
 import BlogPostCard from './BlogPostCard'
 import { HighlightItem } from './HighlightItem'
 import { getCachedPosts, upsertCachedPost, setCachedPosts, getCachedHighlights, upsertCachedHighlight, setCachedHighlights } from '../services/exploreCache'
-import { usePullToRefresh } from '../hooks/usePullToRefresh'
-import PullToRefreshIndicator from './PullToRefreshIndicator'
+import { usePullToRefresh } from 'use-pull-to-refresh'
+import RefreshIndicator from './RefreshIndicator'
 import { classifyHighlights } from '../utils/highlightClassification'
 import { HighlightVisibility } from './HighlightsPanel'
 
@@ -41,7 +41,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const exploreContainerRef = useRef<HTMLDivElement>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   
   // Visibility filters (defaults from settings)
@@ -229,11 +228,13 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
 
   // Pull-to-refresh
-  const pullToRefreshState = usePullToRefresh(exploreContainerRef, {
+  const { isRefreshing, pullPosition } = usePullToRefresh({
     onRefresh: () => {
       setRefreshTrigger(prev => prev + 1)
     },
-    isRefreshing: loading
+    maximumPullLength: 240,
+    refreshThreshold: 80,
+    isDisabled: !activeAccount
   })
 
   const getPostUrl = (post: BlogPostPreview) => {
@@ -393,15 +394,10 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   }
 
   return (
-    <div 
-      ref={exploreContainerRef}
-      className={`explore-container pull-to-refresh-container ${pullToRefreshState.isPulling ? 'is-pulling' : ''}`}
-    >
-      <PullToRefreshIndicator
-        isPulling={pullToRefreshState.isPulling}
-        pullDistance={pullToRefreshState.pullDistance}
-        canRefresh={pullToRefreshState.canRefresh}
-        isRefreshing={loading && pullToRefreshState.canRefresh}
+    <div className="explore-container">
+      <RefreshIndicator
+        isRefreshing={isRefreshing}
+        pullPosition={pullPosition}
       />
       <div className="explore-header">
         <h1>

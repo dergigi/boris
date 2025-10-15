@@ -36,7 +36,8 @@
     "reading-time-estimator": "^1.14.0",
     "rehype-prism-plus": "^2.0.1",
     "rehype-raw": "^7.0.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "use-pull-to-refresh": "^2.4.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.14",

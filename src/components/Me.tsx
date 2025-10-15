@@ -22,8 +22,8 @@ import { ViewMode } from './Bookmarks'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { getCachedMeData, setCachedMeData, updateCachedHighlights } from '../services/meCache'
 import { faBooks } from '../icons/customIcons'
-import { usePullToRefresh } from '../hooks/usePullToRefresh'
-import PullToRefreshIndicator from './PullToRefreshIndicator'
+import { usePullToRefresh } from 'use-pull-to-refresh'
+import RefreshIndicator from './RefreshIndicator'
 import { getProfileUrl } from '../config/nostrGateways'
 
 interface MeProps {
@@ -49,7 +49,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
-  const meContainerRef = useRef<HTMLDivElement>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   // Update local state when prop changes
@@ -125,11 +124,13 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   }, [relayPool, viewingPubkey, isOwnProfile, activeAccount, refreshTrigger])
 
   // Pull-to-refresh
-  const pullToRefreshState = usePullToRefresh(meContainerRef, {
+  const { isRefreshing, pullPosition } = usePullToRefresh({
     onRefresh: () => {
       setRefreshTrigger(prev => prev + 1)
     },
-    isRefreshing: loading
+    maximumPullLength: 240,
+    refreshThreshold: 80,
+    isDisabled: !viewingPubkey
   })
 
   const handleHighlightDelete = (highlightId: string) => {
@@ -367,15 +368,10 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   }
 
   return (
-    <div 
-      ref={meContainerRef}
-      className={`explore-container pull-to-refresh-container ${pullToRefreshState.isPulling ? 'is-pulling' : ''}`}
-    >
-      <PullToRefreshIndicator
-        isPulling={pullToRefreshState.isPulling}
-        pullDistance={pullToRefreshState.pullDistance}
-        canRefresh={pullToRefreshState.canRefresh}
-        isRefreshing={loading && pullToRefreshState.canRefresh}
+    <div className="explore-container">
+      <RefreshIndicator
+        isRefreshing={isRefreshing}
+        pullPosition={pullPosition}
       />
       <div className="explore-header">
         {viewingPubkey && <AuthorCard authorPubkey={viewingPubkey} clickable={false} />}
