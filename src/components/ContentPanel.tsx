@@ -6,7 +6,7 @@ import rehypeRaw from 'rehype-raw'
 import rehypePrism from 'rehype-prism-plus'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import 'prismjs/themes/prism-tomorrow.css'
-import { faSpinner, faCheckCircle, faEllipsisH, faExternalLinkAlt, faMobileAlt, faCopy, faShare } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faCheckCircle, faEllipsisH, faExternalLinkAlt, faMobileAlt, faCopy, faShare, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { ContentSkeleton } from './Skeletons'
 import { nip19 } from 'nostr-tools'
 import { getNostrUrl } from '../config/nostrGateways'
@@ -310,6 +310,13 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     } finally {
       setShowArticleMenu(false)
     }
+  }
+
+  const handleOpenSearch = () => {
+    if (articleLinks) {
+      window.open(articleLinks.portal, '_blank', 'noopener,noreferrer')
+    }
+    setShowArticleMenu(false)
   }
   
   // Video actions
@@ -722,6 +729,13 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                         <span>Copy Original</span>
                       </button>
                     )}
+                    <button
+                      className="article-menu-item"
+                      onClick={handleOpenSearch}
+                    >
+                      <FontAwesomeIcon icon={faSearch} />
+                      <span>Search</span>
+                    </button>
                     <button
                       className="article-menu-item"
                       onClick={handleOpenPortal}
