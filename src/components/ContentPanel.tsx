@@ -289,6 +289,28 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       setShowArticleMenu(false)
     }
   }
+
+  const handleCopyBoris = async () => {
+    try {
+      if (!articleLinks) return
+      await navigator.clipboard.writeText(articleLinks.borisUrl)
+    } catch (e) {
+      console.warn('Copy failed', e)
+    } finally {
+      setShowArticleMenu(false)
+    }
+  }
+
+  const handleCopyOriginal = async () => {
+    try {
+      if (!articleLinks?.sourceUrl) return
+      await navigator.clipboard.writeText(articleLinks.sourceUrl)
+    } catch (e) {
+      console.warn('Copy failed', e)
+    } finally {
+      setShowArticleMenu(false)
+    }
+  }
   
   // Video actions
   const handleOpenVideoExternal = () => {
@@ -682,6 +704,22 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                       >
                         <FontAwesomeIcon icon={faShare} />
                         <span>Share Original</span>
+                      </button>
+                    )}
+                    <button
+                      className="article-menu-item"
+                      onClick={handleCopyBoris}
+                    >
+                      <FontAwesomeIcon icon={faCopy} />
+                      <span>Copy Link</span>
+                    </button>
+                    {articleLinks.sourceUrl && (
+                      <button
+                        className="article-menu-item"
+                        onClick={handleCopyOriginal}
+                      >
+                        <FontAwesomeIcon icon={faCopy} />
+                        <span>Copy Original</span>
                       </button>
                     )}
                     <button
