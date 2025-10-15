@@ -9,7 +9,6 @@ import ReadingDisplaySettings from './Settings/ReadingDisplaySettings'
 import LayoutNavigationSettings from './Settings/LayoutNavigationSettings'
 import StartupPreferencesSettings from './Settings/StartupPreferencesSettings'
 import ZapSettings from './Settings/ZapSettings'
-import OfflineModeSettings from './Settings/OfflineModeSettings'
 import RelaySettings from './Settings/RelaySettings'
 import PWASettings from './Settings/PWASettings'
 import { useRelayStatus } from '../hooks/useRelayStatus'
@@ -166,8 +165,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPoo
         <LayoutNavigationSettings settings={localSettings} onUpdate={handleUpdate} />
         <StartupPreferencesSettings settings={localSettings} onUpdate={handleUpdate} />
         <ZapSettings settings={localSettings} onUpdate={handleUpdate} />
-        <OfflineModeSettings settings={localSettings} onUpdate={handleUpdate} onClose={onClose} />
-        <PWASettings />
+        <PWASettings settings={localSettings} onUpdate={handleUpdate} onClose={onClose} />
         <RelaySettings relayStatuses={relayStatuses} onClose={onClose} />
       </div>
     </div>
