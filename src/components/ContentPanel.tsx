@@ -37,7 +37,6 @@ import { buildNativeVideoUrl } from '../utils/videoHelpers'
 import { useReadingPosition } from '../hooks/useReadingPosition'
 import { ReadingProgressIndicator } from './ReadingProgressIndicator'
 import { EventFactory } from 'applesauce-factory'
-import { IEventStore } from 'applesauce-core'
 import { Hooks } from 'applesauce-react'
 import { 
   generateArticleIdentifier, 
