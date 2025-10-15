@@ -143,10 +143,10 @@ const ZapSettings: React.FC<ZapSettingsProps> = ({ settings, onUpdate }) => {
         </div>
       </div>
 
-      <div className="zap-split-description">
+      <p className="setting-description" style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
         Weights determine zap splits when highlighting nostr-native content. 
         If the content has multiple authors, their share is divided proportionally.
-      </div>
+      </p>
     </div>
   )
 }
