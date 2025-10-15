@@ -398,7 +398,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         </div>
         
         {/* Visibility filters */}
-        <div className="highlight-level-toggles" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+        <div className="highlight-level-toggles" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <IconButton
             icon={faNetworkWired}
             onClick={() => setVisibility({ ...visibility, nostrverse: !visibility.nostrverse })}
