@@ -173,7 +173,7 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
                   onClick={handleClearCache}
                   title="Clear cache"
                   variant="ghost"
-                  size={28}
+                  size={20}
                 />
               </div>
             )}
