@@ -15,7 +15,7 @@
   color: var(--color-text-muted) !important; 
   padding: 1.5rem 0.5rem 0.375rem !important; 
   margin: 0 !important; 
-  border-top: 1px solid var(--color-border); 
+  border-top: 1px solid rgba(255, 255, 255, 0.05); 
 }
 .bookmarks-section:first-of-type .bookmarks-section-title { 
   border-top: none; 
