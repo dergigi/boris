@@ -378,25 +378,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           Discover highlights and blog posts from your friends and others
         </p>
         
-        <div className="me-tabs">
-          <button
-            className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
-            data-tab="highlights"
-            onClick={() => navigate('/explore')}
-          >
-            <FontAwesomeIcon icon={faHighlighter} />
-            <span className="tab-label">Highlights</span>
-          </button>
-          <button
-            className={`me-tab ${activeTab === 'writings' ? 'active' : ''}`}
-            data-tab="writings"
-            onClick={() => navigate('/explore/writings')}
-          >
-            <FontAwesomeIcon icon={faNewspaper} />
-            <span className="tab-label">Writings</span>
-          </button>
-        </div>
-        
         {/* Visibility filters */}
         <div className="highlight-level-toggles" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <IconButton
@@ -443,6 +424,25 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
               opacity: visibility.mine ? 1 : 0.4 
             }}
           />
+        </div>
+        
+        <div className="me-tabs">
+          <button
+            className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
+            data-tab="highlights"
+            onClick={() => navigate('/explore')}
+          >
+            <FontAwesomeIcon icon={faHighlighter} />
+            <span className="tab-label">Highlights</span>
+          </button>
+          <button
+            className={`me-tab ${activeTab === 'writings' ? 'active' : ''}`}
+            data-tab="writings"
+            onClick={() => navigate('/explore/writings')}
+          >
+            <FontAwesomeIcon icon={faNewspaper} />
+            <span className="tab-label">Writings</span>
+          </button>
         </div>
       </div>
 
