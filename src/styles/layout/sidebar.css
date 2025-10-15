@@ -211,7 +211,11 @@
   background: transparent;
 }
 
-/* Archive filters in bookmarks sidebar - remove bottom border to avoid double border with view-mode-controls */
+/* Archive filters in bookmarks sidebar - add top border, remove bottom border to avoid double border with view-mode-controls */
+.archive-filters-wrapper {
+  border-top: 1px solid var(--color-border);
+}
+
 .archive-filters-wrapper .bookmark-filters {
   border-bottom: none;
   padding-top: 0;
