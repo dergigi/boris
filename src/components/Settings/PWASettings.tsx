@@ -69,10 +69,6 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {/* PWA Install Section */}
           <div className="setting-group">
-            <div className="setting-info">
-              <FontAwesomeIcon icon={faMobileAlt} style={{ marginRight: '8px' }} />
-              <span>Install Boris as a PWA</span>
-            </div>
             <p className="setting-description" style={{ marginTop: '0.5rem', marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
               Install Boris on your device for a native app experience with offline support. Boris works best with a local relay. Consider running{' '}
               <a 
