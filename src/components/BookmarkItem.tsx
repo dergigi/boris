@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { faBookOpen, faNewspaper, faStickyNote } from '@fortawesome/free-regular-svg-icons'
-import { faPlay, faEye, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faBookOpen, faNewspaper, faStickyNote, faCirclePlay, faEye } from '@fortawesome/free-regular-svg-icons'
+import { faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -77,7 +77,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       switch (firstUrlClassification.type) {
         case 'youtube':
         case 'video':
-          return faPlay
+          return faCirclePlay
         case 'image':
           return faEye
         case 'article':
@@ -88,7 +88,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     }
     
     if (!hasUrls) return faStickyNote // Just a text note
-    if (firstUrlClassification?.type === 'youtube' || firstUrlClassification?.type === 'video') return faPlay
+    if (firstUrlClassification?.type === 'youtube' || firstUrlClassification?.type === 'video') return faCirclePlay
     return faBookOpen
   }
 
@@ -97,7 +97,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     switch (classification.type) {
       case 'youtube':
       case 'video':
-        return faPlay
+        return faCirclePlay
       case 'image':
         return faEye
       default:
