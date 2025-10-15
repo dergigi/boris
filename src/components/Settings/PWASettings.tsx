@@ -67,64 +67,7 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
       
       <div style={{ display: 'flex', gap: '2rem', alignItems: 'stretch' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          {/* PWA Install Section */}
-          <div className="setting-group">
-            <p className="setting-description" style={{ marginTop: '0.5rem', marginBottom: '0.75rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
-              Install Boris on your device for a native app experience.
-            </p>
-            <p className="setting-description" style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
-              <strong>Note:</strong> Boris works best with a local relay. Consider running{' '}
-              <a 
-                href="https://github.com/greenart7c3/Citrine?tab=readme-ov-file#download" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{ color: 'var(--accent, #8b5cf6)' }}
-              >
-                Citrine
-              </a>
-              {' or '}
-              <a 
-                href="https://github.com/CodyTseng/nostr-relay-tray/releases" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{ color: 'var(--accent, #8b5cf6)' }}
-              >
-                nostr-relay-tray
-              </a>
-              {' '}to bring full offline functionality to Boris. Don't know what relays are? Learn more{' '}
-              <a 
-                onClick={(e) => {
-                  e.preventDefault()
-                  handleLinkClick('https://nostr.how/en/relays')
-                }}
-                style={{ color: 'var(--accent, #8b5cf6)', cursor: 'pointer' }}
-              >
-                here
-              </a>
-              {' and '}
-              <a 
-                onClick={(e) => {
-                  e.preventDefault()
-                  handleLinkClick('https://davidebtc186.substack.com/p/the-importance-of-hosting-your-own')
-                }}
-                style={{ color: 'var(--accent, #8b5cf6)', cursor: 'pointer' }}
-              >
-                here
-              </a>
-              .
-            </p>
-            <button
-              onClick={handleInstall}
-              className="zap-preset-btn"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-              disabled={isInstalled}
-            >
-              <FontAwesomeIcon icon={isInstalled ? faCheckCircle : faDownload} />
-              {isInstalled ? 'Installed' : 'Install App'}
-            </button>
-          </div>
-
-          {/* Flight Mode Section */}
+          {/* Flight Mode Section - Checkboxes First */}
           <div className="setting-group" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
             <label htmlFor="enableImageCache" className="checkbox-label" style={{ marginBottom: 0 }}>
               <input
@@ -190,6 +133,63 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
               />
               <span>Use local relays as cache</span>
             </label>
+          </div>
+
+          {/* PWA Install Section - Paragraphs */}
+          <div className="setting-group">
+            <p className="setting-description" style={{ marginTop: '0.5rem', marginBottom: '0.75rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+              Install Boris on your device for a native app experience.
+            </p>
+            <p className="setting-description" style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+              <strong>Note:</strong> Boris works best with a local relay. Consider running{' '}
+              <a 
+                href="https://github.com/greenart7c3/Citrine?tab=readme-ov-file#download" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ color: 'var(--accent, #8b5cf6)' }}
+              >
+                Citrine
+              </a>
+              {' or '}
+              <a 
+                href="https://github.com/CodyTseng/nostr-relay-tray/releases" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ color: 'var(--accent, #8b5cf6)' }}
+              >
+                nostr-relay-tray
+              </a>
+              {' '}to bring full offline functionality to Boris. Don't know what relays are? Learn more{' '}
+              <a 
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleLinkClick('https://nostr.how/en/relays')
+                }}
+                style={{ color: 'var(--accent, #8b5cf6)', cursor: 'pointer' }}
+              >
+                here
+              </a>
+              {' and '}
+              <a 
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleLinkClick('https://davidebtc186.substack.com/p/the-importance-of-hosting-your-own')
+                }}
+                style={{ color: 'var(--accent, #8b5cf6)', cursor: 'pointer' }}
+              >
+                here
+              </a>
+              .
+            </p>
+            <button
+              onClick={handleInstall}
+              className="zap-preset-btn"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              disabled={isInstalled}
+            >
+              <FontAwesomeIcon icon={isInstalled ? faCheckCircle : faDownload} />
+              {isInstalled ? 'Installed' : 'Install App'}
+            </button>
           </div>
         </div>
 
