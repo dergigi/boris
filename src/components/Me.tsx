@@ -26,6 +26,8 @@ import RefreshIndicator from './RefreshIndicator'
 import { groupIndividualBookmarks, hasContent } from '../utils/bookmarkUtils'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
+import { generateArticleIdentifier, loadReadingPosition } from '../services/readingPositionService'
+import ArchiveFilters, { ArchiveFilterType } from './ArchiveFilters'
 
 interface MeProps {
   relayPool: RelayPool
@@ -37,6 +39,7 @@ type TabType = 'highlights' | 'reading-list' | 'archive' | 'writings'
 
 const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: propPubkey }) => {
   const activeAccount = Hooks.useActiveAccount()
+  const eventStore = Hooks.useEventStore()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
   
@@ -51,6 +54,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
+  const [archiveFilter, setArchiveFilter] = useState<ArchiveFilterType>('all')
+  const [readingPositions, setReadingPositions] = useState<Map<string, number>>(new Map())
 
   // Update local state when prop changes
   useEffect(() => {
@@ -122,6 +127,65 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     loadData()
   }, [relayPool, viewingPubkey, isOwnProfile, activeAccount, refreshTrigger])
 
+  // Load reading positions for read articles (only for own profile)
+  useEffect(() => {
+    const loadPositions = async () => {
+      if (!isOwnProfile || !activeAccount || !relayPool || !eventStore || readArticles.length === 0) {
+        console.log('🔍 [Archive] Skipping position load:', {
+          isOwnProfile,
+          hasAccount: !!activeAccount,
+          hasRelayPool: !!relayPool,
+          hasEventStore: !!eventStore,
+          articlesCount: readArticles.length
+        })
+        return
+      }
+
+      console.log('📊 [Archive] Loading reading positions for', readArticles.length, 'articles')
+
+      const positions = new Map<string, number>()
+
+      // Load positions for all read articles
+      await Promise.all(
+        readArticles.map(async (post) => {
+          try {
+            const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+            const naddr = nip19.naddrEncode({
+              kind: 30023,
+              pubkey: post.author,
+              identifier: dTag
+            })
+            const articleUrl = `nostr:${naddr}`
+            const identifier = generateArticleIdentifier(articleUrl)
+
+            console.log('🔍 [Archive] Loading position for:', post.title?.slice(0, 50), 'identifier:', identifier.slice(0, 32))
+
+            const savedPosition = await loadReadingPosition(
+              relayPool,
+              eventStore,
+              activeAccount.pubkey,
+              identifier
+            )
+
+            if (savedPosition && savedPosition.position > 0) {
+              console.log('✅ [Archive] Found position:', Math.round(savedPosition.position * 100) + '%', 'for', post.title?.slice(0, 50))
+              positions.set(post.event.id, savedPosition.position)
+            } else {
+              console.log('❌ [Archive] No position found for:', post.title?.slice(0, 50))
+            }
+          } catch (error) {
+            console.warn('⚠️ [Archive] Failed to load reading position for article:', error)
+          }
+        })
+      )
+
+      console.log('📊 [Archive] Loaded positions for', positions.size, '/', readArticles.length, 'articles')
+      setReadingPositions(positions)
+    }
+
+    loadPositions()
+  }, [readArticles, isOwnProfile, activeAccount, relayPool, eventStore])
+
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
     onRefresh: () => {
@@ -176,10 +240,34 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(hasContent)
   
-  // Apply filter
+  // Apply bookmark filter
   const filteredBookmarks = filterBookmarksByType(allIndividualBookmarks, bookmarkFilter)
   
   const groups = groupIndividualBookmarks(filteredBookmarks)
+
+  // Apply archive filter
+  const filteredReadArticles = readArticles.filter(post => {
+    const position = readingPositions.get(post.event.id)
+    
+    switch (archiveFilter) {
+      case 'to-read':
+        // No position or 0% progress
+        return !position || position === 0
+      case 'reading':
+        // Has some progress but not completed (0 < position < 1)
+        return position !== undefined && position > 0 && position < 0.95
+      case 'completed':
+        // 95% or more read (we consider 95%+ as completed)
+        return position !== undefined && position >= 0.95
+      case 'marked':
+        // Manually marked as read (in archive but no reading position data)
+        // These are articles that were marked via the emoji reaction
+        return !position || position === 0
+      case 'all':
+      default:
+        return true
+    }
+  })
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
     { key: 'private', title: 'Private Bookmarks', items: groups.privateItems },
     { key: 'public', title: 'Public Bookmarks', items: groups.publicItems },
@@ -313,15 +401,30 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             <FontAwesomeIcon icon={faSpinner} spin size="2x" />
           </div>
         ) : (
-          <div className="explore-grid">
-            {readArticles.map((post) => (
-              <BlogPostCard
-                key={post.event.id}
-                post={post}
-                href={getPostUrl(post)}
+          <>
+            {readArticles.length > 0 && (
+              <ArchiveFilters
+                selectedFilter={archiveFilter}
+                onFilterChange={setArchiveFilter}
               />
-            ))}
-          </div>
+            )}
+            {filteredReadArticles.length === 0 ? (
+              <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                No articles match this filter.
+              </div>
+            ) : (
+              <div className="explore-grid">
+                {filteredReadArticles.map((post) => (
+                  <BlogPostCard
+                    key={post.event.id}
+                    post={post}
+                    href={getPostUrl(post)}
+                    readingProgress={readingPositions.get(post.event.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )
 
       case 'writings':

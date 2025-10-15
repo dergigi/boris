@@ -16,6 +16,7 @@ import { createDeletionRequest } from '../services/deletionService'
 import { getNostrUrl } from '../config/nostrGateways'
 import CompactButton from './CompactButton'
 import { HighlightCitation } from './HighlightCitation'
+import { useNavigate } from 'react-router-dom'
 
 // Helper to detect if a URL is an image
 const isImageUrl = (url: string): boolean => {
@@ -206,6 +207,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   const [showMenu, setShowMenu] = useState(false)
   
   const activeAccount = Hooks.useActiveAccount()
+  const navigate = useNavigate()
   
   // Resolve the profile of the user who made the highlight
   const profile = useEventModel(Models.ProfileModel, [highlight.pubkey])
@@ -274,8 +276,34 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   }, [showMenu, showDeleteConfirm])
   
   const handleItemClick = () => {
+    // If onHighlightClick is provided, use it (legacy behavior)
     if (onHighlightClick) {
       onHighlightClick(highlight.id)
+      return
+    }
+    
+    // Otherwise, navigate to the article that this highlight references
+    if (highlight.eventReference) {
+      // Parse the event reference - it can be an event ID or article coordinate (kind:pubkey:identifier)
+      const parts = highlight.eventReference.split(':')
+      
+      // If it's an article coordinate (3 parts) and kind is 30023, navigate to it
+      if (parts.length === 3) {
+        const [kind, pubkey, identifier] = parts
+        
+        if (kind === '30023') {
+          // Encode as naddr and navigate
+          const naddr = nip19.naddrEncode({
+            kind: 30023,
+            pubkey,
+            identifier
+          })
+          navigate(`/a/${naddr}`)
+        }
+      }
+    } else if (highlight.urlReference) {
+      // Navigate to external URL
+      navigate(`/r/${encodeURIComponent(highlight.urlReference)}`)
     }
   }
   
@@ -473,7 +501,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       className={`highlight-item ${isSelected ? 'selected' : ''} ${highlight.level ? `level-${highlight.level}` : ''}`} 
       data-highlight-id={highlight.id}
       onClick={handleItemClick}
-      style={{ cursor: onHighlightClick ? 'pointer' : 'default' }}
+      style={{ cursor: (onHighlightClick || highlight.eventReference || highlight.urlReference) ? 'pointer' : 'default' }}
     >
       <div className="highlight-header">
         <CompactButton
