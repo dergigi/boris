@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookOpen, faBookmark, faCheckCircle } from '@fortawesome/free-solid-svg-icons'
+import { faBookOpen, faBookmark, faCheckCircle, faAsterisk } from '@fortawesome/free-solid-svg-icons'
 import { faBooks } from '../icons/customIcons'
 
 export type ArchiveFilterType = 'all' | 'to-read' | 'reading' | 'completed' | 'marked'
@@ -12,11 +12,11 @@ interface ArchiveFiltersProps {
 
 const ArchiveFilters: React.FC<ArchiveFiltersProps> = ({ selectedFilter, onFilterChange }) => {
   const filters = [
-    { type: 'all' as const, icon: faBooks, label: 'All' },
+    { type: 'all' as const, icon: faAsterisk, label: 'All' },
     { type: 'to-read' as const, icon: faBookmark, label: 'To Read' },
     { type: 'reading' as const, icon: faBookOpen, label: 'Reading' },
     { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' },
-    { type: 'marked' as const, icon: faCheckCircle, label: 'Marked as Read' }
+    { type: 'marked' as const, icon: faBooks, label: 'Marked as Read' }
   ]
 
   return (
