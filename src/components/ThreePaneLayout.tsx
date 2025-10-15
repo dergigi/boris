@@ -106,10 +106,11 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
   const mainPaneRef = useRef<HTMLDivElement>(null)
   
   // Detect scroll direction to hide/show mobile buttons
-  // Now using window scroll (document scroll) instead of pane scroll
+  // Only hide on scroll down when viewing article content
+  const isViewingArticle = !!(props.selectedUrl)
   const scrollDirection = useScrollDirection({ 
     threshold: 10, 
-    enabled: isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed
+    enabled: isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && isViewingArticle
   })
   const showMobileButtons = scrollDirection !== 'down'
 
@@ -229,8 +230,8 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
 
   return (
     <>
-      {/* Mobile bookmark button - only show when viewing article or explore (not on settings/me/profile/support) */}
-      {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && !props.showSettings && !props.showMe && !props.showProfile && !props.showSupport && (
+      {/* Mobile bookmark button - always show except on settings page */}
+      {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && !props.showSettings && (
         <button
           className={`fixed z-[900] bg-zinc-800/70 border border-zinc-600/40 rounded-lg text-zinc-200 flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm md:hidden ${
             showMobileButtons ? 'opacity-90 visible' : 'opacity-0 invisible pointer-events-none'
@@ -249,8 +250,8 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
         </button>
       )}
 
-      {/* Mobile highlights button - only show when viewing article or explore (not on settings/me/profile/support) */}
-      {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && !props.showSettings && !props.showMe && !props.showProfile && !props.showSupport && (
+      {/* Mobile highlights button - only show when viewing article content */}
+      {isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && !props.showSettings && isViewingArticle && (
         <button
           className={`fixed z-[900] border border-zinc-600/40 rounded-lg flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm md:hidden ${
             showMobileButtons ? 'opacity-90 visible' : 'opacity-0 invisible pointer-events-none'
