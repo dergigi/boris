@@ -66,7 +66,7 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
       <h3 className="section-title">PWA & Flight Mode</h3>
       
       <div style={{ display: 'flex', gap: '2rem', alignItems: 'stretch' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {/* PWA Install Section */}
           <div className="setting-group">
             <p className="setting-description" style={{ marginTop: '0.5rem', marginBottom: '0.75rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
