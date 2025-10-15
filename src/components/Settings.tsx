@@ -167,8 +167,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPoo
         <StartupPreferencesSettings settings={localSettings} onUpdate={handleUpdate} />
         <ZapSettings settings={localSettings} onUpdate={handleUpdate} />
         <OfflineModeSettings settings={localSettings} onUpdate={handleUpdate} onClose={onClose} />
-        <RelaySettings relayStatuses={relayStatuses} onClose={onClose} />
         <PWASettings />
+        <RelaySettings relayStatuses={relayStatuses} onClose={onClose} />
       </div>
     </div>
   )
