@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.19] - 2025-10-15
+
+### Fixed
+
+- Highlights disappearing on external URLs after a few seconds
+  - Fixed `useBookmarksData` from fetching general highlights when viewing external URLs
+  - External URL highlights now managed exclusively by `useExternalUrlLoader`
+  - Removed redundant `setHighlights` call that was overwriting streamed highlights
+  - Improved error handling in `fetchHighlightsForUrl` to prevent silent failures
+  - Isolated rebroadcast errors so they don't break highlight display
+  - Added logging to help diagnose highlight fetching issues
+
 ## [0.6.18] - 2025-10-15
 
 ### Changed
@@ -1595,7 +1607,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.18...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.19...HEAD
+[0.6.19]: https://github.com/dergigi/boris/compare/v0.6.18...v0.6.19
 [0.6.18]: https://github.com/dergigi/boris/compare/v0.6.17...v0.6.18
 [0.6.17]: https://github.com/dergigi/boris/compare/v0.6.16...v0.6.17
 [0.6.16]: https://github.com/dergigi/boris/compare/v0.6.15...v0.6.16
