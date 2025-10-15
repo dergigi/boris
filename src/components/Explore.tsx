@@ -405,6 +405,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
             title="Refresh content"
             ariaLabel="Refresh content"
             variant="ghost"
+            spin={loading || isRefreshing}
+            disabled={loading || isRefreshing}
           />
           <IconButton
             icon={faNetworkWired}
