@@ -434,10 +434,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     }
   }
   
-  const handleCancelDelete = () => {
-    setShowDeleteConfirm(false)
-  }
-  
   const handleMenuToggle = (e: React.MouseEvent) => {
     e.stopPropagation()
     // Reset delete confirm state when opening/closing menu
