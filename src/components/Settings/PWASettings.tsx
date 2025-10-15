@@ -64,12 +64,12 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
     <div className="settings-section">
       <h3 className="section-title">App & Airplane Mode</h3>
       
-      <p className="setting-description" style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
-        Boris is offline‑first by design. You can read, create highlights, and browse your library without being connected to the internet. Boris will store changes locally and sync later.
-      </p>
-      
       <div style={{ display: 'flex', gap: '2rem', alignItems: 'stretch' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+          <p className="setting-description" style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+            Boris is offline‑first by design. You can read, create highlights, and browse your library without being connected to the internet. Boris will store changes locally and sync later.
+          </p>
+          
           {/* Flight Mode Section - Checkboxes First */}
           <div className="setting-group" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
             <label htmlFor="enableImageCache" className="checkbox-label" style={{ marginBottom: 0 }}>
