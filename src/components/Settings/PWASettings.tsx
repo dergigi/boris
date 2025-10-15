@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { faDownload, faCheckCircle, faMobileAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { usePWAInstall } from '../../hooks/usePWAInstall'
+import { useIsMobile } from '../../hooks/useMediaQuery'
 import { UserSettings } from '../../services/settingsService'
 import { getImageCacheStatsAsync, clearImageCache } from '../../services/imageCacheService'
 import IconButton from '../IconButton'
@@ -15,6 +16,7 @@ interface PWASettingsProps {
 
 const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }) => {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const { isInstallable, isInstalled, installApp } = usePWAInstall()
   const [cacheStats, setCacheStats] = useState<{
     totalSizeMB: number
@@ -192,11 +194,13 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
           </div>
         </div>
 
-        <img 
-          src="/pwa.svg" 
-          alt="Progressive Web App" 
-          style={{ width: '30%', height: 'auto', flexShrink: 0, opacity: 0.8 }}
-        />
+        {!isMobile && (
+          <img 
+            src="/pwa.svg" 
+            alt="Progressive Web App" 
+            style={{ width: '30%', height: 'auto', flexShrink: 0, opacity: 0.8 }}
+          />
+        )}
       </div>
     </div>
   )
