@@ -11,9 +11,10 @@ interface BlogPostCardProps {
   post: BlogPostPreview
   href: string
   level?: 'mine' | 'friends' | 'nostrverse'
+  readingProgress?: number // 0-1 reading progress (optional)
 }
 
-const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level }) => {
+const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingProgress }) => {
   const profile = useEventModel(Models.ProfileModel, [post.author])
   const displayName = profile?.name || profile?.display_name || 
     `${post.author.slice(0, 8)}...${post.author.slice(-4)}`
@@ -23,11 +24,15 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level }) => {
     addSuffix: true 
   })
 
+  // Calculate progress percentage and determine color
+  const progressPercent = readingProgress ? Math.round(readingProgress * 100) : 0
+  const progressColor = progressPercent >= 95 ? '#10b981' : '#6366f1' // green if >=95%, blue otherwise
+
   return (
     <Link 
       to={href}
       className={`blog-post-card ${level ? `level-${level}` : ''}`}
-      style={{ textDecoration: 'none', color: 'inherit' }}
+      style={{ textDecoration: 'none', color: 'inherit', position: 'relative' }}
     >
       <div className="blog-post-card-image">
         {post.image ? (
@@ -58,6 +63,31 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level }) => {
           </span>
         </div>
       </div>
+      
+      {/* Reading progress indicator */}
+      {readingProgress !== undefined && readingProgress > 0 && (
+        <div 
+          className="blog-post-reading-progress"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            height: '4px',
+            width: '100%',
+            background: 'var(--color-border)',
+            overflow: 'hidden'
+          }}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${progressPercent}%`,
+              background: progressColor,
+              transition: 'width 0.3s ease, background 0.3s ease'
+            }}
+          />
+        </div>
+      )}
     </Link>
   )
 }

@@ -26,6 +26,7 @@ import RefreshIndicator from './RefreshIndicator'
 import { groupIndividualBookmarks, hasContent } from '../utils/bookmarkUtils'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
+import { generateArticleIdentifier, loadReadingPosition } from '../services/readingPositionService'
 
 interface MeProps {
   relayPool: RelayPool
@@ -37,6 +38,7 @@ type TabType = 'highlights' | 'reading-list' | 'archive' | 'writings'
 
 const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: propPubkey }) => {
   const activeAccount = Hooks.useActiveAccount()
+  const eventStore = Hooks.useEventStore()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
   
@@ -51,6 +53,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
+  const [readingPositions, setReadingPositions] = useState<Map<string, number>>(new Map())
 
   // Update local state when prop changes
   useEffect(() => {
@@ -121,6 +124,50 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
 
     loadData()
   }, [relayPool, viewingPubkey, isOwnProfile, activeAccount, refreshTrigger])
+
+  // Load reading positions for read articles (only for own profile)
+  useEffect(() => {
+    const loadPositions = async () => {
+      if (!isOwnProfile || !activeAccount || !relayPool || !eventStore || readArticles.length === 0) {
+        return
+      }
+
+      const positions = new Map<string, number>()
+
+      // Load positions for all read articles
+      await Promise.all(
+        readArticles.map(async (post) => {
+          try {
+            const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+            const naddr = nip19.naddrEncode({
+              kind: 30023,
+              pubkey: post.author,
+              identifier: dTag
+            })
+            const articleUrl = `nostr:${naddr}`
+            const identifier = generateArticleIdentifier(articleUrl)
+
+            const savedPosition = await loadReadingPosition(
+              relayPool,
+              eventStore,
+              activeAccount.pubkey,
+              identifier
+            )
+
+            if (savedPosition && savedPosition.position > 0) {
+              positions.set(post.event.id, savedPosition.position)
+            }
+          } catch (error) {
+            console.warn('Failed to load reading position for article:', error)
+          }
+        })
+      )
+
+      setReadingPositions(positions)
+    }
+
+    loadPositions()
+  }, [readArticles, isOwnProfile, activeAccount, relayPool, eventStore])
 
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
@@ -319,6 +366,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
                 key={post.event.id}
                 post={post}
                 href={getPostUrl(post)}
+                readingProgress={readingPositions.get(post.event.id)}
               />
             ))}
           </div>
