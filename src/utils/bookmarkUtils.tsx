@@ -99,3 +99,8 @@ export function groupIndividualBookmarks(items: IndividualBookmark[]) {
   const publicItems = sorted.filter(i => !i.isPrivate && !isIn(amethyst, i) && !isIn(web, i))
   return { privateItems, publicItems, web, amethyst }
 }
+
+// Simple filter: only exclude bookmarks with empty/whitespace-only content
+export function hasContent(bookmark: IndividualBookmark): boolean {
+  return !!(bookmark.content && bookmark.content.trim().length > 0)
+}

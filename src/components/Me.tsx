@@ -19,12 +19,11 @@ import BlogPostCard from './BlogPostCard'
 import { BookmarkItem } from './BookmarkItem'
 import IconButton from './IconButton'
 import { ViewMode } from './Bookmarks'
-import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { getCachedMeData, setCachedMeData, updateCachedHighlights } from '../services/meCache'
 import { faBooks } from '../icons/customIcons'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
-import { groupIndividualBookmarks } from '../utils/bookmarkUtils'
+import { groupIndividualBookmarks, hasContent } from '../utils/bookmarkUtils'
 
 interface MeProps {
   relayPool: RelayPool
@@ -151,23 +150,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     return `/a/${naddr}`
   }
 
-  // Helper to check if a bookmark has either content or a URL (same logic as BookmarkList)
-  const hasContentOrUrl = (ib: IndividualBookmark) => {
-    const hasContent = ib.content && ib.content.trim().length > 0
-    
-    let hasUrl = false
-    if (ib.kind === 39701) {
-      const dTag = ib.tags?.find((t: string[]) => t[0] === 'd')?.[1]
-      hasUrl = !!dTag && dTag.trim().length > 0
-    } else {
-      const urls = extractUrlsFromContent(ib.content || '')
-      hasUrl = urls.length > 0
-    }
-    
-    if (ib.kind === 30023) return true
-    return hasContent || hasUrl
-  }
-
   const handleSelectUrl = (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => {
     if (bookmark && bookmark.kind === 30023) {
       // For kind:30023 articles, navigate to the article route
@@ -187,9 +169,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     }
   }
 
-  // Merge and flatten all individual bookmarks (same logic as BookmarkList)
+  // Merge and flatten all individual bookmarks
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
-    .filter(hasContentOrUrl)
+    .filter(hasContent)
   const groups = groupIndividualBookmarks(allIndividualBookmarks)
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
     { key: 'private', title: `Private bookmarks (${groups.privateItems.length})`, items: groups.privateItems },
