@@ -5,7 +5,6 @@ import {
   dedupeNip51Events,
   hydrateItems,
   isAccountWithExtension,
-  isHexId,
   hasNip04Decrypt,
   hasNip44Decrypt,
   dedupeBookmarksById,
@@ -120,7 +119,8 @@ export const fetchBookmarks = async (
     const coordinates: string[] = []
     
     allItems.forEach(i => {
-      if (isHexId(i.id)) {
+      // Check if it's a hex ID (64 character hex string)
+      if (/^[0-9a-f]{64}$/i.test(i.id)) {
         noteIds.push(i.id)
       } else if (i.id.includes(':')) {
         // Coordinate format: kind:pubkey:identifier
@@ -128,7 +128,7 @@ export const fetchBookmarks = async (
       }
     })
     
-    let idToEvent: Map<string, NostrEvent> = new Map()
+    const idToEvent: Map<string, NostrEvent> = new Map()
     
     // Fetch regular events by ID
     if (noteIds.length > 0) {
