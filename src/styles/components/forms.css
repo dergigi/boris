@@ -41,6 +41,7 @@
 .preview-content p { 
   margin: 0.75rem 0;
   word-wrap: break-word;
+  text-align: var(--paragraph-alignment, left);
 }
 .setting-select { width: 100%; padding: 0.5rem; background: var(--color-bg-elevated); border: 1px solid var(--color-border-subtle); border-radius: 4px; color: var(--color-text); font-size: 1rem; }
 .setting-inline .setting-select { width: auto; min-width: 200px; flex: 1; }

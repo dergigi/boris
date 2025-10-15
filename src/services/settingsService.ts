@@ -52,6 +52,8 @@ export interface UserSettings {
   theme?: 'dark' | 'light' | 'system' // default: system
   darkColorTheme?: 'black' | 'midnight' | 'charcoal' // default: midnight
   lightColorTheme?: 'paper-white' | 'sepia' | 'ivory' // default: sepia
+  // Reading settings
+  paragraphAlignment?: 'left' | 'justify' // default: left
 }
 
 export async function loadSettings(

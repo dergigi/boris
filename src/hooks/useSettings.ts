@@ -73,6 +73,9 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       root.setProperty('--highlight-color-friends', settings.highlightColorFriends || '#f97316')
       root.setProperty('--highlight-color-nostrverse', settings.highlightColorNostrverse || '#9333ea')
       
+      // Set paragraph alignment
+      root.setProperty('--paragraph-alignment', settings.paragraphAlignment || 'left')
+      
       console.log('✅ All styles applied')
     }
     

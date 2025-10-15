@@ -37,9 +37,22 @@
 .highlight-indicator svg { font-size: 0.875rem; }
 .reader-html { color: var(--color-text); line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; font-family: var(--reading-font); font-size: var(--reading-font-size); }
 .reader-markdown { color: var(--color-text); line-height: 1.7; font-family: var(--reading-font); font-size: var(--reading-font-size); }
-/* Ensure content is left-aligned even if source markup uses center */
-.reader .reader-html *, .reader .reader-markdown * { text-align: left !important; font-family: inherit !important; }
-.reader center, .reader [align="center"] { text-align: left !important; }
+/* Ensure font inheritance */
+.reader .reader-html *, .reader .reader-markdown * { font-family: inherit !important; }
+/* Apply paragraph alignment from settings */
+.reader .reader-html p,
+.reader .reader-markdown p,
+.reader .reader-html div,
+.reader .reader-markdown div,
+.reader .reader-html li,
+.reader .reader-markdown li,
+.reader .reader-html blockquote,
+.reader .reader-markdown blockquote { text-align: var(--paragraph-alignment, left); }
+/* Override centered content with user preference */
+.reader center, .reader [align="center"] { text-align: var(--paragraph-alignment, left) !important; }
+/* Keep headings left-aligned */
+.reader .reader-html h1, .reader .reader-html h2, .reader .reader-html h3, .reader .reader-html h4, .reader .reader-html h5, .reader .reader-html h6,
+.reader .reader-markdown h1, .reader .reader-markdown h2, .reader .reader-markdown h3, .reader .reader-markdown h4, .reader .reader-markdown h5, .reader .reader-markdown h6 { text-align: left !important; }
 /* Tame images from external content */
 .reader .reader-html img, .reader .reader-markdown img { max-width: 100%; max-height: 70vh; height: auto; width: auto; display: block; margin: 0.75rem 0; border-radius: 6px; }
 /* Headlines with Tailwind typography */

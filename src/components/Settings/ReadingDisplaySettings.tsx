@@ -1,5 +1,5 @@
 import React from 'react'
-import { faHighlighter, faUnderline, faNetworkWired, faUserGroup, faUser } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faUnderline, faNetworkWired, faUserGroup, faUser, faAlignLeft, faAlignJustify } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../../services/settingsService'
 import IconButton from '../IconButton'
 import ColorPicker from '../ColorPicker'
@@ -45,6 +45,26 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
               </button>
             ))}
           </div>
+        </div>
+      </div>
+
+      <div className="setting-group setting-inline">
+        <label>Paragraph Alignment</label>
+        <div className="setting-buttons">
+          <IconButton 
+            icon={faAlignLeft} 
+            onClick={() => onUpdate({ paragraphAlignment: 'left' })} 
+            title="Left aligned" 
+            ariaLabel="Left aligned" 
+            variant={(settings.paragraphAlignment || 'left') === 'left' ? 'primary' : 'ghost'} 
+          />
+          <IconButton 
+            icon={faAlignJustify} 
+            onClick={() => onUpdate({ paragraphAlignment: 'justify' })} 
+            title="Justified" 
+            ariaLabel="Justified" 
+            variant={settings.paragraphAlignment === 'justify' ? 'primary' : 'ghost'} 
+          />
         </div>
       </div>
 
@@ -157,7 +177,8 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
           style={{ 
             fontFamily: previewFontFamily,
             fontSize: `${settings.fontSize || 21}px`,
-            '--highlight-rgb': hexToRgb(settings.highlightColor || '#ffff00')
+            '--highlight-rgb': hexToRgb(settings.highlightColor || '#ffff00'),
+            '--paragraph-alignment': settings.paragraphAlignment || 'left'
           } as React.CSSProperties}
         >
           <h3>The Quick Brown Fox</h3>

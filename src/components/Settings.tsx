@@ -35,6 +35,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   zapSplitAuthorWeight: 50,
   useLocalRelayAsCache: true,
   rebroadcastToAllRelays: false,
+  paragraphAlignment: 'left',
 }
 
 interface SettingsProps {
