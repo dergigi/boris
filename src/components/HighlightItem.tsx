@@ -546,7 +546,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
                   onClick={handleOpenPortal}
                 >
                   <FontAwesomeIcon icon={faExternalLinkAlt} />
-                  <span>Open on Nostr</span>
+                  <span>Open with njump</span>
                 </button>
                 <button
                   className="highlight-menu-item"
