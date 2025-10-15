@@ -41,7 +41,7 @@ const PWASettings: React.FC = () => {
         <div style={{ flex: 1 }}>
           <div className="setting-info">
             <FontAwesomeIcon icon={faMobileAlt} style={{ marginRight: '8px' }} />
-            <span>Install Boris as an app</span>
+            <span>Install Boris as a progressive web app (PWA)</span>
           </div>
           <p className="setting-description" style={{ marginTop: '0.5rem', marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
             Install Boris on your device for a native app experience with offline support.
