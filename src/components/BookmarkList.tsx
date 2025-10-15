@@ -168,7 +168,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
           {sections.filter(s => s.items.length > 0).map(section => (
             <div key={section.key} className="bookmarks-section">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 className="bookmarks-section-title" style={{ margin: 0, padding: '1.5rem 0.5rem 0.75rem', flex: 1 }}>{section.title}</h3>
+                <h3 className="bookmarks-section-title" style={{ margin: 0, padding: '1.5rem 0.5rem 0.375rem', flex: 1 }}>{section.title}</h3>
                 {section.key === 'web' && activeAccount && (
                   <CompactButton
                     icon={faPlus}
