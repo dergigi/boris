@@ -7,11 +7,11 @@ import { queryEvents } from './dataFetch'
 import { RELAYS } from '../config/relays'
 import { classifyBookmarkType } from '../utils/bookmarkTypeClassifier'
 import { nip19 } from 'nostr-tools'
+import { processReadingPositions, processMarkedAsRead, filterValidItems, sortByReadingActivity } from './readingDataProcessor'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 const APP_DATA_KIND = 30078 // NIP-78 Application Data
-const READING_POSITION_PREFIX = 'boris:reading-position:'
 
 export interface ReadItem {
   id: string // event ID or URL or coordinate
@@ -60,89 +60,10 @@ export async function fetchAllReads(
       bookmarks: bookmarks.length
     })
 
-    // Map to deduplicate items by ID
+    // Process data using shared utilities
     const readsMap = new Map<string, ReadItem>()
-
-    // 1. Process reading position events
-    for (const event of readingPositionEvents) {
-      const dTag = event.tags.find(t => t[0] === 'd')?.[1]
-      if (!dTag || !dTag.startsWith(READING_POSITION_PREFIX)) continue
-
-      const identifier = dTag.replace(READING_POSITION_PREFIX, '')
-      
-      try {
-        const positionData = JSON.parse(event.content)
-        const position = positionData.position
-        const timestamp = positionData.timestamp
-
-        // Decode identifier to get original URL or naddr
-        let itemId: string
-        let itemUrl: string | undefined
-        let itemType: 'article' | 'external' = 'external'
-
-        // Check if it's a nostr article (naddr format)
-        if (identifier.startsWith('naddr1')) {
-          itemId = identifier
-          itemType = 'article'
-        } else {
-          // It's a base64url-encoded URL
-          try {
-            itemUrl = atob(identifier.replace(/-/g, '+').replace(/_/g, '/'))
-            itemId = itemUrl
-            itemType = 'external'
-          } catch (e) {
-            console.warn('Failed to decode URL identifier:', identifier)
-            continue
-          }
-        }
-
-        // Add or update the item
-        const existing = readsMap.get(itemId)
-        if (!existing || !existing.readingTimestamp || timestamp > existing.readingTimestamp) {
-          readsMap.set(itemId, {
-            ...existing,
-            id: itemId,
-            source: 'reading-progress',
-            type: itemType,
-            url: itemUrl,
-            readingProgress: position,
-            readingTimestamp: timestamp
-          })
-        }
-      } catch (error) {
-        console.warn('Failed to parse reading position:', error)
-      }
-    }
-
-    // 2. Process marked-as-read articles
-    for (const article of markedAsReadArticles) {
-      const existing = readsMap.get(article.id)
-      
-      if (article.eventId && article.eventKind === 30023) {
-        // Nostr article
-        readsMap.set(article.id, {
-          ...existing,
-          id: article.id,
-          source: 'marked-as-read',
-          type: 'article',
-          markedAsRead: true,
-          markedAt: article.markedAt,
-          readingTimestamp: existing?.readingTimestamp || article.markedAt
-        })
-      } else if (article.url) {
-        // External URL
-        readsMap.set(article.id, {
-          ...existing,
-          id: article.id,
-          source: 'marked-as-read',
-          type: 'external',
-          url: article.url,
-          markedAsRead: true,
-          markedAt: article.markedAt,
-          readingTimestamp: existing?.readingTimestamp || article.markedAt
-        })
-      }
-    }
+    processReadingPositions(readingPositionEvents, readsMap)
+    processMarkedAsRead(markedAsReadArticles, readsMap)
 
     // 3. Process bookmarked articles and article/website URLs
     const allBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
@@ -251,30 +172,12 @@ export async function fetchAllReads(
       }
     }
 
-    // 5. Filter and sort reads
-    const sortedReads = Array.from(readsMap.values())
-      .filter(item => {
-        // Only include items that have a timestamp
-        const hasTimestamp = (item.readingTimestamp && item.readingTimestamp > 0) || 
-                            (item.markedAt && item.markedAt > 0)
-        if (!hasTimestamp) return false
-        
-        // Filter out items without titles
-        if (!item.title || item.title === 'Untitled') {
-          // For Nostr articles, we need the title from the event
-          if (item.type === 'article' && !item.event) return false
-          // For external URLs, we need a proper title
-          if (item.type === 'external' && !item.title) return false
-        }
-        
-        // Only include Nostr-native articles in Reads
-        return item.type === 'article'
-      })
-      .sort((a, b) => {
-        const timeA = a.readingTimestamp || a.markedAt || 0
-        const timeB = b.readingTimestamp || b.markedAt || 0
-        return timeB - timeA
-      })
+    // 5. Filter for Nostr articles only and apply common validation/sorting
+    const articles = Array.from(readsMap.values())
+      .filter(item => item.type === 'article')
+    
+    const validArticles = filterValidItems(articles)
+    const sortedReads = sortByReadingActivity(validArticles)
 
     console.log('✅ [Reads] Processed', sortedReads.length, 'total reads')
     return sortedReads

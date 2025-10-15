@@ -28,6 +28,7 @@ import { groupIndividualBookmarks, hasContent } from '../utils/bookmarkUtils'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
 import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProgressFilters'
+import { filterByReadingProgress } from '../utils/readingProgressUtils'
 
 interface MeProps {
   relayPool: RelayPool
@@ -327,51 +328,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const groups = groupIndividualBookmarks(filteredBookmarks)
 
   // Apply reading progress filter
-  const filteredReads = reads.filter((item) => {
-    const progress = item.readingProgress || 0
-    const isMarked = item.markedAsRead || false
-    
-    switch (readingProgressFilter) {
-      case 'unopened':
-        // No reading progress
-        return progress === 0 && !isMarked
-      case 'started':
-        // 0-10% reading progress
-        return progress > 0 && progress <= 0.10 && !isMarked
-      case 'reading':
-        // 11-94% reading progress
-        return progress > 0.10 && progress <= 0.94 && !isMarked
-      case 'completed':
-        // 95%+ or marked as read
-        return progress >= 0.95 || isMarked
-      case 'all':
-      default:
-        return true
-    }
-  })
-
-  const filteredLinks = links.filter((item) => {
-    const progress = item.readingProgress || 0
-    const isMarked = item.markedAsRead || false
-    
-    switch (readingProgressFilter) {
-      case 'unopened':
-        // No reading progress
-        return progress === 0 && !isMarked
-      case 'started':
-        // 0-10% reading progress
-        return progress > 0 && progress <= 0.10 && !isMarked
-      case 'reading':
-        // 11-94% reading progress
-        return progress > 0.10 && progress <= 0.94 && !isMarked
-      case 'completed':
-        // 95%+ or marked as read
-        return progress >= 0.95 || isMarked
-      case 'all':
-      default:
-        return true
-    }
-  })
+  const filteredReads = filterByReadingProgress(reads, readingProgressFilter)
+  const filteredLinks = filterByReadingProgress(links, readingProgressFilter)
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
     { key: 'private', title: 'Private Bookmarks', items: groups.privateItems },
     { key: 'public', title: 'Public Bookmarks', items: groups.publicItems },
