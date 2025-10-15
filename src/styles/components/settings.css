@@ -56,8 +56,8 @@
   border-radius: 4px;
   background: linear-gradient(
     to right,
-    var(--highlight-color) 0%,
-    var(--highlight-color) 50%,
+    color-mix(in srgb, var(--highlight-color) 50%, transparent) 0%,
+    color-mix(in srgb, var(--highlight-color) 50%, transparent) 50%,
     var(--color-bg-elevated) 50%,
     var(--color-bg-elevated) 100%
   );
