@@ -35,7 +35,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   highlightVisibility = { nostrverse: true, friends: true, mine: true }
 }) => {
   const cachedImage = useImageCache(image)
-  const { textColor, shadowColor } = useAdaptiveTextColor(cachedImage)
+  const { textColor } = useAdaptiveTextColor(cachedImage)
   const formattedDate = published ? format(new Date(published * 1000), 'MMM d, yyyy') : null
   const isLongSummary = summary && summary.length > 150
   
@@ -88,8 +88,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
             <div 
               className="publish-date-topright"
               style={{ 
-                color: textColor,
-                textShadow: `0 2px 4px ${shadowColor}`
+                color: textColor
               }}
             >
               {formattedDate}
@@ -136,8 +135,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
             <div 
               className="publish-date-topright"
               style={{ 
-                color: textColor,
-                textShadow: `0 2px 4px ${shadowColor}`
+                color: textColor
               }}
             >
               {formattedDate}

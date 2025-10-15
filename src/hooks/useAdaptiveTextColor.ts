@@ -3,28 +3,25 @@ import { FastAverageColor } from 'fast-average-color'
 
 interface AdaptiveTextColor {
   textColor: string
-  shadowColor: string
 }
 
 /**
- * Hook to determine optimal text and shadow colors based on image background
+ * Hook to determine optimal text color based on image background
  * Samples the top-right corner of the image to ensure publication date is readable
  * 
  * @param imageUrl - The URL of the image to analyze
- * @returns Object containing textColor and shadowColor for optimal contrast
+ * @returns Object containing textColor for optimal contrast
  */
 export function useAdaptiveTextColor(imageUrl: string | undefined): AdaptiveTextColor {
   const [colors, setColors] = useState<AdaptiveTextColor>({
-    textColor: '#ffffff',
-    shadowColor: 'rgba(0, 0, 0, 0.5)'
+    textColor: '#ffffff'
   })
 
   useEffect(() => {
     if (!imageUrl) {
       // No image, use default white text
       setColors({
-        textColor: '#ffffff',
-        shadowColor: 'rgba(0, 0, 0, 0.5)'
+        textColor: '#ffffff'
       })
       return
     }
@@ -57,22 +54,19 @@ export function useAdaptiveTextColor(imageUrl: string | undefined): AdaptiveText
         if (color.isLight) {
           console.log('Light background detected, using black text')
           setColors({
-            textColor: '#000000',
-            shadowColor: 'rgba(255, 255, 255, 0.8)'
+            textColor: '#000000'
           })
         } else {
           console.log('Dark background detected, using white text')
           setColors({
-            textColor: '#ffffff',
-            shadowColor: 'rgba(0, 0, 0, 0.8)'
+            textColor: '#ffffff'
           })
         }
       } catch (error) {
         // Fallback to default on error
         console.error('Error analyzing image color:', error)
         setColors({
-          textColor: '#ffffff',
-          shadowColor: 'rgba(0, 0, 0, 0.5)'
+          textColor: '#ffffff'
         })
       }
     }
@@ -80,8 +74,7 @@ export function useAdaptiveTextColor(imageUrl: string | undefined): AdaptiveText
     img.onerror = () => {
       // Fallback to default if image fails to load
       setColors({
-        textColor: '#ffffff',
-        shadowColor: 'rgba(0, 0, 0, 0.5)'
+        textColor: '#ffffff'
       })
     }
     
