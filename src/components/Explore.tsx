@@ -237,35 +237,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     return `/a/${naddr}`
   }
 
-  const handleHighlightClick = (highlightId: string) => {
-    const highlight = highlights.find(h => h.id === highlightId)
-    if (!highlight) return
-
-    // For nostr-native articles
-    if (highlight.eventReference) {
-      // Convert eventReference to naddr
-      if (highlight.eventReference.includes(':')) {
-        const parts = highlight.eventReference.split(':')
-        const kind = parseInt(parts[0])
-        const pubkey = parts[1]
-        const identifier = parts[2] || ''
-        
-        const naddr = nip19.naddrEncode({
-          kind,
-          pubkey,
-          identifier
-        })
-        navigate(`/a/${naddr}`, { state: { highlightId, openHighlights: true } })
-      } else {
-        // Already an naddr
-        navigate(`/a/${highlight.eventReference}`, { state: { highlightId, openHighlights: true } })
-      }
-    } 
-    // For web URLs
-    else if (highlight.urlReference) {
-      navigate(`/r/${encodeURIComponent(highlight.urlReference)}`, { state: { highlightId, openHighlights: true } })
-    }
-  }
 
   // Classify highlights with levels based on user context and apply visibility filters
   const classifiedHighlights = useMemo(() => {
@@ -357,7 +328,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                 key={highlight.id}
                 highlight={highlight}
                 relayPool={relayPool}
-                onHighlightClick={handleHighlightClick}
               />
             ))}
           </div>
