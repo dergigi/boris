@@ -251,13 +251,22 @@ export async function fetchAllReads(
       }
     }
 
-    // 5. Filter out items without timestamps and sort by most recent reading activity
+    // 5. Filter and sort reads
     const sortedReads = Array.from(readsMap.values())
       .filter(item => {
         // Only include items that have a timestamp
         const hasTimestamp = (item.readingTimestamp && item.readingTimestamp > 0) || 
                             (item.markedAt && item.markedAt > 0)
-        return hasTimestamp
+        if (!hasTimestamp) return false
+        
+        // For external URLs, only include if there's reading progress or marked as read
+        if (item.type === 'external') {
+          const hasProgress = (item.readingProgress && item.readingProgress > 0) || item.markedAsRead
+          return hasProgress
+        }
+        
+        // Include all Nostr articles
+        return true
       })
       .sort((a, b) => {
         const timeA = a.readingTimestamp || a.markedAt || 0
