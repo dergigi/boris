@@ -33,6 +33,12 @@ export async function collectBookmarksFromEvents(
     if (!latestContent && evt.content && !Helpers.hasHiddenContent(evt)) latestContent = evt.content
     if (Array.isArray(evt.tags)) allTags = allTags.concat(evt.tags)
 
+    // Extract the 'd' tag and metadata for bookmark sets (kind 30003)
+    const dTag = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] : undefined
+    const setTitle = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'title')?.[1] : undefined
+    const setDescription = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'description')?.[1] : undefined
+    const setImage = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'image')?.[1] : undefined
+
     // Handle web bookmarks (kind:39701) as individual bookmarks
     if (evt.kind === 39701) {
       publicItemsAll.push({
@@ -46,7 +52,11 @@ export async function collectBookmarksFromEvents(
         type: 'web' as const,
         isPrivate: false,
         added_at: evt.created_at || Math.floor(Date.now() / 1000),
-        sourceKind: 39701
+        sourceKind: 39701,
+        setName: dTag,
+        setTitle,
+        setDescription,
+        setImage
       })
       continue
     }
@@ -55,7 +65,11 @@ export async function collectBookmarksFromEvents(
     publicItemsAll.push(
       ...processApplesauceBookmarks(pub, activeAccount, false).map(i => ({
         ...i,
-        sourceKind: evt.kind
+        sourceKind: evt.kind,
+        setName: dTag,
+        setTitle,
+        setDescription,
+        setImage
       }))
     )
 
@@ -103,7 +117,11 @@ export async function collectBookmarksFromEvents(
             privateItemsAll.push(
               ...processApplesauceBookmarks(manualPrivate, activeAccount, true).map(i => ({
                 ...i,
-                sourceKind: evt.kind
+                sourceKind: evt.kind,
+                setName: dTag,
+                setTitle,
+                setDescription,
+                setImage
               }))
             )
             Reflect.set(evt, BookmarkHiddenSymbol, manualPrivate)
@@ -120,7 +138,11 @@ export async function collectBookmarksFromEvents(
         privateItemsAll.push(
           ...processApplesauceBookmarks(priv, activeAccount, true).map(i => ({
             ...i,
-            sourceKind: evt.kind
+            sourceKind: evt.kind,
+            setName: dTag,
+            setTitle,
+            setDescription,
+            setImage
           }))
         )
       }

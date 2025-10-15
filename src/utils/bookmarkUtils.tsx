@@ -104,3 +104,49 @@ export function groupIndividualBookmarks(items: IndividualBookmark[]) {
 export function hasContent(bookmark: IndividualBookmark): boolean {
   return !!(bookmark.content && bookmark.content.trim().length > 0)
 }
+
+// Bookmark sets helpers (kind 30003)
+export interface BookmarkSet {
+  name: string
+  title?: string
+  description?: string
+  image?: string
+  bookmarks: IndividualBookmark[]
+}
+
+export function getBookmarkSets(items: IndividualBookmark[]): BookmarkSet[] {
+  // Group bookmarks by setName
+  const setMap = new Map<string, IndividualBookmark[]>()
+  
+  items.forEach(bookmark => {
+    if (bookmark.setName) {
+      const existing = setMap.get(bookmark.setName) || []
+      existing.push(bookmark)
+      setMap.set(bookmark.setName, existing)
+    }
+  })
+  
+  // Convert to array and extract metadata from the bookmarks
+  const sets: BookmarkSet[] = []
+  setMap.forEach((bookmarks, name) => {
+    // Get metadata from the first bookmark (all bookmarks in a set share the same metadata)
+    const firstBookmark = bookmarks[0]
+    const title = firstBookmark?.setTitle
+    const description = firstBookmark?.setDescription
+    const image = firstBookmark?.setImage
+    
+    sets.push({
+      name,
+      title,
+      description,
+      image,
+      bookmarks: sortIndividualBookmarks(bookmarks)
+    })
+  })
+  
+  return sets.sort((a, b) => a.name.localeCompare(b.name))
+}
+
+export function getBookmarksWithoutSet(items: IndividualBookmark[]): IndividualBookmark[] {
+  return sortIndividualBookmarks(items.filter(b => !b.setName))
+}

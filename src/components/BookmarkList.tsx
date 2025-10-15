@@ -12,7 +12,7 @@ import { ViewMode } from './Bookmarks'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { BookmarkSkeleton } from './Skeletons'
-import { groupIndividualBookmarks, hasContent } from '../utils/bookmarkUtils'
+import { groupIndividualBookmarks, hasContent, getBookmarkSets, getBookmarksWithoutSet } from '../utils/bookmarkUtils'
 import { UserSettings } from '../services/settingsService'
 
 interface BookmarkListProps {
@@ -71,13 +71,28 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   // Merge and flatten all individual bookmarks from all lists
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(hasContent)
-  const groups = groupIndividualBookmarks(allIndividualBookmarks)
+  
+  // Separate bookmarks with setName (kind 30003) from regular bookmarks
+  const bookmarksWithoutSet = getBookmarksWithoutSet(allIndividualBookmarks)
+  const bookmarkSets = getBookmarkSets(allIndividualBookmarks)
+  
+  // Group non-set bookmarks as before
+  const groups = groupIndividualBookmarks(bookmarksWithoutSet)
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
     { key: 'private', title: 'Private bookmarks', items: groups.privateItems },
     { key: 'public', title: 'Public bookmarks', items: groups.publicItems },
     { key: 'web', title: 'Web bookmarks', items: groups.web },
     { key: 'amethyst', title: 'Amethyst-style bookmarks', items: groups.amethyst }
   ]
+  
+  // Add bookmark sets as additional sections
+  bookmarkSets.forEach(set => {
+    sections.push({
+      key: `set-${set.name}`,
+      title: set.title || set.name,
+      items: set.bookmarks
+    })
+  })
   
   if (isCollapsed) {
     // Check if the selected URL is in bookmarks
