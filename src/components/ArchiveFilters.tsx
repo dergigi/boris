@@ -11,24 +11,25 @@ interface ArchiveFiltersProps {
 }
 
 const ArchiveFilters: React.FC<ArchiveFiltersProps> = ({ selectedFilter, onFilterChange }) => {
-  const filters: { id: ArchiveFilterType; label: string; icon: typeof faBookOpen }[] = [
-    { id: 'all', label: 'All', icon: faBooks },
-    { id: 'to-read', label: 'To Read', icon: faBookmark },
-    { id: 'reading', label: 'Reading', icon: faBookOpen },
-    { id: 'completed', label: 'Completed', icon: faCheckCircle },
-    { id: 'marked', label: 'Marked', icon: faCheckCircle }
+  const filters = [
+    { type: 'all' as const, icon: faBooks, label: 'All' },
+    { type: 'to-read' as const, icon: faBookmark, label: 'To Read' },
+    { type: 'reading' as const, icon: faBookOpen, label: 'Reading' },
+    { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' },
+    { type: 'marked' as const, icon: faCheckCircle, label: 'Marked as Read' }
   ]
 
   return (
     <div className="bookmark-filters">
-      {filters.map((filter) => (
+      {filters.map(filter => (
         <button
-          key={filter.id}
-          className={`bookmark-filter-btn ${selectedFilter === filter.id ? 'active' : ''}`}
-          onClick={() => onFilterChange(filter.id)}
+          key={filter.type}
+          onClick={() => onFilterChange(filter.type)}
+          className={`filter-btn ${selectedFilter === filter.type ? 'active' : ''}`}
+          title={filter.label}
+          aria-label={`Filter by ${filter.label}`}
         >
           <FontAwesomeIcon icon={filter.icon} />
-          <span>{filter.label}</span>
         </button>
       ))}
     </div>
