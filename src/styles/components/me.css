@@ -79,6 +79,14 @@
   text-align: left; /* Override center alignment from .app */
 }
 
+/* Bookmark filters in Me page */
+.me-tab-content .bookmark-filters {
+  background: transparent;
+  border: none;
+  padding: 0 0 1rem 0;
+  justify-content: center;
+}
+
 /* Ensure all reading list elements are left-aligned */
 .bookmarks-list .individual-bookmark,
 .bookmarks-list .individual-bookmark * {

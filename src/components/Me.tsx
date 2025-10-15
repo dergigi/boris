@@ -24,6 +24,8 @@ import { faBooks } from '../icons/customIcons'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { groupIndividualBookmarks, hasContent } from '../utils/bookmarkUtils'
+import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
+import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
 
 interface MeProps {
   relayPool: RelayPool
@@ -48,6 +50,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
 
   // Update local state when prop changes
   useEffect(() => {
@@ -172,7 +175,11 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   // Merge and flatten all individual bookmarks
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(hasContent)
-  const groups = groupIndividualBookmarks(allIndividualBookmarks)
+  
+  // Apply filter
+  const filteredBookmarks = filterBookmarksByType(allIndividualBookmarks, bookmarkFilter)
+  
+  const groups = groupIndividualBookmarks(filteredBookmarks)
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
     { key: 'private', title: 'Private Bookmarks', items: groups.privateItems },
     { key: 'public', title: 'Public Bookmarks', items: groups.publicItems },
@@ -231,7 +238,18 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           </div>
         ) : (
           <div className="bookmarks-list">
-            {sections.filter(s => s.items.length > 0).map(section => (
+            {allIndividualBookmarks.length > 0 && (
+              <BookmarkFilters
+                selectedFilter={bookmarkFilter}
+                onFilterChange={setBookmarkFilter}
+              />
+            )}
+            {filteredBookmarks.length === 0 ? (
+              <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                No bookmarks match this filter.
+              </div>
+            ) : (
+              sections.filter(s => s.items.length > 0).map(section => (
               <div key={section.key} className="bookmarks-section">
                 <h3 className="bookmarks-section-title">{section.title}</h3>
                 <div className={`bookmarks-grid bookmarks-${viewMode}`}>
@@ -246,7 +264,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
                   ))}
                 </div>
               </div>
-            ))}
+            )))}
             <div className="view-mode-controls" style={{
               display: 'flex',
               justifyContent: 'center',
