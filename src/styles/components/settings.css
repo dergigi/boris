@@ -58,8 +58,8 @@
     to right,
     color-mix(in srgb, var(--highlight-color) 50%, transparent) 0%,
     color-mix(in srgb, var(--highlight-color) 50%, transparent) 50%,
-    var(--color-bg-elevated) 50%,
-    var(--color-bg-elevated) 100%
+    color-mix(in srgb, var(--highlight-color-friends) 50%, transparent) 50%,
+    color-mix(in srgb, var(--highlight-color-friends) 50%, transparent) 100%
   );
   outline: none;
   -webkit-appearance: none;
