@@ -316,9 +316,18 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const renderTabContent = () => {
     switch (activeTab) {
       case 'writings':
+        if (showSkeletons) {
+          return (
+            <div className="explore-grid">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <BlogPostSkeleton key={i} />
+              ))}
+            </div>
+          )
+        }
         return filteredBlogPosts.length === 0 ? (
-          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>No blog posts found yet.</p>
+          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
+            <p>No blog posts yet. Pull to refresh!</p>
           </div>
         ) : (
           <div className="explore-grid">
@@ -333,9 +342,18 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         )
 
       case 'highlights':
+        if (showSkeletons) {
+          return (
+            <div className="explore-grid">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <HighlightSkeleton key={i} />
+              ))}
+            </div>
+          )
+        }
         return classifiedHighlights.length === 0 ? (
-          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>No highlights yet. Your friends should start highlighting content!</p>
+          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
+            <p>No highlights yet. Pull to refresh!</p>
           </div>
         ) : (
           <div className="explore-grid">
@@ -355,43 +373,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
   }
 
-  // Only show full loading screen if we don't have any data yet
+  // Show content progressively - no blocking error screens
   const hasData = highlights.length > 0 || blogPosts.length > 0
-
-  if (loading && !hasData) {
-    return (
-      <div className="explore-container" aria-busy="true">
-        <div className="explore-header">
-          <h1>
-            <FontAwesomeIcon icon={faNewspaper} />
-            Explore
-          </h1>
-        </div>
-        <div className="explore-grid">
-          {activeTab === 'writings' ? (
-            Array.from({ length: 6 }).map((_, i) => (
-              <BlogPostSkeleton key={i} />
-            ))
-          ) : (
-            Array.from({ length: 8 }).map((_, i) => (
-              <HighlightSkeleton key={i} />
-            ))
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="explore-container">
-        <div className="explore-error">
-          <FontAwesomeIcon icon={faExclamationCircle} size="2x" />
-          <p>{error}</p>
-        </div>
-      </div>
-    )
-  }
+  const showSkeletons = loading && !hasData
 
   return (
     <div className="explore-container">
