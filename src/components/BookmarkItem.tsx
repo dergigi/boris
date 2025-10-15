@@ -142,7 +142,8 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   }
 
   if (viewMode === 'compact') {
-    return <CompactView {...sharedProps} />
+    const { articleImage: _articleImage, ...compactProps } = sharedProps
+    return <CompactView {...compactProps} />
   }
 
   if (viewMode === 'large') {

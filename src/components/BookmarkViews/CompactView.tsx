@@ -12,7 +12,6 @@ interface CompactViewProps {
   hasUrls: boolean
   extractedUrls: string[]
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
-  articleImage?: string
   articleSummary?: string
   contentTypeIcon: IconDefinition
 }
@@ -23,7 +22,6 @@ export const CompactView: React.FC<CompactViewProps> = ({
   hasUrls,
   extractedUrls,
   onSelectUrl,
-  articleImage,
   articleSummary,
   contentTypeIcon
 }) => {
