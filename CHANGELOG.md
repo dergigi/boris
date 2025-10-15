@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.10] - 2025-10-15
+
+### Added
+
+- Support page (`/support`) displaying zappers with avatar grid
+  - Shows "Absolute Legends" (69420+ sats) and regular supporters (2100+ sats)
+  - Clickable supporter avatars link to profiles
+  - Bolt icon button in sidebar navigation
+  - Thank-you illustration and call-to-action
+  - Links to pricing page and Boris profile
+- Refresh button to explore page
+  - Positioned next to filter buttons
+  - Spinning animation during loading and pull-to-refresh
+- Unified event publishing and querying services
+  - `publishEvent` service for highlights and settings
+  - `queryEvents` helper with local-first fetching
+  - Centralized relay timeouts configuration
+- FEATURES.md documentation file
+- MIT License
+
+### Changed
+
+- Explore page improvements
+  - Filter defaults to friends only (instead of all)
+  - Tabs moved below filter buttons
+  - Filter buttons positioned on the right
+  - Writings tab now uses newspaper icon
+  - Subtitle removed for cleaner layout
+- Pull-to-refresh library
+  - Replaced custom implementation with `use-pull-to-refresh`
+  - Updated HighlightsPanel to use new library
+- Loading states now show progressive loading with skeletons instead of blocking error screens
+- All event fetching services migrated to unified `queryEvents` helper
+  - `nostrverseService`, `bookmarkService`, `libraryService`
+  - `exploreService`, `fetchHighlightsFromAuthors`
+- Contact streaming with extended timeout and partial results
+
+### Fixed
+
+- All ESLint and TypeScript linting errors
+  - Removed all `eslint-disable` statements
+  - Fixed `react-hooks/exhaustive-deps` warnings
+  - Resolved all type errors
+- Explore page refresh loop and false empty-follows error
+- Zap receipt scanning with applesauce helpers and more relays
+- Support page theme colors for proper readability
+
+### Refactored
+
+- Event publishing to use unified `publishEvent` service
+- Event fetching to use unified `queryEvents` helper
+- Image cache and bookmark components (removed unused settings parameter)
+- Support page spacing and visual hierarchy
+
 ## [0.6.9] - 2025-10-14
 
 ### Documentation
@@ -1299,7 +1353,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.9...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.10...HEAD
+[0.6.10]: https://github.com/dergigi/boris/compare/v0.6.9...v0.6.10
 [0.6.9]: https://github.com/dergigi/boris/compare/v0.6.8...v0.6.9
 [0.6.8]: https://github.com/dergigi/boris/compare/v0.6.7...v0.6.8
 [0.6.7]: https://github.com/dergigi/boris/compare/v0.6.6...v0.6.7
