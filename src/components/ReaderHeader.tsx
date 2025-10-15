@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHighlighter, faClock } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faClock, faNewspaper } from '@fortawesome/free-solid-svg-icons'
 import { format } from 'date-fns'
 import { useImageCache } from '../hooks/useImageCache'
 import { UserSettings } from '../services/settingsService'
@@ -70,11 +70,18 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
     }
   }, [highlights, highlightVisibility, settings])
   
-  if (cachedImage) {
+  // Show hero section if we have an image OR a title
+  if (cachedImage || title) {
     return (
       <>
         <div className="reader-hero-image">
-          <img src={cachedImage} alt={title || 'Article image'} />
+          {cachedImage ? (
+            <img src={cachedImage} alt={title || 'Article image'} />
+          ) : (
+            <div className="reader-hero-placeholder">
+              <FontAwesomeIcon icon={faNewspaper} />
+            </div>
+          )}
           {formattedDate && (
             <div className="publish-date-topright">
               {formattedDate}
