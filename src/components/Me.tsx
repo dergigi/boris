@@ -346,12 +346,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       <div className="explore-header">
         {viewingPubkey && <AuthorCard authorPubkey={viewingPubkey} clickable={false} />}
         
-        {loading && hasData && (
-          <div className="explore-loading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0' }}>
-            <FontAwesomeIcon icon={faSpinner} spin />
-          </div>
-        )}
-        
         <div className="me-tabs">
           <button
             className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
