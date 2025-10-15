@@ -167,6 +167,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     activeAccount,
     accountManager,
     naddr,
+    externalUrl,
     currentArticleCoordinate,
     currentArticleEventId,
     settings

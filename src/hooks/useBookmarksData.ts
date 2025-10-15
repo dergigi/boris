@@ -13,6 +13,7 @@ interface UseBookmarksDataParams {
   activeAccount: IAccount | undefined
   accountManager: AccountManager
   naddr?: string
+  externalUrl?: string
   currentArticleCoordinate?: string
   currentArticleEventId?: string
   settings?: UserSettings
@@ -23,6 +24,7 @@ export const useBookmarksData = ({
   activeAccount,
   accountManager,
   naddr,
+  externalUrl,
   currentArticleCoordinate,
   currentArticleEventId,
   settings
@@ -115,11 +117,13 @@ export const useBookmarksData = ({
   // Fetch highlights/contacts independently to avoid disturbing bookmarks
   useEffect(() => {
     if (!relayPool || !activeAccount) return
-    if (!naddr) {
+    // Only fetch general highlights when not viewing an article (naddr) or external URL
+    // External URLs have their highlights fetched by useExternalUrlLoader
+    if (!naddr && !externalUrl) {
       handleFetchHighlights()
     }
     handleFetchContacts()
-  }, [relayPool, activeAccount, naddr, handleFetchHighlights, handleFetchContacts])
+  }, [relayPool, activeAccount, naddr, externalUrl, handleFetchHighlights, handleFetchContacts])
 
   return {
     bookmarks,
