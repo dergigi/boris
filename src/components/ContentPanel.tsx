@@ -380,16 +380,30 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   const handleShareExternalUrl = async () => {
     try {
-      if (selectedUrl && (navigator as { share?: (d: { title?: string; url?: string }) => Promise<void> }).share) {
-        await (navigator as { share: (d: { title?: string; url?: string }) => Promise<void> }).share({ title: title || 'Article', url: selectedUrl })
-      } else if (selectedUrl) {
-        await navigator.clipboard.writeText(selectedUrl)
+      if (!selectedUrl) return
+      const borisUrl = `${window.location.origin}/r/${encodeURIComponent(selectedUrl)}`
+      
+      if ((navigator as { share?: (d: { title?: string; url?: string }) => Promise<void> }).share) {
+        await (navigator as { share: (d: { title?: string; url?: string }) => Promise<void> }).share({ 
+          title: title || 'Article', 
+          url: borisUrl 
+        })
+      } else {
+        await navigator.clipboard.writeText(borisUrl)
       }
     } catch (e) {
       console.warn('Share failed', e)
     } finally {
       setShowExternalMenu(false)
     }
+  }
+
+  const handleSearchExternalUrl = () => {
+    if (selectedUrl) {
+      const searchUrl = `https://ants.sh/?q=${encodeURIComponent(selectedUrl)}`
+      window.open(searchUrl, '_blank', 'noopener,noreferrer')
+    }
+    setShowExternalMenu(false)
   }
   
   // Check if article is already marked as read when URL/article changes
@@ -658,10 +672,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                   <div className="article-menu">
                     <button
                       className="article-menu-item"
-                      onClick={handleOpenExternalUrl}
+                      onClick={handleShareExternalUrl}
                     >
-                      <FontAwesomeIcon icon={faExternalLinkAlt} />
-                      <span>Open Original URL</span>
+                      <FontAwesomeIcon icon={faShare} />
+                      <span>Share</span>
                     </button>
                     <button
                       className="article-menu-item"
@@ -672,10 +686,17 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                     </button>
                     <button
                       className="article-menu-item"
-                      onClick={handleShareExternalUrl}
+                      onClick={handleOpenExternalUrl}
                     >
-                      <FontAwesomeIcon icon={faShare} />
-                      <span>Share</span>
+                      <FontAwesomeIcon icon={faExternalLinkAlt} />
+                      <span>Open Original</span>
+                    </button>
+                    <button
+                      className="article-menu-item"
+                      onClick={handleSearchExternalUrl}
+                    >
+                      <FontAwesomeIcon icon={faSearch} />
+                      <span>Search</span>
                     </button>
                   </div>
                 )}
