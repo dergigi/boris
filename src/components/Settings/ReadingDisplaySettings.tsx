@@ -19,6 +19,46 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
     <div className="settings-section">
       <h3 className="section-title">Reading & Display</h3>
       
+      <div className="setting-group setting-inline">
+        <label>Highlight Style</label>
+        <div className="setting-buttons">
+          <IconButton 
+            icon={faHighlighter} 
+            onClick={() => onUpdate({ highlightStyle: 'marker' })} 
+            title="Text marker style" 
+            ariaLabel="Text marker style" 
+            variant={(settings.highlightStyle || 'marker') === 'marker' ? 'primary' : 'ghost'} 
+          />
+          <IconButton 
+            icon={faUnderline} 
+            onClick={() => onUpdate({ highlightStyle: 'underline' })} 
+            title="Underline style" 
+            ariaLabel="Underline style" 
+            variant={settings.highlightStyle === 'underline' ? 'primary' : 'ghost'} 
+          />
+        </div>
+      </div>
+
+      <div className="setting-group setting-inline">
+        <label>Paragraph Alignment</label>
+        <div className="setting-buttons">
+          <IconButton 
+            icon={faAlignLeft} 
+            onClick={() => onUpdate({ paragraphAlignment: 'left' })} 
+            title="Left aligned" 
+            ariaLabel="Left aligned" 
+            variant={settings.paragraphAlignment === 'left' ? 'primary' : 'ghost'} 
+          />
+          <IconButton 
+            icon={faAlignJustify} 
+            onClick={() => onUpdate({ paragraphAlignment: 'justify' })} 
+            title="Justified" 
+            ariaLabel="Justified" 
+            variant={(settings.paragraphAlignment || 'justify') === 'justify' ? 'primary' : 'ghost'} 
+          />
+        </div>
+      </div>
+
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
         <div className="setting-group setting-inline" style={{ flex: '1 1 auto', minWidth: '200px' }}>
           <label htmlFor="readingFont">Reading Font</label>
@@ -45,46 +85,6 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
               </button>
             ))}
           </div>
-        </div>
-      </div>
-
-      <div className="setting-group setting-inline">
-        <label>Paragraph Alignment</label>
-        <div className="setting-buttons">
-          <IconButton 
-            icon={faAlignLeft} 
-            onClick={() => onUpdate({ paragraphAlignment: 'left' })} 
-            title="Left aligned" 
-            ariaLabel="Left aligned" 
-            variant={settings.paragraphAlignment === 'left' ? 'primary' : 'ghost'} 
-          />
-          <IconButton 
-            icon={faAlignJustify} 
-            onClick={() => onUpdate({ paragraphAlignment: 'justify' })} 
-            title="Justified" 
-            ariaLabel="Justified" 
-            variant={(settings.paragraphAlignment || 'justify') === 'justify' ? 'primary' : 'ghost'} 
-          />
-        </div>
-      </div>
-
-      <div className="setting-group setting-inline">
-        <label>Highlight Style</label>
-        <div className="setting-buttons">
-          <IconButton 
-            icon={faHighlighter} 
-            onClick={() => onUpdate({ highlightStyle: 'marker' })} 
-            title="Text marker style" 
-            ariaLabel="Text marker style" 
-            variant={(settings.highlightStyle || 'marker') === 'marker' ? 'primary' : 'ghost'} 
-          />
-          <IconButton 
-            icon={faUnderline} 
-            onClick={() => onUpdate({ highlightStyle: 'underline' })} 
-            title="Underline style" 
-            ariaLabel="Underline style" 
-            variant={settings.highlightStyle === 'underline' ? 'primary' : 'ghost'} 
-          />
         </div>
       </div>
 
