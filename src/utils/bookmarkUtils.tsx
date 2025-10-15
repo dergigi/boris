@@ -92,10 +92,12 @@ export const sortIndividualBookmarks = (items: IndividualBookmark[]) => {
 
 export function groupIndividualBookmarks(items: IndividualBookmark[]) {
   const sorted = sortIndividualBookmarks(items)
-  const amethyst = sorted.filter(i => i.sourceKind === 30001)
   const web = sorted.filter(i => i.kind === 39701 || i.type === 'web')
+  // Only non-encrypted legacy bookmarks go to the amethyst section
+  const amethyst = sorted.filter(i => i.sourceKind === 30001 && !i.isPrivate)
   const isIn = (list: IndividualBookmark[], x: IndividualBookmark) => list.some(i => i.id === x.id)
-  const privateItems = sorted.filter(i => i.isPrivate && !isIn(amethyst, i) && !isIn(web, i))
+  // Private items include encrypted legacy bookmarks
+  const privateItems = sorted.filter(i => i.isPrivate && !isIn(web, i))
   const publicItems = sorted.filter(i => !i.isPrivate && !isIn(amethyst, i) && !isIn(web, i))
   return { privateItems, publicItems, web, amethyst }
 }

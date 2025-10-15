@@ -1,7 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUserLock } from '@fortawesome/free-solid-svg-icons'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate } from '../../utils/bookmarkUtils'
@@ -96,9 +95,6 @@ export const LargeView: React.FC<LargeViewProps> = ({
         <div className="large-footer">
           <span className="bookmark-type-large">
             <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
-            {bookmark.isPrivate && (
-              <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />
-            )}
           </span>
           <span className="large-author">
             <Link
