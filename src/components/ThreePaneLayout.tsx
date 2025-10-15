@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBookmark, faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { RelayPool } from 'applesauce-relay'
@@ -105,14 +105,30 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
   const highlightsRef = useRef<HTMLDivElement>(null)
   const mainPaneRef = useRef<HTMLDivElement>(null)
   
-  // Detect scroll direction to hide/show mobile buttons
+  // Detect scroll direction and position to hide/show mobile buttons
   // Only hide on scroll down when viewing article content
   const isViewingArticle = !!(props.selectedUrl)
   const scrollDirection = useScrollDirection({ 
     threshold: 10, 
     enabled: isMobile && !props.isSidebarOpen && props.isHighlightsCollapsed && isViewingArticle
   })
-  const showMobileButtons = scrollDirection !== 'down'
+  
+  // Track if we're at the top of the page
+  const [isAtTop, setIsAtTop] = useState(true)
+  useEffect(() => {
+    if (!isMobile || !isViewingArticle) return
+    
+    const handleScroll = () => {
+      setIsAtTop(window.scrollY <= 10)
+    }
+    
+    handleScroll() // Check initial position
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [isMobile, isViewingArticle])
+  
+  const showMobileButtons = scrollDirection !== 'down' && !isAtTop
 
   // Lock body scroll when mobile sidebar or highlights is open
   useEffect(() => {
