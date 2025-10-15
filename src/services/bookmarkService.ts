@@ -57,11 +57,28 @@ export const fetchBookmarks = async (
     rawEvents.forEach((evt, i) => {
       const dTag = evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] || 'none'
       const contentPreview = evt.content ? evt.content.slice(0, 50) + (evt.content.length > 50 ? '...' : '') : 'empty'
-      console.log(`  Event ${i}: kind=${evt.kind}, id=${evt.id?.slice(0, 8)}, dTag=${dTag}, contentLength=${evt.content?.length || 0}, contentPreview=${contentPreview}`)
+      const eTags = evt.tags?.filter((t: string[]) => t[0] === 'e').length || 0
+      const aTags = evt.tags?.filter((t: string[]) => t[0] === 'a').length || 0
+      console.log(`  Event ${i}: kind=${evt.kind}, id=${evt.id?.slice(0, 8)}, dTag=${dTag}, contentLength=${evt.content?.length || 0}, eTags=${eTags}, aTags=${aTags}, contentPreview=${contentPreview}`)
     })
 
     const bookmarkListEvents = dedupeNip51Events(rawEvents)
     console.log('📋 After deduplication:', bookmarkListEvents.length, 'bookmark events')
+    
+    // Log which events made it through deduplication
+    bookmarkListEvents.forEach((evt, i) => {
+      const dTag = evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] || 'none'
+      console.log(`  Dedupe ${i}: kind=${evt.kind}, id=${evt.id?.slice(0, 8)}, dTag="${dTag}"`)
+    })
+    
+    // Check specifically for Primal's "reads" list
+    const primalReads = rawEvents.find(e => e.kind === 10003 && e.tags?.find((t: string[]) => t[0] === 'd' && t[1] === 'reads'))
+    if (primalReads) {
+      console.log('✅ Found Primal reads list:', primalReads.id.slice(0, 8))
+    } else {
+      console.log('❌ No Primal reads list found (kind:10003 with d="reads")')
+    }
+    
     if (bookmarkListEvents.length === 0) {
       // Keep existing bookmarks visible; do not clear list if nothing new found
       return
