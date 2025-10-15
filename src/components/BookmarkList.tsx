@@ -1,19 +1,24 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate, faHeart } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate, faHeart, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { formatDistanceToNow } from 'date-fns'
 import { RelayPool } from 'applesauce-relay'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
 import SidebarHeader from './SidebarHeader'
 import IconButton from './IconButton'
+import CompactButton from './CompactButton'
 import { ViewMode } from './Bookmarks'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { BookmarkSkeleton } from './Skeletons'
 import { groupIndividualBookmarks, hasContent, getBookmarkSets, getBookmarksWithoutSet } from '../utils/bookmarkUtils'
 import { UserSettings } from '../services/settingsService'
+import AddBookmarkModal from './AddBookmarkModal'
+import { createWebBookmark } from '../services/webBookmarkService'
+import { RELAYS } from '../config/relays'
+import { Hooks } from 'applesauce-react'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -55,6 +60,16 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const navigate = useNavigate()
   const bookmarksListRef = useRef<HTMLDivElement>(null)
   const friendsColor = settings?.highlightColorFriends || '#f97316'
+  const [showAddModal, setShowAddModal] = useState(false)
+  const activeAccount = Hooks.useActiveAccount()
+
+  const handleSaveBookmark = async (url: string, title?: string, description?: string, tags?: string[]) => {
+    if (!activeAccount || !relayPool) {
+      throw new Error('Please login to create bookmarks')
+    }
+
+    await createWebBookmark(url, title, description, tags, activeAccount, relayPool, RELAYS)
+  }
 
   // Pull-to-refresh for bookmarks
   const { isRefreshing: isPulling, pullPosition } = usePullToRefresh({
@@ -122,7 +137,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         onToggleCollapse={onToggleCollapse} 
         onLogout={onLogout}
         onOpenSettings={onOpenSettings}
-        relayPool={relayPool}
         isMobile={isMobile}
       />
       
@@ -153,7 +167,17 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
           />
           {sections.filter(s => s.items.length > 0).map(section => (
             <div key={section.key} className="bookmarks-section">
-              <h3 className="bookmarks-section-title">{section.title}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <h3 className="bookmarks-section-title" style={{ margin: 0 }}>{section.title}</h3>
+                {section.key === 'web' && activeAccount && (
+                  <CompactButton
+                    icon={faPlus}
+                    onClick={() => setShowAddModal(true)}
+                    title="Add web bookmark"
+                    ariaLabel="Add web bookmark"
+                  />
+                )}
+              </div>
               <div className={`bookmarks-grid bookmarks-${viewMode}`}>
                 {section.items.map((individualBookmark, index) => (
                   <BookmarkItem 
@@ -215,6 +239,12 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
           />
         </div>
       </div>
+      {showAddModal && (
+        <AddBookmarkModal
+          onClose={() => setShowAddModal(false)}
+          onSave={handleSaveBookmark}
+        />
+      )}
     </div>
   )
 }
