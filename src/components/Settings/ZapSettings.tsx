@@ -90,7 +90,11 @@ const ZapSettings: React.FC<ZapSettingsProps> = ({ settings, onUpdate }) => {
             value={highlighterWeight}
             onChange={(e) => onUpdate({ zapSplitHighlighterWeight: parseInt(e.target.value) })}
             className="zap-split-slider"
+            list="highlighter-ticks"
           />
+          <datalist id="highlighter-ticks">
+            <option value="50" label="50%"></option>
+          </datalist>
         </div>
       </div>
 
@@ -108,7 +112,11 @@ const ZapSettings: React.FC<ZapSettingsProps> = ({ settings, onUpdate }) => {
             value={authorWeight}
             onChange={(e) => onUpdate({ zapSplitAuthorWeight: parseInt(e.target.value) })}
             className="zap-split-slider"
+            list="author-ticks"
           />
+          <datalist id="author-ticks">
+            <option value="50" label="50%"></option>
+          </datalist>
         </div>
       </div>
 
@@ -127,7 +135,11 @@ const ZapSettings: React.FC<ZapSettingsProps> = ({ settings, onUpdate }) => {
             value={borisWeight}
             onChange={(e) => onUpdate({ zapSplitBorisWeight: parseFloat(e.target.value) })}
             className="zap-split-slider"
+            list="boris-ticks"
           />
+          <datalist id="boris-ticks">
+            <option value="5" label="5"></option>
+          </datalist>
         </div>
       </div>
 
