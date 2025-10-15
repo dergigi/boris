@@ -136,9 +136,6 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
           {/* PWA Install Section - Paragraphs */}
           <div className="setting-group">
             <p className="setting-description" style={{ marginTop: '0.5rem', marginBottom: '0.75rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
-              Install Boris on your device for a native app experience.
-            </p>
-            <p className="setting-description" style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
               <strong>Note:</strong> Boris works best with a local relay. Consider running{' '}
               <a 
                 href="https://github.com/greenart7c3/Citrine?tab=readme-ov-file#download" 
@@ -178,6 +175,9 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
                 here
               </a>
               .
+            </p>
+            <p className="setting-description" style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+              Install Boris on your device for a native app experience.
             </p>
             <button
               onClick={handleInstall}
