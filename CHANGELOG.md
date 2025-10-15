@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.16] - 2025-10-15
+
+### Changed
+
+- Replaced delete dialog popup with inline confirmation UI
+  - Shows red "Confirm?" text with trash icon when delete is clicked
+  - Clicking the red trash icon confirms deletion
+  - No more modal overlay or backdrop
+  - Click outside or reopen menu to cancel
+- Reordered Reading & Display settings for better organization
+  - Highlight Style, Paragraph Alignment, and Default Highlight Visibility moved to top
+  - Followed by Reading Font, Font Size, and color pickers
+- Setting buttons now align vertically with fixed label width (220px)
+  - Creates consistent "tab stops" for cleaner visual alignment
+
+### Fixed
+
+- Removed unused `handleCancelDelete` function after dialog removal
+
 ## [0.6.15] - 2025-10-15
 
 ### Added
@@ -1482,7 +1501,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.15...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.16...HEAD
+[0.6.16]: https://github.com/dergigi/boris/compare/v0.6.15...v0.6.16
 [0.6.15]: https://github.com/dergigi/boris/compare/v0.6.14...v0.6.15
 [0.6.14]: https://github.com/dergigi/boris/compare/v0.6.13...v0.6.14
 [0.6.13]: https://github.com/dergigi/boris/compare/v0.6.12...v0.6.13
