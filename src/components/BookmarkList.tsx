@@ -1,6 +1,7 @@
 import React, { useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate, faHeart } from '@fortawesome/free-solid-svg-icons'
 import { formatDistanceToNow } from 'date-fns'
 import { RelayPool } from 'applesauce-relay'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
@@ -48,6 +49,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   relayPool,
   isMobile = false
 }) => {
+  const navigate = useNavigate()
   const bookmarksListRef = useRef<HTMLDivElement>(null)
 
   // Pull-to-refresh for bookmarks
@@ -149,6 +151,13 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         </div>
       )}
       <div className="view-mode-controls">
+        <IconButton
+          icon={faHeart}
+          onClick={() => navigate('/support')}
+          title="Support Boris"
+          ariaLabel="Support"
+          variant="ghost"
+        />
         {onRefresh && (
           <IconButton
             icon={faRotate}

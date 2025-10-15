@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faHome, faPlus, faNewspaper, faTimes, faBolt } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faHome, faPlus, faNewspaper, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -115,13 +115,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           onClick={() => navigate('/explore')}
           title="Explore"
           ariaLabel="Explore"
-          variant="ghost"
-        />
-        <IconButton
-          icon={faBolt}
-          onClick={() => navigate('/support')}
-          title="Support"
-          ariaLabel="Support"
           variant="ghost"
         />
         <IconButton
