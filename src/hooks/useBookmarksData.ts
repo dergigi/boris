@@ -9,6 +9,7 @@ import { fetchHighlights, fetchHighlightsForArticle } from '../services/highligh
 import { fetchContacts } from '../services/contactService'
 import { UserSettings } from '../services/settingsService'
 import { loadReadingPosition, generateArticleIdentifier } from '../services/readingPositionService'
+import { fetchReadArticles } from '../services/libraryService'
 import { nip19 } from 'nostr-tools'
 
 interface UseBookmarksDataParams {
@@ -42,6 +43,7 @@ export const useBookmarksData = ({
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null)
   const [readingPositions, setReadingPositions] = useState<Map<string, number>>(new Map())
+  const [markedAsReadIds, setMarkedAsReadIds] = useState<Set<string>>(new Set())
 
   const handleFetchContacts = useCallback(async () => {
     if (!relayPool || !activeAccount) return
@@ -131,6 +133,25 @@ export const useBookmarksData = ({
     handleFetchContacts()
   }, [relayPool, activeAccount, naddr, externalUrl, handleFetchHighlights, handleFetchContacts])
 
+  // Fetch marked-as-read articles
+  useEffect(() => {
+    const loadMarkedAsRead = async () => {
+      if (!activeAccount || !relayPool) {
+        return
+      }
+
+      try {
+        const readArticles = await fetchReadArticles(relayPool, activeAccount.pubkey)
+        const ids = new Set(readArticles.map(article => article.id))
+        setMarkedAsReadIds(ids)
+      } catch (error) {
+        console.warn('⚠️ [Bookmarks] Failed to load marked-as-read articles:', error)
+      }
+    }
+
+    loadMarkedAsRead()
+  }, [relayPool, activeAccount])
+
   // Load reading positions for bookmarked articles (kind:30023)
   useEffect(() => {
     const loadPositions = async () => {
@@ -192,7 +213,8 @@ export const useBookmarksData = ({
     handleFetchBookmarks,
     handleFetchHighlights,
     handleRefreshAll,
-    readingPositions
+    readingPositions,
+    markedAsReadIds
   }
 }
 

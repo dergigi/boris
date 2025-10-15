@@ -26,7 +26,6 @@ import RefreshIndicator from './RefreshIndicator'
 import { groupIndividualBookmarks, hasContent } from '../utils/bookmarkUtils'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
-import { generateArticleIdentifier, loadReadingPosition } from '../services/readingPositionService'
 import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProgressFilters'
 
 interface MeProps {
@@ -39,7 +38,6 @@ type TabType = 'highlights' | 'reading-list' | 'archive' | 'writings'
 
 const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: propPubkey }) => {
   const activeAccount = Hooks.useActiveAccount()
-  const eventStore = Hooks.useEventStore()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
   
@@ -55,7 +53,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
   const [readingProgressFilter, setReadingProgressFilter] = useState<ReadingProgressFilterType>('all')
-  const [readingPositions, setReadingPositions] = useState<Map<string, number>>(new Map())
 
   // Update local state when prop changes
   useEffect(() => {
@@ -127,64 +124,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     loadData()
   }, [relayPool, viewingPubkey, isOwnProfile, activeAccount, refreshTrigger])
 
-  // Load reading positions for read articles (only for own profile)
-  useEffect(() => {
-    const loadPositions = async () => {
-      if (!isOwnProfile || !activeAccount || !relayPool || !eventStore || readArticles.length === 0) {
-        console.log('🔍 [Archive] Skipping position load:', {
-          isOwnProfile,
-          hasAccount: !!activeAccount,
-          hasRelayPool: !!relayPool,
-          hasEventStore: !!eventStore,
-          articlesCount: readArticles.length
-        })
-        return
-      }
-
-      console.log('📊 [Archive] Loading reading positions for', readArticles.length, 'articles')
-
-      const positions = new Map<string, number>()
-
-      // Load positions for all read articles
-      await Promise.all(
-        readArticles.map(async (post) => {
-          try {
-            const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
-            const naddr = nip19.naddrEncode({
-              kind: 30023,
-              pubkey: post.author,
-              identifier: dTag
-            })
-            const articleUrl = `nostr:${naddr}`
-            const identifier = generateArticleIdentifier(articleUrl)
-
-            console.log('🔍 [Archive] Loading position for:', post.title?.slice(0, 50), 'identifier:', identifier.slice(0, 32))
-
-            const savedPosition = await loadReadingPosition(
-              relayPool,
-              eventStore,
-              activeAccount.pubkey,
-              identifier
-            )
-
-            if (savedPosition && savedPosition.position > 0) {
-              console.log('✅ [Archive] Found position:', Math.round(savedPosition.position * 100) + '%', 'for', post.title?.slice(0, 50))
-              positions.set(post.event.id, savedPosition.position)
-            } else {
-              console.log('❌ [Archive] No position found for:', post.title?.slice(0, 50))
-            }
-          } catch (error) {
-            console.warn('⚠️ [Archive] Failed to load reading position for article:', error)
-          }
-        })
-      )
-
-      console.log('📊 [Archive] Loaded positions for', positions.size, '/', readArticles.length, 'articles')
-      setReadingPositions(positions)
-    }
-
-    loadPositions()
-  }, [readArticles, isOwnProfile, activeAccount, relayPool, eventStore])
 
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
@@ -246,19 +185,21 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const groups = groupIndividualBookmarks(filteredBookmarks)
 
   // Apply reading progress filter
-  const filteredReadArticles = readArticles.filter(post => {
-    const position = readingPositions.get(post.event.id)
+  const filteredReadArticles = readArticles.filter(() => {
+    // All articles in readArticles are marked as read, so they're treated as 100% complete
+    // The filters are only useful for distinguishing between different completion states
+    // but since these are all marked as read, we only care about the 'all' and 'completed' filters
     
     switch (readingProgressFilter) {
       case 'to-read':
-        // 0-5% reading progress (has tracking data, not manually marked)
-        return position !== undefined && position >= 0 && position <= 0.05
+        // Marked articles are never "to-read"
+        return false
       case 'reading':
-        // Has some progress but not completed (5% < position < 95%)
-        return position !== undefined && position > 0.05 && position < 0.95
+        // Marked articles are never "in progress"
+        return false
       case 'completed':
-        // 95% or more read, OR manually marked as read (no position data or 0%)
-        return (position !== undefined && position >= 0.95) || !position || position === 0
+        // All marked articles are considered completed
+        return true
       case 'all':
       default:
         return true
@@ -415,7 +356,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
                     key={post.event.id}
                     post={post}
                     href={getPostUrl(post)}
-                    readingProgress={readingPositions.get(post.event.id)}
+                    readingProgress={1.0}
                   />
                 ))}
               </div>

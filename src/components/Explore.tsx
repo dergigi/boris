@@ -23,6 +23,7 @@ import RefreshIndicator from './RefreshIndicator'
 import { classifyHighlights } from '../utils/highlightClassification'
 import { HighlightVisibility } from './HighlightsPanel'
 import { loadReadingPosition, generateArticleIdentifier } from '../services/readingPositionService'
+import { fetchReadArticles } from '../services/libraryService'
 
 interface ExploreProps {
   relayPool: RelayPool
@@ -43,6 +44,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [readingPositions, setReadingPositions] = useState<Map<string, number>>(new Map())
+  const [markedAsReadIds, setMarkedAsReadIds] = useState<Set<string>>(new Set())
   
   // Visibility filters (defaults from settings, or friends only)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
@@ -215,6 +217,25 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     loadData()
   }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
 
+  // Fetch marked-as-read articles
+  useEffect(() => {
+    const loadMarkedAsRead = async () => {
+      if (!activeAccount) {
+        return
+      }
+
+      try {
+        const readArticles = await fetchReadArticles(relayPool, activeAccount.pubkey)
+        const ids = new Set(readArticles.map(article => article.id))
+        setMarkedAsReadIds(ids)
+      } catch (error) {
+        console.warn('⚠️ [Explore] Failed to load marked-as-read articles:', error)
+      }
+    }
+
+    loadMarkedAsRead()
+  }, [relayPool, activeAccount])
+
   // Load reading positions for blog posts
   useEffect(() => {
     const loadPositions = async () => {
@@ -347,7 +368,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                 post={post}
                 href={getPostUrl(post)}
                 level={post.level}
-                readingProgress={readingPositions.get(post.event.id)}
+                readingProgress={markedAsReadIds.has(post.event.id) ? 1.0 : readingPositions.get(post.event.id)}
               />
             ))}
           </div>

@@ -48,6 +48,7 @@ interface ThreePaneLayoutProps {
   relayPool: RelayPool | null
   eventStore: IEventStore | null
   readingPositions?: Map<string, number>
+  markedAsReadIds?: Set<string>
   
   // Content pane
   readerLoading: boolean
@@ -326,6 +327,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             relayPool={props.relayPool}
             isMobile={isMobile}
             readingPositions={props.readingPositions}
+            markedAsReadIds={props.markedAsReadIds}
             settings={props.settings}
           />
         </div>

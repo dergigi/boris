@@ -41,6 +41,7 @@ interface BookmarkListProps {
   isMobile?: boolean
   settings?: UserSettings
   readingPositions?: Map<string, number>
+  markedAsReadIds?: Set<string>
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({
@@ -60,7 +61,8 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   relayPool,
   isMobile = false,
   settings,
-  readingPositions
+  readingPositions,
+  markedAsReadIds
 }) => {
   const navigate = useNavigate()
   const bookmarksListRef = useRef<HTMLDivElement>(null)
@@ -105,18 +107,24 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
     // If reading progress filter is 'all', show all articles
     if (readingProgressFilter === 'all') return true
     
+    const isMarkedAsRead = markedAsReadIds?.has(bookmark.id)
     const position = readingPositions?.get(bookmark.id)
+    
+    // Marked-as-read articles are always treated as 100% complete
+    if (isMarkedAsRead) {
+      return readingProgressFilter === 'completed'
+    }
     
     switch (readingProgressFilter) {
       case 'to-read':
-        // 0-5% reading progress (has tracking data, not manually marked)
+        // 0-5% reading progress (has tracking data)
         return position !== undefined && position >= 0 && position <= 0.05
       case 'reading':
         // Has some progress but not completed (5% < position < 95%)
         return position !== undefined && position > 0.05 && position < 0.95
       case 'completed':
-        // 95% or more read, OR manually marked as read (no position data or 0%)
-        return (position !== undefined && position >= 0.95) || !position || position === 0
+        // 95% or more read
+        return position !== undefined && position >= 0.95
       default:
         return true
     }
@@ -233,7 +241,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
                     index={index} 
                     onSelectUrl={onSelectUrl}
                     viewMode={viewMode}
-                    readingProgress={readingPositions?.get(individualBookmark.id)}
+                    readingProgress={markedAsReadIds?.has(individualBookmark.id) ? 1.0 : readingPositions?.get(individualBookmark.id)}
                   />
                 ))}
               </div>
