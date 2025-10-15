@@ -19,7 +19,7 @@ import BlogPostCard from './BlogPostCard'
 import { BookmarkItem } from './BookmarkItem'
 import IconButton from './IconButton'
 import { ViewMode } from './Bookmarks'
-import { getCachedMeData, setCachedMeData, updateCachedHighlights } from '../services/meCache'
+import { getCachedMeData, updateCachedHighlights } from '../services/meCache'
 import { faBooks } from '../icons/customIcons'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
@@ -49,6 +49,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [reads, setReads] = useState<ReadItem[]>([])
   const [writings, setWritings] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadedTabs, setLoadedTabs] = useState<Set<TabType>>(new Set())
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
@@ -61,72 +62,141 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     }
   }, [propActiveTab])
 
-  useEffect(() => {
-    const loadData = async () => {
-      if (!viewingPubkey) {
-        setLoading(false)
-        return
+  // Tab-specific loading functions
+  const loadHighlightsTab = async () => {
+    if (!viewingPubkey) return
+    
+    // Only show loading skeleton if tab hasn't been loaded yet
+    const hasBeenLoaded = loadedTabs.has('highlights')
+    
+    try {
+      if (!hasBeenLoaded) setLoading(true)
+      const userHighlights = await fetchHighlights(relayPool, viewingPubkey)
+      setHighlights(userHighlights)
+      setLoadedTabs(prev => new Set(prev).add('highlights'))
+    } catch (err) {
+      console.error('Failed to load highlights:', err)
+    } finally {
+      if (!hasBeenLoaded) setLoading(false)
+    }
+  }
+
+  const loadWritingsTab = async () => {
+    if (!viewingPubkey) return
+    
+    const hasBeenLoaded = loadedTabs.has('writings')
+    
+    try {
+      if (!hasBeenLoaded) setLoading(true)
+      const userWritings = await fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
+      setWritings(userWritings)
+      setLoadedTabs(prev => new Set(prev).add('writings'))
+    } catch (err) {
+      console.error('Failed to load writings:', err)
+    } finally {
+      if (!hasBeenLoaded) setLoading(false)
+    }
+  }
+
+  const loadReadingListTab = async () => {
+    if (!viewingPubkey || !isOwnProfile || !activeAccount) return
+    
+    const hasBeenLoaded = loadedTabs.has('reading-list')
+    
+    try {
+      if (!hasBeenLoaded) setLoading(true)
+      try {
+        await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
+          setBookmarks(newBookmarks)
+        })
+      } catch (err) {
+        console.warn('Failed to load bookmarks:', err)
+        setBookmarks([])
+      }
+      setLoadedTabs(prev => new Set(prev).add('reading-list'))
+    } catch (err) {
+      console.error('Failed to load reading list:', err)
+    } finally {
+      if (!hasBeenLoaded) setLoading(false)
+    }
+  }
+
+  const loadReadsTab = async () => {
+    if (!viewingPubkey || !isOwnProfile || !activeAccount) return
+    
+    const hasBeenLoaded = loadedTabs.has('reads')
+    
+    try {
+      if (!hasBeenLoaded) setLoading(true)
+      
+      // Fetch bookmarks first (needed for reads)
+      let fetchedBookmarks: Bookmark[] = []
+      try {
+        await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
+          fetchedBookmarks = newBookmarks
+          setBookmarks(newBookmarks)
+        })
+      } catch (err) {
+        console.warn('Failed to load bookmarks:', err)
+        fetchedBookmarks = []
       }
 
-      try {
-        setLoading(true)
+      // Fetch all reads
+      const userReads = await fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks)
+      setReads(userReads)
+      setLoadedTabs(prev => new Set(prev).add('reads'))
+    } catch (err) {
+      console.error('Failed to load reads:', err)
+    } finally {
+      if (!hasBeenLoaded) setLoading(false)
+    }
+  }
 
-        // Seed from cache if available to avoid empty flash (own profile only)
-        if (isOwnProfile) {
-          const cached = getCachedMeData(viewingPubkey)
-          if (cached) {
-            setHighlights(cached.highlights)
-            setBookmarks(cached.bookmarks)
-            setReads(cached.reads || [])
-          }
-        }
+  // Load active tab data
+  useEffect(() => {
+    if (!viewingPubkey || !activeTab) {
+      setLoading(false)
+      return
+    }
 
-        // Fetch highlights and writings (public data)
-        const [userHighlights, userWritings] = await Promise.all([
-          fetchHighlights(relayPool, viewingPubkey),
-          fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
-        ])
-
-        setHighlights(userHighlights)
-        setWritings(userWritings)
-
-        // Only fetch private data for own profile
-        if (isOwnProfile && activeAccount) {
-          // Fetch bookmarks using callback pattern
-          let fetchedBookmarks: Bookmark[] = []
-          try {
-            await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
-              fetchedBookmarks = newBookmarks
-              setBookmarks(newBookmarks)
-            })
-          } catch (err) {
-            console.warn('Failed to load bookmarks:', err)
-            setBookmarks([])
-          }
-
-          // Fetch all reads
-          const userReads = await fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks)
-          setReads(userReads)
-          
-          // Update cache with all fetched data
-          setCachedMeData(viewingPubkey, userHighlights, fetchedBookmarks, userReads)
-        } else {
-          setBookmarks([])
-          setReads([])
-        }
-      } catch (err) {
-        console.error('Failed to load data:', err)
-        setLoading(false)
+    // Load cached data immediately if available
+    if (isOwnProfile) {
+      const cached = getCachedMeData(viewingPubkey)
+      if (cached) {
+        setHighlights(cached.highlights)
+        setBookmarks(cached.bookmarks)
+        setReads(cached.reads || [])
       }
     }
 
-    loadData()
-  }, [relayPool, viewingPubkey, isOwnProfile, activeAccount, refreshTrigger])
+    // Load data for active tab (refresh in background if already loaded)
+    switch (activeTab) {
+      case 'highlights':
+        loadHighlightsTab()
+        break
+      case 'writings':
+        loadWritingsTab()
+        break
+      case 'reading-list':
+        loadReadingListTab()
+        break
+      case 'reads':
+        loadReadsTab()
+        break
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, viewingPubkey, refreshTrigger])
 
 
-  // Pull-to-refresh
+  // Pull-to-refresh - only reload active tab
   const { isRefreshing, pullPosition } = usePullToRefresh({
     onRefresh: () => {
+      // Clear the loaded state for current tab to force refresh
+      setLoadedTabs(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(activeTab)
+        return newSet
+      })
       setRefreshTrigger(prev => prev + 1)
     },
     maximumPullLength: 240,
