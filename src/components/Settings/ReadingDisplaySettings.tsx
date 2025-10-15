@@ -109,19 +109,21 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
       </div>
 
       <div className="setting-group setting-inline">
-        <label>Font Size</label>
-        <div className="setting-buttons">
-          {[16, 18, 21, 24, 28, 32].map(size => (
-            <button
-              key={size}
-              onClick={() => onUpdate({ fontSize: size })}
-              className={`font-size-btn ${(settings.fontSize || 21) === size ? 'active' : ''}`}
-              title={`${size}px`}
-              style={{ fontSize: `${size - 2}px` }}
-            >
-              A
-            </button>
-          ))}
+        <label className="setting-label">Font Size</label>
+        <div className="setting-control">
+          <div className="setting-buttons">
+            {[16, 18, 21, 24, 28, 32].map(size => (
+              <button
+                key={size}
+                onClick={() => onUpdate({ fontSize: size })}
+                className={`font-size-btn ${(settings.fontSize || 21) === size ? 'active' : ''}`}
+                title={`${size}px`}
+                style={{ fontSize: `${size - 2}px` }}
+              >
+                A
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
