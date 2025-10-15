@@ -1,9 +1,9 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBookOpen, faCheckCircle, faAsterisk } from '@fortawesome/free-solid-svg-icons'
-import { faBookmark } from '@fortawesome/free-regular-svg-icons'
+import { faEnvelope, faEnvelopeOpen } from '@fortawesome/free-regular-svg-icons'
 
-export type ReadingProgressFilterType = 'all' | 'to-read' | 'reading' | 'completed'
+export type ReadingProgressFilterType = 'all' | 'unopened' | 'started' | 'reading' | 'completed'
 
 interface ReadingProgressFiltersProps {
   selectedFilter: ReadingProgressFilterType
@@ -13,7 +13,8 @@ interface ReadingProgressFiltersProps {
 const ReadingProgressFilters: React.FC<ReadingProgressFiltersProps> = ({ selectedFilter, onFilterChange }) => {
   const filters = [
     { type: 'all' as const, icon: faAsterisk, label: 'All' },
-    { type: 'to-read' as const, icon: faBookmark, label: 'To Read' },
+    { type: 'unopened' as const, icon: faEnvelope, label: 'Unopened' },
+    { type: 'started' as const, icon: faEnvelopeOpen, label: 'Started' },
     { type: 'reading' as const, icon: faBookOpen, label: 'Reading' },
     { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' }
   ]

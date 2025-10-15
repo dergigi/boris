@@ -191,8 +191,11 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     // but since these are all marked as read, we only care about the 'all' and 'completed' filters
     
     switch (readingProgressFilter) {
-      case 'to-read':
-        // Marked articles are never "to-read"
+      case 'unopened':
+        // Marked articles are never "unopened"
+        return false
+      case 'started':
+        // Marked articles are never "started"
         return false
       case 'reading':
         // Marked articles are never "in progress"
