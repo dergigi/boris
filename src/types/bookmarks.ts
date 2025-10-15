@@ -42,6 +42,8 @@ export interface IndividualBookmark {
   encryptedContent?: string
   // When the item was added to the bookmark list (synthetic, for sorting)
   added_at?: number
+  // The kind of the source list/set that produced this bookmark (e.g., 10003, 30003, 30001, or 39701 for web)
+  sourceKind?: number
 }
 
 export interface ActiveAccount {
