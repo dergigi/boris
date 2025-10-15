@@ -97,7 +97,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
     { key: 'private', title: 'Private bookmarks', items: groups.privateItems },
     { key: 'public', title: 'Public bookmarks', items: groups.publicItems },
     { key: 'web', title: 'Web bookmarks', items: groups.web },
-    { key: 'amethyst', title: 'Amethyst-style bookmarks', items: groups.amethyst }
+    { key: 'amethyst', title: 'Old Bookmarks (Legacy)', items: groups.amethyst }
   ]
   
   // Add bookmark sets as additional sections

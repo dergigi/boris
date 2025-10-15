@@ -177,7 +177,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     { key: 'private', title: 'Private bookmarks', items: groups.privateItems },
     { key: 'public', title: 'Public bookmarks', items: groups.publicItems },
     { key: 'web', title: 'Web bookmarks', items: groups.web },
-    { key: 'amethyst', title: 'Amethyst-style bookmarks', items: groups.amethyst }
+    { key: 'amethyst', title: 'Old Bookmarks (Legacy)', items: groups.amethyst }
   ]
 
   // Show content progressively - no blocking error screens
