@@ -1,6 +1,7 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookOpen, faBookmark, faCheckCircle, faAsterisk } from '@fortawesome/free-solid-svg-icons'
+import { faBookOpen, faCheckCircle, faAsterisk } from '@fortawesome/free-solid-svg-icons'
+import { faBookmark } from '@fortawesome/free-regular-svg-icons'
 import { faBooks } from '../icons/customIcons'
 
 export type ArchiveFilterType = 'all' | 'to-read' | 'reading' | 'completed' | 'marked'
