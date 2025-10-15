@@ -112,7 +112,16 @@ function AppRoutes({
         } 
       />
       <Route 
-        path="/me/archive" 
+        path="/me/reads" 
+        element={
+          <Bookmarks 
+            relayPool={relayPool}
+            onLogout={handleLogout}
+          />
+        } 
+      />
+      <Route 
+        path="/me/links" 
         element={
           <Bookmarks 
             relayPool={relayPool}

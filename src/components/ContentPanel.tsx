@@ -187,14 +187,76 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const { isReadingComplete, progressPercentage, saveNow } = useReadingPosition({
     enabled: isTextContent,
     syncEnabled: settings?.syncReadingPosition,
-    onSave: handleSavePosition,
-    onReadingComplete: () => {
-      // Optional: Auto-mark as read when reading is complete
-      if (activeAccount && !isMarkedAsRead) {
-        // Could trigger auto-mark as read here if desired
+    onSave: handleSavePosition
+  })
+
+  // Determine if we're on a nostr-native article (/a/) or external URL (/r/)
+  const isNostrArticle = selectedUrl && selectedUrl.startsWith('nostr:')
+
+  // Define handleMarkAsRead with useCallback to use in auto-mark effect
+  const handleMarkAsRead = useCallback(() => {
+    if (!activeAccount || !relayPool || isMarkedAsRead) {
+      return
+    }
+
+    // Instantly update UI with checkmark animation
+    setIsMarkedAsRead(true)
+    setShowCheckAnimation(true)
+
+    // Reset animation after it completes (2.5s for full fancy animation)
+    setTimeout(() => {
+      setShowCheckAnimation(false)
+    }, 2500)
+
+    // Fire-and-forget: publish in background without blocking UI
+    ;(async () => {
+      try {
+        if (isNostrArticle && currentArticle) {
+          await createEventReaction(
+            currentArticle.id,
+            currentArticle.pubkey,
+            currentArticle.kind,
+            activeAccount,
+            relayPool
+          )
+          console.log('✅ Marked nostr article as read')
+        } else if (selectedUrl) {
+          await createWebsiteReaction(
+            selectedUrl,
+            activeAccount,
+            relayPool
+          )
+          console.log('✅ Marked website as read')
+        }
+      } catch (error) {
+        console.error('Failed to mark as read:', error)
+        // Revert UI state on error
+        setIsMarkedAsRead(false)
+      }
+    })()
+  }, [activeAccount, relayPool, isMarkedAsRead, isNostrArticle, currentArticle, selectedUrl])
+
+  // Auto-mark as read when reaching 100% for 2 seconds
+  useEffect(() => {
+    if (!settings?.autoMarkAsReadAt100 || isMarkedAsRead || !activeAccount || !relayPool) {
+      return
+    }
+
+    // Only trigger when progress is exactly 100%
+    if (progressPercentage === 100) {
+      console.log('📍 [ContentPanel] Progress at 100%, starting 2-second timer for auto-mark')
+      
+      const timer = setTimeout(() => {
+        console.log('✅ [ContentPanel] Auto-marking as read after 2 seconds at 100%')
+        handleMarkAsRead()
+      }, 2000)
+
+      return () => {
+        console.log('⏹️ [ContentPanel] Canceling auto-mark timer (progress changed or unmounting)')
+        clearTimeout(timer)
       }
     }
-  })
+  }, [progressPercentage, settings?.autoMarkAsReadAt100, isMarkedAsRead, activeAccount, relayPool, handleMarkAsRead])
 
   // Load saved reading position when article loads
   useEffect(() => {
@@ -226,19 +288,25 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
         if (savedPosition && savedPosition.position > 0.05 && savedPosition.position < 1) {
           console.log('🎯 [ContentPanel] Restoring position:', Math.round(savedPosition.position * 100) + '%')
-          // Wait for content to be fully rendered before scrolling
-          setTimeout(() => {
-            const documentHeight = document.documentElement.scrollHeight
-            const windowHeight = window.innerHeight
-            const scrollTop = savedPosition.position * (documentHeight - windowHeight)
-            
-            window.scrollTo({
-              top: scrollTop,
-              behavior: 'smooth'
-            })
-            
-            console.log('✅ [ContentPanel] Restored to position:', Math.round(savedPosition.position * 100) + '%', 'scrollTop:', scrollTop)
-          }, 500) // Give content time to render
+          
+          // Only auto-scroll if the setting is enabled (default: true)
+          if (settings?.autoScrollToPosition !== false) {
+            // Wait for content to be fully rendered before scrolling
+            setTimeout(() => {
+              const documentHeight = document.documentElement.scrollHeight
+              const windowHeight = window.innerHeight
+              const scrollTop = savedPosition.position * (documentHeight - windowHeight)
+              
+              window.scrollTo({
+                top: scrollTop,
+                behavior: 'smooth'
+              })
+              
+              console.log('✅ [ContentPanel] Restored to position:', Math.round(savedPosition.position * 100) + '%', 'scrollTop:', scrollTop)
+            }, 500) // Give content time to render
+          } else {
+            console.log('⏭️ [ContentPanel] Auto-scroll disabled in settings')
+          }
         } else if (savedPosition) {
           if (savedPosition.position === 1) {
             console.log('✅ [ContentPanel] Article completed (100%), starting from top')
@@ -252,7 +320,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }
 
     loadPosition()
-  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl])
+  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, settings?.autoScrollToPosition, selectedUrl])
 
   // Save position before unmounting or changing article
   useEffect(() => {
@@ -324,8 +392,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   const hasHighlights = relevantHighlights.length > 0
 
-  // Determine if we're on a nostr-native article (/a/) or external URL (/r/)
-  const isNostrArticle = selectedUrl && selectedUrl.startsWith('nostr:')
   const isExternalVideo = !isNostrArticle && !!selectedUrl && ['youtube', 'video'].includes(classifyUrl(selectedUrl).type)
 
   // Track external video duration (in seconds) for display in header
@@ -594,48 +660,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
     checkReadStatus()
   }, [selectedUrl, currentArticle, activeAccount, relayPool, isNostrArticle])
-  
-  const handleMarkAsRead = () => {
-    if (!activeAccount || !relayPool || isMarkedAsRead) {
-      return
-    }
-
-    // Instantly update UI with checkmark animation
-    setIsMarkedAsRead(true)
-    setShowCheckAnimation(true)
-
-    // Reset animation after it completes
-    setTimeout(() => {
-      setShowCheckAnimation(false)
-    }, 600)
-
-    // Fire-and-forget: publish in background without blocking UI
-    ;(async () => {
-      try {
-        if (isNostrArticle && currentArticle) {
-          await createEventReaction(
-            currentArticle.id,
-            currentArticle.pubkey,
-            currentArticle.kind,
-            activeAccount,
-            relayPool
-          )
-          console.log('✅ Marked nostr article as read')
-        } else if (selectedUrl) {
-          await createWebsiteReaction(
-            selectedUrl,
-            activeAccount,
-            relayPool
-          )
-          console.log('✅ Marked website as read')
-        }
-      } catch (error) {
-        console.error('Failed to mark as read:', error)
-        // Revert UI state on error
-        setIsMarkedAsRead(false)
-      }
-    })()
-  }
 
   if (!selectedUrl) {
     return (
