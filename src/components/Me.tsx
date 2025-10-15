@@ -49,7 +49,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [reads, setReads] = useState<ReadItem[]>([])
   const [writings, setWritings] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
-  const [loadingReads, setLoadingReads] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
@@ -90,7 +89,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
 
         setHighlights(userHighlights)
         setWritings(userWritings)
-        setLoading(false) // Done loading public data
 
         // Only fetch private data for own profile
         if (isOwnProfile && activeAccount) {
@@ -106,11 +104,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             setBookmarks([])
           }
 
-          // Fetch all reads (async, may take time)
-          setLoadingReads(true)
+          // Fetch all reads
           const userReads = await fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks)
           setReads(userReads)
-          setLoadingReads(false)
           
           // Update cache with all fetched data
           setCachedMeData(viewingPubkey, userHighlights, fetchedBookmarks, userReads)
@@ -377,8 +373,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         )
 
       case 'reads':
-        // Show skeletons while loading reads OR while initial load
-        if (showSkeletons || loadingReads) {
+        if (showSkeletons) {
           return (
             <div className="explore-grid">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -387,7 +382,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             </div>
           )
         }
-        return reads.length === 0 && !loading && !loadingReads ? (
+        return reads.length === 0 && !loading ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
             No articles in your reads.
           </div>
