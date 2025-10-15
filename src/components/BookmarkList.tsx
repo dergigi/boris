@@ -12,6 +12,7 @@ import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { BookmarkSkeleton } from './Skeletons'
+import { groupIndividualBookmarks } from '../utils/bookmarkUtils'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -91,7 +92,13 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   // Re-sort after flattening to ensure newest first across all lists
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(hasContentOrUrl)
-    .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
+  const groups = groupIndividualBookmarks(allIndividualBookmarks)
+  const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
+    { key: 'private', title: `Private bookmarks (${groups.privateItems.length})`, items: groups.privateItems },
+    { key: 'public', title: `Public bookmarks (${groups.publicItems.length})`, items: groups.publicItems },
+    { key: 'web', title: `Web bookmarks (${groups.web.length})`, items: groups.web },
+    { key: 'amethyst', title: `Amethyst-style bookmarks (${groups.amethyst.length})`, items: groups.amethyst }
+  ]
   
   if (isCollapsed) {
     // Check if the selected URL is in bookmarks
@@ -150,17 +157,22 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
             isRefreshing={isPulling || isRefreshing || false}
             pullPosition={pullPosition}
           />
-          <div className={`bookmarks-grid bookmarks-${viewMode}`}>
-            {allIndividualBookmarks.map((individualBookmark, index) => 
-              <BookmarkItem 
-                key={`${individualBookmark.id}-${index}`}
-                bookmark={individualBookmark} 
-                index={index} 
-                onSelectUrl={onSelectUrl}
-                viewMode={viewMode}
-              />
-            )}
-          </div>
+          {sections.filter(s => s.items.length > 0).map(section => (
+            <div key={section.key} className="bookmarks-section">
+              <h3 className="bookmarks-section-title">{section.title}</h3>
+              <div className={`bookmarks-grid bookmarks-${viewMode}`}>
+                {section.items.map((individualBookmark, index) => (
+                  <BookmarkItem 
+                    key={`${section.key}-${individualBookmark.id}-${index}`}
+                    bookmark={individualBookmark} 
+                    index={index} 
+                    onSelectUrl={onSelectUrl}
+                    viewMode={viewMode}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
       <div className="view-mode-controls">
