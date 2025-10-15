@@ -136,21 +136,41 @@ export const useBookmarksData = ({
   // Fetch marked-as-read articles
   useEffect(() => {
     const loadMarkedAsRead = async () => {
-      if (!activeAccount || !relayPool) {
+      if (!activeAccount || !relayPool || !eventStore || bookmarks.length === 0) {
         return
       }
 
       try {
         const readArticles = await fetchReadArticles(relayPool, activeAccount.pubkey)
-        const ids = new Set(readArticles.map(article => article.id))
-        setMarkedAsReadIds(ids)
+        
+        // Create a set of bookmark IDs that are marked as read
+        const markedBookmarkIds = new Set<string>()
+        
+        // For each read article, we need to match it to bookmark IDs
+        for (const readArticle of readArticles) {
+          // Add the event ID directly (for web bookmarks and legacy compatibility)
+          markedBookmarkIds.add(readArticle.id)
+          
+          // For nostr-native articles (kind:7 reactions), also add the coordinate format
+          if (readArticle.eventId && readArticle.eventAuthor && readArticle.eventKind) {
+            // Try to get the event from the eventStore to find the 'd' tag
+            const event = eventStore.getEvent(readArticle.eventId)
+            if (event) {
+              const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+              const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
+              markedBookmarkIds.add(coordinate)
+            }
+          }
+        }
+        
+        setMarkedAsReadIds(markedBookmarkIds)
       } catch (error) {
         console.warn('⚠️ [Bookmarks] Failed to load marked-as-read articles:', error)
       }
     }
 
     loadMarkedAsRead()
-  }, [relayPool, activeAccount])
+  }, [relayPool, activeAccount, eventStore, bookmarks])
 
   // Load reading positions for bookmarked articles (kind:30023)
   useEffect(() => {
