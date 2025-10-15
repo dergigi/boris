@@ -41,36 +41,45 @@ export const HighlightButton = React.forwardRef<HighlightButtonRef, HighlightBut
     }))
 
     return (
-      <button
-        className="highlight-fab"
+      <div
         style={{
-          position: 'absolute',
+          position: 'sticky',
           bottom: '32px',
-          right: '32px',
           zIndex: 10,
-          width: '56px',
-          height: '56px',
-          borderRadius: '50%',
-          backgroundColor: highlightColor,
-          color: '#000',
-          border: 'none',
-          boxShadow: hasSelection ? '0 4px 12px rgba(0, 0, 0, 0.3)' : 'none',
-          cursor: hasSelection ? 'pointer' : 'default',
+          height: 0,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.3s ease',
-          opacity: hasSelection ? 1 : 0.4,
-          transform: hasSelection ? 'scale(1)' : 'scale(0.8)',
-          pointerEvents: hasSelection ? 'auto' : 'none',
-          userSelect: 'none'
+          justifyContent: 'flex-end',
+          pointerEvents: 'none',
+          marginRight: '32px'
         }}
-        onClick={handleClick}
-        aria-label="Create highlight from selection"
-        title={hasSelection ? 'Create highlight' : ''}
       >
-        <FontAwesomeIcon icon={faHighlighter} size="lg" />
-      </button>
+        <button
+          className="highlight-fab"
+          style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            backgroundColor: highlightColor,
+            color: '#000',
+            border: 'none',
+            boxShadow: hasSelection ? '0 4px 12px rgba(0, 0, 0, 0.3)' : 'none',
+            cursor: hasSelection ? 'pointer' : 'default',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.3s ease',
+            opacity: hasSelection ? 1 : 0.4,
+            transform: hasSelection ? 'scale(1)' : 'scale(0.8)',
+            pointerEvents: hasSelection ? 'auto' : 'none',
+            userSelect: 'none'
+          }}
+          onClick={handleClick}
+          aria-label="Create highlight from selection"
+          title={hasSelection ? 'Create highlight' : ''}
+        >
+          <FontAwesomeIcon icon={faHighlighter} size="lg" />
+        </button>
+      </div>
     )
   }
 )
