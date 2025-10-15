@@ -449,22 +449,13 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         )
 
       case 'reads':
-        // Show loading skeletons while fetching reads
-        if (loading && reads.length === 0) {
+        // Show loading skeletons while fetching reads or if no data yet
+        if (reads.length === 0) {
           return (
             <div className="explore-grid">
               {Array.from({ length: 6 }).map((_, i) => (
                 <BlogPostSkeleton key={i} />
               ))}
-            </div>
-          )
-        }
-        
-        // No reads at all
-        if (reads.length === 0) {
-          return (
-            <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-              No articles in your reads.
             </div>
           )
         }
@@ -496,22 +487,13 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         )
 
       case 'links':
-        // Show loading skeletons while fetching links
-        if (loading && links.length === 0) {
+        // Show loading skeletons while fetching links or if no data yet
+        if (links.length === 0) {
           return (
             <div className="explore-grid">
               {Array.from({ length: 6 }).map((_, i) => (
                 <BlogPostSkeleton key={i} />
               ))}
-            </div>
-          )
-        }
-        
-        // No links at all
-        if (links.length === 0) {
-          return (
-            <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-              No links yet.
             </div>
           )
         }
