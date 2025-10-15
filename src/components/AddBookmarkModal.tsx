@@ -140,8 +140,7 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
         clearTimeout(fetchTimeoutRef.current)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url]) // Only depend on url - title, description, tagsInput are intentionally checked but not dependencies
+  }, [url, title, description, tagsInput])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { RelayPool } from 'applesauce-relay'
+import { IAccount, AccountManager } from 'applesauce-accounts'
 import { Bookmark } from '../types/bookmarks'
 import { Highlight } from '../types/highlights'
 import { fetchBookmarks } from '../services/bookmarkService'
@@ -9,10 +10,8 @@ import { UserSettings } from '../services/settingsService'
 
 interface UseBookmarksDataParams {
   relayPool: RelayPool | null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  activeAccount: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  accountManager: any
+  activeAccount: IAccount | undefined
+  accountManager: AccountManager
   naddr?: string
   currentArticleCoordinate?: string
   currentArticleEventId?: string

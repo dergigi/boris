@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faNewspaper, faPenToSquare, faHighlighter, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
+import { faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired, faArrowsRotate } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { Hooks } from 'applesauce-react'
@@ -42,11 +42,11 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   
-  // Visibility filters (defaults from settings)
+  // Visibility filters (defaults from settings, or friends only)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
-    nostrverse: settings?.defaultHighlightVisibilityNostrverse !== false,
-    friends: settings?.defaultHighlightVisibilityFriends !== false,
-    mine: settings?.defaultHighlightVisibilityMine !== false
+    nostrverse: settings?.defaultHighlightVisibilityNostrverse ?? false,
+    friends: settings?.defaultHighlightVisibilityFriends ?? true,
+    mine: settings?.defaultHighlightVisibilityMine ?? false
   })
 
   // Update local state when prop changes
@@ -374,31 +374,18 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           <FontAwesomeIcon icon={faNewspaper} />
           Explore
         </h1>
-        <p className="explore-subtitle">
-          Discover highlights and blog posts from your friends and others
-        </p>
-        
-        <div className="me-tabs">
-          <button
-            className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
-            data-tab="highlights"
-            onClick={() => navigate('/explore')}
-          >
-            <FontAwesomeIcon icon={faHighlighter} />
-            <span className="tab-label">Highlights</span>
-          </button>
-          <button
-            className={`me-tab ${activeTab === 'writings' ? 'active' : ''}`}
-            data-tab="writings"
-            onClick={() => navigate('/explore/writings')}
-          >
-            <FontAwesomeIcon icon={faPenToSquare} />
-            <span className="tab-label">Writings</span>
-          </button>
-        </div>
         
         {/* Visibility filters */}
-        <div className="highlight-level-toggles" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+        <div className="highlight-level-toggles" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+          <IconButton
+            icon={faArrowsRotate}
+            onClick={() => setRefreshTrigger(prev => prev + 1)}
+            title="Refresh content"
+            ariaLabel="Refresh content"
+            variant="ghost"
+            spin={loading || isRefreshing}
+            disabled={loading || isRefreshing}
+          />
           <IconButton
             icon={faNetworkWired}
             onClick={() => setVisibility({ ...visibility, nostrverse: !visibility.nostrverse })}
@@ -434,6 +421,25 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
               opacity: visibility.mine ? 1 : 0.4 
             }}
           />
+        </div>
+        
+        <div className="me-tabs">
+          <button
+            className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
+            data-tab="highlights"
+            onClick={() => navigate('/explore')}
+          >
+            <FontAwesomeIcon icon={faHighlighter} />
+            <span className="tab-label">Highlights</span>
+          </button>
+          <button
+            className={`me-tab ${activeTab === 'writings' ? 'active' : ''}`}
+            data-tab="writings"
+            onClick={() => navigate('/explore/writings')}
+          >
+            <FontAwesomeIcon icon={faNewspaper} />
+            <span className="tab-label">Writings</span>
+          </button>
         </div>
       </div>
 

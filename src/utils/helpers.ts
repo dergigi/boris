@@ -102,13 +102,13 @@ export const prioritizeLocalRelays = (relayUrls: string[]): string[] => {
 // Parallel request helper
 import { completeOnEose, onlyEvents, RelayPool } from 'applesauce-relay'
 import { Observable, takeUntil, timer } from 'rxjs'
+import { Filter } from 'nostr-tools/filter'
 
 export function createParallelReqStreams(
   relayPool: RelayPool,
   localRelays: string[],
   remoteRelays: string[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  filter: any,
+  filter: Filter,
   localTimeoutMs = 1200,
   remoteTimeoutMs = 6000
 ): { local$: Observable<unknown>; remote$: Observable<unknown> } {

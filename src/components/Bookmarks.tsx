@@ -130,8 +130,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     if (isMobile && isSidebarOpen) {
       toggleSidebar()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname])
+  }, [location.pathname, isMobile, isSidebarOpen, toggleSidebar])
 
   // Handle highlight navigation from explore page
   useEffect(() => {

@@ -5,7 +5,6 @@ import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDateCompact } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
 import { useImageCache } from '../../hooks/useImageCache'
-import { UserSettings } from '../../services/settingsService'
 
 interface CompactViewProps {
   bookmark: IndividualBookmark
@@ -15,7 +14,6 @@ interface CompactViewProps {
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   articleImage?: string
   articleSummary?: string
-  settings?: UserSettings
 }
 
 export const CompactView: React.FC<CompactViewProps> = ({
@@ -25,15 +23,14 @@ export const CompactView: React.FC<CompactViewProps> = ({
   extractedUrls,
   onSelectUrl,
   articleImage,
-  articleSummary,
-  settings
+  articleSummary
 }) => {
   const isArticle = bookmark.kind === 30023
   const isWebBookmark = bookmark.kind === 39701
   const isClickable = hasUrls || isArticle || isWebBookmark
   
   // Get cached image for thumbnail
-  const cachedImage = useImageCache(articleImage || undefined, settings)
+  const cachedImage = useImageCache(articleImage || undefined)
   
   const handleCompactClick = () => {
     if (!onSelectUrl) return

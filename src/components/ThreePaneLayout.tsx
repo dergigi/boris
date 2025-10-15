@@ -303,7 +303,6 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             lastFetchTime={props.lastFetchTime}
             loading={props.bookmarksLoading}
             relayPool={props.relayPool}
-            settings={props.settings}
             isMobile={isMobile}
           />
         </div>

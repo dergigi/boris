@@ -33,7 +33,7 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   highlights = [],
   highlightVisibility = { nostrverse: true, friends: true, mine: true }
 }) => {
-  const cachedImage = useImageCache(image, settings)
+  const cachedImage = useImageCache(image)
   const formattedDate = published ? format(new Date(published * 1000), 'MMM d, yyyy') : null
   const isLongSummary = summary && summary.length > 150
   

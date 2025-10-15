@@ -10,7 +10,6 @@ import { classifyUrl } from '../../utils/helpers'
 import { IconGetter } from './shared'
 import { useImageCache } from '../../hooks/useImageCache'
 import { getPreviewImage, fetchOgImage } from '../../utils/imagePreview'
-import { UserSettings } from '../../services/settingsService'
 import { getEventUrl } from '../../config/nostrGateways'
 
 interface CardViewProps {
@@ -26,7 +25,6 @@ interface CardViewProps {
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
   articleImage?: string
   articleSummary?: string
-  settings?: UserSettings
 }
 
 export const CardView: React.FC<CardViewProps> = ({
@@ -41,8 +39,7 @@ export const CardView: React.FC<CardViewProps> = ({
   getAuthorDisplayName,
   handleReadNow,
   articleImage,
-  articleSummary,
-  settings
+  articleSummary
 }) => {
   const firstUrl = hasUrls ? extractedUrls[0] : null
   const firstUrlClassificationType = firstUrl ? classifyUrl(firstUrl)?.type : null
@@ -59,7 +56,7 @@ export const CardView: React.FC<CardViewProps> = ({
   
   // Determine which image to use (article image, instant preview, or OG image)
   const previewImage = articleImage || instantPreview || ogImage
-  const cachedImage = useImageCache(previewImage || undefined, settings)
+  const cachedImage = useImageCache(previewImage || undefined)
   
   // Fetch OG image if we don't have any other image
   React.useEffect(() => {
