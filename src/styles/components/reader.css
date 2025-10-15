@@ -192,6 +192,7 @@
 .article-menu-btn { background: none; border: none; color: var(--color-text-secondary); cursor: pointer; padding: 0.5rem 0.75rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease; border-radius: 6px; }
 .article-menu-btn:hover { color: var(--color-primary); background: rgba(99, 102, 241, 0.1); }
 .article-menu { position: absolute; right: 0; top: calc(100% + 4px); background: var(--color-bg-elevated); border: 1px solid var(--color-border-subtle); border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); z-index: 1000; min-width: 180px; overflow: hidden; }
+.article-menu.open-upward { top: auto; bottom: calc(100% + 4px); }
 .article-menu-item { width: 100%; background: none; border: none; color: var(--color-text); padding: 0.75rem 1rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; transition: all 0.15s ease; text-align: left; white-space: nowrap; }
 .article-menu-item:hover { background: rgba(99, 102, 241, 0.15); color: var(--color-text); }
 .article-menu-item svg { font-size: 0.875rem; flex-shrink: 0; }

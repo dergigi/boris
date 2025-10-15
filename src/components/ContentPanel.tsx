@@ -100,6 +100,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const [showArticleMenu, setShowArticleMenu] = useState(false)
   const [showVideoMenu, setShowVideoMenu] = useState(false)
   const [showExternalMenu, setShowExternalMenu] = useState(false)
+  const [articleMenuOpenUpward, setArticleMenuOpenUpward] = useState(false)
+  const [videoMenuOpenUpward, setVideoMenuOpenUpward] = useState(false)
+  const [externalMenuOpenUpward, setExternalMenuOpenUpward] = useState(false)
   const articleMenuRef = useRef<HTMLDivElement>(null)
   const videoMenuRef = useRef<HTMLDivElement>(null)
   const externalMenuRef = useRef<HTMLDivElement>(null)
@@ -158,6 +161,35 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       return () => {
         document.removeEventListener('mousedown', handleClickOutside)
       }
+    }
+  }, [showArticleMenu, showVideoMenu, showExternalMenu])
+
+  // Check available space and position menu upward if needed
+  useEffect(() => {
+    const checkMenuPosition = (menuRef: React.RefObject<HTMLDivElement>, setOpenUpward: (value: boolean) => void) => {
+      if (!menuRef.current) return
+
+      const menuWrapper = menuRef.current
+      const menuElement = menuWrapper.querySelector('.article-menu') as HTMLElement
+      if (!menuElement) return
+
+      const rect = menuWrapper.getBoundingClientRect()
+      const viewportHeight = window.innerHeight
+      const spaceBelow = viewportHeight - rect.bottom
+      const menuHeight = menuElement.offsetHeight || 300 // estimate if not rendered yet
+
+      // Open upward if there's not enough space below (with 20px buffer)
+      setOpenUpward(spaceBelow < menuHeight + 20 && rect.top > menuHeight)
+    }
+
+    if (showArticleMenu) {
+      checkMenuPosition(articleMenuRef, setArticleMenuOpenUpward)
+    }
+    if (showVideoMenu) {
+      checkMenuPosition(videoMenuRef, setVideoMenuOpenUpward)
+    }
+    if (showExternalMenu) {
+      checkMenuPosition(externalMenuRef, setExternalMenuOpenUpward)
     }
   }, [showArticleMenu, showVideoMenu, showExternalMenu])
 
@@ -588,7 +620,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 <FontAwesomeIcon icon={faEllipsisH} />
               </button>
               {showVideoMenu && (
-                <div className="article-menu">
+                <div className={`article-menu ${videoMenuOpenUpward ? 'open-upward' : ''}`}>
                   <button className="article-menu-item" onClick={handleOpenVideoExternal}>
                     <FontAwesomeIcon icon={faExternalLinkAlt} />
                     <span>Open Link</span>
@@ -669,7 +701,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 </button>
                 
                 {showExternalMenu && (
-                  <div className="article-menu">
+                  <div className={`article-menu ${externalMenuOpenUpward ? 'open-upward' : ''}`}>
                     <button
                       className="article-menu-item"
                       onClick={handleShareExternalUrl}
@@ -717,7 +749,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 </button>
                 
                 {showArticleMenu && (
-                  <div className="article-menu">
+                  <div className={`article-menu ${articleMenuOpenUpward ? 'open-upward' : ''}`}>
                     <button
                       className="article-menu-item"
                       onClick={handleShareBoris}
