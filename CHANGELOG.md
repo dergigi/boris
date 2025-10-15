@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.17] - 2025-10-15
+
+### Added
+
+- PWA settings illustration (`pwa.svg`) displayed on right side of section
+  - Responsive design: hidden on mobile, 30% width on desktop
+  - Visual enhancement for App & Airplane Mode section
+- Zaps illustration (`zaps.svg`) displayed on right side of Zap Splits section
+  - Matching responsive layout and styling as PWA illustration
+- Visual 50% indicators on zap split sliders
+  - Linear gradient background using highlight colors (yellow/orange) at 50% opacity
+  - Datalist tick marks at 50% for "Your Share" and "Author(s) Share" sliders
+  - Tick mark at 5 for "Support Boris" slider
+- Lightning bolt icons as slider thumbs for zap splits
+  - Replaces default circular slider handles
+  - White lightning bolt SVG embedded in slider thumb background
+  - 24px square thumb with 4px border radius
+- Offline-first description paragraph at beginning of App & Airplane Mode section
+  - Explains Boris's offline capabilities upfront
+- Settings page width constraint (900px max-width)
+  - Matches article view max-width for consistent reading experience
+  - Centered layout with proper margins
+
+### Changed
+
+- Settings section reorganization
+  - "PWA & Flight Mode" merged into single "App & Airplane Mode" section
+  - "Layout & Navigation" and "Startup & Behavior" merged into "Layout & Behavior"
+  - Section order: Theme → Reading & Display → Zap Splits → Layout & Behavior → App & Airplane Mode → Relays
+  - "Startup & Behavior" moved after "Zap Splits"
+  - "Layout & Navigation" moved below "Zap Splits"
+- PWA settings section restructure
+  - Checkboxes moved to top (image cache, local relays)
+  - Descriptive paragraphs in middle
+  - Install button at bottom
+  - Note about local relays moved before install paragraph
+- Zap split sliders styling
+  - Left side (0-50%): highlight color (yellow) at 50% opacity
+  - Right side (50-100%): friend-highlight color (orange) at 50% opacity
+  - Creates visual distinction tied to app's highlight color scheme
+- Zap split description text styling
+  - Now matches offline-first paragraph style with secondary color and smaller font size
+- Clear cache button styling
+  - Replaced `IconButton` with plain `FontAwesomeIcon` for subtler appearance
+  - No border or background, just icon with opacity
+- Font Size buttons alignment
+  - Now properly align to the right using `setting-control` wrapper
+  - Matches alignment of highlight color picker buttons
+- Default Highlight Visibility position
+  - Moved back to original position after "Paragraph Alignment"
+  - Grouped with other reading display controls
+- Spacing adjustments in App & Airplane Mode section
+  - Reduced gap between elements from 1rem → 0.5rem → 0.25rem for tighter layout
+
+### Fixed
+
+- PWA settings paragraph wrapping
+  - Moved offline-first paragraph inside flex container to prevent extending above image
+- Font Size buttons alignment issues
+  - Properly implemented `setting-control` wrapper for right alignment
+  - Previously attempted alignment didn't work correctly
+- Slider thumb icon centering
+  - Lightning bolt icons properly centered vertically on slider
+  - Added `position: relative`, `top: 0`, `margin-top: 0` for accurate positioning
+
 ## [0.6.16] - 2025-10-15
 
 ### Changed
@@ -1501,7 +1566,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.16...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.17...HEAD
+[0.6.17]: https://github.com/dergigi/boris/compare/v0.6.16...v0.6.17
 [0.6.16]: https://github.com/dergigi/boris/compare/v0.6.15...v0.6.16
 [0.6.15]: https://github.com/dergigi/boris/compare/v0.6.14...v0.6.15
 [0.6.14]: https://github.com/dergigi/boris/compare/v0.6.13...v0.6.14
