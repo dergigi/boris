@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { faBookOpen, faPlay, faEye, faNewspaper, faGlobe, faStickyNote } from '@fortawesome/free-solid-svg-icons'
+import { faBookOpen, faNewspaper, faStickyNote } from '@fortawesome/free-regular-svg-icons'
+import { faPlay, faEye, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
