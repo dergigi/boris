@@ -1,9 +1,8 @@
-import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
-import { lastValueFrom, merge, Observable, takeUntil, timer, tap, toArray } from 'rxjs'
+import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { Highlight } from '../../types/highlights'
-import { prioritizeLocalRelays, partitionRelays } from '../../utils/helpers'
 import { eventToHighlight, dedupeHighlights, sortHighlights } from '../highlightEventProcessor'
+import { queryEvents } from '../dataFetch'
 
 /**
  * Fetches highlights (kind:9802) from a list of pubkeys (friends)
@@ -24,46 +23,20 @@ export const fetchHighlightsFromAuthors = async (
     }
 
     console.log('💡 Fetching highlights (kind 9802) from', pubkeys.length, 'authors')
-    
-    const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-    const prioritized = prioritizeLocalRelays(relayUrls)
-    const { local: localRelays, remote: remoteRelays } = partitionRelays(prioritized)
 
     const seenIds = new Set<string>()
-    
-    const local$ = localRelays.length > 0
-      ? relayPool
-          .req(localRelays, { kinds: [9802], authors: pubkeys, limit: 200 })
-          .pipe(
-            onlyEvents(),
-            tap((event: NostrEvent) => {
-              if (!seenIds.has(event.id)) {
-                seenIds.add(event.id)
-                if (onHighlight) onHighlight(eventToHighlight(event))
-              }
-            }),
-            completeOnEose(),
-            takeUntil(timer(1200))
-          )
-      : new Observable<NostrEvent>((sub) => sub.complete())
-      
-    const remote$ = remoteRelays.length > 0
-      ? relayPool
-          .req(remoteRelays, { kinds: [9802], authors: pubkeys, limit: 200 })
-          .pipe(
-            onlyEvents(),
-            tap((event: NostrEvent) => {
-              if (!seenIds.has(event.id)) {
-                seenIds.add(event.id)
-                if (onHighlight) onHighlight(eventToHighlight(event))
-              }
-            }),
-            completeOnEose(),
-            takeUntil(timer(6000))
-          )
-      : new Observable<NostrEvent>((sub) => sub.complete())
-      
-    const rawEvents: NostrEvent[] = await lastValueFrom(merge(local$, remote$).pipe(toArray()))
+    const rawEvents = await queryEvents(
+      relayPool,
+      { kinds: [9802], authors: pubkeys, limit: 200 },
+      {
+        onEvent: (event: NostrEvent) => {
+          if (!seenIds.has(event.id)) {
+            seenIds.add(event.id)
+            if (onHighlight) onHighlight(eventToHighlight(event))
+          }
+        }
+      }
+    )
 
     const uniqueEvents = dedupeHighlights(rawEvents)
     const highlights = uniqueEvents.map(eventToHighlight)

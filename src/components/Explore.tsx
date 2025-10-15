@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExclamationCircle, faNewspaper, faPenToSquare, faHighlighter, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
+import { faNewspaper, faPenToSquare, faHighlighter, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { Hooks } from 'applesauce-react'
@@ -18,8 +18,8 @@ import { UserSettings } from '../services/settingsService'
 import BlogPostCard from './BlogPostCard'
 import { HighlightItem } from './HighlightItem'
 import { getCachedPosts, upsertCachedPost, setCachedPosts, getCachedHighlights, upsertCachedHighlight, setCachedHighlights } from '../services/exploreCache'
-import { usePullToRefresh } from '../hooks/usePullToRefresh'
-import PullToRefreshIndicator from './PullToRefreshIndicator'
+import { usePullToRefresh } from 'use-pull-to-refresh'
+import RefreshIndicator from './RefreshIndicator'
 import { classifyHighlights } from '../utils/highlightClassification'
 import { HighlightVisibility } from './HighlightsPanel'
 
@@ -40,8 +40,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const exploreContainerRef = useRef<HTMLDivElement>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   
   // Visibility filters (defaults from settings)
@@ -61,7 +59,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   useEffect(() => {
     const loadData = async () => {
       if (!activeAccount) {
-        setError('Please log in to explore content from your friends')
         setLoading(false)
         return
       }
@@ -69,16 +66,16 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       try {
         // show spinner but keep existing data
         setLoading(true)
-        setError(null)
 
         // Seed from in-memory cache if available to avoid empty flash
+        // Use functional update to check current state without creating dependency
         const cachedPosts = getCachedPosts(activeAccount.pubkey)
-        if (cachedPosts && cachedPosts.length > 0 && blogPosts.length === 0) {
-          setBlogPosts(cachedPosts)
+        if (cachedPosts && cachedPosts.length > 0) {
+          setBlogPosts(prev => prev.length === 0 ? cachedPosts : prev)
         }
         const cachedHighlights = getCachedHighlights(activeAccount.pubkey)
-        if (cachedHighlights && cachedHighlights.length > 0 && highlights.length === 0) {
-          setHighlights(cachedHighlights)
+        if (cachedHighlights && cachedHighlights.length > 0) {
+          setHighlights(prev => prev.length === 0 ? cachedHighlights : prev)
         }
 
         // Fetch the user's contacts (friends)
@@ -151,11 +148,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           }
         )
         
-        if (contacts.size === 0) {
-          setError('You are not following anyone yet. Follow some people to see their content!')
-          setLoading(false)
-          return
-        }
+        // Always proceed to load nostrverse content even if no contacts
+        // (removed blocking error for empty contacts)
 
         // Store final followed pubkeys
         setFollowedPubkeys(contacts)
@@ -202,10 +196,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           })
         }
 
-        if (uniquePosts.length === 0 && uniqueHighlights.length === 0) {
-          setError('No content found yet')
-        }
-
+        // No blocking errors - let empty states handle messaging
         setBlogPosts(uniquePosts)
         setCachedPosts(activeAccount.pubkey, uniquePosts)
 
@@ -213,21 +204,23 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         setCachedHighlights(activeAccount.pubkey, uniqueHighlights)
       } catch (err) {
         console.error('Failed to load data:', err)
-        setError('Failed to load content. Please try again.')
+        // No blocking error - user can pull-to-refresh
       } finally {
         setLoading(false)
       }
     }
 
     loadData()
-  }, [relayPool, activeAccount, blogPosts.length, highlights.length, refreshTrigger, eventStore, settings])
+  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
 
   // Pull-to-refresh
-  const pullToRefreshState = usePullToRefresh(exploreContainerRef, {
+  const { isRefreshing, pullPosition } = usePullToRefresh({
     onRefresh: () => {
       setRefreshTrigger(prev => prev + 1)
     },
-    isRefreshing: loading
+    maximumPullLength: 240,
+    refreshThreshold: 80,
+    isDisabled: !activeAccount
   })
 
   const getPostUrl = (post: BlogPostPreview) => {
@@ -309,9 +302,18 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const renderTabContent = () => {
     switch (activeTab) {
       case 'writings':
+        if (showSkeletons) {
+          return (
+            <div className="explore-grid">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <BlogPostSkeleton key={i} />
+              ))}
+            </div>
+          )
+        }
         return filteredBlogPosts.length === 0 ? (
-          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>No blog posts found yet.</p>
+          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
+            <p>No blog posts yet. Pull to refresh!</p>
           </div>
         ) : (
           <div className="explore-grid">
@@ -326,9 +328,18 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         )
 
       case 'highlights':
+        if (showSkeletons) {
+          return (
+            <div className="explore-grid">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <HighlightSkeleton key={i} />
+              ))}
+            </div>
+          )
+        }
         return classifiedHighlights.length === 0 ? (
-          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <p>No highlights yet. Your friends should start highlighting content!</p>
+          <div className="explore-empty" style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
+            <p>No highlights yet. Pull to refresh!</p>
           </div>
         ) : (
           <div className="explore-grid">
@@ -348,54 +359,15 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
   }
 
-  // Only show full loading screen if we don't have any data yet
+  // Show content progressively - no blocking error screens
   const hasData = highlights.length > 0 || blogPosts.length > 0
-
-  if (loading && !hasData) {
-    return (
-      <div className="explore-container" aria-busy="true">
-        <div className="explore-header">
-          <h1>
-            <FontAwesomeIcon icon={faNewspaper} />
-            Explore
-          </h1>
-        </div>
-        <div className="explore-grid">
-          {activeTab === 'writings' ? (
-            Array.from({ length: 6 }).map((_, i) => (
-              <BlogPostSkeleton key={i} />
-            ))
-          ) : (
-            Array.from({ length: 8 }).map((_, i) => (
-              <HighlightSkeleton key={i} />
-            ))
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="explore-container">
-        <div className="explore-error">
-          <FontAwesomeIcon icon={faExclamationCircle} size="2x" />
-          <p>{error}</p>
-        </div>
-      </div>
-    )
-  }
+  const showSkeletons = loading && !hasData
 
   return (
-    <div 
-      ref={exploreContainerRef}
-      className={`explore-container pull-to-refresh-container ${pullToRefreshState.isPulling ? 'is-pulling' : ''}`}
-    >
-      <PullToRefreshIndicator
-        isPulling={pullToRefreshState.isPulling}
-        pullDistance={pullToRefreshState.pullDistance}
-        canRefresh={pullToRefreshState.canRefresh}
-        isRefreshing={loading && pullToRefreshState.canRefresh}
+    <div className="explore-container">
+      <RefreshIndicator
+        isRefreshing={isRefreshing}
+        pullPosition={pullPosition}
       />
       <div className="explore-header">
         <h1>

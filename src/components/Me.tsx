@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faExclamationCircle, faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { faSpinner, faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
 import { RelayPool } from 'applesauce-relay'
@@ -22,9 +22,8 @@ import { ViewMode } from './Bookmarks'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { getCachedMeData, setCachedMeData, updateCachedHighlights } from '../services/meCache'
 import { faBooks } from '../icons/customIcons'
-import { usePullToRefresh } from '../hooks/usePullToRefresh'
-import PullToRefreshIndicator from './PullToRefreshIndicator'
-import { getProfileUrl } from '../config/nostrGateways'
+import { usePullToRefresh } from 'use-pull-to-refresh'
+import RefreshIndicator from './RefreshIndicator'
 
 interface MeProps {
   relayPool: RelayPool
@@ -47,9 +46,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [readArticles, setReadArticles] = useState<BlogPostPreview[]>([])
   const [writings, setWritings] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
-  const meContainerRef = useRef<HTMLDivElement>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   // Update local state when prop changes
@@ -62,14 +59,12 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   useEffect(() => {
     const loadData = async () => {
       if (!viewingPubkey) {
-        setError(isOwnProfile ? 'Please log in to view your data' : 'Invalid profile')
         setLoading(false)
         return
       }
 
       try {
         setLoading(true)
-        setError(null)
 
         // Seed from cache if available to avoid empty flash (own profile only)
         if (isOwnProfile) {
@@ -115,7 +110,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         }
       } catch (err) {
         console.error('Failed to load data:', err)
-        setError('Failed to load data. Please try again.')
+        // No blocking error - user can pull-to-refresh
       } finally {
         setLoading(false)
       }
@@ -125,11 +120,13 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   }, [relayPool, viewingPubkey, isOwnProfile, activeAccount, refreshTrigger])
 
   // Pull-to-refresh
-  const pullToRefreshState = usePullToRefresh(meContainerRef, {
+  const { isRefreshing, pullPosition } = usePullToRefresh({
     onRefresh: () => {
       setRefreshTrigger(prev => prev + 1)
     },
-    isRefreshing: loading
+    maximumPullLength: 240,
+    refreshThreshold: 80,
+    isDisabled: !viewingPubkey
   })
 
   const handleHighlightDelete = (highlightId: string) => {
@@ -194,56 +191,28 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     .filter(hasContentOrUrl)
     .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
 
-  // Only show full loading screen if we don't have any data yet
+  // Show content progressively - no blocking error screens
   const hasData = highlights.length > 0 || bookmarks.length > 0 || readArticles.length > 0 || writings.length > 0
-  
-  if (loading && !hasData) {
-    return (
-      <div className="explore-container" aria-busy="true">
-        {viewingPubkey && (
-          <div className="explore-header">
-            <AuthorCard authorPubkey={viewingPubkey} />
-          </div>
-        )}
-        <div className="explore-grid">
-          {activeTab === 'writings' ? (
-            Array.from({ length: 6 }).map((_, i) => (
-              <BlogPostSkeleton key={i} />
-            ))
-          ) : activeTab === 'highlights' ? (
-            Array.from({ length: 8 }).map((_, i) => (
-              <HighlightSkeleton key={i} />
-            ))
-          ) : (
-            Array.from({ length: 6 }).map((_, i) => (
-              <BookmarkSkeleton key={i} viewMode={viewMode} />
-            ))
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="explore-container">
-        <div className="explore-error">
-          <FontAwesomeIcon icon={faExclamationCircle} size="2x" />
-          <p>{error}</p>
-        </div>
-      </div>
-    )
-  }
+  const showSkeletons = loading && !hasData
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'highlights':
+        if (showSkeletons) {
+          return (
+            <div className="explore-grid">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <HighlightSkeleton key={i} />
+              ))}
+            </div>
+          )
+        }
         return highlights.length === 0 ? (
-          <div className="explore-empty">
+          <div className="explore-empty" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <p>
               {isOwnProfile 
-                ? 'No highlights yet. Start highlighting content to see them here!'
-                : 'No highlights yet. You should shame them on nostr!'}
+                ? 'No highlights yet. Pull to refresh!'
+                : 'No highlights yet. Pull to refresh!'}
             </p>
           </div>
         ) : (
@@ -260,9 +229,20 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         )
 
       case 'reading-list':
+        if (showSkeletons) {
+          return (
+            <div className="bookmarks-list">
+              <div className={`bookmarks-grid bookmarks-${viewMode}`}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <BookmarkSkeleton key={i} viewMode={viewMode} />
+                ))}
+              </div>
+            </div>
+          )
+        }
         return allIndividualBookmarks.length === 0 ? (
-          <div className="explore-empty">
-            <p>No bookmarks yet. Bookmark articles to see them here!</p>
+          <div className="explore-empty" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+            <p>No bookmarks yet. Pull to refresh!</p>
           </div>
         ) : (
           <div className="bookmarks-list">
@@ -311,9 +291,18 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         )
 
       case 'archive':
+        if (showSkeletons) {
+          return (
+            <div className="explore-grid">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <BlogPostSkeleton key={i} />
+              ))}
+            </div>
+          )
+        }
         return readArticles.length === 0 ? (
-          <div className="explore-empty">
-            <p>No read articles yet. Mark articles as read to see them here!</p>
+          <div className="explore-empty" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+            <p>No read articles yet. Pull to refresh!</p>
           </div>
         ) : (
           <div className="explore-grid">
@@ -328,25 +317,21 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         )
 
       case 'writings':
+        if (showSkeletons) {
+          return (
+            <div className="explore-grid">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <BlogPostSkeleton key={i} />
+              ))}
+            </div>
+          )
+        }
         return writings.length === 0 ? (
-          <div className="explore-empty">
+          <div className="explore-empty" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <p>
               {isOwnProfile 
-                ? 'No articles written yet. Publish your first article to see it here!'
-                : (
-                  <>
-                    No articles written. You can find other stuff from this user using{' '}
-                    <a 
-                      href={viewingPubkey ? getProfileUrl(nip19.npubEncode(viewingPubkey)) : '#'} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      style={{ color: 'rgb(99 102 241)', textDecoration: 'underline' }}
-                    >
-                      ants
-                    </a>
-                    .
-                  </>
-                )}
+                ? 'No articles written yet. Pull to refresh!'
+                : 'No articles written yet. Pull to refresh!'}
             </p>
           </div>
         ) : (
@@ -367,15 +352,10 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   }
 
   return (
-    <div 
-      ref={meContainerRef}
-      className={`explore-container pull-to-refresh-container ${pullToRefreshState.isPulling ? 'is-pulling' : ''}`}
-    >
-      <PullToRefreshIndicator
-        isPulling={pullToRefreshState.isPulling}
-        pullDistance={pullToRefreshState.pullDistance}
-        canRefresh={pullToRefreshState.canRefresh}
-        isRefreshing={loading && pullToRefreshState.canRefresh}
+    <div className="explore-container">
+      <RefreshIndicator
+        isRefreshing={isRefreshing}
+        pullPosition={pullPosition}
       />
       <div className="explore-header">
         {viewingPubkey && <AuthorCard authorPubkey={viewingPubkey} clickable={false} />}

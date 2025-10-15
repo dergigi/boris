@@ -1,6 +1,7 @@
-import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, merge, Observable, takeUntil, timer, toArray } from 'rxjs'
+import { RelayPool } from 'applesauce-relay'
 import { prioritizeLocalRelays } from '../utils/helpers'
+import { queryEvents } from './dataFetch'
+import { CONTACTS_REMOTE_TIMEOUT_MS } from '../config/network'
 
 /**
  * Fetches the contact list (follows) for a specific user
@@ -15,24 +16,27 @@ export const fetchContacts = async (
 ): Promise<Set<string>> => {
   try {
     const relayUrls = prioritizeLocalRelays(Array.from(relayPool.relays.values()).map(relay => relay.url))
-    
     console.log('🔍 Fetching contacts (kind 3) for user:', pubkey)
-    
-    // Local-first quick attempt
-    const localRelays = relayUrls.filter(url => url.includes('localhost') || url.includes('127.0.0.1'))
-    const remoteRelays = relayUrls.filter(url => !url.includes('localhost') && !url.includes('127.0.0.1'))
-    const local$ = localRelays.length > 0
-      ? relayPool
-          .req(localRelays, { kinds: [3], authors: [pubkey] })
-          .pipe(completeOnEose(), takeUntil(timer(1200)))
-      : new Observable<{ created_at: number; tags: string[][] }>((sub) => sub.complete())
-    const remote$ = remoteRelays.length > 0
-      ? relayPool
-          .req(remoteRelays, { kinds: [3], authors: [pubkey] })
-          .pipe(completeOnEose(), takeUntil(timer(6000)))
-      : new Observable<{ created_at: number; tags: string[][] }>((sub) => sub.complete())
-    const events = await lastValueFrom(
-      merge(local$, remote$).pipe(toArray())
+
+    const partialFollowed = new Set<string>()
+    const events = await queryEvents(
+      relayPool,
+      { kinds: [3], authors: [pubkey] },
+      {
+        relayUrls,
+        remoteTimeoutMs: CONTACTS_REMOTE_TIMEOUT_MS,
+        onEvent: (event: { created_at: number; tags: string[][] }) => {
+          // Stream partials as we see any contact list
+          for (const tag of event.tags) {
+            if (tag[0] === 'p' && tag[1]) {
+              partialFollowed.add(tag[1])
+            }
+          }
+          if (onPartial && partialFollowed.size > 0) {
+            onPartial(new Set(partialFollowed))
+          }
+        }
+      }
     )
     const followed = new Set<string>()
     if (events.length > 0) {

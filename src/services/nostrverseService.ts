@@ -1,11 +1,10 @@
-import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
-import { lastValueFrom, merge, Observable, takeUntil, timer, toArray } from 'rxjs'
+import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
-import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 import { Helpers } from 'applesauce-core'
 import { BlogPostPreview } from './exploreService'
 import { Highlight } from '../types/highlights'
 import { eventToHighlight, dedupeHighlights, sortHighlights } from './highlightEventProcessor'
+import { queryEvents } from './dataFetch'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -23,36 +22,25 @@ export const fetchNostrverseBlogPosts = async (
 ): Promise<BlogPostPreview[]> => {
   try {
     console.log('📚 Fetching nostrverse blog posts (kind 30023), limit:', limit)
-    
-    const prioritized = prioritizeLocalRelays(relayUrls)
-    const { local: localRelays, remote: remoteRelays } = partitionRelays(prioritized)
 
     // Deduplicate replaceable events by keeping the most recent version
     const uniqueEvents = new Map<string, NostrEvent>()
 
-    const processEvents = (incoming: NostrEvent[]) => {
-      for (const event of incoming) {
-        const dTag = event.tags.find(t => t[0] === 'd')?.[1] || ''
-        const key = `${event.pubkey}:${dTag}`
-        const existing = uniqueEvents.get(key)
-        if (!existing || event.created_at > existing.created_at) {
-          uniqueEvents.set(key, event)
+    await queryEvents(
+      relayPool,
+      { kinds: [30023], limit },
+      {
+        relayUrls,
+        onEvent: (event: NostrEvent) => {
+          const dTag = event.tags.find(t => t[0] === 'd')?.[1] || ''
+          const key = `${event.pubkey}:${dTag}`
+          const existing = uniqueEvents.get(key)
+          if (!existing || event.created_at > existing.created_at) {
+            uniqueEvents.set(key, event)
+          }
         }
       }
-    }
-
-    const local$ = localRelays.length > 0
-      ? relayPool
-          .req(localRelays, { kinds: [30023], limit })
-          .pipe(completeOnEose(), takeUntil(timer(1200)), onlyEvents())
-      : new Observable<NostrEvent>((sub) => sub.complete())
-    const remote$ = remoteRelays.length > 0
-      ? relayPool
-          .req(remoteRelays, { kinds: [30023], limit })
-          .pipe(completeOnEose(), takeUntil(timer(6000)), onlyEvents())
-      : new Observable<NostrEvent>((sub) => sub.complete())
-    const events = await lastValueFrom(merge(local$, remote$).pipe(toArray()))
-    processEvents(events)
+    )
 
     console.log('📊 Nostrverse blog post events fetched (unique):', uniqueEvents.size)
     
@@ -93,24 +81,12 @@ export const fetchNostrverseHighlights = async (
 ): Promise<Highlight[]> => {
   try {
     console.log('💡 Fetching nostrverse highlights (kind 9802), limit:', limit)
-    
-    const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-    const prioritized = prioritizeLocalRelays(relayUrls)
-    const { local: localRelays, remote: remoteRelays } = partitionRelays(prioritized)
 
-    const local$ = localRelays.length > 0
-      ? relayPool
-          .req(localRelays, { kinds: [9802], limit })
-          .pipe(completeOnEose(), takeUntil(timer(1200)), onlyEvents())
-      : new Observable<NostrEvent>((sub) => sub.complete())
-      
-    const remote$ = remoteRelays.length > 0
-      ? relayPool
-          .req(remoteRelays, { kinds: [9802], limit })
-          .pipe(completeOnEose(), takeUntil(timer(6000)), onlyEvents())
-      : new Observable<NostrEvent>((sub) => sub.complete())
-      
-    const rawEvents: NostrEvent[] = await lastValueFrom(merge(local$, remote$).pipe(toArray()))
+    const rawEvents = await queryEvents(
+      relayPool,
+      { kinds: [9802], limit },
+      {}
+    )
 
     const uniqueEvents = dedupeHighlights(rawEvents)
     const highlights = uniqueEvents.map(eventToHighlight)
