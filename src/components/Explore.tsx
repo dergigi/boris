@@ -68,13 +68,14 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         setLoading(true)
 
         // Seed from in-memory cache if available to avoid empty flash
+        // Use functional update to check current state without creating dependency
         const cachedPosts = getCachedPosts(activeAccount.pubkey)
-        if (cachedPosts && cachedPosts.length > 0 && blogPosts.length === 0) {
-          setBlogPosts(cachedPosts)
+        if (cachedPosts && cachedPosts.length > 0) {
+          setBlogPosts(prev => prev.length === 0 ? cachedPosts : prev)
         }
         const cachedHighlights = getCachedHighlights(activeAccount.pubkey)
-        if (cachedHighlights && cachedHighlights.length > 0 && highlights.length === 0) {
-          setHighlights(cachedHighlights)
+        if (cachedHighlights && cachedHighlights.length > 0) {
+          setHighlights(prev => prev.length === 0 ? cachedHighlights : prev)
         }
 
         // Fetch the user's contacts (friends)
@@ -210,8 +211,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
 
     loadData()
-    // Note: intentionally not including blogPosts/highlights length to avoid re-fetch loops
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
 
   // Pull-to-refresh
