@@ -150,5 +150,5 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     return <LargeView {...sharedProps} getIconForUrlType={getIconForUrlType} previewImage={previewImage} />
   }
 
-  return <CardView {...sharedProps} getIconForUrlType={getIconForUrlType} articleImage={articleImage} />
+  return <CardView {...sharedProps} articleImage={articleImage} />
 }

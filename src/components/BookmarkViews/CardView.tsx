@@ -6,9 +6,7 @@ import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate, renderParsedContent } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
-import IconButton from '../IconButton'
 import { classifyUrl } from '../../utils/helpers'
-import { IconGetter } from './shared'
 import { useImageCache } from '../../hooks/useImageCache'
 import { getPreviewImage, fetchOgImage } from '../../utils/imagePreview'
 import { getEventUrl } from '../../config/nostrGateways'
@@ -19,7 +17,6 @@ interface CardViewProps {
   hasUrls: boolean
   extractedUrls: string[]
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
-  getIconForUrlType: IconGetter
   authorNpub: string
   eventNevent?: string
   getAuthorDisplayName: () => string
@@ -35,7 +32,6 @@ export const CardView: React.FC<CardViewProps> = ({
   hasUrls,
   extractedUrls,
   onSelectUrl,
-  getIconForUrlType,
   authorNpub,
   eventNevent,
   getAuthorDisplayName,
@@ -120,23 +116,14 @@ export const CardView: React.FC<CardViewProps> = ({
         <div className="bookmark-urls">
           {(urlsExpanded ? extractedUrls : extractedUrls.slice(0, 1)).map((url, urlIndex) => {
             return (
-              <div key={urlIndex} className="url-row">
-                <button
-                  className="bookmark-url"
-                  onClick={(e) => { e.stopPropagation(); onSelectUrl?.(url) }}
-                  title="Open in reader"
-                >
-                  {url}
-                </button>
-                <IconButton
-                  icon={getIconForUrlType(url)}
-                  ariaLabel="Open"
-                  title="Open"
-                  variant="success"
-                  size={32}
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSelectUrl?.(url) }}
-                />
-              </div>
+              <button
+                key={urlIndex}
+                className="bookmark-url"
+                onClick={(e) => { e.stopPropagation(); onSelectUrl?.(url) }}
+                title="Open in reader"
+              >
+                {url}
+              </button>
             )
           })}
           {extractedUrls.length > 1 && (
