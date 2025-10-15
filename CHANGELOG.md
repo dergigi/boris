@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.20] - 2025-10-15
+
+### Added
+
+- Bookmark filter buttons by content type (articles, videos, images, web links)
+  - Filter bookmarks by their content type on bookmarks sidebar
+  - Filters also available on `/me` page bookmarks tab
+  - Separate filter for external articles with link icon
+  - Multiple filters can be active simultaneously
+- Private Bookmarks section for encrypted legacy bookmarks
+  - Encrypted legacy bookmarks now grouped in separate section
+  - Better organization and clarity for different bookmark types
+
+### Changed
+
+- Bookmark section labels improved for clarity
+  - More descriptive section headings throughout
+  - Better categorization of bookmark types
+- Bookmark filter button styling refined
+  - Reduced whitespace around bookmark filters for cleaner layout
+  - Dramatically reduced whitespace on both sidebar and `/me` page
+- Lock icon removed from individual bookmarks
+  - Encryption status now indicated by section grouping
+  - Cleaner bookmark item appearance
+- External article icon changed to link icon (`faLink`)
+  - More intuitive icon for external content
+
+### Fixed
+
+- Highlight button positioning and visibility
+  - Fixed to viewport for consistent placement
+  - Sticky and always visible when needed
+  - Properly positioned inside reader pane
+
 ## [0.6.19] - 2025-10-15
 
 ### Fixed
@@ -1607,7 +1641,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.19...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.20...HEAD
+[0.6.20]: https://github.com/dergigi/boris/compare/v0.6.19...v0.6.20
 [0.6.19]: https://github.com/dergigi/boris/compare/v0.6.18...v0.6.19
 [0.6.18]: https://github.com/dergigi/boris/compare/v0.6.17...v0.6.18
 [0.6.17]: https://github.com/dergigi/boris/compare/v0.6.16...v0.6.17
