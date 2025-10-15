@@ -195,7 +195,7 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
         <img 
           src="/pwa.svg" 
           alt="Progressive Web App" 
-          style={{ height: '100%', width: 'auto', flexShrink: 0, opacity: 0.8 }}
+          style={{ width: '150px', height: 'auto', flexShrink: 0, opacity: 0.8 }}
         />
       </div>
     </div>
