@@ -21,7 +21,7 @@ import { RELAYS } from '../config/relays'
 import { Hooks } from 'applesauce-react'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
-import ArchiveFilters, { ArchiveFilterType } from './ArchiveFilters'
+import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProgressFilters'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -67,7 +67,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const friendsColor = settings?.highlightColorFriends || '#f97316'
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState<BookmarkFilterType>('all')
-  const [archiveFilter, setArchiveFilter] = useState<ArchiveFilterType>('all')
+  const [readingProgressFilter, setReadingProgressFilter] = useState<ReadingProgressFilterType>('all')
   const activeAccount = Hooks.useActiveAccount()
 
   const handleSaveBookmark = async (url: string, title?: string, description?: string, tags?: string[]) => {
@@ -97,17 +97,17 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   // Apply type filter
   const typeFilteredBookmarks = filterBookmarksByType(allIndividualBookmarks, selectedFilter)
   
-  // Apply archive filter (only affects kind:30023 articles)
+  // Apply reading progress filter (only affects kind:30023 articles)
   const filteredBookmarks = typeFilteredBookmarks.filter(bookmark => {
-    // Only apply archive filter to kind:30023 articles
+    // Only apply reading progress filter to kind:30023 articles
     if (bookmark.kind !== 30023) return true
     
-    // If archive filter is 'all', show all articles
-    if (archiveFilter === 'all') return true
+    // If reading progress filter is 'all', show all articles
+    if (readingProgressFilter === 'all') return true
     
     const position = readingPositions?.get(bookmark.id)
     
-    switch (archiveFilter) {
+    switch (readingProgressFilter) {
       case 'to-read':
         // 0-5% reading progress (has tracking data, not manually marked)
         return position !== undefined && position >= 0 && position <= 0.05
@@ -246,12 +246,12 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         </div>
       )}
       
-      {/* Archive filters - only show if there are kind:30023 articles */}
+      {/* Reading progress filters - only show if there are kind:30023 articles */}
       {typeFilteredBookmarks.some(b => b.kind === 30023) && (
-        <div className="archive-filters-wrapper">
-          <ArchiveFilters
-            selectedFilter={archiveFilter}
-            onFilterChange={setArchiveFilter}
+        <div className="reading-progress-filters-wrapper">
+          <ReadingProgressFilters
+            selectedFilter={readingProgressFilter}
+            onFilterChange={setReadingProgressFilter}
           />
         </div>
       )}

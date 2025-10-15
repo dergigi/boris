@@ -4,14 +4,14 @@ import { faBookOpen, faCheckCircle, faAsterisk } from '@fortawesome/free-solid-s
 import { faBookmark } from '@fortawesome/free-regular-svg-icons'
 import { faBooks } from '../icons/customIcons'
 
-export type ArchiveFilterType = 'all' | 'to-read' | 'reading' | 'completed' | 'marked'
+export type ReadingProgressFilterType = 'all' | 'to-read' | 'reading' | 'completed' | 'marked'
 
-interface ArchiveFiltersProps {
-  selectedFilter: ArchiveFilterType
-  onFilterChange: (filter: ArchiveFilterType) => void
+interface ReadingProgressFiltersProps {
+  selectedFilter: ReadingProgressFilterType
+  onFilterChange: (filter: ReadingProgressFilterType) => void
 }
 
-const ArchiveFilters: React.FC<ArchiveFiltersProps> = ({ selectedFilter, onFilterChange }) => {
+const ReadingProgressFilters: React.FC<ReadingProgressFiltersProps> = ({ selectedFilter, onFilterChange }) => {
   const filters = [
     { type: 'all' as const, icon: faAsterisk, label: 'All' },
     { type: 'to-read' as const, icon: faBookmark, label: 'To Read' },
@@ -37,5 +37,5 @@ const ArchiveFilters: React.FC<ArchiveFiltersProps> = ({ selectedFilter, onFilte
   )
 }
 
-export default ArchiveFilters
+export default ReadingProgressFilters
 

@@ -27,7 +27,7 @@ import { groupIndividualBookmarks, hasContent } from '../utils/bookmarkUtils'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
 import { generateArticleIdentifier, loadReadingPosition } from '../services/readingPositionService'
-import ArchiveFilters, { ArchiveFilterType } from './ArchiveFilters'
+import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProgressFilters'
 
 interface MeProps {
   relayPool: RelayPool
@@ -54,7 +54,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
-  const [archiveFilter, setArchiveFilter] = useState<ArchiveFilterType>('all')
+  const [readingProgressFilter, setReadingProgressFilter] = useState<ReadingProgressFilterType>('all')
   const [readingPositions, setReadingPositions] = useState<Map<string, number>>(new Map())
 
   // Update local state when prop changes
@@ -245,11 +245,11 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   
   const groups = groupIndividualBookmarks(filteredBookmarks)
 
-  // Apply archive filter
+  // Apply reading progress filter
   const filteredReadArticles = readArticles.filter(post => {
     const position = readingPositions.get(post.event.id)
     
-    switch (archiveFilter) {
+    switch (readingProgressFilter) {
       case 'to-read':
         // 0-5% reading progress (has tracking data, not manually marked)
         return position !== undefined && position >= 0 && position <= 0.05
@@ -403,9 +403,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         ) : (
           <>
             {readArticles.length > 0 && (
-              <ArchiveFilters
-                selectedFilter={archiveFilter}
-                onFilterChange={setArchiveFilter}
+              <ReadingProgressFilters
+                selectedFilter={readingProgressFilter}
+                onFilterChange={setReadingProgressFilter}
               />
             )}
             {filteredReadArticles.length === 0 ? (
