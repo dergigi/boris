@@ -178,22 +178,20 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
             </label>
           </div>
 
-          {(isInstallable || isInstalled) && (
-            <div className="setting-group">
-              <p className="setting-description" style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
-                Install Boris on your device for a native app experience.
-              </p>
-              <button
-                onClick={handleInstall}
-                className="zap-preset-btn"
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                disabled={isInstalled || !isInstallable}
-              >
-                <FontAwesomeIcon icon={isInstalled ? faCheckCircle : faDownload} />
-                {isInstalled ? 'Installed' : 'Install App'}
-              </button>
-            </div>
-          )}
+          <div className="setting-group">
+            <p className="setting-description" style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+              Install Boris on your device for a native app experience.
+            </p>
+            <button
+              onClick={handleInstall}
+              className="zap-preset-btn"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              disabled={isInstalled || !isInstallable}
+            >
+              <FontAwesomeIcon icon={isInstalled ? faCheckCircle : faDownload} />
+              {isInstalled ? 'Installed' : 'Install App'}
+            </button>
+          </div>
         </div>
 
         {!isMobile && (
