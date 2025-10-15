@@ -575,7 +575,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     <ConfirmDialog
       isOpen={showDeleteConfirm}
       title="Delete Highlight?"
-      message="This will request deletion of your highlight. It may still be visible on some relays that don't honor deletion requests."
+      message="This will delete your highlight."
       confirmText="Delete"
       cancelText="Cancel"
       variant="danger"
