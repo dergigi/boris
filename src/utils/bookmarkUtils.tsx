@@ -1,6 +1,6 @@
 import React from 'react'
 import { formatDistanceToNow, differenceInSeconds, differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths, differenceInYears } from 'date-fns'
-import { ParsedContent, ParsedNode } from '../types/bookmarks'
+import { ParsedContent, ParsedNode, IndividualBookmark } from '../types/bookmarks'
 import ResolvedMention from '../components/ResolvedMention'
 // Note: ContentWithResolvedProfiles is imported by components directly to keep this file component-only for fast refresh
 
@@ -81,4 +81,21 @@ export const renderParsedContent = (parsedContent: ParsedContent) => {
       )}
     </div>
   )
+}
+
+// Sorting and grouping for bookmarks
+export const sortIndividualBookmarks = (items: IndividualBookmark[]) => {
+  return items
+    .slice()
+    .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
+}
+
+export function groupIndividualBookmarks(items: IndividualBookmark[]) {
+  const sorted = sortIndividualBookmarks(items)
+  const amethyst = sorted.filter(i => i.sourceKind === 30001)
+  const web = sorted.filter(i => i.kind === 39701 || i.type === 'web')
+  const isIn = (list: IndividualBookmark[], x: IndividualBookmark) => list.some(i => i.id === x.id)
+  const privateItems = sorted.filter(i => i.isPrivate && !isIn(amethyst, i) && !isIn(web, i))
+  const publicItems = sorted.filter(i => !i.isPrivate && !isIn(amethyst, i) && !isIn(web, i))
+  return { privateItems, publicItems, web, amethyst }
 }
