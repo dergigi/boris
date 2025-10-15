@@ -1,6 +1,5 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUserLock } from '@fortawesome/free-solid-svg-icons'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDateCompact } from '../../utils/bookmarkUtils'
@@ -54,9 +53,6 @@ export const CompactView: React.FC<CompactViewProps> = ({
       >
         <span className="bookmark-type-compact">
           <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
-          {bookmark.isPrivate && (
-            <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />
-          )}
         </span>
         {displayText && (
           <div className="compact-text">
