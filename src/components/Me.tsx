@@ -396,9 +396,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             </div>
           )
         }
-        return readArticles.length === 0 ? (
+        return readArticles.length === 0 && !loading ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+            No articles in your archive.
           </div>
         ) : (
           <>
@@ -437,9 +437,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             </div>
           )
         }
-        return writings.length === 0 ? (
+        return writings.length === 0 && !loading ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+            No articles written yet.
           </div>
         ) : (
           <div className="explore-grid">
