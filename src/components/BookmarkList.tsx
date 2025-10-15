@@ -39,6 +39,7 @@ interface BookmarkListProps {
   relayPool: RelayPool | null
   isMobile?: boolean
   settings?: UserSettings
+  readingPositions?: Map<string, number>
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({
@@ -57,7 +58,8 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   loading = false,
   relayPool,
   isMobile = false,
-  settings
+  settings,
+  readingPositions
 }) => {
   const navigate = useNavigate()
   const bookmarksListRef = useRef<HTMLDivElement>(null)
@@ -204,6 +206,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
                     index={index} 
                     onSelectUrl={onSelectUrl}
                     viewMode={viewMode}
+                    readingProgress={readingPositions?.get(individualBookmark.id)}
                   />
                 ))}
               </div>

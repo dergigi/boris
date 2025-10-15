@@ -19,9 +19,10 @@ interface BookmarkItemProps {
   index: number
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   viewMode?: ViewMode
+  readingProgress?: number // 0-1 reading progress (optional)
 }
 
-export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onSelectUrl, viewMode = 'cards' }) => {
+export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onSelectUrl, viewMode = 'cards', readingProgress }) => {
   const [ogImage, setOgImage] = useState<string | null>(null)
 
   const short = (v: string) => `${v.slice(0, 8)}...${v.slice(-8)}`
@@ -150,7 +151,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
 
   if (viewMode === 'large') {
     const previewImage = articleImage || instantPreview || ogImage
-    return <LargeView {...sharedProps} getIconForUrlType={getIconForUrlType} previewImage={previewImage} />
+    return <LargeView {...sharedProps} getIconForUrlType={getIconForUrlType} previewImage={previewImage} readingProgress={readingProgress} />
   }
 
   return <CardView {...sharedProps} articleImage={articleImage} />

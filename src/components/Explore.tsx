@@ -22,6 +22,7 @@ import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { classifyHighlights } from '../utils/highlightClassification'
 import { HighlightVisibility } from './HighlightsPanel'
+import { loadReadingPosition, generateArticleIdentifier } from '../services/readingPositionService'
 
 interface ExploreProps {
   relayPool: RelayPool
@@ -41,6 +42,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [readingPositions, setReadingPositions] = useState<Map<string, number>>(new Map())
   
   // Visibility filters (defaults from settings, or friends only)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
@@ -213,6 +215,49 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     loadData()
   }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
 
+  // Load reading positions for blog posts
+  useEffect(() => {
+    const loadPositions = async () => {
+      if (!activeAccount || !eventStore || blogPosts.length === 0 || !settings?.syncReadingPosition) {
+        return
+      }
+
+      const positions = new Map<string, number>()
+
+      await Promise.all(
+        blogPosts.map(async (post) => {
+          try {
+            const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+            const naddr = nip19.naddrEncode({
+              kind: 30023,
+              pubkey: post.author,
+              identifier: dTag
+            })
+            const articleUrl = `nostr:${naddr}`
+            const identifier = generateArticleIdentifier(articleUrl)
+
+            const savedPosition = await loadReadingPosition(
+              relayPool,
+              eventStore,
+              activeAccount.pubkey,
+              identifier
+            )
+
+            if (savedPosition && savedPosition.position > 0) {
+              positions.set(post.event.id, savedPosition.position)
+            }
+          } catch (error) {
+            console.warn('⚠️ [Explore] Failed to load reading position for post:', error)
+          }
+        })
+      )
+
+      setReadingPositions(positions)
+    }
+
+    loadPositions()
+  }, [blogPosts, activeAccount, relayPool, eventStore, settings?.syncReadingPosition])
+
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
     onRefresh: () => {
@@ -302,6 +347,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                 post={post}
                 href={getPostUrl(post)}
                 level={post.level}
+                readingProgress={readingPositions.get(post.event.id)}
               />
             ))}
           </div>

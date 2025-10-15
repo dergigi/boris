@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IAccount, AccountManager } from 'applesauce-accounts'
+import { IEventStore } from 'applesauce-core'
 import { Bookmark } from '../types/bookmarks'
 import { Highlight } from '../types/highlights'
 import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchHighlights, fetchHighlightsForArticle } from '../services/highlightService'
 import { fetchContacts } from '../services/contactService'
 import { UserSettings } from '../services/settingsService'
+import { loadReadingPosition, generateArticleIdentifier } from '../services/readingPositionService'
+import { nip19 } from 'nostr-tools'
 
 interface UseBookmarksDataParams {
   relayPool: RelayPool | null
@@ -17,6 +20,7 @@ interface UseBookmarksDataParams {
   currentArticleCoordinate?: string
   currentArticleEventId?: string
   settings?: UserSettings
+  eventStore?: IEventStore
 }
 
 export const useBookmarksData = ({
@@ -27,7 +31,8 @@ export const useBookmarksData = ({
   externalUrl,
   currentArticleCoordinate,
   currentArticleEventId,
-  settings
+  settings,
+  eventStore
 }: UseBookmarksDataParams) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [bookmarksLoading, setBookmarksLoading] = useState(true)
@@ -36,6 +41,7 @@ export const useBookmarksData = ({
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null)
+  const [readingPositions, setReadingPositions] = useState<Map<string, number>>(new Map())
 
   const handleFetchContacts = useCallback(async () => {
     if (!relayPool || !activeAccount) return
@@ -125,6 +131,54 @@ export const useBookmarksData = ({
     handleFetchContacts()
   }, [relayPool, activeAccount, naddr, externalUrl, handleFetchHighlights, handleFetchContacts])
 
+  // Load reading positions for bookmarked articles (kind:30023)
+  useEffect(() => {
+    const loadPositions = async () => {
+      if (!activeAccount || !relayPool || !eventStore || bookmarks.length === 0 || !settings?.syncReadingPosition) {
+        return
+      }
+
+      const positions = new Map<string, number>()
+
+      // Extract all kind:30023 articles from bookmarks
+      const articles = bookmarks.flatMap(bookmark => 
+        (bookmark.individualBookmarks || []).filter(item => item.kind === 30023)
+      )
+
+      await Promise.all(
+        articles.map(async (article) => {
+          try {
+            const dTag = article.tags.find(t => t[0] === 'd')?.[1] || ''
+            const naddr = nip19.naddrEncode({
+              kind: 30023,
+              pubkey: article.pubkey,
+              identifier: dTag
+            })
+            const articleUrl = `nostr:${naddr}`
+            const identifier = generateArticleIdentifier(articleUrl)
+
+            const savedPosition = await loadReadingPosition(
+              relayPool,
+              eventStore,
+              activeAccount.pubkey,
+              identifier
+            )
+
+            if (savedPosition && savedPosition.position > 0) {
+              positions.set(article.id, savedPosition.position)
+            }
+          } catch (error) {
+            console.warn('⚠️ [Bookmarks] Failed to load reading position for article:', error)
+          }
+        })
+      )
+
+      setReadingPositions(positions)
+    }
+
+    loadPositions()
+  }, [bookmarks, activeAccount, relayPool, eventStore, settings?.syncReadingPosition])
+
   return {
     bookmarks,
     bookmarksLoading,
@@ -137,7 +191,8 @@ export const useBookmarksData = ({
     lastFetchTime,
     handleFetchBookmarks,
     handleFetchHighlights,
-    handleRefreshAll
+    handleRefreshAll,
+    readingPositions
   }
 }
 

@@ -47,6 +47,7 @@ interface ThreePaneLayoutProps {
   onRefresh: () => void
   relayPool: RelayPool | null
   eventStore: IEventStore | null
+  readingPositions?: Map<string, number>
   
   // Content pane
   readerLoading: boolean
@@ -324,6 +325,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             loading={props.bookmarksLoading}
             relayPool={props.relayPool}
             isMobile={isMobile}
+            readingPositions={props.readingPositions}
             settings={props.settings}
           />
         </div>
