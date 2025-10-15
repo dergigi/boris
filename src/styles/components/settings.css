@@ -44,7 +44,7 @@
 .zap-split-container { width: 100%; }
 .zap-split-labels {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   margin-bottom: 0.5rem;
   font-size: 0.85rem;
   color: var(--color-text-secondary);

@@ -81,9 +81,9 @@ const ZapSettings: React.FC<ZapSettingsProps> = ({ settings, onUpdate }) => {
           </div>
           
           <div className="setting-group">
-            <label className="setting-label">Your Share: {highlighterWeight}</label>
             <div className="zap-split-container">
               <div className="zap-split-labels">
+                <span className="zap-split-label">Your Share: {highlighterWeight}</span>
                 <span className="zap-split-label">({highlighterPercentage.toFixed(1)}%)</span>
               </div>
               <input
@@ -102,9 +102,9 @@ const ZapSettings: React.FC<ZapSettingsProps> = ({ settings, onUpdate }) => {
           </div>
 
           <div className="setting-group">
-            <label className="setting-label">Author's Share: {authorWeight}</label>
             <div className="zap-split-container">
               <div className="zap-split-labels">
+                <span className="zap-split-label">Author's Share: {authorWeight}</span>
                 <span className="zap-split-label">({authorPercentage.toFixed(1)}%)</span>
               </div>
               <input
@@ -123,9 +123,9 @@ const ZapSettings: React.FC<ZapSettingsProps> = ({ settings, onUpdate }) => {
           </div>
 
           <div className="setting-group">
-            <label className="setting-label">Boris' Share: {borisWeight.toFixed(1)}</label>
             <div className="zap-split-container">
               <div className="zap-split-labels">
+                <span className="zap-split-label">Boris' Share: {borisWeight.toFixed(1)}</span>
                 <span className="zap-split-label">({borisPercentage.toFixed(1)}%)</span>
               </div>
               <input
