@@ -215,8 +215,7 @@ function App() {
       console.log('🔗 Created keep-alive subscription for', RELAYS.length, 'relay(s)')
       
       // Store subscription for cleanup
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(pool as any)._keepAliveSubscription = keepAliveSub
+      ;(pool as unknown as { _keepAliveSubscription: typeof keepAliveSub })._keepAliveSubscription = keepAliveSub
       
       // Attach address/replaceable loaders so ProfileModel can fetch profiles
       const addressLoader = createAddressLoader(pool, {
@@ -235,10 +234,9 @@ function App() {
         accountsSub.unsubscribe()
         activeSub.unsubscribe()
         // Clean up keep-alive subscription if it exists
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ((pool as any)._keepAliveSubscription) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (pool as any)._keepAliveSubscription.unsubscribe()
+        const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
+        if (poolWithSub._keepAliveSubscription) {
+          poolWithSub._keepAliveSubscription.unsubscribe()
         }
       }
     }

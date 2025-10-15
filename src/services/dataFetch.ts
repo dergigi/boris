@@ -1,6 +1,7 @@
 import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
 import { Observable, merge, takeUntil, timer, toArray, tap, lastValueFrom } from 'rxjs'
 import { NostrEvent } from 'nostr-tools'
+import { Filter } from 'nostr-tools/filter'
 import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 import { LOCAL_TIMEOUT_MS, REMOTE_TIMEOUT_MS } from '../config/network'
 
@@ -17,8 +18,7 @@ export interface QueryOptions {
  */
 export async function queryEvents(
   relayPool: RelayPool,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  filter: any,
+  filter: Filter,
   options: QueryOptions = {}
 ): Promise<NostrEvent[]> {
   const {

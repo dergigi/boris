@@ -3,6 +3,7 @@ import { flushSync } from 'react-dom'
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { IEventStore } from 'applesauce-core'
+import { IAccount } from 'applesauce-accounts'
 import { Highlight } from '../types/highlights'
 import { ReadableContent } from '../services/readerService'
 import { createHighlight } from '../services/highlightCreationService'
@@ -10,8 +11,7 @@ import { HighlightButtonRef } from '../components/HighlightButton'
 import { UserSettings } from '../services/settingsService'
 
 interface UseHighlightCreationParams {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  activeAccount: any
+  activeAccount: IAccount | undefined
   relayPool: RelayPool | null
   eventStore: IEventStore | null
   currentArticle: NostrEvent | undefined

@@ -1,5 +1,3 @@
-import { UserSettings } from '../services/settingsService'
-
 /**
  * Hook to return image URL for display
  * Service Worker handles all caching transparently
@@ -9,9 +7,7 @@ import { UserSettings } from '../services/settingsService'
  * @returns The image URL (Service Worker handles caching)
  */
 export function useImageCache(
-  imageUrl: string | undefined,
-  // eslint-disable-next-line no-unused-vars
-  _settings?: UserSettings
+  imageUrl: string | undefined
 ): string | undefined {
   // Service Worker handles everything - just return the URL as-is
   return imageUrl
@@ -22,9 +18,7 @@ export function useImageCache(
  * Triggers a fetch so the SW can cache it even if not visible yet
  */
 export function useCacheImageOnLoad(
-  imageUrl: string | undefined,
-  // eslint-disable-next-line no-unused-vars
-  _settings?: UserSettings
+  imageUrl: string | undefined
 ): void {
   // Service Worker will cache on first fetch
   // This hook is now a no-op, kept for API compatibility
