@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import FastAverageColor from 'fast-average-color'
+import { FastAverageColor } from 'fast-average-color'
 
 interface AdaptiveTextColor {
   textColor: string
