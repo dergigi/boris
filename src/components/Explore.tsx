@@ -152,9 +152,13 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         )
         
         if (contacts.size === 0) {
-          setError('You are not following anyone yet. Follow some people to see their content!')
-          setLoading(false)
-          return
+          // If we already have any cached or previously shown data, do not block the UI.
+          const hasAnyData = (blogPosts.length > 0) || (highlights.length > 0)
+          if (!hasAnyData) {
+            // No friends and no cached content: set a soft hint, but still proceed to load nostrverse.
+            setError(null)
+          }
+          // Continue without returning: still fetch nostrverse content below.
         }
 
         // Store final followed pubkeys
@@ -202,7 +206,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           })
         }
 
-        if (uniquePosts.length === 0 && uniqueHighlights.length === 0) {
+        if (contacts.size === 0 && uniquePosts.length === 0 && uniqueHighlights.length === 0) {
+          setError('You are not following anyone yet. Follow some people to see their content!')
+        } else if (uniquePosts.length === 0 && uniqueHighlights.length === 0) {
           setError('No content found yet')
         }
 
@@ -220,7 +226,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
 
     loadData()
-  }, [relayPool, activeAccount, blogPosts.length, highlights.length, refreshTrigger, eventStore, settings])
+  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
 
   // Pull-to-refresh
   const pullToRefreshState = usePullToRefresh(exploreContainerRef, {
