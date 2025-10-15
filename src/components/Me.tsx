@@ -449,8 +449,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         )
 
       case 'reads':
-        // Show loading skeletons while fetching reads or if no data yet
-        if (reads.length === 0) {
+        // Show loading skeletons while fetching or if no data
+        if (reads.length === 0 || (loading && !loadedTabs.has('reads'))) {
           return (
             <div className="explore-grid">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -487,8 +487,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         )
 
       case 'links':
-        // Show loading skeletons while fetching links or if no data yet
-        if (links.length === 0) {
+        // Show loading skeletons while fetching or if no data
+        if (links.length === 0 || (loading && !loadedTabs.has('links'))) {
           return (
             <div className="explore-grid">
               {Array.from({ length: 6 }).map((_, i) => (
