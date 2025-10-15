@@ -6,8 +6,7 @@ import IconButton from './IconButton'
 import { loadFont } from '../utils/fontLoader'
 import ThemeSettings from './Settings/ThemeSettings'
 import ReadingDisplaySettings from './Settings/ReadingDisplaySettings'
-import LayoutNavigationSettings from './Settings/LayoutNavigationSettings'
-import StartupPreferencesSettings from './Settings/StartupPreferencesSettings'
+import LayoutBehaviorSettings from './Settings/LayoutBehaviorSettings'
 import ZapSettings from './Settings/ZapSettings'
 import RelaySettings from './Settings/RelaySettings'
 import PWASettings from './Settings/PWASettings'
@@ -163,8 +162,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPoo
         <ThemeSettings settings={localSettings} onUpdate={handleUpdate} />
         <ReadingDisplaySettings settings={localSettings} onUpdate={handleUpdate} />
         <ZapSettings settings={localSettings} onUpdate={handleUpdate} />
-        <LayoutNavigationSettings settings={localSettings} onUpdate={handleUpdate} />
-        <StartupPreferencesSettings settings={localSettings} onUpdate={handleUpdate} />
+        <LayoutBehaviorSettings settings={localSettings} onUpdate={handleUpdate} />
         <PWASettings settings={localSettings} onUpdate={handleUpdate} onClose={onClose} />
         <RelaySettings relayStatuses={relayStatuses} onClose={onClose} />
       </div>
