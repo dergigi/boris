@@ -545,17 +545,27 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
             {showDeleteConfirm && canDelete && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '0.5rem' }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgb(220 38 38)', fontWeight: 500 }}>Confirm?</span>
-                <CompactButton
-                  icon={faTrash}
+                <button
                   onClick={handleConfirmDeleteClick}
-                  title="Confirm deletion"
                   disabled={isDeleting}
+                  title="Confirm deletion"
                   style={{ 
                     color: 'rgb(220 38 38)',
                     background: 'rgba(220, 38, 38, 0.1)',
-                    borderColor: 'rgb(220 38 38)'
+                    border: '1px solid rgb(220 38 38)',
+                    borderRadius: '4px',
+                    padding: '0.375rem',
+                    cursor: isDeleting ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: '33px',
+                    minHeight: '33px',
+                    transition: 'all 0.2s'
                   }}
-                />
+                >
+                  <FontAwesomeIcon icon={isDeleting ? faSpinner : faTrash} spin={isDeleting} />
+                </button>
               </div>
             )}
             
