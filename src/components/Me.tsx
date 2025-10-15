@@ -449,7 +449,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         )
 
       case 'reads':
-        if (showSkeletons) {
+        // Show loading skeletons while fetching reads
+        if (loading && reads.length === 0) {
           return (
             <div className="explore-grid">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -458,18 +459,23 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             </div>
           )
         }
-        return reads.length === 0 && !loading ? (
-          <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            No articles in your reads.
-          </div>
-        ) : (
+        
+        // No reads at all
+        if (reads.length === 0) {
+          return (
+            <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+              No articles in your reads.
+            </div>
+          )
+        }
+        
+        // Show reads with filters
+        return (
           <>
-            {reads.length > 0 && (
-              <ReadingProgressFilters
-                selectedFilter={readingProgressFilter}
-                onFilterChange={setReadingProgressFilter}
-              />
-            )}
+            <ReadingProgressFilters
+              selectedFilter={readingProgressFilter}
+              onFilterChange={setReadingProgressFilter}
+            />
             {filteredReads.length === 0 ? (
               <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
                 No articles match this filter.
@@ -490,7 +496,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         )
 
       case 'links':
-        if (showSkeletons) {
+        // Show loading skeletons while fetching links
+        if (loading && links.length === 0) {
           return (
             <div className="explore-grid">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -499,18 +506,23 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             </div>
           )
         }
-        return links.length === 0 && !loading ? (
-          <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            No links yet.
-          </div>
-        ) : (
+        
+        // No links at all
+        if (links.length === 0) {
+          return (
+            <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+              No links yet.
+            </div>
+          )
+        }
+        
+        // Show links with filters
+        return (
           <>
-            {links.length > 0 && (
-              <ReadingProgressFilters
-                selectedFilter={readingProgressFilter}
-                onFilterChange={setReadingProgressFilter}
-              />
-            )}
+            <ReadingProgressFilters
+              selectedFilter={readingProgressFilter}
+              onFilterChange={setReadingProgressFilter}
+            />
             {filteredLinks.length === 0 ? (
               <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
                 No links match this filter.
