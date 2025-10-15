@@ -117,11 +117,11 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
     
     switch (readingProgressFilter) {
       case 'to-read':
-        // 0-5% reading progress (has tracking data)
-        return position !== undefined && position >= 0 && position <= 0.05
+        // 0-10% reading progress (has tracking data)
+        return position !== undefined && position >= 0 && position <= 0.10
       case 'reading':
-        // Has some progress but not completed (5% < position < 95%)
-        return position !== undefined && position > 0.05 && position < 0.95
+        // Has some progress but not completed (10% < position < 95%)
+        return position !== undefined && position > 0.10 && position < 0.95
       case 'completed':
         // 95% or more read
         return position !== undefined && position >= 0.95
