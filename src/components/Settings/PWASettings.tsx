@@ -16,7 +16,7 @@ const PWASettings: React.FC = () => {
   if (isInstalled) {
     return (
       <div className="settings-section">
-        <h3>Progressive Web App</h3>
+        <h3 className="section-title">Progressive Web App</h3>
         <div className="setting-item">
           <div className="setting-info">
             <FontAwesomeIcon icon={faCheckCircle} style={{ color: '#22c55e', marginRight: '8px' }} />
@@ -36,41 +36,19 @@ const PWASettings: React.FC = () => {
 
   return (
     <div className="settings-section">
-      <h3>Progressive Web App</h3>
-      <div className="setting-item">
+      <h3 className="section-title">Progressive Web App</h3>
+      <div className="setting-group">
         <div className="setting-info">
           <FontAwesomeIcon icon={faMobileAlt} style={{ marginRight: '8px' }} />
           <span>Install Boris as an app</span>
         </div>
-        <p className="setting-description">
+        <p className="setting-description" style={{ marginTop: '0.5rem', marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
           Install Boris on your device for a native app experience with offline support.
         </p>
         <button
           onClick={handleInstall}
-          className="install-button"
-          style={{
-            marginTop: '12px',
-            padding: '8px 16px',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)'
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)'
-            e.currentTarget.style.boxShadow = 'none'
-          }}
+          className="zap-preset-btn"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         >
           <FontAwesomeIcon icon={faDownload} />
           Install App
