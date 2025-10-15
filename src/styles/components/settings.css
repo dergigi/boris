@@ -73,11 +73,14 @@
   border-radius: 4px;
   background-color: var(--color-primary);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M13 2L3 14h8l-1 8 10-12h-8l1-8z'/%3E%3C/svg%3E");
-  background-size: 16px 16px;
+  background-size: 14px 14px;
   background-repeat: no-repeat;
-  background-position: center;
+  background-position: center center;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
+  top: 0;
+  margin-top: 0;
 }
 .zap-split-slider::-webkit-slider-thumb:hover {
   background-color: var(--color-primary-hover);
@@ -89,12 +92,15 @@
   border-radius: 4px;
   background-color: var(--color-primary);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M13 2L3 14h8l-1 8 10-12h-8l1-8z'/%3E%3C/svg%3E");
-  background-size: 16px 16px;
+  background-size: 14px 14px;
   background-repeat: no-repeat;
-  background-position: center;
+  background-position: center center;
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;
+  position: relative;
+  top: 0;
+  margin-top: 0;
 }
 .zap-split-slider::-moz-range-thumb:hover {
   background-color: var(--color-primary-hover);
