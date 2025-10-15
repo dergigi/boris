@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { faNewspaper, faStickyNote, faCirclePlay, faEye } from '@fortawesome/free-regular-svg-icons'
+import { faNewspaper, faStickyNote, faCirclePlay, faCamera } from '@fortawesome/free-regular-svg-icons'
 import { faBook, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { useEventModel } from 'applesauce-react/hooks'
@@ -79,7 +79,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
         case 'video':
           return faCirclePlay
         case 'image':
-          return faEye
+          return faCamera
         case 'article':
           return faNewspaper
         default:
@@ -99,7 +99,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       case 'video':
         return faCirclePlay
       case 'image':
-        return faEye
+        return faCamera
       default:
         return faBook
     }
