@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.14] - 2025-10-15
+
+### Added
+
+- Support for bookmark sets (NIP-51 kind:30003)
+  - Bookmark sets now display alongside regular bookmark lists
+  - Properly handles AddressPointer bookmarks for long-form articles
+- Content type icons for bookmarks
+  - Article, video, web, and image icons to indicate bookmark content type
+  - Camera icon for image bookmarks
+  - Sticky note icon for text-only bookmarks without URLs
+- Bookmark grouping and sections
+  - Grouped sections in sidebar and `/me` reading-list
+  - Web bookmarks, default bookmarks, and legacy bookmarks in separate sections
+  - Grouping and sorting helpers for organizing bookmark sections
+- Adaptive text color for publication date over hero images
+  - Automatically detects image brightness and adjusts text color
+  - Improved contrast for better readability
+
+### Changed
+
+- Renamed "Amethyst-style bookmarks" to "Old Bookmarks (Legacy)"
+- Hide cover images in compact view for cleaner layout
+- Support button improvements
+  - Moved to bottom-left of bookmarks bar
+  - Changed icon from lightning bolt to heart (orange color)
+  - Left-aligned support button, right-aligned view mode buttons
+- Section headings improved with better typography (removed counts)
+- Icon changed from book to file-lines for default bookmarks
+- Use regular (outlined) icon variants for lighter, more refined appearance
+- Add bookmark button moved to web bookmarks section
+- Empty state messages replaced with loading spinners
+- Section dividers made more subtle
+- Simplified bookmark filtering to only exclude empty content
+
+### Fixed
+
+- Removed borders from compact bookmark cards for cleaner look
+- Removed duplicate type indicator icons from bookmark cards
+- Reduced section heading bottom padding for better spacing
+- Aligned add bookmark button with section heading
+- Removed redundant loading spinner above tabs
+- Resolved linter and type errors
+- Include kind:30003 in default bookmark list detection
+- Removed text shadows from publication date for cleaner look
+- Improved shadow contrast without background overlay
+- Corrected async handling in adaptive color detection
+- Corrected FastAverageColor import to use named export
+- Section heading styles now properly override with `!important`
+- Removed unused articleImage prop from CompactView
+
 ## [0.6.13] - 2025-10-15
 
 ### Added
@@ -1415,7 +1466,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.13...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.14...HEAD
+[0.6.14]: https://github.com/dergigi/boris/compare/v0.6.13...v0.6.14
 [0.6.13]: https://github.com/dergigi/boris/compare/v0.6.12...v0.6.13
 [0.6.12]: https://github.com/dergigi/boris/compare/v0.6.11...v0.6.12
 [0.6.11]: https://github.com/dergigi/boris/compare/v0.6.10...v0.6.11
