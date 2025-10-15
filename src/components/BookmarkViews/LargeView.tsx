@@ -6,7 +6,6 @@ import { formatDate } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
 import { IconGetter } from './shared'
 import { useImageCache } from '../../hooks/useImageCache'
-import { UserSettings } from '../../services/settingsService'
 import { getEventUrl } from '../../config/nostrGateways'
 
 interface LargeViewProps {
@@ -22,7 +21,6 @@ interface LargeViewProps {
   getAuthorDisplayName: () => string
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
   articleSummary?: string
-  settings?: UserSettings
 }
 
 export const LargeView: React.FC<LargeViewProps> = ({
@@ -37,10 +35,9 @@ export const LargeView: React.FC<LargeViewProps> = ({
   eventNevent,
   getAuthorDisplayName,
   handleReadNow,
-  articleSummary,
-  settings
+  articleSummary
 }) => {
-  const cachedImage = useImageCache(previewImage || undefined, settings)
+  const cachedImage = useImageCache(previewImage || undefined)
   const isArticle = bookmark.kind === 30023
   
   const triggerOpen = () => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)

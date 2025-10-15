@@ -9,7 +9,6 @@ import SidebarHeader from './SidebarHeader'
 import IconButton from './IconButton'
 import { ViewMode } from './Bookmarks'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
-import { UserSettings } from '../services/settingsService'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { BookmarkSkeleton } from './Skeletons'
@@ -29,7 +28,6 @@ interface BookmarkListProps {
   lastFetchTime?: number | null
   loading?: boolean
   relayPool: RelayPool | null
-  settings?: UserSettings
   isMobile?: boolean
 }
 
@@ -48,7 +46,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   lastFetchTime,
   loading = false,
   relayPool,
-  settings,
   isMobile = false
 }) => {
   const bookmarksListRef = useRef<HTMLDivElement>(null)
@@ -161,7 +158,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
                 index={index} 
                 onSelectUrl={onSelectUrl}
                 viewMode={viewMode}
-                settings={settings}
               />
             )}
           </div>
