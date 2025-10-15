@@ -68,7 +68,7 @@
 }
 
 .me-tab-content:has(.bookmark-filters) {
-  padding-top: 0.75rem;
+  padding-top: 0.25rem;
 }
 
 /* Align highlight list width with profile card width on /me */
@@ -87,9 +87,9 @@
 .me-tab-content .bookmark-filters {
   background: transparent;
   border: none;
-  padding: 0 0 0.5rem 0;
+  padding: 0;
   justify-content: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 /* Ensure all reading list elements are left-aligned */
