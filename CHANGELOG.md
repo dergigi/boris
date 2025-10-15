@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.13] - 2025-10-15
+
+### Added
+
+- Support for `nprofile` identifiers on `/p/` profile pages (NIP-19)
+  - Profile pages now accept both `npub` and `nprofile` identifiers
+  - Extracts pubkey from nprofile data structure
+  - Users can share profiles with relay metadata included
+- Gradient placeholder images for articles without cover images
+  - Blog post cards show subtle diagonal gradient using theme colors
+  - Reader view displays gradient background with newspaper icon
+  - Placeholders adapt automatically to light/dark themes
+  - Large view bookmarks use matching gradient backgrounds
+
+### Changed
+
+- PWA install section styling in settings
+  - Heading now matches other section headings with proper styling
+  - Install button uses standard app button styling instead of custom gradient
+  - Consistent with app's design system and theme colors
+
+### Fixed
+
+- Mobile bookmark button visibility across all pages
+  - Now visible on `/p/` (profile), `/explore`, `/me`, and `/support` pages
+  - Only hidden on settings page or when scrolling down while reading
+  - Prevents users from getting stuck without navigation options
+- Mobile highlights button behavior at page top
+  - Hidden when scrolled to the very top of the page
+  - Appears when scrolling up from below
+  - Bookmark button remains visible at top (only hides on scroll down)
+  - Separate visibility logic for each button improves UX
+
 ## [0.6.12] - 2025-10-15
 
 ### Changed
@@ -1382,7 +1415,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.12...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.13...HEAD
+[0.6.13]: https://github.com/dergigi/boris/compare/v0.6.12...v0.6.13
 [0.6.12]: https://github.com/dergigi/boris/compare/v0.6.11...v0.6.12
 [0.6.11]: https://github.com/dergigi/boris/compare/v0.6.10...v0.6.11
 [0.6.10]: https://github.com/dergigi/boris/compare/v0.6.9...v0.6.10
