@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
+import { faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired, faArrowsRotate } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { Hooks } from 'applesauce-react'
@@ -398,42 +398,51 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         </div>
         
         {/* Visibility filters */}
-        <div className="highlight-level-toggles" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+        <div className="highlight-level-toggles" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'space-between', alignItems: 'center' }}>
           <IconButton
-            icon={faNetworkWired}
-            onClick={() => setVisibility({ ...visibility, nostrverse: !visibility.nostrverse })}
-            title="Toggle nostrverse content"
-            ariaLabel="Toggle nostrverse content"
+            icon={faArrowsRotate}
+            onClick={() => setRefreshTrigger(prev => prev + 1)}
+            title="Refresh content"
+            ariaLabel="Refresh content"
             variant="ghost"
-            style={{ 
-              color: visibility.nostrverse ? 'var(--highlight-color-nostrverse, #9333ea)' : undefined,
-              opacity: visibility.nostrverse ? 1 : 0.4 
-            }}
           />
-          <IconButton
-            icon={faUserGroup}
-            onClick={() => setVisibility({ ...visibility, friends: !visibility.friends })}
-            title={activeAccount ? "Toggle friends content" : "Login to see friends content"}
-            ariaLabel="Toggle friends content"
-            variant="ghost"
-            disabled={!activeAccount}
-            style={{ 
-              color: visibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined,
-              opacity: visibility.friends ? 1 : 0.4 
-            }}
-          />
-          <IconButton
-            icon={faUser}
-            onClick={() => setVisibility({ ...visibility, mine: !visibility.mine })}
-            title={activeAccount ? "Toggle my content" : "Login to see your content"}
-            ariaLabel="Toggle my content"
-            variant="ghost"
-            disabled={!activeAccount}
-            style={{ 
-              color: visibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined,
-              opacity: visibility.mine ? 1 : 0.4 
-            }}
-          />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <IconButton
+              icon={faNetworkWired}
+              onClick={() => setVisibility({ ...visibility, nostrverse: !visibility.nostrverse })}
+              title="Toggle nostrverse content"
+              ariaLabel="Toggle nostrverse content"
+              variant="ghost"
+              style={{ 
+                color: visibility.nostrverse ? 'var(--highlight-color-nostrverse, #9333ea)' : undefined,
+                opacity: visibility.nostrverse ? 1 : 0.4 
+              }}
+            />
+            <IconButton
+              icon={faUserGroup}
+              onClick={() => setVisibility({ ...visibility, friends: !visibility.friends })}
+              title={activeAccount ? "Toggle friends content" : "Login to see friends content"}
+              ariaLabel="Toggle friends content"
+              variant="ghost"
+              disabled={!activeAccount}
+              style={{ 
+                color: visibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined,
+                opacity: visibility.friends ? 1 : 0.4 
+              }}
+            />
+            <IconButton
+              icon={faUser}
+              onClick={() => setVisibility({ ...visibility, mine: !visibility.mine })}
+              title={activeAccount ? "Toggle my content" : "Login to see your content"}
+              ariaLabel="Toggle my content"
+              variant="ghost"
+              disabled={!activeAccount}
+              style={{ 
+                color: visibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined,
+                opacity: visibility.mine ? 1 : 0.4 
+              }}
+            />
+          </div>
         </div>
       </div>
 
