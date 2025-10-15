@@ -1,7 +1,7 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faNewspaper, faStickyNote, faCirclePlay } from '@fortawesome/free-regular-svg-icons'
-import { faGlobe, faAsterisk, faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
+import { faGlobe, faAsterisk, faLink } from '@fortawesome/free-solid-svg-icons'
 
 export type BookmarkFilterType = 'all' | 'article' | 'external' | 'video' | 'note' | 'web'
 
@@ -17,7 +17,7 @@ const BookmarkFilters: React.FC<BookmarkFiltersProps> = ({
   const filters = [
     { type: 'all' as const, icon: faAsterisk, label: 'All' },
     { type: 'article' as const, icon: faNewspaper, label: 'Articles' },
-    { type: 'external' as const, icon: faArrowUpRightFromSquare, label: 'External Articles' },
+    { type: 'external' as const, icon: faLink, label: 'External Articles' },
     { type: 'video' as const, icon: faCirclePlay, label: 'Videos' },
     { type: 'note' as const, icon: faStickyNote, label: 'Notes' },
     { type: 'web' as const, icon: faGlobe, label: 'Web' }

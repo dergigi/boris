@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { faNewspaper, faStickyNote, faCirclePlay, faCamera, faFileLines } from '@fortawesome/free-regular-svg-icons'
-import { faGlobe, faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
+import { faGlobe, faLink } from '@fortawesome/free-solid-svg-icons'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -81,7 +81,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
         case 'image':
           return faCamera
         case 'article':
-          return faArrowUpRightFromSquare // External article
+          return faLink // External article
         default:
           return faGlobe
       }
@@ -89,7 +89,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     
     if (!hasUrls) return faStickyNote // Just a text note
     if (firstUrlClassification?.type === 'youtube' || firstUrlClassification?.type === 'video') return faCirclePlay
-    if (firstUrlClassification?.type === 'article') return faArrowUpRightFromSquare // External article
+    if (firstUrlClassification?.type === 'article') return faLink // External article
     return faFileLines
   }
 
