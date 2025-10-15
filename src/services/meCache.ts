@@ -6,6 +6,7 @@ export interface MeCache {
   highlights: Highlight[]
   bookmarks: Bookmark[]
   reads: ReadItem[]
+  links: ReadItem[]
   timestamp: number
 }
 
@@ -21,12 +22,14 @@ export function setCachedMeData(
   pubkey: string,
   highlights: Highlight[],
   bookmarks: Bookmark[],
-  reads: ReadItem[]
+  reads: ReadItem[],
+  links: ReadItem[] = []
 ): void {
   meCache.set(pubkey, {
     highlights,
     bookmarks,
     reads,
+    links,
     timestamp: Date.now()
   })
 }

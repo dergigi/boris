@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare, faLink } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
 import { RelayPool } from 'applesauce-relay'
@@ -11,6 +11,7 @@ import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
 import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchAllReads, ReadItem } from '../services/readsService'
+import { fetchLinks } from '../services/linksService'
 import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
 import { RELAYS } from '../config/relays'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
@@ -34,7 +35,7 @@ interface MeProps {
   pubkey?: string // Optional pubkey for viewing other users' profiles
 }
 
-type TabType = 'highlights' | 'reading-list' | 'reads' | 'writings'
+type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
 
 const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: propPubkey }) => {
   const activeAccount = Hooks.useActiveAccount()
@@ -47,6 +48,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [reads, setReads] = useState<ReadItem[]>([])
+  const [links, setLinks] = useState<ReadItem[]>([])
   const [writings, setWritings] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [loadedTabs, setLoadedTabs] = useState<Set<TabType>>(new Set())
@@ -152,6 +154,25 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     }
   }
 
+  const loadLinksTab = async () => {
+    if (!viewingPubkey || !isOwnProfile || !activeAccount) return
+    
+    const hasBeenLoaded = loadedTabs.has('links')
+    
+    try {
+      if (!hasBeenLoaded) setLoading(true)
+      
+      // Fetch links (external URLs with reading progress)
+      const userLinks = await fetchLinks(relayPool, viewingPubkey)
+      setLinks(userLinks)
+      setLoadedTabs(prev => new Set(prev).add('links'))
+    } catch (err) {
+      console.error('Failed to load links:', err)
+    } finally {
+      if (!hasBeenLoaded) setLoading(false)
+    }
+  }
+
   // Load active tab data
   useEffect(() => {
     if (!viewingPubkey || !activeTab) {
@@ -166,6 +187,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         setHighlights(cached.highlights)
         setBookmarks(cached.bookmarks)
         setReads(cached.reads || [])
+        setLinks(cached.links || [])
       }
     }
 
@@ -182,6 +204,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         break
       case 'reads':
         loadReadsTab()
+        break
+      case 'links':
+        loadLinksTab()
         break
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -324,6 +349,29 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         return true
     }
   })
+
+  const filteredLinks = links.filter((item) => {
+    const progress = item.readingProgress || 0
+    const isMarked = item.markedAsRead || false
+    
+    switch (readingProgressFilter) {
+      case 'unopened':
+        // No reading progress
+        return progress === 0 && !isMarked
+      case 'started':
+        // 0-10% reading progress
+        return progress > 0 && progress <= 0.10 && !isMarked
+      case 'reading':
+        // 11-94% reading progress
+        return progress > 0.10 && progress <= 0.94 && !isMarked
+      case 'completed':
+        // 95%+ or marked as read
+        return progress >= 0.95 || isMarked
+      case 'all':
+      default:
+        return true
+    }
+  })
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
     { key: 'private', title: 'Private Bookmarks', items: groups.privateItems },
     { key: 'public', title: 'Public Bookmarks', items: groups.publicItems },
@@ -332,7 +380,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   ]
 
   // Show content progressively - no blocking error screens
-  const hasData = highlights.length > 0 || bookmarks.length > 0 || reads.length > 0 || writings.length > 0
+  const hasData = highlights.length > 0 || bookmarks.length > 0 || reads.length > 0 || links.length > 0 || writings.length > 0
   const showSkeletons = loading && !hasData
 
   const renderTabContent = () => {
@@ -483,6 +531,47 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           </>
         )
 
+      case 'links':
+        if (showSkeletons) {
+          return (
+            <div className="explore-grid">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <BlogPostSkeleton key={i} />
+              ))}
+            </div>
+          )
+        }
+        return links.length === 0 && !loading ? (
+          <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            No links yet.
+          </div>
+        ) : (
+          <>
+            {links.length > 0 && (
+              <ReadingProgressFilters
+                selectedFilter={readingProgressFilter}
+                onFilterChange={setReadingProgressFilter}
+              />
+            )}
+            {filteredLinks.length === 0 ? (
+              <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                No links match this filter.
+              </div>
+            ) : (
+              <div className="explore-grid">
+              {filteredLinks.map((item) => (
+                <BlogPostCard
+                  key={item.id}
+                  post={convertReadItemToBlogPostPreview(item)}
+                  href={getReadItemUrl(item)}
+                  readingProgress={item.readingProgress}
+                />
+              ))}
+              </div>
+            )}
+          </>
+        )
+
       case 'writings':
         if (showSkeletons) {
           return (
@@ -549,6 +638,14 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
               >
                 <FontAwesomeIcon icon={faBooks} />
                 <span className="tab-label">Reads</span>
+              </button>
+              <button
+                className={`me-tab ${activeTab === 'links' ? 'active' : ''}`}
+                data-tab="links"
+                onClick={() => navigate('/me/links')}
+              >
+                <FontAwesomeIcon icon={faLink} />
+                <span className="tab-label">Links</span>
               </button>
             </>
           )}

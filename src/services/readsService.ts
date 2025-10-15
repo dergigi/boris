@@ -267,14 +267,8 @@ export async function fetchAllReads(
           if (item.type === 'external' && !item.title) return false
         }
         
-        // For external URLs, only include if there's reading progress or marked as read
-        if (item.type === 'external') {
-          const hasProgress = (item.readingProgress && item.readingProgress > 0) || item.markedAsRead
-          return hasProgress
-        }
-        
-        // Include all Nostr articles
-        return true
+        // Only include Nostr-native articles in Reads
+        return item.type === 'article'
       })
       .sort((a, b) => {
         const timeA = a.readingTimestamp || a.markedAt || 0
