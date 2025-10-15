@@ -226,19 +226,25 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
         if (savedPosition && savedPosition.position > 0.05 && savedPosition.position < 1) {
           console.log('🎯 [ContentPanel] Restoring position:', Math.round(savedPosition.position * 100) + '%')
-          // Wait for content to be fully rendered before scrolling
-          setTimeout(() => {
-            const documentHeight = document.documentElement.scrollHeight
-            const windowHeight = window.innerHeight
-            const scrollTop = savedPosition.position * (documentHeight - windowHeight)
-            
-            window.scrollTo({
-              top: scrollTop,
-              behavior: 'smooth'
-            })
-            
-            console.log('✅ [ContentPanel] Restored to position:', Math.round(savedPosition.position * 100) + '%', 'scrollTop:', scrollTop)
-          }, 500) // Give content time to render
+          
+          // Only auto-scroll if the setting is enabled (default: true)
+          if (settings?.autoScrollToPosition !== false) {
+            // Wait for content to be fully rendered before scrolling
+            setTimeout(() => {
+              const documentHeight = document.documentElement.scrollHeight
+              const windowHeight = window.innerHeight
+              const scrollTop = savedPosition.position * (documentHeight - windowHeight)
+              
+              window.scrollTo({
+                top: scrollTop,
+                behavior: 'smooth'
+              })
+              
+              console.log('✅ [ContentPanel] Restored to position:', Math.round(savedPosition.position * 100) + '%', 'scrollTop:', scrollTop)
+            }, 500) // Give content time to render
+          } else {
+            console.log('⏭️ [ContentPanel] Auto-scroll disabled in settings')
+          }
         } else if (savedPosition) {
           if (savedPosition.position === 1) {
             console.log('✅ [ContentPanel] Article completed (100%), starting from top')

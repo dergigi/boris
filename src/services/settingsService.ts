@@ -56,6 +56,7 @@ export interface UserSettings {
   paragraphAlignment?: 'left' | 'justify' // default: justify
   // Reading position sync
   syncReadingPosition?: boolean // default: false (opt-in)
+  autoScrollToPosition?: boolean // default: true (auto-scroll to last reading position)
 }
 
 export async function loadSettings(
