@@ -132,7 +132,7 @@
 .reader-markdown hr, .reader-html hr {
   border: none;
   border-top: 1px solid var(--color-border);
-  opacity: 0.3;
+  opacity: 0.5;
   margin: 2.5rem 0;
 }
 .reader-markdown a { color: var(--color-primary); text-decoration: none; }
