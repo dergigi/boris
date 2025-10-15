@@ -155,46 +155,50 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         </div>
       )}
       <div className="view-mode-controls">
-        <IconButton
-          icon={faHeart}
-          onClick={() => navigate('/support')}
-          title="Support Boris"
-          ariaLabel="Support"
-          variant="ghost"
-          style={{ color: friendsColor }}
-        />
-        {onRefresh && (
+        <div className="view-mode-left">
           <IconButton
-            icon={faRotate}
-            onClick={onRefresh}
-            title={lastFetchTime ? `Refresh bookmarks (updated ${formatDistanceToNow(lastFetchTime, { addSuffix: true })})` : 'Refresh bookmarks'}
-            ariaLabel="Refresh bookmarks"
+            icon={faHeart}
+            onClick={() => navigate('/support')}
+            title="Support Boris"
+            ariaLabel="Support"
             variant="ghost"
-            disabled={isRefreshing}
-            spin={isRefreshing}
+            style={{ color: friendsColor }}
           />
-        )}
-        <IconButton
-          icon={faList}
-          onClick={() => onViewModeChange('compact')}
-          title="Compact list view"
-          ariaLabel="Compact list view"
-          variant={viewMode === 'compact' ? 'primary' : 'ghost'}
-        />
-        <IconButton
-          icon={faThLarge}
-          onClick={() => onViewModeChange('cards')}
-          title="Cards view"
-          ariaLabel="Cards view"
-          variant={viewMode === 'cards' ? 'primary' : 'ghost'}
-        />
-        <IconButton
-          icon={faImage}
-          onClick={() => onViewModeChange('large')}
-          title="Large preview view"
-          ariaLabel="Large preview view"
-          variant={viewMode === 'large' ? 'primary' : 'ghost'}
-        />
+        </div>
+        <div className="view-mode-right">
+          {onRefresh && (
+            <IconButton
+              icon={faRotate}
+              onClick={onRefresh}
+              title={lastFetchTime ? `Refresh bookmarks (updated ${formatDistanceToNow(lastFetchTime, { addSuffix: true })})` : 'Refresh bookmarks'}
+              ariaLabel="Refresh bookmarks"
+              variant="ghost"
+              disabled={isRefreshing}
+              spin={isRefreshing}
+            />
+          )}
+          <IconButton
+            icon={faList}
+            onClick={() => onViewModeChange('compact')}
+            title="Compact list view"
+            ariaLabel="Compact list view"
+            variant={viewMode === 'compact' ? 'primary' : 'ghost'}
+          />
+          <IconButton
+            icon={faThLarge}
+            onClick={() => onViewModeChange('cards')}
+            title="Cards view"
+            ariaLabel="Cards view"
+            variant={viewMode === 'cards' ? 'primary' : 'ghost'}
+          />
+          <IconButton
+            icon={faImage}
+            onClick={() => onViewModeChange('large')}
+            title="Large preview view"
+            ariaLabel="Large preview view"
+            variant={viewMode === 'large' ? 'primary' : 'ghost'}
+          />
+        </div>
       </div>
     </div>
   )
