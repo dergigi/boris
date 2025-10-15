@@ -278,25 +278,33 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     })
   }, [highlights, activeAccount?.pubkey, followedPubkeys, visibility])
 
-  // Filter blog posts by future dates and visibility
+  // Filter blog posts by future dates and visibility, and add level classification
   const filteredBlogPosts = useMemo(() => {
     const maxFutureTime = Date.now() / 1000 + (24 * 60 * 60) // 1 day from now
-    return blogPosts.filter(post => {
-      // Filter out future dates
-      const publishedTime = post.published || post.event.created_at
-      if (publishedTime > maxFutureTime) return false
-      
-      // Apply visibility filters
-      const isMine = activeAccount && post.author === activeAccount.pubkey
-      const isFriend = followedPubkeys.has(post.author)
-      const isNostrverse = !isMine && !isFriend
-      
-      if (isMine && !visibility.mine) return false
-      if (isFriend && !visibility.friends) return false
-      if (isNostrverse && !visibility.nostrverse) return false
-      
-      return true
-    })
+    return blogPosts
+      .filter(post => {
+        // Filter out future dates
+        const publishedTime = post.published || post.event.created_at
+        if (publishedTime > maxFutureTime) return false
+        
+        // Apply visibility filters
+        const isMine = activeAccount && post.author === activeAccount.pubkey
+        const isFriend = followedPubkeys.has(post.author)
+        const isNostrverse = !isMine && !isFriend
+        
+        if (isMine && !visibility.mine) return false
+        if (isFriend && !visibility.friends) return false
+        if (isNostrverse && !visibility.nostrverse) return false
+        
+        return true
+      })
+      .map(post => {
+        // Add level classification
+        const isMine = activeAccount && post.author === activeAccount.pubkey
+        const isFriend = followedPubkeys.has(post.author)
+        const level: 'mine' | 'friends' | 'nostrverse' = isMine ? 'mine' : isFriend ? 'friends' : 'nostrverse'
+        return { ...post, level }
+      })
   }, [blogPosts, activeAccount, followedPubkeys, visibility])
 
   const renderTabContent = () => {
@@ -322,6 +330,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                 key={`${post.author}:${post.event.tags.find(t => t[0] === 'd')?.[1]}`}
                 post={post}
                 href={getPostUrl(post)}
+                level={post.level}
               />
             ))}
           </div>

@@ -10,9 +10,10 @@ import { Models } from 'applesauce-core'
 interface BlogPostCardProps {
   post: BlogPostPreview
   href: string
+  level?: 'mine' | 'friends' | 'nostrverse'
 }
 
-const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href }) => {
+const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level }) => {
   const profile = useEventModel(Models.ProfileModel, [post.author])
   const displayName = profile?.name || profile?.display_name || 
     `${post.author.slice(0, 8)}...${post.author.slice(-4)}`
@@ -25,7 +26,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href }) => {
   return (
     <Link 
       to={href}
-      className="blog-post-card"
+      className={`blog-post-card ${level ? `level-${level}` : ''}`}
       style={{ textDecoration: 'none', color: 'inherit' }}
     >
       <div className="blog-post-card-image">
