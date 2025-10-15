@@ -124,19 +124,6 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
             )}
           </div>
 
-          <div className="setting-group">
-            <label htmlFor="useLocalRelayAsCache" className="checkbox-label">
-              <input
-                id="useLocalRelayAsCache"
-                type="checkbox"
-                checked={settings.useLocalRelayAsCache ?? true}
-                onChange={(e) => onUpdate({ useLocalRelayAsCache: e.target.checked })}
-                className="setting-checkbox"
-              />
-              <span>Use local relays as cache</span>
-            </label>
-          </div>
-
           {/* PWA Install Section - Paragraphs */}
           <div className="setting-group">
             <p className="setting-description" style={{ marginTop: '0.5rem', marginBottom: '0.75rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
@@ -180,6 +167,22 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
               </a>
               .
             </p>
+          </div>
+
+          <div className="setting-group">
+            <label htmlFor="useLocalRelayAsCache" className="checkbox-label">
+              <input
+                id="useLocalRelayAsCache"
+                type="checkbox"
+                checked={settings.useLocalRelayAsCache ?? true}
+                onChange={(e) => onUpdate({ useLocalRelayAsCache: e.target.checked })}
+                className="setting-checkbox"
+              />
+              <span>Use local relays as cache</span>
+            </label>
+          </div>
+
+          <div className="setting-group">
             <p className="setting-description" style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
               Install Boris on your device for a native app experience.
             </p>
