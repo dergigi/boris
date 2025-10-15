@@ -1,8 +1,7 @@
-import { RelayPool, completeOnEose } from 'applesauce-relay'
-import { lastValueFrom, merge, Observable, takeUntil, timer, toArray } from 'rxjs'
-import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
+import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
+import { queryEvents } from './dataFetch'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -35,49 +34,38 @@ export const fetchBlogPostsFromAuthors = async (
     }
 
     console.log('📚 Fetching blog posts (kind 30023) from', pubkeys.length, 'authors')
-    
-    const prioritized = prioritizeLocalRelays(relayUrls)
-    const { local: localRelays, remote: remoteRelays } = partitionRelays(prioritized)
 
     // Deduplicate replaceable events by keeping the most recent version
     // Group by author + d-tag identifier
     const uniqueEvents = new Map<string, NostrEvent>()
 
-    const processEvents = (incoming: NostrEvent[]) => {
-      for (const event of incoming) {
-        const dTag = event.tags.find(t => t[0] === 'd')?.[1] || ''
-        const key = `${event.pubkey}:${dTag}`
-        const existing = uniqueEvents.get(key)
-        if (!existing || event.created_at > existing.created_at) {
-          uniqueEvents.set(key, event)
-          // Emit as we incorporate
-          if (onPost) {
-            const post: BlogPostPreview = {
-              event,
-              title: getArticleTitle(event) || 'Untitled',
-              summary: getArticleSummary(event),
-              image: getArticleImage(event),
-              published: getArticlePublished(event),
-              author: event.pubkey
+    const events = await queryEvents(
+      relayPool,
+      { kinds: [30023], authors: pubkeys, limit: 100 },
+      {
+        relayUrls,
+        onEvent: (event: NostrEvent) => {
+          const dTag = event.tags.find(t => t[0] === 'd')?.[1] || ''
+          const key = `${event.pubkey}:${dTag}`
+          const existing = uniqueEvents.get(key)
+          if (!existing || event.created_at > existing.created_at) {
+            uniqueEvents.set(key, event)
+            // Emit as we incorporate
+            if (onPost) {
+              const post: BlogPostPreview = {
+                event,
+                title: getArticleTitle(event) || 'Untitled',
+                summary: getArticleSummary(event),
+                image: getArticleImage(event),
+                published: getArticlePublished(event),
+                author: event.pubkey
+              }
+              onPost(post)
             }
-            onPost(post)
           }
         }
       }
-    }
-
-    const local$ = localRelays.length > 0
-      ? relayPool
-          .req(localRelays, { kinds: [30023], authors: pubkeys, limit: 100 })
-          .pipe(completeOnEose(), takeUntil(timer(1200)))
-      : new Observable<NostrEvent>((sub) => sub.complete())
-    const remote$ = remoteRelays.length > 0
-      ? relayPool
-          .req(remoteRelays, { kinds: [30023], authors: pubkeys, limit: 100 })
-          .pipe(completeOnEose(), takeUntil(timer(6000)))
-      : new Observable<NostrEvent>((sub) => sub.complete())
-    const events = await lastValueFrom(merge(local$, remote$).pipe(toArray()))
-    processEvents(events)
+    )
 
     console.log('📊 Blog post events fetched (unique):', uniqueEvents.size)
     
