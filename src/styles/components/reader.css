@@ -47,9 +47,9 @@
 .reader .reader-html li,
 .reader .reader-markdown li,
 .reader .reader-html blockquote,
-.reader .reader-markdown blockquote { text-align: var(--paragraph-alignment, left); }
+.reader .reader-markdown blockquote { text-align: var(--paragraph-alignment, justify); }
 /* Override centered content with user preference */
-.reader center, .reader [align="center"] { text-align: var(--paragraph-alignment, left) !important; }
+.reader center, .reader [align="center"] { text-align: var(--paragraph-alignment, justify) !important; }
 /* Keep headings left-aligned */
 .reader .reader-html h1, .reader .reader-html h2, .reader .reader-html h3, .reader .reader-html h4, .reader .reader-html h5, .reader .reader-html h6,
 .reader .reader-markdown h1, .reader .reader-markdown h2, .reader .reader-markdown h3, .reader .reader-markdown h4, .reader .reader-markdown h5, .reader .reader-markdown h6 { text-align: left !important; }

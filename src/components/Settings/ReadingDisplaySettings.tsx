@@ -56,14 +56,14 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
             onClick={() => onUpdate({ paragraphAlignment: 'left' })} 
             title="Left aligned" 
             ariaLabel="Left aligned" 
-            variant={(settings.paragraphAlignment || 'left') === 'left' ? 'primary' : 'ghost'} 
+            variant={settings.paragraphAlignment === 'left' ? 'primary' : 'ghost'} 
           />
           <IconButton 
             icon={faAlignJustify} 
             onClick={() => onUpdate({ paragraphAlignment: 'justify' })} 
             title="Justified" 
             ariaLabel="Justified" 
-            variant={settings.paragraphAlignment === 'justify' ? 'primary' : 'ghost'} 
+            variant={(settings.paragraphAlignment || 'justify') === 'justify' ? 'primary' : 'ghost'} 
           />
         </div>
       </div>
@@ -178,7 +178,7 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
             fontFamily: previewFontFamily,
             fontSize: `${settings.fontSize || 21}px`,
             '--highlight-rgb': hexToRgb(settings.highlightColor || '#ffff00'),
-            '--paragraph-alignment': settings.paragraphAlignment || 'left'
+            '--paragraph-alignment': settings.paragraphAlignment || 'justify'
           } as React.CSSProperties}
         >
           <h3>The Quick Brown Fox</h3>
