@@ -33,26 +33,35 @@ export function useAdaptiveTextColor(imageUrl: string | undefined): AdaptiveText
     const img = new Image()
     img.crossOrigin = 'anonymous'
     
-    img.onload = async () => {
+    img.onload = () => {
       try {
         const width = img.naturalWidth
         const height = img.naturalHeight
         
         // Sample top-right corner (last 25% width, first 25% height)
-        const color = await fac.getColor(img, {
+        const color = fac.getColor(img, {
           left: Math.floor(width * 0.75),
           top: 0,
           width: Math.floor(width * 0.25),
           height: Math.floor(height * 0.25)
         })
         
+        console.log('Adaptive color detected:', {
+          hex: color.hex,
+          rgb: color.rgb,
+          isLight: color.isLight,
+          isDark: color.isDark
+        })
+        
         // Use library's built-in isLight check for optimal contrast
         if (color.isLight) {
+          console.log('Light background detected, using black text')
           setColors({
             textColor: '#000000',
             shadowColor: 'rgba(255, 255, 255, 0.5)'
           })
         } else {
+          console.log('Dark background detected, using white text')
           setColors({
             textColor: '#ffffff',
             shadowColor: 'rgba(0, 0, 0, 0.5)'
