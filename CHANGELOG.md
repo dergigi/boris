@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.11] - 2025-10-15
+
+### Added
+
+- Colored borders to blog post and highlight cards based on relationship
+  - Mine: yellow border
+  - Friends: orange border
+  - Nostrverse: purple border
+  - Visual distinction helps identify content source at a glance
+- Mobile sidebar toggle buttons on explore page
+  - Bookmark and highlights buttons now visible on explore page
+  - Improves mobile navigation UX
+
+### Fixed
+
+- Mobile bookmarks sidebar opening and closing immediately
+  - Memoized `toggleSidebar` function to prevent unnecessary re-renders
+  - Updated route-change effect to only close sidebar on actual pathname changes
+  - Sidebar now stays open when opened on mobile PWA
+
 ## [0.6.10] - 2025-10-15
 
 ### Added
@@ -1353,7 +1373,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.10...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.11...HEAD
+[0.6.11]: https://github.com/dergigi/boris/compare/v0.6.10...v0.6.11
 [0.6.10]: https://github.com/dergigi/boris/compare/v0.6.9...v0.6.10
 [0.6.9]: https://github.com/dergigi/boris/compare/v0.6.8...v0.6.9
 [0.6.8]: https://github.com/dergigi/boris/compare/v0.6.7...v0.6.8
