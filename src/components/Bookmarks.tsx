@@ -58,16 +58,18 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   // Extract tab from profile routes
   const profileTab = location.pathname.endsWith('/writings') ? 'writings' : 'highlights'
   
-  // Decode npub to pubkey for profile view
+  // Decode npub or nprofile to pubkey for profile view
   let profilePubkey: string | undefined
   if (npub && showProfile) {
     try {
       const decoded = nip19.decode(npub)
       if (decoded.type === 'npub') {
         profilePubkey = decoded.data
+      } else if (decoded.type === 'nprofile') {
+        profilePubkey = decoded.data.pubkey
       }
     } catch (err) {
-      console.error('Failed to decode npub:', err)
+      console.error('Failed to decode npub/nprofile:', err)
     }
   }
   
