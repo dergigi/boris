@@ -1,6 +1,7 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookmark, faUserLock, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faBookmark, faUserLock } from '@fortawesome/free-solid-svg-icons'
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDateCompact } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
@@ -14,6 +15,7 @@ interface CompactViewProps {
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   articleImage?: string
   articleSummary?: string
+  contentTypeIcon: IconDefinition
 }
 
 export const CompactView: React.FC<CompactViewProps> = ({
@@ -23,7 +25,8 @@ export const CompactView: React.FC<CompactViewProps> = ({
   extractedUrls,
   onSelectUrl,
   articleImage,
-  articleSummary
+  articleSummary,
+  contentTypeIcon
 }) => {
   const isArticle = bookmark.kind === 30023
   const isWebBookmark = bookmark.kind === 39701
@@ -63,18 +66,9 @@ export const CompactView: React.FC<CompactViewProps> = ({
         )}
         
         <span className="bookmark-type-compact">
-          {isWebBookmark ? (
-            <span className="fa-layers fa-fw">
-              <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
-              <FontAwesomeIcon icon={faGlobe} className="bookmark-visibility public" transform="shrink-8 down-2" />
-            </span>
-          ) : bookmark.isPrivate ? (
-            <>
-              <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
-              <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />
-            </>
-          ) : (
-            <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
+          <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
+          {bookmark.isPrivate && (
+            <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />
           )}
         </span>
         {displayText && (

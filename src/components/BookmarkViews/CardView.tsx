@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookmark, faUserLock, faChevronDown, faChevronUp, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faUserLock, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate, renderParsedContent } from '../../utils/bookmarkUtils'
 import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
@@ -25,6 +26,7 @@ interface CardViewProps {
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
   articleImage?: string
   articleSummary?: string
+  contentTypeIcon: IconDefinition
 }
 
 export const CardView: React.FC<CardViewProps> = ({
@@ -39,7 +41,8 @@ export const CardView: React.FC<CardViewProps> = ({
   getAuthorDisplayName,
   handleReadNow,
   articleImage,
-  articleSummary
+  articleSummary,
+  contentTypeIcon
 }) => {
   const firstUrl = hasUrls ? extractedUrls[0] : null
   const firstUrlClassificationType = firstUrl ? classifyUrl(firstUrl)?.type : null
@@ -92,18 +95,9 @@ export const CardView: React.FC<CardViewProps> = ({
       )}
       <div className="bookmark-header">
         <span className="bookmark-type">
-          {isWebBookmark ? (
-            <span className="fa-layers fa-fw">
-              <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
-              <FontAwesomeIcon icon={faGlobe} className="bookmark-visibility public" transform="shrink-8 down-2" />
-            </span>
-          ) : bookmark.isPrivate ? (
-            <>
-              <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
-              <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />
-            </>
-          ) : (
-            <FontAwesomeIcon icon={faBookmark} className="bookmark-visibility public" />
+          <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
+          {bookmark.isPrivate && (
+            <FontAwesomeIcon icon={faUserLock} className="bookmark-visibility private" />
           )}
         </span>
         

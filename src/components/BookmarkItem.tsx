@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { faBookOpen, faPlay, faEye } from '@fortawesome/free-solid-svg-icons'
+import { faBookOpen, faPlay, faEye, faNewspaper, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { npubEncode, neventEncode } from 'nostr-tools/nip19'
@@ -66,7 +67,13 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     return short(bookmark.pubkey) // fallback to short pubkey
   }
 
-  // use helper from kindIcon.ts
+  // Get content type icon based on bookmark kind and URL classification
+  const getContentTypeIcon = (): IconDefinition => {
+    if (isArticle) return faNewspaper
+    if (isWebBookmark) return faGlobe
+    if (firstUrlClassification?.type === 'youtube' || firstUrlClassification?.type === 'video') return faPlay
+    return faBookOpen
+  }
 
   const getIconForUrlType = (url: string) => {
     const classification = classifyUrl(url)
@@ -113,7 +120,8 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     getAuthorDisplayName,
     handleReadNow,
     articleImage,
-    articleSummary
+    articleSummary,
+    contentTypeIcon: getContentTypeIcon()
   }
 
   if (viewMode === 'compact') {
