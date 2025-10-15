@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.12] - 2025-10-15
+
+### Changed
+
+- Horizontal dividers (`<hr>`) in blog posts now display with more subtle styling
+  - Reduced visual weight with 69% opacity for better readability
+  - Added increased vertical padding (2.5rem) above and below dividers
+  - Improved visual separation without disrupting reading flow
+
 ## [0.6.11] - 2025-10-15
 
 ### Added
@@ -1373,7 +1382,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.11...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.12...HEAD
+[0.6.12]: https://github.com/dergigi/boris/compare/v0.6.11...v0.6.12
 [0.6.11]: https://github.com/dergigi/boris/compare/v0.6.10...v0.6.11
 [0.6.10]: https://github.com/dergigi/boris/compare/v0.6.9...v0.6.10
 [0.6.9]: https://github.com/dergigi/boris/compare/v0.6.8...v0.6.9
