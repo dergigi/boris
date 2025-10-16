@@ -188,6 +188,16 @@ function App() {
       // Register common account types (needed for deserialization)
       registerCommonAccountTypes(accounts)
       
+      // Create relay pool and set it up BEFORE loading accounts
+      // NostrConnectAccount.fromJSON needs this to restore the signer
+      const pool = new RelayPool()
+      NostrConnectSigner.pool = pool
+      console.log('[bunker] ✅ Pool assigned to NostrConnectSigner (before account load)')
+      
+      // Create a relay group for better event deduplication and management
+      pool.group(RELAYS)
+      console.log('[bunker] Created relay group with', RELAYS.length, 'relays (including local)')
+      
       // Load persisted accounts from localStorage
       try {
         const accountsJson = localStorage.getItem('accounts')
@@ -234,17 +244,6 @@ function App() {
           localStorage.removeItem('active')
         }
       })
-      
-      const pool = new RelayPool()
-      
-      // Setup NostrConnectSigner to use the relay pool FIRST before any reconnections
-      NostrConnectSigner.pool = pool
-      console.log('[bunker] ✅ Pool assigned to NostrConnectSigner')
-      
-      // Create a relay group for better event deduplication and management
-      pool.group(RELAYS)
-      console.log('Created relay group with', RELAYS.length, 'relays (including local)')
-      console.log('Relay URLs:', RELAYS)
       
       // Reconnect bunker signers when active account changes
       // Keep track of which accounts we've already reconnected to avoid double-connecting
