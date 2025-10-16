@@ -1,4 +1,6 @@
 import { NostrConnectSigner } from 'applesauce-signers'
+import { Accounts } from 'applesauce-accounts'
+import { RelayPool } from 'applesauce-relay'
 
 /**
  * Get default NIP-46 permissions for bunker connections
@@ -22,5 +24,27 @@ export function getDefaultBunkerPermissions(): string[] {
     'nip44_encrypt',
     'nip44_decrypt',
   ]
+}
+
+/**
+ * Reconnect a bunker signer after page load
+ * Ensures the signer is listening and connected to the correct relays
+ */
+export async function reconnectBunkerSigner(
+  account: Accounts.NostrConnectAccount<unknown>,
+  pool: RelayPool
+): Promise<void> {
+  // Add bunker relays to pool for signing communication
+  if (account.signer.relays) {
+    pool.group(account.signer.relays)
+  }
+  
+  // Open signer subscription if not already listening
+  if (!account.signer.listening) {
+    await account.signer.open()
+  }
+  
+  // Mark as connected (bunker remembers permissions from initial connection)
+  account.signer.isConnected = true
 }
 

@@ -8,6 +8,7 @@ import { AccountManager, Accounts } from 'applesauce-accounts'
 import { registerCommonAccountTypes } from 'applesauce-accounts/accounts'
 import { RelayPool } from 'applesauce-relay'
 import { NostrConnectSigner } from 'applesauce-signers'
+import { reconnectBunkerSigner } from './services/nostrConnect'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Bookmarks from './components/Bookmarks'
 import RouteDebug from './components/RouteDebug'
@@ -192,51 +193,29 @@ function App() {
       // NostrConnectAccount.fromJSON needs this to restore the signer
       const pool = new RelayPool()
       NostrConnectSigner.pool = pool
-      console.log('[bunker] ✅ Pool assigned to NostrConnectSigner (before account load)')
-      
-      // Create a relay group for better event deduplication and management
       pool.group(RELAYS)
-      console.log('[bunker] Created relay group with', RELAYS.length, 'relays (including local)')
       
       // Load persisted accounts from localStorage
       try {
         const accountsJson = localStorage.getItem('accounts')
-        console.log('[bunker] Raw accounts from localStorage:', accountsJson)
+        if (accountsJson) {
+          await accounts.fromJSON(JSON.parse(accountsJson))
+        }
         
-        const json = JSON.parse(accountsJson || '[]')
-        console.log('[bunker] Parsed accounts:', json.length, 'accounts')
-        
-        await accounts.fromJSON(json)
-        console.log('[bunker] Loaded', accounts.accounts.length, 'accounts from storage')
-        console.log('[bunker] Account types:', accounts.accounts.map(a => ({ id: a.id, type: a.type })))
-        
-        // Load active account from storage
+        // Restore active account
         const activeId = localStorage.getItem('active')
-        console.log('[bunker] Active ID from localStorage:', activeId)
-        
-        if (activeId) {
-          const account = accounts.getAccount(activeId)
-          console.log('[bunker] Found account for ID?', !!account, account?.type)
-          
-          if (account) {
-            accounts.setActive(activeId)
-            console.log('[bunker] ✅ Restored active account:', activeId, 'type:', account.type)
-          } else {
-            console.warn('[bunker] ⚠️  Active ID found but account not in list')
-          }
-        } else {
-          console.log('[bunker] No active account ID in localStorage')
+        if (activeId && accounts.getAccount(activeId)) {
+          accounts.setActive(activeId)
         }
       } catch (err) {
-        console.error('[bunker] ❌ Failed to load accounts from storage:', err)
+        console.error('[bunker] Failed to restore accounts:', err)
       }
       
-      // Subscribe to accounts changes and persist to localStorage
+      // Persist accounts to localStorage
       const accountsSub = accounts.accounts$.subscribe(() => {
         localStorage.setItem('accounts', JSON.stringify(accounts.toJSON()))
       })
       
-      // Subscribe to active account changes and persist to localStorage
       const activeSub = accounts.active$.subscribe((account) => {
         if (account) {
           localStorage.setItem('active', account.id)
@@ -245,68 +224,20 @@ function App() {
         }
       })
       
-      // Reconnect bunker signers when active account changes
-      // Keep track of which accounts we've already reconnected to avoid double-connecting
+      // Reconnect bunker signers on page load
       const reconnectedAccounts = new Set<string>()
-      
-            const bunkerReconnectSub = accounts.active$.subscribe(async (account) => {
-              console.log('[bunker] Active account changed:', { 
-                hasAccount: !!account, 
-                type: account?.type,
-                id: account?.id 
-              })
-              
-              if (account && account.type === 'nostr-connect') {
-                const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
-                
-                // Skip if we've already reconnected this account
-                if (reconnectedAccounts.has(account.id)) {
-                  console.log('[bunker] ⏭️  Already reconnected this account, skipping')
-                  return
-                }
-                
-                console.log('[bunker] Account detected. Status:', {
-                  listening: nostrConnectAccount.signer.listening,
-                  isConnected: nostrConnectAccount.signer.isConnected,
-                  hasRemote: !!nostrConnectAccount.signer.remote,
-                  bunkerRelays: nostrConnectAccount.signer.relays
-                })
-                
-                try {
-                  // Add bunker's relays to the pool so signing requests can be sent/received
-                  const bunkerRelays = nostrConnectAccount.signer.relays || []
-                  console.log('[bunker] Adding bunker relays to pool:', bunkerRelays)
-                  pool.group(bunkerRelays)
-                  
-                  // Just ensure the signer is listening for responses - don't call connect() again
-                  // The fromBunkerURI already connected with permissions during login
-                  if (!nostrConnectAccount.signer.listening) {
-                    console.log('[bunker] Opening signer subscription...')
-                    await nostrConnectAccount.signer.open()
-                    console.log('[bunker] ✅ Signer subscription opened')
-                  } else {
-                    console.log('[bunker] ✅ Signer already listening')
-                  }
-                  
-                  // Mark as connected so requireConnection() doesn't call connect() again
-                  // The bunker remembers the permissions from the initial connection
-                  nostrConnectAccount.signer.isConnected = true
-                  
-                  console.log('[bunker] Final signer status:', {
-                    listening: nostrConnectAccount.signer.listening,
-                    isConnected: nostrConnectAccount.signer.isConnected,
-                    remote: nostrConnectAccount.signer.remote,
-                    relays: nostrConnectAccount.signer.relays
-                  })
-                  
-                  // Mark this account as reconnected
-                  reconnectedAccounts.add(account.id)
-                  console.log('[bunker] 🎉 Signer ready for signing')
-                } catch (error) {
-                  console.error('[bunker] ❌ Failed to open signer:', error)
-                }
-              }
-            })
+      const bunkerReconnectSub = accounts.active$.subscribe(async (account) => {
+        if (account?.type === 'nostr-connect' && !reconnectedAccounts.has(account.id)) {
+          reconnectedAccounts.add(account.id)
+          
+          try {
+            await reconnectBunkerSigner(account as Accounts.NostrConnectAccount<unknown>, pool)
+            console.log('[bunker] Reconnected to bunker signer')
+          } catch (error) {
+            console.error('[bunker] Failed to reconnect signer:', error)
+          }
+        }
+      })
       
       // Keep all relay connections alive indefinitely by creating a persistent subscription
       // This prevents disconnection when no other subscriptions are active
