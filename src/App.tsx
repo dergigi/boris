@@ -203,13 +203,27 @@ function App() {
       try {
         const accountsJson = localStorage.getItem('accounts')
         if (accountsJson) {
-          await accounts.fromJSON(JSON.parse(accountsJson))
-        }
-        
-        // Restore active account
-        const activeId = localStorage.getItem('active')
-        if (activeId && accounts.getAccount(activeId)) {
-          accounts.setActive(activeId)
+          const parsed = JSON.parse(accountsJson)
+          
+          // Clear old bunker accounts (they were created with wrong setup)
+          const bunkerFixVersion = localStorage.getItem('bunkerFixVersion')
+          if (bunkerFixVersion !== '1') {
+            console.log('[bunker] Clearing old bunker accounts (need to reconnect with fixed setup)')
+            const nonBunkerAccounts = parsed.filter((acc: any) => acc.type !== 'nostr-connect')
+            if (nonBunkerAccounts.length > 0) {
+              await accounts.fromJSON(nonBunkerAccounts)
+            }
+            localStorage.setItem('bunkerFixVersion', '1')
+            localStorage.removeItem('active')
+          } else {
+            await accounts.fromJSON(parsed)
+            
+            // Restore active account
+            const activeId = localStorage.getItem('active')
+            if (activeId && accounts.getAccount(activeId)) {
+              accounts.setActive(activeId)
+            }
+          }
         }
       } catch (err) {
         console.error('[bunker] Failed to restore accounts:', err)
