@@ -112,7 +112,7 @@ export const fetchBookmarks = async (
     try {
       const urls = Array.from(relayPool.relays.values()).map(r => ({ url: r.url, connected: (r as any).connected }))
       console.log('[bunker] Relay connections:', urls)
-    } catch {}
+    } catch (err) { console.warn('[bunker] Failed to read relay connections', err) }
 
 const { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags } = await collectBookmarksFromEvents(
       bookmarkListEvents,

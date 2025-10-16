@@ -264,7 +264,7 @@ function App() {
                 // Sanity check: remote (bunker) pubkey must not equal our pubkey
                 if (nostrConnectAccount.signer.remote === nostrConnectAccount.pubkey) {
                   console.warn('[bunker] ❌ Invalid bunker state: remote pubkey equals user pubkey. Please reconnect using a fresh bunker URI from Amber.')
-                  try { showToast?.('Reconnect bunker from Amber: invalid remote pubkey detected') } catch {}
+                  try { showToast?.('Reconnect bunker from Amber: invalid remote pubkey detected') } catch (err) { console.warn('[bunker] toast failed', err) }
                 }
                 
                 // Skip if we've already reconnected this account
@@ -310,7 +310,7 @@ function App() {
                     const mergedRelays = Array.from(new Set([...(signerData.relays || []), ...RELAYS]))
                     recreatedSigner.relays = mergedRelays
                     console.log('[bunker] 🔗 Signer relays merged with app RELAYS:', mergedRelays)
-                  } catch {}
+                  } catch (err) { console.warn('[bunker] failed to merge signer relays', err) }
                   
                   // Replace the signer on the account
                   nostrConnectAccount.signer = recreatedSigner
@@ -329,14 +329,14 @@ function App() {
                         contentLength: typeof event?.content === 'string' ? event.content.length : undefined
                       }
                       console.log('[bunker] publish via signer:', summary)
-                    } catch {}
+                    } catch (err) { console.warn('[bunker] failed to log publish summary', err) }
                     return originalPublish(relays, event)
                   }
                   const originalSubscribe = (recreatedSigner as any).subscriptionMethod.bind(recreatedSigner)
                   ;(recreatedSigner as any).subscriptionMethod = (relays: string[], filters: any[]) => {
                     try {
                       console.log('[bunker] subscribe via signer:', { relays, filters })
-                    } catch {}
+                    } catch (err) { console.warn('[bunker] failed to log subscribe summary', err) }
                     return originalSubscribe(relays, filters)
                   }
 
