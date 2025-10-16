@@ -29,6 +29,9 @@ import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
 import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProgressFilters'
 import { filterByReadingProgress } from '../utils/readingProgressUtils'
+import { deriveReadsFromBookmarks } from '../utils/readsFromBookmarks'
+import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
+import { mergeReadItem } from '../utils/readItemMerge'
 
 interface MeProps {
   relayPool: RelayPool
@@ -134,30 +137,39 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Fetch bookmarks first (needed for reads)
-      let fetchedBookmarks: Bookmark[] = []
-      try {
-        await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
-          fetchedBookmarks = newBookmarks
-          setBookmarks(newBookmarks)
-        })
-      } catch (err) {
-        console.warn('Failed to load bookmarks:', err)
-        fetchedBookmarks = []
+      // Ensure bookmarks are loaded
+      let fetchedBookmarks: Bookmark[] = bookmarks
+      if (bookmarks.length === 0) {
+        try {
+          await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
+            fetchedBookmarks = newBookmarks
+            setBookmarks(newBookmarks)
+          })
+        } catch (err) {
+          console.warn('Failed to load bookmarks:', err)
+          fetchedBookmarks = []
+        }
       }
 
-      // Fetch all reads with streaming
-      const tempMap = new Map(readsMap)
-      await fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks, (item) => {
-        tempMap.set(item.id, item)
-        setReadsMap(new Map(tempMap))
-        setReads(Array.from(tempMap.values()))
-      })
-      
+      // Derive reads from bookmarks immediately
+      const initialReads = deriveReadsFromBookmarks(fetchedBookmarks)
+      const tempMap = new Map(initialReads.map(item => [item.id, item]))
+      setReadsMap(tempMap)
+      setReads(initialReads)
       setLoadedTabs(prev => new Set(prev).add('reads'))
+      if (!hasBeenLoaded) setLoading(false)
+      
+      // Background enrichment: merge reading progress and mark-as-read
+      // Only update items that are already in our map
+      fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks, (item) => {
+        if (tempMap.has(item.id) && mergeReadItem(tempMap, item)) {
+          setReadsMap(new Map(tempMap))
+          setReads(Array.from(tempMap.values()))
+        }
+      }).catch(err => console.warn('Failed to enrich reads:', err))
+      
     } catch (err) {
       console.error('Failed to load reads:', err)
-    } finally {
       if (!hasBeenLoaded) setLoading(false)
     }
   }
@@ -170,18 +182,39 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Fetch links with streaming
-      const tempMap = new Map(linksMap)
-      await fetchLinks(relayPool, viewingPubkey, (item) => {
-        tempMap.set(item.id, item)
-        setLinksMap(new Map(tempMap))
-        setLinks(Array.from(tempMap.values()))
-      })
-      
+      // Ensure bookmarks are loaded
+      let fetchedBookmarks: Bookmark[] = bookmarks
+      if (bookmarks.length === 0) {
+        try {
+          await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
+            fetchedBookmarks = newBookmarks
+            setBookmarks(newBookmarks)
+          })
+        } catch (err) {
+          console.warn('Failed to load bookmarks:', err)
+          fetchedBookmarks = []
+        }
+      }
+
+      // Derive links from bookmarks immediately
+      const initialLinks = deriveLinksFromBookmarks(fetchedBookmarks)
+      const tempMap = new Map(initialLinks.map(item => [item.id, item]))
+      setLinksMap(tempMap)
+      setLinks(initialLinks)
       setLoadedTabs(prev => new Set(prev).add('links'))
+      if (!hasBeenLoaded) setLoading(false)
+      
+      // Background enrichment: merge reading progress and mark-as-read
+      // Only update items that are already in our map
+      fetchLinks(relayPool, viewingPubkey, (item) => {
+        if (tempMap.has(item.id) && mergeReadItem(tempMap, item)) {
+          setLinksMap(new Map(tempMap))
+          setLinks(Array.from(tempMap.values()))
+        }
+      }).catch(err => console.warn('Failed to enrich links:', err))
+      
     } catch (err) {
       console.error('Failed to load links:', err)
-    } finally {
       if (!hasBeenLoaded) setLoading(false)
     }
   }
