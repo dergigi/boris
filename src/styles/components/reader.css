@@ -216,72 +216,7 @@
 .mark-as-read-btn:hover:not(:disabled) { background: var(--color-border); border-color: var(--color-text-muted); transform: translateY(-1px); }
 .mark-as-read-btn:active:not(:disabled) { transform: translateY(0); }
 .mark-as-read-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.mark-as-read-btn svg { font-size: 1.1rem; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
-
-/* Fancy Mark as Read animation */
-@keyframes markAsReadSuccess {
-  0% {
-    background: var(--color-bg-elevated);
-    border-color: var(--color-border-subtle);
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-  }
-  10% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.3);
-  }
-  25% {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    border-color: #10b981;
-    color: white;
-    transform: scale(1.02);
-    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
-  }
-  65% {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    border-color: #10b981;
-    color: white;
-    transform: scale(1.02);
-    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
-  }
-  100% {
-    background: #6b7280;
-    border-color: #6b7280;
-    color: white;
-    transform: scale(1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-}
-
-@keyframes iconSpin {
-  0% {
-    transform: rotate(0deg) scale(1);
-  }
-  15% {
-    transform: rotate(0deg) scale(1.2);
-  }
-  50% {
-    transform: rotate(360deg) scale(1.2);
-  }
-  100% {
-    transform: rotate(360deg) scale(1);
-  }
-}
-
-.mark-as-read-btn.animating {
-  animation: markAsReadSuccess 2.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  pointer-events: none;
-}
-
-.mark-as-read-btn.animating svg {
-  animation: iconSpin 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-.mark-as-read-btn.marked {
-  background: #6b7280;
-  border-color: #6b7280;
-  color: white;
-}
+.mark-as-read-btn svg { font-size: 1.1rem; }
 @media (max-width: 768px) {
   .reader {
     max-width: 100%;

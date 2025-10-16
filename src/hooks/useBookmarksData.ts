@@ -1,16 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IAccount, AccountManager } from 'applesauce-accounts'
-import { IEventStore } from 'applesauce-core'
 import { Bookmark } from '../types/bookmarks'
 import { Highlight } from '../types/highlights'
 import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchHighlights, fetchHighlightsForArticle } from '../services/highlightService'
 import { fetchContacts } from '../services/contactService'
 import { UserSettings } from '../services/settingsService'
-import { loadReadingPosition, generateArticleIdentifier } from '../services/readingPositionService'
-import { fetchReadArticles } from '../services/libraryService'
-import { nip19 } from 'nostr-tools'
 
 interface UseBookmarksDataParams {
   relayPool: RelayPool | null
@@ -21,7 +17,6 @@ interface UseBookmarksDataParams {
   currentArticleCoordinate?: string
   currentArticleEventId?: string
   settings?: UserSettings
-  eventStore?: IEventStore
 }
 
 export const useBookmarksData = ({
@@ -32,8 +27,7 @@ export const useBookmarksData = ({
   externalUrl,
   currentArticleCoordinate,
   currentArticleEventId,
-  settings,
-  eventStore
+  settings
 }: UseBookmarksDataParams) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [bookmarksLoading, setBookmarksLoading] = useState(true)
@@ -42,8 +36,6 @@ export const useBookmarksData = ({
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null)
-  const [readingPositions, setReadingPositions] = useState<Map<string, number>>(new Map())
-  const [markedAsReadIds, setMarkedAsReadIds] = useState<Set<string>>(new Set())
 
   const handleFetchContacts = useCallback(async () => {
     if (!relayPool || !activeAccount) return
@@ -133,93 +125,6 @@ export const useBookmarksData = ({
     handleFetchContacts()
   }, [relayPool, activeAccount, naddr, externalUrl, handleFetchHighlights, handleFetchContacts])
 
-  // Fetch marked-as-read articles
-  useEffect(() => {
-    const loadMarkedAsRead = async () => {
-      if (!activeAccount || !relayPool || !eventStore || bookmarks.length === 0) {
-        return
-      }
-
-      try {
-        const readArticles = await fetchReadArticles(relayPool, activeAccount.pubkey)
-        
-        // Create a set of bookmark IDs that are marked as read
-        const markedBookmarkIds = new Set<string>()
-        
-        // For each read article, we need to match it to bookmark IDs
-        for (const readArticle of readArticles) {
-          // Add the event ID directly (for web bookmarks and legacy compatibility)
-          markedBookmarkIds.add(readArticle.id)
-          
-          // For nostr-native articles (kind:7 reactions), also add the coordinate format
-          if (readArticle.eventId && readArticle.eventAuthor && readArticle.eventKind) {
-            // Try to get the event from the eventStore to find the 'd' tag
-            const event = eventStore.getEvent(readArticle.eventId)
-            if (event) {
-              const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-              const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
-              markedBookmarkIds.add(coordinate)
-            }
-          }
-        }
-        
-        setMarkedAsReadIds(markedBookmarkIds)
-      } catch (error) {
-        console.warn('⚠️ [Bookmarks] Failed to load marked-as-read articles:', error)
-      }
-    }
-
-    loadMarkedAsRead()
-  }, [relayPool, activeAccount, eventStore, bookmarks])
-
-  // Load reading positions for bookmarked articles (kind:30023)
-  useEffect(() => {
-    const loadPositions = async () => {
-      if (!activeAccount || !relayPool || !eventStore || bookmarks.length === 0 || !settings?.syncReadingPosition) {
-        return
-      }
-
-      const positions = new Map<string, number>()
-
-      // Extract all kind:30023 articles from bookmarks
-      const articles = bookmarks.flatMap(bookmark => 
-        (bookmark.individualBookmarks || []).filter(item => item.kind === 30023)
-      )
-
-      await Promise.all(
-        articles.map(async (article) => {
-          try {
-            const dTag = article.tags.find(t => t[0] === 'd')?.[1] || ''
-            const naddr = nip19.naddrEncode({
-              kind: 30023,
-              pubkey: article.pubkey,
-              identifier: dTag
-            })
-            const articleUrl = `nostr:${naddr}`
-            const identifier = generateArticleIdentifier(articleUrl)
-
-            const savedPosition = await loadReadingPosition(
-              relayPool,
-              eventStore,
-              activeAccount.pubkey,
-              identifier
-            )
-
-            if (savedPosition && savedPosition.position > 0) {
-              positions.set(article.id, savedPosition.position)
-            }
-          } catch (error) {
-            console.warn('⚠️ [Bookmarks] Failed to load reading position for article:', error)
-          }
-        })
-      )
-
-      setReadingPositions(positions)
-    }
-
-    loadPositions()
-  }, [bookmarks, activeAccount, relayPool, eventStore, settings?.syncReadingPosition])
-
   return {
     bookmarks,
     bookmarksLoading,
@@ -232,9 +137,7 @@ export const useBookmarksData = ({
     lastFetchTime,
     handleFetchBookmarks,
     handleFetchHighlights,
-    handleRefreshAll,
-    readingPositions,
-    markedAsReadIds
+    handleRefreshAll
   }
 }
 
