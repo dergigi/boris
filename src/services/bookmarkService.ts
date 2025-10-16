@@ -107,7 +107,14 @@ export const fetchBookmarks = async (
       console.log('[bunker] 🔑 Signer has nip04:', hasNip04Decrypt(signerCandidate))
       console.log('[bunker] 🔑 Signer has nip44:', hasNip44Decrypt(signerCandidate))
     }
-    const { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags } = await collectBookmarksFromEvents(
+    
+    // Debug relay connectivity for bunker relays
+    try {
+      const urls = Array.from(relayPool.relays.values()).map(r => ({ url: r.url, connected: (r as any).connected }))
+      console.log('[bunker] Relay connections:', urls)
+    } catch {}
+
+const { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags } = await collectBookmarksFromEvents(
       bookmarkListEvents,
       activeAccount,
       signerCandidate

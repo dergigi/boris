@@ -301,6 +301,19 @@ function App() {
                   // Replace the signer on the account
                   nostrConnectAccount.signer = recreatedSigner
                   console.log('[bunker] ✅ Signer recreated with pool context')
+
+                  // Debug: log publish/subscription calls made by signer (decrypt/sign requests)
+                  const originalPublish = (recreatedSigner as any).publishMethod
+                  ;(recreatedSigner as any).publishMethod = (relays: string[], event: any) => {
+                    try { console.log('[bunker] publish via signer:', { relays, kind: event?.kind, tags: event?.tags?.length }) } catch {}
+                    return originalPublish(relays, event)
+                  }
+                  const originalSubscribe = (recreatedSigner as any).subscriptionMethod
+                  ;(recreatedSigner as any).subscriptionMethod = (relays: string[], filters: any[]) => {
+                    try { console.log('[bunker] subscribe via signer:', { relays, filters }) } catch {}
+                    return originalSubscribe(relays, filters)
+                  }
+
                   
                   // Just ensure the signer is listening for responses - don't call connect() again
                   // The fromBunkerURI already connected with permissions during login
