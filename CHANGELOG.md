@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.21] - 2025-10-16
+
+### Added
+
+- Reading position sync across devices using Nostr Kind 30078 (NIP-78)
+  - Automatically saves and syncs reading position as you scroll
+  - Visual reading progress indicator on article cards
+  - Reading progress shown in Explore and Bookmarks sidebar
+  - Auto-scroll to last reading position setting (configurable in Settings)
+  - Reading position displayed as colored progress bar on cards
+- Reading progress filters for organizing articles
+  - Filter by reading state: Unopened, Started (0-10%), Reading (11-94%), Completed (95-100% or marked as read)
+  - Filter icons colored when active (blue for most, green for completed)
+  - URL routing support for reading progress filters
+  - Reading progress filters available in Archive tab and bookmarks sidebar
+- Reads and Links tabs on `/me` page
+  - Reads tab shows nostr-native articles with reading progress
+  - Links tab shows external URLs with reading progress
+  - Both tabs populate instantly from bookmarks for fast loading
+  - Lazy loading for improved performance
+- Auto-mark as read at 100% reading progress
+  - Articles automatically marked as read when scrolled to end
+  - Marked-as-read articles treated as 100% progress
+  - Fancy checkmark animation on Mark as Read button
+- Click-to-open article navigation on highlights
+  - Clicking highlights in Explore and Me pages opens the source article
+  - Automatically scrolls to highlighted text position
+
+### Changed
+
+- Renamed Archive to Reads with expanded functionality
+- Merged 'Completed' and 'Marked as Read' filters into one unified filter
+- Simplified filter icon colors to blue (except green for completed)
+- Started reading progress state (0-10%) uses neutral text color
+- Replace spinners with skeleton placeholders during refresh in Archive/Reads/Links tabs
+- Removed unused IEventStore import in ContentPanel
+
+### Fixed
+
+- Reading position calculation now accurately reaches 100%
+- Reading position filters work correctly in bookmarks sidebar
+- Filter out reads without timestamps or 'Untitled' items
+- Show skeleton placeholders correctly during initial tab load
+- External URLs in Reads tab only shown if they have reading progress
+- Reading progress merges even when timestamp is older than bookmark
+- Resolved all linter errors and TypeScript type issues
+
+### Refactored
+
+- Renamed ArchiveFilters component to ReadingProgressFilters
+- Extracted shared utilities from readsFromBookmarks for DRY code
+- Use setState callback pattern for background enrichment
+- Use naddr format for article IDs to match reading positions
+- Extract article titles, images, summaries from bookmark tags using applesauce helpers
+
 ## [0.6.20] - 2025-10-15
 
 ### Added
@@ -1641,7 +1696,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.20...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.21...HEAD
+[0.6.21]: https://github.com/dergigi/boris/compare/v0.6.20...v0.6.21
 [0.6.20]: https://github.com/dergigi/boris/compare/v0.6.19...v0.6.20
 [0.6.19]: https://github.com/dergigi/boris/compare/v0.6.18...v0.6.19
 [0.6.18]: https://github.com/dergigi/boris/compare/v0.6.17...v0.6.18
