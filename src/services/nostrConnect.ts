@@ -79,62 +79,51 @@ export async function reconnectBunkerSigner(
   console.log('[bunker] Signer marked as connected, ready for signing/decryption')
   
   // Expose nip04/nip44 at account level for compatibility with logging
-  // This allows bookmark decryption to work without accessing account.signer
+  // Cache wrapped methods to ensure they're used consistently
   if (!('nip04' in account)) {
-    Object.defineProperty(account, 'nip04', {
-      get() { 
-        const original = this.signer.nip04
-        return {
-          encrypt: async (pubkey: string, plaintext: string) => {
-            console.log('[bunker] 🔐 nip04.encrypt called', { pubkey: pubkey.slice(0, 8) })
-            const result = await original.encrypt(pubkey, plaintext)
-            console.log('[bunker] ✅ nip04.encrypt completed')
-            return result
-          },
-          decrypt: async (pubkey: string, ciphertext: string) => {
-            console.log('[bunker] 🔓 nip04.decrypt called', { pubkey: pubkey.slice(0, 8), ciphertextLength: ciphertext.length })
-            try {
-              const result = await original.decrypt(pubkey, ciphertext)
-              console.log('[bunker] ✅ nip04.decrypt completed')
-              return result
-            } catch (err) {
-              console.error('[bunker] ❌ nip04.decrypt failed:', err)
-              throw err
-            }
-          }
-        }
+    const nip04Wrapped = {
+      encrypt: async (pubkey: string, plaintext: string) => {
+        console.log('[bunker] 🔐 nip04.encrypt called', { pubkey: pubkey.slice(0, 8) })
+        const result = await account.signer.nip04!.encrypt(pubkey, plaintext)
+        console.log('[bunker] ✅ nip04.encrypt completed')
+        return result
       },
-      enumerable: true,
-      configurable: true
-    })
+      decrypt: async (pubkey: string, ciphertext: string) => {
+        console.log('[bunker] 🔓 nip04.decrypt called', { pubkey: pubkey.slice(0, 8), ciphertextLength: ciphertext.length })
+        try {
+          const result = await account.signer.nip04!.decrypt(pubkey, ciphertext)
+          console.log('[bunker] ✅ nip04.decrypt completed')
+          return result
+        } catch (err) {
+          console.error('[bunker] ❌ nip04.decrypt failed:', err)
+          throw err
+        }
+      }
+    };
+    (account as any).nip04 = nip04Wrapped
   }
+  
   if (!('nip44' in account)) {
-    Object.defineProperty(account, 'nip44', {
-      get() { 
-        const original = this.signer.nip44
-        return {
-          encrypt: async (pubkey: string, plaintext: string) => {
-            console.log('[bunker] 🔐 nip44.encrypt called', { pubkey: pubkey.slice(0, 8) })
-            const result = await original.encrypt(pubkey, plaintext)
-            console.log('[bunker] ✅ nip44.encrypt completed')
-            return result
-          },
-          decrypt: async (pubkey: string, ciphertext: string) => {
-            console.log('[bunker] 🔓 nip44.decrypt called', { pubkey: pubkey.slice(0, 8), ciphertextLength: ciphertext.length })
-            try {
-              const result = await original.decrypt(pubkey, ciphertext)
-              console.log('[bunker] ✅ nip44.decrypt completed', { plaintextLength: result.length })
-              return result
-            } catch (err) {
-              console.error('[bunker] ❌ nip44.decrypt failed:', err)
-              throw err
-            }
-          }
-        }
+    const nip44Wrapped = {
+      encrypt: async (pubkey: string, plaintext: string) => {
+        console.log('[bunker] 🔐 nip44.encrypt called', { pubkey: pubkey.slice(0, 8) })
+        const result = await account.signer.nip44!.encrypt(pubkey, plaintext)
+        console.log('[bunker] ✅ nip44.encrypt completed')
+        return result
       },
-      enumerable: true,
-      configurable: true
-    })
+      decrypt: async (pubkey: string, ciphertext: string) => {
+        console.log('[bunker] 🔓 nip44.decrypt called', { pubkey: pubkey.slice(0, 8), ciphertextLength: ciphertext.length })
+        try {
+          const result = await account.signer.nip44!.decrypt(pubkey, ciphertext)
+          console.log('[bunker] ✅ nip44.decrypt completed', { plaintextLength: result.length })
+          return result
+        } catch (err) {
+          console.error('[bunker] ❌ nip44.decrypt failed:', err)
+          throw err
+        }
+      }
+    };
+    (account as any).nip44 = nip44Wrapped
   }
 }
 
