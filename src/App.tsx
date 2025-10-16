@@ -309,7 +309,26 @@ function App() {
                   ;(recreatedSigner as any).publishMethod = (relays: string[], event: any) => {
                     try {
                       const pTag = Array.isArray(event?.tags) ? event.tags.find((t: any) => t?.[0] === 'p')?.[1] : undefined
-                      console.log('[bunker] publish via signer:', { relays, kind: event?.kind, tags: event?.tags, pTag, remote: nostrConnectAccount.signer.remote, userPubkey: nostrConnectAccount.pubkey })
+                      let preview: string | undefined
+                      let method: string | undefined
+                      let methodParamsLen: number | undefined
+                      try {
+                        preview = typeof event?.content === 'string' ? event.content.slice(0, 200) : undefined
+                        const parsed = JSON.parse(event?.content ?? 'null')
+                        method = parsed?.method
+                        methodParamsLen = Array.isArray(parsed?.params) ? parsed.params.length : undefined
+                      } catch {}
+                      console.log('[bunker] publish via signer:', {
+                        relays,
+                        kind: event?.kind,
+                        tags: event?.tags,
+                        pTag,
+                        remote: nostrConnectAccount.signer.remote,
+                        userPubkey: nostrConnectAccount.pubkey,
+                        method,
+                        methodParamsLen,
+                        preview
+                      })
                     } catch {}
                     return originalPublish(relays, event)
                   }
