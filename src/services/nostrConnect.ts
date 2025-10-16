@@ -48,7 +48,8 @@ export async function reconnectBunkerSigner(
   // Important: do NOT set isConnected manually; establish connection properly
   try {
     console.log('[bunker] Connecting to bunker remote...')
-    await account.signer.connect()
+    // Re-request permissions on reconnect to ensure decrypt is allowed
+    await account.signer.connect(undefined, getDefaultBunkerPermissions())
     console.log('[bunker] ✅ Connected to bunker remote')
   } catch (err) {
     console.error('[bunker] ❌ Failed to connect to bunker remote:', err)
