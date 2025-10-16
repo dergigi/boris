@@ -191,18 +191,35 @@ function App() {
       
       // Load persisted accounts from localStorage
       try {
-        const json = JSON.parse(localStorage.getItem('accounts') || '[]')
+        const accountsJson = localStorage.getItem('accounts')
+        console.log('[bunker] Raw accounts from localStorage:', accountsJson)
+        
+        const json = JSON.parse(accountsJson || '[]')
+        console.log('[bunker] Parsed accounts:', json.length, 'accounts')
+        
         await accounts.fromJSON(json)
-        console.log('Loaded', accounts.accounts.length, 'accounts from storage')
+        console.log('[bunker] Loaded', accounts.accounts.length, 'accounts from storage')
+        console.log('[bunker] Account types:', accounts.accounts.map(a => ({ id: a.id, type: a.type })))
         
         // Load active account from storage
         const activeId = localStorage.getItem('active')
-        if (activeId && accounts.getAccount(activeId)) {
-          accounts.setActive(activeId)
-          console.log('Restored active account:', activeId)
+        console.log('[bunker] Active ID from localStorage:', activeId)
+        
+        if (activeId) {
+          const account = accounts.getAccount(activeId)
+          console.log('[bunker] Found account for ID?', !!account, account?.type)
+          
+          if (account) {
+            accounts.setActive(activeId)
+            console.log('[bunker] ✅ Restored active account:', activeId, 'type:', account.type)
+          } else {
+            console.warn('[bunker] ⚠️  Active ID found but account not in list')
+          }
+        } else {
+          console.log('[bunker] No active account ID in localStorage')
         }
       } catch (err) {
-        console.error('Failed to load accounts from storage:', err)
+        console.error('[bunker] ❌ Failed to load accounts from storage:', err)
       }
       
       // Subscribe to accounts changes and persist to localStorage
