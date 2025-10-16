@@ -318,7 +318,7 @@ function App() {
 
                   // Debug: log publish/subscription calls made by signer (decrypt/sign requests)
                   // IMPORTANT: bind originals to preserve `this` context used internally by the signer
-                  const originalPublish = (recreatedSigner as { publishMethod: (relays: string[], event: unknown) => unknown }).publishMethod.bind(recreatedSigner)
+                  const originalPublish = (recreatedSigner as unknown as { publishMethod: (relays: string[], event: unknown) => unknown }).publishMethod.bind(recreatedSigner)
                   ;(recreatedSigner as unknown as { publishMethod: (relays: string[], event: unknown) => unknown }).publishMethod = (relays: string[], event: unknown) => {
                     try {
                       const summary = {
@@ -332,7 +332,7 @@ function App() {
                     } catch (err) { console.warn('[bunker] failed to log publish summary', err) }
                     return originalPublish(relays, event)
                   }
-                  const originalSubscribe = (recreatedSigner as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod.bind(recreatedSigner)
+                  const originalSubscribe = (recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod.bind(recreatedSigner)
                   ;(recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod = (relays: string[], filters: unknown[]) => {
                     try {
                       console.log('[bunker] subscribe via signer:', { relays, filters })
