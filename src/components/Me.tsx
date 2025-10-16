@@ -292,14 +292,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   }
 
   const getReadItemUrl = (item: ReadItem) => {
-    if (item.type === 'article' && item.event) {
-      const dTag = item.event.tags.find(t => t[0] === 'd')?.[1] || ''
-      const naddr = nip19.naddrEncode({
-        kind: 30023,
-        pubkey: item.event.pubkey,
-        identifier: dTag
-      })
-      return `/a/${naddr}`
+    if (item.type === 'article') {
+      // ID is already in naddr format
+      return `/a/${item.id}`
     } else if (item.url) {
       return `/r/${encodeURIComponent(item.url)}`
     }

@@ -2,6 +2,7 @@ import { Bookmark } from '../types/bookmarks'
 import { ReadItem } from '../services/readsService'
 import { classifyBookmarkType } from './bookmarkTypeClassifier'
 import { KINDS } from '../config/kinds'
+import { nip19 } from 'nostr-tools'
 
 /**
  * Derives ReadItems from bookmarks for Nostr articles (kind:30023).
@@ -18,7 +19,24 @@ export function deriveReadsFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
     
     // Only include articles (kind:30023)
     if (bookmarkType === 'article' && bookmark.kind === KINDS.BlogPost) {
-      const coordinate = bookmark.id // Already in coordinate format
+      const coordinate = bookmark.id // coordinate format: kind:pubkey:identifier
+      
+      // Extract identifier from coordinate
+      const parts = coordinate.split(':')
+      const identifier = parts[2] || ''
+      
+      // Convert to naddr format (reading positions use naddr as ID)
+      let naddr: string
+      try {
+        naddr = nip19.naddrEncode({
+          kind: KINDS.BlogPost,
+          pubkey: bookmark.pubkey,
+          identifier
+        })
+      } catch (e) {
+        console.warn('Failed to encode naddr for bookmark:', coordinate)
+        continue
+      }
       
       // Extract metadata from tags (same as BookmarkItem does)
       const title = bookmark.content || 'Untitled'
@@ -27,7 +45,7 @@ export function deriveReadsFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
       const published = bookmark.tags.find(t => t[0] === 'published_at')?.[1]
       
       const item: ReadItem = {
-        id: coordinate,
+        id: naddr, // Use naddr format to match reading positions
         source: 'bookmark',
         type: 'article',
         readingProgress: 0,
@@ -39,7 +57,7 @@ export function deriveReadsFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
         author: bookmark.pubkey
       }
       
-      readsMap.set(coordinate, item)
+      readsMap.set(naddr, item)
     }
   }
   
