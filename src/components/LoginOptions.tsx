@@ -48,6 +48,13 @@ const LoginOptions: React.FC = () => {
       // Get pubkey from signer
       const pubkey = await signer.getPublicKey()
       
+      // Validate: remote (Amber) pubkey must not equal user pubkey
+      if ((signer as any).remote === pubkey) {
+        console.error('[bunker] Invalid bunker URI: remote pubkey equals user pubkey')
+        setError('Invalid bunker URI (remote equals your pubkey). Generate a fresh Connect link in Amber and try again.')
+        return
+      }
+      
       // Create account from signer
       const account = new Accounts.NostrConnectAccount(pubkey, signer)
       

@@ -311,7 +311,10 @@ function App() {
                   // Debug: log publish/subscription calls made by signer (decrypt/sign requests)
                   const originalPublish = (recreatedSigner as any).publishMethod
                   ;(recreatedSigner as any).publishMethod = (relays: string[], event: any) => {
-                    try { console.log('[bunker] publish via signer:', { relays, kind: event?.kind, tags: event?.tags?.length }) } catch {}
+                    try {
+                      const pTag = Array.isArray(event?.tags) ? event.tags.find((t: any) => t?.[0] === 'p')?.[1] : undefined
+                      console.log('[bunker] publish via signer:', { relays, kind: event?.kind, tags: event?.tags, pTag, remote: nostrConnectAccount.signer.remote, userPubkey: nostrConnectAccount.pubkey })
+                    } catch {}
                     return originalPublish(relays, event)
                   }
                   const originalSubscribe = (recreatedSigner as any).subscriptionMethod
