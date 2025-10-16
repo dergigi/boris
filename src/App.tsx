@@ -249,58 +249,64 @@ function App() {
       // Keep track of which accounts we've already reconnected to avoid double-connecting
       const reconnectedAccounts = new Set<string>()
       
-      const bunkerReconnectSub = accounts.active$.subscribe(async (account) => {
-        console.log('[bunker] Active account changed:', { 
-          hasAccount: !!account, 
-          type: account?.type,
-          id: account?.id 
-        })
-        
-        if (account && account.type === 'nostr-connect') {
-          const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
-          
-          // Skip if we've already reconnected this account
-          if (reconnectedAccounts.has(account.id)) {
-            console.log('[bunker] ⏭️  Already reconnected this account, skipping')
-            return
-          }
-          
-          console.log('[bunker] Account detected. Status:', {
-            listening: nostrConnectAccount.signer.listening,
-            isConnected: nostrConnectAccount.signer.isConnected,
-            hasRemote: !!nostrConnectAccount.signer.remote
-          })
-          
-          try {
-            // Just ensure the signer is listening for responses - don't call connect() again
-            // The fromBunkerURI already connected with permissions during login
-            if (!nostrConnectAccount.signer.listening) {
-              console.log('[bunker] Opening signer subscription...')
-              await nostrConnectAccount.signer.open()
-              console.log('[bunker] ✅ Signer subscription opened')
-            } else {
-              console.log('[bunker] ✅ Signer already listening')
-            }
-            
-            // Mark as connected so requireConnection() doesn't call connect() again
-            // The bunker remembers the permissions from the initial connection
-            nostrConnectAccount.signer.isConnected = true
-            
-            console.log('[bunker] Final signer status:', {
-              listening: nostrConnectAccount.signer.listening,
-              isConnected: nostrConnectAccount.signer.isConnected,
-              remote: nostrConnectAccount.signer.remote,
-              relays: nostrConnectAccount.signer.relays
+            const bunkerReconnectSub = accounts.active$.subscribe(async (account) => {
+              console.log('[bunker] Active account changed:', { 
+                hasAccount: !!account, 
+                type: account?.type,
+                id: account?.id 
+              })
+              
+              if (account && account.type === 'nostr-connect') {
+                const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
+                
+                // Skip if we've already reconnected this account
+                if (reconnectedAccounts.has(account.id)) {
+                  console.log('[bunker] ⏭️  Already reconnected this account, skipping')
+                  return
+                }
+                
+                console.log('[bunker] Account detected. Status:', {
+                  listening: nostrConnectAccount.signer.listening,
+                  isConnected: nostrConnectAccount.signer.isConnected,
+                  hasRemote: !!nostrConnectAccount.signer.remote,
+                  bunkerRelays: nostrConnectAccount.signer.relays
+                })
+                
+                try {
+                  // Add bunker's relays to the pool so signing requests can be sent/received
+                  const bunkerRelays = nostrConnectAccount.signer.relays || []
+                  console.log('[bunker] Adding bunker relays to pool:', bunkerRelays)
+                  pool.group(bunkerRelays)
+                  
+                  // Just ensure the signer is listening for responses - don't call connect() again
+                  // The fromBunkerURI already connected with permissions during login
+                  if (!nostrConnectAccount.signer.listening) {
+                    console.log('[bunker] Opening signer subscription...')
+                    await nostrConnectAccount.signer.open()
+                    console.log('[bunker] ✅ Signer subscription opened')
+                  } else {
+                    console.log('[bunker] ✅ Signer already listening')
+                  }
+                  
+                  // Mark as connected so requireConnection() doesn't call connect() again
+                  // The bunker remembers the permissions from the initial connection
+                  nostrConnectAccount.signer.isConnected = true
+                  
+                  console.log('[bunker] Final signer status:', {
+                    listening: nostrConnectAccount.signer.listening,
+                    isConnected: nostrConnectAccount.signer.isConnected,
+                    remote: nostrConnectAccount.signer.remote,
+                    relays: nostrConnectAccount.signer.relays
+                  })
+                  
+                  // Mark this account as reconnected
+                  reconnectedAccounts.add(account.id)
+                  console.log('[bunker] 🎉 Signer ready for signing')
+                } catch (error) {
+                  console.error('[bunker] ❌ Failed to open signer:', error)
+                }
+              }
             })
-            
-            // Mark this account as reconnected
-            reconnectedAccounts.add(account.id)
-            console.log('[bunker] 🎉 Signer ready for signing')
-          } catch (error) {
-            console.error('[bunker] ❌ Failed to open signer:', error)
-          }
-        }
-      })
       
       // Keep all relay connections alive indefinitely by creating a persistent subscription
       // This prevents disconnection when no other subscriptions are active
