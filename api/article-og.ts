@@ -214,11 +214,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const userAgent = req.headers['user-agent'] as string | undefined
 
-  // If it's a regular browser (not a bot), redirect to index.html
-  // and let the SPA handle routing client-side
+  // If it's a regular browser (not a bot), serve index.html
+  // The rewrite preserves the URL, so SPA routing will handle /a/{naddr}
   if (!isCrawler(userAgent)) {
-    res.setHeader('Location', '/')
-    return res.status(302).send('')
+    // Import the static index.html and serve it
+    // This preserves the /a/{naddr} URL for client-side routing
+    const fs = await import('fs')
+    const path = await import('path')
+    // eslint-disable-next-line no-undef
+    const indexPath = path.join(process.cwd(), 'dist', 'index.html')
+    
+    try {
+      const indexHtml = fs.readFileSync(indexPath, 'utf-8')
+      res.setHeader('Content-Type', 'text/html; charset=utf-8')
+      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate')
+      return res.status(200).send(indexHtml)
+    } catch (err) {
+      // Fallback if dist/index.html doesn't exist (dev mode)
+      res.setHeader('Location', '/')
+      return res.status(302).send('')
+    }
   }
 
   // Check cache for bots/crawlers
