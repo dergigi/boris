@@ -6,7 +6,7 @@ import { KINDS } from '../config/kinds'
 /**
  * Derives ReadItems from bookmarks for Nostr articles (kind:30023).
  * Returns items with type='article', using hydrated data when available.
- * Note: After hydration, article titles are stored in bookmark.content field.
+ * Note: After hydration, article titles are in bookmark.content, metadata in tags.
  */
 export function deriveReadsFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
   const readsMap = new Map<string, ReadItem>()
@@ -20,8 +20,11 @@ export function deriveReadsFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
     if (bookmarkType === 'article' && bookmark.kind === KINDS.BlogPost) {
       const coordinate = bookmark.id // Already in coordinate format
       
-      // After hydration, article title is in bookmark.content
+      // Extract metadata from tags (same as BookmarkItem does)
       const title = bookmark.content || 'Untitled'
+      const image = bookmark.tags.find(t => t[0] === 'image')?.[1]
+      const summary = bookmark.tags.find(t => t[0] === 'summary')?.[1]
+      const published = bookmark.tags.find(t => t[0] === 'published_at')?.[1]
       
       const item: ReadItem = {
         id: coordinate,
@@ -30,6 +33,9 @@ export function deriveReadsFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
         readingProgress: 0,
         readingTimestamp: bookmark.added_at || bookmark.created_at,
         title,
+        summary,
+        image,
+        published: published ? parseInt(published) : undefined,
         author: bookmark.pubkey
       }
       
