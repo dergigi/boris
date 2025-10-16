@@ -195,6 +195,11 @@ function App() {
       NostrConnectSigner.pool = pool
       pool.group(RELAYS)
       
+      // Enable debug logging for NostrConnectSigner
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('debug', '*NostrConnectSigner*')
+      }
+      
       // Load persisted accounts from localStorage
       try {
         const accountsJson = localStorage.getItem('accounts')

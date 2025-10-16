@@ -67,11 +67,16 @@ export async function reconnectBunkerSigner(
   
   // Open signer subscription if not already listening
   if (!account.signer.listening) {
+    console.log('[bunker] Opening signer subscription for NIP-46 responses...')
     await account.signer.open()
+    console.log('[bunker] ✅ Signer subscription active, listening for bunker responses')
+  } else {
+    console.log('[bunker] Signer already listening')
   }
   
   // Mark as connected (bunker remembers permissions from initial connection)
   account.signer.isConnected = true
+  console.log('[bunker] Signer marked as connected, ready for signing/decryption')
   
   // Expose nip04/nip44 at account level for compatibility
   // This allows bookmark decryption to work without accessing account.signer
