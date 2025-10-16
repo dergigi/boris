@@ -318,22 +318,22 @@ function App() {
 
                   // Debug: log publish/subscription calls made by signer (decrypt/sign requests)
                   // IMPORTANT: bind originals to preserve `this` context used internally by the signer
-                  const originalPublish = (recreatedSigner as any).publishMethod.bind(recreatedSigner)
-                  ;(recreatedSigner as any).publishMethod = (relays: string[], event: any) => {
+                  const originalPublish = (recreatedSigner as { publishMethod: (relays: string[], event: unknown) => unknown }).publishMethod.bind(recreatedSigner)
+                  ;(recreatedSigner as unknown as { publishMethod: (relays: string[], event: unknown) => unknown }).publishMethod = (relays: string[], event: unknown) => {
                     try {
                       const summary = {
                         relays,
-                        kind: event?.kind,
+                        kind: (event as { kind?: number })?.kind,
                         // include tags array for debugging (NIP-46 expects method tag)
-                        tags: event?.tags,
-                        contentLength: typeof event?.content === 'string' ? event.content.length : undefined
+                        tags: (event as { tags?: unknown })?.tags,
+                        contentLength: typeof (event as { content?: unknown })?.content === 'string' ? (event as { content: string }).content.length : undefined
                       }
                       console.log('[bunker] publish via signer:', summary)
                     } catch (err) { console.warn('[bunker] failed to log publish summary', err) }
                     return originalPublish(relays, event)
                   }
-                  const originalSubscribe = (recreatedSigner as any).subscriptionMethod.bind(recreatedSigner)
-                  ;(recreatedSigner as any).subscriptionMethod = (relays: string[], filters: any[]) => {
+                  const originalSubscribe = (recreatedSigner as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod.bind(recreatedSigner)
+                  ;(recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod = (relays: string[], filters: unknown[]) => {
                     try {
                       console.log('[bunker] subscribe via signer:', { relays, filters })
                     } catch (err) { console.warn('[bunker] failed to log subscribe summary', err) }
@@ -462,7 +462,7 @@ function App() {
     return () => {
       if (cleanup) cleanup()
     }
-  }, [])
+  }, [isOnline, showToast])
 
   // Monitor online/offline status
   useEffect(() => {

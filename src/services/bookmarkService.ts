@@ -110,7 +110,7 @@ export const fetchBookmarks = async (
     
     // Debug relay connectivity for bunker relays
     try {
-      const urls = Array.from(relayPool.relays.values()).map(r => ({ url: r.url, connected: (r as any).connected }))
+      const urls = Array.from(relayPool.relays.values()).map(r => ({ url: r.url, connected: (r as unknown as { connected?: boolean }).connected }))
       console.log('[bunker] Relay connections:', urls)
     } catch (err) { console.warn('[bunker] Failed to read relay connections', err) }
 
