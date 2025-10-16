@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
-import { NostrEvent } from 'nostr-tools'
+import { NostrEvent, Filter } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 
 const { getArticleTitle, getArticleImage, getArticleSummary } = Helpers
@@ -54,7 +54,7 @@ interface ArticleMetadata {
 async function fetchEventsFromRelays(
   relayPool: RelayPool,
   relayUrls: string[],
-  filter: any,
+  filter: Filter,
   timeoutMs: number
 ): Promise<NostrEvent[]> {
   const events: NostrEvent[] = []
