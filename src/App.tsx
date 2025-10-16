@@ -313,6 +313,11 @@ function App() {
                   }
                   
                   // Mark as connected so requireConnection() doesn't call connect() again
+                  
+                  // Give the subscription a moment to fully establish before allowing decrypt operations
+                  // This ensures the signer is ready to handle and receive responses
+                  await new Promise(resolve => setTimeout(resolve, 100))
+                  console.log("[bunker] Subscription ready after startup delay")
                   // The bunker remembers the permissions from the initial connection
                   nostrConnectAccount.signer.isConnected = true
                   
