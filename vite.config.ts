@@ -1,3 +1,4 @@
+/* eslint-env node */
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -11,10 +12,14 @@ function getGitMetadata() {
   let branch = envRef
   try {
     if (!commit) commit = execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
-  } catch {}
+  } catch {
+    // ignore
+  }
   try {
     if (!branch) branch = execSync('git rev-parse --abbrev-ref HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
-  } catch {}
+  } catch {
+    // ignore
+  }
   return { commit, branch }
 }
 
@@ -49,7 +54,9 @@ function getCommitUrl(commit: string): string {
       const cleaned = https.replace(/\.git$/, '')
       return `${cleaned}/commit/${commit}`
     }
-  } catch {}
+  } catch {
+    // ignore
+  }
   return ''
 }
 

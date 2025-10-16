@@ -1,3 +1,4 @@
+/* global __APP_VERSION__, __GIT_COMMIT__, __GIT_COMMIT_URL__ */
 import React, { useState, useEffect, useRef } from 'react'
 import { faTimes, faUndo } from '@fortawesome/free-solid-svg-icons'
 import { RelayPool } from 'applesauce-relay'
