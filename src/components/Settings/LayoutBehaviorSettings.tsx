@@ -117,32 +117,6 @@ const LayoutBehaviorSettings: React.FC<LayoutBehaviorSettingsProps> = ({ setting
           <span>Sync reading position across devices</span>
         </label>
       </div>
-
-      <div className="setting-group">
-        <label htmlFor="autoScrollToPosition" className="checkbox-label">
-          <input
-            id="autoScrollToPosition"
-            type="checkbox"
-            checked={settings.autoScrollToPosition !== false}
-            onChange={(e) => onUpdate({ autoScrollToPosition: e.target.checked })}
-            className="setting-checkbox"
-          />
-          <span>Auto-scroll to last reading position</span>
-        </label>
-      </div>
-
-      <div className="setting-group">
-        <label htmlFor="autoMarkAsReadAt100" className="checkbox-label">
-          <input
-            id="autoMarkAsReadAt100"
-            type="checkbox"
-            checked={settings.autoMarkAsReadAt100 ?? false}
-            onChange={(e) => onUpdate({ autoMarkAsReadAt100: e.target.checked })}
-            className="setting-checkbox"
-          />
-          <span>Automatically mark as read when reading progress is 100%</span>
-        </label>
-      </div>
     </div>
   )
 }

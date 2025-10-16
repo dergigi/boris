@@ -52,8 +52,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   const meTab = location.pathname === '/me' ? 'highlights' : 
                 location.pathname === '/me/highlights' ? 'highlights' :
                 location.pathname === '/me/reading-list' ? 'reading-list' :
-                location.pathname === '/me/reads' ? 'reads' :
-                location.pathname === '/me/links' ? 'links' :
+                location.pathname === '/me/archive' ? 'archive' :
                 location.pathname === '/me/writings' ? 'writings' : 'highlights'
   
   // Extract tab from profile routes
@@ -162,9 +161,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     isRefreshing,
     lastFetchTime,
     handleFetchHighlights,
-    handleRefreshAll,
-    readingPositions,
-    markedAsReadIds
+    handleRefreshAll
   } = useBookmarksData({
     relayPool,
     activeAccount,
@@ -173,8 +170,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     externalUrl,
     currentArticleCoordinate,
     currentArticleEventId,
-    settings,
-    eventStore
+    settings
   })
 
   const {
@@ -316,8 +312,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       highlightButtonRef={highlightButtonRef}
       onCreateHighlight={handleCreateHighlight}
       hasActiveAccount={!!(activeAccount && relayPool)}
-      readingPositions={readingPositions}
-      markedAsReadIds={markedAsReadIds}
       explore={showExplore ? (
         relayPool ? <Explore relayPool={relayPool} eventStore={eventStore} settings={settings} activeTab={exploreTab} /> : null
       ) : undefined}
