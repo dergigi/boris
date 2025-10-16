@@ -4,22 +4,11 @@ import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent, Filter } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
+import { RELAYS } from '../src/config/relays'
 
 const { getArticleTitle, getArticleImage, getArticleSummary } = Helpers
 
-// Relay configuration (from src/config/relays.ts)
-const RELAYS = [
-  'wss://relay.damus.io',
-  'wss://nos.lol',
-  'wss://relay.nostr.band',
-  'wss://relay.dergigi.com',
-  'wss://wot.dergigi.com',
-  'wss://relay.snort.social',
-  'wss://relay.current.fyi',
-  'wss://nostr-pub.wellorder.net',
-  'wss://purplepag.es',
-  'wss://relay.primal.net'
-]
+// Use centralized relay configuration
 
 type CacheEntry = {
   html: string
