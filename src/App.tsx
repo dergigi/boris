@@ -273,6 +273,21 @@ function App() {
                 })
                 
                 try {
+                  // For restored signers, ensure they have the pool's subscription methods
+                  // The signer was created in fromJSON without pool context, so we need to recreate it
+                  const signerData = nostrConnectAccount.toJSON().signer
+                  const recreatedSigner = new NostrConnectSigner({
+                    relays: signerData.relays,
+                    pubkey: nostrConnectAccount.pubkey,
+                    remote: signerData.remote,
+                    signer: nostrConnectAccount.signer.signer, // Use the existing SimpleSigner
+                    pool: pool
+                  })
+                  
+                  // Replace the signer on the account
+                  nostrConnectAccount.signer = recreatedSigner
+                  console.log('[bunker] ✅ Signer recreated with pool context')
+                  
                   // Add bunker's relays to the pool so signing requests can be sent/received
                   const bunkerRelays = nostrConnectAccount.signer.relays || []
                   const existingRelayUrls = new Set(Array.from(pool.relays.keys()))
