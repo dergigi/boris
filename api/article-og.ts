@@ -38,12 +38,46 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;')
 }
 
+function setCacheHeaders(res: VercelResponse, maxAge: number = 86400): void {
+  res.setHeader('Cache-Control', `public, max-age=${maxAge}, s-maxage=604800`)
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+}
+
 interface ArticleMetadata {
   title: string
   summary: string
   image: string
   author: string
   published?: number
+}
+
+async function fetchEventsFromRelays(
+  relayPool: RelayPool,
+  relayUrls: string[],
+  filter: any,
+  timeoutMs: number
+): Promise<NostrEvent[]> {
+  const events: NostrEvent[] = []
+  
+  await new Promise<void>((resolve) => {
+    const timeout = setTimeout(() => resolve(), timeoutMs)
+    
+    relayPool.req(relayUrls, filter).subscribe({
+      next: (msg) => {
+        if (msg.type === 'EVENT') {
+          events.push(msg.event)
+        }
+      },
+      error: () => resolve(),
+      complete: () => {
+        clearTimeout(timeout)
+        resolve()
+      }
+    })
+  })
+
+  // Sort by created_at and return most recent first
+  return events.sort((a, b) => b.created_at - a.created_at)
 }
 
 async function fetchArticleMetadata(naddr: string): Promise<ArticleMetadata | null> {
@@ -62,67 +96,24 @@ async function fetchArticleMetadata(naddr: string): Promise<ArticleMetadata | nu
     const relayUrls = pointer.relays && pointer.relays.length > 0 ? pointer.relays : RELAYS
     relayUrls.forEach(url => relayPool.open(url))
 
-    // Fetch article (kind:30023)
-    const articleFilter = {
-      kinds: [pointer.kind],
-      authors: [pointer.pubkey],
-      '#d': [pointer.identifier || '']
-    }
-
-    const articleEvents: NostrEvent[] = []
-    
-    await new Promise<void>((resolve) => {
-      const timeout = setTimeout(() => resolve(), 5000)
-      
-      relayPool.req(relayUrls, articleFilter).subscribe({
-        next: (msg) => {
-          if (msg.type === 'EVENT') {
-            articleEvents.push(msg.event)
-          }
-        },
-        error: () => resolve(),
-        complete: () => {
-          clearTimeout(timeout)
-          resolve()
-        }
-      })
-    })
+    // Fetch article and profile in parallel
+    const [articleEvents, profileEvents] = await Promise.all([
+      fetchEventsFromRelays(relayPool, relayUrls, {
+        kinds: [pointer.kind],
+        authors: [pointer.pubkey],
+        '#d': [pointer.identifier || '']
+      }, 5000),
+      fetchEventsFromRelays(relayPool, relayUrls, {
+        kinds: [0],
+        authors: [pointer.pubkey]
+      }, 3000)
+    ])
 
     if (articleEvents.length === 0) {
-      relayPool.close()
       return null
     }
 
-    // Sort by created_at and take most recent
-    articleEvents.sort((a, b) => b.created_at - a.created_at)
     const article = articleEvents[0]
-
-    // Fetch author profile (kind:0)
-    const profileFilter = {
-      kinds: [0],
-      authors: [pointer.pubkey]
-    }
-
-    const profileEvents: NostrEvent[] = []
-    
-    await new Promise<void>((resolve) => {
-      const timeout = setTimeout(() => resolve(), 3000)
-      
-      relayPool.req(relayUrls, profileFilter).subscribe({
-        next: (msg) => {
-          if (msg.type === 'EVENT') {
-            profileEvents.push(msg.event)
-          }
-        },
-        error: () => resolve(),
-        complete: () => {
-          clearTimeout(timeout)
-          resolve()
-        }
-      })
-    })
-
-    relayPool.close()
 
     // Extract article metadata
     const title = getArticleTitle(article) || 'Untitled Article'
@@ -132,10 +123,8 @@ async function fetchArticleMetadata(naddr: string): Promise<ArticleMetadata | nu
     // Extract author name from profile
     let authorName = pointer.pubkey.slice(0, 8) + '...'
     if (profileEvents.length > 0) {
-      profileEvents.sort((a, b) => b.created_at - a.created_at)
-      const profile = profileEvents[0]
       try {
-        const profileData = JSON.parse(profile.content)
+        const profileData = JSON.parse(profileEvents[0].content)
         authorName = profileData.display_name || profileData.name || authorName
       } catch {
         // Use fallback
@@ -151,8 +140,9 @@ async function fetchArticleMetadata(naddr: string): Promise<ArticleMetadata | nu
     }
   } catch (err) {
     console.error('Failed to fetch article metadata:', err)
-    relayPool.close()
     return null
+  } finally {
+    relayPool.close()
   }
 }
 
@@ -217,12 +207,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Check cache
-  const cacheKey = naddr
   const now = Date.now()
-  const cached = memoryCache.get(cacheKey)
+  const cached = memoryCache.get(naddr)
   if (cached && cached.expires > now) {
-    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800')
-    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    setCacheHeaders(res)
     return res.status(200).send(cached.html)
   }
 
@@ -234,19 +222,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const html = generateHtml(naddr, meta)
     
     // Cache the result
-    memoryCache.set(cacheKey, { html, expires: now + WEEK_MS })
+    memoryCache.set(naddr, { html, expires: now + WEEK_MS })
     
     // Send response
-    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800')
-    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    setCacheHeaders(res)
     return res.status(200).send(html)
   } catch (err) {
     console.error('Error generating article OG HTML:', err)
     
     // Fallback to basic HTML with SPA boot
     const html = generateHtml(naddr, null)
-    res.setHeader('Cache-Control', 'public, max-age=3600')
-    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    setCacheHeaders(res, 3600)
     return res.status(200).send(html)
   }
 }
