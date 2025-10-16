@@ -261,11 +261,7 @@ function App() {
               
               if (account && account.type === 'nostr-connect') {
                 const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
-                // Sanity check: remote (bunker) pubkey must not equal our pubkey
-                if (nostrConnectAccount.signer.remote === nostrConnectAccount.pubkey) {
-                  console.warn('[bunker] ❌ Invalid bunker state: remote pubkey equals user pubkey. Please reconnect using a fresh bunker URI from Amber.')
-                  try { showToast?.('Reconnect bunker from Amber: invalid remote pubkey detected') } catch (err) { console.warn('[bunker] toast failed', err) }
-                }
+                // Note: for Amber bunker, the remote signer pubkey is the user's pubkey. This is expected.
                 
                 // Skip if we've already reconnected this account
                 if (reconnectedAccounts.has(account.id)) {
