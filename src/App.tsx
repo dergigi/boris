@@ -222,6 +222,9 @@ function App() {
       const pool = new RelayPool()
       
       // Reconnect bunker signers when active account changes
+      // Keep track of which accounts we've already reconnected to avoid double-connecting
+      const reconnectedAccounts = new Set<string>()
+      
       const bunkerReconnectSub = accounts.active$.subscribe(async (account) => {
         console.log('[bunker] Active account changed:', { 
           hasAccount: !!account, 
@@ -231,6 +234,13 @@ function App() {
         
         if (account && account.type === 'nostr-connect') {
           const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
+          
+          // Skip if we've already reconnected this account
+          if (reconnectedAccounts.has(account.id)) {
+            console.log('[bunker] ⏭️  Already reconnected this account, skipping')
+            return
+          }
+          
           console.log('[bunker] Account detected. Status:', {
             listening: nostrConnectAccount.signer.listening,
             isConnected: nostrConnectAccount.signer.isConnected,
@@ -242,7 +252,10 @@ function App() {
             if (!nostrConnectAccount.signer.listening) {
               console.log('[bunker] Opening signer subscription...')
               await nostrConnectAccount.signer.open()
-              console.log('[bunker] ✅ Signer subscription opened')
+              console.log('[bunker] ✅ Signer subscription opened, status:', {
+                listening: nostrConnectAccount.signer.listening,
+                isConnected: nostrConnectAccount.signer.isConnected
+              })
             } else {
               console.log('[bunker] ✅ Signer already listening')
             }
@@ -253,10 +266,17 @@ function App() {
               const permissions = getDefaultBunkerPermissions()
               console.log('[bunker] Permissions:', permissions)
               await nostrConnectAccount.signer.connect(undefined, permissions)
-              console.log('[bunker] ✅ Reconnected successfully')
+              console.log('[bunker] ✅ Reconnected successfully, status:', {
+                listening: nostrConnectAccount.signer.listening,
+                isConnected: nostrConnectAccount.signer.isConnected
+              })
             } else {
               console.log('[bunker] ✅ Already connected')
             }
+            
+            // Mark this account as reconnected
+            reconnectedAccounts.add(account.id)
+            console.log('[bunker] 🎉 Full reconnection complete')
           } catch (error) {
             console.error('[bunker] ❌ Failed to reconnect:', error)
           }
