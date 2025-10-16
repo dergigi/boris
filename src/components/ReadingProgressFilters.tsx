@@ -12,26 +12,32 @@ interface ReadingProgressFiltersProps {
 
 const ReadingProgressFilters: React.FC<ReadingProgressFiltersProps> = ({ selectedFilter, onFilterChange }) => {
   const filters = [
-    { type: 'all' as const, icon: faAsterisk, label: 'All' },
-    { type: 'unopened' as const, icon: faEnvelope, label: 'Unopened' },
-    { type: 'started' as const, icon: faEnvelopeOpen, label: 'Started' },
-    { type: 'reading' as const, icon: faBookOpen, label: 'Reading' },
-    { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' }
+    { type: 'all' as const, icon: faAsterisk, label: 'All', color: undefined },
+    { type: 'unopened' as const, icon: faEnvelope, label: 'Unopened', color: undefined },
+    { type: 'started' as const, icon: faEnvelopeOpen, label: 'Started', color: 'var(--color-text)' },
+    { type: 'reading' as const, icon: faBookOpen, label: 'Reading', color: '#6366f1' },
+    { type: 'completed' as const, icon: faCheckCircle, label: 'Completed', color: '#10b981' }
   ]
 
   return (
     <div className="bookmark-filters">
-      {filters.map(filter => (
-        <button
-          key={filter.type}
-          onClick={() => onFilterChange(filter.type)}
-          className={`filter-btn ${selectedFilter === filter.type ? 'active' : ''}`}
-          title={filter.label}
-          aria-label={`Filter by ${filter.label}`}
-        >
-          <FontAwesomeIcon icon={filter.icon} />
-        </button>
-      ))}
+      {filters.map(filter => {
+        const isActive = selectedFilter === filter.type
+        const activeStyle = isActive && filter.color ? { color: filter.color } : undefined
+        
+        return (
+          <button
+            key={filter.type}
+            onClick={() => onFilterChange(filter.type)}
+            className={`filter-btn ${isActive ? 'active' : ''}`}
+            title={filter.label}
+            aria-label={`Filter by ${filter.label}`}
+            style={activeStyle}
+          >
+            <FontAwesomeIcon icon={filter.icon} />
+          </button>
+        )
+      })}
     </div>
   )
 }
