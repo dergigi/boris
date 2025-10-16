@@ -259,7 +259,11 @@ function App() {
               
               if (account && account.type === 'nostr-connect') {
                 const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
-                // Note: Amber may use the user's pubkey as both p-tag target and remote id; don't block on equality
+                // Sanity check: remote (bunker) pubkey must not equal our pubkey
+                if (nostrConnectAccount.signer.remote === nostrConnectAccount.pubkey) {
+                  console.warn('[bunker] ❌ Invalid bunker state: remote pubkey equals user pubkey. Please reconnect using a fresh bunker URI from Amber.')
+                  try { showToast?.('Reconnect bunker from Amber: invalid remote pubkey detected') } catch {}
+                }
                 
                 // Skip if we've already reconnected this account
                 if (reconnectedAccounts.has(account.id)) {
@@ -307,29 +311,7 @@ function App() {
                   // Debug: log publish/subscription calls made by signer (decrypt/sign requests)
                   const originalPublish = (recreatedSigner as any).publishMethod
                   ;(recreatedSigner as any).publishMethod = (relays: string[], event: any) => {
-                    try {
-                      const pTag = Array.isArray(event?.tags) ? event.tags.find((t: any) => t?.[0] === 'p')?.[1] : undefined
-                      let preview: string | undefined
-                      let method: string | undefined
-                      let methodParamsLen: number | undefined
-                      try {
-                        preview = typeof event?.content === 'string' ? event.content.slice(0, 200) : undefined
-                        const parsed = JSON.parse(event?.content ?? 'null')
-                        method = parsed?.method
-                        methodParamsLen = Array.isArray(parsed?.params) ? parsed.params.length : undefined
-                      } catch {}
-                      console.log('[bunker] publish via signer:', {
-                        relays,
-                        kind: event?.kind,
-                        tags: event?.tags,
-                        pTag,
-                        remote: nostrConnectAccount.signer.remote,
-                        userPubkey: nostrConnectAccount.pubkey,
-                        method,
-                        methodParamsLen,
-                        preview
-                      })
-                    } catch {}
+                    try { console.log('[bunker] publish via signer:', { relays, kind: event?.kind, tags: event?.tags?.length }) } catch {}
                     return originalPublish(relays, event)
                   }
                   const originalSubscribe = (recreatedSigner as any).subscriptionMethod

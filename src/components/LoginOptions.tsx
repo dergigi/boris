@@ -48,8 +48,6 @@ const LoginOptions: React.FC = () => {
       // Get pubkey from signer
       const pubkey = await signer.getPublicKey()
       
-      // Note: Some signers may mirror user pubkey in remote field; not a hard error
-      
       // Create account from signer
       const account = new Accounts.NostrConnectAccount(pubkey, signer)
       
