@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.23] - 2025-01-16
+
+### Fixed
+
+- Deep-link refresh redirect issue for nostr-native articles
+  - Limited `/a/:naddr` rewrite to bot user-agents only in Vercel configuration
+  - Real browsers now hit the SPA directly, preventing redirect to root path
+  - Bot crawlers still receive proper OpenGraph metadata for social sharing
+
+### Added
+
+- Version and git commit information in Settings footer
+  - Displays app version and short commit hash with link to GitHub
+  - Build-time metadata injection via Vite configuration
+  - Subtle footer styling with selectable text
+
+### Changed
+
+- Article OG handler now uses proper RelayPool.request() API
+  - Aligned with applesauce RelayPool interface
+  - Removed deprecated open/close methods
+  - Fixed TypeScript linting errors
+
+### Technical
+
+- Added debug logging for route state and article OG handler
+  - Gated by `?debug=1` query parameter for production testing
+  - Structured logging for troubleshooting deep-link issues
+  - Temporary debug components for validation
+
 ## [0.6.22] - 2025-10-16
 
 ### Added
@@ -1721,7 +1751,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.21...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.23...HEAD
+[0.6.23]: https://github.com/dergigi/boris/compare/v0.6.22...v0.6.23
 [0.6.21]: https://github.com/dergigi/boris/compare/v0.6.20...v0.6.21
 [0.6.20]: https://github.com/dergigi/boris/compare/v0.6.19...v0.6.20
 [0.6.19]: https://github.com/dergigi/boris/compare/v0.6.18...v0.6.19
