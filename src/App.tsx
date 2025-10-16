@@ -221,6 +221,15 @@ function App() {
       
       const pool = new RelayPool()
       
+      // Setup NostrConnectSigner to use the relay pool FIRST before any reconnections
+      NostrConnectSigner.pool = pool
+      console.log('[bunker] ✅ Pool assigned to NostrConnectSigner')
+      
+      // Create a relay group for better event deduplication and management
+      pool.group(RELAYS)
+      console.log('Created relay group with', RELAYS.length, 'relays (including local)')
+      console.log('Relay URLs:', RELAYS)
+      
       // Reconnect bunker signers when active account changes
       // Keep track of which accounts we've already reconnected to avoid double-connecting
       const reconnectedAccounts = new Set<string>()
@@ -277,14 +286,6 @@ function App() {
           }
         }
       })
-      
-      // Setup NostrConnectSigner to use the relay pool
-      NostrConnectSigner.pool = pool
-      
-      // Create a relay group for better event deduplication and management
-      pool.group(RELAYS)
-      console.log('Created relay group with', RELAYS.length, 'relays (including local)')
-      console.log('Relay URLs:', RELAYS)
       
       // Keep all relay connections alive indefinitely by creating a persistent subscription
       // This prevents disconnection when no other subscriptions are active
