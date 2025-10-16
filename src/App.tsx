@@ -253,13 +253,14 @@ function App() {
             if (!nostrConnectAccount.signer.listening) {
               console.log('[bunker] Opening signer subscription...')
               await nostrConnectAccount.signer.open()
-              console.log('[bunker] ✅ Signer subscription opened, status:', {
-                listening: nostrConnectAccount.signer.listening,
-                isConnected: nostrConnectAccount.signer.isConnected
-              })
+              console.log('[bunker] ✅ Signer subscription opened')
             } else {
               console.log('[bunker] ✅ Signer already listening')
             }
+            
+            // Mark as connected so requireConnection() doesn't call connect() again
+            // The bunker remembers the permissions from the initial connection
+            nostrConnectAccount.signer.isConnected = true
             
             console.log('[bunker] Final signer status:', {
               listening: nostrConnectAccount.signer.listening,
