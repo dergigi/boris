@@ -325,7 +325,16 @@ function App() {
                     console.log('[bunker] ✅ Signer already listening')
                   }
                   
-                  // Mark as connected so requireConnection() doesn't call connect() again
+                  // Attempt a guarded reconnect to ensure Amber authorizes decrypt operations
+                  try {
+                    if (nostrConnectAccount.signer.remote && !reconnectedAccounts.has(account.id)) {
+                      console.log('[bunker] Attempting guarded connect() to ensure decrypt perms')
+                      await nostrConnectAccount.signer.connect(undefined, undefined)
+                      console.log('[bunker] ✅ Guarded connect() succeeded')
+                    }
+                  } catch (e) {
+                    console.warn('[bunker] ⚠️ Guarded connect() failed:', e)
+                  }
                   
                   // Give the subscription a moment to fully establish before allowing decrypt operations
                   // This ensures the signer is ready to handle and receive responses
