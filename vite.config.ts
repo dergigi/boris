@@ -1,8 +1,43 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { readFileSync } from 'node:fs'
+import { execSync } from 'node:child_process'
+
+function getGitMetadata() {
+  const envSha = process.env.VERCEL_GIT_COMMIT_SHA || ''
+  const envRef = process.env.VERCEL_GIT_COMMIT_REF || ''
+  let commit = envSha
+  let branch = envRef
+  try {
+    if (!commit) commit = execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+  } catch {}
+  try {
+    if (!branch) branch = execSync('git rev-parse --abbrev-ref HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+  } catch {}
+  return { commit, branch }
+}
+
+function getPackageVersion() {
+  try {
+    const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url)).toString())
+    return pkg.version as string
+  } catch {
+    return '0.0.0'
+  }
+}
+
+const { commit, branch } = getGitMetadata()
+const version = getPackageVersion()
+const buildTime = new Date().toISOString()
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(version),
+    __GIT_COMMIT__: JSON.stringify(commit),
+    __GIT_BRANCH__: JSON.stringify(branch),
+    __BUILD_TIME__: JSON.stringify(buildTime)
+  },
   plugins: [
     react(),
     VitePWA({
