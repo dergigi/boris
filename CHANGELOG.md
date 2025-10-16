@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.22] - 2025-10-16
+
+### Added
+
+- Dynamic OpenGraph and Twitter Card meta tags for article deep-links
+  - Social media platforms display article title, author, cover image, and summary when sharing `/a/{naddr}` links
+  - Serverless endpoint fetches article metadata from Nostr relays (kind:30023) and author profiles (kind:0)
+  - User-agent detection serves appropriate content to crawlers vs browsers
+  - Falls back to default social preview image when articles have no cover image
+- Social preview image for homepage and article links
+  - Added `boris-social-1200.png` as default OpenGraph image (1200x630)
+  - Homepage now includes social preview image in meta tags
+
+### Changed
+
+- Article deep-links now properly preserve URL when loading in browser
+  - Uses `history.replaceState()` to maintain correct article path
+  - Browser navigation works correctly on refresh and new tab opens
+
+### Fixed
+
+- Vercel rewrite configuration for article routes
+  - Routes `/a/:naddr` to serverless OG endpoint for dynamic meta tags
+  - Regular SPA routing preserved for browser navigation
+
 ## [0.6.21] - 2025-10-16
 
 ### Added
