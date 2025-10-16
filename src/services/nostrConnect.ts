@@ -48,6 +48,10 @@ export async function reconnectBunkerSigner(
   // For debugging, keep a minimal log of readiness
   console.log('[bunker] Signer ready (listening:', account.signer.listening, ')')
   
+  // Mark as connected so requireConnection() doesn't attempt connect()
+  // The bunker remembers permissions from the initial connection
+  account.signer.isConnected = true
+
   // Expose nip04/nip44 at account level (like ExtensionAccount does)
   if (!('nip04' in account)) {
     (account as any).nip04 = account.signer.nip04
