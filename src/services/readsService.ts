@@ -76,7 +76,7 @@ export async function fetchAllReads(
     processReadingPositions(readingPositionEvents, readsMap)
     if (onItem) {
       readsMap.forEach(item => {
-        if (item.type === 'article') emitItem(item)
+        if (item.type === 'article') onItem(item)
       })
     }
     
@@ -84,7 +84,7 @@ export async function fetchAllReads(
     processMarkedAsRead(markedAsReadArticles, readsMap)
     if (onItem) {
       readsMap.forEach(item => {
-        if (item.type === 'article') emitItem(item)
+        if (item.type === 'article') onItem(item)
       })
     }
 
