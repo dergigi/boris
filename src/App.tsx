@@ -276,6 +276,20 @@ function App() {
                   // For restored signers, ensure they have the pool's subscription methods
                   // The signer was created in fromJSON without pool context, so we need to recreate it
                   const signerData = nostrConnectAccount.toJSON().signer
+                  
+                  // Add bunker's relays to the pool BEFORE recreating the signer
+                  // This ensures the pool has all relays when the signer sets up its methods
+                  const bunkerRelays = signerData.relays || []
+                  const existingRelayUrls = new Set(Array.from(pool.relays.keys()))
+                  const newBunkerRelays = bunkerRelays.filter(url => !existingRelayUrls.has(url))
+                  
+                  if (newBunkerRelays.length > 0) {
+                    console.log('[bunker] Adding bunker relays to pool BEFORE signer recreation:', newBunkerRelays)
+                    pool.group(newBunkerRelays)
+                  } else {
+                    console.log('[bunker] Bunker relays already in pool')
+                  }
+                  
                   const recreatedSigner = new NostrConnectSigner({
                     relays: signerData.relays,
                     pubkey: nostrConnectAccount.pubkey,
@@ -287,18 +301,6 @@ function App() {
                   // Replace the signer on the account
                   nostrConnectAccount.signer = recreatedSigner
                   console.log('[bunker] ✅ Signer recreated with pool context')
-                  
-                  // Add bunker's relays to the pool so signing requests can be sent/received
-                  const bunkerRelays = nostrConnectAccount.signer.relays || []
-                  const existingRelayUrls = new Set(Array.from(pool.relays.keys()))
-                  const newBunkerRelays = bunkerRelays.filter(url => !existingRelayUrls.has(url))
-                  
-                  if (newBunkerRelays.length > 0) {
-                    console.log('[bunker] Adding new bunker relays to pool:', newBunkerRelays)
-                    pool.group(newBunkerRelays)
-                  } else {
-                    console.log('[bunker] Bunker relays already in pool')
-                  }
                   
                   // Just ensure the signer is listening for responses - don't call connect() again
                   // The fromBunkerURI already connected with permissions during login
