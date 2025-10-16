@@ -287,6 +287,11 @@ function App() {
                   // Replace the signer on the account
                   nostrConnectAccount.signer = recreatedSigner
                   console.log('[bunker] ✅ Signer recreated with pool context')
+                  console.log("[bunker] Signer methods check:", {
+                    hasSubscriptionMethod: !!(recreatedSigner as any).subscriptionMethod,
+                    hasPublishMethod: !!(recreatedSigner as any).publishMethod,
+                    hasMakeRequest: typeof (recreatedSigner as any).makeRequest === "function"
+                  })
                   
                   // Add bunker's relays to the pool so signing requests can be sent/received
                   const bunkerRelays = nostrConnectAccount.signer.relays || []
