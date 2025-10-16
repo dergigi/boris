@@ -162,12 +162,23 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       // Background enrichment: merge reading progress and mark-as-read
       // Only update items that are already in our map
       fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks, (item) => {
+        console.log('📈 [Reads] Enrichment item received:', {
+          id: item.id.slice(0, 20) + '...',
+          progress: item.readingProgress,
+          hasProgress: item.readingProgress !== undefined && item.readingProgress > 0
+        })
+        
         setReadsMap(prevMap => {
           // Only update if item exists in our current map
-          if (!prevMap.has(item.id)) return prevMap
+          if (!prevMap.has(item.id)) {
+            console.log('⚠️ [Reads] Item not in map, skipping:', item.id.slice(0, 20) + '...')
+            return prevMap
+          }
           
           const newMap = new Map(prevMap)
-          if (mergeReadItem(newMap, item)) {
+          const merged = mergeReadItem(newMap, item)
+          if (merged) {
+            console.log('✅ [Reads] Merged progress:', item.id.slice(0, 20) + '...', item.readingProgress)
             // Update reads array after map is updated
             setReads(Array.from(newMap.values()))
             return newMap
