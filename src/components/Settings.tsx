@@ -180,7 +180,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPoo
         </span>
         {typeof __GIT_COMMIT__ !== 'undefined' && __GIT_COMMIT__ ? (
           <span>
-            {' '}·
+            {' '}·{' '}
             {typeof __GIT_COMMIT_URL__ !== 'undefined' && __GIT_COMMIT_URL__ ? (
               <a href={__GIT_COMMIT_URL__} target="_blank" rel="noopener noreferrer">
                 <code>{__GIT_COMMIT__.slice(0, 7)}</code>
