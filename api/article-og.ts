@@ -159,6 +159,7 @@ function generateHtml(naddr: string, meta: ArticleMetadata | null): string {
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=/" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -186,15 +187,11 @@ function generateHtml(naddr: string, meta: ArticleMetadata | null): string {
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(description)}" />
     <meta name="twitter:image" content="${escapeHtml(image)}" />
-    
-    <!-- Default to system theme until settings load from Nostr -->
-    <script>
-      document.documentElement.className = 'theme-system';
-    </script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <noscript>
+      <p>Redirecting to <a href="/">Boris</a>...</p>
+    </noscript>
   </body>
 </html>`
 }
