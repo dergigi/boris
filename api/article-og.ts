@@ -215,22 +215,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const userAgent = req.headers['user-agent'] as string | undefined
   const isCrawlerRequest = isCrawler(userAgent)
 
-  const debugInfo = {
-    naddr: naddr.slice(0, 20) + '...',
-    userAgent: userAgent?.slice(0, 80),
-    isCrawler: isCrawlerRequest,
-    url: req.url,
-    referer: req.headers.referer,
-    accept: req.headers.accept
-  }
-
-  console.log('[article-og]', debugInfo)
-
-  // Debug mode: if ?debug=1, return JSON
-  if (req.query.debug === '1') {
-    return res.status(200).json(debugInfo)
-  }
-
   // If it's a regular browser (not a bot), serve HTML that loads SPA
   // Use history.replaceState to set the URL before the SPA boots
   if (!isCrawlerRequest) {
