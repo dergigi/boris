@@ -32,8 +32,7 @@ export const ReadingProgressIndicator: React.FC<ReadingProgressIndicatorProps> =
     barColorClass = 'bg-green-500'
     barColorStyle = undefined
   } else if (isStarted) {
-    barColorClass = 'bg-amber-500'
-    barColorStyle = undefined
+    barColorStyle = 'var(--color-text)' // Neutral text color (matches card titles)
   }
   
   // Calculate left and right offsets based on sidebar states (desktop only)
@@ -71,9 +70,11 @@ export const ReadingProgressIndicator: React.FC<ReadingProgressIndicatorProps> =
       {showPercentage && (
         <div 
           className={`text-[0.625rem] font-normal min-w-[32px] text-right tabular-nums ${
-            isComplete ? 'text-green-500' : isStarted ? 'text-amber-500' : ''
+            isComplete ? 'text-green-500' : ''
           }`}
-          style={{ color: (isComplete || isStarted) ? undefined : 'var(--color-text-muted)' }}
+          style={{ 
+            color: isComplete ? undefined : isStarted ? 'var(--color-text)' : 'var(--color-text-muted)' 
+          }}
         >
           {isComplete ? '✓' : `${clampedProgress}%`}
         </div>

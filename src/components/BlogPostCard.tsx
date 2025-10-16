@@ -31,7 +31,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
   if (readingProgress && readingProgress >= 0.95) {
     progressColor = '#10b981' // Green (completed)
   } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
-    progressColor = '#f59e0b' // Amber (started)
+    progressColor = 'var(--color-text)' // Neutral text color (started)
   }
 
   return (

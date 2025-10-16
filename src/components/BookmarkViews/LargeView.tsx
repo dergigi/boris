@@ -52,7 +52,7 @@ export const LargeView: React.FC<LargeViewProps> = ({
   if (readingProgress && readingProgress >= 0.95) {
     progressColor = '#10b981' // Green (completed)
   } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
-    progressColor = '#f59e0b' // Amber (started)
+    progressColor = 'var(--color-text)' // Neutral text color (started)
   }
   
   const triggerOpen = () => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)
