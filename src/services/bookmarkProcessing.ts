@@ -156,7 +156,7 @@ export async function collectBookmarksFromEvents(
               console.log('[bunker] ✅ nip04 decrypt succeeded')
             }
           } catch (err) {
-            console.log('[bunker] ❌ nip04 decrypt failed:', err)
+            console.log('[bunker] ❌ nip04 decrypt failed (or timed out):', err)
           }
         }
 
