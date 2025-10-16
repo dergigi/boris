@@ -2,6 +2,7 @@ import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
+import { KINDS } from '../config/kinds'
 import { MARK_AS_READ_EMOJI } from './reactionService'
 import { BlogPostPreview } from './exploreService'
 import { queryEvents } from './dataFetch'
@@ -29,8 +30,8 @@ export async function fetchReadArticles(
   try {
     // Fetch kind:7 and kind:17 reactions in parallel
     const [kind7Events, kind17Events] = await Promise.all([
-      queryEvents(relayPool, { kinds: [7], authors: [userPubkey] }, { relayUrls: RELAYS }),
-      queryEvents(relayPool, { kinds: [17], authors: [userPubkey] }, { relayUrls: RELAYS })
+      queryEvents(relayPool, { kinds: [KINDS.ReactionToEvent], authors: [userPubkey] }, { relayUrls: RELAYS }),
+      queryEvents(relayPool, { kinds: [KINDS.ReactionToUrl], authors: [userPubkey] }, { relayUrls: RELAYS })
     ])
 
     const readArticles: ReadArticle[] = []
@@ -102,7 +103,7 @@ export async function fetchReadArticlesWithData(
     
     // Filter to only nostr-native articles (kind 30023)
     const nostrArticles = readArticles.filter(
-      article => article.eventKind === 30023 && article.eventId
+      article => article.eventKind === KINDS.BlogPost && article.eventId
     )
 
     if (nostrArticles.length === 0) {
@@ -114,7 +115,7 @@ export async function fetchReadArticlesWithData(
     
     const articleEvents = await queryEvents(
       relayPool,
-      { kinds: [30023], ids: eventIds },
+      { kinds: [KINDS.BlogPost], ids: eventIds },
       { relayUrls: RELAYS }
     )
 

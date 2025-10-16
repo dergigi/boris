@@ -6,6 +6,7 @@ import { prioritizeLocalRelays, partitionRelays } from '../../utils/helpers'
 import { eventToHighlight, dedupeHighlights, sortHighlights } from '../highlightEventProcessor'
 import { UserSettings } from '../settingsService'
 import { rebroadcastEvents } from '../rebroadcastService'
+import { KINDS } from '../../config/kinds'
 
 export const fetchHighlights = async (
   relayPool: RelayPool,
@@ -21,7 +22,7 @@ export const fetchHighlights = async (
     const seenIds = new Set<string>()
     const local$ = localRelays.length > 0
       ? relayPool
-          .req(localRelays, { kinds: [9802], authors: [pubkey] })
+          .req(localRelays, { kinds: [KINDS.Highlights], authors: [pubkey] })
           .pipe(
             onlyEvents(),
             tap((event: NostrEvent) => {
@@ -36,7 +37,7 @@ export const fetchHighlights = async (
       : new Observable<NostrEvent>((sub) => sub.complete())
     const remote$ = remoteRelays.length > 0
       ? relayPool
-          .req(remoteRelays, { kinds: [9802], authors: [pubkey] })
+          .req(remoteRelays, { kinds: [KINDS.Highlights], authors: [pubkey] })
           .pipe(
             onlyEvents(),
             tap((event: NostrEvent) => {

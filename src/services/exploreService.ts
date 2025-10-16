@@ -2,6 +2,7 @@ import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 import { queryEvents } from './dataFetch'
+import { KINDS } from '../config/kinds'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -41,7 +42,7 @@ export const fetchBlogPostsFromAuthors = async (
 
     await queryEvents(
       relayPool,
-      { kinds: [30023], authors: pubkeys, limit: 100 },
+      { kinds: [KINDS.BlogPost], authors: pubkeys, limit: 100 },
       {
         relayUrls,
         onEvent: (event: NostrEvent) => {

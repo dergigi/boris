@@ -5,13 +5,13 @@ import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import { fetchReadArticles } from './libraryService'
 import { queryEvents } from './dataFetch'
 import { RELAYS } from '../config/relays'
+import { KINDS } from '../config/kinds'
 import { classifyBookmarkType } from '../utils/bookmarkTypeClassifier'
 import { nip19 } from 'nostr-tools'
 import { processReadingPositions, processMarkedAsRead, filterValidItems, sortByReadingActivity } from './readingDataProcessor'
+import { mergeReadItem } from '../utils/readItemMerge'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
-
-const APP_DATA_KIND = 30078 // NIP-78 Application Data
 
 export interface ReadItem {
   id: string // event ID or URL or coordinate
@@ -43,14 +43,26 @@ export interface ReadItem {
 export async function fetchAllReads(
   relayPool: RelayPool,
   userPubkey: string,
-  bookmarks: Bookmark[]
+  bookmarks: Bookmark[],
+  onItem?: (item: ReadItem) => void
 ): Promise<ReadItem[]> {
   console.log('📚 [Reads] Fetching all reads for user:', userPubkey.slice(0, 8))
+  
+  const readsMap = new Map<string, ReadItem>()
+  
+  // Helper to emit items as they're added/updated
+  const emitItem = (item: ReadItem) => {
+    if (onItem && mergeReadItem(readsMap, item)) {
+      onItem(readsMap.get(item.id)!)
+    } else if (!onItem) {
+      readsMap.set(item.id, item)
+    }
+  }
   
   try {
     // Fetch all data sources in parallel
     const [readingPositionEvents, markedAsReadArticles] = await Promise.all([
-      queryEvents(relayPool, { kinds: [APP_DATA_KIND], authors: [userPubkey] }, { relayUrls: RELAYS }),
+      queryEvents(relayPool, { kinds: [KINDS.AppData], authors: [userPubkey] }, { relayUrls: RELAYS }),
       fetchReadArticles(relayPool, userPubkey)
     ])
 
@@ -60,10 +72,21 @@ export async function fetchAllReads(
       bookmarks: bookmarks.length
     })
 
-    // Process data using shared utilities
-    const readsMap = new Map<string, ReadItem>()
+    // Process reading positions and emit items
     processReadingPositions(readingPositionEvents, readsMap)
+    if (onItem) {
+      readsMap.forEach(item => {
+        if (item.type === 'article') emitItem(item)
+      })
+    }
+    
+    // Process marked-as-read and emit items
     processMarkedAsRead(markedAsReadArticles, readsMap)
+    if (onItem) {
+      readsMap.forEach(item => {
+        if (item.type === 'article') emitItem(item)
+      })
+    }
 
     // 3. Process bookmarked articles and article/website URLs
     const allBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
@@ -71,38 +94,22 @@ export async function fetchAllReads(
     for (const bookmark of allBookmarks) {
       const bookmarkType = classifyBookmarkType(bookmark)
       
-      // Only include articles and external article/website bookmarks
+      // Only include articles
       if (bookmarkType === 'article') {
         // Kind:30023 nostr article
         const coordinate = bookmark.id // Already in coordinate format
         const existing = readsMap.get(coordinate)
         
         if (!existing) {
-          readsMap.set(coordinate, {
+          const item: ReadItem = {
             id: coordinate,
             source: 'bookmark',
             type: 'article',
             readingProgress: 0,
             readingTimestamp: bookmark.added_at || bookmark.created_at
-          })
-        }
-      } else if (bookmarkType === 'external') {
-        // External article URL
-        const urls = extractUrlFromBookmark(bookmark)
-        if (urls.length > 0) {
-          const url = urls[0]
-          const existing = readsMap.get(url)
-          
-          if (!existing) {
-            readsMap.set(url, {
-              id: url,
-              source: 'bookmark',
-              type: 'external',
-              url,
-              readingProgress: 0,
-              readingTimestamp: bookmark.added_at || bookmark.created_at
-            })
           }
+          readsMap.set(coordinate, item)
+          if (onItem) emitItem(item)
         }
       }
     }
@@ -123,7 +130,7 @@ export async function fetchAllReads(
           // Try to decode as naddr
           if (coord.startsWith('naddr1')) {
             const decoded = nip19.decode(coord)
-            if (decoded.type === 'naddr' && decoded.data.kind === 30023) {
+            if (decoded.type === 'naddr' && decoded.data.kind === KINDS.BlogPost) {
               articlesToFetch.push({
                 pubkey: decoded.data.pubkey,
                 identifier: decoded.data.identifier || ''
@@ -132,7 +139,7 @@ export async function fetchAllReads(
           } else {
             // Try coordinate format (kind:pubkey:identifier)
             const parts = coord.split(':')
-            if (parts.length === 3 && parts[0] === '30023') {
+            if (parts.length === 3 && parseInt(parts[0]) === KINDS.BlogPost) {
               articlesToFetch.push({
                 pubkey: parts[1],
                 identifier: parts[2]
@@ -150,14 +157,14 @@ export async function fetchAllReads(
         
         const events = await queryEvents(
           relayPool,
-          { kinds: [30023], authors, '#d': identifiers },
+          { kinds: [KINDS.BlogPost], authors, '#d': identifiers },
           { relayUrls: RELAYS }
         )
 
-        // Merge event data into ReadItems
+        // Merge event data into ReadItems and emit
         for (const event of events) {
           const dTag = event.tags.find(t => t[0] === 'd')?.[1] || ''
-          const coordinate = `30023:${event.pubkey}:${dTag}`
+          const coordinate = `${KINDS.BlogPost}:${event.pubkey}:${dTag}`
           
           const item = readsMap.get(coordinate) || readsMap.get(event.id)
           if (item) {
@@ -167,6 +174,7 @@ export async function fetchAllReads(
             item.image = getArticleImage(event)
             item.published = getArticlePublished(event)
             item.author = event.pubkey
+            if (onItem) emitItem(item)
           }
         }
       }

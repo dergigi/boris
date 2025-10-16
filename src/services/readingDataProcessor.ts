@@ -1,5 +1,6 @@
 import { NostrEvent } from 'nostr-tools'
 import { ReadItem } from './readsService'
+import { fallbackTitleFromUrl } from '../utils/readItemMerge'
 
 const READING_POSITION_PREFIX = 'boris:reading-position:'
 
@@ -117,24 +118,30 @@ export function sortByReadingActivity(items: ReadItem[]): ReadItem[] {
 }
 
 /**
- * Filters out items without timestamps or proper titles
+ * Filters out items without timestamps and enriches external items with fallback titles
  */
 export function filterValidItems(items: ReadItem[]): ReadItem[] {
-  return items.filter(item => {
-    // Only include items that have a timestamp
-    const hasTimestamp = (item.readingTimestamp && item.readingTimestamp > 0) || 
-                        (item.markedAt && item.markedAt > 0)
-    if (!hasTimestamp) return false
-    
-    // Filter out items without titles
-    if (!item.title || item.title === 'Untitled') {
-      // For Nostr articles, we need the title from the event
+  return items
+    .filter(item => {
+      // Only include items that have a timestamp
+      const hasTimestamp = (item.readingTimestamp && item.readingTimestamp > 0) || 
+                          (item.markedAt && item.markedAt > 0)
+      if (!hasTimestamp) return false
+      
+      // For Nostr articles, we need the event to be valid
       if (item.type === 'article' && !item.event) return false
-      // For external URLs, we need a proper title
-      if (item.type === 'external' && !item.title) return false
-    }
-    
-    return true
-  })
+      
+      // For external URLs, we need at least a URL
+      if (item.type === 'external' && !item.url) return false
+      
+      return true
+    })
+    .map(item => {
+      // Add fallback title for external URLs without titles
+      if (item.type === 'external' && !item.title && item.url) {
+        return { ...item, title: fallbackTitleFromUrl(item.url) }
+      }
+      return item
+    })
 }
 

@@ -2,10 +2,10 @@ import { RelayPool } from 'applesauce-relay'
 import { fetchReadArticles } from './libraryService'
 import { queryEvents } from './dataFetch'
 import { RELAYS } from '../config/relays'
+import { KINDS } from '../config/kinds'
 import { ReadItem } from './readsService'
 import { processReadingPositions, processMarkedAsRead, filterValidItems, sortByReadingActivity } from './readingDataProcessor'
-
-const APP_DATA_KIND = 30078 // NIP-78 Application Data
+import { mergeReadItem } from '../utils/readItemMerge'
 
 /**
  * Fetches external URL links with reading progress from:
@@ -14,14 +14,26 @@ const APP_DATA_KIND = 30078 // NIP-78 Application Data
  */
 export async function fetchLinks(
   relayPool: RelayPool,
-  userPubkey: string
+  userPubkey: string,
+  onItem?: (item: ReadItem) => void
 ): Promise<ReadItem[]> {
   console.log('🔗 [Links] Fetching external links for user:', userPubkey.slice(0, 8))
+  
+  const linksMap = new Map<string, ReadItem>()
+  
+  // Helper to emit items as they're added/updated
+  const emitItem = (item: ReadItem) => {
+    if (onItem && mergeReadItem(linksMap, item)) {
+      onItem(linksMap.get(item.id)!)
+    } else if (!onItem) {
+      linksMap.set(item.id, item)
+    }
+  }
   
   try {
     // Fetch all data sources in parallel
     const [readingPositionEvents, markedAsReadArticles] = await Promise.all([
-      queryEvents(relayPool, { kinds: [APP_DATA_KIND], authors: [userPubkey] }, { relayUrls: RELAYS }),
+      queryEvents(relayPool, { kinds: [KINDS.AppData], authors: [userPubkey] }, { relayUrls: RELAYS }),
       fetchReadArticles(relayPool, userPubkey)
     ])
 
@@ -30,10 +42,27 @@ export async function fetchLinks(
       markedAsRead: markedAsReadArticles.length
     })
 
-    // Process data using shared utilities
-    const linksMap = new Map<string, ReadItem>()
+    // Process reading positions and emit external items
     processReadingPositions(readingPositionEvents, linksMap)
+    if (onItem) {
+      linksMap.forEach(item => {
+        if (item.type === 'external') {
+          const hasProgress = (item.readingProgress && item.readingProgress > 0) || item.markedAsRead
+          if (hasProgress) emitItem(item)
+        }
+      })
+    }
+    
+    // Process marked-as-read and emit external items
     processMarkedAsRead(markedAsReadArticles, linksMap)
+    if (onItem) {
+      linksMap.forEach(item => {
+        if (item.type === 'external') {
+          const hasProgress = (item.readingProgress && item.readingProgress > 0) || item.markedAsRead
+          if (hasProgress) emitItem(item)
+        }
+      })
+    }
 
     // Filter for external URLs only with reading progress
     const links = Array.from(linksMap.values())

@@ -49,7 +49,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [reads, setReads] = useState<ReadItem[]>([])
+  const [readsMap, setReadsMap] = useState<Map<string, ReadItem>>(new Map())
   const [links, setLinks] = useState<ReadItem[]>([])
+  const [linksMap, setLinksMap] = useState<Map<string, ReadItem>>(new Map())
   const [writings, setWritings] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [loadedTabs, setLoadedTabs] = useState<Set<TabType>>(new Set())
@@ -144,9 +146,14 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         fetchedBookmarks = []
       }
 
-      // Fetch all reads
-      const userReads = await fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks)
-      setReads(userReads)
+      // Fetch all reads with streaming
+      const tempMap = new Map(readsMap)
+      await fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks, (item) => {
+        tempMap.set(item.id, item)
+        setReadsMap(new Map(tempMap))
+        setReads(Array.from(tempMap.values()))
+      })
+      
       setLoadedTabs(prev => new Set(prev).add('reads'))
     } catch (err) {
       console.error('Failed to load reads:', err)
@@ -163,9 +170,14 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Fetch links (external URLs with reading progress)
-      const userLinks = await fetchLinks(relayPool, viewingPubkey)
-      setLinks(userLinks)
+      // Fetch links with streaming
+      const tempMap = new Map(linksMap)
+      await fetchLinks(relayPool, viewingPubkey, (item) => {
+        tempMap.set(item.id, item)
+        setLinksMap(new Map(tempMap))
+        setLinks(Array.from(tempMap.values()))
+      })
+      
       setLoadedTabs(prev => new Set(prev).add('links'))
     } catch (err) {
       console.error('Failed to load links:', err)
@@ -214,15 +226,10 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   }, [activeTab, viewingPubkey, refreshTrigger])
 
 
-  // Pull-to-refresh - only reload active tab
+  // Pull-to-refresh - reload active tab without clearing state
   const { isRefreshing, pullPosition } = usePullToRefresh({
     onRefresh: () => {
-      // Clear the loaded state for current tab to force refresh
-      setLoadedTabs(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(activeTab)
-        return newSet
-      })
+      // Just trigger refresh - loaders will merge new data
       setRefreshTrigger(prev => prev + 1)
     },
     maximumPullLength: 240,
@@ -449,13 +456,22 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         )
 
       case 'reads':
-        // Show loading skeletons while fetching or if no data
-        if (reads.length === 0 || (loading && !loadedTabs.has('reads'))) {
+        // Show loading skeletons only while initially loading
+        if (loading && !loadedTabs.has('reads')) {
           return (
             <div className="explore-grid">
               {Array.from({ length: 6 }).map((_, i) => (
                 <BlogPostSkeleton key={i} />
               ))}
+            </div>
+          )
+        }
+        
+        // Show empty state if loaded but no reads
+        if (reads.length === 0 && loadedTabs.has('reads')) {
+          return (
+            <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+              No articles read yet.
             </div>
           )
         }
@@ -487,13 +503,22 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
         )
 
       case 'links':
-        // Show loading skeletons while fetching or if no data
-        if (links.length === 0 || (loading && !loadedTabs.has('links'))) {
+        // Show loading skeletons only while initially loading
+        if (loading && !loadedTabs.has('links')) {
           return (
             <div className="explore-grid">
               {Array.from({ length: 6 }).map((_, i) => (
                 <BlogPostSkeleton key={i} />
               ))}
+            </div>
+          )
+        }
+        
+        // Show empty state if loaded but no links
+        if (links.length === 0 && loadedTabs.has('links')) {
+          return (
+            <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+              No links with reading progress yet.
             </div>
           )
         }
