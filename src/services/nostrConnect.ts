@@ -46,5 +46,22 @@ export async function reconnectBunkerSigner(
   
   // Mark as connected (bunker remembers permissions from initial connection)
   account.signer.isConnected = true
+  
+  // Expose nip04/nip44 at account level for compatibility
+  // This allows bookmark decryption to work without accessing account.signer
+  if (!('nip04' in account)) {
+    Object.defineProperty(account, 'nip04', {
+      get() { return this.signer.nip04 },
+      enumerable: true,
+      configurable: true
+    })
+  }
+  if (!('nip44' in account)) {
+    Object.defineProperty(account, 'nip44', {
+      get() { return this.signer.nip44 },
+      enumerable: true,
+      configurable: true
+    })
+  }
 }
 
