@@ -159,7 +159,6 @@ function generateHtml(naddr: string, meta: ArticleMetadata | null): string {
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="0; url=/" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -196,6 +195,16 @@ function generateHtml(naddr: string, meta: ArticleMetadata | null): string {
 </html>`
 }
 
+function isCrawler(userAgent: string | undefined): boolean {
+  if (!userAgent) return false
+  const crawlers = [
+    'bot', 'crawl', 'spider', 'slurp', 'facebook', 'twitter', 'linkedin',
+    'whatsapp', 'telegram', 'slack', 'discord', 'preview'
+  ]
+  const ua = userAgent.toLowerCase()
+  return crawlers.some(crawler => ua.includes(crawler))
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const naddr = (req.query.naddr as string | undefined)?.trim()
   
@@ -203,7 +212,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing naddr parameter' })
   }
 
-  // Check cache
+  const userAgent = req.headers['user-agent'] as string | undefined
+
+  // If it's a regular browser (not a bot), redirect to index.html
+  // and let the SPA handle routing client-side
+  if (!isCrawler(userAgent)) {
+    res.setHeader('Location', '/')
+    return res.status(302).send('')
+  }
+
+  // Check cache for bots/crawlers
   const now = Date.now()
   const cached = memoryCache.get(naddr)
   if (cached && cached.expires > now) {
