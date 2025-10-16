@@ -199,34 +199,15 @@ function App() {
       
       pool.group(RELAYS)
       
-      // Load persisted accounts from localStorage
-      try {
-        const accountsJson = localStorage.getItem('accounts')
-        if (accountsJson) {
-          const parsed = JSON.parse(accountsJson)
-          
-          // Clear old bunker accounts (they were created with wrong setup)
-          const bunkerFixVersion = localStorage.getItem('bunkerFixVersion')
-          if (bunkerFixVersion !== '1') {
-            console.log('[bunker] Clearing old bunker accounts (need to reconnect with fixed setup)')
-            const nonBunkerAccounts = parsed.filter((acc: any) => acc.type !== 'nostr-connect')
-            if (nonBunkerAccounts.length > 0) {
-              await accounts.fromJSON(nonBunkerAccounts)
-            }
-            localStorage.setItem('bunkerFixVersion', '1')
-            localStorage.removeItem('active')
-          } else {
-            await accounts.fromJSON(parsed)
-            
-            // Restore active account
-            const activeId = localStorage.getItem('active')
-            if (activeId && accounts.getAccount(activeId)) {
-              accounts.setActive(activeId)
-            }
-          }
-        }
-      } catch (err) {
-        console.error('[bunker] Failed to restore accounts:', err)
+      // Load persisted accounts from localStorage (per applesauce examples)
+      const savedAccounts = JSON.parse(localStorage.getItem('accounts') || '[]')
+      await accounts.fromJSON(savedAccounts)
+      
+      // Restore active account
+      const activeAccountId = localStorage.getItem('active')
+      if (activeAccountId) {
+        const account = accounts.getAccount(activeAccountId)
+        if (account) accounts.setActive(account)
       }
       
       // Persist accounts to localStorage
@@ -242,18 +223,12 @@ function App() {
         }
       })
       
-      // Reconnect bunker signers on page load
+      // Reconnect bunker signers on page load (per applesauce pattern)
       const reconnectedAccounts = new Set<string>()
       const bunkerReconnectSub = accounts.active$.subscribe(async (account) => {
         if (account?.type === 'nostr-connect' && !reconnectedAccounts.has(account.id)) {
           reconnectedAccounts.add(account.id)
-          
-          try {
-            await reconnectBunkerSigner(account as Accounts.NostrConnectAccount<unknown>, pool)
-            console.log('[bunker] Reconnected to bunker signer')
-          } catch (error) {
-            console.error('[bunker] Failed to reconnect signer:', error)
-          }
+          await reconnectBunkerSigner(account as Accounts.NostrConnectAccount<unknown>, pool)
         }
       })
       

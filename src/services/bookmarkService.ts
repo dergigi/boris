@@ -83,49 +83,16 @@ export const fetchBookmarks = async (
       // Keep existing bookmarks visible; do not clear list if nothing new found
       return
     }
-    // Aggregate across events
+    // Get account with signer for decryption
     const maybeAccount = activeAccount as AccountWithExtension
-    console.log('[bunker] 🔐 Account object:', {
-      hasSignEvent: typeof maybeAccount?.signEvent === 'function',
-      hasSigner: !!maybeAccount?.signer,
-      accountType: maybeAccount?.type || typeof maybeAccount,
-      accountKeys: maybeAccount ? Object.keys(maybeAccount) : []
-    })
-
-    // For ExtensionAccount, we need a signer with nip04/nip44 for decrypting hidden content
-    // The ExtensionAccount itself has nip04/nip44 getters that proxy to the signer
     let signerCandidate: unknown = maybeAccount
+    
+    // Fallback to raw signer if account doesn't expose nip04/nip44
     const hasNip04Prop = (signerCandidate as { nip04?: unknown })?.nip04 !== undefined
     const hasNip44Prop = (signerCandidate as { nip44?: unknown })?.nip44 !== undefined
-    
-    console.log('[bunker] 🔍 Account nip04/nip44 check:', {
-      hasNip04Prop,
-      hasNip44Prop,
-      nip04Type: typeof (signerCandidate as { nip04?: unknown })?.nip04,
-      nip44Type: typeof (signerCandidate as { nip44?: unknown })?.nip44
-    })
-    
     if (signerCandidate && !hasNip04Prop && !hasNip44Prop && maybeAccount?.signer) {
-      // Fallback to the raw signer if account doesn't have nip04/nip44
-      console.log('[bunker] ⚠️  Account missing nip04/nip44, falling back to signer')
       signerCandidate = maybeAccount.signer
-      
-      const signerHasNip04 = (signerCandidate as { nip04?: unknown })?.nip04 !== undefined
-      const signerHasNip44 = (signerCandidate as { nip44?: unknown })?.nip44 !== undefined
-      console.log('[bunker] 🔍 Signer nip04/nip44 check:', {
-        signerHasNip04,
-        signerHasNip44,
-        nip04Type: typeof (signerCandidate as { nip04?: unknown })?.nip04,
-        nip44Type: typeof (signerCandidate as { nip44?: unknown })?.nip44
-      })
     }
-
-    console.log('[bunker] 🔑 Final signer candidate:', {
-      exists: !!signerCandidate,
-      type: typeof signerCandidate,
-      hasNip04: hasNip04Decrypt(signerCandidate),
-      hasNip44: hasNip44Decrypt(signerCandidate)
-    })
     const { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags } = await collectBookmarksFromEvents(
       bookmarkListEvents,
       activeAccount,

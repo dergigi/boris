@@ -28,102 +28,31 @@ export function getDefaultBunkerPermissions(): string[] {
 
 /**
  * Reconnect a bunker signer after page load
- * Ensures the signer is listening and connected to the correct relays
+ * Ensures the signer is listening and ready for signing/decryption
  */
 export async function reconnectBunkerSigner(
   account: Accounts.NostrConnectAccount<unknown>,
   pool: RelayPool
 ): Promise<void> {
-  // Add bunker relays to pool for signing communication
+  // Add bunker relays to pool
   if (account.signer.relays) {
-    const bunkerRelays = account.signer.relays
-    pool.group(bunkerRelays)
-    
-    // Wait for at least one bunker relay to be connected
-    // This ensures signing/decryption requests can be sent
-    console.log('[bunker] Waiting for relay connections...', bunkerRelays)
-    await new Promise<void>((resolve) => {
-      const checkInterval = setInterval(() => {
-        const connectedRelays = bunkerRelays.filter(url => {
-          const relay = pool.relays.get(url)
-          return relay?.connected
-        })
-        
-        if (connectedRelays.length > 0) {
-          console.log('[bunker] ✅ Connected to', connectedRelays.length, 'bunker relay(s)')
-          clearInterval(checkInterval)
-          resolve()
-        }
-      }, 100)
-      
-      // Timeout after 5 seconds
-      setTimeout(() => {
-        clearInterval(checkInterval)
-        console.warn('[bunker] ⚠️  Timeout waiting for relay connections, proceeding anyway')
-        resolve()
-      }, 5000)
-    })
+    pool.group(account.signer.relays)
   }
   
-  // Open signer subscription if not already listening
+  // Open signer subscription for NIP-46 responses
   if (!account.signer.listening) {
-    console.log('[bunker] Opening signer subscription for NIP-46 responses...')
     await account.signer.open()
-    console.log('[bunker] ✅ Signer subscription active, listening for bunker responses')
-  } else {
-    console.log('[bunker] Signer already listening')
   }
   
   // Mark as connected (bunker remembers permissions from initial connection)
   account.signer.isConnected = true
-  console.log('[bunker] Signer marked as connected, ready for signing/decryption')
   
-  // Expose nip04/nip44 at account level for compatibility with logging
-  // Cache wrapped methods to ensure they're used consistently
+  // Expose nip04/nip44 at account level (like ExtensionAccount does)
   if (!('nip04' in account)) {
-    const nip04Wrapped = {
-      encrypt: async (pubkey: string, plaintext: string) => {
-        console.log('[bunker] 🔐 nip04.encrypt called', { pubkey: pubkey.slice(0, 8) })
-        const result = await account.signer.nip04!.encrypt(pubkey, plaintext)
-        console.log('[bunker] ✅ nip04.encrypt completed')
-        return result
-      },
-      decrypt: async (pubkey: string, ciphertext: string) => {
-        console.log('[bunker] 🔓 nip04.decrypt called', { pubkey: pubkey.slice(0, 8), ciphertextLength: ciphertext.length })
-        try {
-          const result = await account.signer.nip04!.decrypt(pubkey, ciphertext)
-          console.log('[bunker] ✅ nip04.decrypt completed')
-          return result
-        } catch (err) {
-          console.error('[bunker] ❌ nip04.decrypt failed:', err)
-          throw err
-        }
-      }
-    };
-    (account as any).nip04 = nip04Wrapped
+    (account as any).nip04 = account.signer.nip04
   }
-  
   if (!('nip44' in account)) {
-    const nip44Wrapped = {
-      encrypt: async (pubkey: string, plaintext: string) => {
-        console.log('[bunker] 🔐 nip44.encrypt called', { pubkey: pubkey.slice(0, 8) })
-        const result = await account.signer.nip44!.encrypt(pubkey, plaintext)
-        console.log('[bunker] ✅ nip44.encrypt completed')
-        return result
-      },
-      decrypt: async (pubkey: string, ciphertext: string) => {
-        console.log('[bunker] 🔓 nip44.decrypt called', { pubkey: pubkey.slice(0, 8), ciphertextLength: ciphertext.length })
-        try {
-          const result = await account.signer.nip44!.decrypt(pubkey, ciphertext)
-          console.log('[bunker] ✅ nip44.decrypt completed', { plaintextLength: result.length })
-          return result
-        } catch (err) {
-          console.error('[bunker] ❌ nip44.decrypt failed:', err)
-          throw err
-        }
-      }
-    };
-    (account as any).nip44 = nip44Wrapped
+    (account as any).nip44 = account.signer.nip44
   }
 }
 
