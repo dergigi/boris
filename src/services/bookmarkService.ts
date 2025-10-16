@@ -85,7 +85,7 @@ export const fetchBookmarks = async (
     }
     // Aggregate across events
     const maybeAccount = activeAccount as AccountWithExtension
-    console.log('🔐 Account object:', {
+    console.log('[bunker] 🔐 Account object:', {
       hasSignEvent: typeof maybeAccount?.signEvent === 'function',
       hasSigner: !!maybeAccount?.signer,
       accountType: typeof maybeAccount,
@@ -102,10 +102,10 @@ export const fetchBookmarks = async (
       signerCandidate = maybeAccount.signer
     }
 
-    console.log('🔑 Signer candidate:', !!signerCandidate, typeof signerCandidate)
+    console.log('[bunker] 🔑 Signer candidate:', !!signerCandidate, typeof signerCandidate)
     if (signerCandidate) {
-      console.log('🔑 Signer has nip04:', hasNip04Decrypt(signerCandidate))
-      console.log('🔑 Signer has nip44:', hasNip44Decrypt(signerCandidate))
+      console.log('[bunker] 🔑 Signer has nip04:', hasNip04Decrypt(signerCandidate))
+      console.log('[bunker] 🔑 Signer has nip44:', hasNip44Decrypt(signerCandidate))
     }
     const { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags } = await collectBookmarksFromEvents(
       bookmarkListEvents,
