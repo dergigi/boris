@@ -5,7 +5,7 @@ import { Hooks } from 'applesauce-react'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
@@ -44,6 +44,7 @@ type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
 const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: propPubkey }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
+  const { filter: urlFilter } = useParams<{ filter?: string }>()
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
   
   // Use provided pubkey or fall back to active account
@@ -61,7 +62,13 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
-  const [readingProgressFilter, setReadingProgressFilter] = useState<ReadingProgressFilterType>('all')
+  
+  // Initialize reading progress filter from URL param
+  const validFilters: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed']
+  const initialFilter = urlFilter && validFilters.includes(urlFilter as ReadingProgressFilterType) 
+    ? (urlFilter as ReadingProgressFilterType) 
+    : 'all'
+  const [readingProgressFilter, setReadingProgressFilter] = useState<ReadingProgressFilterType>(initialFilter)
 
   // Update local state when prop changes
   useEffect(() => {
@@ -69,6 +76,26 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       setActiveTab(propActiveTab)
     }
   }, [propActiveTab])
+
+  // Sync filter state with URL changes
+  useEffect(() => {
+    const filterFromUrl = urlFilter && validFilters.includes(urlFilter as ReadingProgressFilterType) 
+      ? (urlFilter as ReadingProgressFilterType) 
+      : 'all'
+    setReadingProgressFilter(filterFromUrl)
+  }, [urlFilter])
+
+  // Handler to change reading progress filter and update URL
+  const handleReadingProgressFilterChange = (filter: ReadingProgressFilterType) => {
+    setReadingProgressFilter(filter)
+    if (activeTab === 'reads') {
+      if (filter === 'all') {
+        navigate('/me/reads', { replace: true })
+      } else {
+        navigate(`/me/reads/${filter}`, { replace: true })
+      }
+    }
+  }
 
   // Tab-specific loading functions
   const loadHighlightsTab = async () => {
@@ -536,7 +563,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           <>
             <ReadingProgressFilters
               selectedFilter={readingProgressFilter}
-              onFilterChange={setReadingProgressFilter}
+              onFilterChange={handleReadingProgressFilterChange}
             />
             {filteredReads.length === 0 ? (
               <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
@@ -583,7 +610,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           <>
             <ReadingProgressFilters
               selectedFilter={readingProgressFilter}
-              onFilterChange={setReadingProgressFilter}
+              onFilterChange={handleReadingProgressFilterChange}
             />
             {filteredLinks.length === 0 ? (
               <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
