@@ -347,6 +347,33 @@ function App() {
                   // This ensures the signer is ready to handle and receive responses
                   await new Promise(resolve => setTimeout(resolve, 100))
                   console.log("[bunker] Subscription ready after startup delay")
+                  // Fire-and-forget: probe decrypt path to verify Amber responds to NIP-46 decrypt
+                  try {
+                    const withTimeout = async <T,>(p: Promise<T>, ms = 3000): Promise<T> => {
+                      return await Promise.race([
+                        p,
+                        new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`probe timeout after ${ms}ms`)), ms)),
+                      ])
+                    }
+                    setTimeout(async () => {
+                      try {
+                        console.log('[bunker] 🔎 Probe nip44.decrypt…')
+                        await withTimeout(nostrConnectAccount.signer.nip44!.decrypt(nostrConnectAccount.pubkey, 'invalid-ciphertext'))
+                        console.log('[bunker] 🔎 Probe nip44.decrypt responded')
+                      } catch (err) {
+                        console.log('[bunker] 🔎 Probe nip44 result:', err instanceof Error ? err.message : err)
+                      }
+                      try {
+                        console.log('[bunker] 🔎 Probe nip04.decrypt…')
+                        await withTimeout(nostrConnectAccount.signer.nip04!.decrypt(nostrConnectAccount.pubkey, 'invalid-ciphertext'))
+                        console.log('[bunker] 🔎 Probe nip04.decrypt responded')
+                      } catch (err) {
+                        console.log('[bunker] 🔎 Probe nip04 result:', err instanceof Error ? err.message : err)
+                      }
+                    }, 0)
+                  } catch (err) {
+                    console.log('[bunker] 🔎 Probe setup failed:', err)
+                  }
                   // The bunker remembers the permissions from the initial connection
                   nostrConnectAccount.signer.isConnected = true
                   
