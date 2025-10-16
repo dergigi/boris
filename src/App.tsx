@@ -305,6 +305,12 @@ function App() {
                     signer: nostrConnectAccount.signer.signer, // Use the existing SimpleSigner
                     pool: pool
                   })
+                  // Ensure local relays are included for NIP-46 request/response traffic (e.g., Amber bunker)
+                  try {
+                    const mergedRelays = Array.from(new Set([...(signerData.relays || []), ...RELAYS]))
+                    recreatedSigner.relays = mergedRelays
+                    console.log('[bunker] 🔗 Signer relays merged with app RELAYS:', mergedRelays)
+                  } catch {}
                   
                   // Replace the signer on the account
                   nostrConnectAccount.signer = recreatedSigner
