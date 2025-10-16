@@ -26,16 +26,6 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): P
   }
 }
 
-// Serialize NIP-46 decrypt/unlock calls to avoid overloading the provider
-let decryptQueue: Promise<void> = Promise.resolve()
-function enqueueDecrypt<T>(task: () => Promise<T>): Promise<T> {
-  const run = async () => task()
-  const next = decryptQueue.then(run, run)
-  // Chain to ensure one-at-a-time execution
-  decryptQueue = next.then(() => undefined, () => undefined)
-  return next
-}
-
 export async function collectBookmarksFromEvents(
   bookmarkListEvents: NostrEvent[],
   activeAccount: ActiveAccount,
@@ -106,23 +96,19 @@ export async function collectBookmarksFromEvents(
           hasHiddenTags: true
         })
         try {
-          await enqueueDecrypt(() =>
-            withTimeout(
-              Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner),
-              5000,
-              'unlockHiddenTags(nip04)'
-            )
+          await withTimeout(
+            Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner),
+            5000,
+            'unlockHiddenTags(nip04)'
           )
           console.log('[bunker] ✅ Unlocked hidden tags with nip04')
         } catch (err) {
           console.log('[bunker] ⚠️  nip04 unlock failed (or timed out), trying nip44:', err)
           try {
-            await enqueueDecrypt(() =>
-              withTimeout(
-                Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner, 'nip44' as UnlockMode),
-                5000,
-                'unlockHiddenTags(nip44)'
-              )
+            await withTimeout(
+              Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner, 'nip44' as UnlockMode),
+              5000,
+              'unlockHiddenTags(nip44)'
             )
             console.log('[bunker] ✅ Unlocked hidden tags with nip44')
           } catch (err2) {
@@ -141,15 +127,13 @@ export async function collectBookmarksFromEvents(
         try {
           if (hasNip44Decrypt(signerCandidate)) {
             console.log('[bunker] Trying nip44 decrypt...')
-            decryptedContent = await enqueueDecrypt(() =>
-              withTimeout(
-                (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(
-                  evt.pubkey,
-                  evt.content
-                ),
-                6000,
-                'nip44.decrypt'
-              )
+            decryptedContent = await withTimeout(
+              (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(
+                evt.pubkey,
+                evt.content
+              ),
+              6000,
+              'nip44.decrypt'
             )
             console.log('[bunker] ✅ nip44 decrypt succeeded')
           }
@@ -161,15 +145,13 @@ export async function collectBookmarksFromEvents(
           try {
             if (hasNip04Decrypt(signerCandidate)) {
               console.log('[bunker] Trying nip04 decrypt...')
-              decryptedContent = await enqueueDecrypt(() =>
-                withTimeout(
-                  (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(
-                    evt.pubkey,
-                    evt.content
-                  ),
-                  6000,
-                  'nip04.decrypt'
-                )
+              decryptedContent = await withTimeout(
+                (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(
+                  evt.pubkey,
+                  evt.content
+                ),
+                6000,
+                'nip04.decrypt'
               )
               console.log('[bunker] ✅ nip04 decrypt succeeded')
             }
