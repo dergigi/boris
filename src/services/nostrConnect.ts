@@ -36,7 +36,33 @@ export async function reconnectBunkerSigner(
 ): Promise<void> {
   // Add bunker relays to pool for signing communication
   if (account.signer.relays) {
-    pool.group(account.signer.relays)
+    const bunkerRelays = account.signer.relays
+    pool.group(bunkerRelays)
+    
+    // Wait for at least one bunker relay to be connected
+    // This ensures signing/decryption requests can be sent
+    console.log('[bunker] Waiting for relay connections...', bunkerRelays)
+    await new Promise<void>((resolve) => {
+      const checkInterval = setInterval(() => {
+        const connectedRelays = bunkerRelays.filter(url => {
+          const relay = pool.relays.get(url)
+          return relay?.connected
+        })
+        
+        if (connectedRelays.length > 0) {
+          console.log('[bunker] ✅ Connected to', connectedRelays.length, 'bunker relay(s)')
+          clearInterval(checkInterval)
+          resolve()
+        }
+      }, 100)
+      
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval)
+        console.warn('[bunker] ⚠️  Timeout waiting for relay connections, proceeding anyway')
+        resolve()
+      }, 5000)
+    })
   }
   
   // Open signer subscription if not already listening
