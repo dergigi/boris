@@ -15,11 +15,17 @@ export function mergeReadItem(
     return true
   }
   
+  // Always merge if incoming has reading progress data
+  const hasNewProgress = incoming.readingProgress !== undefined && 
+    (existing.readingProgress === undefined || existing.readingProgress !== incoming.readingProgress)
+  
+  const hasNewMarkedAsRead = incoming.markedAsRead !== undefined && existing.markedAsRead === undefined
+  
   // Merge by taking the most recent reading activity
   const existingTime = existing.readingTimestamp || existing.markedAt || 0
   const incomingTime = incoming.readingTimestamp || incoming.markedAt || 0
   
-  if (incomingTime > existingTime) {
+  if (incomingTime > existingTime || hasNewProgress || hasNewMarkedAsRead) {
     // Keep existing data, but update with newer reading metadata
     stateMap.set(incoming.id, {
       ...existing,
@@ -30,7 +36,10 @@ export function mergeReadItem(
       summary: incoming.summary || existing.summary,
       image: incoming.image || existing.image,
       published: incoming.published || existing.published,
-      author: incoming.author || existing.author
+      author: incoming.author || existing.author,
+      // Always take reading progress if available
+      readingProgress: incoming.readingProgress !== undefined ? incoming.readingProgress : existing.readingProgress,
+      readingTimestamp: incomingTime > existingTime ? incoming.readingTimestamp : existing.readingTimestamp
     })
     return true
   }
