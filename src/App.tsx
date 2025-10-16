@@ -192,8 +192,10 @@ function App() {
       // Create relay pool and set it up BEFORE loading accounts
       // NostrConnectAccount.fromJSON needs this to restore the signer
       const pool = new RelayPool()
-      NostrConnectSigner.pool = pool
-      console.log('[bunker] ✅ Pool assigned to NostrConnectSigner (before account load)')
+      // Wire the signer to use this pool's publish/subscription methods (per applesauce examples)
+      NostrConnectSigner.subscriptionMethod = pool.subscription.bind(pool)
+      NostrConnectSigner.publishMethod = pool.publish.bind(pool)
+      console.log('[bunker] ✅ Wired NostrConnectSigner to RelayPool publish/subscription (before account load)')
       
       // Create a relay group for better event deduplication and management
       pool.group(RELAYS)
