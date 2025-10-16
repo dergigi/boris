@@ -1,22 +1,22 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookOpen, faBookmark, faCheckCircle, faAsterisk } from '@fortawesome/free-solid-svg-icons'
-import { faBooks } from '../icons/customIcons'
+import { faBookOpen, faCheckCircle, faAsterisk } from '@fortawesome/free-solid-svg-icons'
+import { faEnvelope, faEnvelopeOpen } from '@fortawesome/free-regular-svg-icons'
 
-export type ArchiveFilterType = 'all' | 'to-read' | 'reading' | 'completed' | 'marked'
+export type ReadingProgressFilterType = 'all' | 'unopened' | 'started' | 'reading' | 'completed'
 
-interface ArchiveFiltersProps {
-  selectedFilter: ArchiveFilterType
-  onFilterChange: (filter: ArchiveFilterType) => void
+interface ReadingProgressFiltersProps {
+  selectedFilter: ReadingProgressFilterType
+  onFilterChange: (filter: ReadingProgressFilterType) => void
 }
 
-const ArchiveFilters: React.FC<ArchiveFiltersProps> = ({ selectedFilter, onFilterChange }) => {
+const ReadingProgressFilters: React.FC<ReadingProgressFiltersProps> = ({ selectedFilter, onFilterChange }) => {
   const filters = [
     { type: 'all' as const, icon: faAsterisk, label: 'All' },
-    { type: 'to-read' as const, icon: faBookmark, label: 'To Read' },
+    { type: 'unopened' as const, icon: faEnvelope, label: 'Unopened' },
+    { type: 'started' as const, icon: faEnvelopeOpen, label: 'Started' },
     { type: 'reading' as const, icon: faBookOpen, label: 'Reading' },
-    { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' },
-    { type: 'marked' as const, icon: faBooks, label: 'Marked as Read' }
+    { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' }
   ]
 
   return (
@@ -43,5 +43,5 @@ const ArchiveFilters: React.FC<ArchiveFiltersProps> = ({ selectedFilter, onFilte
   )
 }
 
-export default ArchiveFilters
+export default ReadingProgressFilters
 

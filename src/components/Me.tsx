@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSpinner, faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare, faLink } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
 import { fetchBookmarks } from '../services/bookmarkService'
-import { fetchReadArticlesWithData } from '../services/libraryService'
+import { fetchAllReads, ReadItem } from '../services/readsService'
+import { fetchLinks } from '../services/linksService'
 import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
 import { RELAYS } from '../config/relays'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
@@ -19,15 +20,18 @@ import BlogPostCard from './BlogPostCard'
 import { BookmarkItem } from './BookmarkItem'
 import IconButton from './IconButton'
 import { ViewMode } from './Bookmarks'
-import { getCachedMeData, setCachedMeData, updateCachedHighlights } from '../services/meCache'
+import { getCachedMeData, updateCachedHighlights } from '../services/meCache'
 import { faBooks } from '../icons/customIcons'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { groupIndividualBookmarks, hasContent } from '../utils/bookmarkUtils'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
-import { generateArticleIdentifier, loadReadingPosition } from '../services/readingPositionService'
-import ArchiveFilters, { ArchiveFilterType } from './ArchiveFilters'
+import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProgressFilters'
+import { filterByReadingProgress } from '../utils/readingProgressUtils'
+import { deriveReadsFromBookmarks } from '../utils/readsFromBookmarks'
+import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
+import { mergeReadItem } from '../utils/readItemMerge'
 
 interface MeProps {
   relayPool: RelayPool
@@ -35,12 +39,15 @@ interface MeProps {
   pubkey?: string // Optional pubkey for viewing other users' profiles
 }
 
-type TabType = 'highlights' | 'reading-list' | 'archive' | 'writings'
+type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
+
+// Valid reading progress filters
+const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed']
 
 const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: propPubkey }) => {
   const activeAccount = Hooks.useActiveAccount()
-  const eventStore = Hooks.useEventStore()
   const navigate = useNavigate()
+  const { filter: urlFilter } = useParams<{ filter?: string }>()
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
   
   // Use provided pubkey or fall back to active account
@@ -48,14 +55,22 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const isOwnProfile = !propPubkey || (activeAccount?.pubkey === propPubkey)
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
-  const [readArticles, setReadArticles] = useState<BlogPostPreview[]>([])
+  const [reads, setReads] = useState<ReadItem[]>([])
+  const [, setReadsMap] = useState<Map<string, ReadItem>>(new Map())
+  const [links, setLinks] = useState<ReadItem[]>([])
+  const [, setLinksMap] = useState<Map<string, ReadItem>>(new Map())
   const [writings, setWritings] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadedTabs, setLoadedTabs] = useState<Set<TabType>>(new Set())
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
-  const [archiveFilter, setArchiveFilter] = useState<ArchiveFilterType>('all')
-  const [readingPositions, setReadingPositions] = useState<Map<string, number>>(new Map())
+  
+  // Initialize reading progress filter from URL param
+  const initialFilter = urlFilter && VALID_FILTERS.includes(urlFilter as ReadingProgressFilterType) 
+    ? (urlFilter as ReadingProgressFilterType) 
+    : 'all'
+  const [readingProgressFilter, setReadingProgressFilter] = useState<ReadingProgressFilterType>(initialFilter)
 
   // Update local state when prop changes
   useEffect(() => {
@@ -64,131 +79,246 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     }
   }, [propActiveTab])
 
+  // Sync filter state with URL changes
   useEffect(() => {
-    const loadData = async () => {
-      if (!viewingPubkey) {
-        setLoading(false)
-        return
-      }
+    const filterFromUrl = urlFilter && VALID_FILTERS.includes(urlFilter as ReadingProgressFilterType) 
+      ? (urlFilter as ReadingProgressFilterType) 
+      : 'all'
+    setReadingProgressFilter(filterFromUrl)
+  }, [urlFilter])
 
+  // Handler to change reading progress filter and update URL
+  const handleReadingProgressFilterChange = (filter: ReadingProgressFilterType) => {
+    setReadingProgressFilter(filter)
+    if (activeTab === 'reads') {
+      if (filter === 'all') {
+        navigate('/me/reads', { replace: true })
+      } else {
+        navigate(`/me/reads/${filter}`, { replace: true })
+      }
+    }
+  }
+
+  // Tab-specific loading functions
+  const loadHighlightsTab = async () => {
+    if (!viewingPubkey) return
+    
+    // Only show loading skeleton if tab hasn't been loaded yet
+    const hasBeenLoaded = loadedTabs.has('highlights')
+    
+    try {
+      if (!hasBeenLoaded) setLoading(true)
+      const userHighlights = await fetchHighlights(relayPool, viewingPubkey)
+      setHighlights(userHighlights)
+      setLoadedTabs(prev => new Set(prev).add('highlights'))
+    } catch (err) {
+      console.error('Failed to load highlights:', err)
+    } finally {
+      if (!hasBeenLoaded) setLoading(false)
+    }
+  }
+
+  const loadWritingsTab = async () => {
+    if (!viewingPubkey) return
+    
+    const hasBeenLoaded = loadedTabs.has('writings')
+    
+    try {
+      if (!hasBeenLoaded) setLoading(true)
+      const userWritings = await fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
+      setWritings(userWritings)
+      setLoadedTabs(prev => new Set(prev).add('writings'))
+    } catch (err) {
+      console.error('Failed to load writings:', err)
+    } finally {
+      if (!hasBeenLoaded) setLoading(false)
+    }
+  }
+
+  const loadReadingListTab = async () => {
+    if (!viewingPubkey || !isOwnProfile || !activeAccount) return
+    
+    const hasBeenLoaded = loadedTabs.has('reading-list')
+    
+    try {
+      if (!hasBeenLoaded) setLoading(true)
       try {
-        setLoading(true)
-
-        // Seed from cache if available to avoid empty flash (own profile only)
-        if (isOwnProfile) {
-          const cached = getCachedMeData(viewingPubkey)
-          if (cached) {
-            setHighlights(cached.highlights)
-            setBookmarks(cached.bookmarks)
-            setReadArticles(cached.readArticles)
-          }
-        }
-
-        // Fetch highlights and writings (public data)
-        const [userHighlights, userWritings] = await Promise.all([
-          fetchHighlights(relayPool, viewingPubkey),
-          fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
-        ])
-
-        setHighlights(userHighlights)
-        setWritings(userWritings)
-
-        // Only fetch private data for own profile
-        if (isOwnProfile && activeAccount) {
-          const userReadArticles = await fetchReadArticlesWithData(relayPool, viewingPubkey)
-          setReadArticles(userReadArticles)
-
-          // Fetch bookmarks using callback pattern
-          let fetchedBookmarks: Bookmark[] = []
-          try {
-            await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
-              fetchedBookmarks = newBookmarks
-              setBookmarks(newBookmarks)
-            })
-          } catch (err) {
-            console.warn('Failed to load bookmarks:', err)
-            setBookmarks([])
-          }
-
-          // Update cache with all fetched data
-          setCachedMeData(viewingPubkey, userHighlights, fetchedBookmarks, userReadArticles)
-        } else {
-          setBookmarks([])
-          setReadArticles([])
-        }
+        await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
+          setBookmarks(newBookmarks)
+        })
       } catch (err) {
-        console.error('Failed to load data:', err)
-        // No blocking error - user can pull-to-refresh
-      } finally {
-        setLoading(false)
+        console.warn('Failed to load bookmarks:', err)
+        setBookmarks([])
       }
+      setLoadedTabs(prev => new Set(prev).add('reading-list'))
+    } catch (err) {
+      console.error('Failed to load reading list:', err)
+    } finally {
+      if (!hasBeenLoaded) setLoading(false)
     }
+  }
 
-    loadData()
-  }, [relayPool, viewingPubkey, isOwnProfile, activeAccount, refreshTrigger])
-
-  // Load reading positions for read articles (only for own profile)
-  useEffect(() => {
-    const loadPositions = async () => {
-      if (!isOwnProfile || !activeAccount || !relayPool || !eventStore || readArticles.length === 0) {
-        console.log('🔍 [Archive] Skipping position load:', {
-          isOwnProfile,
-          hasAccount: !!activeAccount,
-          hasRelayPool: !!relayPool,
-          hasEventStore: !!eventStore,
-          articlesCount: readArticles.length
-        })
-        return
+  const loadReadsTab = async () => {
+    if (!viewingPubkey || !isOwnProfile || !activeAccount) return
+    
+    const hasBeenLoaded = loadedTabs.has('reads')
+    
+    try {
+      if (!hasBeenLoaded) setLoading(true)
+      
+      // Ensure bookmarks are loaded
+      let fetchedBookmarks: Bookmark[] = bookmarks
+      if (bookmarks.length === 0) {
+        try {
+          await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
+            fetchedBookmarks = newBookmarks
+            setBookmarks(newBookmarks)
+          })
+        } catch (err) {
+          console.warn('Failed to load bookmarks:', err)
+          fetchedBookmarks = []
+        }
       }
 
-      console.log('📊 [Archive] Loading reading positions for', readArticles.length, 'articles')
-
-      const positions = new Map<string, number>()
-
-      // Load positions for all read articles
-      await Promise.all(
-        readArticles.map(async (post) => {
-          try {
-            const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
-            const naddr = nip19.naddrEncode({
-              kind: 30023,
-              pubkey: post.author,
-              identifier: dTag
-            })
-            const articleUrl = `nostr:${naddr}`
-            const identifier = generateArticleIdentifier(articleUrl)
-
-            console.log('🔍 [Archive] Loading position for:', post.title?.slice(0, 50), 'identifier:', identifier.slice(0, 32))
-
-            const savedPosition = await loadReadingPosition(
-              relayPool,
-              eventStore,
-              activeAccount.pubkey,
-              identifier
-            )
-
-            if (savedPosition && savedPosition.position > 0) {
-              console.log('✅ [Archive] Found position:', Math.round(savedPosition.position * 100) + '%', 'for', post.title?.slice(0, 50))
-              positions.set(post.event.id, savedPosition.position)
-            } else {
-              console.log('❌ [Archive] No position found for:', post.title?.slice(0, 50))
-            }
-          } catch (error) {
-            console.warn('⚠️ [Archive] Failed to load reading position for article:', error)
+      // Derive reads from bookmarks immediately
+      const initialReads = deriveReadsFromBookmarks(fetchedBookmarks)
+      const initialMap = new Map(initialReads.map(item => [item.id, item]))
+      setReadsMap(initialMap)
+      setReads(initialReads)
+      setLoadedTabs(prev => new Set(prev).add('reads'))
+      if (!hasBeenLoaded) setLoading(false)
+      
+      // Background enrichment: merge reading progress and mark-as-read
+      // Only update items that are already in our map
+      fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks, (item) => {
+        console.log('📈 [Reads] Enrichment item received:', {
+          id: item.id.slice(0, 20) + '...',
+          progress: item.readingProgress,
+          hasProgress: item.readingProgress !== undefined && item.readingProgress > 0
+        })
+        
+        setReadsMap(prevMap => {
+          // Only update if item exists in our current map
+          if (!prevMap.has(item.id)) {
+            console.log('⚠️ [Reads] Item not in map, skipping:', item.id.slice(0, 20) + '...')
+            return prevMap
           }
+          
+          const newMap = new Map(prevMap)
+          const merged = mergeReadItem(newMap, item)
+          if (merged) {
+            console.log('✅ [Reads] Merged progress:', item.id.slice(0, 20) + '...', item.readingProgress)
+            // Update reads array after map is updated
+            setReads(Array.from(newMap.values()))
+            return newMap
+          }
+          return prevMap
         })
-      )
+      }).catch(err => console.warn('Failed to enrich reads:', err))
+      
+    } catch (err) {
+      console.error('Failed to load reads:', err)
+      if (!hasBeenLoaded) setLoading(false)
+    }
+  }
 
-      console.log('📊 [Archive] Loaded positions for', positions.size, '/', readArticles.length, 'articles')
-      setReadingPositions(positions)
+  const loadLinksTab = async () => {
+    if (!viewingPubkey || !isOwnProfile || !activeAccount) return
+    
+    const hasBeenLoaded = loadedTabs.has('links')
+    
+    try {
+      if (!hasBeenLoaded) setLoading(true)
+      
+      // Ensure bookmarks are loaded
+      let fetchedBookmarks: Bookmark[] = bookmarks
+      if (bookmarks.length === 0) {
+        try {
+          await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
+            fetchedBookmarks = newBookmarks
+            setBookmarks(newBookmarks)
+          })
+        } catch (err) {
+          console.warn('Failed to load bookmarks:', err)
+          fetchedBookmarks = []
+        }
+      }
+
+      // Derive links from bookmarks immediately
+      const initialLinks = deriveLinksFromBookmarks(fetchedBookmarks)
+      const initialMap = new Map(initialLinks.map(item => [item.id, item]))
+      setLinksMap(initialMap)
+      setLinks(initialLinks)
+      setLoadedTabs(prev => new Set(prev).add('links'))
+      if (!hasBeenLoaded) setLoading(false)
+      
+      // Background enrichment: merge reading progress and mark-as-read
+      // Only update items that are already in our map
+      fetchLinks(relayPool, viewingPubkey, (item) => {
+        setLinksMap(prevMap => {
+          // Only update if item exists in our current map
+          if (!prevMap.has(item.id)) return prevMap
+          
+          const newMap = new Map(prevMap)
+          if (mergeReadItem(newMap, item)) {
+            // Update links array after map is updated
+            setLinks(Array.from(newMap.values()))
+            return newMap
+          }
+          return prevMap
+        })
+      }).catch(err => console.warn('Failed to enrich links:', err))
+      
+    } catch (err) {
+      console.error('Failed to load links:', err)
+      if (!hasBeenLoaded) setLoading(false)
+    }
+  }
+
+  // Load active tab data
+  useEffect(() => {
+    if (!viewingPubkey || !activeTab) {
+      setLoading(false)
+      return
     }
 
-    loadPositions()
-  }, [readArticles, isOwnProfile, activeAccount, relayPool, eventStore])
+    // Load cached data immediately if available
+    if (isOwnProfile) {
+      const cached = getCachedMeData(viewingPubkey)
+      if (cached) {
+        setHighlights(cached.highlights)
+        setBookmarks(cached.bookmarks)
+        setReads(cached.reads || [])
+        setLinks(cached.links || [])
+      }
+    }
 
-  // Pull-to-refresh
+    // Load data for active tab (refresh in background if already loaded)
+    switch (activeTab) {
+      case 'highlights':
+        loadHighlightsTab()
+        break
+      case 'writings':
+        loadWritingsTab()
+        break
+      case 'reading-list':
+        loadReadingListTab()
+        break
+      case 'reads':
+        loadReadsTab()
+        break
+      case 'links':
+        loadLinksTab()
+        break
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, viewingPubkey, refreshTrigger])
+
+
+  // Pull-to-refresh - reload active tab without clearing state
   const { isRefreshing, pullPosition } = usePullToRefresh({
     onRefresh: () => {
+      // Just trigger refresh - loaders will merge new data
       setRefreshTrigger(prev => prev + 1)
     },
     maximumPullLength: 240,
@@ -215,6 +345,49 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       identifier: dTag
     })
     return `/a/${naddr}`
+  }
+
+  const getReadItemUrl = (item: ReadItem) => {
+    if (item.type === 'article') {
+      // ID is already in naddr format
+      return `/a/${item.id}`
+    } else if (item.url) {
+      return `/r/${encodeURIComponent(item.url)}`
+    }
+    return '#'
+  }
+
+  const convertReadItemToBlogPostPreview = (item: ReadItem): BlogPostPreview => {
+    if (item.event) {
+      return {
+        event: item.event,
+        title: item.title || 'Untitled',
+        summary: item.summary,
+        image: item.image,
+        published: item.published,
+        author: item.author || item.event.pubkey
+      }
+    }
+    
+    // Create a mock event for external URLs
+    const mockEvent = {
+      id: item.id,
+      pubkey: item.author || '',
+      created_at: item.readingTimestamp || Math.floor(Date.now() / 1000),
+      kind: 1,
+      tags: [] as string[][],
+      content: item.title || item.url || 'Untitled',
+      sig: ''
+    } as const
+    
+    return {
+      event: mockEvent as unknown as import('nostr-tools').NostrEvent,
+      title: item.title || item.url || 'Untitled',
+      summary: item.summary,
+      image: item.image,
+      published: item.published,
+      author: item.author || ''
+    }
   }
 
   const handleSelectUrl = (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => {
@@ -245,29 +418,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   
   const groups = groupIndividualBookmarks(filteredBookmarks)
 
-  // Apply archive filter
-  const filteredReadArticles = readArticles.filter(post => {
-    const position = readingPositions.get(post.event.id)
-    
-    switch (archiveFilter) {
-      case 'to-read':
-        // No position or 0% progress
-        return !position || position === 0
-      case 'reading':
-        // Has some progress but not completed (0 < position < 1)
-        return position !== undefined && position > 0 && position < 0.95
-      case 'completed':
-        // 95% or more read (we consider 95%+ as completed)
-        return position !== undefined && position >= 0.95
-      case 'marked':
-        // Manually marked as read (in archive but no reading position data)
-        // These are articles that were marked via the emoji reaction
-        return !position || position === 0
-      case 'all':
-      default:
-        return true
-    }
-  })
+  // Apply reading progress filter
+  const filteredReads = filterByReadingProgress(reads, readingProgressFilter)
+  const filteredLinks = filterByReadingProgress(links, readingProgressFilter)
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
     { key: 'private', title: 'Private Bookmarks', items: groups.privateItems },
     { key: 'public', title: 'Public Bookmarks', items: groups.publicItems },
@@ -276,7 +429,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   ]
 
   // Show content progressively - no blocking error screens
-  const hasData = highlights.length > 0 || bookmarks.length > 0 || readArticles.length > 0 || writings.length > 0
+  const hasData = highlights.length > 0 || bookmarks.length > 0 || reads.length > 0 || links.length > 0 || writings.length > 0
   const showSkeletons = loading && !hasData
 
   const renderTabContent = () => {
@@ -291,9 +444,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             </div>
           )
         }
-        return highlights.length === 0 ? (
+        return highlights.length === 0 && !loading ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+            No highlights yet.
           </div>
         ) : (
           <div className="highlights-list me-highlights-list">
@@ -320,9 +473,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             </div>
           )
         }
-        return allIndividualBookmarks.length === 0 ? (
+        return allIndividualBookmarks.length === 0 && !loading ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+            No bookmarks yet.
           </div>
         ) : (
           <div className="bookmarks-list">
@@ -386,8 +539,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
           </div>
         )
 
-      case 'archive':
-        if (showSkeletons) {
+      case 'reads':
+        // Show loading skeletons only while initially loading
+        if (loading && !loadedTabs.has('reads')) {
           return (
             <div className="explore-grid">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -396,32 +550,84 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             </div>
           )
         }
-        return readArticles.length === 0 ? (
-          <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
-          </div>
-        ) : (
+        
+        // Show empty state if loaded but no reads
+        if (reads.length === 0 && loadedTabs.has('reads')) {
+          return (
+            <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+              No articles read yet.
+            </div>
+          )
+        }
+        
+        // Show reads with filters
+        return (
           <>
-            {readArticles.length > 0 && (
-              <ArchiveFilters
-                selectedFilter={archiveFilter}
-                onFilterChange={setArchiveFilter}
-              />
-            )}
-            {filteredReadArticles.length === 0 ? (
+            <ReadingProgressFilters
+              selectedFilter={readingProgressFilter}
+              onFilterChange={handleReadingProgressFilterChange}
+            />
+            {filteredReads.length === 0 ? (
               <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
                 No articles match this filter.
               </div>
             ) : (
               <div className="explore-grid">
-                {filteredReadArticles.map((post) => (
-                  <BlogPostCard
-                    key={post.event.id}
-                    post={post}
-                    href={getPostUrl(post)}
-                    readingProgress={readingPositions.get(post.event.id)}
-                  />
-                ))}
+              {filteredReads.map((item) => (
+                <BlogPostCard
+                  key={item.id}
+                  post={convertReadItemToBlogPostPreview(item)}
+                  href={getReadItemUrl(item)}
+                  readingProgress={item.readingProgress}
+                />
+              ))}
+              </div>
+            )}
+          </>
+        )
+
+      case 'links':
+        // Show loading skeletons only while initially loading
+        if (loading && !loadedTabs.has('links')) {
+          return (
+            <div className="explore-grid">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <BlogPostSkeleton key={i} />
+              ))}
+            </div>
+          )
+        }
+        
+        // Show empty state if loaded but no links
+        if (links.length === 0 && loadedTabs.has('links')) {
+          return (
+            <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+              No links with reading progress yet.
+            </div>
+          )
+        }
+        
+        // Show links with filters
+        return (
+          <>
+            <ReadingProgressFilters
+              selectedFilter={readingProgressFilter}
+              onFilterChange={handleReadingProgressFilterChange}
+            />
+            {filteredLinks.length === 0 ? (
+              <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                No links match this filter.
+              </div>
+            ) : (
+              <div className="explore-grid">
+              {filteredLinks.map((item) => (
+                <BlogPostCard
+                  key={item.id}
+                  post={convertReadItemToBlogPostPreview(item)}
+                  href={getReadItemUrl(item)}
+                  readingProgress={item.readingProgress}
+                />
+              ))}
               </div>
             )}
           </>
@@ -437,9 +643,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
             </div>
           )
         }
-        return writings.length === 0 ? (
+        return writings.length === 0 && !loading ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+            No articles written yet.
           </div>
         ) : (
           <div className="explore-grid">
@@ -487,12 +693,20 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
                 <span className="tab-label">Bookmarks</span>
               </button>
               <button
-                className={`me-tab ${activeTab === 'archive' ? 'active' : ''}`}
-                data-tab="archive"
-                onClick={() => navigate('/me/archive')}
+                className={`me-tab ${activeTab === 'reads' ? 'active' : ''}`}
+                data-tab="reads"
+                onClick={() => navigate('/me/reads')}
               >
                 <FontAwesomeIcon icon={faBooks} />
-                <span className="tab-label">Archive</span>
+                <span className="tab-label">Reads</span>
+              </button>
+              <button
+                className={`me-tab ${activeTab === 'links' ? 'active' : ''}`}
+                data-tab="links"
+                onClick={() => navigate('/me/links')}
+              >
+                <FontAwesomeIcon icon={faLink} />
+                <span className="tab-label">Links</span>
               </button>
             </>
           )}

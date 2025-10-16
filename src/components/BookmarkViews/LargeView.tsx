@@ -23,6 +23,7 @@ interface LargeViewProps {
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
   articleSummary?: string
   contentTypeIcon: IconDefinition
+  readingProgress?: number // 0-1 reading progress (optional)
 }
 
 export const LargeView: React.FC<LargeViewProps> = ({
@@ -38,10 +39,21 @@ export const LargeView: React.FC<LargeViewProps> = ({
   getAuthorDisplayName,
   handleReadNow,
   articleSummary,
-  contentTypeIcon
+  contentTypeIcon,
+  readingProgress
 }) => {
   const cachedImage = useImageCache(previewImage || undefined)
   const isArticle = bookmark.kind === 30023
+  
+  // Calculate progress display (matching readingProgressUtils.ts logic)
+  const progressPercent = readingProgress ? Math.round(readingProgress * 100) : 0
+  let progressColor = '#6366f1' // Default blue (reading)
+  
+  if (readingProgress && readingProgress >= 0.95) {
+    progressColor = '#10b981' // Green (completed)
+  } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
+    progressColor = 'var(--color-text)' // Neutral text color (started)
+  }
   
   const triggerOpen = () => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)
   const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
@@ -89,6 +101,28 @@ export const LargeView: React.FC<LargeViewProps> = ({
         ) : bookmark.content && (
           <div className="large-text">
             <ContentWithResolvedProfiles content={bookmark.content} />
+          </div>
+        )}
+        
+        {/* Reading progress indicator for articles - shown only if there's progress */}
+        {isArticle && readingProgress !== undefined && readingProgress > 0 && (
+          <div 
+            style={{
+              height: '3px',
+              width: '100%',
+              background: 'var(--color-border)',
+              overflow: 'hidden',
+              marginTop: '0.75rem'
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                width: `${progressPercent}%`,
+                background: progressColor,
+                transition: 'width 0.3s ease, background 0.3s ease'
+              }}
+            />
           </div>
         )}
         

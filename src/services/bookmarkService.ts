@@ -15,6 +15,7 @@ import { collectBookmarksFromEvents } from './bookmarkProcessing.ts'
 import { UserSettings } from './settingsService'
 import { rebroadcastEvents } from './rebroadcastService'
 import { queryEvents } from './dataFetch'
+import { KINDS } from '../config/kinds'
 
 
 
@@ -34,7 +35,7 @@ export const fetchBookmarks = async (
 
     const rawEvents = await queryEvents(
       relayPool,
-      { kinds: [10003, 30003, 30001, 39701], authors: [activeAccount.pubkey] },
+      { kinds: [KINDS.ListSimple, KINDS.ListReplaceable, KINDS.List, KINDS.WebBookmark], authors: [activeAccount.pubkey] },
       {}
     )
     console.log('📊 Raw events fetched:', rawEvents.length, 'events')
@@ -71,7 +72,7 @@ export const fetchBookmarks = async (
     })
     
     // Check specifically for Primal's "reads" list
-    const primalReads = rawEvents.find(e => e.kind === 10003 && e.tags?.find((t: string[]) => t[0] === 'd' && t[1] === 'reads'))
+    const primalReads = rawEvents.find(e => e.kind === KINDS.ListSimple && e.tags?.find((t: string[]) => t[0] === 'd' && t[1] === 'reads'))
     if (primalReads) {
       console.log('✅ Found Primal reads list:', primalReads.id.slice(0, 8))
     } else {

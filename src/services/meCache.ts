@@ -1,11 +1,14 @@
 import { Highlight } from '../types/highlights'
 import { Bookmark } from '../types/bookmarks'
 import { BlogPostPreview } from './exploreService'
+import { ReadItem } from './readsService'
 
 export interface MeCache {
   highlights: Highlight[]
   bookmarks: Bookmark[]
   readArticles: BlogPostPreview[]
+  reads?: ReadItem[]
+  links?: ReadItem[]
   timestamp: number
 }
 
