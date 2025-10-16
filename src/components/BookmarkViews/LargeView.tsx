@@ -45,12 +45,15 @@ export const LargeView: React.FC<LargeViewProps> = ({
   const cachedImage = useImageCache(previewImage || undefined)
   const isArticle = bookmark.kind === 30023
   
-  // Calculate progress display
+  // Calculate progress display (matching readingProgressUtils.ts logic)
   const progressPercent = readingProgress ? Math.round(readingProgress * 100) : 0
-  const progressColor = 
-    progressPercent >= 95 ? '#10b981' :  // green for completed
-    progressPercent > 5 ? '#f97316' :    // orange for in-progress
-    'var(--color-border)'                 // default for not started
+  let progressColor = '#6366f1' // Default blue (reading)
+  
+  if (readingProgress && readingProgress >= 0.95) {
+    progressColor = '#10b981' // Green (completed)
+  } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
+    progressColor = '#f59e0b' // Amber (started)
+  }
   
   const triggerOpen = () => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)
   const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {

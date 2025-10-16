@@ -19,6 +19,23 @@ export const ReadingProgressIndicator: React.FC<ReadingProgressIndicatorProps> =
 }) => {
   const clampedProgress = Math.min(100, Math.max(0, progress))
   
+  // Determine reading state based on progress (matching readingProgressUtils.ts logic)
+  const progressDecimal = clampedProgress / 100
+  const isStarted = progressDecimal > 0 && progressDecimal <= 0.10
+  const isReading = progressDecimal > 0.10 && progressDecimal <= 0.94
+  
+  // Determine bar color based on state
+  let barColorClass = ''
+  let barColorStyle: string | undefined = 'var(--color-primary)' // Default blue
+  
+  if (isComplete) {
+    barColorClass = 'bg-green-500'
+    barColorStyle = undefined
+  } else if (isStarted) {
+    barColorClass = 'bg-amber-500'
+    barColorStyle = undefined
+  }
+  
   // Calculate left and right offsets based on sidebar states (desktop only)
   const leftOffset = isSidebarCollapsed 
     ? 'var(--sidebar-collapsed-width)' 
@@ -42,14 +59,10 @@ export const ReadingProgressIndicator: React.FC<ReadingProgressIndicatorProps> =
         style={{ backgroundColor: 'var(--color-border)' }}
       >
         <div 
-          className={`h-full rounded-full transition-all duration-300 relative ${
-            isComplete 
-              ? 'bg-green-500' 
-              : ''
-          }`}
+          className={`h-full rounded-full transition-all duration-300 relative ${barColorClass}`}
           style={{ 
             width: `${clampedProgress}%`,
-            backgroundColor: isComplete ? undefined : 'var(--color-primary)'
+            backgroundColor: barColorStyle
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]" />
@@ -58,9 +71,9 @@ export const ReadingProgressIndicator: React.FC<ReadingProgressIndicatorProps> =
       {showPercentage && (
         <div 
           className={`text-[0.625rem] font-normal min-w-[32px] text-right tabular-nums ${
-            isComplete ? 'text-green-500' : ''
+            isComplete ? 'text-green-500' : isStarted ? 'text-amber-500' : ''
           }`}
-          style={{ color: isComplete ? undefined : 'var(--color-text-muted)' }}
+          style={{ color: (isComplete || isStarted) ? undefined : 'var(--color-text-muted)' }}
         >
           {isComplete ? '✓' : `${clampedProgress}%`}
         </div>

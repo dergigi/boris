@@ -24,9 +24,15 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
     addSuffix: true 
   })
 
-  // Calculate progress percentage and determine color
+  // Calculate progress percentage and determine color (matching readingProgressUtils.ts logic)
   const progressPercent = readingProgress ? Math.round(readingProgress * 100) : 0
-  const progressColor = progressPercent >= 95 ? '#10b981' : '#6366f1' // green if >=95%, blue otherwise
+  let progressColor = '#6366f1' // Default blue (reading)
+  
+  if (readingProgress && readingProgress >= 0.95) {
+    progressColor = '#10b981' // Green (completed)
+  } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
+    progressColor = '#f59e0b' // Amber (started)
+  }
 
   return (
     <Link 
