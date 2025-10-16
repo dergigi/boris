@@ -116,7 +116,15 @@ export async function createHighlight(
   }
 
   // Sign the event
-  const signedEvent = await factory.sign(highlightEvent)
+  console.log('[bunker] Signing highlight event...', { kind: highlightEvent.kind, tags: highlightEvent.tags.length })
+  let signedEvent
+  try {
+    signedEvent = await factory.sign(highlightEvent)
+    console.log('[bunker] ✅ Highlight signed successfully!', { id: signedEvent.id?.slice(0, 8) })
+  } catch (err) {
+    console.error('[bunker] ❌ Highlight signing failed:', err)
+    throw err
+  }
 
   // Use unified write service to store and publish
   await publishEvent(relayPool, eventStore, signedEvent)
