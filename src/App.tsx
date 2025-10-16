@@ -223,22 +223,42 @@ function App() {
       
       // Reconnect bunker signers when active account changes
       const bunkerReconnectSub = accounts.active$.subscribe(async (account) => {
+        console.log('👤 Active account changed:', { 
+          hasAccount: !!account, 
+          type: account?.type,
+          id: account?.id 
+        })
+        
         if (account && account.type === 'nostr-connect') {
           const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
+          console.log('🔐 Bunker account detected. Status:', {
+            listening: nostrConnectAccount.signer.listening,
+            isConnected: nostrConnectAccount.signer.isConnected,
+            hasRemote: !!nostrConnectAccount.signer.remote
+          })
+          
           try {
             // Ensure the signer is listening for responses
             if (!nostrConnectAccount.signer.listening) {
+              console.log('🔐 Opening bunker signer subscription...')
               await nostrConnectAccount.signer.open()
-              console.log('🔐 Opened bunker signer subscription')
+              console.log('✅ Bunker signer subscription opened')
+            } else {
+              console.log('✅ Bunker signer already listening')
             }
             
             // Reconnect with permissions if not already connected
             if (!nostrConnectAccount.signer.isConnected) {
-              await nostrConnectAccount.signer.connect(undefined, getDefaultBunkerPermissions())
-              console.log('🔐 Reconnected bunker signer with permissions')
+              console.log('🔐 Reconnecting bunker signer with permissions...')
+              const permissions = getDefaultBunkerPermissions()
+              console.log('🔐 Permissions:', permissions)
+              await nostrConnectAccount.signer.connect(undefined, permissions)
+              console.log('✅ Bunker signer reconnected successfully')
+            } else {
+              console.log('✅ Bunker signer already connected')
             }
           } catch (error) {
-            console.warn('⚠️ Failed to reconnect bunker signer:', error)
+            console.error('❌ Failed to reconnect bunker signer:', error)
           }
         }
       })
