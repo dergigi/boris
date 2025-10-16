@@ -7,6 +7,7 @@ import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
 import { registerCommonAccountTypes } from 'applesauce-accounts/accounts'
 import { RelayPool } from 'applesauce-relay'
+import { NostrConnectSigner } from 'applesauce-signers'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Bookmarks from './components/Bookmarks'
 import RouteDebug from './components/RouteDebug'
@@ -218,6 +219,9 @@ function App() {
       })
       
       const pool = new RelayPool()
+      
+      // Setup NostrConnectSigner to use the relay pool
+      NostrConnectSigner.pool = pool
       
       // Create a relay group for better event deduplication and management
       pool.group(RELAYS)

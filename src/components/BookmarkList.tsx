@@ -21,6 +21,7 @@ import { RELAYS } from '../config/relays'
 import { Hooks } from 'applesauce-react'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
+import LoginOptions from './LoginOptions'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -153,7 +154,9 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         />
       )}
       
-      {filteredBookmarks.length === 0 && allIndividualBookmarks.length > 0 ? (
+      {!activeAccount ? (
+        <LoginOptions />
+      ) : filteredBookmarks.length === 0 && allIndividualBookmarks.length > 0 ? (
         <div className="empty-state">
           <p>No bookmarks match this filter.</p>
         </div>
@@ -170,7 +173,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
           <div className="empty-state">
             <p>No bookmarks found.</p>
             <p>Add bookmarks using your nostr client to see them here.</p>
-            <p>If you aren't on nostr yet, start here: <a href="https://nstart.me/" target="_blank" rel="noopener noreferrer">nstart.me</a></p>
           </div>
         )
       ) : (
