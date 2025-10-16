@@ -309,12 +309,13 @@ function App() {
                   console.log('[bunker] ✅ Signer recreated with pool context')
 
                   // Debug: log publish/subscription calls made by signer (decrypt/sign requests)
-                  const originalPublish = (recreatedSigner as any).publishMethod
+                  // IMPORTANT: bind originals to preserve `this` context used internally by the signer
+                  const originalPublish = (recreatedSigner as any).publishMethod.bind(recreatedSigner)
                   ;(recreatedSigner as any).publishMethod = (relays: string[], event: any) => {
                     try { console.log('[bunker] publish via signer:', { relays, kind: event?.kind, tags: event?.tags?.length }) } catch {}
                     return originalPublish(relays, event)
                   }
-                  const originalSubscribe = (recreatedSigner as any).subscriptionMethod
+                  const originalSubscribe = (recreatedSigner as any).subscriptionMethod.bind(recreatedSigner)
                   ;(recreatedSigner as any).subscriptionMethod = (relays: string[], filters: any[]) => {
                     try { console.log('[bunker] subscribe via signer:', { relays, filters }) } catch {}
                     return originalSubscribe(relays, filters)
