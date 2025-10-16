@@ -215,6 +215,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const userAgent = req.headers['user-agent'] as string | undefined
   const isCrawlerRequest = isCrawler(userAgent)
 
+  const debugEnabled = req.query.debug === '1' || req.headers['x-boris-debug'] === '1'
+  if (debugEnabled) {
+    console.log('[article-og] request', JSON.stringify({
+      naddr,
+      ua: userAgent || null,
+      isCrawlerRequest,
+      path: req.url || null
+    }))
+    res.setHeader('X-Boris-Debug', '1')
+  }
+
   // If it's a regular browser (not a bot), serve HTML that loads SPA
   // Use history.replaceState to set the URL before the SPA boots
   if (!isCrawlerRequest) {
@@ -233,6 +244,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       history.replaceState(null, '', '${articlePath}');
     }
   </script>
+  ${debugEnabled ? `<script>console.debug('article-og', { mode: 'browser', naddr: '${naddr}', path: location.pathname, referrer: document.referrer });</script>` : ''}
   <script>
     // Redirect to index.html which will load the SPA
     // The history state is already set, so SPA will see the correct URL
@@ -246,6 +258,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+    if (debugEnabled) {
+      console.log('[article-og] response', JSON.stringify({ mode: 'browser', naddr }))
+    }
     return res.status(200).send(html)
   }
 
@@ -254,6 +269,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const cached = memoryCache.get(naddr)
   if (cached && cached.expires > now) {
     setCacheHeaders(res)
+    if (debugEnabled) {
+      console.log('[article-og] response', JSON.stringify({ mode: 'bot', naddr, cache: true }))
+    }
     return res.status(200).send(cached.html)
   }
 
@@ -269,6 +287,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     // Send response
     setCacheHeaders(res)
+    if (debugEnabled) {
+      console.log('[article-og] response', JSON.stringify({ mode: 'bot', naddr, cache: false }))
+    }
     return res.status(200).send(html)
   } catch (err) {
     console.error('Error generating article OG HTML:', err)
@@ -276,6 +297,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Fallback to basic HTML with SPA boot
     const html = generateHtml(naddr, null)
     setCacheHeaders(res, 3600)
+    if (debugEnabled) {
+      console.log('[article-og] response', JSON.stringify({ mode: 'bot-fallback', naddr }))
+    }
     return res.status(200).send(html)
   }
 }
