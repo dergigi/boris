@@ -22,7 +22,6 @@ export const ReadingProgressIndicator: React.FC<ReadingProgressIndicatorProps> =
   // Determine reading state based on progress (matching readingProgressUtils.ts logic)
   const progressDecimal = clampedProgress / 100
   const isStarted = progressDecimal > 0 && progressDecimal <= 0.10
-  const isReading = progressDecimal > 0.10 && progressDecimal <= 0.94
   
   // Determine bar color based on state
   let barColorClass = ''

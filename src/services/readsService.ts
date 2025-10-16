@@ -1,7 +1,7 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
-import { Bookmark, IndividualBookmark } from '../types/bookmarks'
+import { Bookmark } from '../types/bookmarks'
 import { fetchReadArticles } from './libraryService'
 import { queryEvents } from './dataFetch'
 import { RELAYS } from '../config/relays'
@@ -195,26 +195,3 @@ export async function fetchAllReads(
     return []
   }
 }
-
-// Helper to extract URL from bookmark content
-function extractUrlFromBookmark(bookmark: IndividualBookmark): string[] {
-  const urls: string[] = []
-  
-  // Check for web bookmark (kind 39701) with 'd' tag
-  if (bookmark.kind === 39701) {
-    const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1]
-    if (dTag) {
-      urls.push(dTag.startsWith('http') ? dTag : `https://${dTag}`)
-    }
-  }
-  
-  // Extract URLs from content
-  const urlRegex = /(https?:\/\/[^\s]+)/g
-  const matches = bookmark.content.match(urlRegex)
-  if (matches) {
-    urls.push(...matches)
-  }
-  
-  return urls
-}
-

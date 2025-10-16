@@ -25,11 +25,6 @@ export function deriveLinksFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
       }
     }
     
-    // Extract URLs from urlReferences (pre-extracted by bookmarkService)
-    if (bookmark.urlReferences && bookmark.urlReferences.length > 0) {
-      urls.push(...bookmark.urlReferences)
-    }
-    
     // Extract URLs from content if not already captured
     if (bookmark.content) {
       const urlRegex = /(https?:\/\/[^\s]+)/g
@@ -39,6 +34,11 @@ export function deriveLinksFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
       }
     }
     
+    // Extract metadata from tags (for web bookmarks and other types)
+    const title = bookmark.tags.find(t => t[0] === 'title')?.[1]
+    const summary = bookmark.tags.find(t => t[0] === 'summary')?.[1]
+    const image = bookmark.tags.find(t => t[0] === 'image')?.[1]
+    
     // Create ReadItem for each unique URL
     for (const url of [...new Set(urls)]) {
       if (!linksMap.has(url)) {
@@ -47,9 +47,9 @@ export function deriveLinksFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
           source: 'bookmark',
           type: 'external',
           url,
-          title: bookmark.title || fallbackTitleFromUrl(url),
-          summary: bookmark.summary,
-          image: bookmark.image,
+          title: title || fallbackTitleFromUrl(url),
+          summary,
+          image,
           readingProgress: 0,
           readingTimestamp: bookmark.added_at || bookmark.created_at
         }

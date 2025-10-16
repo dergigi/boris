@@ -41,6 +41,9 @@ interface MeProps {
 
 type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
 
+// Valid reading progress filters
+const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed']
+
 const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: propPubkey }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
@@ -53,9 +56,9 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [reads, setReads] = useState<ReadItem[]>([])
-  const [readsMap, setReadsMap] = useState<Map<string, ReadItem>>(new Map())
+  const [, setReadsMap] = useState<Map<string, ReadItem>>(new Map())
   const [links, setLinks] = useState<ReadItem[]>([])
-  const [linksMap, setLinksMap] = useState<Map<string, ReadItem>>(new Map())
+  const [, setLinksMap] = useState<Map<string, ReadItem>>(new Map())
   const [writings, setWritings] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [loadedTabs, setLoadedTabs] = useState<Set<TabType>>(new Set())
@@ -64,8 +67,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
   
   // Initialize reading progress filter from URL param
-  const validFilters: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed']
-  const initialFilter = urlFilter && validFilters.includes(urlFilter as ReadingProgressFilterType) 
+  const initialFilter = urlFilter && VALID_FILTERS.includes(urlFilter as ReadingProgressFilterType) 
     ? (urlFilter as ReadingProgressFilterType) 
     : 'all'
   const [readingProgressFilter, setReadingProgressFilter] = useState<ReadingProgressFilterType>(initialFilter)
@@ -79,7 +81,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
 
   // Sync filter state with URL changes
   useEffect(() => {
-    const filterFromUrl = urlFilter && validFilters.includes(urlFilter as ReadingProgressFilterType) 
+    const filterFromUrl = urlFilter && VALID_FILTERS.includes(urlFilter as ReadingProgressFilterType) 
       ? (urlFilter as ReadingProgressFilterType) 
       : 'all'
     setReadingProgressFilter(filterFromUrl)
