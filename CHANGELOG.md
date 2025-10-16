@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.24] - 2025-01-16
+
+### Fixed
+
+- TypeScript global declarations for build-time defines
+  - Added proper type declarations for `__APP_VERSION__`, `__GIT_COMMIT__`, `__GIT_BRANCH__`, `__BUILD_TIME__`, and `__GIT_COMMIT_URL__`
+  - Resolved ESLint no-undef errors for build-time injected variables
+  - Added Node.js environment hint to Vite configuration
+
 ## [0.6.23] - 2025-01-16
 
 ### Fixed
@@ -1751,7 +1760,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.23...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.24...HEAD
+[0.6.24]: https://github.com/dergigi/boris/compare/v0.6.23...v0.6.24
 [0.6.23]: https://github.com/dergigi/boris/compare/v0.6.22...v0.6.23
 [0.6.21]: https://github.com/dergigi/boris/compare/v0.6.20...v0.6.21
 [0.6.20]: https://github.com/dergigi/boris/compare/v0.6.19...v0.6.20
