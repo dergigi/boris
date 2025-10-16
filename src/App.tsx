@@ -275,8 +275,15 @@ function App() {
                 try {
                   // Add bunker's relays to the pool so signing requests can be sent/received
                   const bunkerRelays = nostrConnectAccount.signer.relays || []
-                  console.log('[bunker] Adding bunker relays to pool:', bunkerRelays)
-                  pool.group(bunkerRelays)
+                  const existingRelayUrls = new Set(Array.from(pool.relays.keys()))
+                  const newBunkerRelays = bunkerRelays.filter(url => !existingRelayUrls.has(url))
+                  
+                  if (newBunkerRelays.length > 0) {
+                    console.log('[bunker] Adding new bunker relays to pool:', newBunkerRelays)
+                    pool.group(newBunkerRelays)
+                  } else {
+                    console.log('[bunker] Bunker relays already in pool')
+                  }
                   
                   // Just ensure the signer is listening for responses - don't call connect() again
                   // The fromBunkerURI already connected with permissions during login
