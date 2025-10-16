@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/a/(.*)",
+      "destination": "/api/article-og?naddr=$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
