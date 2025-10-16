@@ -58,15 +58,14 @@ async function fetchEventsFromRelays(
   timeoutMs: number
 ): Promise<NostrEvent[]> {
   const events: NostrEvent[] = []
-  
+
   await new Promise<void>((resolve) => {
     const timeout = setTimeout(() => resolve(), timeoutMs)
-    
-    relayPool.req(relayUrls, filter).subscribe({
-      next: (msg) => {
-        if (msg.type === 'EVENT') {
-          events.push(msg.event)
-        }
+
+    // `request` emits NostrEvent objects directly
+    relayPool.request(relayUrls, filter).subscribe({
+      next: (event) => {
+        events.push(event)
       },
       error: () => resolve(),
       complete: () => {
@@ -92,9 +91,8 @@ async function fetchArticleMetadata(naddr: string): Promise<ArticleMetadata | nu
 
     const pointer = decoded.data as AddressPointer
 
-    // Connect to relays
+    // Determine relay URLs
     const relayUrls = pointer.relays && pointer.relays.length > 0 ? pointer.relays : RELAYS
-    relayUrls.forEach(url => relayPool.open(url))
 
     // Fetch article and profile in parallel
     const [articleEvents, profileEvents] = await Promise.all([
@@ -142,7 +140,7 @@ async function fetchArticleMetadata(naddr: string): Promise<ArticleMetadata | nu
     console.error('Failed to fetch article metadata:', err)
     return null
   } finally {
-    relayPool.close()
+    // No explicit close needed; pool manages connections internally
   }
 }
 
