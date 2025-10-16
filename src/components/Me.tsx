@@ -153,8 +153,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
 
       // Derive reads from bookmarks immediately
       const initialReads = deriveReadsFromBookmarks(fetchedBookmarks)
-      const tempMap = new Map(initialReads.map(item => [item.id, item]))
-      setReadsMap(tempMap)
+      const initialMap = new Map(initialReads.map(item => [item.id, item]))
+      setReadsMap(initialMap)
       setReads(initialReads)
       setLoadedTabs(prev => new Set(prev).add('reads'))
       if (!hasBeenLoaded) setLoading(false)
@@ -162,10 +162,18 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       // Background enrichment: merge reading progress and mark-as-read
       // Only update items that are already in our map
       fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks, (item) => {
-        if (tempMap.has(item.id) && mergeReadItem(tempMap, item)) {
-          setReadsMap(new Map(tempMap))
-          setReads(Array.from(tempMap.values()))
-        }
+        setReadsMap(prevMap => {
+          // Only update if item exists in our current map
+          if (!prevMap.has(item.id)) return prevMap
+          
+          const newMap = new Map(prevMap)
+          if (mergeReadItem(newMap, item)) {
+            // Update reads array after map is updated
+            setReads(Array.from(newMap.values()))
+            return newMap
+          }
+          return prevMap
+        })
       }).catch(err => console.warn('Failed to enrich reads:', err))
       
     } catch (err) {
@@ -198,8 +206,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
 
       // Derive links from bookmarks immediately
       const initialLinks = deriveLinksFromBookmarks(fetchedBookmarks)
-      const tempMap = new Map(initialLinks.map(item => [item.id, item]))
-      setLinksMap(tempMap)
+      const initialMap = new Map(initialLinks.map(item => [item.id, item]))
+      setLinksMap(initialMap)
       setLinks(initialLinks)
       setLoadedTabs(prev => new Set(prev).add('links'))
       if (!hasBeenLoaded) setLoading(false)
@@ -207,10 +215,18 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       // Background enrichment: merge reading progress and mark-as-read
       // Only update items that are already in our map
       fetchLinks(relayPool, viewingPubkey, (item) => {
-        if (tempMap.has(item.id) && mergeReadItem(tempMap, item)) {
-          setLinksMap(new Map(tempMap))
-          setLinks(Array.from(tempMap.values()))
-        }
+        setLinksMap(prevMap => {
+          // Only update if item exists in our current map
+          if (!prevMap.has(item.id)) return prevMap
+          
+          const newMap = new Map(prevMap)
+          if (mergeReadItem(newMap, item)) {
+            // Update links array after map is updated
+            setLinks(Array.from(newMap.values()))
+            return newMap
+          }
+          return prevMap
+        })
       }).catch(err => console.warn('Failed to enrich links:', err))
       
     } catch (err) {
