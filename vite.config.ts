@@ -31,12 +31,37 @@ const { commit, branch } = getGitMetadata()
 const version = getPackageVersion()
 const buildTime = new Date().toISOString()
 
+function getCommitUrl(commit: string): string {
+  if (!commit) return ''
+  const provider = process.env.VERCEL_GIT_PROVIDER || ''
+  const owner = process.env.VERCEL_GIT_REPO_OWNER || ''
+  const slug = process.env.VERCEL_GIT_REPO_SLUG || ''
+  if (provider.toLowerCase() === 'github' && owner && slug) {
+    return `https://github.com/${owner}/${slug}/commit/${commit}`
+  }
+  try {
+    const remote = execSync('git config --get remote.origin.url', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+    if (remote.includes('github.com')) {
+      // git@github.com:owner/repo.git or https://github.com/owner/repo.git
+      const https = remote.startsWith('git@')
+        ? `https://github.com/${remote.split(':')[1]}`
+        : remote
+      const cleaned = https.replace(/\.git$/, '')
+      return `${cleaned}/commit/${commit}`
+    }
+  } catch {}
+  return ''
+}
+
+const commitUrl = getCommitUrl(commit)
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(version),
     __GIT_COMMIT__: JSON.stringify(commit),
     __GIT_BRANCH__: JSON.stringify(branch),
-    __BUILD_TIME__: JSON.stringify(buildTime)
+    __BUILD_TIME__: JSON.stringify(buildTime),
+    __GIT_COMMIT_URL__: JSON.stringify(commitUrl)
   },
   plugins: [
     react(),
