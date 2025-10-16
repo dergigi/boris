@@ -248,7 +248,8 @@ function App() {
           })
           
           try {
-            // Ensure the signer is listening for responses
+            // Just ensure the signer is listening for responses - don't call connect() again
+            // The fromBunkerURI already connected with permissions during login
             if (!nostrConnectAccount.signer.listening) {
               console.log('[bunker] Opening signer subscription...')
               await nostrConnectAccount.signer.open()
@@ -260,25 +261,18 @@ function App() {
               console.log('[bunker] ✅ Signer already listening')
             }
             
-            // Reconnect with permissions if not already connected
-            if (!nostrConnectAccount.signer.isConnected) {
-              console.log('[bunker] Reconnecting with permissions...')
-              const permissions = getDefaultBunkerPermissions()
-              console.log('[bunker] Permissions:', permissions)
-              await nostrConnectAccount.signer.connect(undefined, permissions)
-              console.log('[bunker] ✅ Reconnected successfully, status:', {
-                listening: nostrConnectAccount.signer.listening,
-                isConnected: nostrConnectAccount.signer.isConnected
-              })
-            } else {
-              console.log('[bunker] ✅ Already connected')
-            }
+            console.log('[bunker] Final signer status:', {
+              listening: nostrConnectAccount.signer.listening,
+              isConnected: nostrConnectAccount.signer.isConnected,
+              remote: nostrConnectAccount.signer.remote,
+              relays: nostrConnectAccount.signer.relays
+            })
             
             // Mark this account as reconnected
             reconnectedAccounts.add(account.id)
-            console.log('[bunker] 🎉 Full reconnection complete')
+            console.log('[bunker] 🎉 Signer ready for signing')
           } catch (error) {
-            console.error('[bunker] ❌ Failed to reconnect:', error)
+            console.error('[bunker] ❌ Failed to open signer:', error)
           }
         }
       })
