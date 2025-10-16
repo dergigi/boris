@@ -75,38 +75,57 @@ export async function collectBookmarksFromEvents(
 
     try {
       if (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt) && signerCandidate) {
+        console.log('[bunker] 🔓 Attempting to unlock hidden tags:', {
+          eventId: evt.id?.slice(0, 8),
+          kind: evt.kind,
+          hasHiddenTags: true
+        })
         try {
           await Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner)
-        } catch {
+          console.log('[bunker] ✅ Unlocked hidden tags with nip04')
+        } catch (err) {
+          console.log('[bunker] ⚠️  nip04 unlock failed, trying nip44:', err)
           try {
             await Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner, 'nip44' as UnlockMode)
-          } catch {
-            // ignore
+            console.log('[bunker] ✅ Unlocked hidden tags with nip44')
+          } catch (err2) {
+            console.log('[bunker] ❌ nip44 unlock failed:', err2)
           }
         }
       } else if (evt.content && evt.content.length > 0 && signerCandidate) {
+        console.log('[bunker] 🔓 Attempting to decrypt content:', {
+          eventId: evt.id?.slice(0, 8),
+          kind: evt.kind,
+          contentLength: evt.content.length,
+          contentPreview: evt.content.slice(0, 20) + '...'
+        })
+        
         let decryptedContent: string | undefined
         try {
           if (hasNip44Decrypt(signerCandidate)) {
+            console.log('[bunker] Trying nip44 decrypt...')
             decryptedContent = await (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(
               evt.pubkey,
               evt.content
             )
+            console.log('[bunker] ✅ nip44 decrypt succeeded')
           }
-        } catch {
-          // ignore
+        } catch (err) {
+          console.log('[bunker] ⚠️  nip44 decrypt failed:', err)
         }
 
         if (!decryptedContent) {
           try {
             if (hasNip04Decrypt(signerCandidate)) {
+              console.log('[bunker] Trying nip04 decrypt...')
               decryptedContent = await (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(
                 evt.pubkey,
                 evt.content
               )
+              console.log('[bunker] ✅ nip04 decrypt succeeded')
             }
-          } catch {
-            // ignore
+          } catch (err) {
+            console.log('[bunker] ❌ nip04 decrypt failed:', err)
           }
         }
 
