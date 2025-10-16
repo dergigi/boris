@@ -312,12 +312,23 @@ function App() {
                   // IMPORTANT: bind originals to preserve `this` context used internally by the signer
                   const originalPublish = (recreatedSigner as any).publishMethod.bind(recreatedSigner)
                   ;(recreatedSigner as any).publishMethod = (relays: string[], event: any) => {
-                    try { console.log('[bunker] publish via signer:', { relays, kind: event?.kind, tags: event?.tags?.length }) } catch {}
+                    try {
+                      const summary = {
+                        relays,
+                        kind: event?.kind,
+                        // include tags array for debugging (NIP-46 expects method tag)
+                        tags: event?.tags,
+                        contentLength: typeof event?.content === 'string' ? event.content.length : undefined
+                      }
+                      console.log('[bunker] publish via signer:', summary)
+                    } catch {}
                     return originalPublish(relays, event)
                   }
                   const originalSubscribe = (recreatedSigner as any).subscriptionMethod.bind(recreatedSigner)
                   ;(recreatedSigner as any).subscriptionMethod = (relays: string[], filters: any[]) => {
-                    try { console.log('[bunker] subscribe via signer:', { relays, filters }) } catch {}
+                    try {
+                      console.log('[bunker] subscribe via signer:', { relays, filters })
+                    } catch {}
                     return originalSubscribe(relays, filters)
                   }
 
