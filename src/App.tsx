@@ -192,13 +192,12 @@ function App() {
       // Create relay pool and set it up BEFORE loading accounts
       // NostrConnectAccount.fromJSON needs this to restore the signer
       const pool = new RelayPool()
-      NostrConnectSigner.pool = pool
-      pool.group(RELAYS)
       
-      // Enable debug logging for NostrConnectSigner
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('debug', '*NostrConnectSigner*')
-      }
+      // Setup NostrConnectSigner to use the pool's methods (per applesauce examples)
+      NostrConnectSigner.subscriptionMethod = pool.subscription.bind(pool)
+      NostrConnectSigner.publishMethod = pool.publish.bind(pool)
+      
+      pool.group(RELAYS)
       
       // Load persisted accounts from localStorage
       try {
