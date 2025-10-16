@@ -40,8 +40,19 @@ const LoginOptions: React.FC = () => {
       setIsLoading(true)
       setError(null)
       
-      // Create signer from bunker URI
-      const signer = await NostrConnectSigner.fromBunkerURI(bunkerUri)
+      // Build permissions for signing and encryption
+      const permissions = [
+        // Signing permissions for event kinds we create
+        ...NostrConnectSigner.buildSigningPermissions([5, 7, 17, 9802, 30078, 39701, 0]),
+        // Encryption/decryption for hidden content and NIP-04/NIP-44
+        'nip04_encrypt',
+        'nip04_decrypt',
+        'nip44_encrypt',
+        'nip44_decrypt'
+      ]
+      
+      // Create signer from bunker URI with permissions
+      const signer = await NostrConnectSigner.fromBunkerURI(bunkerUri, { permissions })
       
       // Get pubkey from signer
       const pubkey = await signer.getPublicKey()
@@ -58,7 +69,14 @@ const LoginOptions: React.FC = () => {
       setShowBunkerInput(false)
     } catch (err) {
       console.error('Bunker login failed:', err)
-      setError(err instanceof Error ? err.message : 'Failed to connect to bunker')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to connect to bunker'
+      
+      // Check for permission-related errors
+      if (errorMessage.toLowerCase().includes('permission') || errorMessage.toLowerCase().includes('unauthorized')) {
+        setError('Your bunker connection is missing signing permissions. Reconnect and approve signing.')
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setIsLoading(false)
     }
