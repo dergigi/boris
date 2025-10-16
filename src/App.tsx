@@ -223,7 +223,7 @@ function App() {
       
       // Reconnect bunker signers when active account changes
       const bunkerReconnectSub = accounts.active$.subscribe(async (account) => {
-        console.log('👤 Active account changed:', { 
+        console.log('[bunker] Active account changed:', { 
           hasAccount: !!account, 
           type: account?.type,
           id: account?.id 
@@ -231,7 +231,7 @@ function App() {
         
         if (account && account.type === 'nostr-connect') {
           const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
-          console.log('🔐 Bunker account detected. Status:', {
+          console.log('[bunker] Account detected. Status:', {
             listening: nostrConnectAccount.signer.listening,
             isConnected: nostrConnectAccount.signer.isConnected,
             hasRemote: !!nostrConnectAccount.signer.remote
@@ -240,25 +240,25 @@ function App() {
           try {
             // Ensure the signer is listening for responses
             if (!nostrConnectAccount.signer.listening) {
-              console.log('🔐 Opening bunker signer subscription...')
+              console.log('[bunker] Opening signer subscription...')
               await nostrConnectAccount.signer.open()
-              console.log('✅ Bunker signer subscription opened')
+              console.log('[bunker] ✅ Signer subscription opened')
             } else {
-              console.log('✅ Bunker signer already listening')
+              console.log('[bunker] ✅ Signer already listening')
             }
             
             // Reconnect with permissions if not already connected
             if (!nostrConnectAccount.signer.isConnected) {
-              console.log('🔐 Reconnecting bunker signer with permissions...')
+              console.log('[bunker] Reconnecting with permissions...')
               const permissions = getDefaultBunkerPermissions()
-              console.log('🔐 Permissions:', permissions)
+              console.log('[bunker] Permissions:', permissions)
               await nostrConnectAccount.signer.connect(undefined, permissions)
-              console.log('✅ Bunker signer reconnected successfully')
+              console.log('[bunker] ✅ Reconnected successfully')
             } else {
-              console.log('✅ Bunker signer already connected')
+              console.log('[bunker] ✅ Already connected')
             }
           } catch (error) {
-            console.error('❌ Failed to reconnect bunker signer:', error)
+            console.error('[bunker] ❌ Failed to reconnect:', error)
           }
         }
       })

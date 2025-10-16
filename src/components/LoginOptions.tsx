@@ -59,7 +59,7 @@ const LoginOptions: React.FC = () => {
       setBunkerUri('')
       setShowBunkerInput(false)
     } catch (err) {
-      console.error('Bunker login failed:', err)
+      console.error('[bunker] Login failed:', err)
       const errorMessage = err instanceof Error ? err.message : 'Failed to connect to bunker'
       
       // Check for permission-related errors
