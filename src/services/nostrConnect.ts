@@ -43,9 +43,16 @@ export async function reconnectBunkerSigner(
   if (!account.signer.listening) {
     await account.signer.open()
   }
-  
-  // Mark as connected (bunker remembers permissions from initial connection)
-  account.signer.isConnected = true
+
+  // Ensure the signer is connected to the remote signer
+  // Important: do NOT set isConnected manually; establish connection properly
+  try {
+    console.log('[bunker] Connecting to bunker remote...')
+    await account.signer.connect()
+    console.log('[bunker] ✅ Connected to bunker remote')
+  } catch (err) {
+    console.error('[bunker] ❌ Failed to connect to bunker remote:', err)
+  }
   
   // Expose nip04/nip44 at account level (like ExtensionAccount does)
   if (!('nip04' in account)) {
