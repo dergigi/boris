@@ -2,6 +2,13 @@
   "rewrites": [
     {
       "source": "/a/:naddr",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(bot|crawl|spider|slurp|facebook|twitter|linkedin|whatsapp|telegram|slack|discord|preview).*"
+        }
+      ],
       "destination": "/api/article-og?naddr=:naddr"
     },
     {
