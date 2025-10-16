@@ -8,6 +8,7 @@ import { AccountManager, Accounts } from 'applesauce-accounts'
 import { registerCommonAccountTypes } from 'applesauce-accounts/accounts'
 import { RelayPool } from 'applesauce-relay'
 import { NostrConnectSigner } from 'applesauce-signers'
+import { getDefaultBunkerPermissions } from './services/nostrConnect'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Bookmarks from './components/Bookmarks'
 import RouteDebug from './components/RouteDebug'
@@ -328,9 +329,10 @@ function App() {
                   // Attempt a guarded reconnect to ensure Amber authorizes decrypt operations
                   try {
                     if (nostrConnectAccount.signer.remote && !reconnectedAccounts.has(account.id)) {
-                      console.log('[bunker] Attempting guarded connect() to ensure decrypt perms')
-                      await nostrConnectAccount.signer.connect(undefined, undefined)
-                      console.log('[bunker] ✅ Guarded connect() succeeded')
+                      const permissions = getDefaultBunkerPermissions()
+                      console.log('[bunker] Attempting guarded connect() with permissions to ensure decrypt perms', { count: permissions.length })
+                      await nostrConnectAccount.signer.connect(undefined, permissions)
+                      console.log('[bunker] ✅ Guarded connect() succeeded with permissions')
                     }
                   } catch (e) {
                     console.warn('[bunker] ⚠️ Guarded connect() failed:', e)
