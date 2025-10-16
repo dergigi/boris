@@ -11,6 +11,18 @@ type UnlockHiddenTagsFn = typeof Helpers.unlockHiddenTags
 type HiddenContentSigner = Parameters<UnlockHiddenTagsFn>[1]
 type UnlockMode = Parameters<UnlockHiddenTagsFn>[2]
 
+/**
+ * Wrap a decrypt promise with a timeout to prevent hanging
+ */
+function withDecryptTimeout<T>(promise: Promise<T>, timeoutMs = 5000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Decrypt timeout after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ])
+}
+
 export async function collectBookmarksFromEvents(
   bookmarkListEvents: NostrEvent[],
   activeAccount: ActiveAccount,
@@ -88,10 +100,10 @@ export async function collectBookmarksFromEvents(
         let decryptedContent: string | undefined
         try {
           if (hasNip44Decrypt(signerCandidate)) {
-            decryptedContent = await (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(
+            decryptedContent = await withDecryptTimeout((signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(
               evt.pubkey,
               evt.content
-            )
+            ))
           }
         } catch {
           // ignore
@@ -100,10 +112,10 @@ export async function collectBookmarksFromEvents(
         if (!decryptedContent) {
           try {
             if (hasNip04Decrypt(signerCandidate)) {
-              decryptedContent = await (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(
+              decryptedContent = await withDecryptTimeout((signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(
                 evt.pubkey,
                 evt.content
-              )
+              ))
             }
           } catch {
             // ignore
