@@ -44,16 +44,9 @@ export async function reconnectBunkerSigner(
     await account.signer.open()
   }
 
-  // Ensure the signer is connected to the remote signer
-  // Important: do NOT set isConnected manually; establish connection properly
-  try {
-    console.log('[bunker] Connecting to bunker remote...')
-    // Re-request permissions on reconnect to ensure decrypt is allowed
-    await account.signer.connect(undefined, getDefaultBunkerPermissions())
-    console.log('[bunker] ✅ Connected to bunker remote')
-  } catch (err) {
-    console.error('[bunker] ❌ Failed to connect to bunker remote:', err)
-  }
+  // Do not force connect here; let requireConnection() run per operation
+  // For debugging, keep a minimal log of readiness
+  console.log('[bunker] Signer ready (listening:', account.signer.listening, ')')
   
   // Expose nip04/nip44 at account level (like ExtensionAccount does)
   if (!('nip04' in account)) {
