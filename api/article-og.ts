@@ -231,26 +231,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(debugInfo)
   }
 
-  // If it's a regular browser (not a bot), serve index.html with base tag
-  // The rewrite preserves the URL, so SPA routing will handle /a/{naddr}
+  // If it's a regular browser (not a bot), serve HTML that loads SPA
+  // Use history.replaceState to set the URL before the SPA boots
   if (!isCrawlerRequest) {
-    const fs = await import('fs')
-    const path = await import('path')
-    // eslint-disable-next-line no-undef
-    const indexPath = path.join(process.cwd(), 'dist', 'index.html')
-    
-    try {
-      let indexHtml = fs.readFileSync(indexPath, 'utf-8')
-      // Add base tag to ensure assets load from root
-      indexHtml = indexHtml.replace('<head>', '<head>\n    <base href="/" />')
-      res.setHeader('Content-Type', 'text/html; charset=utf-8')
-      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate')
-      return res.status(200).send(indexHtml)
-    } catch (err) {
-      // Fallback if dist/index.html doesn't exist (dev mode)
-      res.setHeader('Location', '/')
-      return res.status(302).send('')
+    const articlePath = `/a/${naddr}`
+    // Serve a minimal HTML that sets up the URL and loads the SPA
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boris - Loading Article...</title>
+  <script>
+    // Set the URL to the article path before SPA loads
+    if (window.location.pathname !== '${articlePath}') {
+      history.replaceState(null, '', '${articlePath}');
     }
+  </script>
+  <script>
+    // Redirect to index.html which will load the SPA
+    // The history state is already set, so SPA will see the correct URL
+    window.location.replace('/');
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>`
+    
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+    return res.status(200).send(html)
   }
 
   // Check cache for bots/crawlers
