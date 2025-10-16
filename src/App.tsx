@@ -376,17 +376,21 @@ function App() {
                       ])
                     }
                     setTimeout(async () => {
+                      const self = nostrConnectAccount.pubkey
+                      // Try a roundtrip so the bunker can respond successfully
                       try {
-                        console.log('[bunker] 🔎 Probe nip44.decrypt…')
-                        await withTimeout(nostrConnectAccount.signer.nip44!.decrypt(nostrConnectAccount.pubkey, 'invalid-ciphertext'))
-                        console.log('[bunker] 🔎 Probe nip44.decrypt responded')
+                        console.log('[bunker] 🔎 Probe nip44 roundtrip (encrypt→decrypt)…')
+                        const cipher44 = await withTimeout(nostrConnectAccount.signer.nip44!.encrypt(self, 'probe-nip44'), 3000)
+                        const plain44 = await withTimeout(nostrConnectAccount.signer.nip44!.decrypt(self, cipher44), 3000)
+                        console.log('[bunker] 🔎 Probe nip44 responded:', typeof plain44 === 'string' ? plain44 : typeof plain44)
                       } catch (err) {
                         console.log('[bunker] 🔎 Probe nip44 result:', err instanceof Error ? err.message : err)
                       }
                       try {
-                        console.log('[bunker] 🔎 Probe nip04.decrypt…')
-                        await withTimeout(nostrConnectAccount.signer.nip04!.decrypt(nostrConnectAccount.pubkey, 'invalid-ciphertext'))
-                        console.log('[bunker] 🔎 Probe nip04.decrypt responded')
+                        console.log('[bunker] 🔎 Probe nip04 roundtrip (encrypt→decrypt)…')
+                        const cipher04 = await withTimeout(nostrConnectAccount.signer.nip04!.encrypt(self, 'probe-nip04'), 3000)
+                        const plain04 = await withTimeout(nostrConnectAccount.signer.nip04!.decrypt(self, cipher04), 3000)
+                        console.log('[bunker] 🔎 Probe nip04 responded:', typeof plain04 === 'string' ? plain04 : typeof plain04)
                       } catch (err) {
                         console.log('[bunker] 🔎 Probe nip04 result:', err instanceof Error ? err.message : err)
                       }
