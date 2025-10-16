@@ -48,8 +48,6 @@ export async function createHighlight(
   // Create EventFactory with the account as signer
   const factory = new EventFactory({ signer: account })
 
-  // Let signer.requireConnection handle connectivity during sign
-
   let blueprintSource: NostrEvent | AddressPointer | string
   let context: string | undefined
 
@@ -119,19 +117,8 @@ export async function createHighlight(
 
   // Sign the event
   console.log('[bunker] Signing highlight event...', { kind: highlightEvent.kind, tags: highlightEvent.tags.length })
-  let signedEvent
-  try {
-    console.log('[bunker] Signer before sign:', {
-      type: (account as any).signer?.constructor?.name,
-      listening: (account as any).signer?.listening,
-      connected: (account as any).signer?.isConnected
-    })
-    signedEvent = await factory.sign(highlightEvent)
-    console.log('[bunker] ✅ Highlight signed successfully!', { id: signedEvent.id?.slice(0, 8) })
-  } catch (err) {
-    console.error('[bunker] ❌ Highlight signing failed:', err)
-    throw err
-  }
+  const signedEvent = await factory.sign(highlightEvent)
+  console.log('[bunker] ✅ Highlight signed successfully!', { id: signedEvent.id.slice(0, 8) })
 
   // Use unified write service to store and publish
   await publishEvent(relayPool, eventStore, signedEvent)

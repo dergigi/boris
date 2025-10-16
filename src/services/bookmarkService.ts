@@ -83,15 +83,29 @@ export const fetchBookmarks = async (
       // Keep existing bookmarks visible; do not clear list if nothing new found
       return
     }
-    // Get account with signer for decryption
+    // Aggregate across events
     const maybeAccount = activeAccount as AccountWithExtension
+    console.log('🔐 Account object:', {
+      hasSignEvent: typeof maybeAccount?.signEvent === 'function',
+      hasSigner: !!maybeAccount?.signer,
+      accountType: typeof maybeAccount,
+      accountKeys: maybeAccount ? Object.keys(maybeAccount) : []
+    })
+
+    // For ExtensionAccount, we need a signer with nip04/nip44 for decrypting hidden content
+    // The ExtensionAccount itself has nip04/nip44 getters that proxy to the signer
     let signerCandidate: unknown = maybeAccount
-    
-    // Fallback to raw signer if account doesn't expose nip04/nip44
     const hasNip04Prop = (signerCandidate as { nip04?: unknown })?.nip04 !== undefined
     const hasNip44Prop = (signerCandidate as { nip44?: unknown })?.nip44 !== undefined
     if (signerCandidate && !hasNip04Prop && !hasNip44Prop && maybeAccount?.signer) {
+      // Fallback to the raw signer if account doesn't have nip04/nip44
       signerCandidate = maybeAccount.signer
+    }
+
+    console.log('🔑 Signer candidate:', !!signerCandidate, typeof signerCandidate)
+    if (signerCandidate) {
+      console.log('🔑 Signer has nip04:', hasNip04Decrypt(signerCandidate))
+      console.log('🔑 Signer has nip44:', hasNip44Decrypt(signerCandidate))
     }
     const { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags } = await collectBookmarksFromEvents(
       bookmarkListEvents,

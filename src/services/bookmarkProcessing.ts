@@ -11,21 +11,6 @@ type UnlockHiddenTagsFn = typeof Helpers.unlockHiddenTags
 type HiddenContentSigner = Parameters<UnlockHiddenTagsFn>[1]
 type UnlockMode = Parameters<UnlockHiddenTagsFn>[2]
 
-// Timeout helper to avoid hanging decrypt/unlock calls
-async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
-  let timer: number | NodeJS.Timeout | undefined
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error(`[timeout] ${label} after ${ms}ms`)), ms)
-      })
-    ])
-  } finally {
-    if (timer) clearTimeout(timer as NodeJS.Timeout)
-  }
-}
-
 export async function collectBookmarksFromEvents(
   bookmarkListEvents: NostrEvent[],
   activeAccount: ActiveAccount,
@@ -90,73 +75,38 @@ export async function collectBookmarksFromEvents(
 
     try {
       if (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt) && signerCandidate) {
-        console.log('[bunker] 🔓 Attempting to unlock hidden tags:', {
-          eventId: evt.id?.slice(0, 8),
-          kind: evt.kind,
-          hasHiddenTags: true
-        })
         try {
-          await withTimeout(
-            Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner),
-            5000,
-            'unlockHiddenTags(nip04)'
-          )
-          console.log('[bunker] ✅ Unlocked hidden tags with nip04')
-        } catch (err) {
-          console.log('[bunker] ⚠️  nip04 unlock failed (or timed out), trying nip44:', err)
+          await Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner)
+        } catch {
           try {
-            await withTimeout(
-              Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner, 'nip44' as UnlockMode),
-              5000,
-              'unlockHiddenTags(nip44)'
-            )
-            console.log('[bunker] ✅ Unlocked hidden tags with nip44')
-          } catch (err2) {
-            console.log('[bunker] ❌ nip44 unlock failed (or timed out):', err2)
+            await Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner, 'nip44' as UnlockMode)
+          } catch {
+            // ignore
           }
         }
       } else if (evt.content && evt.content.length > 0 && signerCandidate) {
-        console.log('[bunker] 🔓 Attempting to decrypt content:', {
-          eventId: evt.id?.slice(0, 8),
-          kind: evt.kind,
-          contentLength: evt.content.length,
-          contentPreview: evt.content.slice(0, 20) + '...'
-        })
-        
         let decryptedContent: string | undefined
         try {
           if (hasNip44Decrypt(signerCandidate)) {
-            console.log('[bunker] Trying nip44 decrypt...')
-            decryptedContent = await withTimeout(
-              (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(
-                evt.pubkey,
-                evt.content
-              ),
-              6000,
-              'nip44.decrypt'
+            decryptedContent = await (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(
+              evt.pubkey,
+              evt.content
             )
-            console.log('[bunker] ✅ nip44 decrypt succeeded')
           }
-        } catch (err) {
-          console.log('[bunker] ⚠️  nip44 decrypt failed (or timed out):', err)
+        } catch {
+          // ignore
         }
 
         if (!decryptedContent) {
           try {
             if (hasNip04Decrypt(signerCandidate)) {
-              console.log('[bunker] Trying nip04 decrypt...')
-              decryptedContent = await withTimeout(
-                (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(
-                  evt.pubkey,
-                  evt.content
-                ),
-                6000,
-                'nip04.decrypt'
+              decryptedContent = await (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(
+                evt.pubkey,
+                evt.content
               )
-              console.log('[bunker] ✅ nip04 decrypt succeeded')
             }
-          } catch (err) {
-            console.log('[bunker] ❌ nip04 decrypt failed (or timed out):', err)
+          } catch {
+            // ignore
           }
         }
 
