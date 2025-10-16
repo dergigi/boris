@@ -92,7 +92,8 @@ export async function collectBookmarksFromEvents(
         } catch {
           try {
             await Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner, 'nip44' as UnlockMode)
-          } catch {
+          } catch (err) {
+          console.log("[bunker] ❌ nip44.decrypt failed:", err instanceof Error ? err.message : String(err))
             // ignore
           }
         }
@@ -105,7 +106,8 @@ export async function collectBookmarksFromEvents(
               evt.content
             ))
           }
-        } catch {
+        } catch (err) {
+          console.log("[bunker] ❌ nip44.decrypt failed:", err instanceof Error ? err.message : String(err))
           // ignore
         }
 
@@ -117,7 +119,8 @@ export async function collectBookmarksFromEvents(
                 evt.content
               ))
             }
-          } catch {
+          } catch (err) {
+          console.log("[bunker] ❌ nip04.decrypt failed:", err instanceof Error ? err.message : String(err))
             // ignore
           }
         }
@@ -139,7 +142,7 @@ export async function collectBookmarksFromEvents(
             Reflect.set(evt, BookmarkHiddenSymbol, manualPrivate)
             Reflect.set(evt, 'EncryptedContentSymbol', decryptedContent)
             // Don't set latestContent to decrypted JSON - it's not user-facing content
-          } catch {
+          } catch (err) {
             // ignore
           }
         }
