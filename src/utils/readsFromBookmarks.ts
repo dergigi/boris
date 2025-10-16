@@ -1,4 +1,4 @@
-import { Bookmark, IndividualBookmark } from '../types/bookmarks'
+import { Bookmark } from '../types/bookmarks'
 import { ReadItem } from '../services/readsService'
 import { classifyBookmarkType } from './bookmarkTypeClassifier'
 import { KINDS } from '../config/kinds'
