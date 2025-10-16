@@ -21,7 +21,6 @@ import { RELAYS } from '../config/relays'
 import { Hooks } from 'applesauce-react'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
-import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProgressFilters'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -40,8 +39,6 @@ interface BookmarkListProps {
   relayPool: RelayPool | null
   isMobile?: boolean
   settings?: UserSettings
-  readingPositions?: Map<string, number>
-  markedAsReadIds?: Set<string>
 }
 
 export const BookmarkList: React.FC<BookmarkListProps> = ({
@@ -60,16 +57,13 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   loading = false,
   relayPool,
   isMobile = false,
-  settings,
-  readingPositions,
-  markedAsReadIds
+  settings
 }) => {
   const navigate = useNavigate()
   const bookmarksListRef = useRef<HTMLDivElement>(null)
   const friendsColor = settings?.highlightColorFriends || '#f97316'
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState<BookmarkFilterType>('all')
-  const [readingProgressFilter, setReadingProgressFilter] = useState<ReadingProgressFilterType>('all')
   const activeAccount = Hooks.useActiveAccount()
 
   const handleSaveBookmark = async (url: string, title?: string, description?: string, tags?: string[]) => {
@@ -96,42 +90,8 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(hasContent)
   
-  // Apply type filter
-  const typeFilteredBookmarks = filterBookmarksByType(allIndividualBookmarks, selectedFilter)
-  
-  // Apply reading progress filter (only affects kind:30023 articles)
-  const filteredBookmarks = typeFilteredBookmarks.filter(bookmark => {
-    // Only apply reading progress filter to kind:30023 articles
-    if (bookmark.kind !== 30023) return true
-    
-    // If reading progress filter is 'all', show all articles
-    if (readingProgressFilter === 'all') return true
-    
-    const isMarkedAsRead = markedAsReadIds?.has(bookmark.id)
-    const position = readingPositions?.get(bookmark.id)
-    
-    // Marked-as-read articles are always treated as 100% complete
-    if (isMarkedAsRead) {
-      return readingProgressFilter === 'completed'
-    }
-    
-    switch (readingProgressFilter) {
-      case 'unopened':
-        // No reading progress - never opened
-        return !position || position === 0
-      case 'started':
-        // 0-10% reading progress - opened but not read far
-        return position !== undefined && position > 0 && position <= 0.10
-      case 'reading':
-        // Has some progress but not completed (11% - 94%)
-        return position !== undefined && position > 0.10 && position <= 0.94
-      case 'completed':
-        // 95% or more read
-        return position !== undefined && position >= 0.95
-      default:
-        return true
-    }
-  })
+  // Apply filter
+  const filteredBookmarks = filterBookmarksByType(allIndividualBookmarks, selectedFilter)
   
   // Separate bookmarks with setName (kind 30003) from regular bookmarks
   const bookmarksWithoutSet = getBookmarksWithoutSet(filteredBookmarks)
@@ -244,7 +204,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
                     index={index} 
                     onSelectUrl={onSelectUrl}
                     viewMode={viewMode}
-                    readingProgress={markedAsReadIds?.has(individualBookmark.id) ? 1.0 : readingPositions?.get(individualBookmark.id)}
                   />
                 ))}
               </div>
@@ -252,17 +211,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
           ))}
         </div>
       )}
-      
-      {/* Reading progress filters - only show if there are kind:30023 articles */}
-      {typeFilteredBookmarks.some(b => b.kind === 30023) && (
-        <div className="reading-progress-filters-wrapper">
-          <ReadingProgressFilters
-            selectedFilter={readingProgressFilter}
-            onFilterChange={setReadingProgressFilter}
-          />
-        </div>
-      )}
-      
       <div className="view-mode-controls">
         <div className="view-mode-left">
           <IconButton

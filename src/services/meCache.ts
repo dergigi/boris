@@ -1,12 +1,11 @@
 import { Highlight } from '../types/highlights'
 import { Bookmark } from '../types/bookmarks'
-import { ReadItem } from './readsService'
+import { BlogPostPreview } from './exploreService'
 
 export interface MeCache {
   highlights: Highlight[]
   bookmarks: Bookmark[]
-  reads: ReadItem[]
-  links: ReadItem[]
+  readArticles: BlogPostPreview[]
   timestamp: number
 }
 
@@ -22,14 +21,12 @@ export function setCachedMeData(
   pubkey: string,
   highlights: Highlight[],
   bookmarks: Bookmark[],
-  reads: ReadItem[],
-  links: ReadItem[] = []
+  readArticles: BlogPostPreview[]
 ): void {
   meCache.set(pubkey, {
     highlights,
     bookmarks,
-    reads,
-    links,
+    readArticles,
     timestamp: Date.now()
   })
 }
@@ -48,10 +45,10 @@ export function updateCachedBookmarks(pubkey: string, bookmarks: Bookmark[]): vo
   }
 }
 
-export function updateCachedReads(pubkey: string, reads: ReadItem[]): void {
+export function updateCachedReadArticles(pubkey: string, readArticles: BlogPostPreview[]): void {
   const existing = meCache.get(pubkey)
   if (existing) {
-    meCache.set(pubkey, { ...existing, reads, timestamp: Date.now() })
+    meCache.set(pubkey, { ...existing, readArticles, timestamp: Date.now() })
   }
 }
 

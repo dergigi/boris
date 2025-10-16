@@ -22,8 +22,6 @@ import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { classifyHighlights } from '../utils/highlightClassification'
 import { HighlightVisibility } from './HighlightsPanel'
-import { loadReadingPosition, generateArticleIdentifier } from '../services/readingPositionService'
-import { fetchReadArticles } from '../services/libraryService'
 
 interface ExploreProps {
   relayPool: RelayPool
@@ -43,8 +41,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const [readingPositions, setReadingPositions] = useState<Map<string, number>>(new Map())
-  const [markedAsReadIds, setMarkedAsReadIds] = useState<Set<string>>(new Set())
   
   // Visibility filters (defaults from settings, or friends only)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
@@ -217,88 +213,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     loadData()
   }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
 
-  // Fetch marked-as-read articles
-  useEffect(() => {
-    const loadMarkedAsRead = async () => {
-      if (!activeAccount || !eventStore) {
-        return
-      }
-
-      try {
-        const readArticles = await fetchReadArticles(relayPool, activeAccount.pubkey)
-        
-        // Create a set of article IDs that are marked as read
-        const markedArticleIds = new Set<string>()
-        
-        // For each read article, add both event ID and coordinate format
-        for (const readArticle of readArticles) {
-          // Add the event ID directly
-          markedArticleIds.add(readArticle.id)
-          
-          // For nostr-native articles (kind:7 reactions), also add the coordinate format
-          if (readArticle.eventId && readArticle.eventAuthor && readArticle.eventKind) {
-            // Try to get the event from the eventStore to find the 'd' tag
-            const event = eventStore.getEvent(readArticle.eventId)
-            if (event) {
-              const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-              const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
-              markedArticleIds.add(coordinate)
-            }
-          }
-        }
-        
-        setMarkedAsReadIds(markedArticleIds)
-      } catch (error) {
-        console.warn('⚠️ [Explore] Failed to load marked-as-read articles:', error)
-      }
-    }
-
-    loadMarkedAsRead()
-  }, [relayPool, activeAccount, eventStore])
-
-  // Load reading positions for blog posts
-  useEffect(() => {
-    const loadPositions = async () => {
-      if (!activeAccount || !eventStore || blogPosts.length === 0 || !settings?.syncReadingPosition) {
-        return
-      }
-
-      const positions = new Map<string, number>()
-
-      await Promise.all(
-        blogPosts.map(async (post) => {
-          try {
-            const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
-            const naddr = nip19.naddrEncode({
-              kind: 30023,
-              pubkey: post.author,
-              identifier: dTag
-            })
-            const articleUrl = `nostr:${naddr}`
-            const identifier = generateArticleIdentifier(articleUrl)
-
-            const savedPosition = await loadReadingPosition(
-              relayPool,
-              eventStore,
-              activeAccount.pubkey,
-              identifier
-            )
-
-            if (savedPosition && savedPosition.position > 0) {
-              positions.set(post.event.id, savedPosition.position)
-            }
-          } catch (error) {
-            console.warn('⚠️ [Explore] Failed to load reading position for post:', error)
-          }
-        })
-      )
-
-      setReadingPositions(positions)
-    }
-
-    loadPositions()
-  }, [blogPosts, activeAccount, relayPool, eventStore, settings?.syncReadingPosition])
-
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
     onRefresh: () => {
@@ -388,7 +302,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                 post={post}
                 href={getPostUrl(post)}
                 level={post.level}
-                readingProgress={markedAsReadIds.has(post.event.id) ? 1.0 : readingPositions.get(post.event.id)}
               />
             ))}
           </div>

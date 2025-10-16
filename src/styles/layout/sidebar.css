@@ -211,12 +211,3 @@
   background: transparent;
 }
 
-/* Reading progress filters in bookmarks sidebar - add top border, remove bottom border to avoid double border with view-mode-controls */
-.reading-progress-filters-wrapper {
-  border-top: 1px solid var(--color-border);
-}
-
-.reading-progress-filters-wrapper .bookmark-filters {
-  border-bottom: none;
-}
-
