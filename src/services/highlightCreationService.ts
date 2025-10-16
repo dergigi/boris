@@ -48,24 +48,7 @@ export async function createHighlight(
   // Create EventFactory with the account as signer
   const factory = new EventFactory({ signer: account })
 
-  // For NIP-46 (bunker) accounts, ensure connection before signing
-  try {
-    const signer = (account as unknown as { signer?: unknown })?.signer as unknown
-    const hasConnect = signer && typeof (signer as { connect?: unknown }).connect === 'function'
-    const hasOpen = signer && typeof (signer as { open?: unknown }).open === 'function'
-    const isListening = signer && (signer as { listening?: boolean }).listening === true
-    if (hasConnect) {
-      if (hasOpen && !isListening) {
-        console.log('[bunker] Opening signer subscription before signing...')
-        await (signer as { open: () => Promise<void> }).open()
-      }
-      console.log('[bunker] Ensuring bunker connection before signing...')
-      await (signer as { connect: () => Promise<void> }).connect()
-      console.log('[bunker] ✅ Bunker connection ready for signing')
-    }
-  } catch (err) {
-    console.warn('[bunker] ⚠️ Could not pre-connect signer (will rely on requireConnection):', err)
-  }
+  // Let signer.requireConnection handle connectivity during sign
 
   let blueprintSource: NostrEvent | AddressPointer | string
   let context: string | undefined
