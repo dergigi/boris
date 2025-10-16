@@ -194,21 +194,8 @@ function App() {
       const pool = new RelayPool()
       
       // Setup NostrConnectSigner to use the pool's methods (per applesauce examples)
-      // Wrap with [bunker] logs for debugging NIP-46 traffic
-      NostrConnectSigner.subscriptionMethod = (relays, filters) => {
-        console.log('[bunker] NIP-46 subscribe', { relays, filters })
-        return pool.subscription(relays, filters)
-      }
-      NostrConnectSigner.publishMethod = (relays, event) => {
-        try {
-          const size = JSON.stringify(event).length
-          console.log('[bunker] NIP-46 publish', { relays, kind: event.kind, size })
-        } catch {}
-        return pool.publish(relays, event).then((resp) => {
-          console.log('[bunker] NIP-46 publish responses', resp)
-          return resp
-        })
-      }
+      NostrConnectSigner.subscriptionMethod = pool.subscription.bind(pool)
+      NostrConnectSigner.publishMethod = pool.publish.bind(pool)
       
       pool.group(RELAYS)
       
