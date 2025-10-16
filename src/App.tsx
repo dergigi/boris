@@ -5,7 +5,7 @@ import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { EventStoreProvider, AccountsProvider, Hooks } from 'applesauce-react'
 import { EventStore } from 'applesauce-core'
 import { AccountManager } from 'applesauce-accounts'
-import { registerCommonAccountTypes } from 'applesauce-accounts/accounts'
+import { registerCommonAccountTypes, Accounts } from 'applesauce-accounts/accounts'
 import { RelayPool } from 'applesauce-relay'
 import { NostrConnectSigner } from 'applesauce-signers'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
@@ -16,6 +16,7 @@ import { useToast } from './hooks/useToast'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { RELAYS } from './config/relays'
 import { SkeletonThemeProvider } from './components/Skeletons'
+import { getDefaultBunkerPermissions } from './services/nostrConnect'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -220,6 +221,28 @@ function App() {
       
       const pool = new RelayPool()
       
+      // Reconnect bunker signers when active account changes
+      const bunkerReconnectSub = accounts.active$.subscribe(async (account) => {
+        if (account && account.type === 'nostr-connect') {
+          const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
+          try {
+            // Ensure the signer is listening for responses
+            if (!nostrConnectAccount.signer.listening) {
+              await nostrConnectAccount.signer.open()
+              console.log('🔐 Opened bunker signer subscription')
+            }
+            
+            // Reconnect with permissions if not already connected
+            if (!nostrConnectAccount.signer.isConnected) {
+              await nostrConnectAccount.signer.connect(undefined, getDefaultBunkerPermissions())
+              console.log('🔐 Reconnected bunker signer with permissions')
+            }
+          } catch (error) {
+            console.warn('⚠️ Failed to reconnect bunker signer:', error)
+          }
+        }
+      })
+      
       // Setup NostrConnectSigner to use the relay pool
       NostrConnectSigner.pool = pool
       
@@ -256,6 +279,7 @@ function App() {
       return () => {
         accountsSub.unsubscribe()
         activeSub.unsubscribe()
+        bunkerReconnectSub.unsubscribe()
         // Clean up keep-alive subscription if it exists
         const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
         if (poolWithSub._keepAliveSubscription) {

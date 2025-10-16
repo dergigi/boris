@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Hooks } from 'applesauce-react'
 import { Accounts } from 'applesauce-accounts'
 import { NostrConnectSigner } from 'applesauce-signers'
+import { getDefaultBunkerPermissions } from '../services/nostrConnect'
 
 const LoginOptions: React.FC = () => {
   const accountManager = Hooks.useAccountManager()
@@ -40,18 +41,8 @@ const LoginOptions: React.FC = () => {
       setIsLoading(true)
       setError(null)
       
-      // Build permissions for signing and encryption
-      const permissions = [
-        // Signing permissions for event kinds we create
-        ...NostrConnectSigner.buildSigningPermissions([5, 7, 17, 9802, 30078, 39701, 0]),
-        // Encryption/decryption for hidden content and NIP-04/NIP-44
-        'nip04_encrypt',
-        'nip04_decrypt',
-        'nip44_encrypt',
-        'nip44_decrypt'
-      ]
-      
-      // Create signer from bunker URI with permissions
+      // Create signer from bunker URI with default permissions
+      const permissions = getDefaultBunkerPermissions()
       const signer = await NostrConnectSigner.fromBunkerURI(bunkerUri, { permissions })
       
       // Get pubkey from signer
