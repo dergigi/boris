@@ -214,18 +214,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const userAgent = req.headers['user-agent'] as string | undefined
 
-  // If it's a regular browser (not a bot), serve index.html
+  // If it's a regular browser (not a bot), serve index.html with base tag
   // The rewrite preserves the URL, so SPA routing will handle /a/{naddr}
   if (!isCrawler(userAgent)) {
-    // Import the static index.html and serve it
-    // This preserves the /a/{naddr} URL for client-side routing
     const fs = await import('fs')
     const path = await import('path')
     // eslint-disable-next-line no-undef
     const indexPath = path.join(process.cwd(), 'dist', 'index.html')
     
     try {
-      const indexHtml = fs.readFileSync(indexPath, 'utf-8')
+      let indexHtml = fs.readFileSync(indexPath, 'utf-8')
+      // Add base tag to ensure assets load from root
+      indexHtml = indexHtml.replace('<head>', '<head>\n    <base href="/" />')
       res.setHeader('Content-Type', 'text/html; charset=utf-8')
       res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate')
       return res.status(200).send(indexHtml)
