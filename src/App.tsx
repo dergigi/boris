@@ -9,6 +9,7 @@ import { registerCommonAccountTypes } from 'applesauce-accounts/accounts'
 import { RelayPool } from 'applesauce-relay'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Bookmarks from './components/Bookmarks'
+import RouteDebug from './components/RouteDebug'
 import Toast from './components/Toast'
 import { useToast } from './hooks/useToast'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
@@ -303,6 +304,7 @@ function App() {
           <BrowserRouter>
             <div className="min-h-screen p-0 max-w-none m-0 relative">
               <AppRoutes relayPool={relayPool} showToast={showToast} />
+              <RouteDebug />
             </div>
           </BrowserRouter>
           {toastMessage && (
