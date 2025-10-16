@@ -46,7 +46,8 @@ export async function createHighlight(
   }
 
   // Create EventFactory with the account as signer
-  const factory = new EventFactory({ signer: account })
+  console.log("[bunker] Creating EventFactory with signer:", { signerType: account.signer?.constructor?.name })
+  const factory = new EventFactory({ signer: account.signer })
 
   let blueprintSource: NostrEvent | AddressPointer | string
   let context: string | undefined
