@@ -121,6 +121,11 @@ export async function createHighlight(
   console.log('[bunker] Signing highlight event...', { kind: highlightEvent.kind, tags: highlightEvent.tags.length })
   let signedEvent
   try {
+    console.log('[bunker] Signer before sign:', {
+      type: (account as any).signer?.constructor?.name,
+      listening: (account as any).signer?.listening,
+      connected: (account as any).signer?.isConnected
+    })
     signedEvent = await factory.sign(highlightEvent)
     console.log('[bunker] ✅ Highlight signed successfully!', { id: signedEvent.id?.slice(0, 8) })
   } catch (err) {
