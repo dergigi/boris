@@ -162,9 +162,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     isRefreshing,
     lastFetchTime,
     handleFetchHighlights,
-    handleRefreshAll,
-    readingPositions,
-    markedAsReadIds
+    handleRefreshAll
   } = useBookmarksData({
     relayPool,
     activeAccount,
@@ -173,8 +171,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
     externalUrl,
     currentArticleCoordinate,
     currentArticleEventId,
-    settings,
-    eventStore
+    settings
   })
 
   const {
@@ -316,8 +313,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
       highlightButtonRef={highlightButtonRef}
       onCreateHighlight={handleCreateHighlight}
       hasActiveAccount={!!(activeAccount && relayPool)}
-      readingPositions={readingPositions}
-      markedAsReadIds={markedAsReadIds}
       explore={showExplore ? (
         relayPool ? <Explore relayPool={relayPool} eventStore={eventStore} settings={settings} activeTab={exploreTab} /> : null
       ) : undefined}
