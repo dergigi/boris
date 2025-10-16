@@ -36,13 +36,13 @@ const { commit, branch } = getGitMetadata()
 const version = getPackageVersion()
 const buildTime = new Date().toISOString()
 
-function getCommitUrl(commit: string): string {
-  if (!commit) return ''
+function getReleaseUrl(version: string): string {
+  if (!version) return ''
   const provider = process.env.VERCEL_GIT_PROVIDER || ''
   const owner = process.env.VERCEL_GIT_REPO_OWNER || ''
   const slug = process.env.VERCEL_GIT_REPO_SLUG || ''
   if (provider.toLowerCase() === 'github' && owner && slug) {
-    return `https://github.com/${owner}/${slug}/commit/${commit}`
+    return `https://github.com/${owner}/${slug}/releases/tag/v${version}`
   }
   try {
     const remote = execSync('git config --get remote.origin.url', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
@@ -52,7 +52,7 @@ function getCommitUrl(commit: string): string {
         ? `https://github.com/${remote.split(':')[1]}`
         : remote
       const cleaned = https.replace(/\.git$/, '')
-      return `${cleaned}/commit/${commit}`
+      return `${cleaned}/releases/tag/v${version}`
     }
   } catch {
     // ignore
@@ -60,7 +60,7 @@ function getCommitUrl(commit: string): string {
   return ''
 }
 
-const commitUrl = getCommitUrl(commit)
+const releaseUrl = getReleaseUrl(version)
 
 export default defineConfig({
   define: {
@@ -68,7 +68,7 @@ export default defineConfig({
     __GIT_COMMIT__: JSON.stringify(commit),
     __GIT_BRANCH__: JSON.stringify(branch),
     __BUILD_TIME__: JSON.stringify(buildTime),
-    __GIT_COMMIT_URL__: JSON.stringify(commitUrl)
+    __GIT_COMMIT_URL__: JSON.stringify(releaseUrl)
   },
   plugins: [
     react(),
