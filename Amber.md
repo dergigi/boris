@@ -94,14 +94,47 @@ If DECRYPT entries still don’t appear:
   - Process sequentially (removed concurrent `mapWithConcurrency` hack).
 - **Result**: Bookmark decryption is near-instant, limited only by bunker response time and user approval speed.
 
+## Amethyst-style bookmarks (kind:30001)
+
+**Important**: Bookmark events (kind:30001) that have public `tags` and private `content` are **Amethyst-style bookmarks**.
+
+### Format:
+- **Public bookmarks**: Stored in event `tags` (e.g., `["e", "..."]`, `["a", "..."]`)
+- **Private bookmarks**: Stored in encrypted `content` field (NIP-04 or NIP-44)
+
+### Implementation details:
+- The encrypted `content` field contains a JSON array of private bookmark tags
+- `Helpers.hasHiddenContent()` from `applesauce-core` only detects **NIP-44** encrypted content
+- **NIP-04** encrypted content must be detected explicitly by checking for `?iv=` in the content string
+- Both detection methods are needed in:
+  1. **Display logic** (`Debug.tsx` - `hasEncryptedContent()`) - to show padlock emoji and decrypt button
+  2. **Decryption logic** (`bookmarkProcessing.ts`) - to schedule decrypt jobs
+
+### Example event structure:
+```json
+{
+  "kind": 30001,
+  "tags": [
+    ["d", "bookmark"],
+    ["e", "102a2fe..."],  // Public bookmark
+    ["e", "84ce035..."]   // Public bookmark
+  ],
+  "content": "lvOfl7Qb...?iv=5KzDXv09..."  // NIP-04 encrypted private bookmarks
+}
+```
+
+### Why this matters:
+This dual-storage format (public + private) is why we need explicit NIP-04 detection. Without it, `Helpers.hasHiddenContent()` returns `false` and the encrypted content is never decrypted, resulting in 0 private bookmarks despite having encrypted data.
+
 ## Current conclusion
 
 - Client is configured and publishing requests correctly; encryption proves end‑to‑end path is alive.
 - Non-blocking publish keeps operations fast (~1-2s for encrypt/decrypt).
 - **Account queue is GLOBALLY DISABLED** - this was the primary cause of hangs/timeouts.
-- Smart encryption detection and no artificial timeouts make operations instant.
+- Smart encryption detection (both NIP-04 and NIP-44) and no artificial timeouts make operations instant.
 - Sequential processing is cleaner and more predictable than concurrent hacks.
 - Relay queries now trust EOSE signals instead of arbitrary timeouts, completing in 1-2s instead of 6s.
 - The missing DECRYPT activity in Amber was partially due to requests never being sent (stuck in queue). With queue disabled globally, Amber receives all decrypt requests immediately.
+- **Amethyst-style bookmarks** require explicit NIP-04 detection (`?iv=` check) since `Helpers.hasHiddenContent()` only detects NIP-44.
 
 
