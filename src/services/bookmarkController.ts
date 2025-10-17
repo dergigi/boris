@@ -12,6 +12,22 @@ import {
   extractUrlsFromContent
 } from './bookmarkHelpers'
 
+// Batching constants
+const IDS_BATCH_SIZE = 100
+const D_TAG_BATCH_SIZE = 50
+const AUTHORS_BATCH_SIZE = 50
+
+/**
+ * Chunk array into smaller batches
+ */
+function chunk<T>(arr: T[], size: number): T[][] {
+  const result: T[][] = []
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size))
+  }
+  return result
+}
+
 /**
  * Get unique key for event deduplication (from Debug)
  */
@@ -59,6 +75,7 @@ class BookmarkController {
     allTags?: string[][]
   }> = new Map()
   private isLoading = false
+  private hydrationGeneration = 0
 
   onRawEvent(cb: RawEventCallback): () => void {
     this.rawEventListeners.push(cb)
@@ -89,6 +106,7 @@ class BookmarkController {
   }
 
   reset(): void {
+    this.hydrationGeneration++
     this.currentEvents.clear()
     this.decryptedResults.clear()
     this.setLoading(false)
@@ -103,6 +121,128 @@ class BookmarkController {
 
   private emitRawEvent(evt: NostrEvent): void {
     this.rawEventListeners.forEach(cb => cb(evt))
+  }
+
+  /**
+   * Hydrate events by IDs in batches
+   */
+  private async hydrateByIds(
+    relayPool: RelayPool,
+    ids: string[],
+    idToEvent: Map<string, NostrEvent>,
+    onProgress: () => void,
+    generation: number
+  ): Promise<void> {
+    // Filter to unique IDs not already hydrated
+    const unique = Array.from(new Set(ids)).filter(id => !idToEvent.has(id))
+    if (unique.length === 0) {
+      console.log('[bookmark] 🔧 All IDs already hydrated, skipping')
+      return
+    }
+
+    console.log('[bookmark] 🔧 Hydrating', unique.length, 'IDs in batches of', IDS_BATCH_SIZE)
+    
+    const batches = chunk(unique, IDS_BATCH_SIZE)
+    for (let i = 0; i < batches.length; i++) {
+      // Check if hydration was cancelled
+      if (this.hydrationGeneration !== generation) {
+        console.log('[bookmark] ⏹️ Hydration cancelled (generation changed)')
+        return
+      }
+
+      const batch = batches[i]
+      console.log('[bookmark] 🔧 Fetching batch', i + 1, '/', batches.length, '(', batch.length, 'IDs )')
+      
+      try {
+        const events = await queryEvents(
+          relayPool,
+          { ids: batch },
+          {
+            onEvent: (e: NostrEvent) => {
+              idToEvent.set(e.id, e)
+              // Also index by coordinate for addressable events
+              if (e.kind && e.kind >= 30000 && e.kind < 40000) {
+                const dTag = e.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+                const coordinate = `${e.kind}:${e.pubkey}:${dTag}`
+                idToEvent.set(coordinate, e)
+              }
+              onProgress()
+            }
+          }
+        )
+        console.log('[bookmark] ✅ Batch', i + 1, 'fetched', events.length, 'events')
+      } catch (error) {
+        console.warn('[bookmark] ⚠️ Batch', i + 1, 'failed:', error)
+      }
+    }
+  }
+
+  /**
+   * Hydrate addressable events by coordinates in batches
+   */
+  private async hydrateByCoordinates(
+    relayPool: RelayPool,
+    coords: Array<{ kind: number; pubkey: string; identifier: string }>,
+    idToEvent: Map<string, NostrEvent>,
+    onProgress: () => void,
+    generation: number
+  ): Promise<void> {
+    if (coords.length === 0) return
+
+    console.log('[bookmark] 🔧 Hydrating', coords.length, 'coordinates by kind')
+
+    // Group by kind for efficient queries
+    const byKind = new Map<number, Array<{ pubkey: string; identifier: string }>>()
+    coords.forEach(c => {
+      if (!byKind.has(c.kind)) byKind.set(c.kind, [])
+      byKind.get(c.kind)!.push({ pubkey: c.pubkey, identifier: c.identifier })
+    })
+
+    for (const [kind, items] of byKind.entries()) {
+      // Check if hydration was cancelled
+      if (this.hydrationGeneration !== generation) {
+        console.log('[bookmark] ⏹️ Hydration cancelled (generation changed)')
+        return
+      }
+
+      const authors = Array.from(new Set(items.map(i => i.pubkey)))
+      const identifiers = Array.from(new Set(items.map(i => i.identifier)))
+
+      console.log('[bookmark] 🔧 Kind', kind, ':', authors.length, 'authors ×', identifiers.length, 'identifiers')
+
+      // Batch authors and identifiers
+      const authorBatches = chunk(authors, AUTHORS_BATCH_SIZE)
+      const idBatches = chunk(identifiers, D_TAG_BATCH_SIZE)
+
+      for (const authorBatch of authorBatches) {
+        for (const idBatch of idBatches) {
+          // Check if hydration was cancelled
+          if (this.hydrationGeneration !== generation) {
+            console.log('[bookmark] ⏹️ Hydration cancelled (generation changed)')
+            return
+          }
+
+          try {
+            const events = await queryEvents(
+              relayPool,
+              { kinds: [kind], authors: authorBatch, '#d': idBatch },
+              {
+                onEvent: (e: NostrEvent) => {
+                  const dTag = e.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+                  const coordinate = `${e.kind}:${e.pubkey}:${dTag}`
+                  idToEvent.set(coordinate, e)
+                  idToEvent.set(e.id, e)
+                  onProgress()
+                }
+              }
+            )
+            console.log('[bookmark] ✅ Kind', kind, 'batch fetched', events.length, 'events')
+          } catch (error) {
+            console.warn('[bookmark] ⚠️ Kind', kind, 'batch failed:', error)
+          }
+        }
+      }
+    }
   }
 
   private async buildAndEmitBookmarks(
@@ -217,82 +357,28 @@ class BookmarkController {
       console.log('[bookmark] 🚀 Emitting initial bookmarks with placeholders (IDs only)...')
       emitBookmarks(idToEvent)
 
-      // Now fetch events progressively in background (non-blocking)
-      console.log('[bookmark] 🔧 Background fetch:', noteIds.length, 'note IDs and', coordinates.length, 'coordinates')
+      // Now fetch events progressively in background using batched hydrators
+      console.log('[bookmark] 🔧 Background hydration:', noteIds.length, 'note IDs and', coordinates.length, 'coordinates')
       
-      // Skip fetching if there are too many (would be too slow)
-      const MAX_IDS_TO_FETCH = 100
-      if (noteIds.length > MAX_IDS_TO_FETCH) {
-        console.log('[bookmark] ⏭️ Skipping event fetch (', noteIds.length, '> max', MAX_IDS_TO_FETCH, ') - showing IDs only')
-      } else if (noteIds.length > 0) {
-        console.log('[bookmark] 🔧 Fetching', noteIds.length, 'events by ID in background...')
-        queryEvents(
-          relayPool,
-          { ids: Array.from(new Set(noteIds)) },
-          {}
-        ).then(fetchedEvents => {
-          console.log('[bookmark] 🔧 Fetched', fetchedEvents.length, 'events by ID')
-          fetchedEvents.forEach((e: NostrEvent) => {
-            idToEvent.set(e.id, e)
-            if (e.kind && e.kind >= 30000 && e.kind < 40000) {
-              const dTag = e.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-              const coordinate = `${e.kind}:${e.pubkey}:${dTag}`
-              idToEvent.set(coordinate, e)
-            }
-          })
-          console.log('[bookmark] 🔄 Re-emitting with hydrated ID events...')
-          emitBookmarks(idToEvent)
-        }).catch(error => {
-          console.warn('[bookmark] ⚠️ Failed to fetch events by ID:', error)
-        })
-      }
+      const generation = this.hydrationGeneration
+      const onProgress = () => emitBookmarks(idToEvent)
       
-      // Fetch addressable events by coordinates (non-blocking)
-      const MAX_COORDS_TO_FETCH = 100
-      if (coordinates.length > MAX_COORDS_TO_FETCH) {
-        console.log('[bookmark] ⏭️ Skipping coordinate fetch (', coordinates.length, '> max', MAX_COORDS_TO_FETCH, ') - showing IDs only')
-      } else if (coordinates.length > 0) {
-        console.log('[bookmark] 🔧 Fetching', coordinates.length, 'addressable events in background...')
-        const byKind = new Map<number, Array<{ pubkey: string; identifier: string }>>()
-        
-        coordinates.forEach(coord => {
-          const parts = coord.split(':')
-          const kind = parseInt(parts[0])
-          const pubkey = parts[1]
-          const identifier = parts[2] || ''
-          
-          if (!byKind.has(kind)) {
-            byKind.set(kind, [])
-          }
-          byKind.get(kind)!.push({ pubkey, identifier })
+      // Parse coordinates from strings to objects
+      const coordObjs = coordinates.map(c => {
+        const parts = c.split(':')
+        return {
+          kind: parseInt(parts[0]),
+          pubkey: parts[1],
+          identifier: parts[2] || ''
+        }
+      })
+      
+      // Kick off batched hydration (sequential, fire-and-forget)
+      this.hydrateByIds(relayPool, noteIds, idToEvent, onProgress, generation)
+        .then(() => this.hydrateByCoordinates(relayPool, coordObjs, idToEvent, onProgress, generation))
+        .catch(error => {
+          console.warn('[bookmark] ⚠️ Hydration failed:', error)
         })
-        
-        Promise.all(
-          Array.from(byKind.entries()).map(([kind, items]) => {
-            const authors = Array.from(new Set(items.map(i => i.pubkey)))
-            const identifiers = Array.from(new Set(items.map(i => i.identifier)))
-            
-            return queryEvents(
-              relayPool,
-              { kinds: [kind], authors, '#d': identifiers },
-              {}
-            )
-          })
-        ).then(results => {
-          const allFetched = results.flat()
-          console.log('[bookmark] 🔧 Fetched', allFetched.length, 'addressable events')
-          allFetched.forEach((e: NostrEvent) => {
-            const dTag = e.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-            const coordinate = `${e.kind}:${e.pubkey}:${dTag}`
-            idToEvent.set(coordinate, e)
-            idToEvent.set(e.id, e)
-          })
-          console.log('[bookmark] 🔄 Re-emitting with all metadata loaded...')
-          emitBookmarks(idToEvent)
-        }).catch(error => {
-          console.warn('[bookmark] ⚠️ Failed to fetch addressable events:', error)
-        })
-      }
     } catch (error) {
       console.error('[bookmark] ❌ Failed to build bookmarks:', error)
       console.error('[bookmark] ❌ Error details:', error instanceof Error ? error.message : String(error))
@@ -315,6 +401,9 @@ class BookmarkController {
 
     const account = activeAccount as { pubkey: string; [key: string]: unknown }
 
+    // Increment generation to cancel any in-flight hydration
+    this.hydrationGeneration++
+    
     this.setLoading(true)
     console.log('[bookmark] 🔍 Starting bookmark load for', account.pubkey.slice(0, 8))
 
