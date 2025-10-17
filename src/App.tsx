@@ -353,7 +353,9 @@ function App() {
                       try { (result as { subscribe: (h: { complete?: () => void; error?: (e: unknown) => void }) => unknown }).subscribe({ complete: () => {}, error: () => {} }) } catch {}
                     }
                     // If it's a Promise, simply ignore it (no await) so it resolves in the background.
-                    return undefined as unknown as never
+                    // Return a benign object so callers that probe for a "subscribe" property
+                    // (e.g., applesauce makeRequest) won't throw on `"subscribe" in result`.
+                    return {} as unknown as never
                   }
                   const originalSubscribe = (recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod.bind(recreatedSigner)
                   ;(recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod = (relays: string[], filters: unknown[]) => {
