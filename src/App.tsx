@@ -346,7 +346,14 @@ function App() {
                       console.log('[bunker] publish via signer:', summary)
                       try { DebugBus.info('bunker', 'publish', summary) } catch (err) { console.warn('[bunker] failed to log to DebugBus', err) }
                     } catch (err) { console.warn('[bunker] failed to log publish summary', err) }
-                    return originalPublish(relays, event)
+                    // Fire-and-forget publish: trigger the publish but do not return the
+                    // Observable/Promise to upstream to avoid their awaiting of completion.
+                    const result = originalPublish(relays, event)
+                    if (result && typeof (result as { subscribe?: unknown }).subscribe === 'function') {
+                      try { (result as { subscribe: (h: { complete?: () => void; error?: (e: unknown) => void }) => unknown }).subscribe({ complete: () => {}, error: () => {} }) } catch {}
+                    }
+                    // If it's a Promise, simply ignore it (no await) so it resolves in the background.
+                    return undefined as unknown as never
                   }
                   const originalSubscribe = (recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod.bind(recreatedSigner)
                   ;(recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod = (relays: string[], filters: unknown[]) => {
