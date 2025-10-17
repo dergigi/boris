@@ -1,7 +1,7 @@
 /* global __APP_VERSION__, __GIT_COMMIT__, __GIT_COMMIT_URL__, __RELEASE_URL__ */
 import React, { useEffect, useMemo, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faClock } from '@fortawesome/free-solid-svg-icons'
+import { faClock, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { Accounts } from 'applesauce-accounts'
 import { NostrConnectSigner } from 'applesauce-signers'
@@ -196,7 +196,7 @@ const Debug: React.FC = () => {
     
     let displayValue: string
     if (isLive) {
-      displayValue = `${liveValue}ms`
+      displayValue = 'measuring...'
     } else if (value !== null && value !== undefined) {
       displayValue = `${value}ms`
     } else {
@@ -204,10 +204,13 @@ const Debug: React.FC = () => {
     }
     
     return (
-      <span className={`badge ${isLive ? 'animate-pulse' : ''}`} style={{ marginRight: 8 }}>
-        <FontAwesomeIcon icon={faClock} style={{ marginRight: 4, fontSize: '0.8em' }} />
+      <span className="badge" style={{ marginRight: 8 }}>
+        {isLive ? (
+          <FontAwesomeIcon icon={faSpinner} className="animate-spin" style={{ marginRight: 4, fontSize: '0.8em' }} />
+        ) : (
+          <FontAwesomeIcon icon={faClock} style={{ marginRight: 4, fontSize: '0.8em' }} />
+        )}
         {label}: {displayValue}
-        {isLive && <span className="ml-1 text-xs opacity-70">⏱️</span>}
       </span>
     )
   }
