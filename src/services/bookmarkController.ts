@@ -53,7 +53,6 @@ class BookmarkController {
   private currentEvents: Map<string, NostrEvent> = new Map()
   private decryptedEvents: Map<string, { public: number; private: number }> = new Map()
   private isLoading = false
-  private updateScheduled = false
 
   onRawEvent(cb: RawEventCallback): () => void {
     this.rawEventListeners.push(cb)
@@ -87,7 +86,6 @@ class BookmarkController {
     this.currentEvents.clear()
     this.decryptedEvents.clear()
     this.setLoading(false)
-    this.updateScheduled = false
   }
 
   private setLoading(loading: boolean): void {
@@ -99,20 +97,6 @@ class BookmarkController {
 
   private emitRawEvent(evt: NostrEvent): void {
     this.rawEventListeners.forEach(cb => cb(evt))
-  }
-
-  private scheduleBookmarkUpdate(
-    relayPool: RelayPool,
-    activeAccount: AccountWithExtension,
-    signerCandidate: unknown
-  ): void {
-    if (this.updateScheduled) return
-    
-    this.updateScheduled = true
-    setTimeout(async () => {
-      this.updateScheduled = false
-      await this.buildAndEmitBookmarks(relayPool, activeAccount, signerCandidate)
-    }, 0)
   }
 
   private async buildAndEmitBookmarks(
@@ -292,9 +276,6 @@ class BookmarkController {
             // Emit raw event for Debug UI
             this.emitRawEvent(evt)
             
-            // Schedule bookmark update (non-blocking, coalesced)
-            this.scheduleBookmarkUpdate(relayPool, maybeAccount, signerCandidate)
-            
             // Auto-decrypt if event has encrypted content (fire-and-forget, non-blocking)
             if (hasEncryptedContent(evt)) {
               console.log('[controller] 🔓 Auto-decrypting event', evt.id.slice(0, 8))
@@ -315,12 +296,17 @@ class BookmarkController {
                     cb(evt.id, publicItemsAll.length, privateItemsAll.length)
                   )
                   
-                  // Schedule another update after decrypt
-                  this.scheduleBookmarkUpdate(relayPool, maybeAccount, signerCandidate)
+                  // Rebuild bookmarks with newly decrypted content (progressive update)
+                  this.buildAndEmitBookmarks(relayPool, maybeAccount, signerCandidate)
+                    .catch(err => console.error('[controller] ❌ Failed to update after decrypt:', err))
                 })
                 .catch((error) => {
                   console.error('[controller] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
                 })
+            } else {
+              // For unencrypted events, build bookmarks immediately (progressive update)
+              this.buildAndEmitBookmarks(relayPool, maybeAccount, signerCandidate)
+                .catch(err => console.error('[controller] ❌ Failed to update after event:', err))
             }
           }
         }
