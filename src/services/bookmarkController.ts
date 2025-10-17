@@ -138,51 +138,122 @@ class BookmarkController {
         }
       })
       
-      console.log('[bookmark] 🔧 Fetching', noteIds.length, 'note IDs and', coordinates.length, 'coordinates')
-      console.log('[bookmark] ⚠️ Skipping event fetching for now (causes hang) - will show bookmark items without full metadata')
-      
+      // Helper to build and emit bookmarks
+      const emitBookmarks = (idToEvent: Map<string, NostrEvent>) => {
+        console.log('[bookmark] 🔧 Building final bookmarks list...')
+        const allBookmarks = dedupeBookmarksById([
+          ...hydrateItems(publicItemsAll, idToEvent),
+          ...hydrateItems(privateItemsAll, idToEvent)
+        ])
+        console.log('[bookmark] 🔧 After hydration and dedup:', allBookmarks.length, 'bookmarks')
+
+        console.log('[bookmark] 🔧 Enriching and sorting...')
+        const enriched = allBookmarks.map(b => ({
+          ...b,
+          tags: b.tags || [],
+          content: b.content || ''
+        }))
+        
+        const sortedBookmarks = enriched
+          .map(b => ({ ...b, urlReferences: extractUrlsFromContent(b.content) }))
+          .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
+        console.log('[bookmark] 🔧 Sorted:', sortedBookmarks.length, 'bookmarks')
+
+        console.log('[bookmark] 🔧 Creating final Bookmark object...')
+        const bookmark: Bookmark = {
+          id: `${activeAccount.pubkey}-bookmarks`,
+          title: `Bookmarks (${sortedBookmarks.length})`,
+          url: '',
+          content: latestContent,
+          created_at: newestCreatedAt || Math.floor(Date.now() / 1000),
+          tags: allTags,
+          bookmarkCount: sortedBookmarks.length,
+          eventReferences: allTags.filter((tag: string[]) => tag[0] === 'e').map((tag: string[]) => tag[1]),
+          individualBookmarks: sortedBookmarks,
+          isPrivate: privateItemsAll.length > 0,
+          encryptedContent: undefined
+        }
+        
+        console.log('[bookmark] 📋 Built bookmark with', sortedBookmarks.length, 'items')
+        console.log('[bookmark] 📤 Emitting to', this.bookmarksListeners.length, 'listeners')
+        this.bookmarksListeners.forEach(cb => cb([bookmark]))
+      }
+
+      // Emit immediately with empty metadata (show placeholders)
       const idToEvent: Map<string, NostrEvent> = new Map()
-      
-      // TODO: Re-enable event fetching once queryEvents hanging is fixed
-      // For now, skip this step to unblock sidebar population
-      
-      console.log('[bookmark] 🔧 Building final bookmarks list...')
-      const allBookmarks = dedupeBookmarksById([
-        ...hydrateItems(publicItemsAll, idToEvent),
-        ...hydrateItems(privateItemsAll, idToEvent)
-      ])
-      console.log('[bookmark] 🔧 After hydration and dedup:', allBookmarks.length, 'bookmarks')
+      console.log('[bookmark] 🚀 Emitting initial bookmarks with placeholders (IDs only)...')
+      emitBookmarks(idToEvent)
 
-      console.log('[bookmark] 🔧 Enriching and sorting...')
-      const enriched = allBookmarks.map(b => ({
-        ...b,
-        tags: b.tags || [],
-        content: b.content || ''
-      }))
+      // Now fetch events progressively in background (non-blocking)
+      console.log('[bookmark] 🔧 Starting background fetch:', noteIds.length, 'note IDs and', coordinates.length, 'coordinates')
       
-      const sortedBookmarks = enriched
-        .map(b => ({ ...b, urlReferences: extractUrlsFromContent(b.content) }))
-        .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
-      console.log('[bookmark] 🔧 Sorted:', sortedBookmarks.length, 'bookmarks')
-
-      console.log('[bookmark] 🔧 Creating final Bookmark object...')
-      const bookmark: Bookmark = {
-        id: `${activeAccount.pubkey}-bookmarks`,
-        title: `Bookmarks (${sortedBookmarks.length})`,
-        url: '',
-        content: latestContent,
-        created_at: newestCreatedAt || Math.floor(Date.now() / 1000),
-        tags: allTags,
-        bookmarkCount: sortedBookmarks.length,
-        eventReferences: allTags.filter((tag: string[]) => tag[0] === 'e').map((tag: string[]) => tag[1]),
-        individualBookmarks: sortedBookmarks,
-        isPrivate: privateItemsAll.length > 0,
-        encryptedContent: undefined
+      // Fetch regular events by ID (non-blocking)
+      if (noteIds.length > 0) {
+        console.log('[bookmark] 🔧 Fetching events by ID in background...')
+        queryEvents(
+          relayPool,
+          { ids: Array.from(new Set(noteIds)) },
+          {}
+        ).then(fetchedEvents => {
+          console.log('[bookmark] 🔧 Fetched', fetchedEvents.length, 'events by ID')
+          fetchedEvents.forEach((e: NostrEvent) => {
+            idToEvent.set(e.id, e)
+            if (e.kind && e.kind >= 30000 && e.kind < 40000) {
+              const dTag = e.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+              const coordinate = `${e.kind}:${e.pubkey}:${dTag}`
+              idToEvent.set(coordinate, e)
+            }
+          })
+          console.log('[bookmark] 🔄 Re-emitting with hydrated ID events...')
+          emitBookmarks(idToEvent)
+        }).catch(error => {
+          console.warn('[bookmark] ⚠️ Failed to fetch events by ID:', error)
+        })
       }
       
-      console.log('[bookmark] 📋 Built bookmark with', sortedBookmarks.length, 'items')
-      console.log('[bookmark] 📤 Emitting to', this.bookmarksListeners.length, 'listeners')
-      this.bookmarksListeners.forEach(cb => cb([bookmark]))
+      // Fetch addressable events by coordinates (non-blocking)
+      if (coordinates.length > 0) {
+        console.log('[bookmark] 🔧 Fetching addressable events in background...')
+        const byKind = new Map<number, Array<{ pubkey: string; identifier: string }>>()
+        
+        coordinates.forEach(coord => {
+          const parts = coord.split(':')
+          const kind = parseInt(parts[0])
+          const pubkey = parts[1]
+          const identifier = parts[2] || ''
+          
+          if (!byKind.has(kind)) {
+            byKind.set(kind, [])
+          }
+          byKind.get(kind)!.push({ pubkey, identifier })
+        })
+        
+        Promise.all(
+          Array.from(byKind.entries()).map(([kind, items]) => {
+            const authors = Array.from(new Set(items.map(i => i.pubkey)))
+            const identifiers = Array.from(new Set(items.map(i => i.identifier)))
+            
+            return queryEvents(
+              relayPool,
+              { kinds: [kind], authors, '#d': identifiers },
+              {}
+            )
+          })
+        ).then(results => {
+          const allFetched = results.flat()
+          console.log('[bookmark] 🔧 Fetched', allFetched.length, 'addressable events')
+          allFetched.forEach((e: NostrEvent) => {
+            const dTag = e.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+            const coordinate = `${e.kind}:${e.pubkey}:${dTag}`
+            idToEvent.set(coordinate, e)
+            idToEvent.set(e.id, e)
+          })
+          console.log('[bookmark] 🔄 Re-emitting with all metadata loaded...')
+          emitBookmarks(idToEvent)
+        }).catch(error => {
+          console.warn('[bookmark] ⚠️ Failed to fetch addressable events:', error)
+        })
+      }
     } catch (error) {
       console.error('[bookmark] ❌ Failed to build bookmarks:', error)
       console.error('[bookmark] ❌ Error details:', error instanceof Error ? error.message : String(error))
