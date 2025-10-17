@@ -17,6 +17,7 @@ import { useToast } from './hooks/useToast'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { RELAYS } from './config/relays'
 import { SkeletonThemeProvider } from './components/Skeletons'
+import Debug from './components/Debug'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -168,6 +169,7 @@ function AppRoutes({
           />
         } 
       />
+      <Route path="/debug" element={<Debug />} />
       <Route path="/" element={<Navigate to={`/a/${DEFAULT_ARTICLE}`} replace />} />
     </Routes>
   )
