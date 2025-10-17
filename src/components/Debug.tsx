@@ -280,7 +280,7 @@ const Debug: React.FC = () => {
               <h3 className="text-lg font-semibold">Debug Logs</h3>
               <div className="flex gap-2">
                 <button className="btn btn-outline" onClick={toggleDebug}>
-                  {debugEnabled && <span style={{ marginRight: 6 }}>✓</span>}
+                  <span style={{ marginRight: 6 }}>{debugEnabled ? '✓' : '☐'}</span>
                   {debugEnabled ? 'Hide' : 'Show'} all applesauce debug logs
                 </button>
                 <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
