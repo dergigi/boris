@@ -265,7 +265,7 @@ const Debug: React.FC = () => {
         {/* Debug Logs Section */}
         <div className="settings-section">
           <h3 className="section-title">Debug Logs</h3>
-          <div className="text-sm opacity-70 mb-3">Recent NIP-46 activity</div>
+          <div className="text-sm opacity-70 mb-3">Recent bunker logs:</div>
           <div className="max-h-64 overflow-y-auto font-mono text-xs leading-relaxed">
             {logs.length === 0 ? (
               <div className="text-sm opacity-50 italic">No logs yet</div>
