@@ -258,12 +258,12 @@ const Debug: React.FC = () => {
                 <div className="text-sm opacity-70">Connected to bunker</div>
                 <div className="text-sm font-mono">{pubkey}</div>
               </div>
-              <button 
-                className="btn btn-outline" 
-                onClick={() => accountManager.removeAccount(activeAccount)}
-              >
-                Disconnect
-              </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => accountManager.removeAccount(activeAccount)}
+                  >
+                    Disconnect
+                  </button>
             </div>
           )}
         </div>
