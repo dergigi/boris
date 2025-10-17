@@ -287,7 +287,7 @@ const Debug: React.FC = () => {
           <div className="grid" style={{ gap: 12, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)' }}>
             <div className="setting-group">
               <label className="setting-label">NIP-44</label>
-              <div className="flex gap-2 mb-3 justify-end">
+              <div className="flex gap-2 mb-3">
                 <button className="btn btn-primary" onClick={() => doEncrypt('nip44')} disabled={!hasNip44}>Encrypt</button>
                 <button className="btn btn-secondary" onClick={() => doDecrypt('nip44')} disabled={!cipher44}>Decrypt</button>
               </div>
@@ -301,7 +301,7 @@ const Debug: React.FC = () => {
 
             <div className="setting-group">
               <label className="setting-label">NIP-04</label>
-              <div className="flex gap-2 mb-3 justify-end">
+              <div className="flex gap-2 mb-3">
                 <button className="btn btn-primary" onClick={() => doEncrypt('nip04')} disabled={!hasNip04}>Encrypt</button>
                 <button className="btn btn-secondary" onClick={() => doDecrypt('nip04')} disabled={!cipher04}>Decrypt</button>
               </div>
