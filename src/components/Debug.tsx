@@ -105,6 +105,19 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
   }
 
+  const getEventKey = (evt: NostrEvent): string => {
+    if (evt.kind === 30003 || evt.kind === 30001) {
+      // Replaceable: kind:pubkey:dtag
+      const dTag = evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+      return `${evt.kind}:${evt.pubkey}:${dTag}`
+    } else if (evt.kind === 10003) {
+      // Simple list: kind:pubkey
+      return `${evt.kind}:${evt.pubkey}`
+    }
+    // Web bookmarks: use event id (no deduplication)
+    return evt.id
+  }
+
   const doEncrypt = async (mode: 'nip44' | 'nip04') => {
     if (!signer || !pubkey) return
     try {
@@ -182,23 +195,49 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
     try {
       setIsLoadingBookmarks(true)
       setBookmarkStats(null)
+      setBookmarkEvents([]) // Clear existing events
       DebugBus.info('debug', 'Loading bookmark events...')
 
       // Start timing
       const start = performance.now()
       setLiveTiming(prev => ({ ...prev, loadBookmarks: { startTime: start } }))
 
+      // Use onEvent callback to stream events as they arrive
       const rawEvents = await queryEvents(
         relayPool,
         { kinds: [KINDS.ListSimple, KINDS.ListReplaceable, KINDS.List, KINDS.WebBookmark], authors: [activeAccount.pubkey] },
-        {}
+        {
+          onEvent: (evt) => {
+            // Add event immediately with live deduplication
+            setBookmarkEvents(prev => {
+              // Create unique key for deduplication
+              const key = getEventKey(evt)
+              
+              // Find existing event with same key
+              const existingIdx = prev.findIndex(e => getEventKey(e) === key)
+              
+              if (existingIdx >= 0) {
+                // Replace if newer
+                const existing = prev[existingIdx]
+                if ((evt.created_at || 0) > (existing.created_at || 0)) {
+                  const newEvents = [...prev]
+                  newEvents[existingIdx] = evt
+                  return newEvents
+                }
+                return prev // Keep existing (it's newer)
+              }
+              
+              // Add new event
+              return [...prev, evt]
+            })
+          }
+        }
       )
 
       const ms = Math.round(performance.now() - start)
       setLiveTiming(prev => ({ ...prev, loadBookmarks: undefined }))
       setTLoadBookmarks(ms)
 
-      setBookmarkEvents(rawEvents)
       DebugBus.info('debug', `Loaded ${rawEvents.length} bookmark events`, {
         kinds: rawEvents.map(e => e.kind).join(', '),
         ms
