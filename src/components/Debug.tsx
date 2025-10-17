@@ -7,14 +7,9 @@ import { useEventStore } from 'applesauce-react/hooks'
 import { Accounts } from 'applesauce-accounts'
 import { NostrConnectSigner } from 'applesauce-signers'
 import { RelayPool } from 'applesauce-relay'
-import { Helpers } from 'applesauce-core'
 import { getDefaultBunkerPermissions } from '../services/nostrConnect'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
 import ThreePaneLayout from './ThreePaneLayout'
-import { queryEvents } from '../services/dataFetch'
-import { KINDS } from '../config/kinds'
-import { collectBookmarksFromEvents } from '../services/bookmarkProcessing'
-import type { NostrEvent } from '../services/bookmarkHelpers'
 import { Bookmark } from '../types/bookmarks'
 import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import { useSettings } from '../hooks/useSettings'
@@ -72,15 +67,8 @@ const Debug: React.FC<DebugProps> = ({
   const [isBunkerLoading, setIsBunkerLoading] = useState<boolean>(false)
   const [bunkerError, setBunkerError] = useState<string | null>(null)
   
-  // Bookmark loading state
-  const [bookmarkEvents, setBookmarkEvents] = useState<NostrEvent[]>([])
-  const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false)
-  const [bookmarkStats, setBookmarkStats] = useState<{ public: number; private: number } | null>(null)
+  // Bookmark loading timing (actual loading uses centralized function)
   const [tLoadBookmarks, setTLoadBookmarks] = useState<number | null>(null)
-  const [tDecryptBookmarks, setTDecryptBookmarks] = useState<number | null>(null)
-  
-  // Individual event decryption results
-  const [decryptedEvents, setDecryptedEvents] = useState<Map<string, { public: number; private: number }>>(new Map())
   
   // Live timing state
   const [liveTiming, setLiveTiming] = useState<{
@@ -108,63 +96,6 @@ const Debug: React.FC<DebugProps> = ({
 
   const hasNip04 = typeof (signer as { nip04?: { encrypt?: unknown; decrypt?: unknown } } | undefined)?.nip04?.encrypt === 'function'
   const hasNip44 = typeof (signer as { nip44?: { encrypt?: unknown; decrypt?: unknown } } | undefined)?.nip44?.encrypt === 'function'
-
-  const getKindName = (kind: number): string => {
-    switch (kind) {
-      case KINDS.ListSimple: return 'Simple List (10003)'
-      case KINDS.ListReplaceable: return 'Replaceable List (30003)'
-      case KINDS.List: return 'List (30001)'
-      case KINDS.WebBookmark: return 'Web Bookmark (39701)'
-      default: return `Kind ${kind}`
-    }
-  }
-
-  const getEventSize = (evt: NostrEvent): number => {
-    const content = evt.content || ''
-    const tags = JSON.stringify(evt.tags || [])
-    return content.length + tags.length
-  }
-
-  const hasEncryptedContent = (evt: NostrEvent): boolean => {
-    // Check for NIP-44 encrypted content (detected by Helpers)
-    if (Helpers.hasHiddenContent(evt)) return true
-    
-    // Check for NIP-04 encrypted content (base64 with ?iv= suffix)
-    if (evt.content && evt.content.includes('?iv=')) return true
-    
-    // Check for encrypted tags
-    if (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt)) return true
-    
-    return false
-  }
-
-  const getBookmarkCount = (evt: NostrEvent): { public: number; private: number } => {
-    const publicTags = (evt.tags || []).filter((t: string[]) => t[0] === 'e' || t[0] === 'a')
-    const hasEncrypted = hasEncryptedContent(evt)
-    return {
-      public: publicTags.length,
-      private: hasEncrypted ? 1 : 0 // Can't know exact count until decrypted
-    }
-  }
-
-  const formatBytes = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
-  }
-
-  const getEventKey = (evt: NostrEvent): string => {
-    if (evt.kind === 30003 || evt.kind === 30001) {
-      // Replaceable: kind:pubkey:dtag
-      const dTag = evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-      return `${evt.kind}:${evt.pubkey}:${dTag}`
-    } else if (evt.kind === 10003) {
-      // Simple list: kind:pubkey
-      return `${evt.kind}:${evt.pubkey}`
-    }
-    // Web bookmarks: use event id (no deduplication)
-    return evt.id
-  }
 
   const doEncrypt = async (mode: 'nip44' | 'nip04') => {
     if (!signer || !pubkey) return
@@ -235,103 +166,20 @@ const Debug: React.FC<DebugProps> = ({
   }
 
   const handleLoadBookmarks = async () => {
-    if (!relayPool || !activeAccount) {
-      DebugBus.warn('debug', 'Cannot load bookmarks: missing relayPool or activeAccount')
-      return
-    }
-
-    try {
-      setIsLoadingBookmarks(true)
-      setBookmarkStats(null)
-      setBookmarkEvents([]) // Clear existing events
-      DebugBus.info('debug', 'Loading bookmark events...')
-
-      // Start timing
-      const start = performance.now()
-      setLiveTiming(prev => ({ ...prev, loadBookmarks: { startTime: start } }))
-
-      // Get signer for auto-decryption
-      const fullAccount = accountManager.getActive()
-      const signerCandidate = fullAccount || activeAccount
-
-      // Use onEvent callback to stream events as they arrive
-      // Trust EOSE - completes when relays finish, no artificial timeouts
-      const rawEvents = await queryEvents(
-        relayPool,
-        { kinds: [KINDS.ListSimple, KINDS.ListReplaceable, KINDS.List, KINDS.WebBookmark], authors: [activeAccount.pubkey] },
-        {
-          onEvent: async (evt) => {
-            // Add event immediately with live deduplication
-            setBookmarkEvents(prev => {
-              // Create unique key for deduplication
-              const key = getEventKey(evt)
-              
-              // Find existing event with same key
-              const existingIdx = prev.findIndex(e => getEventKey(e) === key)
-              
-              if (existingIdx >= 0) {
-                // Replace if newer
-                const existing = prev[existingIdx]
-                if ((evt.created_at || 0) > (existing.created_at || 0)) {
-                  const newEvents = [...prev]
-                  newEvents[existingIdx] = evt
-                  return newEvents
-                }
-                return prev // Keep existing (it's newer)
-              }
-              
-              // Add new event
-              return [...prev, evt]
-            })
-
-            // Auto-decrypt if event has encrypted content
-            if (hasEncryptedContent(evt)) {
-              console.log('[bunker] 🔓 Auto-decrypting event', evt.id.slice(0, 8))
-              try {
-                const { publicItemsAll, privateItemsAll } = await collectBookmarksFromEvents(
-                  [evt],
-                  activeAccount,
-                  signerCandidate
-                )
-                setDecryptedEvents(prev => new Map(prev).set(evt.id, { 
-                  public: publicItemsAll.length, 
-                  private: privateItemsAll.length 
-                }))
-                console.log('[bunker] ✅ Auto-decrypted:', evt.id.slice(0, 8), {
-                  public: publicItemsAll.length,
-                  private: privateItemsAll.length
-                })
-              } catch (error) {
-                console.error('[bunker] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
-              }
-            }
-          }
-        }
-      )
-
-      const ms = Math.round(performance.now() - start)
-      setLiveTiming(prev => ({ ...prev, loadBookmarks: undefined }))
-      setTLoadBookmarks(ms)
-
-      DebugBus.info('debug', `Loaded ${rawEvents.length} bookmark events`, {
-        kinds: rawEvents.map(e => e.kind).join(', '),
-        ms
-      })
-    } catch (error) {
-      setLiveTiming(prev => ({ ...prev, loadBookmarks: undefined }))
-      DebugBus.error('debug', 'Failed to load bookmarks', error instanceof Error ? error.message : String(error))
-    } finally {
-      setIsLoadingBookmarks(false)
-    }
+    // Use the centralized bookmark loading (same as refresh button in sidebar)
+    const start = performance.now()
+    setLiveTiming(prev => ({ ...prev, loadBookmarks: { startTime: start } }))
+    
+    await onRefreshBookmarks()
+    
+    const ms = Math.round(performance.now() - start)
+    setLiveTiming(prev => ({ ...prev, loadBookmarks: undefined }))
+    setTLoadBookmarks(ms)
   }
 
   const handleClearBookmarks = () => {
-    setBookmarkEvents([])
-    setBookmarkStats(null)
     setTLoadBookmarks(null)
-    setTDecryptBookmarks(null)
-    setDecryptedEvents(new Map())
-    DebugBus.info('debug', 'Cleared bookmark data')
+    DebugBus.info('debug', 'Cleared bookmark timing data')
   }
 
   const handleBunkerLogin = async () => {
@@ -588,15 +436,19 @@ const Debug: React.FC<DebugProps> = ({
         {/* Bookmark Loading Section */}
         <div className="settings-section">
           <h3 className="section-title">Bookmark Loading</h3>
-          <div className="text-sm opacity-70 mb-3">Test bookmark loading with auto-decryption (kinds: 10003, 30003, 30001, 39701)</div>
+          <div className="text-sm opacity-70 mb-3">
+            Uses centralized bookmark loading (same as refresh button in sidebar)
+            <br />
+            Bookmarks: {bookmarks.length > 0 ? `${bookmarks[0]?.individualBookmarks?.length || 0} items` : '0 items'}
+          </div>
           
           <div className="flex gap-2 mb-3 items-center">
             <button 
               className="btn btn-primary" 
               onClick={handleLoadBookmarks}
-              disabled={isLoadingBookmarks || !relayPool || !activeAccount}
+              disabled={bookmarksLoading || !relayPool || !activeAccount}
             >
-              {isLoadingBookmarks ? (
+              {bookmarksLoading ? (
                 <>
                   <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
                   Loading...
@@ -608,62 +460,20 @@ const Debug: React.FC<DebugProps> = ({
             <button 
               className="btn btn-secondary ml-auto" 
               onClick={handleClearBookmarks}
-              disabled={bookmarkEvents.length === 0 && !bookmarkStats}
+              disabled={!tLoadBookmarks}
             >
-              Clear
+              Clear Timing
             </button>
           </div>
 
           <div className="mb-3 flex gap-2 flex-wrap">
             <Stat label="load" value={tLoadBookmarks} bookmarkOp="loadBookmarks" />
-            <Stat label="decrypt" value={tDecryptBookmarks} bookmarkOp="decryptBookmarks" />
           </div>
 
-          {bookmarkStats && (
-            <div className="mb-3">
-              <div className="text-sm opacity-70 mb-2">Decrypted Bookmarks:</div>
-              <div className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
-                <div>Public: {bookmarkStats.public}</div>
-                <div>Private: {bookmarkStats.private}</div>
-                <div className="font-semibold mt-1">Total: {bookmarkStats.public + bookmarkStats.private}</div>
-              </div>
-            </div>
-          )}
-
-          {bookmarkEvents.length > 0 && (
-            <div className="mb-3">
-              <div className="text-sm opacity-70 mb-2">Loaded Events ({bookmarkEvents.length}):</div>
-              <div className="space-y-2">
-                {bookmarkEvents.map((evt, idx) => {
-                  const dTag = evt.tags?.find((t: string[]) => t[0] === 'd')?.[1]
-                  const titleTag = evt.tags?.find((t: string[]) => t[0] === 'title')?.[1]
-                  const size = getEventSize(evt)
-                  const counts = getBookmarkCount(evt)
-                  const hasEncrypted = hasEncryptedContent(evt)
-                  const decryptResult = decryptedEvents.get(evt.id)
-                  
-                  return (
-                    <div key={idx} className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
-                      <div className="font-semibold mb-1">{getKindName(evt.kind)}</div>
-                      {dTag && <div className="opacity-70">d-tag: {dTag}</div>}
-                      {titleTag && <div className="opacity-70">title: {titleTag}</div>}
-                      <div className="mt-1">
-                        <div>Size: {formatBytes(size)}</div>
-                        <div>Public: {counts.public}</div>
-                        {hasEncrypted && <div>🔒 Has encrypted content</div>}
-                      </div>
-                      {decryptResult && (
-                        <div className="mt-1 text-[11px] opacity-80">
-                          <div>✓ Decrypted: {decryptResult.public} public, {decryptResult.private} private</div>
-                        </div>
-                      )}
-                      <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
+          <div className="text-xs opacity-70 mt-3 p-2 bg-gray-100 dark:bg-gray-800 rounded">
+            ℹ️  This button calls the same centralized bookmark loading function as the refresh button in the sidebar.
+            Check the sidebar to see the loaded bookmarks, or check the console for [app] logs.
+          </div>
         </div>
 
         {/* Debug Logs Section */}
