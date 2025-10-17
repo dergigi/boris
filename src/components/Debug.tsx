@@ -326,14 +326,18 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
   }
 
   const handleDecryptSingleEvent = async (evt: NostrEvent) => {
+    console.log('[bunker] 🔵 Individual decrypt clicked for event:', evt.id.slice(0, 8))
+    console.log('[bunker] activeAccount exists?', !!activeAccount)
+    
     if (!activeAccount) {
+      console.warn('[bunker] ⚠️  No active account - cannot decrypt')
       DebugBus.warn('debug', 'Cannot decrypt: missing activeAccount')
       return
     }
 
     try {
       setDecryptingEventIds(prev => new Set(prev).add(evt.id))
-      DebugBus.info('debug', `Decrypting event ${evt.id.slice(0, 8)}...`, {
+      console.log('[bunker] 🔓 Decrypting event', evt.id.slice(0, 8), {
         kind: evt.kind,
         contentLength: evt.content?.length || 0,
         hasContent: !!evt.content,
@@ -345,7 +349,7 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
       const fullAccount = accountManager.getActive()
       const signerCandidate = fullAccount || activeAccount
       
-      DebugBus.info('debug', 'Signer info', {
+      console.log('[bunker] Signer info:', {
         hasFullAccount: !!fullAccount,
         hasSigner: !!signerCandidate,
         signerType: (signerCandidate as { type?: string })?.type
@@ -362,15 +366,16 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
         private: privateItemsAll.length 
       }))
 
-      DebugBus.info('debug', `Event ${evt.id.slice(0, 8)} decrypted`, {
+      console.log('[bunker] ✅ Event decrypted:', evt.id.slice(0, 8), {
         public: publicItemsAll.length,
         private: privateItemsAll.length
       })
       
       if (privateItemsAll.length === 0 && hasEncryptedContent(evt)) {
-        DebugBus.warn('debug', 'Decryption found 0 private items but event has encrypted content - check console for decrypt errors')
+        console.warn('[bunker] ⚠️  Found 0 private items but event has encrypted content - decrypt may have failed')
       }
     } catch (error) {
+      console.error('[bunker] ❌ Failed to decrypt event', evt.id.slice(0, 8), error)
       DebugBus.error('debug', `Failed to decrypt event ${evt.id.slice(0, 8)}`, error instanceof Error ? error.message : String(error))
     } finally {
       setDecryptingEventIds(prev => {
