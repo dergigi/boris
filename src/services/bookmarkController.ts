@@ -152,13 +152,16 @@ class BookmarkController {
 
       const batch = batches[i]
       console.log('[bookmark] 🔧 Fetching batch', i + 1, '/', batches.length, '(', batch.length, 'IDs )')
+      console.log('[bookmark] 🔧 First few IDs in batch:', batch.slice(0, 3))
       
       try {
+        console.log('[bookmark] 🔧 Calling queryEvents...')
         const events = await queryEvents(
           relayPool,
           { ids: batch },
           {
             onEvent: (e: NostrEvent) => {
+              console.log('[bookmark] 📨 Received event:', e.id.slice(0, 8), 'kind:', e.kind)
               idToEvent.set(e.id, e)
               // Also index by coordinate for addressable events
               if (e.kind && e.kind >= 30000 && e.kind < 40000) {
@@ -170,9 +173,9 @@ class BookmarkController {
             }
           }
         )
-        console.log('[bookmark] ✅ Batch', i + 1, 'fetched', events.length, 'events')
+        console.log('[bookmark] ✅ Batch', i + 1, 'completed with', events.length, 'events')
       } catch (error) {
-        console.warn('[bookmark] ⚠️ Batch', i + 1, 'failed:', error)
+        console.error('[bookmark] ❌ Batch', i + 1, 'failed:', error)
       }
     }
   }
@@ -222,12 +225,16 @@ class BookmarkController {
             return
           }
 
+          console.log('[bookmark] 🔧 Fetching kind', kind, ':', authorBatch.length, 'authors ×', idBatch.length, 'identifiers')
+          
           try {
+            console.log('[bookmark] 🔧 Calling queryEvents for coordinates...')
             const events = await queryEvents(
               relayPool,
               { kinds: [kind], authors: authorBatch, '#d': idBatch },
               {
                 onEvent: (e: NostrEvent) => {
+                  console.log('[bookmark] 📨 Received coordinate event:', e.id.slice(0, 8), 'kind:', e.kind)
                   const dTag = e.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
                   const coordinate = `${e.kind}:${e.pubkey}:${dTag}`
                   idToEvent.set(coordinate, e)
@@ -236,9 +243,9 @@ class BookmarkController {
                 }
               }
             )
-            console.log('[bookmark] ✅ Kind', kind, 'batch fetched', events.length, 'events')
+            console.log('[bookmark] ✅ Kind', kind, 'batch completed with', events.length, 'events')
           } catch (error) {
-            console.warn('[bookmark] ⚠️ Kind', kind, 'batch failed:', error)
+            console.error('[bookmark] ❌ Kind', kind, 'batch failed:', error)
           }
         }
       }
