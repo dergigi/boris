@@ -149,65 +149,64 @@ const Debug: React.FC = () => {
   )
 
   return (
-    <div className="content-panel" style={{ maxWidth: '900px', margin: '0 auto' }}>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">Bunker Debug</h2>
-        <div className="flex items-center gap-2 mb-3">
+    <div className="settings-view">
+      <div className="settings-header">
+        <h2>Bunker Debug</h2>
+        <div className="settings-header-actions">
           <span className="opacity-70">Active pubkey:</span> <code className="text-sm">{pubkey || 'none'}</code>
         </div>
       </div>
 
-      {/* Bunker Login Section */}
-      <div className="mb-6">
-        <div className="card">
-          <div className="card-body">
-            <h3 className="text-lg font-semibold mb-3">Bunker Connection</h3>
-            {!activeAccount ? (
-              <div>
-                <div className="text-sm opacity-70 mb-3">Connect to your bunker (Nostr Connect signer) to enable encryption/decryption testing</div>
-                <div className="flex gap-2 mb-3">
-                  <input
-                    type="text"
-                    className="input flex-1"
-                    placeholder="bunker://..."
-                    value={bunkerUri}
-                    onChange={(e) => setBunkerUri(e.target.value)}
-                    disabled={isBunkerLoading}
-                  />
-                  <button 
-                    className="btn btn-primary" 
-                    onClick={handleBunkerLogin}
-                    disabled={isBunkerLoading || !bunkerUri.trim()}
-                  >
-                    {isBunkerLoading ? 'Connecting...' : 'Connect'}
-                  </button>
-                </div>
-                {bunkerError && (
-                  <div className="text-sm text-red-600 dark:text-red-400 mb-2">{bunkerError}</div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm opacity-70">Connected to bunker</div>
-                  <div className="text-sm font-mono">{pubkey}</div>
-                </div>
+      <div className="settings-content">
+
+        {/* Bunker Login Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Bunker Connection</h3>
+          {!activeAccount ? (
+            <div>
+              <div className="text-sm opacity-70 mb-3">Connect to your bunker (Nostr Connect signer) to enable encryption/decryption testing</div>
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  className="input flex-1"
+                  placeholder="bunker://..."
+                  value={bunkerUri}
+                  onChange={(e) => setBunkerUri(e.target.value)}
+                  disabled={isBunkerLoading}
+                />
                 <button 
-                  className="btn btn-outline" 
-                  onClick={() => accountManager.removeAccount(activeAccount)}
+                  className="btn btn-primary" 
+                  onClick={handleBunkerLogin}
+                  disabled={isBunkerLoading || !bunkerUri.trim()}
                 >
-                  Disconnect
+                  {isBunkerLoading ? 'Connecting...' : 'Connect'}
                 </button>
               </div>
-            )}
-          </div>
+              {bunkerError && (
+                <div className="text-sm text-red-600 dark:text-red-400 mb-2">{bunkerError}</div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm opacity-70">Connected to bunker</div>
+                <div className="text-sm font-mono">{pubkey}</div>
+              </div>
+              <button 
+                className="btn btn-outline" 
+                onClick={() => accountManager.removeAccount(activeAccount)}
+              >
+                Disconnect
+              </button>
+            </div>
+          )}
         </div>
-      </div>
 
-      <div className="grid" style={{ gap: 12 }}>
-        <div className="card">
-          <div className="card-body">
-            <h3 className="text-lg font-semibold mb-3">Payload</h3>
+        {/* Encryption Tools Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Encryption Tools</h3>
+          <div className="setting-group">
+            <label className="setting-label">Payload</label>
             <textarea className="textarea w-full" value={payload} onChange={e => setPayload(e.target.value)} rows={3} />
             <div className="flex gap-2 mt-3">
               <button className="btn btn-primary" onClick={() => doEncrypt('nip44')} disabled={!hasNip44}>Encrypt (nip44)</button>
@@ -215,12 +214,10 @@ const Debug: React.FC = () => {
               <button className="btn btn-secondary" onClick={() => { setCipher44(''); setCipher04(''); setPlain44(''); setPlain04(''); setTEncrypt44(null); setTEncrypt04(null); setTDecrypt44(null); setTDecrypt04(null) }}>Clear</button>
             </div>
           </div>
-        </div>
-
-        <div className="grid" style={{ gap: 12, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)' }}>
-          <div className="card">
-            <div className="card-body">
-              <h3 className="text-lg font-semibold mb-3">nip44</h3>
+          
+          <div className="grid" style={{ gap: 12, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)' }}>
+            <div className="setting-group">
+              <label className="setting-label">nip44</label>
               <label className="block text-sm opacity-70 mb-2">cipher</label>
               <CodeBox value={cipher44} />
               <div className="flex gap-2 mt-3">
@@ -229,11 +226,9 @@ const Debug: React.FC = () => {
               </div>
               <CodeBox value={plain44} />
             </div>
-          </div>
 
-          <div className="card">
-            <div className="card-body">
-              <h3 className="text-lg font-semibold mb-3">nip04</h3>
+            <div className="setting-group">
+              <label className="setting-label">nip04</label>
               <label className="block text-sm opacity-70 mb-2">cipher</label>
               <CodeBox value={cipher04} />
               <div className="flex gap-2 mt-3">
@@ -244,73 +239,63 @@ const Debug: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Performance Timing Section */}
-      <div className="mt-8">
-        <div className="card">
-          <div className="card-body">
-            <h3 className="text-lg font-semibold mb-3">Performance Timing</h3>
-            <div className="text-sm opacity-70 mb-3">Encryption and decryption operation durations</div>
-            <div className="grid" style={{ gap: 12, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)' }}>
-              <div>
-                <h4 className="text-md font-medium mb-2">nip44</h4>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Stat label="enc" value={tEncrypt44 !== null ? `${tEncrypt44}ms` : null} />
-                  <Stat label="dec" value={tDecrypt44 !== null ? `${tDecrypt44}ms` : null} />
-                </div>
+        {/* Performance Timing Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Performance Timing</h3>
+          <div className="text-sm opacity-70 mb-3">Encryption and decryption operation durations</div>
+          <div className="grid" style={{ gap: 12, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)' }}>
+            <div className="setting-group">
+              <label className="setting-label">nip44</label>
+              <div className="flex flex-wrap items-center gap-2">
+                <Stat label="enc" value={tEncrypt44 !== null ? `${tEncrypt44}ms` : null} />
+                <Stat label="dec" value={tDecrypt44 !== null ? `${tDecrypt44}ms` : null} />
               </div>
-              <div>
-                <h4 className="text-md font-medium mb-2">nip04</h4>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Stat label="enc" value={tEncrypt04 !== null ? `${tEncrypt04}ms` : null} />
-                  <Stat label="dec" value={tDecrypt04 !== null ? `${tDecrypt04}ms` : null} />
-                </div>
+            </div>
+            <div className="setting-group">
+              <label className="setting-label">nip04</label>
+              <div className="flex flex-wrap items-center gap-2">
+                <Stat label="enc" value={tEncrypt04 !== null ? `${tEncrypt04}ms` : null} />
+                <Stat label="dec" value={tDecrypt04 !== null ? `${tDecrypt04}ms` : null} />
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Debug Logs Section */}
-      <div className="mt-8">
-        <div className="card">
-          <div className="card-body">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">Debug Logs</h3>
-              <div className="flex gap-2 items-center">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={debugEnabled}
-                    onChange={toggleDebug}
-                    className="checkbox"
-                  />
-                  <span className="text-sm">Show all applesauce debug logs</span>
-                </label>
-                <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
-              </div>
-            </div>
-            <div className="text-sm opacity-70 mb-3">Recent NIP-46 activity</div>
-            <div className="max-h-64 overflow-y-auto font-mono text-xs leading-relaxed">
-              {logs.length === 0 ? (
-                <div className="text-sm opacity-50 italic">No logs yet</div>
-              ) : (
-                logs.slice(-200).map((l, i) => (
-                  <div key={i} className="mb-1 p-2 bg-gray-100 dark:bg-gray-800 rounded">
-                    <span className="opacity-70">[{new Date(l.ts).toLocaleTimeString()}]</span> <span className="font-semibold">{l.level.toUpperCase()}</span> {l.source}: {l.message}
-                    {l.data !== undefined && (
-                      <span className="opacity-70"> — {typeof l.data === 'string' ? l.data : JSON.stringify(l.data)}</span>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
+        {/* Debug Logs Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Debug Logs</h3>
+          <div className="flex gap-2 items-center mb-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={debugEnabled}
+                onChange={toggleDebug}
+                className="checkbox"
+              />
+              <span className="text-sm">Show all applesauce debug logs</span>
+            </label>
+            <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
+          </div>
+          <div className="text-sm opacity-70 mb-3">Recent NIP-46 activity</div>
+          <div className="max-h-64 overflow-y-auto font-mono text-xs leading-relaxed">
+            {logs.length === 0 ? (
+              <div className="text-sm opacity-50 italic">No logs yet</div>
+            ) : (
+              logs.slice(-200).map((l, i) => (
+                <div key={i} className="mb-1 p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                  <span className="opacity-70">[{new Date(l.ts).toLocaleTimeString()}]</span> <span className="font-semibold">{l.level.toUpperCase()}</span> {l.source}: {l.message}
+                  {l.data !== undefined && (
+                    <span className="opacity-70"> — {typeof l.data === 'string' ? l.data : JSON.stringify(l.data)}</span>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      <div className="text-center opacity-50 text-sm mt-4">
+      <div className="text-xs opacity-60 mt-4 px-4 pb-3 select-text">
         <span>
           {typeof __RELEASE_URL__ !== 'undefined' && __RELEASE_URL__ ? (
             <a href={__RELEASE_URL__} target="_blank" rel="noopener noreferrer">
