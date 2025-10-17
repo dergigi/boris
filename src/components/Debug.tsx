@@ -29,9 +29,24 @@ const Debug: React.FC = () => {
   const [bunkerUri, setBunkerUri] = useState<string>('')
   const [isBunkerLoading, setIsBunkerLoading] = useState<boolean>(false)
   const [bunkerError, setBunkerError] = useState<string | null>(null)
+  
+  // Live timing state
+  const [liveTiming, setLiveTiming] = useState<{
+    nip44?: { type: 'encrypt' | 'decrypt'; startTime: number }
+    nip04?: { type: 'encrypt' | 'decrypt'; startTime: number }
+  }>({})
 
   useEffect(() => {
     return DebugBus.subscribe((e) => setLogs(prev => [...prev, e].slice(-300)))
+  }, [])
+
+  // Live timer effect - triggers re-renders for live timing updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Force re-render to update live timing display
+      setLiveTiming(prev => prev)
+    }, 16) // ~60fps for smooth updates
+    return () => clearInterval(interval)
   }, [])
 
   const signer = useMemo(() => (activeAccount as unknown as { signer?: unknown })?.signer, [activeAccount])
@@ -45,15 +60,25 @@ const Debug: React.FC = () => {
     try {
       const api = (signer as { [key: string]: { encrypt: (pubkey: string, message: string) => Promise<string> } })[mode]
       DebugBus.info('debug', `encrypt start ${mode}`, { pubkey, len: payload.length })
+      
+      // Start live timing
       const start = performance.now()
+      setLiveTiming(prev => ({ ...prev, [mode]: { type: 'encrypt', startTime: start } }))
+      
       const cipher = await api.encrypt(pubkey, payload)
       const ms = Math.round(performance.now() - start)
+      
+      // Stop live timing
+      setLiveTiming(prev => ({ ...prev, [mode]: undefined }))
+      
       DebugBus.info('debug', `encrypt done ${mode}`, { len: typeof cipher === 'string' ? cipher.length : -1, ms })
       if (mode === 'nip44') setCipher44(cipher)
       else setCipher04(cipher)
       if (mode === 'nip44') setTEncrypt44(ms)
       else setTEncrypt04(ms)
     } catch (e) {
+      // Stop live timing on error
+      setLiveTiming(prev => ({ ...prev, [mode]: undefined }))
       DebugBus.error('debug', `encrypt error ${mode}`, e instanceof Error ? e.message : String(e))
     }
   }
@@ -68,15 +93,25 @@ const Debug: React.FC = () => {
         return
       }
       DebugBus.info('debug', `decrypt start ${mode}`, { len: cipher.length })
+      
+      // Start live timing
       const start = performance.now()
+      setLiveTiming(prev => ({ ...prev, [mode]: { type: 'decrypt', startTime: start } }))
+      
       const plain = await api.decrypt(pubkey, cipher)
       const ms = Math.round(performance.now() - start)
+      
+      // Stop live timing
+      setLiveTiming(prev => ({ ...prev, [mode]: undefined }))
+      
       DebugBus.info('debug', `decrypt done ${mode}`, { len: typeof plain === 'string' ? plain.length : -1, ms })
       if (mode === 'nip44') setPlain44(String(plain))
       else setPlain04(String(plain))
       if (mode === 'nip44') setTDecrypt44(ms)
       else setTDecrypt04(ms)
     } catch (e) {
+      // Stop live timing on error
+      setLiveTiming(prev => ({ ...prev, [mode]: undefined }))
       DebugBus.error('debug', `decrypt error ${mode}`, e instanceof Error ? e.message : String(e))
     }
   }
@@ -141,12 +176,33 @@ const Debug: React.FC = () => {
     >{value || '—'}</pre>
   )
 
-  const Stat = ({ label, value }: { label: string; value?: string | number | null }) => (
-    <span className="badge" style={{ marginRight: 8 }}>
-      <FontAwesomeIcon icon={faClock} style={{ marginRight: 4, fontSize: '0.8em' }} />
-      {label}: {value ?? '—'}
-    </span>
-  )
+  const getLiveTiming = (mode: 'nip44' | 'nip04', type: 'encrypt' | 'decrypt') => {
+    const timing = liveTiming[mode]
+    if (timing && timing.type === type) {
+      const elapsed = Math.round(performance.now() - timing.startTime)
+      return `${elapsed}ms`
+    }
+    return null
+  }
+
+  const Stat = ({ label, value, mode, type }: { 
+    label: string; 
+    value?: string | number | null;
+    mode?: 'nip44' | 'nip04';
+    type?: 'encrypt' | 'decrypt';
+  }) => {
+    const liveValue = mode && type ? getLiveTiming(mode, type) : null
+    const displayValue = liveValue || (value ?? '—')
+    const isLive = !!liveValue
+    
+    return (
+      <span className={`badge ${isLive ? 'animate-pulse' : ''}`} style={{ marginRight: 8 }}>
+        <FontAwesomeIcon icon={faClock} style={{ marginRight: 4, fontSize: '0.8em' }} />
+        {label}: {displayValue}
+        {isLive && <span className="ml-1 text-xs opacity-70">⏱️</span>}
+      </span>
+    )
+  }
 
   return (
     <div className="settings-view">
@@ -248,15 +304,15 @@ const Debug: React.FC = () => {
             <div className="setting-group">
               <label className="setting-label">NIP-44</label>
               <div className="flex flex-wrap items-center gap-2">
-                <Stat label="enc" value={tEncrypt44 !== null ? `${tEncrypt44}ms` : null} />
-                <Stat label="dec" value={tDecrypt44 !== null ? `${tDecrypt44}ms` : null} />
+                <Stat label="enc" value={tEncrypt44 !== null ? `${tEncrypt44}ms` : null} mode="nip44" type="encrypt" />
+                <Stat label="dec" value={tDecrypt44 !== null ? `${tDecrypt44}ms` : null} mode="nip44" type="decrypt" />
               </div>
             </div>
             <div className="setting-group">
               <label className="setting-label">NIP-04</label>
               <div className="flex flex-wrap items-center gap-2">
-                <Stat label="enc" value={tEncrypt04 !== null ? `${tEncrypt04}ms` : null} />
-                <Stat label="dec" value={tDecrypt04 !== null ? `${tDecrypt04}ms` : null} />
+                <Stat label="enc" value={tEncrypt04 !== null ? `${tEncrypt04}ms` : null} mode="nip04" type="encrypt" />
+                <Stat label="dec" value={tDecrypt04 !== null ? `${tDecrypt04}ms` : null} mode="nip04" type="decrypt" />
               </div>
             </div>
           </div>
