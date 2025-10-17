@@ -93,31 +93,12 @@ export const sortIndividualBookmarks = (items: IndividualBookmark[]) => {
 export function groupIndividualBookmarks(items: IndividualBookmark[]) {
   const sorted = sortIndividualBookmarks(items)
   
-  console.log('[bookmark] 🗂️ Grouping', sorted.length, 'items')
-  
   // Group by source list, not by content type
   const nip51Public = sorted.filter(i => i.sourceKind === 10003 && !i.isPrivate)
   const nip51Private = sorted.filter(i => i.sourceKind === 10003 && i.isPrivate)
   const amethystPublic = sorted.filter(i => i.sourceKind === 30001 && !i.isPrivate)
   const amethystPrivate = sorted.filter(i => i.sourceKind === 30001 && i.isPrivate)
   const standaloneWeb = sorted.filter(i => i.sourceKind === 39701)
-  
-  console.log('[bookmark] 🗂️ Groups:', {
-    nip51Public: nip51Public.length,
-    nip51Private: nip51Private.length,
-    amethystPublic: amethystPublic.length,
-    amethystPrivate: amethystPrivate.length,
-    standaloneWeb: standaloneWeb.length
-  })
-  
-  // Debug: sample first few items to see their properties
-  if (sorted.length > 0) {
-    console.log('[bookmark] 🗂️ Sample items:', sorted.slice(0, 3).map(i => ({
-      sourceKind: i.sourceKind,
-      isPrivate: i.isPrivate,
-      id: i.id.slice(0, 16)
-    })))
-  }
   
   return { 
     nip51Public, 
