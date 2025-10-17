@@ -5,7 +5,7 @@ import {
 } from '../types/bookmarks'
 import { BookmarkHiddenSymbol, hasNip04Decrypt, hasNip44Decrypt, processApplesauceBookmarks } from './bookmarkHelpers'
 import type { NostrEvent } from './bookmarkHelpers'
-import { withTimeout, mapWithConcurrency } from '../utils/async'
+import { mapWithConcurrency } from '../utils/async'
 
 type DecryptFn = (pubkey: string, content: string) => Promise<string>
 type UnlockHiddenTagsFn = typeof Helpers.unlockHiddenTags
@@ -39,10 +39,7 @@ async function decryptEvent(
       let decryptedContent: string | undefined
       try {
         if (hasNip44Decrypt(signerCandidate)) {
-          decryptedContent = await withTimeout(
-            (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(evt.pubkey, evt.content),
-            30000
-          )
+          decryptedContent = await (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(evt.pubkey, evt.content)
         }
       } catch (err) {
         console.log("[bunker] ❌ nip44.decrypt failed:", err instanceof Error ? err.message : String(err))
@@ -51,10 +48,7 @@ async function decryptEvent(
       if (!decryptedContent) {
         try {
           if (hasNip04Decrypt(signerCandidate)) {
-            decryptedContent = await withTimeout(
-              (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(evt.pubkey, evt.content),
-              30000
-            )
+            decryptedContent = await (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(evt.pubkey, evt.content)
           }
         } catch (err) {
           console.log("[bunker] ❌ nip04.decrypt failed:", err instanceof Error ? err.message : String(err))
