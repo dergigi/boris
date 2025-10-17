@@ -186,12 +186,12 @@ export const fetchBookmarks = async (
       setBookmarks([bookmark])
     }
 
-    // Stream events with auto-decryption
+    // Stream events (just collect, decrypt after)
     const rawEvents = await queryEvents(
       relayPool,
       { kinds: [KINDS.ListSimple, KINDS.ListReplaceable, KINDS.List, KINDS.WebBookmark], authors: [activeAccount.pubkey] },
       {
-        onEvent: async (evt) => {
+        onEvent: (evt) => {
           // Deduplicate by key
           const key = getEventKey(evt)
           const existing = eventMap.get(key)
@@ -205,19 +205,6 @@ export const fetchBookmarks = async (
           processedCount++
           
           console.log(`[app] 📨 Event ${processedCount}: kind=${evt.kind}, id=${evt.id.slice(0, 8)}, hasEncrypted=${hasEncryptedContent(evt)}`)
-          
-          // Auto-decrypt if has encrypted content
-          if (hasEncryptedContent(evt)) {
-            console.log('[app] 🔓 Auto-decrypting bookmark event', evt.id.slice(0, 8))
-            try {
-              // Trigger decryption by collecting from this single event
-              // This will unlock the content for the main collection pass
-              await collectBookmarksFromEvents([evt], activeAccount, signerCandidate)
-              console.log('[app] ✅ Auto-decrypted:', evt.id.slice(0, 8))
-            } catch (error) {
-              console.error('[app] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
-            }
-          }
         }
       }
     )
@@ -236,7 +223,22 @@ export const fetchBookmarks = async (
       return
     }
 
-    // Final update with all events
+    // Auto-decrypt events with encrypted content (batch processing)
+    const encryptedEvents = dedupedEvents.filter(evt => hasEncryptedContent(evt))
+    if (encryptedEvents.length > 0) {
+      console.log('[app] 🔓 Auto-decrypting', encryptedEvents.length, 'encrypted events')
+      for (const evt of encryptedEvents) {
+        try {
+          // Trigger decryption - this unlocks the content for the main collection pass
+          await collectBookmarksFromEvents([evt], activeAccount, signerCandidate)
+          console.log('[app] ✅ Auto-decrypted:', evt.id.slice(0, 8))
+        } catch (error) {
+          console.error('[app] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
+        }
+      }
+    }
+
+    // Final update with all events (now with decrypted content)
     console.log('[app] 🔄 Final bookmark processing with', dedupedEvents.length, 'events')
     await updateBookmarks(dedupedEvents)
     console.log('[app] ✅ Bookmarks processing complete')

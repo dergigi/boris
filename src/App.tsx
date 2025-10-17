@@ -68,19 +68,10 @@ function AppRoutes({
     await loadBookmarks()
   }, [loadBookmarks])
 
-  // Load bookmarks on mount if account exists (app reopen)
+  // Load bookmarks when account changes (includes initial mount)
   useEffect(() => {
     if (activeAccount && relayPool) {
-      console.log('[app] 📱 App mounted with active account, loading bookmarks')
-      loadBookmarks()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // Empty deps - only on mount, loadBookmarks is stable
-
-  // Load bookmarks when account changes (login)
-  useEffect(() => {
-    if (activeAccount && relayPool) {
-      console.log('[app] 👤 Active account changed, loading bookmarks')
+      console.log('[app] 👤 Loading bookmarks (account + relayPool ready)')
       loadBookmarks()
     }
   }, [activeAccount, relayPool, loadBookmarks])
