@@ -106,14 +106,10 @@ class BookmarkController {
   ): Promise<void> {
     const allEvents = Array.from(this.currentEvents.values())
     
-    // Only process events that are ready (unencrypted or already decrypted)
-    const readyEvents = allEvents.filter(evt => {
-      const isEncrypted = hasEncryptedContent(evt)
-      if (!isEncrypted) return true // Unencrypted - ready
-      return this.decryptedEvents.has(evt.id) // Encrypted - only if decrypted
-    })
+    // Only process unencrypted events for now (skip encrypted entirely)
+    const readyEvents = allEvents.filter(evt => !hasEncryptedContent(evt))
     
-    console.log('[controller] 📋 Building bookmarks:', readyEvents.length, 'ready of', allEvents.length, 'total')
+    console.log('[controller] 📋 Building bookmarks:', readyEvents.length, 'unencrypted of', allEvents.length, 'total')
     
     if (readyEvents.length === 0) {
       this.bookmarksListeners.forEach(cb => cb([]))
@@ -231,6 +227,7 @@ class BookmarkController {
       }
       
       console.log('[controller] 📋 Built bookmark with', sortedBookmarks.length, 'items')
+      console.log('[controller] 📤 Emitting to', this.bookmarksListeners.length, 'listeners')
       this.bookmarksListeners.forEach(cb => cb([bookmark]))
     } catch (error) {
       console.error('[controller] ❌ Failed to build bookmarks:', error)

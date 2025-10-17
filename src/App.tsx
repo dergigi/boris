@@ -42,10 +42,18 @@ function AppRoutes({
 
   // Subscribe to bookmark controller
   useEffect(() => {
-    const unsubBookmarks = bookmarkController.onBookmarks(setBookmarks)
-    const unsubLoading = bookmarkController.onLoading(setBookmarksLoading)
+    console.log('[app] 🎧 Subscribing to bookmark controller')
+    const unsubBookmarks = bookmarkController.onBookmarks((bookmarks) => {
+      console.log('[app] 📥 Received bookmarks:', bookmarks.length)
+      setBookmarks(bookmarks)
+    })
+    const unsubLoading = bookmarkController.onLoading((loading) => {
+      console.log('[app] 📥 Loading state:', loading)
+      setBookmarksLoading(loading)
+    })
     
     return () => {
+      console.log('[app] 🔇 Unsubscribing from bookmark controller')
       unsubBookmarks()
       unsubLoading()
     }
