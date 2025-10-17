@@ -279,7 +279,7 @@ const Debug: React.FC = () => {
                   onChange={e => setPayload(e.target.value)} 
                   rows={3} 
                 />
-            <div className="flex gap-2 mt-3">
+            <div className="flex gap-2 mt-3 justify-end">
               <button className="btn btn-secondary" onClick={() => { setCipher44(''); setCipher04(''); setPlain44(''); setPlain04(''); setTEncrypt44(null); setTEncrypt04(null); setTDecrypt44(null); setTDecrypt04(null) }}>Clear</button>
             </div>
           </div>
@@ -289,7 +289,7 @@ const Debug: React.FC = () => {
               <label className="setting-label">NIP-44</label>
               <label className="block text-sm opacity-70 mb-2">cipher</label>
               <CodeBox value={cipher44} />
-              <div className="flex gap-2 mt-3">
+              <div className="flex gap-2 mt-3 justify-end">
                 <button className="btn btn-primary" onClick={() => doEncrypt('nip44')} disabled={!hasNip44}>Encrypt</button>
                 <button className="btn btn-secondary" onClick={() => doDecrypt('nip44')} disabled={!cipher44}>Decrypt</button>
               </div>
@@ -303,7 +303,7 @@ const Debug: React.FC = () => {
               <label className="setting-label">NIP-04</label>
               <label className="block text-sm opacity-70 mb-2">cipher</label>
               <CodeBox value={cipher04} />
-              <div className="flex gap-2 mt-3">
+              <div className="flex gap-2 mt-3 justify-end">
                 <button className="btn btn-primary" onClick={() => doEncrypt('nip04')} disabled={!hasNip04}>Encrypt</button>
                 <button className="btn btn-secondary" onClick={() => doDecrypt('nip04')} disabled={!cipher04}>Decrypt</button>
               </div>
@@ -355,18 +355,18 @@ const Debug: React.FC = () => {
               ))
             )}
           </div>
-          <div className="flex gap-2 items-center mt-3">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={debugEnabled}
-                onChange={toggleDebug}
-                className="checkbox"
-              />
-              <span className="text-sm">Show all applesauce debug logs</span>
-            </label>
-            <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
-          </div>
+            <div className="flex gap-2 items-center mt-3 justify-end">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={debugEnabled}
+                  onChange={toggleDebug}
+                  className="checkbox"
+                />
+                <span className="text-sm">Show all applesauce debug logs</span>
+              </label>
+              <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
+            </div>
         </div>
       </div>
 
