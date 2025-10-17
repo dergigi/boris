@@ -417,9 +417,17 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
 
       <div className="settings-content">
 
-        {/* Bunker Login Section */}
+        {/* Account Connection Section */}
         <div className="settings-section">
-          <h3 className="section-title">Bunker Connection</h3>
+          <h3 className="section-title">
+            {activeAccount 
+              ? activeAccount.type === 'extension' 
+                ? 'Browser Extension' 
+                : activeAccount.type === 'nostr-connect'
+                ? 'Bunker Connection'
+                : 'Account Connection'
+              : 'Account Connection'}
+          </h3>
           {!activeAccount ? (
             <div>
               <div className="text-sm opacity-70 mb-3">Connect to your bunker (Nostr Connect signer) to enable encryption/decryption testing</div>
@@ -447,7 +455,13 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
           ) : (
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm opacity-70">Connected to bunker</div>
+                <div className="text-sm opacity-70">
+                  {activeAccount.type === 'extension' 
+                    ? 'Connected via browser extension' 
+                    : activeAccount.type === 'nostr-connect'
+                    ? 'Connected to bunker'
+                    : 'Connected'}
+                </div>
                 <div className="text-sm font-mono">{pubkey}</div>
               </div>
                   <button
