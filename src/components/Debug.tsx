@@ -333,10 +333,23 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
 
     try {
       setDecryptingEventIds(prev => new Set(prev).add(evt.id))
-      DebugBus.info('debug', `Decrypting event ${evt.id.slice(0, 8)}...`)
+      DebugBus.info('debug', `Decrypting event ${evt.id.slice(0, 8)}...`, {
+        kind: evt.kind,
+        contentLength: evt.content?.length || 0,
+        hasContent: !!evt.content,
+        isNip04: evt.content?.includes('?iv='),
+        hasHiddenContent: Helpers.hasHiddenContent(evt),
+        hasHiddenTags: Helpers.hasHiddenTags(evt)
+      })
 
       const fullAccount = accountManager.getActive()
       const signerCandidate = fullAccount || activeAccount
+      
+      DebugBus.info('debug', 'Signer info', {
+        hasFullAccount: !!fullAccount,
+        hasSigner: !!signerCandidate,
+        signerType: (signerCandidate as { type?: string })?.type
+      })
 
       const { publicItemsAll, privateItemsAll } = await collectBookmarksFromEvents(
         [evt],
@@ -353,6 +366,10 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
         public: publicItemsAll.length,
         private: privateItemsAll.length
       })
+      
+      if (privateItemsAll.length === 0 && hasEncryptedContent(evt)) {
+        DebugBus.warn('debug', 'Decryption found 0 private items but event has encrypted content - check console for decrypt errors')
+      }
     } catch (error) {
       DebugBus.error('debug', `Failed to decrypt event ${evt.id.slice(0, 8)}`, error instanceof Error ? error.message : String(error))
     } finally {
