@@ -37,7 +37,7 @@ interface MeProps {
   activeTab?: TabType
   pubkey?: string // Optional pubkey for viewing other users' profiles
   bookmarks: Bookmark[] // From centralized App.tsx state
-  bookmarksLoading: boolean // From centralized App.tsx state
+  bookmarksLoading?: boolean // From centralized App.tsx state (reserved for future use)
 }
 
 type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
@@ -49,8 +49,7 @@ const Me: React.FC<MeProps> = ({
   relayPool, 
   activeTab: propActiveTab, 
   pubkey: propPubkey,
-  bookmarks,
-  bookmarksLoading
+  bookmarks
 }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
