@@ -166,7 +166,15 @@ export async function collectBookmarksFromEvents(
     )
 
     // Schedule decrypt if needed
-    if (signerCandidate && ((Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt)) || Helpers.hasHiddenContent(evt))) {
+    // Check for NIP-44 (Helpers.hasHiddenContent), NIP-04 (?iv= in content), or encrypted tags
+    const hasNip04Content = evt.content && evt.content.includes('?iv=')
+    const needsDecrypt = signerCandidate && (
+      (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt)) ||
+      Helpers.hasHiddenContent(evt) ||
+      hasNip04Content
+    )
+    
+    if (needsDecrypt) {
       decryptJobs.push({ evt, metadata })
     } else {
       // Check for already-unlocked hidden bookmarks
