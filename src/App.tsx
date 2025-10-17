@@ -264,6 +264,13 @@ function App() {
               
               if (account && account.type === 'nostr-connect') {
                 const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
+                // Disable applesauce account queueing so decrypt requests aren't serialized behind earlier ops
+                try {
+                  if (!(nostrConnectAccount as unknown as { disableQueue?: boolean }).disableQueue) {
+                    (nostrConnectAccount as unknown as { disableQueue?: boolean }).disableQueue = true
+                    console.log('[bunker] ⚙️  Disabled account request queueing for nostr-connect')
+                  }
+                } catch (err) { console.warn('[bunker] failed to disable queue', err) }
                 // Note: for Amber bunker, the remote signer pubkey is the user's pubkey. This is expected.
                 
                 // Skip if we've already reconnected this account

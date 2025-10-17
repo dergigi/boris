@@ -12,6 +12,7 @@ const Debug: React.FC = () => {
   const [plain44, setPlain44] = useState<string>('')
   const [plain04, setPlain04] = useState<string>('')
   const [logs, setLogs] = useState<DebugLogEntry[]>(DebugBus.snapshot())
+  const [debugEnabled, setDebugEnabled] = useState<boolean>(() => localStorage.getItem('debug') === '*')
 
   useEffect(() => {
     return DebugBus.subscribe((e) => setLogs(prev => [...prev, e].slice(-300)))
@@ -56,11 +57,22 @@ const Debug: React.FC = () => {
     }
   }
 
+  const toggleDebug = () => {
+    const next = !debugEnabled
+    setDebugEnabled(next)
+    if (next) localStorage.setItem('debug', '*')
+    else localStorage.removeItem('debug')
+  }
+
   return (
     <div className="content-panel">
       <h2>Debug / NIP-46 Tools</h2>
       <div className="card">
         <div className="card-body">
+          <div className="flex items-center gap-2">
+            <button className="btn btn-outline" onClick={toggleDebug}>{debugEnabled ? 'Disable' : 'Enable'} debug logs</button>
+            <button className="btn btn-ghost" onClick={() => setLogs([])}>Clear logs</button>
+          </div>
           <div>Active pubkey: <code>{pubkey || 'none'}</code></div>
           <div className="grid" style={{ gap: 8 }}>
             <label>Payload</label>
