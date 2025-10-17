@@ -553,7 +553,7 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
                       <div className="mt-1 flex gap-3 flex-wrap">
                         <span>Size: {formatBytes(size)}</span>
                         <span>Public: {counts.public}</span>
-                        {counts.private > 0 && <span>Has encrypted content</span>}
+                        {counts.private > 0 && <span>🔒 Has encrypted content</span>}
                       </div>
                       <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
                     </div>
