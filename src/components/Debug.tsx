@@ -196,7 +196,7 @@ const Debug: React.FC = () => {
     
     let displayValue: string
     if (isLive) {
-      displayValue = 'measuring...'
+      displayValue = ''
     } else if (value !== null && value !== undefined) {
       displayValue = `${value}ms`
     } else {
@@ -205,12 +205,12 @@ const Debug: React.FC = () => {
     
     return (
       <span className="badge" style={{ marginRight: 8 }}>
-        {isLive ? (
-          <FontAwesomeIcon icon={faSpinner} className="animate-spin" style={{ marginRight: 4, fontSize: '0.8em' }} />
+        <FontAwesomeIcon icon={faClock} style={{ marginRight: 4, fontSize: '0.8em' }} />
+        {label}: {isLive ? (
+          <FontAwesomeIcon icon={faSpinner} className="animate-spin" style={{ fontSize: '0.8em' }} />
         ) : (
-          <FontAwesomeIcon icon={faClock} style={{ marginRight: 4, fontSize: '0.8em' }} />
+          displayValue
         )}
-        {label}: {displayValue}
       </span>
     )
   }
