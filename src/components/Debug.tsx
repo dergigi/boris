@@ -711,6 +711,7 @@ const Debug: React.FC<DebugProps> = ({
       isHighlightsCollapsed={true}
       isSidebarOpen={false}
       showSettings={false}
+      showSupport={true}
       bookmarks={bookmarks}
       bookmarksLoading={bookmarksLoading}
       viewMode={viewMode}
@@ -732,7 +733,7 @@ const Debug: React.FC<DebugProps> = ({
       classifiedHighlights={[]}
       showHighlights={false}
       selectedHighlightId={undefined}
-      highlightVisibility="all"
+      highlightVisibility={{ nostrverse: true, friends: true, mine: true }}
       onHighlightClick={() => {}}
       onTextSelection={() => {}}
       onClearSelection={() => {}}
@@ -753,9 +754,8 @@ const Debug: React.FC<DebugProps> = ({
       toastMessage={undefined}
       toastType={undefined}
       onClearToast={() => {}}
-    >
-      {debugContent}
-    </ThreePaneLayout>
+      support={debugContent}
+    />
   )
 }
 
