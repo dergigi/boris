@@ -110,6 +110,15 @@ export function groupIndividualBookmarks(items: IndividualBookmark[]) {
   }))
   console.log('[bookmark] 📊 Sample items:', samples)
   
+  // Debug: Show setName distribution for kind:30001
+  const kind30001Items = sorted.filter(i => i.sourceKind === 30001)
+  const setNameCounts = new Map<string | undefined, number>()
+  kind30001Items.forEach(i => {
+    const count = setNameCounts.get(i.setName) || 0
+    setNameCounts.set(i.setName, count + 1)
+  })
+  console.log('[bookmark] 📊 kind:30001 setName distribution:', Object.fromEntries(setNameCounts))
+  
   // Group by source list, not by content type
   const nip51Public = sorted.filter(i => i.sourceKind === 10003 && !i.isPrivate)
   const nip51Private = sorted.filter(i => i.sourceKind === 10003 && i.isPrivate)
