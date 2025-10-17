@@ -5,6 +5,7 @@ import { Hooks } from 'applesauce-react'
 import { Accounts } from 'applesauce-accounts'
 import { NostrConnectSigner } from 'applesauce-signers'
 import { RelayPool } from 'applesauce-relay'
+import { Helpers } from 'applesauce-core'
 import { getDefaultBunkerPermissions } from '../services/nostrConnect'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
 import VersionFooter from './VersionFooter'
@@ -46,6 +47,10 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
   const [bookmarkStats, setBookmarkStats] = useState<{ public: number; private: number } | null>(null)
   const [tLoadBookmarks, setTLoadBookmarks] = useState<number | null>(null)
   const [tDecryptBookmarks, setTDecryptBookmarks] = useState<number | null>(null)
+  
+  // Individual event decryption state
+  const [decryptingEventIds, setDecryptingEventIds] = useState<Set<string>>(new Set())
+  const [decryptedEvents, setDecryptedEvents] = useState<Map<string, { public: number; private: number }>>(new Map())
   
   // Live timing state
   const [liveTiming, setLiveTiming] = useState<{
@@ -302,7 +307,48 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
     setBookmarkStats(null)
     setTLoadBookmarks(null)
     setTDecryptBookmarks(null)
+    setDecryptingEventIds(new Set())
+    setDecryptedEvents(new Map())
     DebugBus.info('debug', 'Cleared bookmark data')
+  }
+
+  const handleDecryptSingleEvent = async (evt: NostrEvent) => {
+    if (!activeAccount) {
+      DebugBus.warn('debug', 'Cannot decrypt: missing activeAccount')
+      return
+    }
+
+    try {
+      setDecryptingEventIds(prev => new Set(prev).add(evt.id))
+      DebugBus.info('debug', `Decrypting event ${evt.id.slice(0, 8)}...`)
+
+      const fullAccount = accountManager.getActive()
+      const signerCandidate = fullAccount || activeAccount
+
+      const { publicItemsAll, privateItemsAll } = await collectBookmarksFromEvents(
+        [evt],
+        activeAccount,
+        signerCandidate
+      )
+
+      setDecryptedEvents(prev => new Map(prev).set(evt.id, { 
+        public: publicItemsAll.length, 
+        private: privateItemsAll.length 
+      }))
+
+      DebugBus.info('debug', `Event ${evt.id.slice(0, 8)} decrypted`, {
+        public: publicItemsAll.length,
+        private: privateItemsAll.length
+      })
+    } catch (error) {
+      DebugBus.error('debug', `Failed to decrypt event ${evt.id.slice(0, 8)}`, error instanceof Error ? error.message : String(error))
+    } finally {
+      setDecryptingEventIds(prev => {
+        const next = new Set(prev)
+        next.delete(evt.id)
+        return next
+      })
+    }
   }
 
   const handleBunkerLogin = async () => {
@@ -624,18 +670,46 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
                   const titleTag = evt.tags?.find((t: string[]) => t[0] === 'title')?.[1]
                   const size = getEventSize(evt)
                   const counts = getBookmarkCount(evt)
+                  const hasEncrypted = Helpers.hasHiddenContent(evt) || (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt))
+                  const isDecrypting = decryptingEventIds.has(evt.id)
+                  const decryptResult = decryptedEvents.get(evt.id)
                   
                   return (
                     <div key={idx} className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
-                      <div className="font-semibold mb-1">{getKindName(evt.kind)}</div>
-                      {dTag && <div className="opacity-70">d-tag: {dTag}</div>}
-                      {titleTag && <div className="opacity-70">title: {titleTag}</div>}
-                      <div className="mt-1">
-                        <div>Size: {formatBytes(size)}</div>
-                        <div>Public: {counts.public}</div>
-                        {counts.private > 0 && <div>🔒 Has encrypted content</div>}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="font-semibold mb-1">{getKindName(evt.kind)}</div>
+                          {dTag && <div className="opacity-70">d-tag: {dTag}</div>}
+                          {titleTag && <div className="opacity-70">title: {titleTag}</div>}
+                          <div className="mt-1">
+                            <div>Size: {formatBytes(size)}</div>
+                            <div>Public: {counts.public}</div>
+                            {counts.private > 0 && <div>🔒 Has encrypted content</div>}
+                          </div>
+                          {decryptResult && (
+                            <div className="mt-1 text-[11px] opacity-80">
+                              <div>✓ Decrypted: {decryptResult.public} public, {decryptResult.private} private</div>
+                            </div>
+                          )}
+                          <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
+                        </div>
+                        {hasEncrypted && !decryptResult && (
+                          <button 
+                            className="text-[11px] px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                            onClick={() => handleDecryptSingleEvent(evt)}
+                            disabled={isDecrypting}
+                          >
+                            {isDecrypting ? (
+                              <>
+                                <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-1" />
+                                decrypt
+                              </>
+                            ) : (
+                              'decrypt'
+                            )}
+                          </button>
+                        )}
                       </div>
-                      <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
                     </div>
                   )
                 })}
