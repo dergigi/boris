@@ -139,72 +139,12 @@ class BookmarkController {
       })
       
       console.log('[bookmark] 🔧 Fetching', noteIds.length, 'note IDs and', coordinates.length, 'coordinates')
+      console.log('[bookmark] ⚠️ Skipping event fetching for now (causes hang) - will show bookmark items without full metadata')
       
       const idToEvent: Map<string, NostrEvent> = new Map()
       
-      // Fetch regular events by ID
-      if (noteIds.length > 0) {
-        console.log('[bookmark] 🔧 Fetching events by ID...')
-        try {
-          const fetchedEvents = await queryEvents(
-            relayPool,
-            { ids: Array.from(new Set(noteIds)) },
-            {}
-          )
-          console.log('[bookmark] 🔧 Fetched', fetchedEvents.length, 'events by ID')
-          fetchedEvents.forEach((e: NostrEvent) => {
-            idToEvent.set(e.id, e)
-            if (e.kind && e.kind >= 30000 && e.kind < 40000) {
-              const dTag = e.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-              const coordinate = `${e.kind}:${e.pubkey}:${dTag}`
-              idToEvent.set(coordinate, e)
-            }
-          })
-        } catch (error) {
-          console.warn('[bookmark] Failed to fetch events by ID:', error)
-        }
-      }
-      
-      // Fetch addressable events by coordinates
-      if (coordinates.length > 0) {
-        console.log('[bookmark] 🔧 Fetching addressable events...')
-        try {
-          const byKind = new Map<number, Array<{ pubkey: string; identifier: string }>>()
-          
-          coordinates.forEach(coord => {
-            const parts = coord.split(':')
-            const kind = parseInt(parts[0])
-            const pubkey = parts[1]
-            const identifier = parts[2] || ''
-            
-            if (!byKind.has(kind)) {
-              byKind.set(kind, [])
-            }
-            byKind.get(kind)!.push({ pubkey, identifier })
-          })
-          
-          for (const [kind, items] of byKind.entries()) {
-            const authors = Array.from(new Set(items.map(i => i.pubkey)))
-            const identifiers = Array.from(new Set(items.map(i => i.identifier)))
-            
-            const fetchedEvents = await queryEvents(
-              relayPool,
-              { kinds: [kind], authors, '#d': identifiers },
-              {}
-            )
-            
-            fetchedEvents.forEach((e: NostrEvent) => {
-              const dTag = e.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-              const coordinate = `${e.kind}:${e.pubkey}:${dTag}`
-              idToEvent.set(coordinate, e)
-              idToEvent.set(e.id, e)
-            })
-          }
-          console.log('[bookmark] 🔧 Fetched addressable events, total idToEvent size:', idToEvent.size)
-        } catch (error) {
-          console.warn('[bookmark] Failed to fetch addressable events:', error)
-        }
-      }
+      // TODO: Re-enable event fetching once queryEvents hanging is fixed
+      // For now, skip this step to unblock sidebar population
       
       console.log('[bookmark] 🔧 Building final bookmarks list...')
       const allBookmarks = dedupeBookmarksById([
