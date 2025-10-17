@@ -147,7 +147,6 @@ class BookmarkController {
         // Check if hydration was cancelled
         if (this.hydrationGeneration !== generation) return
         
-        console.log('[bookmark] 📨 Received event:', event.id.slice(0, 8), 'kind:', event.kind)
         idToEvent.set(event.id, event)
         
         // Also index by coordinate for addressable events
@@ -161,9 +160,6 @@ class BookmarkController {
       },
       error: (error) => {
         console.error('[bookmark] ❌ EventLoader error:', error)
-      },
-      complete: () => {
-        console.log('[bookmark] ✅ EventLoader completed')
       }
     })
   }
@@ -199,7 +195,6 @@ class BookmarkController {
         // Check if hydration was cancelled
         if (this.hydrationGeneration !== generation) return
 
-        console.log('[bookmark] 📨 Received addressable event:', event.id.slice(0, 8), 'kind:', event.kind)
         const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
         const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
         idToEvent.set(coordinate, event)
@@ -209,9 +204,6 @@ class BookmarkController {
       },
       error: (error) => {
         console.error('[bookmark] ❌ AddressLoader error:', error)
-      },
-      complete: () => {
-        console.log('[bookmark] ✅ AddressLoader completed')
       }
     })
   }
