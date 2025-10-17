@@ -278,11 +278,16 @@ const Debug: React.FC = () => {
           <div className="card-body">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold">Debug Logs</h3>
-              <div className="flex gap-2">
-                <button className="btn btn-outline" onClick={toggleDebug}>
-                  <span style={{ marginRight: 6 }}>{debugEnabled ? '✓' : '☐'}</span>
-                  {debugEnabled ? 'Hide' : 'Show'} all applesauce debug logs
-                </button>
+              <div className="flex gap-2 items-center">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={debugEnabled}
+                    onChange={toggleDebug}
+                    className="checkbox"
+                  />
+                  <span className="text-sm">Show all applesauce debug logs</span>
+                </label>
                 <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
               </div>
             </div>
