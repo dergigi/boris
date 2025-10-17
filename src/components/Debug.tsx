@@ -257,6 +257,14 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
     }
   }
 
+  const handleClearBookmarks = () => {
+    setBookmarkEvents([])
+    setBookmarkStats(null)
+    setTLoadBookmarks(null)
+    setTDecryptBookmarks(null)
+    DebugBus.info('debug', 'Cleared bookmark data')
+  }
+
   const handleBunkerLogin = async () => {
     if (!bunkerUri.trim()) {
       setBunkerError('Please enter a bunker URI')
@@ -499,7 +507,7 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
           <h3 className="section-title">Bookmark Loading</h3>
           <div className="text-sm opacity-70 mb-3">Test bookmark loading and decryption (kinds: 10003, 30003, 30001, 39701)</div>
           
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-2 mb-3 items-center">
             <button 
               className="btn btn-primary" 
               onClick={handleLoadBookmarks}
@@ -527,6 +535,13 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
               ) : (
                 'Decrypt'
               )}
+            </button>
+            <button 
+              className="btn btn-secondary ml-auto" 
+              onClick={handleClearBookmarks}
+              disabled={bookmarkEvents.length === 0 && !bookmarkStats}
+            >
+              Clear
             </button>
           </div>
 
