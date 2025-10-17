@@ -195,9 +195,17 @@ function App() {
       // Create relay pool and set it up BEFORE loading accounts
       // NostrConnectAccount.fromJSON needs this to restore the signer
       const pool = new RelayPool()
-      // Wire the signer to use this pool's publish/subscription methods (per applesauce examples)
+      // Wire the signer to use this pool; make publish non-blocking so callers don't
+      // wait for every relay send to finish. Responses still resolve the pending request.
       NostrConnectSigner.subscriptionMethod = pool.subscription.bind(pool)
-      NostrConnectSigner.publishMethod = pool.publish.bind(pool)
+      NostrConnectSigner.publishMethod = (relays: string[], event: unknown) => {
+        const result: any = pool.publish(relays, event as any)
+        if (result && typeof (result as any).subscribe === 'function') {
+          try { (result as any).subscribe({ complete: () => {}, error: () => {} }) } catch {}
+        }
+        // Return an already-resolved promise so upstream await finishes immediately
+        return Promise.resolve()
+      }
       console.log('[bunker] ✅ Wired NostrConnectSigner to RelayPool publish/subscription (before account load)')
       
       // Create a relay group for better event deduplication and management
