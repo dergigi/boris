@@ -535,6 +535,17 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
             <Stat label="decrypt" value={tDecryptBookmarks} bookmarkOp="decryptBookmarks" />
           </div>
 
+          {bookmarkStats && (
+            <div className="mb-3">
+              <div className="text-sm opacity-70 mb-2">Decrypted Bookmarks:</div>
+              <div className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                <div>Public: {bookmarkStats.public}</div>
+                <div>Private: {bookmarkStats.private}</div>
+                <div className="font-semibold mt-1">Total: {bookmarkStats.public + bookmarkStats.private}</div>
+              </div>
+            </div>
+          )}
+
           {bookmarkEvents.length > 0 && (
             <div className="mb-3">
               <div className="text-sm opacity-70 mb-2">Loaded Events ({bookmarkEvents.length}):</div>
@@ -559,17 +570,6 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
                     </div>
                   )
                 })}
-              </div>
-            </div>
-          )}
-
-          {bookmarkStats && (
-            <div className="mb-3">
-              <div className="text-sm opacity-70 mb-2">Decrypted Bookmarks:</div>
-              <div className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
-                <div>Public: {bookmarkStats.public}</div>
-                <div>Private: {bookmarkStats.private}</div>
-                <div className="font-semibold mt-1">Total: {bookmarkStats.public + bookmarkStats.private}</div>
               </div>
             </div>
           )}
