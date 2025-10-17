@@ -76,56 +76,89 @@ const Debug: React.FC = () => {
     else localStorage.removeItem('debug')
   }
 
+  const CodeBox = ({ value }: { value: string }) => (
+    <pre
+      className="textarea"
+      style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}
+    >{value || '—'}</pre>
+  )
+
+  const Stat = ({ label, value }: { label: string; value?: string | number | null }) => (
+    <span className="badge" style={{ marginRight: 8 }}>{label}: {value ?? '—'}</span>
+  )
+
   return (
     <div className="content-panel">
       <h2>Debug / NIP-46 Tools</h2>
-      <div className="card">
-        <div className="card-body">
-          <div className="flex items-center gap-2">
-            <button className="btn btn-outline" onClick={toggleDebug}>{debugEnabled ? 'Disable' : 'Enable'} debug logs</button>
-            <button className="btn btn-ghost" onClick={() => setLogs([])}>Clear logs</button>
-          </div>
-          <div>Active pubkey: <code>{pubkey || 'none'}</code></div>
-          <div className="grid" style={{ gap: 8 }}>
-            <label>Payload</label>
+
+      <div className="flex items-center gap-2 mb-3">
+        <button className="btn btn-outline" onClick={toggleDebug}>{debugEnabled ? 'Disable' : 'Enable'} debug logs</button>
+        <button className="btn btn-ghost" onClick={() => setLogs([])}>Clear logs</button>
+        <span className="opacity-70">Active pubkey:</span> <code>{pubkey || 'none'}</code>
+      </div>
+
+      <div className="grid" style={{ gap: 12 }}>
+        <div className="card">
+          <div className="card-body">
+            <h3>Payload</h3>
             <textarea className="textarea" value={payload} onChange={e => setPayload(e.target.value)} rows={3} />
             <div className="flex gap-2 mt-2">
               <button className="btn btn-primary" onClick={() => doEncrypt('nip44')} disabled={!hasNip44}>Encrypt (nip44)</button>
               <button className="btn" onClick={() => doEncrypt('nip04')} disabled={!hasNip04}>Encrypt (nip04)</button>
-              <button className="btn btn-outline" onClick={() => { setCipher44(''); setCipher04(''); setPlain44(''); setPlain04(''); }}>Clear</button>
-            </div>
-          </div>
-          <div className="grid mt-3" style={{ gap: 8 }}>
-            <label>nip44 cipher</label>
-            <textarea className="textarea" value={cipher44} readOnly rows={2} />
-            <div className="flex gap-2">
-              <button className="btn btn-secondary" onClick={() => doDecrypt('nip44')} disabled={!cipher44}>Decrypt (nip44)</button>
-              <span>Plain: <code>{plain44}</code>{tEncrypt44 !== null && (<span> • enc {tEncrypt44}ms</span>)}{tDecrypt44 !== null && (<span> • dec {tDecrypt44}ms</span>)}</span>
-            </div>
-          </div>
-          <div className="grid mt-3" style={{ gap: 8 }}>
-            <label>nip04 cipher</label>
-            <textarea className="textarea" value={cipher04} readOnly rows={2} />
-            <div className="flex gap-2">
-              <button className="btn btn-secondary" onClick={() => doDecrypt('nip04')} disabled={!cipher04}>Decrypt (nip04)</button>
-              <span>Plain: <code>{plain04}</code>{tEncrypt04 !== null && (<span> • enc {tEncrypt04}ms</span>)}{tDecrypt04 !== null && (<span> • dec {tDecrypt04}ms</span>)}</span>
+              <button className="btn btn-outline" onClick={() => { setCipher44(''); setCipher04(''); setPlain44(''); setPlain04(''); setTEncrypt44(null); setTEncrypt04(null); setTDecrypt44(null); setTDecrypt04(null) }}>Clear</button>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="card mt-4">
-        <div className="card-body">
-          <h3>Live Logs</h3>
-          <div style={{ maxHeight: 260, overflow: 'auto', fontFamily: 'monospace', fontSize: 12 }}>
-            {logs.slice(-200).map((l, i) => (
-              <div key={i}>
-                [{new Date(l.ts).toLocaleTimeString()}] {l.level.toUpperCase()} {l.source}: {l.message}
-                {l.data !== undefined && (
-                  <span> — {typeof l.data === 'string' ? l.data : JSON.stringify(l.data)}</span>
-                )}
+        <div className="grid" style={{ gap: 12, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)' }}>
+          <div className="card">
+            <div className="card-body">
+              <h3>nip44</h3>
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <Stat label="enc" value={tEncrypt44 !== null ? `${tEncrypt44}ms` : null} />
+                <Stat label="dec" value={tDecrypt44 !== null ? `${tDecrypt44}ms` : null} />
               </div>
-            ))}
+              <label className="opacity-70">cipher</label>
+              <CodeBox value={cipher44} />
+              <div className="flex gap-2 mt-2">
+                <button className="btn btn-secondary" onClick={() => doDecrypt('nip44')} disabled={!cipher44}>Decrypt (nip44)</button>
+                <span>Plain:</span>
+              </div>
+              <CodeBox value={plain44} />
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-body">
+              <h3>nip04</h3>
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <Stat label="enc" value={tEncrypt04 !== null ? `${tEncrypt04}ms` : null} />
+                <Stat label="dec" value={tDecrypt04 !== null ? `${tDecrypt04}ms` : null} />
+              </div>
+              <label className="opacity-70">cipher</label>
+              <CodeBox value={cipher04} />
+              <div className="flex gap-2 mt-2">
+                <button className="btn btn-secondary" onClick={() => doDecrypt('nip04')} disabled={!cipher04}>Decrypt (nip04)</button>
+                <span>Plain:</span>
+              </div>
+              <CodeBox value={plain04} />
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-body">
+            <h3>Live Logs</h3>
+            <div style={{ maxHeight: 300, overflow: 'auto', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.4 }}>
+              {logs.slice(-200).map((l, i) => (
+                <div key={i}>
+                  [{new Date(l.ts).toLocaleTimeString()}] {l.level.toUpperCase()} {l.source}: {l.message}
+                  {l.data !== undefined && (
+                    <span> — {typeof l.data === 'string' ? l.data : JSON.stringify(l.data)}</span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
