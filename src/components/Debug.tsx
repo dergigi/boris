@@ -1,3 +1,4 @@
+/* global __APP_VERSION__, __GIT_COMMIT__, __GIT_COMMIT_URL__, __RELEASE_URL__ */
 import React, { useEffect, useMemo, useState } from 'react'
 import { Hooks } from 'applesauce-react'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
@@ -161,6 +162,30 @@ const Debug: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="text-center opacity-50 text-sm mt-4">
+        <span>
+          {typeof __RELEASE_URL__ !== 'undefined' && __RELEASE_URL__ ? (
+            <a href={__RELEASE_URL__} target="_blank" rel="noopener noreferrer">
+              Version {typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'}
+            </a>
+          ) : (
+            `Version ${typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'}`
+          )}
+        </span>
+        {typeof __GIT_COMMIT__ !== 'undefined' && __GIT_COMMIT__ ? (
+          <span>
+            {' '}·{' '}
+            {typeof __GIT_COMMIT_URL__ !== 'undefined' && __GIT_COMMIT_URL__ ? (
+              <a href={__GIT_COMMIT_URL__} target="_blank" rel="noopener noreferrer">
+                <code>{__GIT_COMMIT__.slice(0, 7)}</code>
+              </a>
+            ) : (
+              <code>{__GIT_COMMIT__.slice(0, 7)}</code>
+            )}
+          </span>
+        ) : null}
       </div>
     </div>
   )
