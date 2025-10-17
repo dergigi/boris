@@ -59,6 +59,14 @@ function AppRoutes({
     }
   }, [])
 
+  // Auto-load bookmarks when account is ready (on login or page mount)
+  useEffect(() => {
+    if (activeAccount && relayPool && bookmarks.length === 0 && !bookmarksLoading) {
+      console.log('[bookmark] 🚀 Auto-loading bookmarks on mount/login')
+      bookmarkController.start({ relayPool, activeAccount, accountManager })
+    }
+  }, [activeAccount, relayPool, bookmarks.length, bookmarksLoading, accountManager])
+
   // Manual refresh (for sidebar button)
   const handleRefreshBookmarks = useCallback(async () => {
     if (!relayPool || !activeAccount) {
