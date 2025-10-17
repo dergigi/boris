@@ -342,7 +342,7 @@ const Debug: React.FC = () => {
         <div className="settings-section">
           <h3 className="section-title">Debug Logs</h3>
           <div className="text-sm opacity-70 mb-3">Recent bunker logs:</div>
-          <div className="max-h-64 overflow-y-auto font-mono text-xs leading-relaxed">
+            <div className="max-h-96 overflow-y-auto font-mono text-xs leading-relaxed">
             {logs.length === 0 ? (
               <div className="text-sm opacity-50 italic">No logs yet</div>
             ) : (
