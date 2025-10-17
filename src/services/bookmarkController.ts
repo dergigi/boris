@@ -268,7 +268,7 @@ class BookmarkController {
         relayPool,
         { kinds: [KINDS.ListSimple, KINDS.ListReplaceable, KINDS.List, KINDS.WebBookmark], authors: [account.pubkey] },
         {
-          onEvent: async (evt) => {
+          onEvent: (evt) => {
             const key = getEventKey(evt)
             const existing = this.currentEvents.get(key)
             
@@ -286,29 +286,27 @@ class BookmarkController {
             // Schedule bookmark update (non-blocking, coalesced)
             this.scheduleBookmarkUpdate(relayPool, maybeAccount, signerCandidate)
             
-            // Auto-decrypt if event has encrypted content
+            // Auto-decrypt if event has encrypted content (fire-and-forget, non-blocking)
             if (hasEncryptedContent(evt)) {
               console.log('[controller] 🔓 Auto-decrypting event', evt.id.slice(0, 8))
-              try {
-                const { publicItemsAll, privateItemsAll } = await collectBookmarksFromEvents(
-                  [evt],
-                  account,
-                  signerCandidate
-                )
-                this.decryptedEvents.set(evt.id, { 
-                  public: publicItemsAll.length, 
-                  private: privateItemsAll.length 
+              // Don't await - let it run in background
+              collectBookmarksFromEvents([evt], account, signerCandidate)
+                .then(({ publicItemsAll, privateItemsAll }) => {
+                  this.decryptedEvents.set(evt.id, { 
+                    public: publicItemsAll.length, 
+                    private: privateItemsAll.length 
+                  })
+                  console.log('[controller] ✅ Auto-decrypted:', evt.id.slice(0, 8), {
+                    public: publicItemsAll.length,
+                    private: privateItemsAll.length
+                  })
+                  
+                  // Schedule another update after decrypt
+                  this.scheduleBookmarkUpdate(relayPool, maybeAccount, signerCandidate)
                 })
-                console.log('[controller] ✅ Auto-decrypted:', evt.id.slice(0, 8), {
-                  public: publicItemsAll.length,
-                  private: privateItemsAll.length
+                .catch((error) => {
+                  console.error('[controller] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
                 })
-                
-                // Schedule another update after decrypt
-                this.scheduleBookmarkUpdate(relayPool, maybeAccount, signerCandidate)
-              } catch (error) {
-                console.error('[controller] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
-              }
             }
           }
         }
