@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { RelayPool } from 'applesauce-relay'
-import { IAccount, AccountManager } from 'applesauce-accounts'
+import { IAccount } from 'applesauce-accounts'
 import { Bookmark } from '../types/bookmarks'
 import { Highlight } from '../types/highlights'
-import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchHighlights, fetchHighlightsForArticle } from '../services/highlightService'
 import { fetchContacts } from '../services/contactService'
 import { UserSettings } from '../services/settingsService'
@@ -11,26 +10,26 @@ import { UserSettings } from '../services/settingsService'
 interface UseBookmarksDataParams {
   relayPool: RelayPool | null
   activeAccount: IAccount | undefined
-  accountManager: AccountManager
   naddr?: string
   externalUrl?: string
   currentArticleCoordinate?: string
   currentArticleEventId?: string
   settings?: UserSettings
+  bookmarks: Bookmark[] // Passed from App.tsx (centralized loading)
+  bookmarksLoading: boolean // Passed from App.tsx (centralized loading)
+  onRefreshBookmarks: () => Promise<void>
 }
 
 export const useBookmarksData = ({
   relayPool,
   activeAccount,
-  accountManager,
   naddr,
   externalUrl,
   currentArticleCoordinate,
   currentArticleEventId,
-  settings
-}: UseBookmarksDataParams) => {
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
-  const [bookmarksLoading, setBookmarksLoading] = useState(true)
+  settings,
+  onRefreshBookmarks
+}: Omit<UseBookmarksDataParams, 'bookmarks' | 'bookmarksLoading'>) => {
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [highlightsLoading, setHighlightsLoading] = useState(true)
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
@@ -42,21 +41,6 @@ export const useBookmarksData = ({
     const contacts = await fetchContacts(relayPool, activeAccount.pubkey)
     setFollowedPubkeys(contacts)
   }, [relayPool, activeAccount])
-
-  const handleFetchBookmarks = useCallback(async () => {
-    if (!relayPool || !activeAccount) return
-    // don't clear existing bookmarks: we keep UI stable and show spinner unobtrusively
-    setBookmarksLoading(true)
-    try {
-      const fullAccount = accountManager.getActive()
-      // merge-friendly: updater form that preserves visible list until replacement
-      await fetchBookmarks(relayPool, fullAccount || activeAccount, (next) => {
-        setBookmarks(() => next)
-      }, settings)
-    } finally {
-      setBookmarksLoading(false)
-    }
-  }, [relayPool, activeAccount, accountManager, settings])
 
   const handleFetchHighlights = useCallback(async () => {
     if (!relayPool) return
@@ -96,7 +80,7 @@ export const useBookmarksData = ({
     
     setIsRefreshing(true)
     try {
-      await handleFetchBookmarks()
+      await onRefreshBookmarks()
       await handleFetchHighlights()
       await handleFetchContacts()
       setLastFetchTime(Date.now())
@@ -105,16 +89,9 @@ export const useBookmarksData = ({
     } finally {
       setIsRefreshing(false)
     }
-  }, [relayPool, activeAccount, isRefreshing, handleFetchBookmarks, handleFetchHighlights, handleFetchContacts])
+  }, [relayPool, activeAccount, isRefreshing, onRefreshBookmarks, handleFetchHighlights, handleFetchContacts])
 
-  // Load initial data (avoid clearing on route-only changes)
-  useEffect(() => {
-    if (!relayPool || !activeAccount) return
-    // Only (re)fetch bookmarks when account or relayPool changes, not on naddr route changes
-    handleFetchBookmarks()
-  }, [relayPool, activeAccount, handleFetchBookmarks])
-
-  // Fetch highlights/contacts independently to avoid disturbing bookmarks
+  // Fetch highlights/contacts independently
   useEffect(() => {
     if (!relayPool || !activeAccount) return
     // Only fetch general highlights when not viewing an article (naddr) or external URL
@@ -126,8 +103,6 @@ export const useBookmarksData = ({
   }, [relayPool, activeAccount, naddr, externalUrl, handleFetchHighlights, handleFetchContacts])
 
   return {
-    bookmarks,
-    bookmarksLoading,
     highlights,
     setHighlights,
     highlightsLoading,
@@ -135,7 +110,6 @@ export const useBookmarksData = ({
     followedPubkeys,
     isRefreshing,
     lastFetchTime,
-    handleFetchBookmarks,
     handleFetchHighlights,
     handleRefreshAll
   }

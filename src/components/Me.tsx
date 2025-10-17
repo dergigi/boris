@@ -9,7 +9,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
-import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchAllReads, ReadItem } from '../services/readsService'
 import { fetchLinks } from '../services/linksService'
 import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
@@ -142,14 +141,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     
     try {
       if (!hasBeenLoaded) setLoading(true)
-      try {
-        await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
-          setBookmarks(newBookmarks)
-        })
-      } catch (err) {
-        console.warn('Failed to load bookmarks:', err)
-        setBookmarks([])
-      }
+      // Bookmarks come from centralized loading in App.tsx
       setLoadedTabs(prev => new Set(prev).add('reading-list'))
     } catch (err) {
       console.error('Failed to load reading list:', err)
@@ -166,22 +158,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Ensure bookmarks are loaded
-      let fetchedBookmarks: Bookmark[] = bookmarks
-      if (bookmarks.length === 0) {
-        try {
-          await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
-            fetchedBookmarks = newBookmarks
-            setBookmarks(newBookmarks)
-          })
-        } catch (err) {
-          console.warn('Failed to load bookmarks:', err)
-          fetchedBookmarks = []
-        }
-      }
-
-      // Derive reads from bookmarks immediately
-      const initialReads = deriveReadsFromBookmarks(fetchedBookmarks)
+      // Derive reads from bookmarks immediately (bookmarks come from centralized loading in App.tsx)
+      const initialReads = deriveReadsFromBookmarks(bookmarks)
       const initialMap = new Map(initialReads.map(item => [item.id, item]))
       setReadsMap(initialMap)
       setReads(initialReads)
@@ -190,7 +168,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       
       // Background enrichment: merge reading progress and mark-as-read
       // Only update items that are already in our map
-      fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks, (item) => {
+      fetchAllReads(relayPool, viewingPubkey, bookmarks, (item) => {
         console.log('📈 [Reads] Enrichment item received:', {
           id: item.id.slice(0, 20) + '...',
           progress: item.readingProgress,
@@ -230,22 +208,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Ensure bookmarks are loaded
-      let fetchedBookmarks: Bookmark[] = bookmarks
-      if (bookmarks.length === 0) {
-        try {
-          await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
-            fetchedBookmarks = newBookmarks
-            setBookmarks(newBookmarks)
-          })
-        } catch (err) {
-          console.warn('Failed to load bookmarks:', err)
-          fetchedBookmarks = []
-        }
-      }
-
-      // Derive links from bookmarks immediately
-      const initialLinks = deriveLinksFromBookmarks(fetchedBookmarks)
+      // Derive links from bookmarks immediately (bookmarks come from centralized loading in App.tsx)
+      const initialLinks = deriveLinksFromBookmarks(bookmarks)
       const initialMap = new Map(initialLinks.map(item => [item.id, item]))
       setLinksMap(initialMap)
       setLinks(initialLinks)

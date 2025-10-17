@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
@@ -19,6 +19,8 @@ import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { RELAYS } from './config/relays'
 import { SkeletonThemeProvider } from './components/Skeletons'
 import { DebugBus } from './utils/debugBus'
+import { Bookmark } from './types/bookmarks'
+import { fetchBookmarks } from './services/bookmarkService'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -32,9 +34,60 @@ function AppRoutes({
   showToast: (message: string) => void
 }) {
   const accountManager = Hooks.useAccountManager()
+  const activeAccount = Hooks.useActiveAccount()
+  
+  // Centralized bookmark state
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
+  const [bookmarksLoading, setBookmarksLoading] = useState(false)
+  const isLoadingRef = useRef(false)
+
+  // Load bookmarks function
+  const loadBookmarks = useCallback(async () => {
+    if (!relayPool || !activeAccount || isLoadingRef.current) return
+    
+    try {
+      isLoadingRef.current = true
+      setBookmarksLoading(true)
+      console.log('[app] 🔍 Loading bookmarks for', activeAccount.pubkey.slice(0, 8))
+      
+      const fullAccount = accountManager.getActive()
+      await fetchBookmarks(relayPool, fullAccount || activeAccount, setBookmarks)
+      
+      console.log('[app] ✅ Bookmarks loaded')
+    } catch (error) {
+      console.error('[app] ❌ Failed to load bookmarks:', error)
+    } finally {
+      setBookmarksLoading(false)
+      isLoadingRef.current = false
+    }
+  }, [relayPool, activeAccount, accountManager])
+
+  // Refresh bookmarks (for manual refresh button)
+  const handleRefreshBookmarks = useCallback(async () => {
+    console.log('[app] 🔄 Manual refresh triggered')
+    await loadBookmarks()
+  }, [loadBookmarks])
+
+  // Load bookmarks on mount if account exists (app reopen)
+  useEffect(() => {
+    if (activeAccount && relayPool) {
+      console.log('[app] 📱 App mounted with active account, loading bookmarks')
+      loadBookmarks()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty deps - only on mount, loadBookmarks is stable
+
+  // Load bookmarks when account changes (login)
+  useEffect(() => {
+    if (activeAccount && relayPool) {
+      console.log('[app] 👤 Active account changed, loading bookmarks')
+      loadBookmarks()
+    }
+  }, [activeAccount, relayPool, loadBookmarks])
 
   const handleLogout = () => {
     accountManager.clearActive()
+    setBookmarks([]) // Clear bookmarks on logout
     showToast('Logged out successfully')
   }
 
@@ -46,6 +99,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -55,6 +111,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -64,6 +123,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -73,6 +135,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -82,6 +147,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -91,6 +159,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -104,6 +175,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -113,6 +187,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -122,6 +199,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -131,6 +211,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -140,6 +223,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -149,6 +235,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -158,6 +247,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
@@ -167,6 +259,9 @@ function AppRoutes({
           <Bookmarks 
             relayPool={relayPool}
             onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
           />
         } 
       />
