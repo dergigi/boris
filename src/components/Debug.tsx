@@ -260,7 +260,18 @@ const Debug: React.FC = () => {
               </div>
                   <button
                     className="btn"
-                    style={{ background: 'rgb(220 38 38)', color: 'white', border: 'none' }}
+                    style={{ 
+                      background: 'rgb(220 38 38)', 
+                      color: 'white', 
+                      border: '1px solid rgb(220 38 38)',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '6px',
+                      fontSize: '1rem',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgb(185 28 28)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgb(220 38 38)'}
                     onClick={() => accountManager.removeAccount(activeAccount)}
                   >
                     Disconnect
