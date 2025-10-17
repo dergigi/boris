@@ -317,12 +317,21 @@ function App() {
                   const originalPublish = (recreatedSigner as unknown as { publishMethod: (relays: string[], event: unknown) => unknown }).publishMethod.bind(recreatedSigner)
                   ;(recreatedSigner as unknown as { publishMethod: (relays: string[], event: unknown) => unknown }).publishMethod = (relays: string[], event: unknown) => {
                     try {
+                      let method: string | undefined
+                      const content = (event as { content?: unknown })?.content
+                      if (typeof content === 'string') {
+                        try {
+                          const parsed = JSON.parse(content) as { method?: string; id?: unknown }
+                          method = parsed?.method
+                        } catch {}
+                      }
                       const summary = {
                         relays,
                         kind: (event as { kind?: number })?.kind,
+                        method,
                         // include tags array for debugging (NIP-46 expects method tag)
                         tags: (event as { tags?: unknown })?.tags,
-                        contentLength: typeof (event as { content?: unknown })?.content === 'string' ? (event as { content: string }).content.length : undefined
+                        contentLength: typeof content === 'string' ? content.length : undefined
                       }
                       console.log('[bunker] publish via signer:', summary)
                     } catch (err) { console.warn('[bunker] failed to log publish summary', err) }
