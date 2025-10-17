@@ -69,9 +69,26 @@ If DECRYPT entries still don’t appear:
 - Ensure the response event is published back to the same relays and correctly addressed to the client (`p` tag set and content encrypted back to client pubkey).
 - Add activity logging for “Decrypt …” attempts and failures to surface denial/exception states.
 
+## Performance improvements (post-debugging)
+
+### Non-blocking publish wiring
+- **Problem**: Awaiting `pool.publish()` completion blocks until all relay sends finish (can take 30s+ with timeouts).
+- **Solution**: Wrapped `NostrConnectSigner.publishMethod` at app startup to fire-and-forget publish Observable/Promise; responses still arrive via signer subscription.
+- **Result**: Encrypt/decrypt operations complete in <2s as seen in `/debug` page (NIP-44: ~900ms enc, ~700ms dec; NIP-04: ~1s enc, ~2s dec).
+
+### Concurrent bookmark decryption
+- **Problem**: Sequential decrypt of encrypted bookmark events blocks UI and takes long with multiple events.
+- **Solution**: Refactored `collectBookmarksFromEvents` to:
+  - Collect public bookmarks immediately (synchronous).
+  - Schedule decrypt jobs for events with encrypted content.
+  - Run decrypt jobs with limited concurrency (6 parallel max) using `mapWithConcurrency`.
+  - Each decrypt wrapped with 30s timeout as safety net.
+- **Result**: Bookmark loading is faster and UI remains responsive during decrypts.
+
 ## Current conclusion
 
 - Client is configured and publishing requests correctly; encryption proves end‑to‑end path is alive.
-- The missing DECRYPT activity in Amber is the blocker. Fixing Amber’s NIP‑46 decrypt handling should resolve bookmark decryption in Boris without further client changes.
+- Non-blocking publish and concurrent decrypts keep UI responsive.
+- The missing DECRYPT activity in Amber is the blocker. Fixing Amber's NIP‑46 decrypt handling should resolve bookmark decryption in Boris without further client changes.
 
 

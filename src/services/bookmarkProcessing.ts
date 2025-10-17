@@ -5,6 +5,7 @@ import {
 } from '../types/bookmarks'
 import { BookmarkHiddenSymbol, hasNip04Decrypt, hasNip44Decrypt, processApplesauceBookmarks } from './bookmarkHelpers'
 import type { NostrEvent } from './bookmarkHelpers'
+import { withTimeout, mapWithConcurrency } from '../utils/async'
 
 type DecryptFn = (pubkey: string, content: string) => Promise<string>
 type UnlockHiddenTagsFn = typeof Helpers.unlockHiddenTags
@@ -12,15 +13,94 @@ type HiddenContentSigner = Parameters<UnlockHiddenTagsFn>[1]
 type UnlockMode = Parameters<UnlockHiddenTagsFn>[2]
 
 /**
- * Wrap a decrypt promise with a timeout to prevent hanging (using 30s timeout for bunker)
+ * Decrypt/unlock a single event and return private bookmarks
  */
-function withDecryptTimeout<T>(promise: Promise<T>, timeoutMs = 30000): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Decrypt timeout after ${timeoutMs}ms`)), timeoutMs)
-    )
-  ])
+async function decryptEvent(
+  evt: NostrEvent,
+  activeAccount: ActiveAccount,
+  signerCandidate: unknown,
+  metadata: { dTag?: string; setTitle?: string; setDescription?: string; setImage?: string }
+): Promise<IndividualBookmark[]> {
+  const { dTag, setTitle, setDescription, setImage } = metadata
+  const privateItems: IndividualBookmark[] = []
+
+  try {
+    if (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt)) {
+      try {
+        await Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner)
+      } catch {
+        try {
+          await Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner, 'nip44' as UnlockMode)
+        } catch (err) {
+          console.log("[bunker] ❌ nip44.decrypt failed:", err instanceof Error ? err.message : String(err))
+        }
+      }
+    } else if (evt.content && evt.content.length > 0) {
+      let decryptedContent: string | undefined
+      try {
+        if (hasNip44Decrypt(signerCandidate)) {
+          decryptedContent = await withTimeout(
+            (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(evt.pubkey, evt.content),
+            30000
+          )
+        }
+      } catch (err) {
+        console.log("[bunker] ❌ nip44.decrypt failed:", err instanceof Error ? err.message : String(err))
+      }
+
+      if (!decryptedContent) {
+        try {
+          if (hasNip04Decrypt(signerCandidate)) {
+            decryptedContent = await withTimeout(
+              (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(evt.pubkey, evt.content),
+              30000
+            )
+          }
+        } catch (err) {
+          console.log("[bunker] ❌ nip04.decrypt failed:", err instanceof Error ? err.message : String(err))
+        }
+      }
+
+      if (decryptedContent) {
+        try {
+          const hiddenTags = JSON.parse(decryptedContent) as string[][]
+          const manualPrivate = Helpers.parseBookmarkTags(hiddenTags)
+          privateItems.push(
+            ...processApplesauceBookmarks(manualPrivate, activeAccount, true).map(i => ({
+              ...i,
+              sourceKind: evt.kind,
+              setName: dTag,
+              setTitle,
+              setDescription,
+              setImage
+            }))
+          )
+          Reflect.set(evt, BookmarkHiddenSymbol, manualPrivate)
+          Reflect.set(evt, 'EncryptedContentSymbol', decryptedContent)
+        } catch (err) {
+          // ignore parse errors
+        }
+      }
+    }
+
+    const priv = Helpers.getHiddenBookmarks(evt)
+    if (priv) {
+      privateItems.push(
+        ...processApplesauceBookmarks(priv, activeAccount, true).map(i => ({
+          ...i,
+          sourceKind: evt.kind,
+          setName: dTag,
+          setTitle,
+          setDescription,
+          setImage
+        }))
+      )
+    }
+  } catch {
+    // ignore individual event failures
+  }
+
+  return privateItems
 }
 
 export async function collectBookmarksFromEvents(
@@ -35,21 +115,23 @@ export async function collectBookmarksFromEvents(
   allTags: string[][]
 }> {
   const publicItemsAll: IndividualBookmark[] = []
-  const privateItemsAll: IndividualBookmark[] = []
   let newestCreatedAt = 0
   let latestContent = ''
   let allTags: string[][] = []
+
+  // Build list of events needing decrypt and collect public items immediately
+  const decryptJobs: Array<{ evt: NostrEvent; metadata: { dTag?: string; setTitle?: string; setDescription?: string; setImage?: string } }> = []
 
   for (const evt of bookmarkListEvents) {
     newestCreatedAt = Math.max(newestCreatedAt, evt.created_at || 0)
     if (!latestContent && evt.content && !Helpers.hasHiddenContent(evt)) latestContent = evt.content
     if (Array.isArray(evt.tags)) allTags = allTags.concat(evt.tags)
 
-    // Extract the 'd' tag and metadata for bookmark sets (kind 30003)
     const dTag = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] : undefined
     const setTitle = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'title')?.[1] : undefined
     const setDescription = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'description')?.[1] : undefined
     const setImage = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'image')?.[1] : undefined
+    const metadata = { dTag, setTitle, setDescription, setImage }
 
     // Handle web bookmarks (kind:39701) as individual bookmarks
     if (evt.kind === 39701) {
@@ -85,72 +167,14 @@ export async function collectBookmarksFromEvents(
       }))
     )
 
-    try {
-      if (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt) && signerCandidate) {
-        try {
-          await Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner)
-        } catch {
-          try {
-            await Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner, 'nip44' as UnlockMode)
-          } catch (err) {
-          console.log("[bunker] ❌ nip44.decrypt failed:", err instanceof Error ? err.message : String(err))
-            // ignore
-          }
-        }
-      } else if (evt.content && evt.content.length > 0 && signerCandidate) {
-        let decryptedContent: string | undefined
-        try {
-          if (hasNip44Decrypt(signerCandidate)) {
-            decryptedContent = await withDecryptTimeout((signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(
-              evt.pubkey,
-              evt.content
-            ))
-          }
-        } catch (err) {
-          console.log("[bunker] ❌ nip44.decrypt failed:", err instanceof Error ? err.message : String(err))
-          // ignore
-        }
-
-        if (!decryptedContent) {
-          try {
-            if (hasNip04Decrypt(signerCandidate)) {
-              decryptedContent = await withDecryptTimeout((signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(
-                evt.pubkey,
-                evt.content
-              ))
-            }
-          } catch (err) {
-          console.log("[bunker] ❌ nip04.decrypt failed:", err instanceof Error ? err.message : String(err))
-            // ignore
-          }
-        }
-
-        if (decryptedContent) {
-          try {
-            const hiddenTags = JSON.parse(decryptedContent) as string[][]
-            const manualPrivate = Helpers.parseBookmarkTags(hiddenTags)
-            privateItemsAll.push(
-              ...processApplesauceBookmarks(manualPrivate, activeAccount, true).map(i => ({
-                ...i,
-                sourceKind: evt.kind,
-                setName: dTag,
-                setTitle,
-                setDescription,
-                setImage
-              }))
-            )
-            Reflect.set(evt, BookmarkHiddenSymbol, manualPrivate)
-            Reflect.set(evt, 'EncryptedContentSymbol', decryptedContent)
-            // Don't set latestContent to decrypted JSON - it's not user-facing content
-          } catch (err) {
-            // ignore
-          }
-        }
-      }
-
+    // Schedule decrypt if needed
+    if (signerCandidate && ((Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt)) || (evt.content && evt.content.length > 0))) {
+      decryptJobs.push({ evt, metadata })
+    } else {
+      // Check for already-unlocked hidden bookmarks
       const priv = Helpers.getHiddenBookmarks(evt)
       if (priv) {
-        privateItemsAll.push(
+        publicItemsAll.push(
           ...processApplesauceBookmarks(priv, activeAccount, true).map(i => ({
             ...i,
             sourceKind: evt.kind,
@@ -161,9 +185,22 @@ export async function collectBookmarksFromEvents(
           }))
         )
       }
-    } catch {
-      // ignore individual event failures
     }
+  }
+
+  // Run decrypt jobs with limited concurrency (6 parallel at most)
+  const privateItemsAll: IndividualBookmark[] = []
+  if (decryptJobs.length > 0 && signerCandidate) {
+    const privateChunks = await mapWithConcurrency(
+      decryptJobs,
+      6,
+      async (job) => decryptEvent(job.evt, activeAccount, signerCandidate, job.metadata)
+    )
+    privateChunks.forEach(chunk => {
+      if (chunk && chunk.length > 0) {
+        privateItemsAll.push(...chunk)
+      }
+    })
   }
 
   return { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags }
