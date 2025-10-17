@@ -181,7 +181,7 @@ const Debug: React.FC = () => {
     const timing = liveTiming[mode]
     if (timing && timing.type === type) {
       const elapsed = Math.round(performance.now() - timing.startTime)
-      return `${elapsed}ms`
+      return elapsed
     }
     return null
   }
@@ -193,8 +193,16 @@ const Debug: React.FC = () => {
     type?: 'encrypt' | 'decrypt';
   }) => {
     const liveValue = mode && type ? getLiveTiming(mode, type) : null
-    const displayValue = liveValue || (value ?? '—')
     const isLive = !!liveValue
+    
+    let displayValue: string
+    if (isLive) {
+      displayValue = `${liveValue}ms`
+    } else if (value !== null && value !== undefined) {
+      displayValue = `${value}ms`
+    } else {
+      displayValue = '—'
+    }
     
     return (
       <span className={`badge ${isLive ? 'animate-pulse' : ''}`} style={{ marginRight: 8 }}>
@@ -309,15 +317,15 @@ const Debug: React.FC = () => {
             <div className="setting-group">
               <label className="setting-label">NIP-44</label>
               <div className="flex flex-wrap items-center gap-2">
-                <Stat label="enc" value={tEncrypt44 !== null ? `${tEncrypt44}ms` : null} mode="nip44" type="encrypt" />
-                <Stat label="dec" value={tDecrypt44 !== null ? `${tDecrypt44}ms` : null} mode="nip44" type="decrypt" />
+                <Stat label="enc" value={tEncrypt44} mode="nip44" type="encrypt" />
+                <Stat label="dec" value={tDecrypt44} mode="nip44" type="decrypt" />
               </div>
             </div>
             <div className="setting-group">
               <label className="setting-label">NIP-04</label>
               <div className="flex flex-wrap items-center gap-2">
-                <Stat label="enc" value={tEncrypt04 !== null ? `${tEncrypt04}ms` : null} mode="nip04" type="encrypt" />
-                <Stat label="dec" value={tDecrypt04 !== null ? `${tDecrypt04}ms` : null} mode="nip04" type="decrypt" />
+                <Stat label="enc" value={tEncrypt04} mode="nip04" type="encrypt" />
+                <Stat label="dec" value={tDecrypt04} mode="nip04" type="decrypt" />
               </div>
             </div>
           </div>
