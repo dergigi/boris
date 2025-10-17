@@ -97,10 +97,10 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
 
   const getBookmarkCount = (evt: NostrEvent): { public: number; private: number } => {
     const publicTags = (evt.tags || []).filter((t: string[]) => t[0] === 'e' || t[0] === 'a')
-    const hasPrivate = evt.content && evt.content.length > 0
+    const hasEncrypted = Helpers.hasHiddenContent(evt) || (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt))
     return {
       public: publicTags.length,
-      private: hasPrivate ? 1 : 0 // Can't know exact count until decrypted
+      private: hasEncrypted ? 1 : 0 // Can't know exact count until decrypted
     }
   }
 
