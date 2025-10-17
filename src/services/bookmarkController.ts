@@ -109,7 +109,7 @@ class BookmarkController {
     // Only process unencrypted events for now (skip encrypted entirely)
     const readyEvents = allEvents.filter(evt => !hasEncryptedContent(evt))
     
-    console.log('[controller] 📋 Building bookmarks:', readyEvents.length, 'unencrypted of', allEvents.length, 'total')
+    console.log('[bookmark] 📋 Building bookmarks:', readyEvents.length, 'unencrypted of', allEvents.length, 'total')
     
     if (readyEvents.length === 0) {
       this.bookmarksListeners.forEach(cb => cb([]))
@@ -117,11 +117,11 @@ class BookmarkController {
     }
 
     try {
-      console.log('[controller] 🔧 Calling collectBookmarksFromEvents with', readyEvents.length, 'events')
+      console.log('[bookmark] 🔧 Calling collectBookmarksFromEvents with', readyEvents.length, 'events')
       // Collect bookmarks from ready events only
       const { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags } = 
         await collectBookmarksFromEvents(readyEvents, activeAccount, signerCandidate)
-      console.log('[controller] 🔧 collectBookmarksFromEvents returned:', publicItemsAll.length, 'public,', privateItemsAll.length, 'private')
+      console.log('[bookmark] 🔧 collectBookmarksFromEvents returned:', publicItemsAll.length, 'public,', privateItemsAll.length, 'private')
 
       const allItems = [...publicItemsAll, ...privateItemsAll]
       
@@ -156,7 +156,7 @@ class BookmarkController {
             }
           })
         } catch (error) {
-          console.warn('[controller] Failed to fetch events by ID:', error)
+          console.warn('[bookmark] Failed to fetch events by ID:', error)
         }
       }
       
@@ -195,7 +195,7 @@ class BookmarkController {
             })
           }
         } catch (error) {
-          console.warn('[controller] Failed to fetch addressable events:', error)
+          console.warn('[bookmark] Failed to fetch addressable events:', error)
         }
       }
       
@@ -228,13 +228,13 @@ class BookmarkController {
         encryptedContent: undefined
       }
       
-      console.log('[controller] 📋 Built bookmark with', sortedBookmarks.length, 'items')
-      console.log('[controller] 📤 Emitting to', this.bookmarksListeners.length, 'listeners')
+      console.log('[bookmark] 📋 Built bookmark with', sortedBookmarks.length, 'items')
+      console.log('[bookmark] 📤 Emitting to', this.bookmarksListeners.length, 'listeners')
       this.bookmarksListeners.forEach(cb => cb([bookmark]))
     } catch (error) {
-      console.error('[controller] ❌ Failed to build bookmarks:', error)
-      console.error('[controller] ❌ Error details:', error instanceof Error ? error.message : String(error))
-      console.error('[controller] ❌ Stack:', error instanceof Error ? error.stack : 'no stack')
+      console.error('[bookmark] ❌ Failed to build bookmarks:', error)
+      console.error('[bookmark] ❌ Error details:', error instanceof Error ? error.message : String(error))
+      console.error('[bookmark] ❌ Stack:', error instanceof Error ? error.stack : 'no stack')
       this.bookmarksListeners.forEach(cb => cb([]))
     }
   }
@@ -247,14 +247,14 @@ class BookmarkController {
     const { relayPool, activeAccount, accountManager } = options
 
     if (!activeAccount || typeof (activeAccount as { pubkey?: string }).pubkey !== 'string') {
-      console.error('[controller] Invalid activeAccount')
+      console.error('[bookmark] Invalid activeAccount')
       return
     }
 
     const account = activeAccount as { pubkey: string; [key: string]: unknown }
 
     this.setLoading(true)
-    console.log('[controller] 🔍 Starting bookmark load for', account.pubkey.slice(0, 8))
+    console.log('[bookmark] 🔍 Starting bookmark load for', account.pubkey.slice(0, 8))
 
     try {
       // Get signer for auto-decryption
@@ -282,7 +282,7 @@ class BookmarkController {
             
             // Add/update event
             this.currentEvents.set(key, evt)
-            console.log('[controller] 📨 Event:', evt.kind, evt.id.slice(0, 8), 'encrypted:', hasEncryptedContent(evt))
+            console.log('[bookmark] 📨 Event:', evt.kind, evt.id.slice(0, 8), 'encrypted:', hasEncryptedContent(evt))
             
             // Emit raw event for Debug UI
             this.emitRawEvent(evt)
@@ -292,12 +292,12 @@ class BookmarkController {
             if (!isEncrypted) {
               // For unencrypted events, build bookmarks immediately (progressive update)
               this.buildAndEmitBookmarks(relayPool, maybeAccount, signerCandidate)
-                .catch(err => console.error('[controller] ❌ Failed to update after event:', err))
+                .catch(err => console.error('[bookmark] ❌ Failed to update after event:', err))
             }
             
             // Auto-decrypt if event has encrypted content (fire-and-forget, non-blocking)
             if (isEncrypted) {
-              console.log('[controller] 🔓 Auto-decrypting event', evt.id.slice(0, 8))
+              console.log('[bookmark] 🔓 Auto-decrypting event', evt.id.slice(0, 8))
               // Don't await - let it run in background
               collectBookmarksFromEvents([evt], account, signerCandidate)
                 .then(({ publicItemsAll, privateItemsAll }) => {
@@ -305,7 +305,7 @@ class BookmarkController {
                     public: publicItemsAll.length, 
                     private: privateItemsAll.length 
                   })
-                  console.log('[controller] ✅ Auto-decrypted:', evt.id.slice(0, 8), {
+                  console.log('[bookmark] ✅ Auto-decrypted:', evt.id.slice(0, 8), {
                     public: publicItemsAll.length,
                     private: privateItemsAll.length
                   })
@@ -317,10 +317,10 @@ class BookmarkController {
                   
                   // Rebuild bookmarks with newly decrypted content (progressive update)
                   this.buildAndEmitBookmarks(relayPool, maybeAccount, signerCandidate)
-                    .catch(err => console.error('[controller] ❌ Failed to update after decrypt:', err))
+                    .catch(err => console.error('[bookmark] ❌ Failed to update after decrypt:', err))
                 })
                 .catch((error) => {
-                  console.error('[controller] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
+                  console.error('[bookmark] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
                 })
             }
           }
@@ -329,9 +329,9 @@ class BookmarkController {
 
       // Final update after EOSE
       await this.buildAndEmitBookmarks(relayPool, maybeAccount, signerCandidate)
-      console.log('[controller] ✅ Bookmark load complete')
+      console.log('[bookmark] ✅ Bookmark load complete')
     } catch (error) {
-      console.error('[controller] ❌ Failed to load bookmarks:', error)
+      console.error('[bookmark] ❌ Failed to load bookmarks:', error)
       this.bookmarksListeners.forEach(cb => cb([]))
     } finally {
       this.setLoading(false)

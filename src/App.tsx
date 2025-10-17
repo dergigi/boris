@@ -42,18 +42,18 @@ function AppRoutes({
 
   // Subscribe to bookmark controller
   useEffect(() => {
-    console.log('[app] 🎧 Subscribing to bookmark controller')
+    console.log('[bookmark] 🎧 Subscribing to bookmark controller')
     const unsubBookmarks = bookmarkController.onBookmarks((bookmarks) => {
-      console.log('[app] 📥 Received bookmarks:', bookmarks.length)
+      console.log('[bookmark] 📥 Received bookmarks:', bookmarks.length)
       setBookmarks(bookmarks)
     })
     const unsubLoading = bookmarkController.onLoading((loading) => {
-      console.log('[app] 📥 Loading state:', loading)
+      console.log('[bookmark] 📥 Loading state:', loading)
       setBookmarksLoading(loading)
     })
     
     return () => {
-      console.log('[app] 🔇 Unsubscribing from bookmark controller')
+      console.log('[bookmark] 🔇 Unsubscribing from bookmark controller')
       unsubBookmarks()
       unsubLoading()
     }
@@ -62,10 +62,10 @@ function AppRoutes({
   // Manual refresh (for sidebar button)
   const handleRefreshBookmarks = useCallback(async () => {
     if (!relayPool || !activeAccount) {
-      console.warn('[app] Cannot refresh: missing relayPool or activeAccount')
+      console.warn('[bookmark] Cannot refresh: missing relayPool or activeAccount')
       return
     }
-    console.log('[app] 🔄 Manual refresh triggered')
+    console.log('[bookmark] 🔄 Manual refresh triggered')
     bookmarkController.reset()
     await bookmarkController.start({ relayPool, activeAccount, accountManager })
   }, [relayPool, activeAccount, accountManager])
