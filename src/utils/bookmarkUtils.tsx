@@ -93,48 +93,13 @@ export const sortIndividualBookmarks = (items: IndividualBookmark[]) => {
 export function groupIndividualBookmarks(items: IndividualBookmark[]) {
   const sorted = sortIndividualBookmarks(items)
   
-  // Debug: log what sourceKind values we're seeing
-  const sourceKindCounts = new Map<number | undefined, number>()
-  sorted.forEach(i => {
-    const count = sourceKindCounts.get(i.sourceKind) || 0
-    sourceKindCounts.set(i.sourceKind, count + 1)
-  })
-  console.log('[bookmark] 📊 SourceKind distribution:', Object.fromEntries(sourceKindCounts))
-  
-  // Sample a few items to see their properties
-  const samples = sorted.slice(0, 5).map(i => ({
-    sourceKind: i.sourceKind,
-    isPrivate: i.isPrivate,
-    setName: i.setName,
-    id: i.id.slice(0, 20)
-  }))
-  console.log('[bookmark] 📊 Sample items:', samples)
-  
-  // Debug: Show setName distribution for kind:30001
-  const kind30001Items = sorted.filter(i => i.sourceKind === 30001)
-  const setNameCounts = new Map<string | undefined, number>()
-  kind30001Items.forEach(i => {
-    const count = setNameCounts.get(i.setName) || 0
-    setNameCounts.set(i.setName, count + 1)
-  })
-  console.log('[bookmark] 📊 kind:30001 setName distribution:', Object.fromEntries(setNameCounts))
-  
   // Group by source list, not by content type
   const nip51Public = sorted.filter(i => i.sourceKind === 10003 && !i.isPrivate)
   const nip51Private = sorted.filter(i => i.sourceKind === 10003 && i.isPrivate)
-  // Amethyst bookmarks: kind:30001 with d-tag "bookmark"
-  const amethystPublic = sorted.filter(i => i.sourceKind === 30001 && !i.isPrivate && i.setName === 'bookmark')
-  const amethystPrivate = sorted.filter(i => i.sourceKind === 30001 && i.isPrivate && i.setName === 'bookmark')
+  // Amethyst bookmarks: kind:30001 (any d-tag or undefined)
+  const amethystPublic = sorted.filter(i => i.sourceKind === 30001 && !i.isPrivate)
+  const amethystPrivate = sorted.filter(i => i.sourceKind === 30001 && i.isPrivate)
   const standaloneWeb = sorted.filter(i => i.sourceKind === 39701)
-  
-  console.log('[bookmark] 📊 After grouping:', {
-    nip51Public: nip51Public.length,
-    nip51Private: nip51Private.length,
-    amethystPublic: amethystPublic.length,
-    amethystPrivate: amethystPrivate.length,
-    standaloneWeb: standaloneWeb.length,
-    total: sorted.length
-  })
   
   return { 
     nip51Public, 
