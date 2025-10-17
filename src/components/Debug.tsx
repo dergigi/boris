@@ -274,7 +274,12 @@ const Debug: React.FC = () => {
           <h3 className="section-title">Encryption Tools</h3>
           <div className="setting-group">
             <label className="setting-label">Payload</label>
-            <textarea className="textarea w-full" value={payload} onChange={e => setPayload(e.target.value)} rows={3} />
+                <textarea 
+                  className="textarea w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700" 
+                  value={payload} 
+                  onChange={e => setPayload(e.target.value)} 
+                  rows={3} 
+                />
             <div className="flex gap-2 mt-3">
               <button className="btn btn-secondary" onClick={() => { setCipher44(''); setCipher04(''); setPlain44(''); setPlain04(''); setTEncrypt44(null); setTEncrypt04(null); setTDecrypt44(null); setTDecrypt04(null) }}>Clear</button>
             </div>
