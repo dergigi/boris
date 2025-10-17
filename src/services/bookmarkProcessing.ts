@@ -196,11 +196,21 @@ export async function collectBookmarksFromEvents(
   // Decrypt events sequentially
   const privateItemsAll: IndividualBookmark[] = []
   if (decryptJobs.length > 0 && signerCandidate) {
-    for (const job of decryptJobs) {
-      const privateItems = await decryptEvent(job.evt, activeAccount, signerCandidate, job.metadata)
-      if (privateItems && privateItems.length > 0) {
-        privateItemsAll.push(...privateItems)
+    // Disable queueing for batch operations to avoid blocking on user interaction
+    const accountWithQueue = activeAccount as { disableQueue?: boolean }
+    const originalQueueState = accountWithQueue.disableQueue
+    accountWithQueue.disableQueue = true
+
+    try {
+      for (const job of decryptJobs) {
+        const privateItems = await decryptEvent(job.evt, activeAccount, signerCandidate, job.metadata)
+        if (privateItems && privateItems.length > 0) {
+          privateItemsAll.push(...privateItems)
+        }
       }
+    } finally {
+      // Restore original queue state
+      accountWithQueue.disableQueue = originalQueueState
     }
   }
 
