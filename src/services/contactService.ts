@@ -1,7 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { prioritizeLocalRelays } from '../utils/helpers'
 import { queryEvents } from './dataFetch'
-import { CONTACTS_REMOTE_TIMEOUT_MS } from '../config/network'
 
 /**
  * Fetches the contact list (follows) for a specific user
@@ -24,7 +23,6 @@ export const fetchContacts = async (
       { kinds: [3], authors: [pubkey] },
       {
         relayUrls,
-        remoteTimeoutMs: CONTACTS_REMOTE_TIMEOUT_MS,
         onEvent: (event: { created_at: number; tags: string[][] }) => {
           // Stream partials as we see any contact list
           for (const tag of event.tags) {

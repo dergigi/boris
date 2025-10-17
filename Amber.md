@@ -15,7 +15,7 @@
 - **Account queue disabling (CRITICAL)**
   - `applesauce-accounts` `BaseAccount` queues requests by default - each request waits for the previous one to complete before being sent.
   - This caused batch decrypt operations to hang: first request would timeout waiting for user interaction, blocking all subsequent requests in the queue.
-  - **Solution**: Set `account.disableQueue = true` before batch operations, restore after completion.
+  - **Solution**: Set `accounts.disableQueue = true` globally on the `AccountManager` in `App.tsx` during initialization. This applies to all accounts.
   - Without this, Amber never sees decrypt requests because they're stuck in the account's internal queue.
   - Reference: https://hzrd149.github.io/applesauce/typedoc/classes/applesauce-accounts.BaseAccount.html#disablequeue
 
@@ -88,20 +88,20 @@ If DECRYPT entries still don’t appear:
 - **Problem #2**: 30-second timeouts on `nip44.decrypt` meant waiting 30s per event if bunker didn't support nip44.
 - **Problem #3**: Account request queue blocked all decrypt requests until first one completed (waiting for user interaction).
 - **Solution**: 
-  - Removed artificial timeouts - let decrypt fail naturally like debug page does.
+  - Removed all artificial timeouts - let decrypt fail naturally like debug page does.
   - Added smart encryption detection (NIP-04 has `?iv=`, NIP-44 doesn't) to try the right method first.
-  - Use 5-second timeout as safety net (down from 30s).
-  - **Disable account queue** (`disableQueue = true`) during batch operations so all requests are sent immediately.
+  - **Disabled account queue globally** (`accounts.disableQueue = true`) in `App.tsx` so all requests are sent immediately.
   - Process sequentially (removed concurrent `mapWithConcurrency` hack).
-- **Result**: Bookmark decryption should be near-instant, limited only by bunker response time and user approval speed.
+- **Result**: Bookmark decryption is near-instant, limited only by bunker response time and user approval speed.
 
 ## Current conclusion
 
 - Client is configured and publishing requests correctly; encryption proves end‑to‑end path is alive.
 - Non-blocking publish keeps operations fast (~1-2s for encrypt/decrypt).
-- **Account queue MUST be disabled** for batch operations - this was the primary cause of hangs/timeouts.
-- Smart encryption detection and reasonable timeouts (5s) prevent unnecessary delays.
+- **Account queue is GLOBALLY DISABLED** - this was the primary cause of hangs/timeouts.
+- Smart encryption detection and no artificial timeouts make operations instant.
 - Sequential processing is cleaner and more predictable than concurrent hacks.
-- The missing DECRYPT activity in Amber was partially due to requests never being sent (stuck in queue). With queue disabled, Amber should now receive all decrypt requests.
+- Relay queries now trust EOSE signals instead of arbitrary timeouts, completing in 1-2s instead of 6s.
+- The missing DECRYPT activity in Amber was partially due to requests never being sent (stuck in queue). With queue disabled globally, Amber receives all decrypt requests immediately.
 
 

@@ -203,13 +203,11 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
       setLiveTiming(prev => ({ ...prev, loadBookmarks: { startTime: start } }))
 
       // Use onEvent callback to stream events as they arrive
-      // Shorter timeouts for debug page - trust EOSE from fast relays
+      // Trust EOSE - completes when relays finish, no artificial timeouts
       const rawEvents = await queryEvents(
         relayPool,
         { kinds: [KINDS.ListSimple, KINDS.ListReplaceable, KINDS.List, KINDS.WebBookmark], authors: [activeAccount.pubkey] },
         {
-          localTimeoutMs: 800,   // Local relays should be instant
-          remoteTimeoutMs: 2000, // Trust EOSE from fast remote relays
           onEvent: (evt) => {
             // Add event immediately with live deduplication
             setBookmarkEvents(prev => {

@@ -189,6 +189,10 @@ function App() {
       const store = new EventStore()
       const accounts = new AccountManager()
       
+      // Disable request queueing globally - makes all operations instant
+      // Queue causes requests to wait for user interaction which blocks batch operations
+      accounts.disableQueue = true
+      
       // Register common account types (needed for deserialization)
       registerCommonAccountTypes(accounts)
       

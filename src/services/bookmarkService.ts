@@ -144,7 +144,7 @@ const { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags
         const events = await queryEvents(
           relayPool,
           { ids: Array.from(new Set(noteIds)) },
-          { localTimeoutMs: 800, remoteTimeoutMs: 2500 }
+          {}
         )
         events.forEach((e: NostrEvent) => {
           idToEvent.set(e.id, e)
@@ -186,7 +186,7 @@ const { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags
           const events = await queryEvents(
             relayPool,
             { kinds: [kind], authors, '#d': identifiers },
-            { localTimeoutMs: 800, remoteTimeoutMs: 2500 }
+            {}
           )
           
           events.forEach((e: NostrEvent) => {
