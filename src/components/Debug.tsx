@@ -551,9 +551,9 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
                       {dTag && <div className="opacity-70">d-tag: {dTag}</div>}
                       {titleTag && <div className="opacity-70">title: {titleTag}</div>}
                       <div className="mt-1 flex gap-3 flex-wrap">
-                        <span>📊 Size: {formatBytes(size)}</span>
-                        <span>📌 Public: {counts.public}</span>
-                        {counts.private > 0 && <span>🔒 Has encrypted content</span>}
+                        <span>Size: {formatBytes(size)}</span>
+                        <span>Public: {counts.public}</span>
+                        {counts.private > 0 && <span>Has encrypted content</span>}
                       </div>
                       <div className="opacity-50 mt-1 text-[10px]">ID: {evt.id?.slice(0, 16)}...</div>
                     </div>
