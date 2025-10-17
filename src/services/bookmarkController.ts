@@ -218,11 +218,14 @@ class BookmarkController {
       emitBookmarks(idToEvent)
 
       // Now fetch events progressively in background (non-blocking)
-      console.log('[bookmark] 🔧 Starting background fetch:', noteIds.length, 'note IDs and', coordinates.length, 'coordinates')
+      console.log('[bookmark] 🔧 Background fetch:', noteIds.length, 'note IDs and', coordinates.length, 'coordinates')
       
-      // Fetch regular events by ID (non-blocking)
-      if (noteIds.length > 0) {
-        console.log('[bookmark] 🔧 Fetching events by ID in background...')
+      // Skip fetching if there are too many (would be too slow)
+      const MAX_IDS_TO_FETCH = 100
+      if (noteIds.length > MAX_IDS_TO_FETCH) {
+        console.log('[bookmark] ⏭️ Skipping event fetch (', noteIds.length, '> max', MAX_IDS_TO_FETCH, ') - showing IDs only')
+      } else if (noteIds.length > 0) {
+        console.log('[bookmark] 🔧 Fetching', noteIds.length, 'events by ID in background...')
         queryEvents(
           relayPool,
           { ids: Array.from(new Set(noteIds)) },
@@ -245,8 +248,11 @@ class BookmarkController {
       }
       
       // Fetch addressable events by coordinates (non-blocking)
-      if (coordinates.length > 0) {
-        console.log('[bookmark] 🔧 Fetching addressable events in background...')
+      const MAX_COORDS_TO_FETCH = 100
+      if (coordinates.length > MAX_COORDS_TO_FETCH) {
+        console.log('[bookmark] ⏭️ Skipping coordinate fetch (', coordinates.length, '> max', MAX_COORDS_TO_FETCH, ') - showing IDs only')
+      } else if (coordinates.length > 0) {
+        console.log('[bookmark] 🔧 Fetching', coordinates.length, 'addressable events in background...')
         const byKind = new Map<number, Array<{ pubkey: string; identifier: string }>>()
         
         coordinates.forEach(coord => {
