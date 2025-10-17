@@ -265,18 +265,6 @@ const Debug: React.FC = () => {
         {/* Debug Logs Section */}
         <div className="settings-section">
           <h3 className="section-title">Debug Logs</h3>
-          <div className="flex gap-2 items-center mb-3">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={debugEnabled}
-                onChange={toggleDebug}
-                className="checkbox"
-              />
-              <span className="text-sm">Show all applesauce debug logs</span>
-            </label>
-            <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
-          </div>
           <div className="text-sm opacity-70 mb-3">Recent NIP-46 activity</div>
           <div className="max-h-64 overflow-y-auto font-mono text-xs leading-relaxed">
             {logs.length === 0 ? (
@@ -291,6 +279,18 @@ const Debug: React.FC = () => {
                 </div>
               ))
             )}
+          </div>
+          <div className="flex gap-2 items-center mt-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={debugEnabled}
+                onChange={toggleDebug}
+                className="checkbox"
+              />
+              <span className="text-sm">Show all applesauce debug logs</span>
+            </label>
+            <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
           </div>
         </div>
       </div>
