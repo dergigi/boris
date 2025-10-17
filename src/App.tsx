@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
@@ -20,7 +20,7 @@ import { RELAYS } from './config/relays'
 import { SkeletonThemeProvider } from './components/Skeletons'
 import { DebugBus } from './utils/debugBus'
 import { Bookmark } from './types/bookmarks'
-import { fetchBookmarks } from './services/bookmarkService'
+import { bookmarkController } from './services/bookmarkController'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -36,60 +36,35 @@ function AppRoutes({
   const accountManager = Hooks.useAccountManager()
   const activeAccount = Hooks.useActiveAccount()
   
-  // Centralized bookmark state
+  // Centralized bookmark state (fed by controller)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [bookmarksLoading, setBookmarksLoading] = useState(false)
-  const isLoadingRef = useRef(false)
 
-  // Load bookmarks function
-  const loadBookmarks = useCallback(async () => {
-    if (!relayPool || !activeAccount || isLoadingRef.current) return
-    
-    try {
-      isLoadingRef.current = true
-      setBookmarksLoading(true)
-      console.log('[app] 🔍 Loading bookmarks for', activeAccount.pubkey.slice(0, 8))
-      
-      const fullAccount = accountManager.getActive()
-      // Progressive updates via onProgressUpdate callback
-      await fetchBookmarks(
-        relayPool, 
-        fullAccount || activeAccount, 
-        accountManager,
-        setBookmarks,
-        undefined, // settings
-        () => {
-          // Trigger re-render on each event/decrypt (progressive loading)
-          setBookmarksLoading(true)
-        }
-      )
-      
-      console.log('[app] ✅ Bookmarks loaded')
-    } catch (error) {
-      console.error('[app] ❌ Failed to load bookmarks:', error)
-    } finally {
-      setBookmarksLoading(false)
-      isLoadingRef.current = false
-    }
-  }, [relayPool, activeAccount, accountManager])
-
-  // Refresh bookmarks (for manual refresh button)
-  const handleRefreshBookmarks = useCallback(async () => {
-    console.log('[app] 🔄 Manual refresh triggered')
-    await loadBookmarks()
-  }, [loadBookmarks])
-
-  // Load bookmarks when account changes (includes initial mount)
+  // Subscribe to bookmark controller
   useEffect(() => {
-    if (activeAccount && relayPool) {
-      console.log('[app] 👤 Loading bookmarks (account + relayPool ready)')
-      loadBookmarks()
+    const unsubBookmarks = bookmarkController.onBookmarks(setBookmarks)
+    const unsubLoading = bookmarkController.onLoading(setBookmarksLoading)
+    
+    return () => {
+      unsubBookmarks()
+      unsubLoading()
     }
-  }, [activeAccount, relayPool, loadBookmarks])
+  }, [])
+
+  // Manual refresh (for sidebar button)
+  const handleRefreshBookmarks = useCallback(async () => {
+    if (!relayPool || !activeAccount) {
+      console.warn('[app] Cannot refresh: missing relayPool or activeAccount')
+      return
+    }
+    console.log('[app] 🔄 Manual refresh triggered')
+    bookmarkController.reset()
+    await bookmarkController.start({ relayPool, activeAccount, accountManager })
+  }, [relayPool, activeAccount, accountManager])
 
   const handleLogout = () => {
     accountManager.clearActive()
-    setBookmarks([]) // Clear bookmarks on logout
+    bookmarkController.reset() // Clear bookmarks via controller
     showToast('Logged out successfully')
   }
 

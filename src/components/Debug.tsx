@@ -11,9 +11,7 @@ import { Helpers } from 'applesauce-core'
 import { getDefaultBunkerPermissions } from '../services/nostrConnect'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
 import ThreePaneLayout from './ThreePaneLayout'
-import { queryEvents } from '../services/dataFetch'
 import { KINDS } from '../config/kinds'
-import { collectBookmarksFromEvents } from '../services/bookmarkProcessing'
 import type { NostrEvent } from '../services/bookmarkHelpers'
 import { Bookmark } from '../types/bookmarks'
 import { useBookmarksUI } from '../hooks/useBookmarksUI'
@@ -244,79 +242,49 @@ const Debug: React.FC<DebugProps> = ({
       setIsLoadingBookmarks(true)
       setBookmarkStats(null)
       setBookmarkEvents([]) // Clear existing events
+      setDecryptedEvents(new Map())
       DebugBus.info('debug', 'Loading bookmark events...')
 
       // Start timing
       const start = performance.now()
       setLiveTiming(prev => ({ ...prev, loadBookmarks: { startTime: start } }))
 
-      // Get signer for auto-decryption
-      const fullAccount = accountManager.getActive()
-      const signerCandidate = fullAccount || activeAccount
-
-      // Use onEvent callback to stream events as they arrive
-      // Trust EOSE - completes when relays finish, no artificial timeouts
-      const rawEvents = await queryEvents(
-        relayPool,
-        { kinds: [KINDS.ListSimple, KINDS.ListReplaceable, KINDS.List, KINDS.WebBookmark], authors: [activeAccount.pubkey] },
-        {
-          onEvent: async (evt) => {
-            // Add event immediately with live deduplication
-            setBookmarkEvents(prev => {
-              // Create unique key for deduplication
-              const key = getEventKey(evt)
-              
-              // Find existing event with same key
-              const existingIdx = prev.findIndex(e => getEventKey(e) === key)
-              
-              if (existingIdx >= 0) {
-                // Replace if newer
-                const existing = prev[existingIdx]
-                if ((evt.created_at || 0) > (existing.created_at || 0)) {
-                  const newEvents = [...prev]
-                  newEvents[existingIdx] = evt
-                  return newEvents
-                }
-                return prev // Keep existing (it's newer)
-              }
-              
-              // Add new event
-              return [...prev, evt]
-            })
-
-            // Auto-decrypt if event has encrypted content
-            if (hasEncryptedContent(evt)) {
-              console.log('[bunker] 🔓 Auto-decrypting event', evt.id.slice(0, 8))
-              try {
-                const { publicItemsAll, privateItemsAll } = await collectBookmarksFromEvents(
-                  [evt],
-                  activeAccount,
-                  signerCandidate
-                )
-                setDecryptedEvents(prev => new Map(prev).set(evt.id, { 
-                  public: publicItemsAll.length, 
-                  private: privateItemsAll.length 
-                }))
-                console.log('[bunker] ✅ Auto-decrypted:', evt.id.slice(0, 8), {
-                  public: publicItemsAll.length,
-                  private: privateItemsAll.length
-                })
-              } catch (error) {
-                console.error('[bunker] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
-              }
+      // Import controller at runtime to avoid circular dependencies
+      const { bookmarkController } = await import('../services/bookmarkController')
+      
+      // Subscribe to raw events for Debug UI display
+      const unsubscribe = bookmarkController.onRawEvent((evt) => {
+        // Add event immediately with live deduplication
+        setBookmarkEvents(prev => {
+          const key = getEventKey(evt)
+          const existingIdx = prev.findIndex(e => getEventKey(e) === key)
+          
+          if (existingIdx >= 0) {
+            const existing = prev[existingIdx]
+            if ((evt.created_at || 0) > (existing.created_at || 0)) {
+              const newEvents = [...prev]
+              newEvents[existingIdx] = evt
+              return newEvents
             }
+            return prev
           }
-        }
-      )
+          
+          return [...prev, evt]
+        })
+      })
+
+      // Start the controller (triggers app bookmark population too)
+      bookmarkController.reset()
+      await bookmarkController.start({ relayPool, activeAccount, accountManager })
+      
+      // Clean up subscription
+      unsubscribe()
 
       const ms = Math.round(performance.now() - start)
       setLiveTiming(prev => ({ ...prev, loadBookmarks: undefined }))
       setTLoadBookmarks(ms)
 
-      DebugBus.info('debug', `Loaded ${rawEvents.length} bookmark events`, {
-        kinds: rawEvents.map(e => e.kind).join(', '),
-        ms
-      })
+      DebugBus.info('debug', `Loaded bookmark events`, { ms })
     } catch (error) {
       setLiveTiming(prev => ({ ...prev, loadBookmarks: undefined }))
       DebugBus.error('debug', 'Failed to load bookmarks', error instanceof Error ? error.message : String(error))
