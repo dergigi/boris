@@ -6,6 +6,7 @@ import { EventPointer } from 'nostr-tools/nip19'
 import { merge } from 'rxjs'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
+import { RELAYS } from '../config/relays'
 import { collectBookmarksFromEvents } from './bookmarkProcessing'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import {
@@ -365,9 +366,15 @@ class BookmarkController {
     this.hydrationGeneration++
     
     // Initialize loaders for this session
-    console.log('[bookmark] 🔧 Initializing EventLoader and AddressLoader')
-    this.eventLoader = createEventLoader(relayPool, { eventStore: this.eventStore })
-    this.addressLoader = createAddressLoader(relayPool, { eventStore: this.eventStore })
+    console.log('[bookmark] 🔧 Initializing EventLoader and AddressLoader with', RELAYS.length, 'relays')
+    this.eventLoader = createEventLoader(relayPool, { 
+      eventStore: this.eventStore,
+      extraRelays: RELAYS 
+    })
+    this.addressLoader = createAddressLoader(relayPool, { 
+      eventStore: this.eventStore,
+      extraRelays: RELAYS
+    })
     
     this.setLoading(true)
     console.log('[bookmark] 🔍 Starting bookmark load for', account.pubkey.slice(0, 8))
