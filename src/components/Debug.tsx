@@ -44,11 +44,15 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
   const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false)
   const [isDecryptingBookmarks, setIsDecryptingBookmarks] = useState(false)
   const [bookmarkStats, setBookmarkStats] = useState<{ public: number; private: number } | null>(null)
+  const [tLoadBookmarks, setTLoadBookmarks] = useState<number | null>(null)
+  const [tDecryptBookmarks, setTDecryptBookmarks] = useState<number | null>(null)
   
   // Live timing state
   const [liveTiming, setLiveTiming] = useState<{
     nip44?: { type: 'encrypt' | 'decrypt'; startTime: number }
     nip04?: { type: 'encrypt' | 'decrypt'; startTime: number }
+    loadBookmarks?: { startTime: number }
+    decryptBookmarks?: { startTime: number }
   }>({})
 
   useEffect(() => {
@@ -180,17 +184,27 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
       setBookmarkStats(null)
       DebugBus.info('debug', 'Loading bookmark events...')
 
+      // Start timing
+      const start = performance.now()
+      setLiveTiming(prev => ({ ...prev, loadBookmarks: { startTime: start } }))
+
       const rawEvents = await queryEvents(
         relayPool,
         { kinds: [KINDS.ListSimple, KINDS.ListReplaceable, KINDS.List, KINDS.WebBookmark], authors: [activeAccount.pubkey] },
         {}
       )
 
+      const ms = Math.round(performance.now() - start)
+      setLiveTiming(prev => ({ ...prev, loadBookmarks: undefined }))
+      setTLoadBookmarks(ms)
+
       setBookmarkEvents(rawEvents)
       DebugBus.info('debug', `Loaded ${rawEvents.length} bookmark events`, {
-        kinds: rawEvents.map(e => e.kind).join(', ')
+        kinds: rawEvents.map(e => e.kind).join(', '),
+        ms
       })
     } catch (error) {
+      setLiveTiming(prev => ({ ...prev, loadBookmarks: undefined }))
       DebugBus.error('debug', 'Failed to load bookmarks', error instanceof Error ? error.message : String(error))
     } finally {
       setIsLoadingBookmarks(false)
@@ -207,6 +221,10 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
       setIsDecryptingBookmarks(true)
       DebugBus.info('debug', 'Decrypting bookmark events...')
 
+      // Start timing
+      const start = performance.now()
+      setLiveTiming(prev => ({ ...prev, decryptBookmarks: { startTime: start } }))
+
       const fullAccount = accountManager.getActive()
       const signerCandidate = fullAccount || activeAccount
 
@@ -216,6 +234,10 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
         signerCandidate
       )
 
+      const ms = Math.round(performance.now() - start)
+      setLiveTiming(prev => ({ ...prev, decryptBookmarks: undefined }))
+      setTDecryptBookmarks(ms)
+
       setBookmarkStats({
         public: publicItemsAll.length,
         private: privateItemsAll.length
@@ -224,9 +246,11 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
       DebugBus.info('debug', `Decryption complete`, {
         public: publicItemsAll.length,
         private: privateItemsAll.length,
-        total: publicItemsAll.length + privateItemsAll.length
+        total: publicItemsAll.length + privateItemsAll.length,
+        ms
       })
     } catch (error) {
+      setLiveTiming(prev => ({ ...prev, decryptBookmarks: undefined }))
       DebugBus.error('debug', 'Failed to decrypt bookmarks', error instanceof Error ? error.message : String(error))
     } finally {
       setIsDecryptingBookmarks(false)
@@ -294,13 +318,23 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
     return null
   }
 
-  const Stat = ({ label, value, mode, type }: { 
+  const getBookmarkLiveTiming = (operation: 'loadBookmarks' | 'decryptBookmarks') => {
+    const timing = liveTiming[operation]
+    if (timing) {
+      const elapsed = Math.round(performance.now() - timing.startTime)
+      return elapsed
+    }
+    return null
+  }
+
+  const Stat = ({ label, value, mode, type, bookmarkOp }: { 
     label: string; 
     value?: string | number | null;
     mode?: 'nip44' | 'nip04';
     type?: 'encrypt' | 'decrypt';
+    bookmarkOp?: 'loadBookmarks' | 'decryptBookmarks';
   }) => {
-    const liveValue = mode && type ? getLiveTiming(mode, type) : null
+    const liveValue = bookmarkOp ? getBookmarkLiveTiming(bookmarkOp) : (mode && type ? getLiveTiming(mode, type) : null)
     const isLive = !!liveValue
     
     let displayValue: string
@@ -494,6 +528,11 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
                 'Decrypt'
               )}
             </button>
+          </div>
+
+          <div className="mb-3 flex gap-2 flex-wrap">
+            <Stat label="load" value={tLoadBookmarks} bookmarkOp="loadBookmarks" />
+            <Stat label="decrypt" value={tDecryptBookmarks} bookmarkOp="decryptBookmarks" />
           </div>
 
           {bookmarkEvents.length > 0 && (
