@@ -173,7 +173,7 @@ export async function collectBookmarksFromEvents(
     )
 
     // Schedule decrypt if needed
-    if (signerCandidate && ((Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt)) || (evt.content && evt.content.length > 0))) {
+    if (signerCandidate && ((Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt)) || Helpers.hasHiddenContent(evt))) {
       decryptJobs.push({ evt, metadata })
     } else {
       // Check for already-unlocked hidden bookmarks
