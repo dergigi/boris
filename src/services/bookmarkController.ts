@@ -38,6 +38,7 @@ function hasEncryptedContent(evt: NostrEvent): boolean {
 type RawEventCallback = (event: NostrEvent) => void
 type BookmarksCallback = (bookmarks: Bookmark[]) => void
 type LoadingCallback = (loading: boolean) => void
+type DecryptCompleteCallback = (eventId: string, publicCount: number, privateCount: number) => void
 
 /**
  * Shared bookmark streaming controller
@@ -47,6 +48,7 @@ class BookmarkController {
   private rawEventListeners: RawEventCallback[] = []
   private bookmarksListeners: BookmarksCallback[] = []
   private loadingListeners: LoadingCallback[] = []
+  private decryptCompleteListeners: DecryptCompleteCallback[] = []
   
   private currentEvents: Map<string, NostrEvent> = new Map()
   private decryptedEvents: Map<string, { public: number; private: number }> = new Map()
@@ -71,6 +73,13 @@ class BookmarkController {
     this.loadingListeners.push(cb)
     return () => {
       this.loadingListeners = this.loadingListeners.filter(l => l !== cb)
+    }
+  }
+
+  onDecryptComplete(cb: DecryptCompleteCallback): () => void {
+    this.decryptCompleteListeners.push(cb)
+    return () => {
+      this.decryptCompleteListeners = this.decryptCompleteListeners.filter(l => l !== cb)
     }
   }
 
@@ -300,6 +309,11 @@ class BookmarkController {
                     public: publicItemsAll.length,
                     private: privateItemsAll.length
                   })
+                  
+                  // Emit decrypt complete for Debug UI
+                  this.decryptCompleteListeners.forEach(cb => 
+                    cb(evt.id, publicItemsAll.length, privateItemsAll.length)
+                  )
                   
                   // Schedule another update after decrypt
                   this.scheduleBookmarkUpdate(relayPool, maybeAccount, signerCandidate)

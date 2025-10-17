@@ -253,7 +253,7 @@ const Debug: React.FC<DebugProps> = ({
       const { bookmarkController } = await import('../services/bookmarkController')
       
       // Subscribe to raw events for Debug UI display
-      const unsubscribe = bookmarkController.onRawEvent((evt) => {
+      const unsubscribeRaw = bookmarkController.onRawEvent((evt) => {
         // Add event immediately with live deduplication
         setBookmarkEvents(prev => {
           const key = getEventKey(evt)
@@ -273,12 +273,25 @@ const Debug: React.FC<DebugProps> = ({
         })
       })
 
+      // Subscribe to decrypt complete events for Debug UI display
+      const unsubscribeDecrypt = bookmarkController.onDecryptComplete((eventId, publicCount, privateCount) => {
+        console.log('[bunker] ✅ Auto-decrypted:', eventId.slice(0, 8), {
+          public: publicCount,
+          private: privateCount
+        })
+        setDecryptedEvents(prev => new Map(prev).set(eventId, { 
+          public: publicCount, 
+          private: privateCount 
+        }))
+      })
+
       // Start the controller (triggers app bookmark population too)
       bookmarkController.reset()
       await bookmarkController.start({ relayPool, activeAccount, accountManager })
       
-      // Clean up subscription
-      unsubscribe()
+      // Clean up subscriptions
+      unsubscribeRaw()
+      unsubscribeDecrypt()
 
       const ms = Math.round(performance.now() - start)
       setLiveTiming(prev => ({ ...prev, loadBookmarks: undefined }))
