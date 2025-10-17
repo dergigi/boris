@@ -36,6 +36,8 @@ interface MeProps {
   relayPool: RelayPool
   activeTab?: TabType
   pubkey?: string // Optional pubkey for viewing other users' profiles
+  bookmarks: Bookmark[] // From centralized App.tsx state
+  bookmarksLoading: boolean // From centralized App.tsx state
 }
 
 type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
@@ -43,7 +45,13 @@ type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
 // Valid reading progress filters
 const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed']
 
-const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: propPubkey }) => {
+const Me: React.FC<MeProps> = ({ 
+  relayPool, 
+  activeTab: propActiveTab, 
+  pubkey: propPubkey,
+  bookmarks,
+  bookmarksLoading
+}) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
   const { filter: urlFilter } = useParams<{ filter?: string }>()
@@ -53,7 +61,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const viewingPubkey = propPubkey || activeAccount?.pubkey
   const isOwnProfile = !propPubkey || (activeAccount?.pubkey === propPubkey)
   const [highlights, setHighlights] = useState<Highlight[]>([])
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [reads, setReads] = useState<ReadItem[]>([])
   const [, setReadsMap] = useState<Map<string, ReadItem>>(new Map())
   const [links, setLinks] = useState<ReadItem[]>([])
@@ -251,7 +258,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       const cached = getCachedMeData(viewingPubkey)
       if (cached) {
         setHighlights(cached.highlights)
-        setBookmarks(cached.bookmarks)
+        // Bookmarks come from App.tsx centralized state, no local caching needed
         setReads(cached.reads || [])
         setLinks(cached.links || [])
       }
