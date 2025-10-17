@@ -82,7 +82,7 @@ const Debug: React.FC = () => {
   const CodeBox = ({ value }: { value: string }) => (
     <pre
       className="textarea"
-      style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}
+      style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
     >{value || '—'}</pre>
   )
 
