@@ -280,6 +280,7 @@ const Debug: React.FC = () => {
                   rows={3} 
                 />
             <div className="flex gap-2 mt-3 justify-end">
+              <button className="btn btn-secondary" onClick={() => setPayload(defaultPayload)}>Reset</button>
               <button className="btn btn-secondary" onClick={() => { setCipher44(''); setCipher04(''); setPlain44(''); setPlain04(''); setTEncrypt44(null); setTEncrypt04(null); setTDecrypt44(null); setTDecrypt04(null) }}>Clear</button>
             </div>
           </div>
