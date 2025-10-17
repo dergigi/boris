@@ -218,7 +218,7 @@ const Debug: React.FC = () => {
   return (
     <div className="settings-view">
       <div className="settings-header">
-        <h2>Bunker Debug</h2>
+        <h2>Debug</h2>
         <div className="settings-header-actions">
           <span className="opacity-70">Active pubkey:</span> <code className="text-sm">{pubkey || 'none'}</code>
         </div>
