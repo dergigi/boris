@@ -106,8 +106,8 @@ const Debug: React.FC = () => {
             <textarea className="textarea w-full" value={payload} onChange={e => setPayload(e.target.value)} rows={3} />
             <div className="flex gap-2 mt-3">
               <button className="btn btn-primary" onClick={() => doEncrypt('nip44')} disabled={!hasNip44}>Encrypt (nip44)</button>
-              <button className="btn" onClick={() => doEncrypt('nip04')} disabled={!hasNip04}>Encrypt (nip04)</button>
-              <button className="btn btn-outline" onClick={() => { setCipher44(''); setCipher04(''); setPlain44(''); setPlain04(''); setTEncrypt44(null); setTEncrypt04(null); setTDecrypt44(null); setTDecrypt04(null) }}>Clear</button>
+              <button className="btn btn-secondary" onClick={() => doEncrypt('nip04')} disabled={!hasNip04}>Encrypt (nip04)</button>
+              <button className="btn btn-secondary" onClick={() => { setCipher44(''); setCipher04(''); setPlain44(''); setPlain04(''); setTEncrypt44(null); setTEncrypt04(null); setTDecrypt44(null); setTDecrypt04(null) }}>Clear</button>
             </div>
           </div>
         </div>
