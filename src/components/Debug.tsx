@@ -171,10 +171,9 @@ const Debug: React.FC = () => {
   }
 
   const CodeBox = ({ value }: { value: string }) => (
-    <pre
-      className="textarea"
-      style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
-    >{value || '—'}</pre>
+    <div className="max-h-32 overflow-y-auto font-mono text-xs leading-relaxed p-2 bg-gray-100 dark:bg-gray-800 rounded">
+      {value || '—'}
+    </div>
   )
 
   const getLiveTiming = (mode: 'nip44' | 'nip04', type: 'encrypt' | 'decrypt') => {
