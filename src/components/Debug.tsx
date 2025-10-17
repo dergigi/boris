@@ -355,17 +355,21 @@ const Debug: React.FC = () => {
               ))
             )}
           </div>
-            <div className="flex gap-2 items-center mt-3 justify-end">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={debugEnabled}
-                  onChange={toggleDebug}
-                  className="checkbox"
-                />
-                <span className="text-sm">Show all applesauce debug logs</span>
-              </label>
-              <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
+            <div className="mt-3">
+              <div className="flex justify-end mb-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={debugEnabled}
+                    onChange={toggleDebug}
+                    className="checkbox"
+                  />
+                  <span className="text-sm">Show all applesauce debug logs</span>
+                </label>
+              </div>
+              <div className="flex justify-end">
+                <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
+              </div>
             </div>
         </div>
       </div>
