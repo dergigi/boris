@@ -11,6 +11,10 @@ const Debug: React.FC = () => {
   const [cipher04, setCipher04] = useState<string>('')
   const [plain44, setPlain44] = useState<string>('')
   const [plain04, setPlain04] = useState<string>('')
+  const [tEncrypt44, setTEncrypt44] = useState<number | null>(null)
+  const [tEncrypt04, setTEncrypt04] = useState<number | null>(null)
+  const [tDecrypt44, setTDecrypt44] = useState<number | null>(null)
+  const [tDecrypt04, setTDecrypt04] = useState<number | null>(null)
   const [logs, setLogs] = useState<DebugLogEntry[]>(DebugBus.snapshot())
   const [debugEnabled, setDebugEnabled] = useState<boolean>(() => localStorage.getItem('debug') === '*')
 
@@ -29,10 +33,14 @@ const Debug: React.FC = () => {
     try {
       const api = (signer as any)[mode]
       DebugBus.info('debug', `encrypt start ${mode}`, { pubkey, len: payload.length })
+      const start = performance.now()
       const cipher = await api.encrypt(pubkey, payload)
-      DebugBus.info('debug', `encrypt done ${mode}`, { len: typeof cipher === 'string' ? cipher.length : -1 })
+      const ms = Math.round(performance.now() - start)
+      DebugBus.info('debug', `encrypt done ${mode}`, { len: typeof cipher === 'string' ? cipher.length : -1, ms })
       if (mode === 'nip44') setCipher44(cipher)
       else setCipher04(cipher)
+      if (mode === 'nip44') setTEncrypt44(ms)
+      else setTEncrypt04(ms)
     } catch (e) {
       DebugBus.error('debug', `encrypt error ${mode}`, e instanceof Error ? e.message : String(e))
     }
@@ -48,10 +56,14 @@ const Debug: React.FC = () => {
         return
       }
       DebugBus.info('debug', `decrypt start ${mode}`, { len: cipher.length })
+      const start = performance.now()
       const plain = await api.decrypt(pubkey, cipher)
-      DebugBus.info('debug', `decrypt done ${mode}`, { len: typeof plain === 'string' ? plain.length : -1 })
+      const ms = Math.round(performance.now() - start)
+      DebugBus.info('debug', `decrypt done ${mode}`, { len: typeof plain === 'string' ? plain.length : -1, ms })
       if (mode === 'nip44') setPlain44(String(plain))
       else setPlain04(String(plain))
+      if (mode === 'nip44') setTDecrypt44(ms)
+      else setTDecrypt04(ms)
     } catch (e) {
       DebugBus.error('debug', `decrypt error ${mode}`, e instanceof Error ? e.message : String(e))
     }
@@ -88,7 +100,7 @@ const Debug: React.FC = () => {
             <textarea className="textarea" value={cipher44} readOnly rows={2} />
             <div className="flex gap-2">
               <button className="btn btn-secondary" onClick={() => doDecrypt('nip44')} disabled={!cipher44}>Decrypt (nip44)</button>
-              <span>Plain: <code>{plain44}</code></span>
+              <span>Plain: <code>{plain44}</code>{tEncrypt44 !== null && (<span> • enc {tEncrypt44}ms</span>)}{tDecrypt44 !== null && (<span> • dec {tDecrypt44}ms</span>)}</span>
             </div>
           </div>
           <div className="grid mt-3" style={{ gap: 8 }}>
@@ -96,7 +108,7 @@ const Debug: React.FC = () => {
             <textarea className="textarea" value={cipher04} readOnly rows={2} />
             <div className="flex gap-2">
               <button className="btn btn-secondary" onClick={() => doDecrypt('nip04')} disabled={!cipher04}>Decrypt (nip04)</button>
-              <span>Plain: <code>{plain04}</code></span>
+              <span>Plain: <code>{plain04}</code>{tEncrypt04 !== null && (<span> • enc {tEncrypt04}ms</span>)}{tDecrypt04 !== null && (<span> • dec {tDecrypt04}ms</span>)}</span>
             </div>
           </div>
         </div>
