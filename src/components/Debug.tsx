@@ -1,55 +1,108 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Hooks } from 'applesauce-react'
+import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
+
+const defaultPayload = 'The quick brown fox jumps over the lazy dog.'
 
 const Debug: React.FC = () => {
   const activeAccount = Hooks.useActiveAccount()
-  const [result, setResult] = useState<string>('')
-  const [error, setError] = useState<string>('')
+  const [payload, setPayload] = useState<string>(defaultPayload)
+  const [cipher44, setCipher44] = useState<string>('')
+  const [cipher04, setCipher04] = useState<string>('')
+  const [plain44, setPlain44] = useState<string>('')
+  const [plain04, setPlain04] = useState<string>('')
+  const [logs, setLogs] = useState<DebugLogEntry[]>(DebugBus.snapshot())
+
+  useEffect(() => {
+    return DebugBus.subscribe((e) => setLogs(prev => [...prev, e].slice(-300)))
+  }, [])
 
   const signer = useMemo(() => (activeAccount as unknown as { signer?: unknown })?.signer, [activeAccount])
-  const hasNip04 = typeof (signer as { nip04?: { encrypt?: unknown; decrypt?: unknown } } | undefined)?.nip04?.encrypt === 'function'
-  const hasNip44 = typeof (signer as { nip44?: { encrypt?: unknown; decrypt?: unknown } } | undefined)?.nip44?.encrypt === 'function'
   const pubkey = (activeAccount as unknown as { pubkey?: string })?.pubkey
 
-  const doRoundtrip = async (mode: 'nip04' | 'nip44') => {
-    setResult('')
-    setError('')
-    if (!signer || !pubkey) {
-      setError('No active signer/pubkey')
-      return
-    }
+  const hasNip04 = typeof (signer as { nip04?: { encrypt?: unknown; decrypt?: unknown } } | undefined)?.nip04?.encrypt === 'function'
+  const hasNip44 = typeof (signer as { nip44?: { encrypt?: unknown; decrypt?: unknown } } | undefined)?.nip44?.encrypt === 'function'
+
+  const doEncrypt = async (mode: 'nip44' | 'nip04') => {
+    if (!signer || !pubkey) return
     try {
       const api = (signer as any)[mode]
-      if (!api || typeof api.encrypt !== 'function' || typeof api.decrypt !== 'function') {
-        setError(`${mode} not available on signer`)
+      DebugBus.info('debug', `encrypt start ${mode}`, { pubkey, len: payload.length })
+      const cipher = await api.encrypt(pubkey, payload)
+      DebugBus.info('debug', `encrypt done ${mode}`, { len: typeof cipher === 'string' ? cipher.length : -1 })
+      if (mode === 'nip44') setCipher44(cipher)
+      else setCipher04(cipher)
+    } catch (e) {
+      DebugBus.error('debug', `encrypt error ${mode}`, e instanceof Error ? e.message : String(e))
+    }
+  }
+
+  const doDecrypt = async (mode: 'nip44' | 'nip04') => {
+    if (!signer || !pubkey) return
+    try {
+      const api = (signer as any)[mode]
+      const cipher = mode === 'nip44' ? cipher44 : cipher04
+      if (!cipher) {
+        DebugBus.warn('debug', `no cipher to decrypt for ${mode}`)
         return
       }
-      const cipher = await api.encrypt(pubkey, `debug-${mode}-${Date.now()}`)
+      DebugBus.info('debug', `decrypt start ${mode}`, { len: cipher.length })
       const plain = await api.decrypt(pubkey, cipher)
-      setResult(String(plain))
+      DebugBus.info('debug', `decrypt done ${mode}`, { len: typeof plain === 'string' ? plain.length : -1 })
+      if (mode === 'nip44') setPlain44(String(plain))
+      else setPlain04(String(plain))
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      DebugBus.error('debug', `decrypt error ${mode}`, e instanceof Error ? e.message : String(e))
     }
   }
 
   return (
     <div className="content-panel">
-      <h2>Debug / NIP-46 Echo</h2>
+      <h2>Debug / NIP-46 Tools</h2>
       <div className="card">
         <div className="card-body">
           <div>Active pubkey: <code>{pubkey || 'none'}</code></div>
-          <div>Signer has nip04: <strong>{hasNip04 ? 'yes' : 'no'}</strong></div>
-          <div>Signer has nip44: <strong>{hasNip44 ? 'yes' : 'no'}</strong></div>
-          <div className="flex gap-2 mt-3">
-            <button className="btn btn-primary" onClick={() => doRoundtrip('nip44')} disabled={!hasNip44}>Probe nip44 encrypt→decrypt</button>
-            <button className="btn" onClick={() => doRoundtrip('nip04')} disabled={!hasNip04}>Probe nip04 encrypt→decrypt</button>
+          <div className="grid" style={{ gap: 8 }}>
+            <label>Payload</label>
+            <textarea className="textarea" value={payload} onChange={e => setPayload(e.target.value)} rows={3} />
+            <div className="flex gap-2 mt-2">
+              <button className="btn btn-primary" onClick={() => doEncrypt('nip44')} disabled={!hasNip44}>Encrypt (nip44)</button>
+              <button className="btn" onClick={() => doEncrypt('nip04')} disabled={!hasNip04}>Encrypt (nip04)</button>
+              <button className="btn btn-outline" onClick={() => { setCipher44(''); setCipher04(''); setPlain44(''); setPlain04(''); }}>Clear</button>
+            </div>
           </div>
-          {result && (
-            <div className="alert alert-success mt-3">Plaintext: <code>{result}</code></div>
-          )}
-          {error && (
-            <div className="alert alert-error mt-3">Error: {error}</div>
-          )}
+          <div className="grid mt-3" style={{ gap: 8 }}>
+            <label>nip44 cipher</label>
+            <textarea className="textarea" value={cipher44} readOnly rows={2} />
+            <div className="flex gap-2">
+              <button className="btn btn-secondary" onClick={() => doDecrypt('nip44')} disabled={!cipher44}>Decrypt (nip44)</button>
+              <span>Plain: <code>{plain44}</code></span>
+            </div>
+          </div>
+          <div className="grid mt-3" style={{ gap: 8 }}>
+            <label>nip04 cipher</label>
+            <textarea className="textarea" value={cipher04} readOnly rows={2} />
+            <div className="flex gap-2">
+              <button className="btn btn-secondary" onClick={() => doDecrypt('nip04')} disabled={!cipher04}>Decrypt (nip04)</button>
+              <span>Plain: <code>{plain04}</code></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card mt-4">
+        <div className="card-body">
+          <h3>Live Logs</h3>
+          <div style={{ maxHeight: 260, overflow: 'auto', fontFamily: 'monospace', fontSize: 12 }}>
+            {logs.slice(-200).map((l, i) => (
+              <div key={i}>
+                [{new Date(l.ts).toLocaleTimeString()}] {l.level.toUpperCase()} {l.source}: {l.message}
+                {l.data !== undefined && (
+                  <span> — {typeof l.data === 'string' ? l.data : JSON.stringify(l.data)}</span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

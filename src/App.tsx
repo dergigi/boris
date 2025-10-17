@@ -10,6 +10,7 @@ import { RelayPool } from 'applesauce-relay'
 import { NostrConnectSigner } from 'applesauce-signers'
 import { getDefaultBunkerPermissions } from './services/nostrConnect'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
+import Debug from './components/Debug'
 import Bookmarks from './components/Bookmarks'
 import RouteDebug from './components/RouteDebug'
 import Toast from './components/Toast'
@@ -17,7 +18,7 @@ import { useToast } from './hooks/useToast'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { RELAYS } from './config/relays'
 import { SkeletonThemeProvider } from './components/Skeletons'
-import Debug from './components/Debug'
+import { DebugBus } from './utils/debugBus'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -336,6 +337,7 @@ function App() {
                         contentLength: typeof content === 'string' ? content.length : undefined
                       }
                       console.log('[bunker] publish via signer:', summary)
+                      try { DebugBus.info('bunker', 'publish', summary) } catch {}
                     } catch (err) { console.warn('[bunker] failed to log publish summary', err) }
                     return originalPublish(relays, event)
                   }
@@ -343,6 +345,7 @@ function App() {
                   ;(recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod = (relays: string[], filters: unknown[]) => {
                     try {
                       console.log('[bunker] subscribe via signer:', { relays, filters })
+                      try { DebugBus.info('bunker', 'subscribe', { relays, filters }) } catch {}
                     } catch (err) { console.warn('[bunker] failed to log subscribe summary', err) }
                     return originalSubscribe(relays, filters)
                   }
