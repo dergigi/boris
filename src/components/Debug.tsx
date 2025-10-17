@@ -1,7 +1,7 @@
 /* global __APP_VERSION__, __GIT_COMMIT__, __GIT_COMMIT_URL__, __RELEASE_URL__ */
 import React, { useEffect, useMemo, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faClock } from '@fortawesome/free-solid-svg-icons'
+import { faClock, faCheck } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
 
@@ -98,7 +98,10 @@ const Debug: React.FC = () => {
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-2">Bunker Debug</h2>
         <div className="flex items-center gap-2 mb-3">
-          <button className="btn btn-outline" onClick={toggleDebug}>{debugEnabled ? 'Hide' : 'Show'} all applesauce debug logs</button>
+          <button className="btn btn-outline" onClick={toggleDebug}>
+            {debugEnabled && <FontAwesomeIcon icon={faCheck} style={{ marginRight: 6 }} />}
+            {debugEnabled ? 'Hide' : 'Show'} all applesauce debug logs
+          </button>
           <button className="btn btn-ghost" onClick={() => setLogs([])}>Clear logs</button>
           <span className="opacity-70">Active pubkey:</span> <code className="text-sm">{pubkey || 'none'}</code>
         </div>
