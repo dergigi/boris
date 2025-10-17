@@ -266,8 +266,6 @@ const Debug: React.FC = () => {
             <label className="setting-label">Payload</label>
             <textarea className="textarea w-full" value={payload} onChange={e => setPayload(e.target.value)} rows={3} />
             <div className="flex gap-2 mt-3">
-              <button className="btn btn-primary" onClick={() => doEncrypt('nip44')} disabled={!hasNip44}>Encrypt (NIP-44)</button>
-              <button className="btn btn-secondary" onClick={() => doEncrypt('nip04')} disabled={!hasNip04}>Encrypt (NIP-04)</button>
               <button className="btn btn-secondary" onClick={() => { setCipher44(''); setCipher04(''); setPlain44(''); setPlain04(''); setTEncrypt44(null); setTEncrypt04(null); setTDecrypt44(null); setTDecrypt04(null) }}>Clear</button>
             </div>
           </div>
@@ -278,7 +276,8 @@ const Debug: React.FC = () => {
               <label className="block text-sm opacity-70 mb-2">cipher</label>
               <CodeBox value={cipher44} />
               <div className="flex gap-2 mt-3">
-                <button className="btn btn-secondary" onClick={() => doDecrypt('nip44')} disabled={!cipher44}>Decrypt (NIP-44)</button>
+                <button className="btn btn-primary" onClick={() => doEncrypt('nip44')} disabled={!hasNip44}>Encrypt</button>
+                <button className="btn btn-secondary" onClick={() => doDecrypt('nip44')} disabled={!cipher44}>Decrypt</button>
                 <span className="text-sm opacity-70">Plain:</span>
               </div>
               <CodeBox value={plain44} />
@@ -289,7 +288,8 @@ const Debug: React.FC = () => {
               <label className="block text-sm opacity-70 mb-2">cipher</label>
               <CodeBox value={cipher04} />
               <div className="flex gap-2 mt-3">
-                <button className="btn btn-secondary" onClick={() => doDecrypt('nip04')} disabled={!cipher04}>Decrypt (NIP-04)</button>
+                <button className="btn btn-primary" onClick={() => doEncrypt('nip04')} disabled={!hasNip04}>Encrypt</button>
+                <button className="btn btn-secondary" onClick={() => doDecrypt('nip04')} disabled={!cipher04}>Decrypt</button>
                 <span className="text-sm opacity-70">Plain:</span>
               </div>
               <CodeBox value={plain04} />
