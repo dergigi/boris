@@ -555,7 +555,7 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
                         <span>Public: {counts.public}</span>
                         {counts.private > 0 && <span>Has encrypted content</span>}
                       </div>
-                      <div className="opacity-50 mt-1 text-[10px]">ID: {evt.id?.slice(0, 16)}...</div>
+                      <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
                     </div>
                   )
                 })}
