@@ -4,7 +4,7 @@ import { NostrEvent } from 'nostr-tools'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
 import { collectBookmarksFromEvents } from './bookmarkProcessing'
-import { Bookmark } from '../types/bookmarks'
+import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import {
   AccountWithExtension,
   hydrateItems,
@@ -51,7 +51,13 @@ class BookmarkController {
   private decryptCompleteListeners: DecryptCompleteCallback[] = []
   
   private currentEvents: Map<string, NostrEvent> = new Map()
-  private decryptedEvents: Map<string, { public: number; private: number }> = new Map()
+  private decryptedResults: Map<string, { 
+    publicItems: IndividualBookmark[]
+    privateItems: IndividualBookmark[]
+    newestCreatedAt?: number
+    latestContent?: string
+    allTags?: string[][]
+  }> = new Map()
   private isLoading = false
 
   onRawEvent(cb: RawEventCallback): () => void {
@@ -84,7 +90,7 @@ class BookmarkController {
 
   reset(): void {
     this.currentEvents.clear()
-    this.decryptedEvents.clear()
+    this.decryptedResults.clear()
     this.setLoading(false)
   }
 
@@ -106,10 +112,17 @@ class BookmarkController {
   ): Promise<void> {
     const allEvents = Array.from(this.currentEvents.values())
     
-    // Only process unencrypted events for now (skip encrypted entirely)
-    const readyEvents = allEvents.filter(evt => !hasEncryptedContent(evt))
+    // Include unencrypted events OR encrypted events that have been decrypted
+    const readyEvents = allEvents.filter(evt => {
+      const isEncrypted = hasEncryptedContent(evt)
+      if (!isEncrypted) return true // Include unencrypted
+      // Include encrypted if already decrypted
+      return this.decryptedResults.has(getEventKey(evt))
+    })
     
-    console.log('[bookmark] 📋 Building bookmarks:', readyEvents.length, 'unencrypted of', allEvents.length, 'total')
+    const unencryptedCount = allEvents.filter(evt => !hasEncryptedContent(evt)).length
+    const decryptedCount = readyEvents.length - unencryptedCount
+    console.log('[bookmark] 📋 Building bookmarks:', unencryptedCount, 'unencrypted,', decryptedCount, 'decrypted, of', allEvents.length, 'total')
     
     if (readyEvents.length === 0) {
       this.bookmarksListeners.forEach(cb => cb([]))
@@ -117,11 +130,31 @@ class BookmarkController {
     }
 
     try {
-      console.log('[bookmark] 🔧 Calling collectBookmarksFromEvents with', readyEvents.length, 'events')
-      // Collect bookmarks from ready events only
-      const { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags } = 
-        await collectBookmarksFromEvents(readyEvents, activeAccount, signerCandidate)
-      console.log('[bookmark] 🔧 collectBookmarksFromEvents returned:', publicItemsAll.length, 'public,', privateItemsAll.length, 'private')
+      // Separate unencrypted and decrypted events
+      const unencryptedEvents = readyEvents.filter(evt => !hasEncryptedContent(evt))
+      const decryptedEvents = readyEvents.filter(evt => hasEncryptedContent(evt))
+      
+      console.log('[bookmark] 🔧 Processing', unencryptedEvents.length, 'unencrypted events')
+      // Process unencrypted events
+      const { publicItemsAll: publicUnencrypted, privateItemsAll: privateUnencrypted, newestCreatedAt, latestContent, allTags } = 
+        await collectBookmarksFromEvents(unencryptedEvents, activeAccount, signerCandidate)
+      console.log('[bookmark] 🔧 Unencrypted returned:', publicUnencrypted.length, 'public,', privateUnencrypted.length, 'private')
+      
+      // Merge in decrypted results
+      let publicItemsAll = [...publicUnencrypted]
+      let privateItemsAll = [...privateUnencrypted]
+      
+      console.log('[bookmark] 🔧 Merging', decryptedEvents.length, 'decrypted events')
+      decryptedEvents.forEach(evt => {
+        const eventKey = getEventKey(evt)
+        const decrypted = this.decryptedResults.get(eventKey)
+        if (decrypted) {
+          publicItemsAll = [...publicItemsAll, ...decrypted.publicItems]
+          privateItemsAll = [...privateItemsAll, ...decrypted.privateItems]
+        }
+      })
+      
+      console.log('[bookmark] 🔧 Total after merge:', publicItemsAll.length, 'public,', privateItemsAll.length, 'private')
 
       const allItems = [...publicItemsAll, ...privateItemsAll]
       console.log('[bookmark] 🔧 Total items to process:', allItems.length)
@@ -323,10 +356,15 @@ class BookmarkController {
               console.log('[bookmark] 🔓 Auto-decrypting event', evt.id.slice(0, 8))
               // Don't await - let it run in background
               collectBookmarksFromEvents([evt], account, signerCandidate)
-                .then(({ publicItemsAll, privateItemsAll }) => {
-                  this.decryptedEvents.set(evt.id, { 
-                    public: publicItemsAll.length, 
-                    private: privateItemsAll.length 
+                .then(({ publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags }) => {
+                  const eventKey = getEventKey(evt)
+                  // Store the actual decrypted items, not just counts
+                  this.decryptedResults.set(eventKey, { 
+                    publicItems: publicItemsAll,
+                    privateItems: privateItemsAll,
+                    newestCreatedAt,
+                    latestContent,
+                    allTags
                   })
                   console.log('[bookmark] ✅ Auto-decrypted:', evt.id.slice(0, 8), {
                     public: publicItemsAll.length,
