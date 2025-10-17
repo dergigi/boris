@@ -287,12 +287,12 @@ const Debug: React.FC = () => {
           <div className="grid" style={{ gap: 12, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)' }}>
             <div className="setting-group">
               <label className="setting-label">NIP-44</label>
-              <label className="block text-sm opacity-70 mb-2">Encrypted:</label>
-              <CodeBox value={cipher44} />
-              <div className="flex gap-2 mt-3 justify-end">
+              <div className="flex gap-2 mb-3 justify-end">
                 <button className="btn btn-primary" onClick={() => doEncrypt('nip44')} disabled={!hasNip44}>Encrypt</button>
                 <button className="btn btn-secondary" onClick={() => doDecrypt('nip44')} disabled={!cipher44}>Decrypt</button>
               </div>
+              <label className="block text-sm opacity-70 mb-2">Encrypted:</label>
+              <CodeBox value={cipher44} />
               <div className="mt-3">
                 <span className="text-sm opacity-70">Plain:</span>
                 <CodeBox value={plain44} />
@@ -301,12 +301,12 @@ const Debug: React.FC = () => {
 
             <div className="setting-group">
               <label className="setting-label">NIP-04</label>
-              <label className="block text-sm opacity-70 mb-2">Encrypted:</label>
-              <CodeBox value={cipher04} />
-              <div className="flex gap-2 mt-3 justify-end">
+              <div className="flex gap-2 mb-3 justify-end">
                 <button className="btn btn-primary" onClick={() => doEncrypt('nip04')} disabled={!hasNip04}>Encrypt</button>
                 <button className="btn btn-secondary" onClick={() => doDecrypt('nip04')} disabled={!cipher04}>Decrypt</button>
               </div>
+              <label className="block text-sm opacity-70 mb-2">Encrypted:</label>
+              <CodeBox value={cipher04} />
               <div className="mt-3">
                 <span className="text-sm opacity-70">Plain:</span>
                 <CodeBox value={plain04} />
