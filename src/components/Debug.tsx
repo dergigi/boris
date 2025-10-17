@@ -95,9 +95,22 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
     return content.length + tags.length
   }
 
+  const hasEncryptedContent = (evt: NostrEvent): boolean => {
+    // Check for NIP-44 encrypted content (detected by Helpers)
+    if (Helpers.hasHiddenContent(evt)) return true
+    
+    // Check for NIP-04 encrypted content (base64 with ?iv= suffix)
+    if (evt.content && evt.content.includes('?iv=')) return true
+    
+    // Check for encrypted tags
+    if (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt)) return true
+    
+    return false
+  }
+
   const getBookmarkCount = (evt: NostrEvent): { public: number; private: number } => {
     const publicTags = (evt.tags || []).filter((t: string[]) => t[0] === 'e' || t[0] === 'a')
-    const hasEncrypted = Helpers.hasHiddenContent(evt) || (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt))
+    const hasEncrypted = hasEncryptedContent(evt)
     return {
       public: publicTags.length,
       private: hasEncrypted ? 1 : 0 // Can't know exact count until decrypted
@@ -670,7 +683,7 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
                   const titleTag = evt.tags?.find((t: string[]) => t[0] === 'title')?.[1]
                   const size = getEventSize(evt)
                   const counts = getBookmarkCount(evt)
-                  const hasEncrypted = Helpers.hasHiddenContent(evt) || (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt))
+                  const hasEncrypted = hasEncryptedContent(evt)
                   const isDecrypting = decryptingEventIds.has(evt.id)
                   const decryptResult = decryptedEvents.get(evt.id)
                   
