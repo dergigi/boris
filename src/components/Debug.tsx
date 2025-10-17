@@ -4,13 +4,22 @@ import { faClock, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { Accounts } from 'applesauce-accounts'
 import { NostrConnectSigner } from 'applesauce-signers'
+import { RelayPool } from 'applesauce-relay'
 import { getDefaultBunkerPermissions } from '../services/nostrConnect'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
 import VersionFooter from './VersionFooter'
+import { queryEvents } from '../services/dataFetch'
+import { KINDS } from '../config/kinds'
+import { collectBookmarksFromEvents } from '../services/bookmarkProcessing'
+import type { NostrEvent } from '../services/bookmarkHelpers'
 
 const defaultPayload = 'The quick brown fox jumps over the lazy dog.'
 
-const Debug: React.FC = () => {
+interface DebugProps {
+  relayPool?: RelayPool | null
+}
+
+const Debug: React.FC<DebugProps> = ({ relayPool }) => {
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
   const [payload, setPayload] = useState<string>(defaultPayload)
@@ -29,6 +38,12 @@ const Debug: React.FC = () => {
   const [bunkerUri, setBunkerUri] = useState<string>('')
   const [isBunkerLoading, setIsBunkerLoading] = useState<boolean>(false)
   const [bunkerError, setBunkerError] = useState<string | null>(null)
+  
+  // Bookmark loading state
+  const [bookmarkEvents, setBookmarkEvents] = useState<NostrEvent[]>([])
+  const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false)
+  const [isDecryptingBookmarks, setIsDecryptingBookmarks] = useState(false)
+  const [bookmarkStats, setBookmarkStats] = useState<{ public: number; private: number } | null>(null)
   
   // Live timing state
   const [liveTiming, setLiveTiming] = useState<{
@@ -121,6 +136,70 @@ const Debug: React.FC = () => {
     setDebugEnabled(next)
     if (next) localStorage.setItem('debug', '*')
     else localStorage.removeItem('debug')
+  }
+
+  const handleLoadBookmarks = async () => {
+    if (!relayPool || !activeAccount) {
+      DebugBus.warn('debug', 'Cannot load bookmarks: missing relayPool or activeAccount')
+      return
+    }
+
+    try {
+      setIsLoadingBookmarks(true)
+      setBookmarkStats(null)
+      DebugBus.info('debug', 'Loading bookmark events...')
+
+      const rawEvents = await queryEvents(
+        relayPool,
+        { kinds: [KINDS.ListSimple, KINDS.ListReplaceable, KINDS.List, KINDS.WebBookmark], authors: [activeAccount.pubkey] },
+        {}
+      )
+
+      setBookmarkEvents(rawEvents)
+      DebugBus.info('debug', `Loaded ${rawEvents.length} bookmark events`, {
+        kinds: rawEvents.map(e => e.kind).join(', ')
+      })
+    } catch (error) {
+      DebugBus.error('debug', 'Failed to load bookmarks', error instanceof Error ? error.message : String(error))
+    } finally {
+      setIsLoadingBookmarks(false)
+    }
+  }
+
+  const handleDecryptBookmarks = async () => {
+    if (!activeAccount || bookmarkEvents.length === 0) {
+      DebugBus.warn('debug', 'Cannot decrypt: missing activeAccount or no bookmark events loaded')
+      return
+    }
+
+    try {
+      setIsDecryptingBookmarks(true)
+      DebugBus.info('debug', 'Decrypting bookmark events...')
+
+      const fullAccount = accountManager.getActive()
+      const signerCandidate = fullAccount || activeAccount
+
+      const { publicItemsAll, privateItemsAll } = await collectBookmarksFromEvents(
+        bookmarkEvents,
+        activeAccount,
+        signerCandidate
+      )
+
+      setBookmarkStats({
+        public: publicItemsAll.length,
+        private: privateItemsAll.length
+      })
+
+      DebugBus.info('debug', `Decryption complete`, {
+        public: publicItemsAll.length,
+        private: privateItemsAll.length,
+        total: publicItemsAll.length + privateItemsAll.length
+      })
+    } catch (error) {
+      DebugBus.error('debug', 'Failed to decrypt bookmarks', error instanceof Error ? error.message : String(error))
+    } finally {
+      setIsDecryptingBookmarks(false)
+    }
   }
 
   const handleBunkerLogin = async () => {
@@ -348,6 +427,68 @@ const Debug: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Bookmark Loading Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Bookmark Loading</h3>
+          <div className="text-sm opacity-70 mb-3">Test bookmark loading and decryption (kinds: 10003, 30003, 30001, 39701)</div>
+          
+          <div className="flex gap-2 mb-3">
+            <button 
+              className="btn btn-primary" 
+              onClick={handleLoadBookmarks}
+              disabled={isLoadingBookmarks || !relayPool || !activeAccount}
+            >
+              {isLoadingBookmarks ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                  Loading...
+                </>
+              ) : (
+                'Load Bookmarks'
+              )}
+            </button>
+            <button 
+              className="btn btn-secondary" 
+              onClick={handleDecryptBookmarks}
+              disabled={isDecryptingBookmarks || bookmarkEvents.length === 0}
+            >
+              {isDecryptingBookmarks ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                  Decrypting...
+                </>
+              ) : (
+                'Decrypt'
+              )}
+            </button>
+          </div>
+
+          {bookmarkEvents.length > 0 && (
+            <div className="mb-3">
+              <div className="text-sm opacity-70 mb-2">Loaded Events:</div>
+              <div className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                {bookmarkEvents.length} event{bookmarkEvents.length !== 1 ? 's' : ''} found
+                {bookmarkEvents.length > 0 && (
+                  <div className="mt-1">
+                    Kinds: {Array.from(new Set(bookmarkEvents.map(e => e.kind))).join(', ')}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {bookmarkStats && (
+            <div className="mb-3">
+              <div className="text-sm opacity-70 mb-2">Decrypted Bookmarks:</div>
+              <div className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                <div>Public: {bookmarkStats.public}</div>
+                <div>Private: {bookmarkStats.private}</div>
+                <div className="font-semibold mt-1">Total: {bookmarkStats.public + bookmarkStats.private}</div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Debug Logs Section */}

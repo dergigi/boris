@@ -170,7 +170,7 @@ function AppRoutes({
           />
         } 
       />
-      <Route path="/debug" element={<Debug />} />
+      <Route path="/debug" element={<Debug relayPool={relayPool} />} />
       <Route path="/" element={<Navigate to={`/a/${DEFAULT_ARTICLE}`} replace />} />
     </Routes>
   )
