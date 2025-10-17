@@ -259,7 +259,8 @@ const Debug: React.FC = () => {
                 <div className="text-sm font-mono">{pubkey}</div>
               </div>
                   <button
-                    className="btn btn-danger"
+                    className="btn"
+                    style={{ background: 'rgb(220 38 38)', color: 'white', border: 'none' }}
                     onClick={() => accountManager.removeAccount(activeAccount)}
                   >
                     Disconnect
