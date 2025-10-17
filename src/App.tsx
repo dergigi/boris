@@ -333,7 +333,7 @@ function App() {
                         try {
                           const parsed = JSON.parse(content) as { method?: string; id?: unknown }
                           method = parsed?.method
-                        } catch {}
+                        } catch (err) { console.warn('[bunker] failed to parse event content', err) }
                       }
                       const summary = {
                         relays,
@@ -344,7 +344,7 @@ function App() {
                         contentLength: typeof content === 'string' ? content.length : undefined
                       }
                       console.log('[bunker] publish via signer:', summary)
-                      try { DebugBus.info('bunker', 'publish', summary) } catch {}
+                      try { DebugBus.info('bunker', 'publish', summary) } catch (err) { console.warn('[bunker] failed to log to DebugBus', err) }
                     } catch (err) { console.warn('[bunker] failed to log publish summary', err) }
                     return originalPublish(relays, event)
                   }
@@ -352,7 +352,7 @@ function App() {
                   ;(recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod = (relays: string[], filters: unknown[]) => {
                     try {
                       console.log('[bunker] subscribe via signer:', { relays, filters })
-                      try { DebugBus.info('bunker', 'subscribe', { relays, filters }) } catch {}
+                      try { DebugBus.info('bunker', 'subscribe', { relays, filters }) } catch (err) { console.warn('[bunker] failed to log subscribe to DebugBus', err) }
                     } catch (err) { console.warn('[bunker] failed to log subscribe summary', err) }
                     return originalSubscribe(relays, filters)
                   }

@@ -20,7 +20,7 @@ export const DebugBus = {
     buffer.push(entry)
     if (buffer.length > MAX_BUFFER) buffer.shift()
     listeners.forEach(l => {
-      try { l(entry) } catch {}
+      try { l(entry) } catch (err) { console.warn('[DebugBus] listener error:', err) }
     })
   },
   info(source: string, message: string, data?: unknown): void { this.log('info', source, message, data) },

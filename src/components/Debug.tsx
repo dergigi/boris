@@ -43,7 +43,7 @@ const Debug: React.FC = () => {
   const doEncrypt = async (mode: 'nip44' | 'nip04') => {
     if (!signer || !pubkey) return
     try {
-      const api = (signer as any)[mode]
+      const api = (signer as { [key: string]: { encrypt: (pubkey: string, message: string) => Promise<string> } })[mode]
       DebugBus.info('debug', `encrypt start ${mode}`, { pubkey, len: payload.length })
       const start = performance.now()
       const cipher = await api.encrypt(pubkey, payload)
@@ -61,7 +61,7 @@ const Debug: React.FC = () => {
   const doDecrypt = async (mode: 'nip44' | 'nip04') => {
     if (!signer || !pubkey) return
     try {
-      const api = (signer as any)[mode]
+      const api = (signer as { [key: string]: { decrypt: (pubkey: string, ciphertext: string) => Promise<string> } })[mode]
       const cipher = mode === 'nip44' ? cipher44 : cipher04
       if (!cipher) {
         DebugBus.warn('debug', `no cipher to decrypt for ${mode}`)
