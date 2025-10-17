@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare, faLink } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare, faLink, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
 import { RelayPool } from 'applesauce-relay'
@@ -70,6 +70,16 @@ const Me: React.FC<MeProps> = ({
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
+  const [groupingMode, setGroupingMode] = useState<'grouped' | 'flat'>(() => {
+    const saved = localStorage.getItem('bookmarkGroupingMode')
+    return saved === 'flat' ? 'flat' : 'grouped'
+  })
+  
+  const toggleGroupingMode = () => {
+    const newMode = groupingMode === 'grouped' ? 'flat' : 'grouped'
+    setGroupingMode(newMode)
+    localStorage.setItem('bookmarkGroupingMode', newMode)
+  }
   
   // Initialize reading progress filter from URL param
   const initialFilter = urlFilter && VALID_FILTERS.includes(urlFilter as ReadingProgressFilterType) 
@@ -391,12 +401,16 @@ const Me: React.FC<MeProps> = ({
   // Apply reading progress filter
   const filteredReads = filterByReadingProgress(reads, readingProgressFilter)
   const filteredLinks = filterByReadingProgress(links, readingProgressFilter)
-  const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
-    { key: 'private', title: 'Private Bookmarks', items: groups.privateItems },
-    { key: 'public', title: 'Public Bookmarks', items: groups.publicItems },
-    { key: 'web', title: 'Web Bookmarks', items: groups.web },
-    { key: 'amethyst', title: 'Legacy Bookmarks', items: groups.amethyst }
-  ]
+  const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
+    groupingMode === 'flat'
+      ? [{ key: 'all', title: `All Bookmarks (${filteredBookmarks.length})`, items: filteredBookmarks }]
+      : [
+          { key: 'nip51-private', title: 'Private Bookmarks', items: groups.nip51Private },
+          { key: 'nip51-public', title: 'My Bookmarks', items: groups.nip51Public },
+          { key: 'amethyst-private', title: 'Amethyst Private', items: groups.amethystPrivate },
+          { key: 'amethyst-public', title: 'Amethyst Lists', items: groups.amethystPublic },
+          { key: 'web', title: 'Web Bookmarks', items: groups.standaloneWeb }
+        ]
 
   // Show content progressively - no blocking error screens
   const hasData = highlights.length > 0 || bookmarks.length > 0 || reads.length > 0 || links.length > 0 || writings.length > 0
@@ -484,6 +498,13 @@ const Me: React.FC<MeProps> = ({
               marginTop: '1rem',
               borderTop: '1px solid var(--border-color)'
             }}>
+              <IconButton
+                icon={groupingMode === 'grouped' ? faLayerGroup : faBars}
+                onClick={toggleGroupingMode}
+                title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
+                ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
+                variant="ghost"
+              />
               <IconButton
                 icon={faList}
                 onClick={() => setViewMode('compact')}

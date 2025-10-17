@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate, faHeart, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate, faHeart, faPlus, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
 import { formatDistanceToNow } from 'date-fns'
 import { RelayPool } from 'applesauce-relay'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
@@ -65,7 +65,17 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const friendsColor = settings?.highlightColorFriends || '#f97316'
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState<BookmarkFilterType>('all')
+  const [groupingMode, setGroupingMode] = useState<'grouped' | 'flat'>(() => {
+    const saved = localStorage.getItem('bookmarkGroupingMode')
+    return saved === 'flat' ? 'flat' : 'grouped'
+  })
   const activeAccount = Hooks.useActiveAccount()
+
+  const toggleGroupingMode = () => {
+    const newMode = groupingMode === 'grouped' ? 'flat' : 'grouped'
+    setGroupingMode(newMode)
+    localStorage.setItem('bookmarkGroupingMode', newMode)
+  }
 
   const handleSaveBookmark = async (url: string, title?: string, description?: string, tags?: string[]) => {
     if (!activeAccount || !relayPool) {
@@ -98,14 +108,18 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const bookmarksWithoutSet = getBookmarksWithoutSet(filteredBookmarks)
   const bookmarkSets = getBookmarkSets(filteredBookmarks)
   
-  // Group non-set bookmarks as before
+  // Group non-set bookmarks by source or flatten based on mode
   const groups = groupIndividualBookmarks(bookmarksWithoutSet)
-  const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
-    { key: 'private', title: 'Private Bookmarks', items: groups.privateItems },
-    { key: 'public', title: 'Public Bookmarks', items: groups.publicItems },
-    { key: 'web', title: 'Web Bookmarks', items: groups.web },
-    { key: 'amethyst', title: 'Legacy Bookmarks', items: groups.amethyst }
-  ]
+  const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
+    groupingMode === 'flat'
+      ? [{ key: 'all', title: `All Bookmarks (${bookmarksWithoutSet.length})`, items: bookmarksWithoutSet }]
+      : [
+          { key: 'nip51-private', title: 'Private Bookmarks', items: groups.nip51Private },
+          { key: 'nip51-public', title: 'My Bookmarks', items: groups.nip51Public },
+          { key: 'amethyst-private', title: 'Amethyst Private', items: groups.amethystPrivate },
+          { key: 'amethyst-public', title: 'Amethyst Lists', items: groups.amethystPublic },
+          { key: 'web', title: 'Web Bookmarks', items: groups.standaloneWeb }
+        ]
   
   // Add bookmark sets as additional sections
   bookmarkSets.forEach(set => {
@@ -236,6 +250,13 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
               spin={isRefreshing}
             />
           )}
+          <IconButton
+            icon={groupingMode === 'grouped' ? faLayerGroup : faBars}
+            onClick={toggleGroupingMode}
+            title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
+            ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
+            variant="ghost"
+          />
           <IconButton
             icon={faList}
             onClick={() => onViewModeChange('compact')}
