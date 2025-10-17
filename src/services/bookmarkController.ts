@@ -104,16 +104,26 @@ class BookmarkController {
     activeAccount: AccountWithExtension,
     signerCandidate: unknown
   ): Promise<void> {
-    const events = Array.from(this.currentEvents.values())
-    if (events.length === 0) {
+    const allEvents = Array.from(this.currentEvents.values())
+    
+    // Only process events that are ready (unencrypted or already decrypted)
+    const readyEvents = allEvents.filter(evt => {
+      const isEncrypted = hasEncryptedContent(evt)
+      if (!isEncrypted) return true // Unencrypted - ready
+      return this.decryptedEvents.has(evt.id) // Encrypted - only if decrypted
+    })
+    
+    console.log('[controller] 📋 Building bookmarks:', readyEvents.length, 'ready of', allEvents.length, 'total')
+    
+    if (readyEvents.length === 0) {
       this.bookmarksListeners.forEach(cb => cb([]))
       return
     }
 
     try {
-      // Collect bookmarks from all events
+      // Collect bookmarks from ready events only
       const { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags } = 
-        await collectBookmarksFromEvents(events, activeAccount, signerCandidate)
+        await collectBookmarksFromEvents(readyEvents, activeAccount, signerCandidate)
 
       const allItems = [...publicItemsAll, ...privateItemsAll]
       
@@ -276,8 +286,16 @@ class BookmarkController {
             // Emit raw event for Debug UI
             this.emitRawEvent(evt)
             
+            // Build bookmarks immediately for unencrypted events
+            const isEncrypted = hasEncryptedContent(evt)
+            if (!isEncrypted) {
+              // For unencrypted events, build bookmarks immediately (progressive update)
+              this.buildAndEmitBookmarks(relayPool, maybeAccount, signerCandidate)
+                .catch(err => console.error('[controller] ❌ Failed to update after event:', err))
+            }
+            
             // Auto-decrypt if event has encrypted content (fire-and-forget, non-blocking)
-            if (hasEncryptedContent(evt)) {
+            if (isEncrypted) {
               console.log('[controller] 🔓 Auto-decrypting event', evt.id.slice(0, 8))
               // Don't await - let it run in background
               collectBookmarksFromEvents([evt], account, signerCandidate)
@@ -303,10 +321,6 @@ class BookmarkController {
                 .catch((error) => {
                   console.error('[controller] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
                 })
-            } else {
-              // For unencrypted events, build bookmarks immediately (progressive update)
-              this.buildAndEmitBookmarks(relayPool, maybeAccount, signerCandidate)
-                .catch(err => console.error('[controller] ❌ Failed to update after event:', err))
             }
           }
         }
