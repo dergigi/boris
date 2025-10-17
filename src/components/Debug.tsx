@@ -221,10 +221,6 @@ const Debug: React.FC = () => {
           <div className="card">
             <div className="card-body">
               <h3 className="text-lg font-semibold mb-3">nip44</h3>
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <Stat label="enc" value={tEncrypt44 !== null ? `${tEncrypt44}ms` : null} />
-                <Stat label="dec" value={tDecrypt44 !== null ? `${tDecrypt44}ms` : null} />
-              </div>
               <label className="block text-sm opacity-70 mb-2">cipher</label>
               <CodeBox value={cipher44} />
               <div className="flex gap-2 mt-3">
@@ -238,10 +234,6 @@ const Debug: React.FC = () => {
           <div className="card">
             <div className="card-body">
               <h3 className="text-lg font-semibold mb-3">nip04</h3>
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <Stat label="enc" value={tEncrypt04 !== null ? `${tEncrypt04}ms` : null} />
-                <Stat label="dec" value={tDecrypt04 !== null ? `${tDecrypt04}ms` : null} />
-              </div>
               <label className="block text-sm opacity-70 mb-2">cipher</label>
               <CodeBox value={cipher04} />
               <div className="flex gap-2 mt-3">
@@ -249,6 +241,32 @@ const Debug: React.FC = () => {
                 <span className="text-sm opacity-70">Plain:</span>
               </div>
               <CodeBox value={plain04} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Performance Timing Section */}
+      <div className="mt-8">
+        <div className="card">
+          <div className="card-body">
+            <h3 className="text-lg font-semibold mb-3">Performance Timing</h3>
+            <div className="text-sm opacity-70 mb-3">Encryption and decryption operation durations</div>
+            <div className="grid" style={{ gap: 12, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)' }}>
+              <div>
+                <h4 className="text-md font-medium mb-2">nip44</h4>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Stat label="enc" value={tEncrypt44 !== null ? `${tEncrypt44}ms` : null} />
+                  <Stat label="dec" value={tDecrypt44 !== null ? `${tDecrypt44}ms` : null} />
+                </div>
+              </div>
+              <div>
+                <h4 className="text-md font-medium mb-2">nip04</h4>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Stat label="enc" value={tEncrypt04 !== null ? `${tEncrypt04}ms` : null} />
+                  <Stat label="dec" value={tDecrypt04 !== null ? `${tDecrypt04}ms` : null} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
