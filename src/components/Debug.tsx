@@ -102,7 +102,7 @@ const Debug: React.FC = () => {
             {debugEnabled && <FontAwesomeIcon icon={faCheck} style={{ marginRight: 6 }} />}
             {debugEnabled ? 'Hide' : 'Show'} all applesauce debug logs
           </button>
-          <button className="btn btn-ghost" onClick={() => setLogs([])}>Clear logs</button>
+          <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
           <span className="opacity-70">Active pubkey:</span> <code className="text-sm">{pubkey || 'none'}</code>
         </div>
       </div>
