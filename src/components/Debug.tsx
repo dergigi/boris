@@ -1,5 +1,7 @@
 /* global __APP_VERSION__, __GIT_COMMIT__, __GIT_COMMIT_URL__, __RELEASE_URL__ */
 import React, { useEffect, useMemo, useState } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faClock } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
 
@@ -85,7 +87,10 @@ const Debug: React.FC = () => {
   )
 
   const Stat = ({ label, value }: { label: string; value?: string | number | null }) => (
-    <span className="badge" style={{ marginRight: 8 }}>{label}: {value ?? '—'}</span>
+    <span className="badge" style={{ marginRight: 8 }}>
+      <FontAwesomeIcon icon={faClock} style={{ marginRight: 4, fontSize: '0.8em' }} />
+      {label}: {value ?? '—'}
+    </span>
   )
 
   return (
