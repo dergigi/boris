@@ -43,13 +43,11 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
   // Bookmark loading state
   const [bookmarkEvents, setBookmarkEvents] = useState<NostrEvent[]>([])
   const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false)
-  const [isDecryptingBookmarks, setIsDecryptingBookmarks] = useState(false)
   const [bookmarkStats, setBookmarkStats] = useState<{ public: number; private: number } | null>(null)
   const [tLoadBookmarks, setTLoadBookmarks] = useState<number | null>(null)
   const [tDecryptBookmarks, setTDecryptBookmarks] = useState<number | null>(null)
   
-  // Individual event decryption state
-  const [decryptingEventIds, setDecryptingEventIds] = useState<Set<string>>(new Set())
+  // Individual event decryption results
   const [decryptedEvents, setDecryptedEvents] = useState<Map<string, { public: number; private: number }>>(new Map())
   
   // Live timing state
@@ -220,13 +218,17 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
       const start = performance.now()
       setLiveTiming(prev => ({ ...prev, loadBookmarks: { startTime: start } }))
 
+      // Get signer for auto-decryption
+      const fullAccount = accountManager.getActive()
+      const signerCandidate = fullAccount || activeAccount
+
       // Use onEvent callback to stream events as they arrive
       // Trust EOSE - completes when relays finish, no artificial timeouts
       const rawEvents = await queryEvents(
         relayPool,
         { kinds: [KINDS.ListSimple, KINDS.ListReplaceable, KINDS.List, KINDS.WebBookmark], authors: [activeAccount.pubkey] },
         {
-          onEvent: (evt) => {
+          onEvent: async (evt) => {
             // Add event immediately with live deduplication
             setBookmarkEvents(prev => {
               // Create unique key for deduplication
@@ -249,6 +251,28 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
               // Add new event
               return [...prev, evt]
             })
+
+            // Auto-decrypt if event has encrypted content
+            if (hasEncryptedContent(evt)) {
+              console.log('[bunker] 🔓 Auto-decrypting event', evt.id.slice(0, 8))
+              try {
+                const { publicItemsAll, privateItemsAll } = await collectBookmarksFromEvents(
+                  [evt],
+                  activeAccount,
+                  signerCandidate
+                )
+                setDecryptedEvents(prev => new Map(prev).set(evt.id, { 
+                  public: publicItemsAll.length, 
+                  private: privateItemsAll.length 
+                }))
+                console.log('[bunker] ✅ Auto-decrypted:', evt.id.slice(0, 8), {
+                  public: publicItemsAll.length,
+                  private: privateItemsAll.length
+                })
+              } catch (error) {
+                console.error('[bunker] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
+              }
+            }
           }
         }
       )
@@ -269,121 +293,13 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
     }
   }
 
-  const handleDecryptBookmarks = async () => {
-    if (!activeAccount || bookmarkEvents.length === 0) {
-      DebugBus.warn('debug', 'Cannot decrypt: missing activeAccount or no bookmark events loaded')
-      return
-    }
-
-    try {
-      setIsDecryptingBookmarks(true)
-      DebugBus.info('debug', 'Decrypting bookmark events...')
-
-      // Start timing
-      const start = performance.now()
-      setLiveTiming(prev => ({ ...prev, decryptBookmarks: { startTime: start } }))
-
-      const fullAccount = accountManager.getActive()
-      const signerCandidate = fullAccount || activeAccount
-
-      const { publicItemsAll, privateItemsAll } = await collectBookmarksFromEvents(
-        bookmarkEvents,
-        activeAccount,
-        signerCandidate
-      )
-
-      const ms = Math.round(performance.now() - start)
-      setLiveTiming(prev => ({ ...prev, decryptBookmarks: undefined }))
-      setTDecryptBookmarks(ms)
-
-      setBookmarkStats({
-        public: publicItemsAll.length,
-        private: privateItemsAll.length
-      })
-
-      DebugBus.info('debug', `Decryption complete`, {
-        public: publicItemsAll.length,
-        private: privateItemsAll.length,
-        total: publicItemsAll.length + privateItemsAll.length,
-        ms
-      })
-    } catch (error) {
-      setLiveTiming(prev => ({ ...prev, decryptBookmarks: undefined }))
-      DebugBus.error('debug', 'Failed to decrypt bookmarks', error instanceof Error ? error.message : String(error))
-    } finally {
-      setIsDecryptingBookmarks(false)
-    }
-  }
-
   const handleClearBookmarks = () => {
     setBookmarkEvents([])
     setBookmarkStats(null)
     setTLoadBookmarks(null)
     setTDecryptBookmarks(null)
-    setDecryptingEventIds(new Set())
     setDecryptedEvents(new Map())
     DebugBus.info('debug', 'Cleared bookmark data')
-  }
-
-  const handleDecryptSingleEvent = async (evt: NostrEvent) => {
-    console.log('[bunker] 🔵 Individual decrypt clicked for event:', evt.id.slice(0, 8))
-    console.log('[bunker] activeAccount exists?', !!activeAccount)
-    
-    if (!activeAccount) {
-      console.warn('[bunker] ⚠️  No active account - cannot decrypt')
-      DebugBus.warn('debug', 'Cannot decrypt: missing activeAccount')
-      return
-    }
-
-    try {
-      setDecryptingEventIds(prev => new Set(prev).add(evt.id))
-      console.log('[bunker] 🔓 Decrypting event', evt.id.slice(0, 8), {
-        kind: evt.kind,
-        contentLength: evt.content?.length || 0,
-        hasContent: !!evt.content,
-        isNip04: evt.content?.includes('?iv='),
-        hasHiddenContent: Helpers.hasHiddenContent(evt),
-        hasHiddenTags: Helpers.hasHiddenTags(evt)
-      })
-
-      const fullAccount = accountManager.getActive()
-      const signerCandidate = fullAccount || activeAccount
-      
-      console.log('[bunker] Signer info:', {
-        hasFullAccount: !!fullAccount,
-        hasSigner: !!signerCandidate,
-        signerType: (signerCandidate as { type?: string })?.type
-      })
-
-      const { publicItemsAll, privateItemsAll } = await collectBookmarksFromEvents(
-        [evt],
-        activeAccount,
-        signerCandidate
-      )
-
-      setDecryptedEvents(prev => new Map(prev).set(evt.id, { 
-        public: publicItemsAll.length, 
-        private: privateItemsAll.length 
-      }))
-
-      console.log('[bunker] ✅ Event decrypted:', evt.id.slice(0, 8), {
-        public: publicItemsAll.length,
-        private: privateItemsAll.length
-      })
-      
-      if (privateItemsAll.length === 0 && hasEncryptedContent(evt)) {
-        console.warn('[bunker] ⚠️  Found 0 private items but event has encrypted content - decrypt may have failed')
-      }
-    } catch (error) {
-      console.error('[bunker] ❌ Failed to decrypt event', evt.id.slice(0, 8), error)
-      DebugBus.error('debug', `Failed to decrypt event ${evt.id.slice(0, 8)}`, error instanceof Error ? error.message : String(error))
-    } finally {
-      setDecryptingEventIds(prev => {
-        const next = new Set(prev)
-        next.delete(evt.id)
-        return next
-      })
-    }
   }
 
   const handleBunkerLogin = async () => {
@@ -640,7 +556,7 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
         {/* Bookmark Loading Section */}
         <div className="settings-section">
           <h3 className="section-title">Bookmark Loading</h3>
-          <div className="text-sm opacity-70 mb-3">Test bookmark loading and decryption (kinds: 10003, 30003, 30001, 39701)</div>
+          <div className="text-sm opacity-70 mb-3">Test bookmark loading with auto-decryption (kinds: 10003, 30003, 30001, 39701)</div>
           
           <div className="flex gap-2 mb-3 items-center">
             <button 
@@ -655,20 +571,6 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
                 </>
               ) : (
                 'Load Bookmarks'
-              )}
-            </button>
-            <button 
-              className="btn btn-secondary" 
-              onClick={handleDecryptBookmarks}
-              disabled={isDecryptingBookmarks || bookmarkEvents.length === 0}
-            >
-              {isDecryptingBookmarks ? (
-                <>
-                  <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
-                  Decrypting...
-                </>
-              ) : (
-                'Decrypt'
               )}
             </button>
             <button 
@@ -706,45 +608,24 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
                   const size = getEventSize(evt)
                   const counts = getBookmarkCount(evt)
                   const hasEncrypted = hasEncryptedContent(evt)
-                  const isDecrypting = decryptingEventIds.has(evt.id)
                   const decryptResult = decryptedEvents.get(evt.id)
                   
                   return (
                     <div key={idx} className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <div className="font-semibold mb-1">{getKindName(evt.kind)}</div>
-                          {dTag && <div className="opacity-70">d-tag: {dTag}</div>}
-                          {titleTag && <div className="opacity-70">title: {titleTag}</div>}
-                          <div className="mt-1">
-                            <div>Size: {formatBytes(size)}</div>
-                            <div>Public: {counts.public}</div>
-                            {counts.private > 0 && <div>🔒 Has encrypted content</div>}
-                          </div>
-                          {decryptResult && (
-                            <div className="mt-1 text-[11px] opacity-80">
-                              <div>✓ Decrypted: {decryptResult.public} public, {decryptResult.private} private</div>
-                            </div>
-                          )}
-                          <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
-                        </div>
-                        {hasEncrypted && !decryptResult && (
-                          <button 
-                            className="text-[11px] px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                            onClick={() => handleDecryptSingleEvent(evt)}
-                            disabled={isDecrypting}
-                          >
-                            {isDecrypting ? (
-                              <>
-                                <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-1" />
-                                decrypt
-                              </>
-                            ) : (
-                              'decrypt'
-                            )}
-                          </button>
-                        )}
+                      <div className="font-semibold mb-1">{getKindName(evt.kind)}</div>
+                      {dTag && <div className="opacity-70">d-tag: {dTag}</div>}
+                      {titleTag && <div className="opacity-70">title: {titleTag}</div>}
+                      <div className="mt-1">
+                        <div>Size: {formatBytes(size)}</div>
+                        <div>Public: {counts.public}</div>
+                        {hasEncrypted && <div>🔒 Has encrypted content</div>}
                       </div>
+                      {decryptResult && (
+                        <div className="mt-1 text-[11px] opacity-80">
+                          <div>✓ Decrypted: {decryptResult.public} public, {decryptResult.private} private</div>
+                        </div>
+                      )}
+                      <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
                     </div>
                   )
                 })}
