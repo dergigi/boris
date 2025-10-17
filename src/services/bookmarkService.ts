@@ -54,11 +54,13 @@ export const fetchBookmarks = async (
       throw new Error('Invalid account object provided')
     }
 
-    console.log('🔍 Fetching bookmark events with streaming')
+    console.log('[app] 🔍 Fetching bookmark events with streaming')
 
     // Track events with deduplication as they arrive
     const eventMap = new Map<string, NostrEvent>()
     let processedCount = 0
+    
+    console.log('[app] Account:', activeAccount.pubkey.slice(0, 8))
 
     // Get signer for auto-decryption
     const maybeAccount = activeAccount as AccountWithExtension
@@ -202,42 +204,42 @@ export const fetchBookmarks = async (
           eventMap.set(key, evt)
           processedCount++
           
-          console.log(`[bookmark-stream] Event ${processedCount}: kind=${evt.kind}, id=${evt.id.slice(0, 8)}, hasEncrypted=${hasEncryptedContent(evt)}`)
+          console.log(`[app] 📨 Event ${processedCount}: kind=${evt.kind}, id=${evt.id.slice(0, 8)}, hasEncrypted=${hasEncryptedContent(evt)}`)
           
           // Auto-decrypt if has encrypted content
           if (hasEncryptedContent(evt)) {
-            console.log('[bunker] 🔓 Auto-decrypting bookmark event', evt.id.slice(0, 8))
+            console.log('[app] 🔓 Auto-decrypting bookmark event', evt.id.slice(0, 8))
             try {
               // Trigger decryption by collecting from this single event
               // This will unlock the content for the main collection pass
               await collectBookmarksFromEvents([evt], activeAccount, signerCandidate)
-              console.log('[bunker] ✅ Auto-decrypted:', evt.id.slice(0, 8))
+              console.log('[app] ✅ Auto-decrypted:', evt.id.slice(0, 8))
             } catch (error) {
-              console.error('[bunker] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
+              console.error('[app] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
             }
           }
-          
-          // Update bookmarks with current events
-          await updateBookmarks(Array.from(eventMap.values()))
         }
       }
     )
 
-    console.log('📊 Raw events fetched:', rawEvents.length, 'events')
+    console.log('[app] 📊 Query complete, raw events fetched:', rawEvents.length, 'events')
     
     // Rebroadcast bookmark events to local/all relays based on settings
     await rebroadcastEvents(rawEvents, relayPool, settings)
 
     const dedupedEvents = Array.from(eventMap.values())
-    console.log('📋 After deduplication:', dedupedEvents.length, 'bookmark events')
+    console.log('[app] 📋 After deduplication:', dedupedEvents.length, 'bookmark events')
     
     if (dedupedEvents.length === 0) {
-      // No events found, don't update
+      console.log('[app] ⚠️  No bookmark events found')
+      setBookmarks([]) // Clear bookmarks if none found
       return
     }
 
-    // Final update with all events (in case onEvent didn't complete)
+    // Final update with all events
+    console.log('[app] 🔄 Final bookmark processing with', dedupedEvents.length, 'events')
     await updateBookmarks(dedupedEvents)
+    console.log('[app] ✅ Bookmarks processing complete')
 
   } catch (error) {
     console.error('Failed to fetch bookmarks:', error)
