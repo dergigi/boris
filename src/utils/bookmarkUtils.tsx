@@ -128,9 +128,12 @@ export function groupIndividualBookmarks(items: IndividualBookmark[]) {
   }
 }
 
-// Simple filter: only exclude bookmarks with empty/whitespace-only content
+// Simple filter: show bookmarks that have content OR just an ID (placeholder)
 export function hasContent(bookmark: IndividualBookmark): boolean {
-  return !!(bookmark.content && bookmark.content.trim().length > 0)
+  // Show if has content OR has an ID (placeholder until events are fetched)
+  const hasValidContent = !!(bookmark.content && bookmark.content.trim().length > 0)
+  const hasId = !!(bookmark.id && bookmark.id.trim().length > 0)
+  return hasValidContent || hasId
 }
 
 // Bookmark sets helpers (kind 30003)
