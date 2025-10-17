@@ -98,11 +98,6 @@ const Debug: React.FC = () => {
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-2">Bunker Debug</h2>
         <div className="flex items-center gap-2 mb-3">
-          <button className="btn btn-outline" onClick={toggleDebug}>
-            {debugEnabled && <span style={{ marginRight: 6 }}>✓</span>}
-            {debugEnabled ? 'Hide' : 'Show'} all applesauce debug logs
-          </button>
-          <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
           <span className="opacity-70">Active pubkey:</span> <code className="text-sm">{pubkey || 'none'}</code>
         </div>
       </div>
@@ -155,10 +150,22 @@ const Debug: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
 
+      {/* Debug Logs Section */}
+      <div className="mt-8">
         <div className="card">
           <div className="card-body">
-            <h3 className="text-lg font-semibold mb-3">Live Logs</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold">Debug Logs</h3>
+              <div className="flex gap-2">
+                <button className="btn btn-outline" onClick={toggleDebug}>
+                  {debugEnabled && <span style={{ marginRight: 6 }}>✓</span>}
+                  {debugEnabled ? 'Hide' : 'Show'} all applesauce debug logs
+                </button>
+                <button className="btn btn-secondary" onClick={() => setLogs([])}>Clear logs</button>
+              </div>
+            </div>
             <div className="text-sm opacity-70 mb-3">Recent NIP-46 activity</div>
             <div className="max-h-64 overflow-y-auto font-mono text-xs leading-relaxed">
               {logs.length === 0 ? (
