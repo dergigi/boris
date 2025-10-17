@@ -256,7 +256,18 @@ function AppRoutes({
           />
         } 
       />
-      <Route path="/debug" element={<Debug relayPool={relayPool} />} />
+      <Route 
+        path="/debug" 
+        element={
+          <Debug 
+            relayPool={relayPool}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
+            onLogout={handleLogout}
+          />
+        } 
+      />
       <Route path="/" element={<Navigate to={`/a/${DEFAULT_ARTICLE}`} replace />} />
     </Routes>
   )

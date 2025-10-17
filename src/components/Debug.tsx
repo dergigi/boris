@@ -1,28 +1,60 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faClock, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
+import { useEventStore } from 'applesauce-react/hooks'
 import { Accounts } from 'applesauce-accounts'
 import { NostrConnectSigner } from 'applesauce-signers'
 import { RelayPool } from 'applesauce-relay'
 import { Helpers } from 'applesauce-core'
 import { getDefaultBunkerPermissions } from '../services/nostrConnect'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
-import VersionFooter from './VersionFooter'
+import ThreePaneLayout from './ThreePaneLayout'
 import { queryEvents } from '../services/dataFetch'
 import { KINDS } from '../config/kinds'
 import { collectBookmarksFromEvents } from '../services/bookmarkProcessing'
 import type { NostrEvent } from '../services/bookmarkHelpers'
+import { Bookmark } from '../types/bookmarks'
+import { useBookmarksUI } from '../hooks/useBookmarksUI'
+import { useSettings } from '../hooks/useSettings'
 
 const defaultPayload = 'The quick brown fox jumps over the lazy dog.'
 
 interface DebugProps {
-  relayPool?: RelayPool | null
+  relayPool: RelayPool | null
+  bookmarks: Bookmark[]
+  bookmarksLoading: boolean
+  onRefreshBookmarks: () => Promise<void>
+  onLogout: () => void
 }
 
-const Debug: React.FC<DebugProps> = ({ relayPool }) => {
+const Debug: React.FC<DebugProps> = ({ 
+  relayPool, 
+  bookmarks, 
+  bookmarksLoading, 
+  onRefreshBookmarks,
+  onLogout 
+}) => {
+  const navigate = useNavigate()
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
+  const eventStore = useEventStore()
+  
+  const { settings, saveSettings } = useSettings({
+    relayPool,
+    eventStore,
+    pubkey: activeAccount?.pubkey,
+    accountManager
+  })
+  
+  const {
+    isMobile,
+    isCollapsed,
+    setIsCollapsed,
+    viewMode,
+    setViewMode
+  } = useBookmarksUI({ settings })
   const [payload, setPayload] = useState<string>(defaultPayload)
   const [cipher44, setCipher44] = useState<string>('')
   const [cipher04, setCipher04] = useState<string>('')
@@ -403,7 +435,7 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
     )
   }
 
-  return (
+  const debugContent = (
     <div className="settings-view">
       <div className="settings-header">
         <h2>Debug</h2>
@@ -670,9 +702,60 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
             </div>
         </div>
       </div>
-
-      <VersionFooter />
     </div>
+  )
+  
+  return (
+    <ThreePaneLayout
+      isCollapsed={isCollapsed}
+      isHighlightsCollapsed={true}
+      isSidebarOpen={false}
+      showSettings={false}
+      bookmarks={bookmarks}
+      bookmarksLoading={bookmarksLoading}
+      viewMode={viewMode}
+      isRefreshing={false}
+      lastFetchTime={null}
+      onToggleSidebar={isMobile ? () => {} : () => setIsCollapsed(!isCollapsed)}
+      onLogout={onLogout}
+      onViewModeChange={setViewMode}
+      onOpenSettings={() => navigate('/settings')}
+      onRefresh={onRefreshBookmarks}
+      relayPool={relayPool}
+      eventStore={eventStore}
+      readerLoading={false}
+      readerContent={undefined}
+      selectedUrl={undefined}
+      settings={settings}
+      onSaveSettings={saveSettings}
+      onCloseSettings={() => navigate('/')}
+      classifiedHighlights={[]}
+      showHighlights={false}
+      selectedHighlightId={undefined}
+      highlightVisibility="all"
+      onHighlightClick={() => {}}
+      onTextSelection={() => {}}
+      onClearSelection={() => {}}
+      currentUserPubkey={activeAccount?.pubkey}
+      followedPubkeys={new Set()}
+      activeAccount={activeAccount}
+      currentArticle={null}
+      highlights={[]}
+      highlightsLoading={false}
+      onToggleHighlightsPanel={() => {}}
+      onSelectUrl={() => {}}
+      onToggleHighlights={() => {}}
+      onRefreshHighlights={() => {}}
+      onHighlightVisibilityChange={() => {}}
+      highlightButtonRef={{ current: null }}
+      onCreateHighlight={() => {}}
+      hasActiveAccount={!!activeAccount}
+      toastMessage={undefined}
+      toastType={undefined}
+      onClearToast={() => {}}
+    >
+      {debugContent}
+    </ThreePaneLayout>
   )
 }
 
