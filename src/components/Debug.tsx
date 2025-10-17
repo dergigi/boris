@@ -70,6 +70,37 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
   const hasNip04 = typeof (signer as { nip04?: { encrypt?: unknown; decrypt?: unknown } } | undefined)?.nip04?.encrypt === 'function'
   const hasNip44 = typeof (signer as { nip44?: { encrypt?: unknown; decrypt?: unknown } } | undefined)?.nip44?.encrypt === 'function'
 
+  const getKindName = (kind: number): string => {
+    switch (kind) {
+      case KINDS.ListSimple: return 'Simple List (10003)'
+      case KINDS.ListReplaceable: return 'Replaceable List (30003)'
+      case KINDS.List: return 'List (30001)'
+      case KINDS.WebBookmark: return 'Web Bookmark (39701)'
+      default: return `Kind ${kind}`
+    }
+  }
+
+  const getEventSize = (evt: NostrEvent): number => {
+    const content = evt.content || ''
+    const tags = JSON.stringify(evt.tags || [])
+    return content.length + tags.length
+  }
+
+  const getBookmarkCount = (evt: NostrEvent): { public: number; private: number } => {
+    const publicTags = (evt.tags || []).filter((t: string[]) => t[0] === 'e' || t[0] === 'a')
+    const hasPrivate = evt.content && evt.content.length > 0
+    return {
+      public: publicTags.length,
+      private: hasPrivate ? 1 : 0 // Can't know exact count until decrypted
+    }
+  }
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+  }
+
   const doEncrypt = async (mode: 'nip44' | 'nip04') => {
     if (!signer || !pubkey) return
     try {
@@ -467,14 +498,28 @@ const Debug: React.FC<DebugProps> = ({ relayPool }) => {
 
           {bookmarkEvents.length > 0 && (
             <div className="mb-3">
-              <div className="text-sm opacity-70 mb-2">Loaded Events:</div>
-              <div className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
-                {bookmarkEvents.length} event{bookmarkEvents.length !== 1 ? 's' : ''} found
-                {bookmarkEvents.length > 0 && (
-                  <div className="mt-1">
-                    Kinds: {Array.from(new Set(bookmarkEvents.map(e => e.kind))).join(', ')}
-                  </div>
-                )}
+              <div className="text-sm opacity-70 mb-2">Loaded Events ({bookmarkEvents.length}):</div>
+              <div className="space-y-2">
+                {bookmarkEvents.map((evt, idx) => {
+                  const dTag = evt.tags?.find((t: string[]) => t[0] === 'd')?.[1]
+                  const titleTag = evt.tags?.find((t: string[]) => t[0] === 'title')?.[1]
+                  const size = getEventSize(evt)
+                  const counts = getBookmarkCount(evt)
+                  
+                  return (
+                    <div key={idx} className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                      <div className="font-semibold mb-1">{getKindName(evt.kind)}</div>
+                      {dTag && <div className="opacity-70">d-tag: {dTag}</div>}
+                      {titleTag && <div className="opacity-70">title: {titleTag}</div>}
+                      <div className="mt-1 flex gap-3 flex-wrap">
+                        <span>📊 Size: {formatBytes(size)}</span>
+                        <span>📌 Public: {counts.public}</span>
+                        {counts.private > 0 && <span>🔒 Has encrypted content</span>}
+                      </div>
+                      <div className="opacity-50 mt-1 text-[10px]">ID: {evt.id?.slice(0, 16)}...</div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
