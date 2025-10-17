@@ -96,7 +96,7 @@ const Debug: React.FC = () => {
   return (
     <div className="content-panel" style={{ maxWidth: '900px', margin: '0 auto' }}>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">Debug / NIP-46 Tools</h2>
+        <h2 className="text-2xl font-bold mb-2">Bunker Debug</h2>
         <div className="flex items-center gap-2 mb-3">
           <button className="btn btn-outline" onClick={toggleDebug}>{debugEnabled ? 'Disable' : 'Enable'} debug logs</button>
           <button className="btn btn-ghost" onClick={() => setLogs([])}>Clear logs</button>
