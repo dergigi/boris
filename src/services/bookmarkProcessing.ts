@@ -5,7 +5,7 @@ import {
 } from '../types/bookmarks'
 import { BookmarkHiddenSymbol, hasNip04Decrypt, hasNip44Decrypt, processApplesauceBookmarks } from './bookmarkHelpers'
 import type { NostrEvent } from './bookmarkHelpers'
-import { mapWithConcurrency } from '../utils/async'
+import { mapWithConcurrency, withTimeout } from '../utils/async'
 
 type DecryptFn = (pubkey: string, content: string) => Promise<string>
 type UnlockHiddenTagsFn = typeof Helpers.unlockHiddenTags
@@ -37,19 +37,30 @@ async function decryptEvent(
       }
     } else if (evt.content && evt.content.length > 0) {
       let decryptedContent: string | undefined
-      try {
-        if (hasNip44Decrypt(signerCandidate)) {
-          decryptedContent = await (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(evt.pubkey, evt.content)
+      
+      // Try to detect encryption method from content format
+      // NIP-44 starts with version byte (currently 0x02), NIP-04 is base64
+      const looksLikeNip44 = evt.content.length > 0 && !evt.content.includes('?iv=')
+      
+      // Try the likely method first, with a 5s timeout
+      if (looksLikeNip44 && hasNip44Decrypt(signerCandidate)) {
+        try {
+          decryptedContent = await withTimeout(
+            (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(evt.pubkey, evt.content),
+            5000
+          )
+        } catch (err) {
+          console.log("[bunker] ❌ nip44.decrypt failed:", err instanceof Error ? err.message : String(err))
         }
-      } catch (err) {
-        console.log("[bunker] ❌ nip44.decrypt failed:", err instanceof Error ? err.message : String(err))
       }
 
-      if (!decryptedContent) {
+      // Fallback to nip04 if nip44 failed or content looks like nip04
+      if (!decryptedContent && hasNip04Decrypt(signerCandidate)) {
         try {
-          if (hasNip04Decrypt(signerCandidate)) {
-            decryptedContent = await (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(evt.pubkey, evt.content)
-          }
+          decryptedContent = await withTimeout(
+            (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(evt.pubkey, evt.content),
+            5000
+          )
         } catch (err) {
           console.log("[bunker] ❌ nip04.decrypt failed:", err instanceof Error ? err.message : String(err))
         }
