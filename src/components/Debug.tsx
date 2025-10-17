@@ -3,12 +3,16 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faClock } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
+import { Accounts } from 'applesauce-accounts'
+import { NostrConnectSigner } from 'applesauce-signers'
+import { getDefaultBunkerPermissions } from '../services/nostrConnect'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
 
 const defaultPayload = 'The quick brown fox jumps over the lazy dog.'
 
 const Debug: React.FC = () => {
   const activeAccount = Hooks.useActiveAccount()
+  const accountManager = Hooks.useAccountManager()
   const [payload, setPayload] = useState<string>(defaultPayload)
   const [cipher44, setCipher44] = useState<string>('')
   const [cipher04, setCipher04] = useState<string>('')
@@ -20,6 +24,11 @@ const Debug: React.FC = () => {
   const [tDecrypt04, setTDecrypt04] = useState<number | null>(null)
   const [logs, setLogs] = useState<DebugLogEntry[]>(DebugBus.snapshot())
   const [debugEnabled, setDebugEnabled] = useState<boolean>(() => localStorage.getItem('debug') === '*')
+  
+  // Bunker login state
+  const [bunkerUri, setBunkerUri] = useState<string>('')
+  const [isBunkerLoading, setIsBunkerLoading] = useState<boolean>(false)
+  const [bunkerError, setBunkerError] = useState<string | null>(null)
 
   useEffect(() => {
     return DebugBus.subscribe((e) => setLogs(prev => [...prev, e].slice(-300)))
@@ -79,6 +88,52 @@ const Debug: React.FC = () => {
     else localStorage.removeItem('debug')
   }
 
+  const handleBunkerLogin = async () => {
+    if (!bunkerUri.trim()) {
+      setBunkerError('Please enter a bunker URI')
+      return
+    }
+
+    if (!bunkerUri.startsWith('bunker://')) {
+      setBunkerError('Invalid bunker URI. Must start with bunker://')
+      return
+    }
+
+    try {
+      setIsBunkerLoading(true)
+      setBunkerError(null)
+      
+      // Create signer from bunker URI with default permissions
+      const permissions = getDefaultBunkerPermissions()
+      const signer = await NostrConnectSigner.fromBunkerURI(bunkerUri, { permissions })
+      
+      // Get pubkey from signer
+      const pubkey = await signer.getPublicKey()
+      
+      // Create account from signer
+      const account = new Accounts.NostrConnectAccount(pubkey, signer)
+      
+      // Add to account manager and set active
+      accountManager.addAccount(account)
+      accountManager.setActive(account)
+      
+      // Clear input on success
+      setBunkerUri('')
+    } catch (err) {
+      console.error('[bunker] Login failed:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to connect to bunker'
+      
+      // Check for permission-related errors
+      if (errorMessage.toLowerCase().includes('permission') || errorMessage.toLowerCase().includes('unauthorized')) {
+        setBunkerError('Your bunker connection is missing signing permissions. Reconnect and approve signing.')
+      } else {
+        setBunkerError(errorMessage)
+      }
+    } finally {
+      setIsBunkerLoading(false)
+    }
+  }
+
   const CodeBox = ({ value }: { value: string }) => (
     <pre
       className="textarea"
@@ -99,6 +154,53 @@ const Debug: React.FC = () => {
         <h2 className="text-2xl font-bold mb-2">Bunker Debug</h2>
         <div className="flex items-center gap-2 mb-3">
           <span className="opacity-70">Active pubkey:</span> <code className="text-sm">{pubkey || 'none'}</code>
+        </div>
+      </div>
+
+      {/* Bunker Login Section */}
+      <div className="mb-6">
+        <div className="card">
+          <div className="card-body">
+            <h3 className="text-lg font-semibold mb-3">Bunker Connection</h3>
+            {!activeAccount ? (
+              <div>
+                <div className="text-sm opacity-70 mb-3">Connect to your bunker (Nostr Connect signer) to enable encryption/decryption testing</div>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    className="input flex-1"
+                    placeholder="bunker://..."
+                    value={bunkerUri}
+                    onChange={(e) => setBunkerUri(e.target.value)}
+                    disabled={isBunkerLoading}
+                  />
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={handleBunkerLogin}
+                    disabled={isBunkerLoading || !bunkerUri.trim()}
+                  >
+                    {isBunkerLoading ? 'Connecting...' : 'Connect'}
+                  </button>
+                </div>
+                {bunkerError && (
+                  <div className="text-sm text-red-600 dark:text-red-400 mb-2">{bunkerError}</div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm opacity-70">Connected to bunker</div>
+                  <div className="text-sm font-mono">{pubkey}</div>
+                </div>
+                <button 
+                  className="btn btn-outline" 
+                  onClick={() => accountManager.removeAccount(activeAccount)}
+                >
+                  Disconnect
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
