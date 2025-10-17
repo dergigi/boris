@@ -96,8 +96,9 @@ export function groupIndividualBookmarks(items: IndividualBookmark[]) {
   // Group by source list, not by content type
   const nip51Public = sorted.filter(i => i.sourceKind === 10003 && !i.isPrivate)
   const nip51Private = sorted.filter(i => i.sourceKind === 10003 && i.isPrivate)
-  const amethystPublic = sorted.filter(i => i.sourceKind === 30001 && !i.isPrivate)
-  const amethystPrivate = sorted.filter(i => i.sourceKind === 30001 && i.isPrivate)
+  // Amethyst bookmarks: kind:30001 with d-tag "bookmark"
+  const amethystPublic = sorted.filter(i => i.sourceKind === 30001 && !i.isPrivate && i.setName === 'bookmark')
+  const amethystPrivate = sorted.filter(i => i.sourceKind === 30001 && i.isPrivate && i.setName === 'bookmark')
   const standaloneWeb = sorted.filter(i => i.sourceKind === 39701)
   
   return { 
