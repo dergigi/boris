@@ -12,9 +12,9 @@ type HiddenContentSigner = Parameters<UnlockHiddenTagsFn>[1]
 type UnlockMode = Parameters<UnlockHiddenTagsFn>[2]
 
 /**
- * Wrap a decrypt promise with a timeout to prevent hanging (using 15s timeout for bunker)
+ * Wrap a decrypt promise with a timeout to prevent hanging (using 30s timeout for bunker)
  */
-function withDecryptTimeout<T>(promise: Promise<T>, timeoutMs = 15000): Promise<T> {
+function withDecryptTimeout<T>(promise: Promise<T>, timeoutMs = 30000): Promise<T> {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) =>

@@ -374,7 +374,7 @@ function App() {
                   console.log("[bunker] Subscription ready after startup delay")
                   // Fire-and-forget: probe decrypt path to verify Amber responds to NIP-46 decrypt
                   try {
-                    const withTimeout = async <T,>(p: Promise<T>, ms = 3000): Promise<T> => {
+                    const withTimeout = async <T,>(p: Promise<T>, ms = 10000): Promise<T> => {
                       return await Promise.race([
                         p,
                         new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`probe timeout after ${ms}ms`)), ms)),
@@ -385,16 +385,16 @@ function App() {
                       // Try a roundtrip so the bunker can respond successfully
                       try {
                         console.log('[bunker] 🔎 Probe nip44 roundtrip (encrypt→decrypt)…')
-                        const cipher44 = await withTimeout(nostrConnectAccount.signer.nip44!.encrypt(self, 'probe-nip44'), 3000)
-                        const plain44 = await withTimeout(nostrConnectAccount.signer.nip44!.decrypt(self, cipher44), 3000)
+                        const cipher44 = await withTimeout(nostrConnectAccount.signer.nip44!.encrypt(self, 'probe-nip44'))
+                        const plain44 = await withTimeout(nostrConnectAccount.signer.nip44!.decrypt(self, cipher44))
                         console.log('[bunker] 🔎 Probe nip44 responded:', typeof plain44 === 'string' ? plain44 : typeof plain44)
                       } catch (err) {
                         console.log('[bunker] 🔎 Probe nip44 result:', err instanceof Error ? err.message : err)
                       }
                       try {
                         console.log('[bunker] 🔎 Probe nip04 roundtrip (encrypt→decrypt)…')
-                        const cipher04 = await withTimeout(nostrConnectAccount.signer.nip04!.encrypt(self, 'probe-nip04'), 3000)
-                        const plain04 = await withTimeout(nostrConnectAccount.signer.nip04!.decrypt(self, cipher04), 3000)
+                        const cipher04 = await withTimeout(nostrConnectAccount.signer.nip04!.encrypt(self, 'probe-nip04'))
+                        const plain04 = await withTimeout(nostrConnectAccount.signer.nip04!.decrypt(self, cipher04))
                         console.log('[bunker] 🔎 Probe nip04 responded:', typeof plain04 === 'string' ? plain04 : typeof plain04)
                       } catch (err) {
                         console.log('[bunker] 🔎 Probe nip04 result:', err instanceof Error ? err.message : err)
