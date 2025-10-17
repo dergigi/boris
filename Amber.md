@@ -96,13 +96,34 @@ If DECRYPT entries still don’t appear:
 
 ## Amethyst-style bookmarks (kind:30001)
 
-**Important**: Bookmark events (kind:30001) that have public `tags` and private `content` are **Amethyst-style bookmarks**.
+**Important**: Amethyst bookmarks are stored in a **SINGLE** `kind:30001` event with d-tag `"bookmark"` that contains BOTH public AND private bookmarks in different parts of the event.
 
-### Format:
+### Event structure:
+- **Event kind**: `30001` (NIP-51 bookmark set)
+- **d-tag**: `"bookmark"` (identifies this as the Amethyst bookmark list)
 - **Public bookmarks**: Stored in event `tags` (e.g., `["e", "..."]`, `["a", "..."]`)
 - **Private bookmarks**: Stored in encrypted `content` field (NIP-04 or NIP-44)
 
-### Implementation details:
+### Example event:
+```json
+{
+  "kind": 30001,
+  "tags": [
+    ["d", "bookmark"],       // Identifies this as Amethyst bookmarks
+    ["e", "102a2fe..."],     // Public bookmark (76 total)
+    ["a", "30023:..."]       // Public bookmark
+  ],
+  "content": "lvOfl7Qb...?iv=5KzDXv09..."  // NIP-04 encrypted (416 private bookmarks)
+}
+```
+
+### Processing:
+When this single event is processed:
+1. **Public tags** → 76 bookmark items with `sourceKind: 30001, isPrivate: false, setName: "bookmark"`
+2. **Encrypted content** → 416 bookmark items with `sourceKind: 30001, isPrivate: true, setName: "bookmark"`
+3. Total: 492 bookmarks from one event
+
+### Encryption detection:
 - The encrypted `content` field contains a JSON array of private bookmark tags
 - `Helpers.hasHiddenContent()` from `applesauce-core` only detects **NIP-44** encrypted content
 - **NIP-04** encrypted content must be detected explicitly by checking for `?iv=` in the content string
@@ -110,21 +131,15 @@ If DECRYPT entries still don’t appear:
   1. **Display logic** (`Debug.tsx` - `hasEncryptedContent()`) - to show padlock emoji and decrypt button
   2. **Decryption logic** (`bookmarkProcessing.ts`) - to schedule decrypt jobs
 
-### Example event structure:
-```json
-{
-  "kind": 30001,
-  "tags": [
-    ["d", "bookmark"],
-    ["e", "102a2fe..."],  // Public bookmark
-    ["e", "84ce035..."]   // Public bookmark
-  ],
-  "content": "lvOfl7Qb...?iv=5KzDXv09..."  // NIP-04 encrypted private bookmarks
-}
-```
+### Grouping:
+In the UI, these are separated into two groups:
+- **Amethyst Lists**: `sourceKind === 30001 && !isPrivate && setName === 'bookmark'` (public items)
+- **Amethyst Private**: `sourceKind === 30001 && isPrivate && setName === 'bookmark'` (private items)
+
+Both groups come from the same event, separated by whether they were in public tags or encrypted content.
 
 ### Why this matters:
-This dual-storage format (public + private) is why we need explicit NIP-04 detection. Without it, `Helpers.hasHiddenContent()` returns `false` and the encrypted content is never decrypted, resulting in 0 private bookmarks despite having encrypted data.
+This dual-storage format (public + private in one event) is why we need explicit NIP-04 detection. Without it, `Helpers.hasHiddenContent()` returns `false` and the encrypted content is never decrypted, resulting in 0 private bookmarks despite having encrypted data.
 
 ## Current conclusion
 
