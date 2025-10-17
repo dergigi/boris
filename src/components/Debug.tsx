@@ -209,30 +209,30 @@ const Debug: React.FC = () => {
             <label className="setting-label">Payload</label>
             <textarea className="textarea w-full" value={payload} onChange={e => setPayload(e.target.value)} rows={3} />
             <div className="flex gap-2 mt-3">
-              <button className="btn btn-primary" onClick={() => doEncrypt('nip44')} disabled={!hasNip44}>Encrypt (nip44)</button>
-              <button className="btn btn-secondary" onClick={() => doEncrypt('nip04')} disabled={!hasNip04}>Encrypt (nip04)</button>
+              <button className="btn btn-primary" onClick={() => doEncrypt('nip44')} disabled={!hasNip44}>Encrypt (NIP-44)</button>
+              <button className="btn btn-secondary" onClick={() => doEncrypt('nip04')} disabled={!hasNip04}>Encrypt (NIP-04)</button>
               <button className="btn btn-secondary" onClick={() => { setCipher44(''); setCipher04(''); setPlain44(''); setPlain04(''); setTEncrypt44(null); setTEncrypt04(null); setTDecrypt44(null); setTDecrypt04(null) }}>Clear</button>
             </div>
           </div>
           
           <div className="grid" style={{ gap: 12, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)' }}>
             <div className="setting-group">
-              <label className="setting-label">nip44</label>
+              <label className="setting-label">NIP-44</label>
               <label className="block text-sm opacity-70 mb-2">cipher</label>
               <CodeBox value={cipher44} />
               <div className="flex gap-2 mt-3">
-                <button className="btn btn-secondary" onClick={() => doDecrypt('nip44')} disabled={!cipher44}>Decrypt (nip44)</button>
+                <button className="btn btn-secondary" onClick={() => doDecrypt('nip44')} disabled={!cipher44}>Decrypt (NIP-44)</button>
                 <span className="text-sm opacity-70">Plain:</span>
               </div>
               <CodeBox value={plain44} />
             </div>
 
             <div className="setting-group">
-              <label className="setting-label">nip04</label>
+              <label className="setting-label">NIP-04</label>
               <label className="block text-sm opacity-70 mb-2">cipher</label>
               <CodeBox value={cipher04} />
               <div className="flex gap-2 mt-3">
-                <button className="btn btn-secondary" onClick={() => doDecrypt('nip04')} disabled={!cipher04}>Decrypt (nip04)</button>
+                <button className="btn btn-secondary" onClick={() => doDecrypt('nip04')} disabled={!cipher04}>Decrypt (NIP-04)</button>
                 <span className="text-sm opacity-70">Plain:</span>
               </div>
               <CodeBox value={plain04} />
@@ -246,14 +246,14 @@ const Debug: React.FC = () => {
           <div className="text-sm opacity-70 mb-3">Encryption and decryption operation durations</div>
           <div className="grid" style={{ gap: 12, gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)' }}>
             <div className="setting-group">
-              <label className="setting-label">nip44</label>
+              <label className="setting-label">NIP-44</label>
               <div className="flex flex-wrap items-center gap-2">
                 <Stat label="enc" value={tEncrypt44 !== null ? `${tEncrypt44}ms` : null} />
                 <Stat label="dec" value={tDecrypt44 !== null ? `${tDecrypt44}ms` : null} />
               </div>
             </div>
             <div className="setting-group">
-              <label className="setting-label">nip04</label>
+              <label className="setting-label">NIP-04</label>
               <div className="flex flex-wrap items-center gap-2">
                 <Stat label="enc" value={tEncrypt04 !== null ? `${tEncrypt04}ms` : null} />
                 <Stat label="dec" value={tDecrypt04 !== null ? `${tDecrypt04}ms` : null} />
