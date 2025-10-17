@@ -5,7 +5,7 @@ import {
 } from '../types/bookmarks'
 import { BookmarkHiddenSymbol, hasNip04Decrypt, hasNip44Decrypt, processApplesauceBookmarks } from './bookmarkHelpers'
 import type { NostrEvent } from './bookmarkHelpers'
-import { mapWithConcurrency, withTimeout } from '../utils/async'
+import { withTimeout } from '../utils/async'
 
 type DecryptFn = (pubkey: string, content: string) => Promise<string>
 type UnlockHiddenTagsFn = typeof Helpers.unlockHiddenTags
@@ -193,19 +193,15 @@ export async function collectBookmarksFromEvents(
     }
   }
 
-  // Run decrypt jobs with limited concurrency (6 parallel at most)
+  // Decrypt events sequentially
   const privateItemsAll: IndividualBookmark[] = []
   if (decryptJobs.length > 0 && signerCandidate) {
-    const privateChunks = await mapWithConcurrency(
-      decryptJobs,
-      6,
-      async (job) => decryptEvent(job.evt, activeAccount, signerCandidate, job.metadata)
-    )
-    privateChunks.forEach(chunk => {
-      if (chunk && chunk.length > 0) {
-        privateItemsAll.push(...chunk)
+    for (const job of decryptJobs) {
+      const privateItems = await decryptEvent(job.evt, activeAccount, signerCandidate, job.metadata)
+      if (privateItems && privateItems.length > 0) {
+        privateItemsAll.push(...privateItems)
       }
-    })
+    }
   }
 
   return { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags }
