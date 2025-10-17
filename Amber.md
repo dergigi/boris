@@ -12,6 +12,13 @@
   - After deserialization, recreated the signer with pool context and merged its relays with app `RELAYS` (includes local relays).
   - Opened the signer subscription and performed a guarded `connect()` with default permissions including `nip04_encrypt/decrypt` and `nip44_encrypt/decrypt`.
 
+- **Account queue disabling (CRITICAL)**
+  - `applesauce-accounts` `BaseAccount` queues requests by default - each request waits for the previous one to complete before being sent.
+  - This caused batch decrypt operations to hang: first request would timeout waiting for user interaction, blocking all subsequent requests in the queue.
+  - **Solution**: Set `account.disableQueue = true` before batch operations, restore after completion.
+  - Without this, Amber never sees decrypt requests because they're stuck in the account's internal queue.
+  - Reference: https://hzrd149.github.io/applesauce/typedoc/classes/applesauce-accounts.BaseAccount.html#disablequeue
+
 - **Probes and timeouts**
   - Initial probe tried `decrypt('invalid-ciphertext')` → timed out.
   - Switched to roundtrip probes: `encrypt(self, ... )` then `decrypt(self, cipher)` for both nip-44 and nip-04.
@@ -76,19 +83,25 @@ If DECRYPT entries still don’t appear:
 - **Solution**: Wrapped `NostrConnectSigner.publishMethod` at app startup to fire-and-forget publish Observable/Promise; responses still arrive via signer subscription.
 - **Result**: Encrypt/decrypt operations complete in <2s as seen in `/debug` page (NIP-44: ~900ms enc, ~700ms dec; NIP-04: ~1s enc, ~2s dec).
 
-### Concurrent bookmark decryption
-- **Problem**: Sequential decrypt of encrypted bookmark events blocks UI and takes long with multiple events.
-- **Solution**: Refactored `collectBookmarksFromEvents` to:
-  - Collect public bookmarks immediately (synchronous).
-  - Schedule decrypt jobs for events with encrypted content.
-  - Run decrypt jobs with limited concurrency (6 parallel max) using `mapWithConcurrency`.
-  - Each decrypt wrapped with 30s timeout as safety net.
-- **Result**: Bookmark loading is faster and UI remains responsive during decrypts.
+### Bookmark decryption optimization
+- **Problem #1**: Sequential decrypt of encrypted bookmark events blocks UI and takes long with multiple events.
+- **Problem #2**: 30-second timeouts on `nip44.decrypt` meant waiting 30s per event if bunker didn't support nip44.
+- **Problem #3**: Account request queue blocked all decrypt requests until first one completed (waiting for user interaction).
+- **Solution**: 
+  - Removed artificial timeouts - let decrypt fail naturally like debug page does.
+  - Added smart encryption detection (NIP-04 has `?iv=`, NIP-44 doesn't) to try the right method first.
+  - Use 5-second timeout as safety net (down from 30s).
+  - **Disable account queue** (`disableQueue = true`) during batch operations so all requests are sent immediately.
+  - Process sequentially (removed concurrent `mapWithConcurrency` hack).
+- **Result**: Bookmark decryption should be near-instant, limited only by bunker response time and user approval speed.
 
 ## Current conclusion
 
 - Client is configured and publishing requests correctly; encryption proves end‑to‑end path is alive.
-- Non-blocking publish and concurrent decrypts keep UI responsive.
-- The missing DECRYPT activity in Amber is the blocker. Fixing Amber's NIP‑46 decrypt handling should resolve bookmark decryption in Boris without further client changes.
+- Non-blocking publish keeps operations fast (~1-2s for encrypt/decrypt).
+- **Account queue MUST be disabled** for batch operations - this was the primary cause of hangs/timeouts.
+- Smart encryption detection and reasonable timeouts (5s) prevent unnecessary delays.
+- Sequential processing is cleaner and more predictable than concurrent hacks.
+- The missing DECRYPT activity in Amber was partially due to requests never being sent (stuck in queue). With queue disabled, Amber should now receive all decrypt requests.
 
 
