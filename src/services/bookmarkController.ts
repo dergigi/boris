@@ -124,6 +124,7 @@ class BookmarkController {
       console.log('[bookmark] 🔧 collectBookmarksFromEvents returned:', publicItemsAll.length, 'public,', privateItemsAll.length, 'private')
 
       const allItems = [...publicItemsAll, ...privateItemsAll]
+      console.log('[bookmark] 🔧 Total items to process:', allItems.length)
       
       // Separate hex IDs from coordinates
       const noteIds: string[] = []
@@ -137,16 +138,20 @@ class BookmarkController {
         }
       })
       
+      console.log('[bookmark] 🔧 Fetching', noteIds.length, 'note IDs and', coordinates.length, 'coordinates')
+      
       const idToEvent: Map<string, NostrEvent> = new Map()
       
       // Fetch regular events by ID
       if (noteIds.length > 0) {
+        console.log('[bookmark] 🔧 Fetching events by ID...')
         try {
           const fetchedEvents = await queryEvents(
             relayPool,
             { ids: Array.from(new Set(noteIds)) },
             {}
           )
+          console.log('[bookmark] 🔧 Fetched', fetchedEvents.length, 'events by ID')
           fetchedEvents.forEach((e: NostrEvent) => {
             idToEvent.set(e.id, e)
             if (e.kind && e.kind >= 30000 && e.kind < 40000) {
@@ -162,6 +167,7 @@ class BookmarkController {
       
       // Fetch addressable events by coordinates
       if (coordinates.length > 0) {
+        console.log('[bookmark] 🔧 Fetching addressable events...')
         try {
           const byKind = new Map<number, Array<{ pubkey: string; identifier: string }>>()
           
@@ -194,16 +200,20 @@ class BookmarkController {
               idToEvent.set(e.id, e)
             })
           }
+          console.log('[bookmark] 🔧 Fetched addressable events, total idToEvent size:', idToEvent.size)
         } catch (error) {
           console.warn('[bookmark] Failed to fetch addressable events:', error)
         }
       }
       
+      console.log('[bookmark] 🔧 Building final bookmarks list...')
       const allBookmarks = dedupeBookmarksById([
         ...hydrateItems(publicItemsAll, idToEvent),
         ...hydrateItems(privateItemsAll, idToEvent)
       ])
+      console.log('[bookmark] 🔧 After hydration and dedup:', allBookmarks.length, 'bookmarks')
 
+      console.log('[bookmark] 🔧 Enriching and sorting...')
       const enriched = allBookmarks.map(b => ({
         ...b,
         tags: b.tags || [],
@@ -213,7 +223,9 @@ class BookmarkController {
       const sortedBookmarks = enriched
         .map(b => ({ ...b, urlReferences: extractUrlsFromContent(b.content) }))
         .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
+      console.log('[bookmark] 🔧 Sorted:', sortedBookmarks.length, 'bookmarks')
 
+      console.log('[bookmark] 🔧 Creating final Bookmark object...')
       const bookmark: Bookmark = {
         id: `${activeAccount.pubkey}-bookmarks`,
         title: `Bookmarks (${sortedBookmarks.length})`,
