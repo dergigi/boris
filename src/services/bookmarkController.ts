@@ -117,9 +117,11 @@ class BookmarkController {
     }
 
     try {
+      console.log('[controller] 🔧 Calling collectBookmarksFromEvents with', readyEvents.length, 'events')
       // Collect bookmarks from ready events only
       const { publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags } = 
         await collectBookmarksFromEvents(readyEvents, activeAccount, signerCandidate)
+      console.log('[controller] 🔧 collectBookmarksFromEvents returned:', publicItemsAll.length, 'public,', privateItemsAll.length, 'private')
 
       const allItems = [...publicItemsAll, ...privateItemsAll]
       
@@ -231,6 +233,8 @@ class BookmarkController {
       this.bookmarksListeners.forEach(cb => cb([bookmark]))
     } catch (error) {
       console.error('[controller] ❌ Failed to build bookmarks:', error)
+      console.error('[controller] ❌ Error details:', error instanceof Error ? error.message : String(error))
+      console.error('[controller] ❌ Stack:', error instanceof Error ? error.stack : 'no stack')
       this.bookmarksListeners.forEach(cb => cb([]))
     }
   }
