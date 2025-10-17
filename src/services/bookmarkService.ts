@@ -1,5 +1,4 @@
 import { RelayPool } from 'applesauce-relay'
-import { Helpers } from 'applesauce-core'
 import {
   AccountWithExtension,
   NostrEvent,
@@ -13,56 +12,22 @@ import { collectBookmarksFromEvents } from './bookmarkProcessing.ts'
 import { UserSettings } from './settingsService'
 import { rebroadcastEvents } from './rebroadcastService'
 import { queryEvents } from './dataFetch'
-import { KINDS } from '../config/kinds'
-
-// Helper to check if event has encrypted content
-const hasEncryptedContent = (evt: NostrEvent): boolean => {
-  // Check for NIP-44 encrypted content (detected by Helpers)
-  if (Helpers.hasHiddenContent(evt)) return true
-  
-  // Check for NIP-04 encrypted content (base64 with ?iv= suffix)
-  if (evt.content && evt.content.includes('?iv=')) return true
-  
-  // Check for encrypted tags
-  if (Helpers.hasHiddenTags(evt) && !Helpers.isHiddenTagsUnlocked(evt)) return true
-  
-  return false
-}
-
-// Helper to deduplicate events by key
-const getEventKey = (evt: NostrEvent): string => {
-  if (evt.kind === 30003 || evt.kind === 30001) {
-    // Replaceable: kind:pubkey:dtag
-    const dTag = evt.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-    return `${evt.kind}:${evt.pubkey}:${dTag}`
-  } else if (evt.kind === 10003) {
-    // Simple list: kind:pubkey
-    return `${evt.kind}:${evt.pubkey}`
-  }
-  // Web bookmarks: use event id (no deduplication)
-  return evt.id
-}
+import { loadBookmarksStream } from './bookmarkStream'
 
 export const fetchBookmarks = async (
   relayPool: RelayPool,
   activeAccount: unknown,
+  accountManager: { getActive: () => unknown },
   setBookmarks: (bookmarks: Bookmark[]) => void,
-  settings?: UserSettings
+  settings?: UserSettings,
+  onProgressUpdate?: () => void
 ) => {
   try {
     if (!isAccountWithExtension(activeAccount)) {
       throw new Error('Invalid account object provided')
     }
 
-    console.log('[app] 🔍 Fetching bookmark events with streaming')
-
-    // Track events with deduplication as they arrive
-    const eventMap = new Map<string, NostrEvent>()
-    let processedCount = 0
-    
-    console.log('[app] Account:', activeAccount.pubkey.slice(0, 8))
-
-    // Get signer for auto-decryption
+    // Get signer for bookmark processing
     const maybeAccount = activeAccount as AccountWithExtension
     let signerCandidate: unknown = maybeAccount
     const hasNip04Prop = (signerCandidate as { nip04?: unknown })?.nip04 !== undefined
@@ -186,56 +151,33 @@ export const fetchBookmarks = async (
       setBookmarks([bookmark])
     }
 
-    // Stream events (just collect, decrypt after)
-    const rawEvents = await queryEvents(
+    // Use shared streaming helper for consistent behavior with Debug page
+    // Progressive updates via callbacks (non-blocking)
+    const { events: dedupedEvents } = await loadBookmarksStream({
       relayPool,
-      { kinds: [KINDS.ListSimple, KINDS.ListReplaceable, KINDS.List, KINDS.WebBookmark], authors: [activeAccount.pubkey] },
-      {
-        onEvent: (evt) => {
-          // Deduplicate by key
-          const key = getEventKey(evt)
-          const existing = eventMap.get(key)
-          
-          if (existing && (existing.created_at || 0) >= (evt.created_at || 0)) {
-            return // Keep existing (it's newer or same)
-          }
-          
-          // Add/update event
-          eventMap.set(key, evt)
-          processedCount++
-          
-          console.log(`[app] 📨 Event ${processedCount}: kind=${evt.kind}, id=${evt.id.slice(0, 8)}, hasEncrypted=${hasEncryptedContent(evt)}`)
+      activeAccount: maybeAccount,
+      accountManager,
+      onEvent: () => {
+        // Signal that an event arrived (for loading indicator updates)
+        if (onProgressUpdate) {
+          onProgressUpdate()
+        }
+      },
+      onDecryptComplete: () => {
+        // Signal that a decrypt completed (for loading indicator updates)
+        if (onProgressUpdate) {
+          onProgressUpdate()
         }
       }
-    )
+    })
 
-    console.log('[app] 📊 Query complete, raw events fetched:', rawEvents.length, 'events')
-    
     // Rebroadcast bookmark events to local/all relays based on settings
-    await rebroadcastEvents(rawEvents, relayPool, settings)
+    await rebroadcastEvents(dedupedEvents, relayPool, settings)
 
-    const dedupedEvents = Array.from(eventMap.values())
-    console.log('[app] 📋 After deduplication:', dedupedEvents.length, 'bookmark events')
-    
     if (dedupedEvents.length === 0) {
       console.log('[app] ⚠️  No bookmark events found')
-      setBookmarks([]) // Clear bookmarks if none found
+      setBookmarks([])
       return
-    }
-
-    // Auto-decrypt events with encrypted content (batch processing)
-    const encryptedEvents = dedupedEvents.filter(evt => hasEncryptedContent(evt))
-    if (encryptedEvents.length > 0) {
-      console.log('[app] 🔓 Auto-decrypting', encryptedEvents.length, 'encrypted events')
-      for (const evt of encryptedEvents) {
-        try {
-          // Trigger decryption - this unlocks the content for the main collection pass
-          await collectBookmarksFromEvents([evt], activeAccount, signerCandidate)
-          console.log('[app] ✅ Auto-decrypted:', evt.id.slice(0, 8))
-        } catch (error) {
-          console.error('[app] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
-        }
-      }
     }
 
     // Final update with all events (now with decrypted content)

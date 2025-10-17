@@ -51,7 +51,18 @@ function AppRoutes({
       console.log('[app] 🔍 Loading bookmarks for', activeAccount.pubkey.slice(0, 8))
       
       const fullAccount = accountManager.getActive()
-      await fetchBookmarks(relayPool, fullAccount || activeAccount, setBookmarks)
+      // Progressive updates via onProgressUpdate callback
+      await fetchBookmarks(
+        relayPool, 
+        fullAccount || activeAccount, 
+        accountManager,
+        setBookmarks,
+        undefined, // settings
+        () => {
+          // Trigger re-render on each event/decrypt (progressive loading)
+          setBookmarksLoading(true)
+        }
+      )
       
       console.log('[app] ✅ Bookmarks loaded')
     } catch (error) {
