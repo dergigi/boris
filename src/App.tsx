@@ -199,9 +199,13 @@ function App() {
       // wait for every relay send to finish. Responses still resolve the pending request.
       NostrConnectSigner.subscriptionMethod = pool.subscription.bind(pool)
       NostrConnectSigner.publishMethod = (relays: string[], event: unknown) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result: any = pool.publish(relays, event as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (result && typeof (result as any).subscribe === 'function') {
-          try { (result as any).subscribe({ complete: () => {}, error: () => {} }) } catch {}
+          // Subscribe to the observable but ignore completion/errors (fire-and-forget)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          try { (result as any).subscribe({ complete: () => { /* noop */ }, error: () => { /* noop */ } }) } catch { /* ignore */ }
         }
         // Return an already-resolved promise so upstream await finishes immediately
         return Promise.resolve()
@@ -358,7 +362,8 @@ function App() {
                     // Observable/Promise to upstream to avoid their awaiting of completion.
                     const result = originalPublish(relays, event)
                     if (result && typeof (result as { subscribe?: unknown }).subscribe === 'function') {
-                      try { (result as { subscribe: (h: { complete?: () => void; error?: (e: unknown) => void }) => unknown }).subscribe({ complete: () => {}, error: () => {} }) } catch {}
+                      // Subscribe to the observable but ignore completion/errors (fire-and-forget)
+                      try { (result as { subscribe: (h: { complete?: () => void; error?: (e: unknown) => void }) => unknown }).subscribe({ complete: () => { /* noop */ }, error: () => { /* noop */ } }) } catch { /* ignore */ }
                     }
                     // If it's a Promise, simply ignore it (no await) so it resolves in the background.
                     // Return a benign object so callers that probe for a "subscribe" property
