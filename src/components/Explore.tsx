@@ -67,9 +67,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   
   const cachedWritings = useStoreTimeline(eventStore, { kinds: [30023] }, toBlogPostPreview, [])
   
-  // Visibility filters (defaults from settings)
+  // Visibility filters (defaults from settings or nostrverse when logged out)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
-    nostrverse: settings?.defaultExploreScopeNostrverse ?? false,
+    nostrverse: activeAccount ? (settings?.defaultExploreScopeNostrverse ?? false) : true,
     friends: settings?.defaultExploreScopeFriends ?? true,
     mine: settings?.defaultExploreScopeMine ?? false
   })
@@ -84,6 +84,21 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
   }, [])
 
+  // Update visibility when login state changes
+  useEffect(() => {
+    if (!activeAccount) {
+      // When logged out, show nostrverse by default
+      setVisibility(prev => ({ ...prev, nostrverse: true, friends: false, mine: false }))
+    } else {
+      // When logged in, use settings defaults
+      setVisibility({
+        nostrverse: settings?.defaultExploreScopeNostrverse ?? false,
+        friends: settings?.defaultExploreScopeFriends ?? true,
+        mine: settings?.defaultExploreScopeMine ?? false
+      })
+    }
+  }, [activeAccount, settings])
+
   // Update local state when prop changes
   useEffect(() => {
     if (propActiveTab) {
@@ -93,14 +108,23 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
 
   useEffect(() => {
     const loadData = async () => {
-      if (!activeAccount) {
-        setLoading(false)
-        return
-      }
-
       try {
         // show spinner but keep existing data
         setLoading(true)
+
+        // If not logged in, only fetch nostrverse content
+        if (!activeAccount) {
+          const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+          const [nostrversePosts, nostriverseHighlights] = await Promise.all([
+            fetchNostrverseBlogPosts(relayPool, relayUrls, 50, eventStore || undefined),
+            fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
+          ])
+
+          setBlogPosts(nostrversePosts)
+          setHighlights(nostriverseHighlights)
+          setLoading(false)
+          return
+        }
 
         // Seed from in-memory cache if available to avoid empty flash
         const memoryCachedPosts = getCachedPosts(activeAccount.pubkey)
