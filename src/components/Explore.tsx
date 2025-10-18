@@ -487,7 +487,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         </div>
       </div>
 
-      {renderTabContent()}
+      <div key={activeTab}>
+        {renderTabContent()}
+      </div>
     </div>
   )
 }
