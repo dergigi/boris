@@ -47,11 +47,11 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
   const [myHighlightsLoading, setMyHighlightsLoading] = useState(false)
   
-  // Visibility filters (defaults from settings, or friends only)
+  // Visibility filters (defaults from settings)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
-    nostrverse: settings?.defaultHighlightVisibilityNostrverse ?? false,
-    friends: settings?.defaultHighlightVisibilityFriends ?? true,
-    mine: settings?.defaultHighlightVisibilityMine ?? false
+    nostrverse: settings?.defaultExploreScopeNostrverse ?? false,
+    friends: settings?.defaultExploreScopeFriends ?? true,
+    mine: settings?.defaultExploreScopeMine ?? false
   })
 
   // Subscribe to highlights controller

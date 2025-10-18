@@ -36,6 +36,10 @@ export interface UserSettings {
   defaultHighlightVisibilityNostrverse?: boolean
   defaultHighlightVisibilityFriends?: boolean
   defaultHighlightVisibilityMine?: boolean
+  // Default explore scope
+  defaultExploreScopeNostrverse?: boolean
+  defaultExploreScopeFriends?: boolean
+  defaultExploreScopeMine?: boolean
   // Zap split weights (treated as relative weights, not strict percentages)
   zapSplitHighlighterWeight?: number // default 50
   zapSplitBorisWeight?: number // default 2.1
