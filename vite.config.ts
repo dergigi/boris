@@ -123,7 +123,8 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
-        globIgnores: ['**/_headers', '**/_redirects', '**/robots.txt']
+        globIgnores: ['**/_headers', '**/_redirects', '**/robots.txt'],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024 // 3 MiB
       },
       devOptions: {
         enabled: true,
