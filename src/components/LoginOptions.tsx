@@ -100,7 +100,9 @@ const LoginOptions: React.FC = () => {
         // Show helpful message for bunker connection failures
         setError(
           <>
-            {errorMessage}. Don't have a signer? Give{' '}
+            Failed: {errorMessage}
+            <br /><br />
+            Don't have a signer? Give{' '}
             <a href="https://github.com/greenart7c3/Amber" target="_blank" rel="noopener noreferrer">
               Amber
             </a>
