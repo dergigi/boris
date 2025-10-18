@@ -18,7 +18,6 @@ import { Bookmark } from '../types/bookmarks'
 import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import { useSettings } from '../hooks/useSettings'
 import { fetchHighlights, fetchHighlightsFromAuthors } from '../services/highlightService'
-import { fetchNostrverseHighlights } from '../services/nostrverseService'
 import { fetchContacts } from '../services/contactService'
 
 const defaultPayload = 'The quick brown fox jumps over the lazy dog.'
@@ -504,10 +503,25 @@ const Debug: React.FC<DebugProps> = ({
     setIsLoadingHighlights(true)
     setTLoadHighlights(null)
     setTFirstHighlight(null)
-    DebugBus.info('debug', 'Loading nostrverse highlights...')
+    DebugBus.info('debug', 'Loading nostrverse highlights (kind:9802)...')
     try {
-      const all = await fetchNostrverseHighlights(relayPool, 100)
-      setHighlightEvents(all.map(h => ({ ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent)))
+      let firstEventTime: number | null = null
+      const seenIds = new Set<string>()
+      const { queryEvents } = await import('../services/dataFetch')
+      
+      const events = await queryEvents(relayPool, { kinds: [9802], limit: 100 }, {
+        onEvent: (evt) => {
+          if (seenIds.has(evt.id)) return
+          seenIds.add(evt.id)
+          if (firstEventTime === null) {
+            firstEventTime = performance.now() - start
+            setTFirstHighlight(Math.round(firstEventTime))
+          }
+          setHighlightEvents(prev => [...prev, evt])
+        }
+      })
+      
+      DebugBus.info('debug', `Loaded ${events.length} nostrverse highlights`)
     } finally {
       setIsLoadingHighlights(false)
       const elapsed = Math.round(performance.now() - start)
