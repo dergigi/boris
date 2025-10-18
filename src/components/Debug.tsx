@@ -18,7 +18,7 @@ import { Bookmark } from '../types/bookmarks'
 import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import { useSettings } from '../hooks/useSettings'
 import { fetchHighlights, fetchHighlightsFromAuthors } from '../services/highlightService'
-import { fetchContacts } from '../services/contactService'
+import { contactsController } from '../services/contactsController'
 
 const defaultPayload = 'The quick brown fox jumps over the lazy dog.'
 
@@ -109,6 +109,12 @@ const Debug: React.FC<DebugProps> = ({
 
   useEffect(() => {
     return DebugBus.subscribe((e) => setLogs(prev => [...prev, e].slice(-300)))
+  }, [])
+
+  // Subscribe to contacts controller for friends list display
+  useEffect(() => {
+    const unsubLoading = contactsController.onLoading(setFriendsLoading)
+    return unsubLoading
   }, [])
 
   // Live timer effect - triggers re-renders for live timing updates
@@ -464,63 +470,40 @@ const Debug: React.FC<DebugProps> = ({
       DebugBus.warn('debug', 'Please log in to load friends highlights')
       return
     }
+    
+    // Ensure contacts are loaded first (will use cache if already loaded)
+    if (!contactsController.isLoadedFor(activeAccount.pubkey)) {
+      DebugBus.info('debug', 'Loading contacts first...')
+      await contactsController.start({ relayPool, pubkey: activeAccount.pubkey })
+    }
+    
+    const contacts = contactsController.getContacts()
+    if (contacts.size === 0) {
+      DebugBus.warn('debug', 'No friends found')
+      return
+    }
+    
     const start = performance.now()
     setHighlightEvents([])
     setIsLoadingHighlights(true)
     setTLoadHighlights(null)
     setTFirstHighlight(null)
-    DebugBus.info('debug', 'Loading friends highlights (non-blocking)...')
+    DebugBus.info('debug', `Loading highlights from ${contacts.size} friends...`)
     
     let firstEventTime: number | null = null
-    const seenAuthors = new Set<string>()
     
     try {
-      const contacts = await fetchContacts(
-        relayPool,
-        activeAccount.pubkey,
-        (partial) => {
-          // Non-blocking: start fetching as soon as we get partial contacts
-          if (partial.size > 0) {
-            const partialArray = Array.from(partial).filter(pk => !seenAuthors.has(pk))
-            if (partialArray.length > 0) {
-              partialArray.forEach(pk => seenAuthors.add(pk))
-              DebugBus.info('debug', `Fetching highlights from ${partialArray.length} friends (${seenAuthors.size} total)`)
-              
-              // Fire and forget - don't await
-              fetchHighlightsFromAuthors(relayPool, partialArray, (h) => {
-                if (firstEventTime === null) {
-                  firstEventTime = performance.now() - start
-                  setTFirstHighlight(Math.round(firstEventTime))
-                }
-                setHighlightEvents(prev => {
-                  if (prev.some(x => x.id === h.id)) return prev
-                  const next = [...prev, { ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent]
-                  return next.sort((a, b) => b.created_at - a.created_at)
-                })
-              }).catch(err => console.error('Error fetching highlights from partial:', err))
-            }
-          }
+      await fetchHighlightsFromAuthors(relayPool, Array.from(contacts), (h) => {
+        if (firstEventTime === null) {
+          firstEventTime = performance.now() - start
+          setTFirstHighlight(Math.round(firstEventTime))
         }
-      )
-      
-      DebugBus.info('debug', `Found ${contacts.size} total friends`)
-      
-      // Fetch any remaining authors not covered by partials
-      const finalAuthors = Array.from(contacts).filter(pk => !seenAuthors.has(pk))
-      if (finalAuthors.length > 0) {
-        DebugBus.info('debug', `Fetching highlights from ${finalAuthors.length} remaining friends`)
-        await fetchHighlightsFromAuthors(relayPool, finalAuthors, (h) => {
-          if (firstEventTime === null) {
-            firstEventTime = performance.now() - start
-            setTFirstHighlight(Math.round(firstEventTime))
-          }
-          setHighlightEvents(prev => {
-            if (prev.some(x => x.id === h.id)) return prev
-            const next = [...prev, { ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent]
-            return next.sort((a, b) => b.created_at - a.created_at)
-          })
+        setHighlightEvents(prev => {
+          if (prev.some(x => x.id === h.id)) return prev
+          const next = [...prev, { ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent]
+          return next.sort((a, b) => b.created_at - a.created_at)
         })
-      }
+      })
     } finally {
       setIsLoadingHighlights(false)
       const elapsed = Math.round(performance.now() - start)
@@ -571,19 +554,20 @@ const Debug: React.FC<DebugProps> = ({
       DebugBus.warn('debug', 'Please log in to load friends list')
       return
     }
-    setFriendsLoading(true)
-    setFriendsPubkeys(new Set())
-    DebugBus.info('debug', 'Loading friends list...')
+    DebugBus.info('debug', 'Loading friends list via controller...')
+    
+    // Subscribe to controller updates
+    const unsubscribe = contactsController.onContacts((contacts) => {
+      setFriendsPubkeys(new Set(contacts))
+    })
+    
     try {
-      const final = await fetchContacts(
-        relayPool,
-        activeAccount.pubkey,
-        (partial) => setFriendsPubkeys(new Set(partial))
-      )
-      setFriendsPubkeys(new Set(final))
-      DebugBus.info('debug', `Loaded ${final.size} friends`)
+      // Force reload to see streaming behavior
+      await contactsController.start({ relayPool, pubkey: activeAccount.pubkey, force: true })
+      const final = contactsController.getContacts()
+      DebugBus.info('debug', `Loaded ${final.size} friends from controller`)
     } finally {
-      setFriendsLoading(false)
+      unsubscribe()
     }
   }
 

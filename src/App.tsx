@@ -21,6 +21,7 @@ import { SkeletonThemeProvider } from './components/Skeletons'
 import { DebugBus } from './utils/debugBus'
 import { Bookmark } from './types/bookmarks'
 import { bookmarkController } from './services/bookmarkController'
+import { contactsController } from './services/contactsController'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -39,6 +40,10 @@ function AppRoutes({
   // Centralized bookmark state (fed by controller)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [bookmarksLoading, setBookmarksLoading] = useState(false)
+
+  // Centralized contacts state (fed by controller)
+  const [contacts, setContacts] = useState<Set<string>>(new Set())
+  const [contactsLoading, setContactsLoading] = useState(false)
 
   // Subscribe to bookmark controller
   useEffect(() => {
@@ -59,6 +64,25 @@ function AppRoutes({
     }
   }, [])
 
+  // Subscribe to contacts controller
+  useEffect(() => {
+    console.log('[contacts] 🎧 Subscribing to contacts controller')
+    const unsubContacts = contactsController.onContacts((contacts) => {
+      console.log('[contacts] 📥 Received contacts:', contacts.size)
+      setContacts(contacts)
+    })
+    const unsubLoading = contactsController.onLoading((loading) => {
+      console.log('[contacts] 📥 Loading state:', loading)
+      setContactsLoading(loading)
+    })
+    
+    return () => {
+      console.log('[contacts] 🔇 Unsubscribing from contacts controller')
+      unsubContacts()
+      unsubLoading()
+    }
+  }, [])
+
   // Auto-load bookmarks when account is ready (on login or page mount)
   useEffect(() => {
     if (activeAccount && relayPool && bookmarks.length === 0 && !bookmarksLoading) {
@@ -66,6 +90,17 @@ function AppRoutes({
       bookmarkController.start({ relayPool, activeAccount, accountManager })
     }
   }, [activeAccount, relayPool, bookmarks.length, bookmarksLoading, accountManager])
+
+  // Auto-load contacts when account is ready (on login or page mount)
+  useEffect(() => {
+    if (activeAccount && relayPool && contacts.size === 0 && !contactsLoading) {
+      const pubkey = (activeAccount as { pubkey?: string }).pubkey
+      if (pubkey) {
+        console.log('[contacts] 🚀 Auto-loading contacts on mount/login')
+        contactsController.start({ relayPool, pubkey })
+      }
+    }
+  }, [activeAccount, relayPool, contacts.size, contactsLoading])
 
   // Manual refresh (for sidebar button)
   const handleRefreshBookmarks = useCallback(async () => {
@@ -81,6 +116,7 @@ function AppRoutes({
   const handleLogout = () => {
     accountManager.clearActive()
     bookmarkController.reset() // Clear bookmarks via controller
+    contactsController.reset() // Clear contacts via controller
     showToast('Logged out successfully')
   }
 
