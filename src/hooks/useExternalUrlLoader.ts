@@ -1,9 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { fetchReadableContent, ReadableContent } from '../services/readerService'
 import { fetchHighlightsForUrl } from '../services/highlightService'
 import { Highlight } from '../types/highlights'
+import { useStoreTimeline } from './useStoreTimeline'
+import { eventToHighlight } from '../services/highlightEventProcessor'
+import { KINDS } from '../config/kinds'
 
 // Helper to extract filename from URL
 function getFilenameFromUrl(url: string): string {
@@ -45,6 +48,19 @@ export function useExternalUrlLoader({
   setCurrentArticleCoordinate,
   setCurrentArticleEventId
 }: UseExternalUrlLoaderProps) {
+  // Load cached URL-specific highlights from event store
+  const urlFilter = useMemo(() => {
+    if (!url) return null
+    return { kinds: [KINDS.Highlights], '#r': [url] }
+  }, [url])
+  
+  const cachedUrlHighlights = useStoreTimeline(
+    eventStore || null,
+    urlFilter || { kinds: [KINDS.Highlights], limit: 0 },
+    eventToHighlight,
+    [url]
+  )
+  
   useEffect(() => {
     if (!relayPool || !url) return
     
@@ -69,11 +85,20 @@ export function useExternalUrlLoader({
         // Fetch highlights for this URL asynchronously
         try {
           setHighlightsLoading(true)
-          setHighlights([])
+          
+          // Seed with cached highlights first
+          if (cachedUrlHighlights.length > 0) {
+            setHighlights(cachedUrlHighlights.sort((a, b) => b.created_at - a.created_at))
+          } else {
+            setHighlights([])
+          }
           
           // Check if fetchHighlightsForUrl exists, otherwise skip
           if (typeof fetchHighlightsForUrl === 'function') {
             const seen = new Set<string>()
+            // Seed with cached IDs
+            cachedUrlHighlights.forEach(h => seen.add(h.id))
+            
             await fetchHighlightsForUrl(
               relayPool,
               url,
@@ -90,11 +115,6 @@ export function useExternalUrlLoader({
               false, // force
               eventStore || undefined
             )
-            // Highlights are already set via the streaming callback
-            // No need to set them again as that could cause a flash/disappearance
-            console.log(`📌 Finished fetching highlights for URL`)
-          } else {
-            console.log('📌 Highlight fetching for URLs not yet implemented')
           }
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
@@ -115,6 +135,6 @@ export function useExternalUrlLoader({
     }
     
     loadExternalUrl()
-  }, [url, relayPool, eventStore, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId])
+  }, [url, relayPool, eventStore, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId, cachedUrlHighlights])
 }
 

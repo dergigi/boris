@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { IEventStore } from 'applesauce-core'
@@ -8,6 +8,9 @@ import { fetchHighlightsForArticle } from '../services/highlightService'
 import { UserSettings } from '../services/settingsService'
 import { highlightsController } from '../services/highlightsController'
 import { contactsController } from '../services/contactsController'
+import { useStoreTimeline } from './useStoreTimeline'
+import { eventToHighlight } from '../services/highlightEventProcessor'
+import { KINDS } from '../config/kinds'
 
 interface UseBookmarksDataParams {
   relayPool: RelayPool | null
@@ -41,6 +44,23 @@ export const useBookmarksData = ({
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null)
 
+  // Load cached article-specific highlights from event store
+  const articleFilter = useMemo(() => {
+    if (!currentArticleCoordinate) return null
+    return {
+      kinds: [KINDS.Highlights],
+      '#a': [currentArticleCoordinate],
+      ...(currentArticleEventId ? { '#e': [currentArticleEventId] } : {})
+    }
+  }, [currentArticleCoordinate, currentArticleEventId])
+  
+  const cachedArticleHighlights = useStoreTimeline(
+    eventStore || null,
+    articleFilter || { kinds: [KINDS.Highlights], limit: 0 }, // empty filter if no article
+    eventToHighlight,
+    [currentArticleCoordinate, currentArticleEventId]
+  )
+
   // Subscribe to centralized controllers
   useEffect(() => {
     // Get initial state immediately
@@ -65,8 +85,16 @@ export const useBookmarksData = ({
     setHighlightsLoading(true)
     try {
       if (currentArticleCoordinate) {
-        // Fetch article-specific highlights (from all users)
+        // Seed with cached highlights first
+        if (cachedArticleHighlights.length > 0) {
+          setArticleHighlights(cachedArticleHighlights.sort((a, b) => b.created_at - a.created_at))
+        }
+        
+        // Fetch fresh article-specific highlights (from all users)
         const highlightsMap = new Map<string, Highlight>()
+        // Seed map with cached highlights
+        cachedArticleHighlights.forEach(h => highlightsMap.set(h.id, h))
+        
         await fetchHighlightsForArticle(
           relayPool, 
           currentArticleCoordinate, 
@@ -83,7 +111,6 @@ export const useBookmarksData = ({
           false, // force
           eventStore || undefined
         )
-        console.log(`🔄 Refreshed ${highlightsMap.size} highlights for article`)
       } else {
         // No article selected - clear article highlights
         setArticleHighlights([])
@@ -93,7 +120,7 @@ export const useBookmarksData = ({
     } finally {
       setHighlightsLoading(false)
     }
-  }, [relayPool, currentArticleCoordinate, currentArticleEventId, settings, eventStore])
+  }, [relayPool, currentArticleCoordinate, currentArticleEventId, settings, eventStore, cachedArticleHighlights])
 
   const handleRefreshAll = useCallback(async () => {
     if (!relayPool || !activeAccount || isRefreshing) return

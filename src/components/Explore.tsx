@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired, faArrowsRotate, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { Hooks } from 'applesauce-react'
-import { useObservableMemo } from 'applesauce-react/hooks'
 import { RelayPool } from 'applesauce-relay'
-import { IEventStore } from 'applesauce-core'
-import { nip19 } from 'nostr-tools'
+import { IEventStore, Helpers } from 'applesauce-core'
+import { nip19, NostrEvent } from 'nostr-tools'
 import { useNavigate } from 'react-router-dom'
-import { startWith } from 'rxjs'
 import { fetchContacts } from '../services/contactService'
 import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
 import { fetchHighlightsFromAuthors } from '../services/highlightService'
@@ -27,6 +25,10 @@ import { classifyHighlights } from '../utils/highlightClassification'
 import { HighlightVisibility } from './HighlightsPanel'
 import { KINDS } from '../config/kinds'
 import { eventToHighlight } from '../services/highlightEventProcessor'
+import { useStoreTimeline } from '../hooks/useStoreTimeline'
+import { dedupeHighlightsById, dedupeWritingsByReplaceable } from '../utils/dedupe'
+
+const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 interface ExploreProps {
   relayPool: RelayPool
@@ -51,15 +53,19 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
   const [myHighlightsLoading, setMyHighlightsLoading] = useState(false)
   
-  // Load cached highlights from event store (instant display)
-  const cachedHighlightEvents = useObservableMemo(
-    () => eventStore.timeline({ kinds: [KINDS.Highlights] }).pipe(startWith([])),
-    []
-  )
-  const cachedHighlights = useMemo(
-    () => cachedHighlightEvents?.map(eventToHighlight) ?? [],
-    [cachedHighlightEvents]
-  )
+  // Load cached content from event store (instant display)
+  const cachedHighlights = useStoreTimeline(eventStore, { kinds: [KINDS.Highlights] }, eventToHighlight, [])
+  
+  const toBlogPostPreview = useCallback((event: NostrEvent): BlogPostPreview => ({
+    event,
+    title: getArticleTitle(event) || 'Untitled',
+    summary: getArticleSummary(event),
+    image: getArticleImage(event),
+    published: getArticlePublished(event),
+    author: event.pubkey
+  }), [])
+  
+  const cachedWritings = useStoreTimeline(eventStore, { kinds: [30023] }, toBlogPostPreview, [])
   
   // Visibility filters (defaults from settings)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
@@ -97,32 +103,33 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         setLoading(true)
 
         // Seed from in-memory cache if available to avoid empty flash
-        // Use functional update to check current state without creating dependency
-        const cachedPosts = getCachedPosts(activeAccount.pubkey)
-        if (cachedPosts && cachedPosts.length > 0) {
-          setBlogPosts(prev => prev.length === 0 ? cachedPosts : prev)
+        const memoryCachedPosts = getCachedPosts(activeAccount.pubkey)
+        if (memoryCachedPosts && memoryCachedPosts.length > 0) {
+          setBlogPosts(prev => prev.length === 0 ? memoryCachedPosts : prev)
         }
         const memoryCachedHighlights = getCachedHighlights(activeAccount.pubkey)
         if (memoryCachedHighlights && memoryCachedHighlights.length > 0) {
           setHighlights(prev => prev.length === 0 ? memoryCachedHighlights : prev)
         }
         
-        // Seed with cached highlights from event store (instant display)
-        console.log('[NOSTRVERSE] 💾 Seeding from event store:', cachedHighlights.length, 'highlights')
-        if (cachedHighlights.length > 0) {
+        // Seed with cached content from event store (instant display)
+        if (cachedHighlights.length > 0 || myHighlights.length > 0) {
+          const merged = dedupeHighlightsById([...cachedHighlights, ...myHighlights])
           setHighlights(prev => {
-            const byId = new Map(prev.map(h => [h.id, h]))
-            for (const h of cachedHighlights) byId.set(h.id, h)
-            return Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
+            const all = dedupeHighlightsById([...prev, ...merged])
+            return all.sort((a, b) => b.created_at - a.created_at)
           })
         }
         
-        // Seed with myHighlights from controller (already loaded on app start)
-        if (myHighlights.length > 0) {
-          setHighlights(prev => {
-            const byId = new Map(prev.map(h => [h.id, h]))
-            for (const h of myHighlights) byId.set(h.id, h)
-            return Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
+        // Seed with cached writings from event store
+        if (cachedWritings.length > 0) {
+          setBlogPosts(prev => {
+            const all = dedupeWritingsByReplaceable([...prev, ...cachedWritings])
+            return all.sort((a, b) => {
+              const timeA = a.published || a.event.created_at
+              const timeB = b.published || b.event.created_at
+              return timeB - timeA
+            })
           })
         }
 
@@ -255,29 +262,15 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
 
         // Merge and deduplicate all posts
         const allPosts = [...friendsPosts, ...nostrversePosts]
-        const postsByKey = new Map<string, BlogPostPreview>()
-        for (const post of allPosts) {
-          const key = `${post.author}:${post.event.tags.find(t => t[0] === 'd')?.[1] || ''}`
-          const existing = postsByKey.get(key)
-          if (!existing || post.event.created_at > existing.event.created_at) {
-            postsByKey.set(key, post)
-          }
-        }
-        const uniquePosts = Array.from(postsByKey.values()).sort((a, b) => {
+        const uniquePosts = dedupeWritingsByReplaceable(allPosts).sort((a, b) => {
           const timeA = a.published || a.event.created_at
           const timeB = b.published || b.event.created_at
           return timeB - timeA
         })
 
         // Merge and deduplicate all highlights (mine from controller + friends + nostrverse)
-        console.log('[NOSTRVERSE] 📊 Highlight counts - mine:', myHighlights.length, 'friends:', friendsHighlights.length, 'nostrverse:', nostriverseHighlights.length)
         const allHighlights = [...myHighlights, ...friendsHighlights, ...nostriverseHighlights]
-        const highlightsByKey = new Map<string, Highlight>()
-        for (const highlight of allHighlights) {
-          highlightsByKey.set(highlight.id, highlight)
-        }
-        const uniqueHighlights = Array.from(highlightsByKey.values()).sort((a, b) => b.created_at - a.created_at)
-        console.log('[NOSTRVERSE] 📊 Total unique highlights after merge:', uniqueHighlights.length)
+        const uniqueHighlights = dedupeHighlightsById(allHighlights).sort((a, b) => b.created_at - a.created_at)
 
         // Fetch profiles for all blog post authors to cache them
         if (uniquePosts.length > 0) {
@@ -302,7 +295,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
 
     loadData()
-  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings, myHighlights, cachedHighlights])
+  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings, myHighlights, cachedHighlights, cachedWritings])
 
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
@@ -332,18 +325,12 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   // Classify highlights with levels based on user context and apply visibility filters
   const classifiedHighlights = useMemo(() => {
     const classified = classifyHighlights(highlights, activeAccount?.pubkey, followedPubkeys)
-    const levelCounts = { mine: 0, friends: 0, nostrverse: 0 }
-    classified.forEach(h => levelCounts[h.level]++)
-    console.log('[NOSTRVERSE] 📊 Classified highlights by level:', levelCounts, 'visibility:', visibility)
-    
-    const filtered = classified.filter(h => {
+    return classified.filter(h => {
       if (h.level === 'mine' && !visibility.mine) return false
       if (h.level === 'friends' && !visibility.friends) return false
       if (h.level === 'nostrverse' && !visibility.nostrverse) return false
       return true
     })
-    console.log('[NOSTRVERSE] 📊 After visibility filter:', filtered.length, 'highlights')
-    return filtered
   }, [highlights, activeAccount?.pubkey, followedPubkeys, visibility])
 
   // Filter blog posts by future dates and visibility, and add level classification

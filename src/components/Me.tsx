@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare, faLink, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
+import { IEventStore, Helpers } from 'applesauce-core'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
 import { RelayPool } from 'applesauce-relay'
-import { nip19 } from 'nostr-tools'
+import { nip19, NostrEvent } from 'nostr-tools'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
@@ -32,9 +33,15 @@ import { filterByReadingProgress } from '../utils/readingProgressUtils'
 import { deriveReadsFromBookmarks } from '../utils/readsFromBookmarks'
 import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
 import { mergeReadItem } from '../utils/readItemMerge'
+import { useStoreTimeline } from '../hooks/useStoreTimeline'
+import { eventToHighlight } from '../services/highlightEventProcessor'
+import { KINDS } from '../config/kinds'
+
+const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 interface MeProps {
   relayPool: RelayPool
+  eventStore: IEventStore
   activeTab?: TabType
   pubkey?: string // Optional pubkey for viewing other users' profiles
   bookmarks: Bookmark[] // From centralized App.tsx state
@@ -48,6 +55,7 @@ const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started'
 
 const Me: React.FC<MeProps> = ({ 
   relayPool, 
+  eventStore,
   activeTab: propActiveTab, 
   pubkey: propPubkey,
   bookmarks
@@ -72,6 +80,30 @@ const Me: React.FC<MeProps> = ({
   // Get myHighlights directly from controller
   const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
   const [myHighlightsLoading, setMyHighlightsLoading] = useState(false)
+  
+  // Load cached data from event store for OTHER profiles (not own)
+  const cachedHighlights = useStoreTimeline(
+    eventStore,
+    !isOwnProfile && viewingPubkey ? { kinds: [KINDS.Highlights], authors: [viewingPubkey] } : { kinds: [KINDS.Highlights], limit: 0 },
+    eventToHighlight,
+    [viewingPubkey, isOwnProfile]
+  )
+  
+  const toBlogPostPreview = useMemo(() => (event: NostrEvent): BlogPostPreview => ({
+    event,
+    title: getArticleTitle(event) || 'Untitled',
+    summary: getArticleSummary(event),
+    image: getArticleImage(event),
+    published: getArticlePublished(event),
+    author: event.pubkey
+  }), [])
+  
+  const cachedWritings = useStoreTimeline(
+    eventStore,
+    !isOwnProfile && viewingPubkey ? { kinds: [30023], authors: [viewingPubkey] } : { kinds: [30023], limit: 0 },
+    toBlogPostPreview,
+    [viewingPubkey, isOwnProfile]
+  )
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
@@ -144,8 +176,14 @@ const Me: React.FC<MeProps> = ({
       if (!hasBeenLoaded) setLoading(true)
       
       // For own profile, highlights come from controller subscription (sync effect handles it)
-      // For viewing other users, fetch on-demand
+      // For viewing other users, seed with cached data then fetch fresh
       if (!isOwnProfile) {
+        // Seed with cached highlights first
+        if (cachedHighlights.length > 0) {
+          setHighlights(cachedHighlights.sort((a, b) => b.created_at - a.created_at))
+        }
+        
+        // Fetch fresh highlights
         const userHighlights = await fetchHighlights(relayPool, viewingPubkey)
         setHighlights(userHighlights)
       }
@@ -165,6 +203,17 @@ const Me: React.FC<MeProps> = ({
     
     try {
       if (!hasBeenLoaded) setLoading(true)
+      
+      // Seed with cached writings first
+      if (!isOwnProfile && cachedWritings.length > 0) {
+        setWritings(cachedWritings.sort((a, b) => {
+          const timeA = a.published || a.event.created_at
+          const timeB = b.published || b.event.created_at
+          return timeB - timeA
+        }))
+      }
+      
+      // Fetch fresh writings
       const userWritings = await fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
       setWritings(userWritings)
       setLoadedTabs(prev => new Set(prev).add('writings'))
