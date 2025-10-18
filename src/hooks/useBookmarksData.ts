@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
+import { IEventStore } from 'applesauce-core'
 import { Bookmark } from '../types/bookmarks'
 import { Highlight } from '../types/highlights'
 import { fetchHighlightsForArticle } from '../services/highlightService'
@@ -16,6 +17,7 @@ interface UseBookmarksDataParams {
   currentArticleCoordinate?: string
   currentArticleEventId?: string
   settings?: UserSettings
+  eventStore?: IEventStore | null
   bookmarks: Bookmark[] // Passed from App.tsx (centralized loading)
   bookmarksLoading: boolean // Passed from App.tsx (centralized loading)
   onRefreshBookmarks: () => Promise<void>
@@ -29,6 +31,7 @@ export const useBookmarksData = ({
   currentArticleCoordinate,
   currentArticleEventId,
   settings,
+  eventStore,
   onRefreshBookmarks
 }: Omit<UseBookmarksDataParams, 'bookmarks' | 'bookmarksLoading'>) => {
   const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
@@ -76,7 +79,9 @@ export const useBookmarksData = ({
               setArticleHighlights(highlightsList.sort((a, b) => b.created_at - a.created_at))
             }
           },
-          settings
+          settings,
+          false, // force
+          eventStore || undefined
         )
         console.log(`🔄 Refreshed ${highlightsMap.size} highlights for article`)
       } else {
@@ -88,7 +93,7 @@ export const useBookmarksData = ({
     } finally {
       setHighlightsLoading(false)
     }
-  }, [relayPool, currentArticleCoordinate, currentArticleEventId, settings])
+  }, [relayPool, currentArticleCoordinate, currentArticleEventId, settings, eventStore])
 
   const handleRefreshAll = useCallback(async () => {
     if (!relayPool || !activeAccount || isRefreshing) return

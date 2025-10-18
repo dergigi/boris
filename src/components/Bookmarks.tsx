@@ -179,6 +179,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
     currentArticleCoordinate,
     currentArticleEventId,
     settings,
+    eventStore,
     onRefreshBookmarks
   })
 
@@ -242,6 +243,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   useExternalUrlLoader({
     url: externalUrl,
     relayPool,
+    eventStore,
     setSelectedUrl,
     setReaderContent,
     setReaderLoading,

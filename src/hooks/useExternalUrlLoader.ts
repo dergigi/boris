@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { RelayPool } from 'applesauce-relay'
+import { IEventStore } from 'applesauce-core'
 import { fetchReadableContent, ReadableContent } from '../services/readerService'
 import { fetchHighlightsForUrl } from '../services/highlightService'
 import { Highlight } from '../types/highlights'
@@ -20,6 +21,7 @@ function getFilenameFromUrl(url: string): string {
 interface UseExternalUrlLoaderProps {
   url: string | undefined
   relayPool: RelayPool | null
+  eventStore?: IEventStore | null
   setSelectedUrl: (url: string) => void
   setReaderContent: (content: ReadableContent | undefined) => void
   setReaderLoading: (loading: boolean) => void
@@ -33,6 +35,7 @@ interface UseExternalUrlLoaderProps {
 export function useExternalUrlLoader({
   url,
   relayPool,
+  eventStore,
   setSelectedUrl,
   setReaderContent,
   setReaderLoading,
@@ -82,7 +85,10 @@ export function useExternalUrlLoader({
                   const next = [...prev, highlight]
                   return next.sort((a, b) => b.created_at - a.created_at)
                 })
-              }
+              },
+              undefined, // settings
+              false, // force
+              eventStore || undefined
             )
             // Highlights are already set via the streaming callback
             // No need to set them again as that could cause a flash/disappearance
@@ -109,6 +115,6 @@ export function useExternalUrlLoader({
     }
     
     loadExternalUrl()
-  }, [url, relayPool, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId])
+  }, [url, relayPool, eventStore, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId])
 }
 
