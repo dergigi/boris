@@ -8,6 +8,7 @@ import { Accounts } from 'applesauce-accounts'
 import { NostrConnectSigner } from 'applesauce-signers'
 import { RelayPool } from 'applesauce-relay'
 import { Helpers } from 'applesauce-core'
+import { nip19 } from 'nostr-tools'
 import { getDefaultBunkerPermissions } from '../services/nostrConnect'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
 import ThreePaneLayout from './ThreePaneLayout'
@@ -16,6 +17,9 @@ import type { NostrEvent } from '../services/bookmarkHelpers'
 import { Bookmark } from '../types/bookmarks'
 import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import { useSettings } from '../hooks/useSettings'
+import { fetchHighlights, fetchHighlightsFromAuthors } from '../services/highlightService'
+import { fetchNostrverseHighlights } from '../services/nostrverseService'
+import { fetchContacts } from '../services/contactService'
 
 const defaultPayload = 'The quick brown fox jumps over the lazy dog.'
 
@@ -99,6 +103,10 @@ const Debug: React.FC<DebugProps> = ({
     decryptBookmarks?: { startTime: number }
     loadHighlights?: { startTime: number }
   }>({})
+  
+  // Web of Trust state
+  const [friendsPubkeys, setFriendsPubkeys] = useState<Set<string>>(new Set())
+  const [friendsLoading, setFriendsLoading] = useState(false)
 
   useEffect(() => {
     return DebugBus.subscribe((e) => setLogs(prev => [...prev, e].slice(-300)))
@@ -419,6 +427,119 @@ const Debug: React.FC<DebugProps> = ({
     setTFirstHighlight(null)
     DebugBus.info('debug', 'Cleared highlight data')
   }
+
+  const handleLoadMyHighlights = async () => {
+    if (!relayPool || !activeAccount?.pubkey) {
+      DebugBus.warn('debug', 'Please log in to load your highlights')
+      return
+    }
+    const start = performance.now()
+    setHighlightEvents([])
+    setIsLoadingHighlights(true)
+    setTLoadHighlights(null)
+    setTFirstHighlight(null)
+    DebugBus.info('debug', 'Loading my highlights...')
+    try {
+      let firstEventTime: number | null = null
+      await fetchHighlights(relayPool, activeAccount.pubkey, (h) => {
+        if (firstEventTime === null) {
+          firstEventTime = performance.now() - start
+          setTFirstHighlight(Math.round(firstEventTime))
+        }
+        setHighlightEvents(prev => {
+          if (prev.some(x => x.id === h.id)) return prev
+          const next = [...prev, { ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent]
+          return next.sort((a, b) => b.created_at - a.created_at)
+        })
+      }, settings)
+    } finally {
+      setIsLoadingHighlights(false)
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadHighlights(elapsed)
+      DebugBus.info('debug', `Loaded my highlights in ${elapsed}ms`)
+    }
+  }
+
+  const handleLoadFriendsHighlights = async () => {
+    if (!relayPool || !activeAccount?.pubkey) {
+      DebugBus.warn('debug', 'Please log in to load friends highlights')
+      return
+    }
+    const start = performance.now()
+    setHighlightEvents([])
+    setIsLoadingHighlights(true)
+    setTLoadHighlights(null)
+    setTFirstHighlight(null)
+    DebugBus.info('debug', 'Loading friends highlights...')
+    try {
+      const contacts = await fetchContacts(relayPool, activeAccount.pubkey)
+      DebugBus.info('debug', `Found ${contacts.size} friends`)
+      let firstEventTime: number | null = null
+      await fetchHighlightsFromAuthors(relayPool, Array.from(contacts), (h) => {
+        if (firstEventTime === null) {
+          firstEventTime = performance.now() - start
+          setTFirstHighlight(Math.round(firstEventTime))
+        }
+        setHighlightEvents(prev => {
+          if (prev.some(x => x.id === h.id)) return prev
+          const next = [...prev, { ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent]
+          return next.sort((a, b) => b.created_at - a.created_at)
+        })
+      })
+    } finally {
+      setIsLoadingHighlights(false)
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadHighlights(elapsed)
+      DebugBus.info('debug', `Loaded friends highlights in ${elapsed}ms`)
+    }
+  }
+
+  const handleLoadNostrverseHighlights = async () => {
+    if (!relayPool) {
+      DebugBus.warn('debug', 'Relay pool not available')
+      return
+    }
+    const start = performance.now()
+    setHighlightEvents([])
+    setIsLoadingHighlights(true)
+    setTLoadHighlights(null)
+    setTFirstHighlight(null)
+    DebugBus.info('debug', 'Loading nostrverse highlights...')
+    try {
+      const all = await fetchNostrverseHighlights(relayPool, 100)
+      setHighlightEvents(all.map(h => ({ ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent)))
+    } finally {
+      setIsLoadingHighlights(false)
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadHighlights(elapsed)
+      DebugBus.info('debug', `Loaded nostrverse highlights in ${elapsed}ms`)
+    }
+  }
+
+  const handleLoadFriendsList = async () => {
+    if (!relayPool || !activeAccount?.pubkey) {
+      DebugBus.warn('debug', 'Please log in to load friends list')
+      return
+    }
+    setFriendsLoading(true)
+    setFriendsPubkeys(new Set())
+    DebugBus.info('debug', 'Loading friends list...')
+    try {
+      const final = await fetchContacts(
+        relayPool,
+        activeAccount.pubkey,
+        (partial) => setFriendsPubkeys(new Set(partial))
+      )
+      setFriendsPubkeys(new Set(final))
+      DebugBus.info('debug', `Loaded ${final.size} friends`)
+    } finally {
+      setFriendsLoading(false)
+    }
+  }
+
+  const friendsNpubs = useMemo(() => {
+    return Array.from(friendsPubkeys).map(pk => nip19.npubEncode(pk))
+  }, [friendsPubkeys])
 
   const handleBunkerLogin = async () => {
     if (!bunkerUri.trim()) {
@@ -845,6 +966,31 @@ const Debug: React.FC<DebugProps> = ({
             </button>
           </div>
 
+          <div className="mb-3 text-sm opacity-70">Quick load options:</div>
+          <div className="flex gap-2 mb-3 flex-wrap">
+            <button 
+              className="btn btn-secondary text-sm" 
+              onClick={handleLoadMyHighlights}
+              disabled={isLoadingHighlights || !relayPool || !activeAccount}
+            >
+              Load My Highlights
+            </button>
+            <button 
+              className="btn btn-secondary text-sm" 
+              onClick={handleLoadFriendsHighlights}
+              disabled={isLoadingHighlights || !relayPool || !activeAccount}
+            >
+              Load Friends Highlights
+            </button>
+            <button 
+              className="btn btn-secondary text-sm" 
+              onClick={handleLoadNostrverseHighlights}
+              disabled={isLoadingHighlights || !relayPool}
+            >
+              Load Nostrverse Highlights
+            </button>
+          </div>
+
           <div className="mb-3 flex gap-2 flex-wrap">
             <Stat label="total" value={tLoadHighlights} bookmarkOp="loadHighlights" />
             <Stat label="first event" value={tFirstHighlight} />
@@ -885,6 +1031,42 @@ const Debug: React.FC<DebugProps> = ({
                     </div>
                   )
                 })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Web of Trust Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Web of Trust</h3>
+          <div className="text-sm opacity-70 mb-3">Load your followed contacts (friends) for highlight fetching:</div>
+          
+          <div className="mb-3">
+            <button 
+              className="btn btn-primary" 
+              onClick={handleLoadFriendsList}
+              disabled={friendsLoading || !relayPool || !activeAccount}
+            >
+              {friendsLoading ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                  Loading...
+                </>
+              ) : (
+                'Load Friends'
+              )}
+            </button>
+          </div>
+
+          {friendsPubkeys.size > 0 && (
+            <div className="mb-3">
+              <div className="text-sm opacity-70 mb-2">Friends Count: {friendsNpubs.length}</div>
+              <div className="font-mono text-xs max-h-48 overflow-y-auto bg-gray-100 dark:bg-gray-800 p-3 rounded space-y-1">
+                {friendsNpubs.map(npub => (
+                  <div key={npub} title={npub} className="truncate hover:text-clip hover:whitespace-normal cursor-pointer">
+                    {npub}
+                  </div>
+                ))}
               </div>
             </div>
           )}
