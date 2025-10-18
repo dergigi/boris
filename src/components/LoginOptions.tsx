@@ -11,7 +11,7 @@ const LoginOptions: React.FC = () => {
   const [showBunkerInput, setShowBunkerInput] = useState(false)
   const [bunkerUri, setBunkerUri] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<React.ReactNode | null>(null)
 
   const handleExtensionLogin = async () => {
     try {
@@ -22,7 +22,15 @@ const LoginOptions: React.FC = () => {
       accountManager.setActive(account)
     } catch (err) {
       console.error('Extension login failed:', err)
-      setError('Login failed. Please install a nostr browser extension and try again.')
+      setError(
+        <>
+          Please install a nostr browser extension like{' '}
+          <a href="https://chromewebstore.google.com/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp" target="_blank" rel="noopener noreferrer">
+            nos2x
+          </a>
+          {' '}and try again.
+        </>
+      )
     } finally {
       setIsLoading(false)
     }
