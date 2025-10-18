@@ -465,15 +465,10 @@ const Debug: React.FC<DebugProps> = ({
       return
     }
     
-    // Ensure contacts are loaded first (will use cache if already loaded)
-    if (!contactsController.isLoadedFor(activeAccount.pubkey)) {
-      DebugBus.info('debug', 'Loading contacts first...')
-      await contactsController.start({ relayPool, pubkey: activeAccount.pubkey })
-    }
-    
+    // Get contacts from centralized controller (should already be loaded by App.tsx)
     const contacts = contactsController.getContacts()
     if (contacts.size === 0) {
-      DebugBus.warn('debug', 'No friends found')
+      DebugBus.warn('debug', 'No friends found. Make sure you have contacts loaded.')
       return
     }
     
@@ -482,7 +477,7 @@ const Debug: React.FC<DebugProps> = ({
     setIsLoadingHighlights(true)
     setTLoadHighlights(null)
     setTFirstHighlight(null)
-    DebugBus.info('debug', `Loading highlights from ${contacts.size} friends...`)
+    DebugBus.info('debug', `Loading highlights from ${contacts.size} friends (using cached contacts)...`)
     
     let firstEventTime: number | null = null
     
