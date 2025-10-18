@@ -509,7 +509,7 @@ const Debug: React.FC<DebugProps> = ({
       const seenIds = new Set<string>()
       const { queryEvents } = await import('../services/dataFetch')
       
-      const events = await queryEvents(relayPool, { kinds: [9802], limit: 100 }, {
+      const events = await queryEvents(relayPool, { kinds: [9802], limit: 500 }, {
         onEvent: (evt) => {
           if (seenIds.has(evt.id)) return
           seenIds.add(evt.id)
