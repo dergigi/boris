@@ -80,12 +80,23 @@ const Debug: React.FC<DebugProps> = ({
   // Individual event decryption results
   const [decryptedEvents, setDecryptedEvents] = useState<Map<string, { public: number; private: number }>>(new Map())
   
+  // Highlight loading state
+  const [highlightMode, setHighlightMode] = useState<'article' | 'url' | 'author'>('article')
+  const [highlightArticleCoord, setHighlightArticleCoord] = useState<string>('')
+  const [highlightUrl, setHighlightUrl] = useState<string>('')
+  const [highlightAuthor, setHighlightAuthor] = useState<string>('')
+  const [isLoadingHighlights, setIsLoadingHighlights] = useState(false)
+  const [highlightEvents, setHighlightEvents] = useState<NostrEvent[]>([])
+  const [tLoadHighlights, setTLoadHighlights] = useState<number | null>(null)
+  const [tFirstHighlight, setTFirstHighlight] = useState<number | null>(null)
+  
   // Live timing state
   const [liveTiming, setLiveTiming] = useState<{
     nip44?: { type: 'encrypt' | 'decrypt'; startTime: number }
     nip04?: { type: 'encrypt' | 'decrypt'; startTime: number }
     loadBookmarks?: { startTime: number }
     decryptBookmarks?: { startTime: number }
+    loadHighlights?: { startTime: number }
   }>({})
 
   useEffect(() => {
@@ -315,6 +326,87 @@ const Debug: React.FC<DebugProps> = ({
     DebugBus.info('debug', 'Cleared bookmark data')
   }
 
+  const handleLoadHighlights = async () => {
+    if (!relayPool) {
+      DebugBus.warn('debug', 'Cannot load highlights: missing relayPool')
+      return
+    }
+
+    const getValue = () => {
+      if (highlightMode === 'article') return highlightArticleCoord.trim()
+      if (highlightMode === 'url') return highlightUrl.trim()
+      return highlightAuthor.trim()
+    }
+
+    const value = getValue()
+    if (!value) {
+      DebugBus.warn('debug', 'Please provide a value to query')
+      return
+    }
+
+    try {
+      setIsLoadingHighlights(true)
+      setHighlightEvents([])
+      setTFirstHighlight(null)
+      DebugBus.info('debug', `Loading highlights (${highlightMode}: ${value})...`)
+
+      const start = performance.now()
+      setLiveTiming(prev => ({ ...prev, loadHighlights: { startTime: start } }))
+
+      let firstEventTime: number | null = null
+      const seenIds = new Set<string>()
+
+      // Import highlight services
+      const { queryEvents } = await import('../services/dataFetch')
+      const { KINDS } = await import('../config/kinds')
+
+      // Build filter based on mode
+      let filter: { kinds: number[]; '#a'?: string[]; '#r'?: string[]; authors?: string[] }
+      if (highlightMode === 'article') {
+        filter = { kinds: [KINDS.Highlights], '#a': [value] }
+      } else if (highlightMode === 'url') {
+        filter = { kinds: [KINDS.Highlights], '#r': [value] }
+      } else {
+        filter = { kinds: [KINDS.Highlights], authors: [value] }
+      }
+
+      const events = await queryEvents(relayPool, filter, {
+        onEvent: (evt) => {
+          if (seenIds.has(evt.id)) return
+          seenIds.add(evt.id)
+
+          if (firstEventTime === null) {
+            firstEventTime = performance.now() - start
+            setTFirstHighlight(Math.round(firstEventTime))
+          }
+
+          setHighlightEvents(prev => [...prev, evt])
+        }
+      })
+
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadHighlights(elapsed)
+      setLiveTiming(prev => {
+        const { loadHighlights, ...rest } = prev
+        return rest
+      })
+
+      DebugBus.info('debug', `Loaded ${events.length} highlight events in ${elapsed}ms`)
+    } catch (err) {
+      console.error('Failed to load highlights:', err)
+      DebugBus.error('debug', `Failed to load highlights: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setIsLoadingHighlights(false)
+    }
+  }
+
+  const handleClearHighlights = () => {
+    setHighlightEvents([])
+    setTLoadHighlights(null)
+    setTFirstHighlight(null)
+    DebugBus.info('debug', 'Cleared highlight data')
+  }
+
   const handleBunkerLogin = async () => {
     if (!bunkerUri.trim()) {
       setBunkerError('Please enter a bunker URI')
@@ -376,7 +468,7 @@ const Debug: React.FC<DebugProps> = ({
     return null
   }
 
-  const getBookmarkLiveTiming = (operation: 'loadBookmarks' | 'decryptBookmarks') => {
+  const getBookmarkLiveTiming = (operation: 'loadBookmarks' | 'decryptBookmarks' | 'loadHighlights') => {
     const timing = liveTiming[operation]
     if (timing) {
       const elapsed = Math.round(performance.now() - timing.startTime)
@@ -390,7 +482,7 @@ const Debug: React.FC<DebugProps> = ({
     value?: string | number | null;
     mode?: 'nip44' | 'nip04';
     type?: 'encrypt' | 'decrypt';
-    bookmarkOp?: 'loadBookmarks' | 'decryptBookmarks';
+    bookmarkOp?: 'loadBookmarks' | 'decryptBookmarks' | 'loadHighlights';
   }) => {
     const liveValue = bookmarkOp ? getBookmarkLiveTiming(bookmarkOp) : (mode && type ? getLiveTiming(mode, type) : null)
     const isLive = !!liveValue
@@ -638,6 +730,143 @@ const Debug: React.FC<DebugProps> = ({
                           <div>✓ Decrypted: {decryptResult.public} public, {decryptResult.private} private</div>
                         </div>
                       )}
+                      <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Highlight Loading Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Highlight Loading</h3>
+          <div className="text-sm opacity-70 mb-3">Test highlight loading with EOSE-based queryEvents (kind: 9802)</div>
+          
+          <div className="mb-3">
+            <div className="text-sm opacity-70 mb-2">Query Mode:</div>
+            <div className="flex gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={highlightMode === 'article'}
+                  onChange={() => setHighlightMode('article')}
+                />
+                <span>Article (#a)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={highlightMode === 'url'}
+                  onChange={() => setHighlightMode('url')}
+                />
+                <span>URL (#r)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={highlightMode === 'author'}
+                  onChange={() => setHighlightMode('author')}
+                />
+                <span>Author</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="mb-3">
+            {highlightMode === 'article' && (
+              <input
+                type="text"
+                className="input w-full"
+                placeholder="30023:pubkey:identifier"
+                value={highlightArticleCoord}
+                onChange={(e) => setHighlightArticleCoord(e.target.value)}
+                disabled={isLoadingHighlights}
+              />
+            )}
+            {highlightMode === 'url' && (
+              <input
+                type="text"
+                className="input w-full"
+                placeholder="https://example.com/article"
+                value={highlightUrl}
+                onChange={(e) => setHighlightUrl(e.target.value)}
+                disabled={isLoadingHighlights}
+              />
+            )}
+            {highlightMode === 'author' && (
+              <input
+                type="text"
+                className="input w-full"
+                placeholder="pubkey (hex)"
+                value={highlightAuthor}
+                onChange={(e) => setHighlightAuthor(e.target.value)}
+                disabled={isLoadingHighlights}
+              />
+            )}
+          </div>
+
+          <div className="flex gap-2 mb-3 items-center">
+            <button 
+              className="btn btn-primary" 
+              onClick={handleLoadHighlights}
+              disabled={isLoadingHighlights || !relayPool}
+            >
+              {isLoadingHighlights ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                  Loading...
+                </>
+              ) : (
+                'Load Highlights'
+              )}
+            </button>
+            <button 
+              className="btn btn-secondary ml-auto" 
+              onClick={handleClearHighlights}
+              disabled={highlightEvents.length === 0}
+            >
+              Clear
+            </button>
+          </div>
+
+          <div className="mb-3 flex gap-2 flex-wrap">
+            <Stat label="total" value={tLoadHighlights} bookmarkOp="loadHighlights" />
+            <Stat label="first event" value={tFirstHighlight} />
+          </div>
+
+          {highlightEvents.length > 0 && (
+            <div className="mb-3">
+              <div className="text-sm opacity-70 mb-2">Loaded Highlights ({highlightEvents.length}):</div>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {highlightEvents.map((evt, idx) => {
+                  const content = evt.content || ''
+                  const shortContent = content.length > 100 ? content.substring(0, 100) + '...' : content
+                  const aTag = evt.tags?.find((t: string[]) => t[0] === 'a')?.[1]
+                  const rTag = evt.tags?.find((t: string[]) => t[0] === 'r')?.[1]
+                  const eTag = evt.tags?.find((t: string[]) => t[0] === 'e')?.[1]
+                  const contextTag = evt.tags?.find((t: string[]) => t[0] === 'context')?.[1]
+                  
+                  return (
+                    <div key={idx} className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                      <div className="font-semibold mb-1">Highlight #{idx + 1}</div>
+                      <div className="opacity-70 mb-1">
+                        <div>Author: {evt.pubkey.slice(0, 16)}...</div>
+                        <div>Created: {new Date(evt.created_at * 1000).toLocaleString()}</div>
+                      </div>
+                      <div className="mt-1">
+                        <div className="font-semibold text-[11px]">Content:</div>
+                        <div className="italic">&quot;{shortContent}&quot;</div>
+                      </div>
+                      {contextTag && (
+                        <div className="mt-1 text-[11px] opacity-70">
+                          <div>Context: {contextTag.substring(0, 60)}...</div>
+                        </div>
+                      )}
+                      {aTag && <div className="mt-1 text-[11px] opacity-70">#a: {aTag}</div>}
+                      {rTag && <div className="mt-1 text-[11px] opacity-70">#r: {rTag}</div>}
+                      {eTag && <div className="mt-1 text-[11px] opacity-70">#e: {eTag.slice(0, 16)}...</div>}
                       <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
                     </div>
                   )
