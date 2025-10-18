@@ -48,6 +48,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [hasLoadedNostrverse, setHasLoadedNostrverse] = useState(false)
   
   // Get myHighlights directly from controller
   const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
@@ -89,6 +90,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     if (!activeAccount) {
       // When logged out, show nostrverse by default
       setVisibility(prev => ({ ...prev, nostrverse: true, friends: false, mine: false }))
+      setHasLoadedNostrverse(true) // logged out path loads nostrverse immediately
     } else {
       // When logged in, use settings defaults
       setVisibility({
@@ -96,6 +98,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         friends: settings?.defaultExploreScopeFriends ?? true,
         mine: settings?.defaultExploreScopeMine ?? false
       })
+      setHasLoadedNostrverse(false)
     }
   }, [activeAccount, settings])
 
@@ -309,32 +312,36 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         // Store final followed pubkeys
         setFollowedPubkeys(contacts)
 
-        // Fetch both friends content and nostrverse content in parallel
+        // Fetch friends content and (optionally) nostrverse content in parallel
         const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
         const contactsArray = Array.from(contacts)
+        const nostrversePostsPromise = visibility.nostrverse
+          ? fetchNostrverseBlogPosts(relayPool, relayUrls, 50, eventStore || undefined, (post) => {
+              // Stream nostrverse posts too when logged in
+              setBlogPosts(prev => {
+                const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                const key = `${post.author}:${dTag}`
+                const existingIndex = prev.findIndex(p => {
+                  const pDTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                  return `${p.author}:${pDTag}` === key
+                })
+                if (existingIndex >= 0) {
+                  const existing = prev[existingIndex]
+                  if (post.event.created_at <= existing.event.created_at) return prev
+                  const next = [...prev]
+                  next[existingIndex] = post
+                  return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+                }
+                const next = [...prev, post]
+                return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+              })
+            })
+          : Promise.resolve([] as BlogPostPreview[])
+
         const [friendsPosts, friendsHighlights, nostrversePosts, nostriverseHighlights] = await Promise.all([
           fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls),
           fetchHighlightsFromAuthors(relayPool, contactsArray),
-          fetchNostrverseBlogPosts(relayPool, relayUrls, 50, eventStore || undefined, (post) => {
-            // Stream nostrverse posts too when logged in
-            setBlogPosts(prev => {
-              const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
-              const key = `${post.author}:${dTag}`
-              const existingIndex = prev.findIndex(p => {
-                const pDTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-                return `${p.author}:${pDTag}` === key
-              })
-              if (existingIndex >= 0) {
-                const existing = prev[existingIndex]
-                if (post.event.created_at <= existing.event.created_at) return prev
-                const next = [...prev]
-                next[existingIndex] = post
-                return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-              }
-              const next = [...prev, post]
-              return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-            })
-          }),
+          nostrversePostsPromise,
           fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
         ])
 
@@ -375,6 +382,50 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     loadData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
+
+  // Lazy-load nostrverse writings when user toggles it on (logged in)
+  useEffect(() => {
+    if (!activeAccount || !relayPool || !visibility.nostrverse || hasLoadedNostrverse) return
+    const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+    setHasLoadedNostrverse(true)
+    fetchNostrverseBlogPosts(
+      relayPool,
+      relayUrls,
+      50,
+      eventStore || undefined,
+      (post) => {
+        setBlogPosts(prev => {
+          const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+          const key = `${post.author}:${dTag}`
+          const existingIndex = prev.findIndex(p => {
+            const pDTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+            return `${p.author}:${pDTag}` === key
+          })
+          if (existingIndex >= 0) {
+            const existing = prev[existingIndex]
+            if (post.event.created_at <= existing.event.created_at) return prev
+            const next = [...prev]
+            next[existingIndex] = post
+            return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+          }
+          const next = [...prev, post]
+          return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+        })
+      }
+    ).then((finalPosts) => {
+      // Ensure final deduped list
+      setBlogPosts(prev => {
+        const byKey = new Map<string, BlogPostPreview>()
+        for (const p of [...prev, ...finalPosts]) {
+          const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+          const key = `${p.author}:${dTag}`
+          const existing = byKey.get(key)
+          if (!existing || p.event.created_at > existing.event.created_at) byKey.set(key, p)
+        }
+        return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+      })
+    }).catch(() => {})
+  }, [visibility.nostrverse, activeAccount, relayPool, eventStore, hasLoadedNostrverse])
 
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
