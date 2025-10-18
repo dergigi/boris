@@ -199,7 +199,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   useEffect(() => {
     const loadData = async () => {
       try {
-        // show spinner but keep existing data
+        // begin load, but do not block rendering
         setLoading(true)
 
         // If not logged in, only fetch nostrverse content with streaming posts
@@ -234,29 +234,31 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
             }
           )
 
-          const [finalPosts, nostriverseHighlights] = await Promise.all([postsPromise, highlightPromise])
-          // Ensure final sorted list set (in case stream missed an update)
-          setBlogPosts(prev => {
-            const byKey = new Map<string, BlogPostPreview>()
-            for (const p of [...prev, ...finalPosts]) {
-              const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-              const key = `${p.author}:${dTag}`
-              const existing = byKey.get(key)
-              if (!existing || p.event.created_at > existing.event.created_at) byKey.set(key, p)
-            }
-            return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-          })
-          setHighlights(nostriverseHighlights)
-          setLoading(false)
-          return
+          // When each finishes, merge without blocking initial render
+          postsPromise.then((finalPosts) => {
+            setBlogPosts(prev => {
+              const byKey = new Map<string, BlogPostPreview>()
+              for (const p of [...prev, ...finalPosts]) {
+                const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                const key = `${p.author}:${dTag}`
+                const existing = byKey.get(key)
+                if (!existing || p.event.created_at > existing.event.created_at) byKey.set(key, p)
+              }
+              return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+            })
+          }).catch(() => {})
+          highlightPromise.then((nostriverseHighlights) => {
+            setHighlights(prev => dedupeHighlightsById([...prev, ...nostriverseHighlights]).sort((a, b) => b.created_at - a.created_at))
+          }).catch(() => {})
+          // drop through; do not early return so post-login path runs seeding too
         }
 
         // Seed from in-memory cache if available to avoid empty flash
-        const memoryCachedPosts = getCachedPosts(activeAccount.pubkey)
+        const memoryCachedPosts = activeAccount ? getCachedPosts(activeAccount.pubkey) : []
         if (memoryCachedPosts && memoryCachedPosts.length > 0) {
           setBlogPosts(prev => prev.length === 0 ? memoryCachedPosts : prev)
         }
-        const memoryCachedHighlights = getCachedHighlights(activeAccount.pubkey)
+        const memoryCachedHighlights = activeAccount ? getCachedHighlights(activeAccount.pubkey) : []
         if (memoryCachedHighlights && memoryCachedHighlights.length > 0) {
           setHighlights(prev => prev.length === 0 ? memoryCachedHighlights : prev)
         }
@@ -282,10 +284,13 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           })
         }
 
+        // At this point, we have seeded any available data; lift the loading state
+        setLoading(false)
+
         // Fetch the user's contacts (friends)
         const contacts = await fetchContacts(
           relayPool,
-          activeAccount.pubkey,
+          activeAccount?.pubkey || '',
           (partial) => {
             // Store followed pubkeys for highlight classification
             setFollowedPubkeys(partial)
@@ -333,7 +338,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                       return timeB - timeA
                     })
                   })
-                  setCachedPosts(activeAccount.pubkey, upsertCachedPost(activeAccount.pubkey, post))
+                  if (activeAccount) setCachedPosts(activeAccount.pubkey, upsertCachedPost(activeAccount.pubkey, post))
                 }
               ).then((all) => {
                 setBlogPosts((prev) => {
@@ -362,7 +367,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                     const timeB = b.published || b.event.created_at
                     return timeB - timeA
                   })
-                  setCachedPosts(activeAccount.pubkey, merged)
+                  if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
                   return merged
                 })
               })
@@ -378,14 +383,14 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                     const next = [...prev, highlight]
                     return next.sort((a, b) => b.created_at - a.created_at)
                   })
-                  setCachedHighlights(activeAccount.pubkey, upsertCachedHighlight(activeAccount.pubkey, highlight))
+                  if (activeAccount) setCachedHighlights(activeAccount.pubkey, upsertCachedHighlight(activeAccount.pubkey, highlight))
                 }
               ).then((all) => {
                 setHighlights((prev) => {
                   const byId = new Map(prev.map(h => [h.id, h]))
                   for (const highlight of all) byId.set(highlight.id, highlight)
                   const merged = Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
-                  setCachedHighlights(activeAccount.pubkey, merged)
+                  if (activeAccount) setCachedHighlights(activeAccount.pubkey, merged)
                   return merged
                 })
               })
@@ -403,7 +408,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
         const contactsArray = Array.from(contacts)
         // Use centralized writingsController for my posts (non-blocking)
-        const myPostsPromise: Promise<BlogPostPreview[]> = Promise.resolve(writingsController.getWritings())
+        // pull from writingsController; no need to store promise
+        setBlogPosts(prev => dedupeWritingsByReplaceable([...prev, ...writingsController.getWritings()]).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at)))
         setHasLoadedMine(true)
         const nostrversePostsPromise = visibility.nostrverse
           ? fetchNostrverseBlogPosts(relayPool, relayUrls, 50, eventStore || undefined, (post) => {
@@ -428,45 +434,43 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
             })
           : Promise.resolve([] as BlogPostPreview[])
 
-        const [myPosts, friendsPosts, friendsHighlights, nostrversePosts, nostriverseHighlights] = await Promise.all([
-          myPostsPromise,
-          fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls),
-          fetchHighlightsFromAuthors(relayPool, contactsArray),
-          nostrversePostsPromise,
-          fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
-        ])
+        // Fire non-blocking fetches and merge as they resolve
+        fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls)
+          .then((friendsPosts) => {
+            setBlogPosts(prev => {
+              const merged = dedupeWritingsByReplaceable([...prev, ...friendsPosts])
+              const sorted = merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+              if (activeAccount) setCachedPosts(activeAccount.pubkey, sorted)
+              // Pre-cache profiles in background
+              const authorPubkeys = Array.from(new Set(sorted.map(p => p.author)))
+              fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch(() => {})
+              return sorted
+            })
+          }).catch(() => {})
 
-        // Merge and deduplicate all posts
-        const allPosts = [...myPosts, ...friendsPosts, ...nostrversePosts]
-        const uniquePosts = dedupeWritingsByReplaceable(allPosts).sort((a, b) => {
-          const timeA = a.published || a.event.created_at
-          const timeB = b.published || b.event.created_at
-          return timeB - timeA
-        })
+        fetchHighlightsFromAuthors(relayPool, contactsArray)
+          .then((friendsHighlights) => {
+            setHighlights(prev => {
+              const merged = dedupeHighlightsById([...prev, ...friendsHighlights])
+              const sorted = merged.sort((a, b) => b.created_at - a.created_at)
+              if (activeAccount) setCachedHighlights(activeAccount.pubkey, sorted)
+              return sorted
+            })
+          }).catch(() => {})
 
-        // Merge and deduplicate all highlights (mine from controller + friends + nostrverse)
-        const allHighlights = [...myHighlights, ...friendsHighlights, ...nostriverseHighlights]
-        const uniqueHighlights = dedupeHighlightsById(allHighlights).sort((a, b) => b.created_at - a.created_at)
+        nostrversePostsPromise.then((nostrversePosts) => {
+          setBlogPosts(prev => dedupeWritingsByReplaceable([...prev, ...nostrversePosts]).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at)))
+        }).catch(() => {})
 
-        // Fetch profiles for all blog post authors to cache them
-        if (uniquePosts.length > 0) {
-          const authorPubkeys = Array.from(new Set(uniquePosts.map(p => p.author)))
-          fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch(err => {
-            console.error('Failed to fetch author profiles:', err)
-          })
-        }
-
-        // No blocking errors - let empty states handle messaging
-        setBlogPosts(uniquePosts)
-        setCachedPosts(activeAccount.pubkey, uniquePosts)
-
-        setHighlights(uniqueHighlights)
-        setCachedHighlights(activeAccount.pubkey, uniqueHighlights)
+        fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
+          .then((nostriverseHighlights) => {
+            setHighlights(prev => dedupeHighlightsById([...prev, ...nostriverseHighlights]).sort((a, b) => b.created_at - a.created_at))
+          }).catch(() => {})
       } catch (err) {
         console.error('Failed to load data:', err)
         // No blocking error - user can pull-to-refresh
       } finally {
-        setLoading(false)
+        // loading is already turned off after seeding
       }
     }
 
