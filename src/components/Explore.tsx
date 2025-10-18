@@ -121,8 +121,31 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                 relayUrls,
                 (post) => {
                   setBlogPosts((prev) => {
-                    const exists = prev.some(p => p.event.id === post.event.id)
-                    if (exists) return prev
+                    // Deduplicate by author:d-tag (replaceable event key)
+                    const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                    const key = `${post.author}:${dTag}`
+                    const existingIndex = prev.findIndex(p => {
+                      const pDTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                      return `${p.author}:${pDTag}` === key
+                    })
+                    
+                    // If exists, only replace if this one is newer
+                    if (existingIndex >= 0) {
+                      const existing = prev[existingIndex]
+                      if (post.event.created_at <= existing.event.created_at) {
+                        return prev // Keep existing (newer or same)
+                      }
+                      // Replace with newer version
+                      const next = [...prev]
+                      next[existingIndex] = post
+                      return next.sort((a, b) => {
+                        const timeA = a.published || a.event.created_at
+                        const timeB = b.published || b.event.created_at
+                        return timeB - timeA
+                      })
+                    }
+                    
+                    // New post, add it
                     const next = [...prev, post]
                     return next.sort((a, b) => {
                       const timeA = a.published || a.event.created_at
@@ -134,9 +157,27 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                 }
               ).then((all) => {
                 setBlogPosts((prev) => {
-                  const byId = new Map(prev.map(p => [p.event.id, p]))
-                  for (const post of all) byId.set(post.event.id, post)
-                  const merged = Array.from(byId.values()).sort((a, b) => {
+                  // Deduplicate by author:d-tag (replaceable event key)
+                  const byKey = new Map<string, BlogPostPreview>()
+                  
+                  // Add existing posts
+                  for (const p of prev) {
+                    const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                    const key = `${p.author}:${dTag}`
+                    byKey.set(key, p)
+                  }
+                  
+                  // Merge in new posts (keeping newer versions)
+                  for (const post of all) {
+                    const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                    const key = `${post.author}:${dTag}`
+                    const existing = byKey.get(key)
+                    if (!existing || post.event.created_at > existing.event.created_at) {
+                      byKey.set(key, post)
+                    }
+                  }
+                  
+                  const merged = Array.from(byKey.values()).sort((a, b) => {
                     const timeA = a.published || a.event.created_at
                     const timeB = b.published || b.event.created_at
                     return timeB - timeA
