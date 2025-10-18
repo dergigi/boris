@@ -246,14 +246,14 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         })
 
         // Merge and deduplicate all highlights (mine from controller + friends + nostrverse)
-        console.log('📊 Highlight counts - mine:', myHighlights.length, 'friends:', friendsHighlights.length, 'nostrverse:', nostriverseHighlights.length)
+        console.log('[NOSTRVERSE] 📊 Highlight counts - mine:', myHighlights.length, 'friends:', friendsHighlights.length, 'nostrverse:', nostriverseHighlights.length)
         const allHighlights = [...myHighlights, ...friendsHighlights, ...nostriverseHighlights]
         const highlightsByKey = new Map<string, Highlight>()
         for (const highlight of allHighlights) {
           highlightsByKey.set(highlight.id, highlight)
         }
         const uniqueHighlights = Array.from(highlightsByKey.values()).sort((a, b) => b.created_at - a.created_at)
-        console.log('📊 Total unique highlights after merge:', uniqueHighlights.length)
+        console.log('[NOSTRVERSE] 📊 Total unique highlights after merge:', uniqueHighlights.length)
 
         // Fetch profiles for all blog post authors to cache them
         if (uniquePosts.length > 0) {
@@ -310,7 +310,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     const classified = classifyHighlights(highlights, activeAccount?.pubkey, followedPubkeys)
     const levelCounts = { mine: 0, friends: 0, nostrverse: 0 }
     classified.forEach(h => levelCounts[h.level]++)
-    console.log('📊 Classified highlights by level:', levelCounts, 'visibility:', visibility)
+    console.log('[NOSTRVERSE] 📊 Classified highlights by level:', levelCounts, 'visibility:', visibility)
     
     const filtered = classified.filter(h => {
       if (h.level === 'mine' && !visibility.mine) return false
@@ -318,7 +318,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       if (h.level === 'nostrverse' && !visibility.nostrverse) return false
       return true
     })
-    console.log('📊 After visibility filter:', filtered.length, 'highlights')
+    console.log('[NOSTRVERSE] 📊 After visibility filter:', filtered.length, 'highlights')
     return filtered
   }, [highlights, activeAccount?.pubkey, followedPubkeys, visibility])
 

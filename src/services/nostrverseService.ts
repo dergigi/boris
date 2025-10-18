@@ -23,7 +23,7 @@ export const fetchNostrverseBlogPosts = async (
   eventStore?: IEventStore
 ): Promise<BlogPostPreview[]> => {
   try {
-    console.log('📚 Fetching nostrverse blog posts (kind 30023), limit:', limit)
+    console.log('[NOSTRVERSE] 📚 Fetching blog posts (kind 30023), limit:', limit)
 
     // Deduplicate replaceable events by keeping the most recent version
     const uniqueEvents = new Map<string, NostrEvent>()
@@ -49,7 +49,7 @@ export const fetchNostrverseBlogPosts = async (
       }
     )
 
-    console.log('📊 Nostrverse blog post events fetched (unique):', uniqueEvents.size)
+    console.log('[NOSTRVERSE] 📊 Blog post events fetched (unique):', uniqueEvents.size)
     
     // Convert to blog post previews and sort by published date (most recent first)
     const blogPosts: BlogPostPreview[] = Array.from(uniqueEvents.values())
@@ -67,7 +67,7 @@ export const fetchNostrverseBlogPosts = async (
         return timeB - timeA // Most recent first
       })
     
-    console.log('📰 Processed', blogPosts.length, 'unique nostrverse blog posts')
+    console.log('[NOSTRVERSE] 📰 Processed', blogPosts.length, 'unique blog posts')
     
     return blogPosts
   } catch (error) {
@@ -89,7 +89,7 @@ export const fetchNostrverseHighlights = async (
   eventStore?: IEventStore
 ): Promise<Highlight[]> => {
   try {
-    console.log('💡 Fetching nostrverse highlights (kind 9802), limit:', limit)
+    console.log('[NOSTRVERSE] 💡 Fetching highlights (kind 9802), limit:', limit)
 
     const seenIds = new Set<string>()
     const rawEvents = await queryEvents(
@@ -116,7 +116,7 @@ export const fetchNostrverseHighlights = async (
     const uniqueEvents = dedupeHighlights(rawEvents)
     const highlights = uniqueEvents.map(eventToHighlight)
     
-    console.log('💡 Processed', highlights.length, 'unique nostrverse highlights')
+    console.log('[NOSTRVERSE] 💡 Processed', highlights.length, 'unique highlights')
     
     return sortHighlights(highlights)
   } catch (error) {
