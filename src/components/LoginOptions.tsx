@@ -22,15 +22,24 @@ const LoginOptions: React.FC = () => {
       accountManager.setActive(account)
     } catch (err) {
       console.error('Extension login failed:', err)
-      setError(
-        <>
-          Please install a nostr browser extension like{' '}
-          <a href="https://chromewebstore.google.com/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp" target="_blank" rel="noopener noreferrer">
-            nos2x
-          </a>
-          {' '}and try again.
-        </>
-      )
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      
+      // Check if extension is not installed
+      if (errorMessage.includes('window.nostr') || errorMessage.includes('not found') || errorMessage.includes('undefined')) {
+        setError(
+          <>
+            No browser extension found. Please install{' '}
+            <a href="https://chromewebstore.google.com/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp" target="_blank" rel="noopener noreferrer">
+              nos2x
+            </a>
+            {' '}or another nostr extension.
+          </>
+        )
+      } else if (errorMessage.includes('denied') || errorMessage.includes('rejected') || errorMessage.includes('cancel')) {
+        setError('Authentication was cancelled or denied.')
+      } else {
+        setError(`Authentication failed: ${errorMessage}`)
+      }
     } finally {
       setIsLoading(false)
     }
