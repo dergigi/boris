@@ -238,47 +238,49 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
             style={{ color: friendsColor }}
           />
         </div>
-        <div className="view-mode-right">
-          {onRefresh && (
+        {activeAccount && (
+          <div className="view-mode-right">
+            {onRefresh && (
+              <IconButton
+                icon={faRotate}
+                onClick={onRefresh}
+                title={lastFetchTime ? `Refresh bookmarks (updated ${formatDistanceToNow(lastFetchTime, { addSuffix: true })})` : 'Refresh bookmarks'}
+                ariaLabel="Refresh bookmarks"
+                variant="ghost"
+                disabled={isRefreshing}
+                spin={isRefreshing}
+              />
+            )}
             <IconButton
-              icon={faRotate}
-              onClick={onRefresh}
-              title={lastFetchTime ? `Refresh bookmarks (updated ${formatDistanceToNow(lastFetchTime, { addSuffix: true })})` : 'Refresh bookmarks'}
-              ariaLabel="Refresh bookmarks"
+              icon={groupingMode === 'grouped' ? faLayerGroup : faBars}
+              onClick={toggleGroupingMode}
+              title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
+              ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
               variant="ghost"
-              disabled={isRefreshing}
-              spin={isRefreshing}
             />
-          )}
-          <IconButton
-            icon={groupingMode === 'grouped' ? faLayerGroup : faBars}
-            onClick={toggleGroupingMode}
-            title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
-            ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
-            variant="ghost"
-          />
-          <IconButton
-            icon={faList}
-            onClick={() => onViewModeChange('compact')}
-            title="Compact list view"
-            ariaLabel="Compact list view"
-            variant={viewMode === 'compact' ? 'primary' : 'ghost'}
-          />
-          <IconButton
-            icon={faThLarge}
-            onClick={() => onViewModeChange('cards')}
-            title="Cards view"
-            ariaLabel="Cards view"
-            variant={viewMode === 'cards' ? 'primary' : 'ghost'}
-          />
-          <IconButton
-            icon={faImage}
-            onClick={() => onViewModeChange('large')}
-            title="Large preview view"
-            ariaLabel="Large preview view"
-            variant={viewMode === 'large' ? 'primary' : 'ghost'}
-          />
-        </div>
+            <IconButton
+              icon={faList}
+              onClick={() => onViewModeChange('compact')}
+              title="Compact list view"
+              ariaLabel="Compact list view"
+              variant={viewMode === 'compact' ? 'primary' : 'ghost'}
+            />
+            <IconButton
+              icon={faThLarge}
+              onClick={() => onViewModeChange('cards')}
+              title="Cards view"
+              ariaLabel="Cards view"
+              variant={viewMode === 'cards' ? 'primary' : 'ghost'}
+            />
+            <IconButton
+              icon={faImage}
+              onClick={() => onViewModeChange('large')}
+              title="Large preview view"
+              ariaLabel="Large preview view"
+              variant={viewMode === 'large' ? 'primary' : 'ghost'}
+            />
+          </div>
+        )}
       </div>
       {showAddModal && (
         <AddBookmarkModal
