@@ -28,11 +28,12 @@ interface ExploreProps {
   eventStore: IEventStore
   settings?: UserSettings
   activeTab?: TabType
+  myHighlights?: Highlight[] // From highlightsController in App.tsx
 }
 
 type TabType = 'writings' | 'highlights'
 
-const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, activeTab: propActiveTab }) => {
+const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, activeTab: propActiveTab, myHighlights = [] }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
@@ -76,6 +77,15 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         const cachedHighlights = getCachedHighlights(activeAccount.pubkey)
         if (cachedHighlights && cachedHighlights.length > 0) {
           setHighlights(prev => prev.length === 0 ? cachedHighlights : prev)
+        }
+        
+        // Seed with myHighlights from controller (already loaded on app start)
+        if (myHighlights.length > 0) {
+          setHighlights(prev => {
+            const byId = new Map(prev.map(h => [h.id, h]))
+            for (const h of myHighlights) byId.set(h.id, h)
+            return Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
+          })
         }
 
         // Fetch the user's contacts (friends)
@@ -180,8 +190,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           return timeB - timeA
         })
 
-        // Merge and deduplicate all highlights
-        const allHighlights = [...friendsHighlights, ...nostriverseHighlights]
+        // Merge and deduplicate all highlights (mine from controller + friends + nostrverse)
+        const allHighlights = [...myHighlights, ...friendsHighlights, ...nostriverseHighlights]
         const highlightsByKey = new Map<string, Highlight>()
         for (const highlight of allHighlights) {
           highlightsByKey.set(highlight.id, highlight)
@@ -211,7 +221,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
 
     loadData()
-  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
+  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings, myHighlights])
 
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({

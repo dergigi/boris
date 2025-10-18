@@ -14,6 +14,7 @@ import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import { useRelayStatus } from '../hooks/useRelayStatus'
 import { useOfflineSync } from '../hooks/useOfflineSync'
 import { Bookmark } from '../types/bookmarks'
+import { Highlight } from '../types/highlights'
 import ThreePaneLayout from './ThreePaneLayout'
 import Explore from './Explore'
 import Me from './Me'
@@ -28,6 +29,7 @@ interface BookmarksProps {
   bookmarks: Bookmark[]
   bookmarksLoading: boolean
   onRefreshBookmarks: () => Promise<void>
+  myHighlights: Highlight[]
 }
 
 const Bookmarks: React.FC<BookmarksProps> = ({ 
@@ -35,7 +37,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   onLogout, 
   bookmarks, 
   bookmarksLoading, 
-  onRefreshBookmarks 
+  onRefreshBookmarks,
+  myHighlights
 }) => {
   const { naddr, npub } = useParams<{ naddr?: string; npub?: string }>()
   const location = useLocation()
@@ -322,7 +325,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
       onCreateHighlight={handleCreateHighlight}
       hasActiveAccount={!!(activeAccount && relayPool)}
       explore={showExplore ? (
-        relayPool ? <Explore relayPool={relayPool} eventStore={eventStore} settings={settings} activeTab={exploreTab} /> : null
+        relayPool ? <Explore relayPool={relayPool} eventStore={eventStore} settings={settings} activeTab={exploreTab} myHighlights={myHighlights} /> : null
       ) : undefined}
       me={showMe ? (
         relayPool ? <Me relayPool={relayPool} activeTab={meTab} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} /> : null

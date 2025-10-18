@@ -165,6 +165,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -177,6 +178,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -189,6 +191,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -201,6 +204,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -213,6 +217,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -225,6 +230,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -241,6 +247,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -253,6 +260,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -265,6 +273,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -277,6 +286,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -289,6 +299,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -301,6 +312,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -313,6 +325,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
@@ -325,6 +338,7 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
+            myHighlights={highlights}
           />
         } 
       />
