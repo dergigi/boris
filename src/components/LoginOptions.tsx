@@ -52,7 +52,19 @@ const LoginOptions: React.FC = () => {
     }
 
     if (!bunkerUri.startsWith('bunker://')) {
-      setError('Invalid bunker URI. Must start with bunker://')
+      setError(
+        <>
+          Invalid bunker URI. Must start with bunker://. Don't have a signer? Give{' '}
+          <a href="https://github.com/greenart7c3/Amber" target="_blank" rel="noopener noreferrer">
+            Amber
+          </a>
+          {' '}or{' '}
+          <a href="https://testflight.apple.com/join/DUzVMDMK" target="_blank" rel="noopener noreferrer">
+            Aegis
+          </a>
+          {' '}a try.
+        </>
+      )
       return
     }
 
