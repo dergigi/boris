@@ -76,7 +76,7 @@ const LoginOptions: React.FC = () => {
   return (
     <div className="empty-state login-container">
       <div className="login-content">
-        <h2 className="login-title">Welcome to Boris</h2>
+        <h2 className="login-title">Hi! I'm Boris.</h2>
         <p className="login-description">
           Login to see your bookmarks, explore long-form articles, and create <mark className="login-highlight">your own highlights</mark>.
         </p>
