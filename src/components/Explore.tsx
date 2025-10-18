@@ -76,6 +76,17 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     mine: settings?.defaultExploreScopeMine ?? false
   })
 
+  // Ensure at least one scope remains active
+  const toggleScope = useCallback((key: 'nostrverse' | 'friends' | 'mine') => {
+    setVisibility(prev => {
+      const next = { ...prev, [key]: !prev[key] }
+      if (!next.nostrverse && !next.friends && !next.mine) {
+        return prev // ignore toggle that would disable all scopes
+      }
+      return next
+    })
+  }, [])
+
   // Subscribe to highlights controller
   useEffect(() => {
     const unsubHighlights = highlightsController.onHighlights(setMyHighlights)
@@ -661,7 +672,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           />
           <IconButton
             icon={faNetworkWired}
-            onClick={() => setVisibility({ ...visibility, nostrverse: !visibility.nostrverse })}
+            onClick={() => toggleScope('nostrverse')}
             title="Toggle nostrverse content"
             ariaLabel="Toggle nostrverse content"
             variant="ghost"
@@ -672,7 +683,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           />
           <IconButton
             icon={faUserGroup}
-            onClick={() => setVisibility({ ...visibility, friends: !visibility.friends })}
+            onClick={() => toggleScope('friends')}
             title={activeAccount ? "Toggle friends content" : "Login to see friends content"}
             ariaLabel="Toggle friends content"
             variant="ghost"
@@ -684,7 +695,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           />
           <IconButton
             icon={faUser}
-            onClick={() => setVisibility({ ...visibility, mine: !visibility.mine })}
+            onClick={() => toggleScope('mine')}
             title={activeAccount ? "Toggle my content" : "Login to see your content"}
             ariaLabel="Toggle my content"
             variant="ghost"
