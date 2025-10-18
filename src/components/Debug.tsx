@@ -18,6 +18,8 @@ import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import { useSettings } from '../hooks/useSettings'
 import { fetchHighlights, fetchHighlightsFromAuthors } from '../services/highlightService'
 import { contactsController } from '../services/contactsController'
+import { writingsController } from '../services/writingsController'
+import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
 
 const defaultPayload = 'The quick brown fox jumps over the lazy dog.'
 
@@ -93,6 +95,12 @@ const Debug: React.FC<DebugProps> = ({
   const [highlightEvents, setHighlightEvents] = useState<NostrEvent[]>([])
   const [tLoadHighlights, setTLoadHighlights] = useState<number | null>(null)
   const [tFirstHighlight, setTFirstHighlight] = useState<number | null>(null)
+  
+  // Writings loading state
+  const [isLoadingWritings, setIsLoadingWritings] = useState(false)
+  const [writingPosts, setWritingPosts] = useState<BlogPostPreview[]>([])
+  const [tLoadWritings, setTLoadWritings] = useState<number | null>(null)
+  const [tFirstWriting, setTFirstWriting] = useState<number | null>(null)
   
   // Live timing state
   const [liveTiming, setLiveTiming] = useState<{
@@ -536,6 +544,188 @@ const Debug: React.FC<DebugProps> = ({
       setTLoadHighlights(elapsed)
       DebugBus.info('debug', `Loaded nostrverse highlights in ${elapsed}ms`)
     }
+  }
+
+  const handleLoadMyWritings = async () => {
+    if (!relayPool || !activeAccount?.pubkey || !eventStore) {
+      DebugBus.warn('debug', 'Please log in to load your writings')
+      return
+    }
+    const start = performance.now()
+    setWritingPosts([])
+    setIsLoadingWritings(true)
+    setTLoadWritings(null)
+    setTFirstWriting(null)
+    DebugBus.info('debug', 'Loading my writings via writingsController...')
+    try {
+      let firstEventTime: number | null = null
+      const unsub = writingsController.onWritings((posts) => {
+        if (firstEventTime === null && posts.length > 0) {
+          firstEventTime = performance.now() - start
+          setTFirstWriting(Math.round(firstEventTime))
+        }
+        setWritingPosts(posts)
+      })
+      
+      await writingsController.start({
+        relayPool,
+        eventStore,
+        pubkey: activeAccount.pubkey,
+        force: true
+      })
+      
+      unsub()
+      const currentWritings = writingsController.getWritings()
+      setWritingPosts(currentWritings)
+      DebugBus.info('debug', `Loaded ${currentWritings.length} writings via controller`)
+    } finally {
+      setIsLoadingWritings(false)
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadWritings(elapsed)
+      DebugBus.info('debug', `Loaded my writings in ${elapsed}ms`)
+    }
+  }
+
+  const handleLoadFriendsWritings = async () => {
+    if (!relayPool || !activeAccount?.pubkey) {
+      DebugBus.warn('debug', 'Please log in to load friends writings')
+      return
+    }
+    const start = performance.now()
+    setWritingPosts([])
+    setIsLoadingWritings(true)
+    setTLoadWritings(null)
+    setTFirstWriting(null)
+    DebugBus.info('debug', 'Loading friends writings...')
+    try {
+      // Get contacts first
+      await contactsController.start({ relayPool, pubkey: activeAccount.pubkey })
+      const friends = contactsController.getContacts()
+      const friendsArray = Array.from(friends)
+      DebugBus.info('debug', `Found ${friendsArray.length} friends`)
+      
+      if (friendsArray.length === 0) {
+        DebugBus.warn('debug', 'No friends found to load writings from')
+        return
+      }
+      
+      let firstEventTime: number | null = null
+      const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+      const posts = await fetchBlogPostsFromAuthors(
+        relayPool,
+        friendsArray,
+        relayUrls,
+        (post) => {
+          if (firstEventTime === null) {
+            firstEventTime = performance.now() - start
+            setTFirstWriting(Math.round(firstEventTime))
+          }
+          setWritingPosts(prev => {
+            const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+            const key = `${post.author}:${dTag}`
+            const exists = prev.find(p => {
+              const pDTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+              return `${p.author}:${pDTag}` === key
+            })
+            if (exists) return prev
+            return [...prev, post].sort((a, b) => {
+              const timeA = a.published || a.event.created_at
+              const timeB = b.published || b.event.created_at
+              return timeB - timeA
+            })
+          })
+        }
+      )
+      
+      setWritingPosts(posts)
+      DebugBus.info('debug', `Loaded ${posts.length} friend writings`)
+    } finally {
+      setIsLoadingWritings(false)
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadWritings(elapsed)
+      DebugBus.info('debug', `Loaded friend writings in ${elapsed}ms`)
+    }
+  }
+
+  const handleLoadNostrverseWritings = async () => {
+    if (!relayPool) {
+      DebugBus.warn('debug', 'Relay pool not available')
+      return
+    }
+    const start = performance.now()
+    setWritingPosts([])
+    setIsLoadingWritings(true)
+    setTLoadWritings(null)
+    setTFirstWriting(null)
+    DebugBus.info('debug', 'Loading nostrverse writings (kind:30023)...')
+    try {
+      let firstEventTime: number | null = null
+      const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+      
+      const { queryEvents } = await import('../services/dataFetch')
+      const { Helpers } = await import('applesauce-core')
+      const { getArticleTitle, getArticleSummary, getArticleImage, getArticlePublished } = Helpers
+      
+      const uniqueEvents = new Map<string, NostrEvent>()
+      await queryEvents(relayPool, { kinds: [30023], limit: 50 }, {
+        relayUrls,
+        onEvent: (evt) => {
+          const dTag = evt.tags.find(t => t[0] === 'd')?.[1] || ''
+          const key = `${evt.pubkey}:${dTag}`
+          const existing = uniqueEvents.get(key)
+          if (!existing || evt.created_at > existing.created_at) {
+            uniqueEvents.set(key, evt)
+            
+            if (firstEventTime === null) {
+              firstEventTime = performance.now() - start
+              setTFirstWriting(Math.round(firstEventTime))
+            }
+            
+            const posts = Array.from(uniqueEvents.values()).map(event => ({
+              event,
+              title: getArticleTitle(event) || 'Untitled',
+              summary: getArticleSummary(event),
+              image: getArticleImage(event),
+              published: getArticlePublished(event),
+              author: event.pubkey
+            } as BlogPostPreview)).sort((a, b) => {
+              const timeA = a.published || a.event.created_at
+              const timeB = b.published || b.event.created_at
+              return timeB - timeA
+            })
+            
+            setWritingPosts(posts)
+          }
+        }
+      })
+      
+      const finalPosts = Array.from(uniqueEvents.values()).map(event => ({
+        event,
+        title: getArticleTitle(event) || 'Untitled',
+        summary: getArticleSummary(event),
+        image: getArticleImage(event),
+        published: getArticlePublished(event),
+        author: event.pubkey
+      } as BlogPostPreview)).sort((a, b) => {
+        const timeA = a.published || a.event.created_at
+        const timeB = b.published || b.event.created_at
+        return timeB - timeA
+      })
+      
+      setWritingPosts(finalPosts)
+      DebugBus.info('debug', `Loaded ${finalPosts.length} nostrverse writings`)
+    } finally {
+      setIsLoadingWritings(false)
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadWritings(elapsed)
+      DebugBus.info('debug', `Loaded nostrverse writings in ${elapsed}ms`)
+    }
+  }
+
+  const handleClearWritings = () => {
+    setWritingPosts([])
+    setTLoadWritings(null)
+    setTFirstWriting(null)
   }
 
   const handleLoadFriendsList = async () => {
@@ -1062,6 +1252,99 @@ const Debug: React.FC<DebugProps> = ({
                       {rTag && <div className="mt-1 text-[11px] opacity-70">#r: {rTag}</div>}
                       {eTag && <div className="mt-1 text-[11px] opacity-70">#e: {eTag.slice(0, 16)}...</div>}
                       <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Writings Loading Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Writings Loading</h3>
+          
+          <div className="mb-3 text-sm opacity-70">Quick load options:</div>
+          <div className="flex gap-2 mb-3 flex-wrap">
+            <button 
+              className="btn btn-secondary text-sm" 
+              onClick={handleLoadMyWritings}
+              disabled={isLoadingWritings || !relayPool || !activeAccount || !eventStore}
+            >
+              {isLoadingWritings ? (
+                <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+              ) : (
+                'Load My Writings'
+              )}
+            </button>
+            <button 
+              className="btn btn-secondary text-sm" 
+              onClick={handleLoadFriendsWritings}
+              disabled={isLoadingWritings || !relayPool || !activeAccount}
+            >
+              {isLoadingWritings ? (
+                <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+              ) : (
+                'Load Friends Writings'
+              )}
+            </button>
+            <button 
+              className="btn btn-secondary text-sm" 
+              onClick={handleLoadNostrverseWritings}
+              disabled={isLoadingWritings || !relayPool}
+            >
+              {isLoadingWritings ? (
+                <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+              ) : (
+                'Load Nostrverse Writings'
+              )}
+            </button>
+            <button 
+              className="btn btn-secondary text-sm ml-auto" 
+              onClick={handleClearWritings}
+              disabled={writingPosts.length === 0}
+            >
+              Clear
+            </button>
+          </div>
+
+          <div className="mb-3 flex gap-2 flex-wrap">
+            <Stat label="total" value={tLoadWritings} />
+            <Stat label="first event" value={tFirstWriting} />
+          </div>
+
+          {writingPosts.length > 0 && (
+            <div className="mb-3">
+              <div className="text-sm opacity-70 mb-2">Loaded Writings ({writingPosts.length}):</div>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {writingPosts.map((post, idx) => {
+                  const title = post.title
+                  const summary = post.summary
+                  const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                  
+                  return (
+                    <div key={idx} className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                      <div className="font-semibold mb-1">Writing #{idx + 1}</div>
+                      <div className="opacity-70 mb-1">
+                        <div>Author: {post.author.slice(0, 16)}...</div>
+                        <div>Published: {post.published ? new Date(post.published * 1000).toLocaleString() : new Date(post.event.created_at * 1000).toLocaleString()}</div>
+                        <div>d-tag: {dTag || '(empty)'}</div>
+                      </div>
+                      <div className="mt-1">
+                        <div className="font-semibold text-[11px]">Title:</div>
+                        <div>&quot;{title}&quot;</div>
+                      </div>
+                      {summary && (
+                        <div className="mt-1 text-[11px] opacity-70">
+                          <div>Summary: {summary.substring(0, 100)}{summary.length > 100 ? '...' : ''}</div>
+                        </div>
+                      )}
+                      {post.image && (
+                        <div className="mt-1 text-[11px] opacity-70">
+                          <div>Image: {post.image.substring(0, 40)}...</div>
+                        </div>
+                      )}
+                      <div className="opacity-50 mt-1 text-[10px] break-all">ID: {post.event.id}</div>
                     </div>
                   )
                 })}
