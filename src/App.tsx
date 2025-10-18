@@ -20,7 +20,6 @@ import { RELAYS } from './config/relays'
 import { SkeletonThemeProvider } from './components/Skeletons'
 import { DebugBus } from './utils/debugBus'
 import { Bookmark } from './types/bookmarks'
-import { Highlight } from './types/highlights'
 import { bookmarkController } from './services/bookmarkController'
 import { contactsController } from './services/contactsController'
 import { highlightsController } from './services/highlightsController'
@@ -48,10 +47,6 @@ function AppRoutes({
   // Centralized contacts state (fed by controller)
   const [contacts, setContacts] = useState<Set<string>>(new Set())
   const [contactsLoading, setContactsLoading] = useState(false)
-
-  // Centralized highlights state (fed by controller)
-  const [highlights, setHighlights] = useState<Highlight[]>([])
-  const [highlightsLoading, setHighlightsLoading] = useState(false)
 
   // Subscribe to bookmark controller
   useEffect(() => {
@@ -91,24 +86,6 @@ function AppRoutes({
     }
   }, [])
 
-  // Subscribe to highlights controller
-  useEffect(() => {
-    console.log('[highlights] 🎧 Subscribing to highlights controller')
-    const unsubHighlights = highlightsController.onHighlights((highlights) => {
-      console.log('[highlights] 📥 Received highlights:', highlights.length)
-      setHighlights(highlights)
-    })
-    const unsubLoading = highlightsController.onLoading((loading) => {
-      console.log('[highlights] 📥 Loading state:', loading)
-      setHighlightsLoading(loading)
-    })
-    
-    return () => {
-      console.log('[highlights] 🔇 Unsubscribing from highlights controller')
-      unsubHighlights()
-      unsubLoading()
-    }
-  }, [])
 
   // Auto-load bookmarks, contacts, and highlights when account is ready (on login or page mount)
   useEffect(() => {
@@ -127,13 +104,13 @@ function AppRoutes({
         contactsController.start({ relayPool, pubkey })
       }
       
-      // Load highlights
-      if (pubkey && eventStore && highlights.length === 0 && !highlightsLoading) {
+      // Load highlights (controller manages its own state)
+      if (pubkey && eventStore && !highlightsController.isLoadedFor(pubkey)) {
         console.log('[highlights] 🚀 Auto-loading highlights on mount/login')
         highlightsController.start({ relayPool, eventStore, pubkey })
       }
     }
-  }, [activeAccount, relayPool, eventStore, bookmarks.length, bookmarksLoading, contacts.size, contactsLoading, highlights.length, highlightsLoading, accountManager])
+  }, [activeAccount, relayPool, eventStore, bookmarks.length, bookmarksLoading, contacts.size, contactsLoading, accountManager])
 
   // Manual refresh (for sidebar button)
   const handleRefreshBookmarks = useCallback(async () => {
@@ -165,8 +142,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -179,8 +154,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -193,8 +166,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -207,8 +178,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -221,8 +190,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -235,8 +202,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -253,8 +218,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -267,8 +230,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -281,8 +242,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -295,8 +254,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -309,8 +266,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -323,8 +278,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -337,8 +290,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -351,8 +302,6 @@ function AppRoutes({
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
-            myHighlights={highlights}
-            myHighlightsLoading={highlightsLoading}
           />
         } 
       />

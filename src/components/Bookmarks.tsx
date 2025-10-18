@@ -14,7 +14,6 @@ import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import { useRelayStatus } from '../hooks/useRelayStatus'
 import { useOfflineSync } from '../hooks/useOfflineSync'
 import { Bookmark } from '../types/bookmarks'
-import { Highlight } from '../types/highlights'
 import ThreePaneLayout from './ThreePaneLayout'
 import Explore from './Explore'
 import Me from './Me'
@@ -29,8 +28,6 @@ interface BookmarksProps {
   bookmarks: Bookmark[]
   bookmarksLoading: boolean
   onRefreshBookmarks: () => Promise<void>
-  myHighlights: Highlight[]
-  myHighlightsLoading: boolean
 }
 
 const Bookmarks: React.FC<BookmarksProps> = ({ 
@@ -38,9 +35,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   onLogout, 
   bookmarks, 
   bookmarksLoading, 
-  onRefreshBookmarks,
-  myHighlights,
-  myHighlightsLoading
+  onRefreshBookmarks
 }) => {
   const { naddr, npub } = useParams<{ naddr?: string; npub?: string }>()
   const location = useLocation()
@@ -327,10 +322,10 @@ const Bookmarks: React.FC<BookmarksProps> = ({
       onCreateHighlight={handleCreateHighlight}
       hasActiveAccount={!!(activeAccount && relayPool)}
       explore={showExplore ? (
-        relayPool ? <Explore relayPool={relayPool} eventStore={eventStore} settings={settings} activeTab={exploreTab} myHighlights={myHighlights} myHighlightsLoading={myHighlightsLoading} /> : null
+        relayPool ? <Explore relayPool={relayPool} eventStore={eventStore} settings={settings} activeTab={exploreTab} /> : null
       ) : undefined}
       me={showMe ? (
-        relayPool ? <Me relayPool={relayPool} activeTab={meTab} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} myHighlights={myHighlights} myHighlightsLoading={myHighlightsLoading} /> : null
+        relayPool ? <Me relayPool={relayPool} activeTab={meTab} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} /> : null
       ) : undefined}
       profile={showProfile && profilePubkey ? (
         relayPool ? <Me relayPool={relayPool} activeTab={profileTab} pubkey={profilePubkey} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} /> : null

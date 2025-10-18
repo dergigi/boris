@@ -13,6 +13,7 @@ import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreS
 import { fetchHighlightsFromAuthors } from '../services/highlightService'
 import { fetchProfiles } from '../services/profileService'
 import { fetchNostrverseBlogPosts, fetchNostrverseHighlights } from '../services/nostrverseService'
+import { highlightsController } from '../services/highlightsController'
 import { Highlight } from '../types/highlights'
 import { UserSettings } from '../services/settingsService'
 import BlogPostCard from './BlogPostCard'
@@ -28,13 +29,11 @@ interface ExploreProps {
   eventStore: IEventStore
   settings?: UserSettings
   activeTab?: TabType
-  myHighlights?: Highlight[] // From highlightsController in App.tsx
-  myHighlightsLoading?: boolean // Loading state from highlightsController
 }
 
 type TabType = 'writings' | 'highlights'
 
-const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, activeTab: propActiveTab, myHighlights = [], myHighlightsLoading = false }) => {
+const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, activeTab: propActiveTab }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
@@ -44,12 +43,26 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   
+  // Get myHighlights directly from controller
+  const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
+  const [myHighlightsLoading, setMyHighlightsLoading] = useState(false)
+  
   // Visibility filters (defaults from settings, or friends only)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
     nostrverse: settings?.defaultHighlightVisibilityNostrverse ?? false,
     friends: settings?.defaultHighlightVisibilityFriends ?? true,
     mine: settings?.defaultHighlightVisibilityMine ?? false
   })
+
+  // Subscribe to highlights controller
+  useEffect(() => {
+    const unsubHighlights = highlightsController.onHighlights(setMyHighlights)
+    const unsubLoading = highlightsController.onLoading(setMyHighlightsLoading)
+    return () => {
+      unsubHighlights()
+      unsubLoading()
+    }
+  }, [])
 
   // Update local state when prop changes
   useEffect(() => {

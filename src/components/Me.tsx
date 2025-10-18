@@ -9,6 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
+import { highlightsController } from '../services/highlightsController'
 import { fetchAllReads, ReadItem } from '../services/readsService'
 import { fetchLinks } from '../services/linksService'
 import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
@@ -38,8 +39,6 @@ interface MeProps {
   pubkey?: string // Optional pubkey for viewing other users' profiles
   bookmarks: Bookmark[] // From centralized App.tsx state
   bookmarksLoading?: boolean // From centralized App.tsx state (reserved for future use)
-  myHighlights?: Highlight[] // From highlightsController (for own profile)
-  myHighlightsLoading?: boolean // Loading state from highlightsController
 }
 
 type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
@@ -51,9 +50,7 @@ const Me: React.FC<MeProps> = ({
   relayPool, 
   activeTab: propActiveTab, 
   pubkey: propPubkey,
-  bookmarks,
-  myHighlights = [],
-  myHighlightsLoading = false
+  bookmarks
 }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
@@ -71,6 +68,10 @@ const Me: React.FC<MeProps> = ({
   const [writings, setWritings] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [loadedTabs, setLoadedTabs] = useState<Set<TabType>>(new Set())
+  
+  // Get myHighlights directly from controller
+  const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
+  const [myHighlightsLoading, setMyHighlightsLoading] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
@@ -90,6 +91,16 @@ const Me: React.FC<MeProps> = ({
     ? (urlFilter as ReadingProgressFilterType) 
     : 'all'
   const [readingProgressFilter, setReadingProgressFilter] = useState<ReadingProgressFilterType>(initialFilter)
+
+  // Subscribe to highlights controller
+  useEffect(() => {
+    const unsubHighlights = highlightsController.onHighlights(setMyHighlights)
+    const unsubLoading = highlightsController.onLoading(setMyHighlightsLoading)
+    return () => {
+      unsubHighlights()
+      unsubLoading()
+    }
+  }, [])
 
   // Update local state when prop changes
   useEffect(() => {
