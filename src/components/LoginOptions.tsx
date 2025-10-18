@@ -74,103 +74,85 @@ const LoginOptions: React.FC = () => {
   }
 
   return (
-    <div className="empty-state">
-      <p style={{ marginBottom: '1rem' }}>Login with:</p>
-      
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '300px', margin: '0 auto' }}>
-        <button
-          onClick={handleExtensionLogin}
-          disabled={isLoading}
-          style={{
-            padding: '0.75rem 1.5rem',
-            fontSize: '1rem',
-            cursor: isLoading ? 'wait' : 'pointer',
-            opacity: isLoading ? 0.6 : 1
-          }}
-        >
-          {isLoading && !showBunkerInput ? 'Connecting...' : 'Extension'}
-        </button>
+    <div className="empty-state login-container">
+      <div className="login-content">
+        <h2 className="login-title">Welcome to Boris</h2>
+        <p className="login-description">
+          Login to see your bookmarks, explore long-form articles, and create your own highlights.
+        </p>
         
-        {!showBunkerInput ? (
+        <div className="login-buttons">
           <button
-            onClick={() => setShowBunkerInput(true)}
+            onClick={handleExtensionLogin}
             disabled={isLoading}
-            style={{
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              cursor: isLoading ? 'wait' : 'pointer',
-              opacity: isLoading ? 0.6 : 1
-            }}
+            className="login-button login-button-primary"
           >
-            Bunker
+            <i className="fa-solid fa-puzzle-piece" />
+            <span>{isLoading && !showBunkerInput ? 'Connecting...' : 'Login with Extension'}</span>
           </button>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <input
-              type="text"
-              placeholder="bunker://..."
-              value={bunkerUri}
-              onChange={(e) => setBunkerUri(e.target.value)}
+          
+          {!showBunkerInput ? (
+            <button
+              onClick={() => setShowBunkerInput(true)}
               disabled={isLoading}
-              style={{
-                padding: '0.75rem',
-                fontSize: '0.9rem',
-                width: '100%',
-                boxSizing: 'border-box'
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleBunkerLogin()
-                }
-              }}
-            />
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                onClick={handleBunkerLogin}
-                disabled={isLoading || !bunkerUri.trim()}
-                style={{
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.9rem',
-                  flex: 1,
-                  cursor: isLoading || !bunkerUri.trim() ? 'not-allowed' : 'pointer',
-                  opacity: isLoading || !bunkerUri.trim() ? 0.6 : 1
-                }}
-              >
-                {isLoading && showBunkerInput ? 'Connecting...' : 'Connect'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowBunkerInput(false)
-                  setBunkerUri('')
-                  setError(null)
-                }}
+              className="login-button login-button-secondary"
+            >
+              <i className="fa-solid fa-shield-halved" />
+              <span>Login with Bunker</span>
+            </button>
+          ) : (
+            <div className="bunker-input-container">
+              <input
+                type="text"
+                placeholder="bunker://..."
+                value={bunkerUri}
+                onChange={(e) => setBunkerUri(e.target.value)}
                 disabled={isLoading}
-                style={{
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.9rem',
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  opacity: isLoading ? 0.6 : 1
+                className="bunker-input"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleBunkerLogin()
+                  }
                 }}
-              >
-                Cancel
-              </button>
+              />
+              <div className="bunker-actions">
+                <button
+                  onClick={handleBunkerLogin}
+                  disabled={isLoading || !bunkerUri.trim()}
+                  className="bunker-button bunker-connect"
+                >
+                  {isLoading && showBunkerInput ? 'Connecting...' : 'Connect'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowBunkerInput(false)
+                    setBunkerUri('')
+                    setError(null)
+                  }}
+                  disabled={isLoading}
+                  className="bunker-button bunker-cancel"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
+          )}
+        </div>
+        
+        {error && (
+          <div className="login-error">
+            <i className="fa-solid fa-circle-info" />
+            <span>{error}</span>
           </div>
         )}
-      </div>
-      
-      {error && (
-        <p style={{ color: 'var(--color-error, #ef4444)', marginTop: '1rem', fontSize: '0.9rem' }}>
-          {error}
+        
+        <p className="login-footer">
+          New to nostr? Start here:{' '}
+          <a href="https://nstart.me/" target="_blank" rel="noopener noreferrer">
+            nstart.me
+          </a>
         </p>
-      )}
-      
-      <p style={{ marginTop: '1.5rem', fontSize: '0.9rem' }}>
-        If you aren't on nostr yet, start here:{' '}
-        <a href="https://nstart.me/" target="_blank" rel="noopener noreferrer">
-          nstart.me
-        </a>
-      </p>
+      </div>
     </div>
   )
 }
