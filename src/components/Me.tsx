@@ -319,7 +319,7 @@ const Me: React.FC<MeProps> = ({
 
   // Sync myHighlights from controller when viewing own profile
   useEffect(() => {
-    if (isOwnProfile && myHighlights.length > 0) {
+    if (isOwnProfile) {
       setHighlights(myHighlights)
     }
   }, [isOwnProfile, myHighlights])
@@ -457,7 +457,7 @@ const Me: React.FC<MeProps> = ({
             </div>
           )
         }
-        return highlights.length === 0 && !loading ? (
+        return highlights.length === 0 && !loading && !(isOwnProfile && myHighlightsLoading) ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
             No highlights yet.
           </div>
