@@ -1,11 +1,10 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faRightToBracket, faUserCircle, faGear, faHome, faNewspaper, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faUserCircle, faGear, faHome, faNewspaper, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
-import { Accounts } from 'applesauce-accounts'
 import IconButton from './IconButton'
 
 interface SidebarHeaderProps {
@@ -16,25 +15,9 @@ interface SidebarHeaderProps {
 }
 
 const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogout, onOpenSettings, isMobile = false }) => {
-  const [isConnecting, setIsConnecting] = useState(false)
   const navigate = useNavigate()
   const activeAccount = Hooks.useActiveAccount()
-  const accountManager = Hooks.useAccountManager()
   const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
-
-  const handleLogin = async () => {
-    try {
-      setIsConnecting(true)
-      const account = await Accounts.ExtensionAccount.fromExtension()
-      accountManager.addAccount(account)
-      accountManager.setActive(account)
-    } catch (error) {
-      console.error('Login failed:', error)
-      alert('Login failed. Please install a nostr browser extension and try again.\n\nIf you aren\'t on nostr yet, start here: https://nstart.me/')
-    } finally {
-      setIsConnecting(false)
-    }
-  }
 
   const getProfileImage = () => {
     return profile?.picture || null
@@ -73,22 +56,20 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           </button>
         )}
         <div className="sidebar-header-right">
-        <div 
-          className="profile-avatar" 
-          title={activeAccount ? getUserDisplayName() : "Login"}
-          onClick={
-            activeAccount 
-              ? () => navigate('/me')
-              : (isConnecting ? () => {} : handleLogin)
-          }
-          style={{ cursor: 'pointer' }}
-        >
-          {profileImage ? (
-            <img src={profileImage} alt={getUserDisplayName()} />
-          ) : (
-            <FontAwesomeIcon icon={faUserCircle} />
-          )}
-        </div>
+        {activeAccount && (
+          <div 
+            className="profile-avatar" 
+            title={getUserDisplayName()}
+            onClick={() => navigate('/me')}
+            style={{ cursor: 'pointer' }}
+          >
+            {profileImage ? (
+              <img src={profileImage} alt={getUserDisplayName()} />
+            ) : (
+              <FontAwesomeIcon icon={faUserCircle} />
+            )}
+          </div>
+        )}
         <IconButton
           icon={faHome}
           onClick={() => navigate('/')}
@@ -110,20 +91,12 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           ariaLabel="Settings"
           variant="ghost"
         />
-        {activeAccount ? (
+        {activeAccount && (
           <IconButton
             icon={faRightFromBracket}
             onClick={onLogout}
             title="Logout"
             ariaLabel="Logout"
-            variant="ghost"
-          />
-        ) : (
-          <IconButton
-            icon={faRightToBracket}
-            onClick={isConnecting ? () => {} : handleLogin}
-            title={isConnecting ? "Connecting..." : "Login"}
-            ariaLabel="Login"
             variant="ghost"
           />
         )}
