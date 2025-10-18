@@ -752,7 +752,7 @@ const Me: React.FC<MeProps> = ({
             </div>
           )
         }
-        return writings.length === 0 && !loading ? (
+        return writings.length === 0 && !loading && !(isOwnProfile && myWritingsLoading) ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
             No articles written yet.
           </div>
