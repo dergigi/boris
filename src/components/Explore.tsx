@@ -29,6 +29,7 @@ import { eventToHighlight } from '../services/highlightEventProcessor'
 import { useStoreTimeline } from '../hooks/useStoreTimeline'
 import { dedupeHighlightsById, dedupeWritingsByReplaceable } from '../utils/dedupe'
 import { writingsController } from '../services/writingsController'
+import { nostrverseWritingsController } from '../services/nostrverseWritingsController'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -112,6 +113,30 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     // seed immediately
     apply(nostrverseHighlightsController.getHighlights())
     const unsub = nostrverseHighlightsController.onHighlights(apply)
+    return () => unsub()
+  }, [])
+
+  // Subscribe to nostrverse writings controller for global stream
+  useEffect(() => {
+    const apply = (incoming: BlogPostPreview[]) => {
+      setBlogPosts(prev => {
+        const byKey = new Map<string, BlogPostPreview>()
+        for (const p of prev) {
+          const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+          const key = `${p.author}:${dTag}`
+          byKey.set(key, p)
+        }
+        for (const p of incoming) {
+          const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+          const key = `${p.author}:${dTag}`
+          const existing = byKey.get(key)
+          if (!existing || p.event.created_at > existing.event.created_at) byKey.set(key, p)
+        }
+        return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+      })
+    }
+    apply(nostrverseWritingsController.getWritings())
+    const unsub = nostrverseWritingsController.onWritings(apply)
     return () => unsub()
   }, [])
 
