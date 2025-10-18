@@ -7,6 +7,124 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-10-18
+
+### Added
+
+- Login with Bunker (NIP-46) authentication support
+  - Support for remote signing via Nostr Connect protocol
+  - Bunker URI input with validation and error handling
+  - Automatic reconnection on app restore with proper permissions
+  - Signer suggestions in error messages (Amber, nsec.app, Nostrum)
+- Debug page (`/debug`) for diagnostics and testing
+  - Interactive NIP-04 and NIP-44 encryption/decryption testing
+  - Live performance timing with stopwatch display
+  - Bookmark loading and decryption diagnostics
+  - Real-time bunker logs with filtering and clearing
+  - Version and git commit footer
+- Progressive bookmark loading with streaming updates
+  - Non-blocking, progressive bookmark updates via callback pattern
+  - Batched background hydration using EventLoader and AddressLoader
+  - Auto-decrypt bookmarks as they arrive from relays
+  - Individual decrypt buttons for encrypted bookmark events
+- Bookmark grouping toggle (grouped by source vs flat chronological)
+  - Toggle between grouped view and flat chronological list
+  - Amethyst-style bookmark detection and grouping
+  - Display bookmarks even when they only have IDs (content loads in background)
+
+### Changed
+
+- Improved login UI with better copy and modern design
+  - Personable title and nostr-native language
+  - Highlighted 'your own highlights' in login copy
+  - Simplified button text to single words (Extension, Signer)
+  - Hide login button and user icon when logged out
+  - Hide Extension button when Bunker input is shown
+  - Auto-load bookmarks on login and page mount
+- Enhanced bunker error messages
+  - Formatted error messages with signer suggestions
+  - Links to nos2x, Amber, nsec.app, and Nostrum signers
+  - Better error handling for missing signer extensions
+  - Centered and constrained bunker input field
+- Centralized bookmark loading architecture
+  - Single shared bookmark controller for consistent loading
+  - Unified bookmark loading with streaming and auto-decrypt
+  - Consolidated bookmark loading into single centralized function
+  - Bookmarks passed as props throughout component tree
+- Renamed UI elements for clarity
+  - "Bunker" button renamed to "Signer"
+  - Hide bookmark controls when logged out
+- Settings version footer improvements
+  - Separate links for version (to GitHub release) and commit (to commit page)
+  - Proper spacing around middot separator
+
+### Fixed
+
+- NIP-46 bunker signing and decryption
+  - NostrConnectSigner properly reconnects with permissions on app restore
+  - Bunker relays added to relay pool for signing requests
+  - Proper setup of pool and relays before bunker reconnection
+  - Expose nip04/nip44 on NostrConnectAccount for bookmark decryption
+  - Cache wrapped nip04/nip44 objects instead of using getters
+  - Wait for bunker relay connections before marking signer ready
+  - Validate bunker URI (remote must differ from user pubkey)
+  - Accept remote===pubkey for Amber compatibility
+- Bookmark loading and decryption
+  - Bookmarks load and complete properly with streaming
+  - Auto-decrypt private bookmarks with NIP-04 detection
+  - Include decrypted private bookmarks in sidebar
+  - Skip background event fetching when there are too many IDs
+  - Only build bookmarks from ready events (unencrypted or decrypted)
+  - Restore Debug page decrypt display via onDecryptComplete callback
+  - Make controller onEvent non-blocking for queryEvents completion
+  - Proper timeout handling for bookmark decryption (no hanging)
+  - Smart encryption detection with consistent padlock display
+  - Sequential decryption instead of concurrent to avoid queue issues
+  - Add extraRelays to EventLoader and AddressLoader
+- PWA cache limit increased to 3 MiB for larger bundles
+- Extension login error messages with nos2x link
+- TypeScript and linting errors throughout
+  - Replace empty catch blocks with warnings
+  - Fix explicit any types
+  - Add missing useEffect dependencies
+  - Resolve all linting issues in App.tsx, Debug.tsx, and async utilities
+
+### Performance
+
+- Non-blocking NIP-46 operations
+  - Fire-and-forget NIP-46 publish for better UI responsiveness
+  - Non-blocking bookmark decryption with sequential processing
+  - Make controller onEvent non-blocking for queryEvents completion
+- Optimized bookmark loading
+  - Batched background hydration using EventLoader and AddressLoader
+  - Progressive, non-blocking bookmark loading with streaming
+  - Shorter timeouts for debug page bookmark loading
+  - Remove artificial delays from bookmark decryption
+
+### Refactored
+
+- Centralized bookmark controller architecture
+  - Extract bookmark streaming helpers and centralize loading
+  - Consolidated bookmark loading into single function
+  - Remove deprecated bookmark service files
+  - Share bookmark controller between components
+- Debug page organization
+  - Extract VersionFooter component to eliminate duplication
+  - Structured sections with proper layout and styling
+  - Apply settings page styling structure
+- Simplified bunker implementation following applesauce patterns
+  - Clean up bunker implementation for better maintainability
+  - Import RELAYS from central config (DRY principle)
+  - Update RELAYS list with relay.nsec.app
+
+### Documentation
+
+- Comprehensive Amber.md documentation
+  - Amethyst-style bookmarks section
+  - Bunker decrypt investigation summary
+  - Critical queue disabling requirement
+  - NIP-46 setup and troubleshooting
+
 ## [0.6.24] - 2025-01-16
 
 ### Fixed
@@ -1760,7 +1878,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.6.24...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/dergigi/boris/compare/v0.6.24...v0.7.0
 [0.6.24]: https://github.com/dergigi/boris/compare/v0.6.23...v0.6.24
 [0.6.23]: https://github.com/dergigi/boris/compare/v0.6.22...v0.6.23
 [0.6.21]: https://github.com/dergigi/boris/compare/v0.6.20...v0.6.21

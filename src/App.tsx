@@ -21,6 +21,8 @@ import { SkeletonThemeProvider } from './components/Skeletons'
 import { DebugBus } from './utils/debugBus'
 import { Bookmark } from './types/bookmarks'
 import { bookmarkController } from './services/bookmarkController'
+import { contactsController } from './services/contactsController'
+import { highlightsController } from './services/highlightsController'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -28,9 +30,11 @@ const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR ||
 // AppRoutes component that has access to hooks
 function AppRoutes({ 
   relayPool, 
+  eventStore,
   showToast 
 }: { 
   relayPool: RelayPool
+  eventStore: EventStore | null
   showToast: (message: string) => void
 }) {
   const accountManager = Hooks.useAccountManager()
@@ -39,6 +43,10 @@ function AppRoutes({
   // Centralized bookmark state (fed by controller)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [bookmarksLoading, setBookmarksLoading] = useState(false)
+
+  // Centralized contacts state (fed by controller)
+  const [contacts, setContacts] = useState<Set<string>>(new Set())
+  const [contactsLoading, setContactsLoading] = useState(false)
 
   // Subscribe to bookmark controller
   useEffect(() => {
@@ -59,13 +67,50 @@ function AppRoutes({
     }
   }, [])
 
-  // Auto-load bookmarks when account is ready (on login or page mount)
+  // Subscribe to contacts controller
   useEffect(() => {
-    if (activeAccount && relayPool && bookmarks.length === 0 && !bookmarksLoading) {
-      console.log('[bookmark] 🚀 Auto-loading bookmarks on mount/login')
-      bookmarkController.start({ relayPool, activeAccount, accountManager })
+    console.log('[contacts] 🎧 Subscribing to contacts controller')
+    const unsubContacts = contactsController.onContacts((contacts) => {
+      console.log('[contacts] 📥 Received contacts:', contacts.size)
+      setContacts(contacts)
+    })
+    const unsubLoading = contactsController.onLoading((loading) => {
+      console.log('[contacts] 📥 Loading state:', loading)
+      setContactsLoading(loading)
+    })
+    
+    return () => {
+      console.log('[contacts] 🔇 Unsubscribing from contacts controller')
+      unsubContacts()
+      unsubLoading()
     }
-  }, [activeAccount, relayPool, bookmarks.length, bookmarksLoading, accountManager])
+  }, [])
+
+
+  // Auto-load bookmarks, contacts, and highlights when account is ready (on login or page mount)
+  useEffect(() => {
+    if (activeAccount && relayPool) {
+      const pubkey = (activeAccount as { pubkey?: string }).pubkey
+      
+      // Load bookmarks
+      if (bookmarks.length === 0 && !bookmarksLoading) {
+        console.log('[bookmark] 🚀 Auto-loading bookmarks on mount/login')
+        bookmarkController.start({ relayPool, activeAccount, accountManager })
+      }
+      
+      // Load contacts
+      if (pubkey && contacts.size === 0 && !contactsLoading) {
+        console.log('[contacts] 🚀 Auto-loading contacts on mount/login')
+        contactsController.start({ relayPool, pubkey })
+      }
+      
+      // Load highlights (controller manages its own state)
+      if (pubkey && eventStore && !highlightsController.isLoadedFor(pubkey)) {
+        console.log('[highlights] 🚀 Auto-loading highlights on mount/login')
+        highlightsController.start({ relayPool, eventStore, pubkey })
+      }
+    }
+  }, [activeAccount, relayPool, eventStore, bookmarks.length, bookmarksLoading, contacts.size, contactsLoading, accountManager])
 
   // Manual refresh (for sidebar button)
   const handleRefreshBookmarks = useCallback(async () => {
@@ -81,6 +126,8 @@ function AppRoutes({
   const handleLogout = () => {
     accountManager.clearActive()
     bookmarkController.reset() // Clear bookmarks via controller
+    contactsController.reset() // Clear contacts via controller
+    highlightsController.reset() // Clear highlights via controller
     showToast('Logged out successfully')
   }
 
@@ -263,6 +310,7 @@ function AppRoutes({
         element={
           <Debug 
             relayPool={relayPool}
+            eventStore={eventStore}
             bookmarks={bookmarks}
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
@@ -639,7 +687,7 @@ function App() {
         <AccountsProvider manager={accountManager}>
           <BrowserRouter>
             <div className="min-h-screen p-0 max-w-none m-0 relative">
-              <AppRoutes relayPool={relayPool} showToast={showToast} />
+              <AppRoutes relayPool={relayPool} eventStore={eventStore} showToast={showToast} />
               <RouteDebug />
             </div>
           </BrowserRouter>

@@ -1,18 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired, faArrowsRotate, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { Hooks } from 'applesauce-react'
 import { RelayPool } from 'applesauce-relay'
-import { IEventStore } from 'applesauce-core'
-import { nip19 } from 'nostr-tools'
+import { IEventStore, Helpers } from 'applesauce-core'
+import { nip19, NostrEvent } from 'nostr-tools'
 import { useNavigate } from 'react-router-dom'
 import { fetchContacts } from '../services/contactService'
 import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
 import { fetchHighlightsFromAuthors } from '../services/highlightService'
 import { fetchProfiles } from '../services/profileService'
 import { fetchNostrverseBlogPosts, fetchNostrverseHighlights } from '../services/nostrverseService'
+import { highlightsController } from '../services/highlightsController'
 import { Highlight } from '../types/highlights'
 import { UserSettings } from '../services/settingsService'
 import BlogPostCard from './BlogPostCard'
@@ -22,6 +23,12 @@ import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { classifyHighlights } from '../utils/highlightClassification'
 import { HighlightVisibility } from './HighlightsPanel'
+import { KINDS } from '../config/kinds'
+import { eventToHighlight } from '../services/highlightEventProcessor'
+import { useStoreTimeline } from '../hooks/useStoreTimeline'
+import { dedupeHighlightsById, dedupeWritingsByReplaceable } from '../utils/dedupe'
+
+const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 interface ExploreProps {
   relayPool: RelayPool
@@ -42,12 +49,40 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   
-  // Visibility filters (defaults from settings, or friends only)
+  // Get myHighlights directly from controller
+  const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
+  const [myHighlightsLoading, setMyHighlightsLoading] = useState(false)
+  
+  // Load cached content from event store (instant display)
+  const cachedHighlights = useStoreTimeline(eventStore, { kinds: [KINDS.Highlights] }, eventToHighlight, [])
+  
+  const toBlogPostPreview = useCallback((event: NostrEvent): BlogPostPreview => ({
+    event,
+    title: getArticleTitle(event) || 'Untitled',
+    summary: getArticleSummary(event),
+    image: getArticleImage(event),
+    published: getArticlePublished(event),
+    author: event.pubkey
+  }), [])
+  
+  const cachedWritings = useStoreTimeline(eventStore, { kinds: [30023] }, toBlogPostPreview, [])
+  
+  // Visibility filters (defaults from settings)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
-    nostrverse: settings?.defaultHighlightVisibilityNostrverse ?? false,
-    friends: settings?.defaultHighlightVisibilityFriends ?? true,
-    mine: settings?.defaultHighlightVisibilityMine ?? false
+    nostrverse: settings?.defaultExploreScopeNostrverse ?? false,
+    friends: settings?.defaultExploreScopeFriends ?? true,
+    mine: settings?.defaultExploreScopeMine ?? false
   })
+
+  // Subscribe to highlights controller
+  useEffect(() => {
+    const unsubHighlights = highlightsController.onHighlights(setMyHighlights)
+    const unsubLoading = highlightsController.onLoading(setMyHighlightsLoading)
+    return () => {
+      unsubHighlights()
+      unsubLoading()
+    }
+  }, [])
 
   // Update local state when prop changes
   useEffect(() => {
@@ -68,14 +103,34 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         setLoading(true)
 
         // Seed from in-memory cache if available to avoid empty flash
-        // Use functional update to check current state without creating dependency
-        const cachedPosts = getCachedPosts(activeAccount.pubkey)
-        if (cachedPosts && cachedPosts.length > 0) {
-          setBlogPosts(prev => prev.length === 0 ? cachedPosts : prev)
+        const memoryCachedPosts = getCachedPosts(activeAccount.pubkey)
+        if (memoryCachedPosts && memoryCachedPosts.length > 0) {
+          setBlogPosts(prev => prev.length === 0 ? memoryCachedPosts : prev)
         }
-        const cachedHighlights = getCachedHighlights(activeAccount.pubkey)
-        if (cachedHighlights && cachedHighlights.length > 0) {
-          setHighlights(prev => prev.length === 0 ? cachedHighlights : prev)
+        const memoryCachedHighlights = getCachedHighlights(activeAccount.pubkey)
+        if (memoryCachedHighlights && memoryCachedHighlights.length > 0) {
+          setHighlights(prev => prev.length === 0 ? memoryCachedHighlights : prev)
+        }
+        
+        // Seed with cached content from event store (instant display)
+        if (cachedHighlights.length > 0 || myHighlights.length > 0) {
+          const merged = dedupeHighlightsById([...cachedHighlights, ...myHighlights])
+          setHighlights(prev => {
+            const all = dedupeHighlightsById([...prev, ...merged])
+            return all.sort((a, b) => b.created_at - a.created_at)
+          })
+        }
+        
+        // Seed with cached writings from event store
+        if (cachedWritings.length > 0) {
+          setBlogPosts(prev => {
+            const all = dedupeWritingsByReplaceable([...prev, ...cachedWritings])
+            return all.sort((a, b) => {
+              const timeA = a.published || a.event.created_at
+              const timeB = b.published || b.event.created_at
+              return timeB - timeA
+            })
+          })
         }
 
         // Fetch the user's contacts (friends)
@@ -97,8 +152,31 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                 relayUrls,
                 (post) => {
                   setBlogPosts((prev) => {
-                    const exists = prev.some(p => p.event.id === post.event.id)
-                    if (exists) return prev
+                    // Deduplicate by author:d-tag (replaceable event key)
+                    const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                    const key = `${post.author}:${dTag}`
+                    const existingIndex = prev.findIndex(p => {
+                      const pDTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                      return `${p.author}:${pDTag}` === key
+                    })
+                    
+                    // If exists, only replace if this one is newer
+                    if (existingIndex >= 0) {
+                      const existing = prev[existingIndex]
+                      if (post.event.created_at <= existing.event.created_at) {
+                        return prev // Keep existing (newer or same)
+                      }
+                      // Replace with newer version
+                      const next = [...prev]
+                      next[existingIndex] = post
+                      return next.sort((a, b) => {
+                        const timeA = a.published || a.event.created_at
+                        const timeB = b.published || b.event.created_at
+                        return timeB - timeA
+                      })
+                    }
+                    
+                    // New post, add it
                     const next = [...prev, post]
                     return next.sort((a, b) => {
                       const timeA = a.published || a.event.created_at
@@ -110,9 +188,27 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                 }
               ).then((all) => {
                 setBlogPosts((prev) => {
-                  const byId = new Map(prev.map(p => [p.event.id, p]))
-                  for (const post of all) byId.set(post.event.id, post)
-                  const merged = Array.from(byId.values()).sort((a, b) => {
+                  // Deduplicate by author:d-tag (replaceable event key)
+                  const byKey = new Map<string, BlogPostPreview>()
+                  
+                  // Add existing posts
+                  for (const p of prev) {
+                    const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                    const key = `${p.author}:${dTag}`
+                    byKey.set(key, p)
+                  }
+                  
+                  // Merge in new posts (keeping newer versions)
+                  for (const post of all) {
+                    const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                    const key = `${post.author}:${dTag}`
+                    const existing = byKey.get(key)
+                    if (!existing || post.event.created_at > existing.event.created_at) {
+                      byKey.set(key, post)
+                    }
+                  }
+                  
+                  const merged = Array.from(byKey.values()).sort((a, b) => {
                     const timeA = a.published || a.event.created_at
                     const timeB = b.published || b.event.created_at
                     return timeB - timeA
@@ -160,33 +256,21 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         const [friendsPosts, friendsHighlights, nostrversePosts, nostriverseHighlights] = await Promise.all([
           fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls),
           fetchHighlightsFromAuthors(relayPool, contactsArray),
-          fetchNostrverseBlogPosts(relayPool, relayUrls, 50),
-          fetchNostrverseHighlights(relayPool, 100)
+          fetchNostrverseBlogPosts(relayPool, relayUrls, 50, eventStore || undefined),
+          fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
         ])
 
         // Merge and deduplicate all posts
         const allPosts = [...friendsPosts, ...nostrversePosts]
-        const postsByKey = new Map<string, BlogPostPreview>()
-        for (const post of allPosts) {
-          const key = `${post.author}:${post.event.tags.find(t => t[0] === 'd')?.[1] || ''}`
-          const existing = postsByKey.get(key)
-          if (!existing || post.event.created_at > existing.event.created_at) {
-            postsByKey.set(key, post)
-          }
-        }
-        const uniquePosts = Array.from(postsByKey.values()).sort((a, b) => {
+        const uniquePosts = dedupeWritingsByReplaceable(allPosts).sort((a, b) => {
           const timeA = a.published || a.event.created_at
           const timeB = b.published || b.event.created_at
           return timeB - timeA
         })
 
-        // Merge and deduplicate all highlights
-        const allHighlights = [...friendsHighlights, ...nostriverseHighlights]
-        const highlightsByKey = new Map<string, Highlight>()
-        for (const highlight of allHighlights) {
-          highlightsByKey.set(highlight.id, highlight)
-        }
-        const uniqueHighlights = Array.from(highlightsByKey.values()).sort((a, b) => b.created_at - a.created_at)
+        // Merge and deduplicate all highlights (mine from controller + friends + nostrverse)
+        const allHighlights = [...myHighlights, ...friendsHighlights, ...nostriverseHighlights]
+        const uniqueHighlights = dedupeHighlightsById(allHighlights).sort((a, b) => b.created_at - a.created_at)
 
         // Fetch profiles for all blog post authors to cache them
         if (uniquePosts.length > 0) {
@@ -211,7 +295,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
 
     loadData()
-  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
+  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings, myHighlights, cachedHighlights, cachedWritings])
 
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
@@ -340,7 +424,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
 
   // Show content progressively - no blocking error screens
   const hasData = highlights.length > 0 || blogPosts.length > 0
-  const showSkeletons = loading && !hasData
+  const showSkeletons = (loading || myHighlightsLoading) && !hasData
 
   return (
     <div className="explore-container">
@@ -422,7 +506,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         </div>
       </div>
 
-      {renderTabContent()}
+      <div key={activeTab}>
+        {renderTabContent()}
+      </div>
     </div>
   )
 }

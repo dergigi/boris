@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare, faLink, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
+import { IEventStore, Helpers } from 'applesauce-core'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
 import { RelayPool } from 'applesauce-relay'
-import { nip19 } from 'nostr-tools'
+import { nip19, NostrEvent } from 'nostr-tools'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
+import { highlightsController } from '../services/highlightsController'
 import { fetchAllReads, ReadItem } from '../services/readsService'
 import { fetchLinks } from '../services/linksService'
 import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
@@ -31,9 +33,15 @@ import { filterByReadingProgress } from '../utils/readingProgressUtils'
 import { deriveReadsFromBookmarks } from '../utils/readsFromBookmarks'
 import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
 import { mergeReadItem } from '../utils/readItemMerge'
+import { useStoreTimeline } from '../hooks/useStoreTimeline'
+import { eventToHighlight } from '../services/highlightEventProcessor'
+import { KINDS } from '../config/kinds'
+
+const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 interface MeProps {
   relayPool: RelayPool
+  eventStore: IEventStore
   activeTab?: TabType
   pubkey?: string // Optional pubkey for viewing other users' profiles
   bookmarks: Bookmark[] // From centralized App.tsx state
@@ -47,6 +55,7 @@ const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started'
 
 const Me: React.FC<MeProps> = ({ 
   relayPool, 
+  eventStore,
   activeTab: propActiveTab, 
   pubkey: propPubkey,
   bookmarks
@@ -67,6 +76,34 @@ const Me: React.FC<MeProps> = ({
   const [writings, setWritings] = useState<BlogPostPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [loadedTabs, setLoadedTabs] = useState<Set<TabType>>(new Set())
+  
+  // Get myHighlights directly from controller
+  const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
+  const [myHighlightsLoading, setMyHighlightsLoading] = useState(false)
+  
+  // Load cached data from event store for OTHER profiles (not own)
+  const cachedHighlights = useStoreTimeline(
+    eventStore,
+    !isOwnProfile && viewingPubkey ? { kinds: [KINDS.Highlights], authors: [viewingPubkey] } : { kinds: [KINDS.Highlights], limit: 0 },
+    eventToHighlight,
+    [viewingPubkey, isOwnProfile]
+  )
+  
+  const toBlogPostPreview = useMemo(() => (event: NostrEvent): BlogPostPreview => ({
+    event,
+    title: getArticleTitle(event) || 'Untitled',
+    summary: getArticleSummary(event),
+    image: getArticleImage(event),
+    published: getArticlePublished(event),
+    author: event.pubkey
+  }), [])
+  
+  const cachedWritings = useStoreTimeline(
+    eventStore,
+    !isOwnProfile && viewingPubkey ? { kinds: [30023], authors: [viewingPubkey] } : { kinds: [30023], limit: 0 },
+    toBlogPostPreview,
+    [viewingPubkey, isOwnProfile]
+  )
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
@@ -86,6 +123,20 @@ const Me: React.FC<MeProps> = ({
     ? (urlFilter as ReadingProgressFilterType) 
     : 'all'
   const [readingProgressFilter, setReadingProgressFilter] = useState<ReadingProgressFilterType>(initialFilter)
+
+  // Subscribe to highlights controller
+  useEffect(() => {
+    // Get initial state immediately
+    setMyHighlights(highlightsController.getHighlights())
+    
+    // Subscribe to updates
+    const unsubHighlights = highlightsController.onHighlights(setMyHighlights)
+    const unsubLoading = highlightsController.onLoading(setMyHighlightsLoading)
+    return () => {
+      unsubHighlights()
+      unsubLoading()
+    }
+  }, [])
 
   // Update local state when prop changes
   useEffect(() => {
@@ -123,8 +174,20 @@ const Me: React.FC<MeProps> = ({
     
     try {
       if (!hasBeenLoaded) setLoading(true)
-      const userHighlights = await fetchHighlights(relayPool, viewingPubkey)
-      setHighlights(userHighlights)
+      
+      // For own profile, highlights come from controller subscription (sync effect handles it)
+      // For viewing other users, seed with cached data then fetch fresh
+      if (!isOwnProfile) {
+        // Seed with cached highlights first
+        if (cachedHighlights.length > 0) {
+          setHighlights(cachedHighlights.sort((a, b) => b.created_at - a.created_at))
+        }
+        
+        // Fetch fresh highlights
+        const userHighlights = await fetchHighlights(relayPool, viewingPubkey)
+        setHighlights(userHighlights)
+      }
+      
       setLoadedTabs(prev => new Set(prev).add('highlights'))
     } catch (err) {
       console.error('Failed to load highlights:', err)
@@ -140,6 +203,17 @@ const Me: React.FC<MeProps> = ({
     
     try {
       if (!hasBeenLoaded) setLoading(true)
+      
+      // Seed with cached writings first
+      if (!isOwnProfile && cachedWritings.length > 0) {
+        setWritings(cachedWritings.sort((a, b) => {
+          const timeA = a.published || a.event.created_at
+          const timeB = b.published || b.event.created_at
+          return timeB - timeA
+        }))
+      }
+      
+      // Fetch fresh writings
       const userWritings = await fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
       setWritings(userWritings)
       setLoadedTabs(prev => new Set(prev).add('writings'))
@@ -294,6 +368,12 @@ const Me: React.FC<MeProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, viewingPubkey, refreshTrigger])
 
+  // Sync myHighlights from controller when viewing own profile
+  useEffect(() => {
+    if (isOwnProfile) {
+      setHighlights(myHighlights)
+    }
+  }, [isOwnProfile, myHighlights])
 
   // Pull-to-refresh - reload active tab without clearing state
   const { isRefreshing, pullPosition } = usePullToRefresh({
@@ -414,7 +494,7 @@ const Me: React.FC<MeProps> = ({
 
   // Show content progressively - no blocking error screens
   const hasData = highlights.length > 0 || bookmarks.length > 0 || reads.length > 0 || links.length > 0 || writings.length > 0
-  const showSkeletons = loading && !hasData
+  const showSkeletons = (loading || (isOwnProfile && myHighlightsLoading)) && !hasData
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -428,7 +508,7 @@ const Me: React.FC<MeProps> = ({
             </div>
           )
         }
-        return highlights.length === 0 && !loading ? (
+        return highlights.length === 0 && !loading && !(isOwnProfile && myHighlightsLoading) ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
             No highlights yet.
           </div>

@@ -1,6 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
-import { Helpers } from 'applesauce-core'
+import { Helpers, IEventStore } from 'applesauce-core'
 import { BlogPostPreview } from './exploreService'
 import { Highlight } from '../types/highlights'
 import { eventToHighlight, dedupeHighlights, sortHighlights } from './highlightEventProcessor'
@@ -13,15 +13,17 @@ const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary
  * @param relayPool - The relay pool to query
  * @param relayUrls - Array of relay URLs to query
  * @param limit - Maximum number of posts to fetch (default: 50)
+ * @param eventStore - Optional event store to persist fetched events
  * @returns Array of blog post previews
  */
 export const fetchNostrverseBlogPosts = async (
   relayPool: RelayPool,
   relayUrls: string[],
-  limit = 50
+  limit = 50,
+  eventStore?: IEventStore
 ): Promise<BlogPostPreview[]> => {
   try {
-    console.log('📚 Fetching nostrverse blog posts (kind 30023), limit:', limit)
+    console.log('[NOSTRVERSE] 📚 Fetching blog posts (kind 30023), limit:', limit)
 
     // Deduplicate replaceable events by keeping the most recent version
     const uniqueEvents = new Map<string, NostrEvent>()
@@ -32,6 +34,11 @@ export const fetchNostrverseBlogPosts = async (
       {
         relayUrls,
         onEvent: (event: NostrEvent) => {
+          // Store in event store if provided
+          if (eventStore) {
+            eventStore.add(event)
+          }
+          
           const dTag = event.tags.find(t => t[0] === 'd')?.[1] || ''
           const key = `${event.pubkey}:${dTag}`
           const existing = uniqueEvents.get(key)
@@ -42,7 +49,7 @@ export const fetchNostrverseBlogPosts = async (
       }
     )
 
-    console.log('📊 Nostrverse blog post events fetched (unique):', uniqueEvents.size)
+    console.log('[NOSTRVERSE] 📊 Blog post events fetched (unique):', uniqueEvents.size)
     
     // Convert to blog post previews and sort by published date (most recent first)
     const blogPosts: BlogPostPreview[] = Array.from(uniqueEvents.values())
@@ -60,7 +67,7 @@ export const fetchNostrverseBlogPosts = async (
         return timeB - timeA // Most recent first
       })
     
-    console.log('📰 Processed', blogPosts.length, 'unique nostrverse blog posts')
+    console.log('[NOSTRVERSE] 📰 Processed', blogPosts.length, 'unique blog posts')
     
     return blogPosts
   } catch (error) {
@@ -73,25 +80,43 @@ export const fetchNostrverseBlogPosts = async (
  * Fetches public highlights (kind:9802) from the nostrverse (not filtered by author)
  * @param relayPool - The relay pool to query
  * @param limit - Maximum number of highlights to fetch (default: 100)
+ * @param eventStore - Optional event store to persist fetched events
  * @returns Array of highlights
  */
 export const fetchNostrverseHighlights = async (
   relayPool: RelayPool,
-  limit = 100
+  limit = 100,
+  eventStore?: IEventStore
 ): Promise<Highlight[]> => {
   try {
-    console.log('💡 Fetching nostrverse highlights (kind 9802), limit:', limit)
+    console.log('[NOSTRVERSE] 💡 Fetching highlights (kind 9802), limit:', limit)
 
+    const seenIds = new Set<string>()
     const rawEvents = await queryEvents(
       relayPool,
       { kinds: [9802], limit },
-      {}
+      {
+        onEvent: (event: NostrEvent) => {
+          if (seenIds.has(event.id)) return
+          seenIds.add(event.id)
+          
+          // Store in event store if provided
+          if (eventStore) {
+            eventStore.add(event)
+          }
+        }
+      }
     )
+
+    // Store all events in event store if provided (in case some were missed in streaming)
+    if (eventStore) {
+      rawEvents.forEach(evt => eventStore.add(evt))
+    }
 
     const uniqueEvents = dedupeHighlights(rawEvents)
     const highlights = uniqueEvents.map(eventToHighlight)
     
-    console.log('💡 Processed', highlights.length, 'unique nostrverse highlights')
+    console.log('[NOSTRVERSE] 💡 Processed', highlights.length, 'unique highlights')
     
     return sortHighlights(highlights)
   } catch (error) {

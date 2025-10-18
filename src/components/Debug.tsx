@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faClock, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
-import { useEventStore } from 'applesauce-react/hooks'
 import { Accounts } from 'applesauce-accounts'
 import { NostrConnectSigner } from 'applesauce-signers'
 import { RelayPool } from 'applesauce-relay'
-import { Helpers } from 'applesauce-core'
+import { Helpers, IEventStore } from 'applesauce-core'
+import { nip19 } from 'nostr-tools'
 import { getDefaultBunkerPermissions } from '../services/nostrConnect'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
 import ThreePaneLayout from './ThreePaneLayout'
@@ -16,11 +16,14 @@ import type { NostrEvent } from '../services/bookmarkHelpers'
 import { Bookmark } from '../types/bookmarks'
 import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import { useSettings } from '../hooks/useSettings'
+import { fetchHighlights, fetchHighlightsFromAuthors } from '../services/highlightService'
+import { contactsController } from '../services/contactsController'
 
 const defaultPayload = 'The quick brown fox jumps over the lazy dog.'
 
 interface DebugProps {
   relayPool: RelayPool | null
+  eventStore: IEventStore | null
   bookmarks: Bookmark[]
   bookmarksLoading: boolean
   onRefreshBookmarks: () => Promise<void>
@@ -29,6 +32,7 @@ interface DebugProps {
 
 const Debug: React.FC<DebugProps> = ({ 
   relayPool, 
+  eventStore,
   bookmarks, 
   bookmarksLoading, 
   onRefreshBookmarks,
@@ -37,11 +41,10 @@ const Debug: React.FC<DebugProps> = ({
   const navigate = useNavigate()
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
-  const eventStore = useEventStore()
   
   const { settings, saveSettings } = useSettings({
     relayPool,
-    eventStore,
+    eventStore: eventStore!,
     pubkey: activeAccount?.pubkey,
     accountManager
   })
@@ -76,9 +79,20 @@ const Debug: React.FC<DebugProps> = ({
   const [bookmarkStats, setBookmarkStats] = useState<{ public: number; private: number } | null>(null)
   const [tLoadBookmarks, setTLoadBookmarks] = useState<number | null>(null)
   const [tDecryptBookmarks, setTDecryptBookmarks] = useState<number | null>(null)
+  const [tFirstBookmark, setTFirstBookmark] = useState<number | null>(null)
   
   // Individual event decryption results
   const [decryptedEvents, setDecryptedEvents] = useState<Map<string, { public: number; private: number }>>(new Map())
+  
+  // Highlight loading state
+  const [highlightMode, setHighlightMode] = useState<'article' | 'url' | 'author'>('author')
+  const [highlightArticleCoord, setHighlightArticleCoord] = useState<string>('')
+  const [highlightUrl, setHighlightUrl] = useState<string>('')
+  const [highlightAuthor, setHighlightAuthor] = useState<string>('')
+  const [isLoadingHighlights, setIsLoadingHighlights] = useState(false)
+  const [highlightEvents, setHighlightEvents] = useState<NostrEvent[]>([])
+  const [tLoadHighlights, setTLoadHighlights] = useState<number | null>(null)
+  const [tFirstHighlight, setTFirstHighlight] = useState<number | null>(null)
   
   // Live timing state
   const [liveTiming, setLiveTiming] = useState<{
@@ -86,7 +100,12 @@ const Debug: React.FC<DebugProps> = ({
     nip04?: { type: 'encrypt' | 'decrypt'; startTime: number }
     loadBookmarks?: { startTime: number }
     decryptBookmarks?: { startTime: number }
+    loadHighlights?: { startTime: number }
   }>({})
+  
+  // Web of Trust state
+  const [friendsPubkeys, setFriendsPubkeys] = useState<Set<string>>(new Set())
+  const [friendsButtonLoading, setFriendsButtonLoading] = useState(false)
 
   useEffect(() => {
     return DebugBus.subscribe((e) => setLogs(prev => [...prev, e].slice(-300)))
@@ -243,10 +262,12 @@ const Debug: React.FC<DebugProps> = ({
       setBookmarkStats(null)
       setBookmarkEvents([]) // Clear existing events
       setDecryptedEvents(new Map())
+      setTFirstBookmark(null)
       DebugBus.info('debug', 'Loading bookmark events...')
 
       // Start timing
       const start = performance.now()
+      let firstEventTime: number | null = null
       setLiveTiming(prev => ({ ...prev, loadBookmarks: { startTime: start } }))
 
       // Import controller at runtime to avoid circular dependencies
@@ -254,6 +275,12 @@ const Debug: React.FC<DebugProps> = ({
       
       // Subscribe to raw events for Debug UI display
       const unsubscribeRaw = bookmarkController.onRawEvent((evt) => {
+        // Track time to first event
+        if (firstEventTime === null) {
+          firstEventTime = performance.now() - start
+          setTFirstBookmark(Math.round(firstEventTime))
+        }
+        
         // Add event immediately with live deduplication
         setBookmarkEvents(prev => {
           const key = getEventKey(evt)
@@ -311,9 +338,242 @@ const Debug: React.FC<DebugProps> = ({
     setBookmarkStats(null)
     setTLoadBookmarks(null)
     setTDecryptBookmarks(null)
+    setTFirstBookmark(null)
     setDecryptedEvents(new Map())
     DebugBus.info('debug', 'Cleared bookmark data')
   }
+
+  const handleLoadHighlights = async () => {
+    if (!relayPool) {
+      DebugBus.warn('debug', 'Cannot load highlights: missing relayPool')
+      return
+    }
+
+    // Default to logged-in user's highlights if no specific query provided
+    const getValue = () => {
+      if (highlightMode === 'article') return highlightArticleCoord.trim()
+      if (highlightMode === 'url') return highlightUrl.trim()
+      const authorValue = highlightAuthor.trim()
+      return authorValue || pubkey || ''
+    }
+
+    const value = getValue()
+    if (!value) {
+      DebugBus.warn('debug', 'Please provide a value to query or log in')
+      return
+    }
+
+    try {
+      setIsLoadingHighlights(true)
+      setHighlightEvents([])
+      setTFirstHighlight(null)
+      DebugBus.info('debug', `Loading highlights (${highlightMode}: ${value})...`)
+
+      const start = performance.now()
+      setLiveTiming(prev => ({ ...prev, loadHighlights: { startTime: start } }))
+
+      let firstEventTime: number | null = null
+      const seenIds = new Set<string>()
+
+      // Import highlight services
+      const { queryEvents } = await import('../services/dataFetch')
+      const { KINDS } = await import('../config/kinds')
+
+      // Build filter based on mode
+      let filter: { kinds: number[]; '#a'?: string[]; '#r'?: string[]; authors?: string[] }
+      if (highlightMode === 'article') {
+        filter = { kinds: [KINDS.Highlights], '#a': [value] }
+      } else if (highlightMode === 'url') {
+        filter = { kinds: [KINDS.Highlights], '#r': [value] }
+      } else {
+        filter = { kinds: [KINDS.Highlights], authors: [value] }
+      }
+
+      const events = await queryEvents(relayPool, filter, {
+        onEvent: (evt) => {
+          if (seenIds.has(evt.id)) return
+          seenIds.add(evt.id)
+
+          if (firstEventTime === null) {
+            firstEventTime = performance.now() - start
+            setTFirstHighlight(Math.round(firstEventTime))
+          }
+
+          setHighlightEvents(prev => [...prev, evt])
+        }
+      })
+
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadHighlights(elapsed)
+      setLiveTiming(prev => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+        const { loadHighlights, ...rest } = prev
+        return rest
+      })
+
+      DebugBus.info('debug', `Loaded ${events.length} highlight events in ${elapsed}ms`)
+    } catch (err) {
+      console.error('Failed to load highlights:', err)
+      DebugBus.error('debug', `Failed to load highlights: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setIsLoadingHighlights(false)
+    }
+  }
+
+  const handleClearHighlights = () => {
+    setHighlightEvents([])
+    setTLoadHighlights(null)
+    setTFirstHighlight(null)
+    DebugBus.info('debug', 'Cleared highlight data')
+  }
+
+  const handleLoadMyHighlights = async () => {
+    if (!relayPool || !activeAccount?.pubkey) {
+      DebugBus.warn('debug', 'Please log in to load your highlights')
+      return
+    }
+    const start = performance.now()
+    setHighlightEvents([])
+    setIsLoadingHighlights(true)
+    setTLoadHighlights(null)
+    setTFirstHighlight(null)
+    DebugBus.info('debug', 'Loading my highlights...')
+    try {
+      let firstEventTime: number | null = null
+      await fetchHighlights(relayPool, activeAccount.pubkey, (h) => {
+        if (firstEventTime === null) {
+          firstEventTime = performance.now() - start
+          setTFirstHighlight(Math.round(firstEventTime))
+        }
+        setHighlightEvents(prev => {
+          if (prev.some(x => x.id === h.id)) return prev
+          const next = [...prev, { ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent]
+          return next.sort((a, b) => b.created_at - a.created_at)
+        })
+      }, settings, false, eventStore || undefined)
+    } finally {
+      setIsLoadingHighlights(false)
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadHighlights(elapsed)
+      DebugBus.info('debug', `Loaded my highlights in ${elapsed}ms`)
+    }
+  }
+
+  const handleLoadFriendsHighlights = async () => {
+    if (!relayPool || !activeAccount?.pubkey) {
+      DebugBus.warn('debug', 'Please log in to load friends highlights')
+      return
+    }
+    
+    // Get contacts from centralized controller (should already be loaded by App.tsx)
+    const contacts = contactsController.getContacts()
+    if (contacts.size === 0) {
+      DebugBus.warn('debug', 'No friends found. Make sure you have contacts loaded.')
+      return
+    }
+    
+    const start = performance.now()
+    setHighlightEvents([])
+    setIsLoadingHighlights(true)
+    setTLoadHighlights(null)
+    setTFirstHighlight(null)
+    DebugBus.info('debug', `Loading highlights from ${contacts.size} friends (using cached contacts)...`)
+    
+    let firstEventTime: number | null = null
+    
+    try {
+      await fetchHighlightsFromAuthors(relayPool, Array.from(contacts), (h) => {
+        if (firstEventTime === null) {
+          firstEventTime = performance.now() - start
+          setTFirstHighlight(Math.round(firstEventTime))
+        }
+        setHighlightEvents(prev => {
+          if (prev.some(x => x.id === h.id)) return prev
+          const next = [...prev, { ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent]
+          return next.sort((a, b) => b.created_at - a.created_at)
+        })
+      }, eventStore || undefined)
+    } finally {
+      setIsLoadingHighlights(false)
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadHighlights(elapsed)
+      DebugBus.info('debug', `Loaded friends highlights in ${elapsed}ms`)
+    }
+  }
+
+  const handleLoadNostrverseHighlights = async () => {
+    if (!relayPool) {
+      DebugBus.warn('debug', 'Relay pool not available')
+      return
+    }
+    const start = performance.now()
+    setHighlightEvents([])
+    setIsLoadingHighlights(true)
+    setTLoadHighlights(null)
+    setTFirstHighlight(null)
+    DebugBus.info('debug', 'Loading nostrverse highlights (kind:9802)...')
+    try {
+      let firstEventTime: number | null = null
+      const seenIds = new Set<string>()
+      const { queryEvents } = await import('../services/dataFetch')
+      
+      const events = await queryEvents(relayPool, { kinds: [9802], limit: 500 }, {
+        onEvent: (evt) => {
+          if (seenIds.has(evt.id)) return
+          seenIds.add(evt.id)
+          if (firstEventTime === null) {
+            firstEventTime = performance.now() - start
+            setTFirstHighlight(Math.round(firstEventTime))
+          }
+          setHighlightEvents(prev => [...prev, evt])
+        }
+      })
+      
+      DebugBus.info('debug', `Loaded ${events.length} nostrverse highlights`)
+    } finally {
+      setIsLoadingHighlights(false)
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadHighlights(elapsed)
+      DebugBus.info('debug', `Loaded nostrverse highlights in ${elapsed}ms`)
+    }
+  }
+
+  const handleLoadFriendsList = async () => {
+    if (!relayPool || !activeAccount?.pubkey) {
+      DebugBus.warn('debug', 'Please log in to load friends list')
+      return
+    }
+    
+    setFriendsButtonLoading(true)
+    DebugBus.info('debug', 'Loading friends list via controller...')
+    
+    // Clear current list
+    setFriendsPubkeys(new Set())
+    
+    // Subscribe to controller updates to see streaming
+    const unsubscribe = contactsController.onContacts((contacts) => {
+      console.log('[debug] Received contacts update:', contacts.size)
+      setFriendsPubkeys(new Set(contacts))
+    })
+    
+    try {
+      // Force reload to see streaming behavior
+      await contactsController.start({ relayPool, pubkey: activeAccount.pubkey, force: true })
+      const final = contactsController.getContacts()
+      setFriendsPubkeys(new Set(final))
+      DebugBus.info('debug', `Loaded ${final.size} friends from controller`)
+    } catch (err) {
+      console.error('[debug] Failed to load friends:', err)
+      DebugBus.error('debug', `Failed to load friends: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      unsubscribe()
+      setFriendsButtonLoading(false)
+    }
+  }
+
+  const friendsNpubs = useMemo(() => {
+    return Array.from(friendsPubkeys).map(pk => nip19.npubEncode(pk))
+  }, [friendsPubkeys])
 
   const handleBunkerLogin = async () => {
     if (!bunkerUri.trim()) {
@@ -376,7 +636,7 @@ const Debug: React.FC<DebugProps> = ({
     return null
   }
 
-  const getBookmarkLiveTiming = (operation: 'loadBookmarks' | 'decryptBookmarks') => {
+  const getBookmarkLiveTiming = (operation: 'loadBookmarks' | 'decryptBookmarks' | 'loadHighlights') => {
     const timing = liveTiming[operation]
     if (timing) {
       const elapsed = Math.round(performance.now() - timing.startTime)
@@ -390,7 +650,7 @@ const Debug: React.FC<DebugProps> = ({
     value?: string | number | null;
     mode?: 'nip44' | 'nip04';
     type?: 'encrypt' | 'decrypt';
-    bookmarkOp?: 'loadBookmarks' | 'decryptBookmarks';
+    bookmarkOp?: 'loadBookmarks' | 'decryptBookmarks' | 'loadHighlights';
   }) => {
     const liveValue = bookmarkOp ? getBookmarkLiveTiming(bookmarkOp) : (mode && type ? getLiveTiming(mode, type) : null)
     const isLive = !!liveValue
@@ -596,7 +856,8 @@ const Debug: React.FC<DebugProps> = ({
           </div>
 
           <div className="mb-3 flex gap-2 flex-wrap">
-            <Stat label="load" value={tLoadBookmarks} bookmarkOp="loadBookmarks" />
+            <Stat label="total" value={tLoadBookmarks} bookmarkOp="loadBookmarks" />
+            <Stat label="first event" value={tFirstBookmark} />
             <Stat label="decrypt" value={tDecryptBookmarks} bookmarkOp="decryptBookmarks" />
           </div>
 
@@ -642,6 +903,204 @@ const Debug: React.FC<DebugProps> = ({
                     </div>
                   )
                 })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Highlight Loading Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Highlight Loading</h3>
+          <div className="text-sm opacity-70 mb-3">Test highlight loading with EOSE-based queryEvents (kind: 9802). Author mode defaults to your highlights.</div>
+          
+          <div className="mb-3">
+            <div className="text-sm opacity-70 mb-2">Query Mode:</div>
+            <div className="flex gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={highlightMode === 'article'}
+                  onChange={() => setHighlightMode('article')}
+                />
+                <span>Article (#a)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={highlightMode === 'url'}
+                  onChange={() => setHighlightMode('url')}
+                />
+                <span>URL (#r)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={highlightMode === 'author'}
+                  onChange={() => setHighlightMode('author')}
+                />
+                <span>Author</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="mb-3">
+            {highlightMode === 'article' && (
+              <input
+                type="text"
+                className="input w-full"
+                placeholder="30023:pubkey:identifier"
+                value={highlightArticleCoord}
+                onChange={(e) => setHighlightArticleCoord(e.target.value)}
+                disabled={isLoadingHighlights}
+              />
+            )}
+            {highlightMode === 'url' && (
+              <input
+                type="text"
+                className="input w-full"
+                placeholder="https://example.com/article"
+                value={highlightUrl}
+                onChange={(e) => setHighlightUrl(e.target.value)}
+                disabled={isLoadingHighlights}
+              />
+            )}
+            {highlightMode === 'author' && (
+              <input
+                type="text"
+                className="input w-full"
+                placeholder={pubkey ? `${pubkey.slice(0, 16)}... (logged-in user)` : 'pubkey (hex)'}
+                value={highlightAuthor}
+                onChange={(e) => setHighlightAuthor(e.target.value)}
+                disabled={isLoadingHighlights}
+              />
+            )}
+          </div>
+
+          <div className="flex gap-2 mb-3 items-center">
+            <button 
+              className="btn btn-primary" 
+              onClick={handleLoadHighlights}
+              disabled={isLoadingHighlights || !relayPool}
+            >
+              {isLoadingHighlights ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                  Loading...
+                </>
+              ) : (
+                'Load Highlights'
+              )}
+            </button>
+            <button 
+              className="btn btn-secondary ml-auto" 
+              onClick={handleClearHighlights}
+              disabled={highlightEvents.length === 0}
+            >
+              Clear
+            </button>
+          </div>
+
+          <div className="mb-3 text-sm opacity-70">Quick load options:</div>
+          <div className="flex gap-2 mb-3 flex-wrap">
+            <button 
+              className="btn btn-secondary text-sm" 
+              onClick={handleLoadMyHighlights}
+              disabled={isLoadingHighlights || !relayPool || !activeAccount}
+            >
+              Load My Highlights
+            </button>
+            <button 
+              className="btn btn-secondary text-sm" 
+              onClick={handleLoadFriendsHighlights}
+              disabled={isLoadingHighlights || !relayPool || !activeAccount}
+            >
+              Load Friends Highlights
+            </button>
+            <button 
+              className="btn btn-secondary text-sm" 
+              onClick={handleLoadNostrverseHighlights}
+              disabled={isLoadingHighlights || !relayPool}
+            >
+              Load Nostrverse Highlights
+            </button>
+          </div>
+
+          <div className="mb-3 flex gap-2 flex-wrap">
+            <Stat label="total" value={tLoadHighlights} bookmarkOp="loadHighlights" />
+            <Stat label="first event" value={tFirstHighlight} />
+          </div>
+
+          {highlightEvents.length > 0 && (
+            <div className="mb-3">
+              <div className="text-sm opacity-70 mb-2">Loaded Highlights ({highlightEvents.length}):</div>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {highlightEvents.map((evt, idx) => {
+                  const content = evt.content || ''
+                  const shortContent = content.length > 100 ? content.substring(0, 100) + '...' : content
+                  const aTag = evt.tags?.find((t: string[]) => t[0] === 'a')?.[1]
+                  const rTag = evt.tags?.find((t: string[]) => t[0] === 'r')?.[1]
+                  const eTag = evt.tags?.find((t: string[]) => t[0] === 'e')?.[1]
+                  const contextTag = evt.tags?.find((t: string[]) => t[0] === 'context')?.[1]
+                  
+                  return (
+                    <div key={idx} className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                      <div className="font-semibold mb-1">Highlight #{idx + 1}</div>
+                      <div className="opacity-70 mb-1">
+                        <div>Author: {evt.pubkey.slice(0, 16)}...</div>
+                        <div>Created: {new Date(evt.created_at * 1000).toLocaleString()}</div>
+                      </div>
+                      <div className="mt-1">
+                        <div className="font-semibold text-[11px]">Content:</div>
+                        <div className="italic">&quot;{shortContent}&quot;</div>
+                      </div>
+                      {contextTag && (
+                        <div className="mt-1 text-[11px] opacity-70">
+                          <div>Context: {contextTag.substring(0, 60)}...</div>
+                        </div>
+                      )}
+                      {aTag && <div className="mt-1 text-[11px] opacity-70">#a: {aTag}</div>}
+                      {rTag && <div className="mt-1 text-[11px] opacity-70">#r: {rTag}</div>}
+                      {eTag && <div className="mt-1 text-[11px] opacity-70">#e: {eTag.slice(0, 16)}...</div>}
+                      <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Web of Trust Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Web of Trust</h3>
+          <div className="text-sm opacity-70 mb-3">Load your followed contacts (friends) for highlight fetching:</div>
+          
+          <div className="mb-3">
+            <button 
+              className="btn btn-primary" 
+              onClick={handleLoadFriendsList}
+              disabled={friendsButtonLoading || !relayPool || !activeAccount}
+            >
+              {friendsButtonLoading ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                  Loading...
+                </>
+              ) : (
+                'Load Friends'
+              )}
+            </button>
+          </div>
+
+          {friendsPubkeys.size > 0 && (
+            <div className="mb-3">
+              <div className="text-sm opacity-70 mb-2">Friends Count: {friendsNpubs.length}</div>
+              <div className="font-mono text-xs max-h-48 overflow-y-auto bg-gray-100 dark:bg-gray-800 p-3 rounded space-y-1">
+                {friendsNpubs.map(npub => (
+                  <div key={npub} title={npub} className="truncate hover:text-clip hover:whitespace-normal cursor-pointer">
+                    {npub}
+                  </div>
+                ))}
               </div>
             </div>
           )}
