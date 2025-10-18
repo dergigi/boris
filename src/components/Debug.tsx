@@ -105,16 +105,10 @@ const Debug: React.FC<DebugProps> = ({
   
   // Web of Trust state
   const [friendsPubkeys, setFriendsPubkeys] = useState<Set<string>>(new Set())
-  const [friendsLoading, setFriendsLoading] = useState(false)
+  const [friendsButtonLoading, setFriendsButtonLoading] = useState(false)
 
   useEffect(() => {
     return DebugBus.subscribe((e) => setLogs(prev => [...prev, e].slice(-300)))
-  }, [])
-
-  // Subscribe to contacts controller for friends list display
-  useEffect(() => {
-    const unsubLoading = contactsController.onLoading(setFriendsLoading)
-    return unsubLoading
   }, [])
 
   // Live timer effect - triggers re-renders for live timing updates
@@ -554,10 +548,16 @@ const Debug: React.FC<DebugProps> = ({
       DebugBus.warn('debug', 'Please log in to load friends list')
       return
     }
+    
+    setFriendsButtonLoading(true)
     DebugBus.info('debug', 'Loading friends list via controller...')
     
-    // Subscribe to controller updates
+    // Clear current list
+    setFriendsPubkeys(new Set())
+    
+    // Subscribe to controller updates to see streaming
     const unsubscribe = contactsController.onContacts((contacts) => {
+      console.log('[debug] Received contacts update:', contacts.size)
       setFriendsPubkeys(new Set(contacts))
     })
     
@@ -565,9 +565,14 @@ const Debug: React.FC<DebugProps> = ({
       // Force reload to see streaming behavior
       await contactsController.start({ relayPool, pubkey: activeAccount.pubkey, force: true })
       const final = contactsController.getContacts()
+      setFriendsPubkeys(new Set(final))
       DebugBus.info('debug', `Loaded ${final.size} friends from controller`)
+    } catch (err) {
+      console.error('[debug] Failed to load friends:', err)
+      DebugBus.error('debug', `Failed to load friends: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       unsubscribe()
+      setFriendsButtonLoading(false)
     }
   }
 
@@ -1079,9 +1084,9 @@ const Debug: React.FC<DebugProps> = ({
             <button 
               className="btn btn-primary" 
               onClick={handleLoadFriendsList}
-              disabled={friendsLoading || !relayPool || !activeAccount}
+              disabled={friendsButtonLoading || !relayPool || !activeAccount}
             >
-              {friendsLoading ? (
+              {friendsButtonLoading ? (
                 <>
                   <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
                   Loading...
