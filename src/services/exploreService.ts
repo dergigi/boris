@@ -20,13 +20,16 @@ export interface BlogPostPreview {
  * @param relayPool - The relay pool to query
  * @param pubkeys - Array of pubkeys to fetch posts from
  * @param relayUrls - Array of relay URLs to query
+ * @param onPost - Optional callback for streaming posts
+ * @param limit - Limit for number of events to fetch (default: 100, pass null for no limit)
  * @returns Array of blog post previews
  */
 export const fetchBlogPostsFromAuthors = async (
   relayPool: RelayPool,
   pubkeys: string[],
   relayUrls: string[],
-  onPost?: (post: BlogPostPreview) => void
+  onPost?: (post: BlogPostPreview) => void,
+  limit: number | null = 100
 ): Promise<BlogPostPreview[]> => {
   try {
     if (pubkeys.length === 0) {
@@ -34,15 +37,19 @@ export const fetchBlogPostsFromAuthors = async (
       return []
     }
 
-    console.log('📚 Fetching blog posts (kind 30023) from', pubkeys.length, 'authors')
+    console.log('📚 Fetching blog posts (kind 30023) from', pubkeys.length, 'authors', limit ? `(limit: ${limit})` : '(no limit)')
 
     // Deduplicate replaceable events by keeping the most recent version
     // Group by author + d-tag identifier
     const uniqueEvents = new Map<string, NostrEvent>()
 
+    const filter = limit !== null
+      ? { kinds: [KINDS.BlogPost], authors: pubkeys, limit }
+      : { kinds: [KINDS.BlogPost], authors: pubkeys }
+
     await queryEvents(
       relayPool,
-      { kinds: [KINDS.BlogPost], authors: pubkeys, limit: 100 },
+      filter,
       {
         relayUrls,
         onEvent: (event: NostrEvent) => {

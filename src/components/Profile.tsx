@@ -73,8 +73,8 @@ const Profile: React.FC<ProfileProps> = ({
         console.warn('⚠️ [Profile] Failed to fetch highlights:', err)
       })
     
-    // Fetch writings in background
-    fetchBlogPostsFromAuthors(relayPool, [pubkey], RELAYS)
+    // Fetch writings in background (no limit for single user profile)
+    fetchBlogPostsFromAuthors(relayPool, [pubkey], RELAYS, undefined, null)
       .then(writings => {
         writings.forEach(w => eventStore.add(w.event))
         console.log('✅ [Profile] Fetched', writings.length, 'writings')
