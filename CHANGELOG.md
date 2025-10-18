@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2] - 2025-01-27
+
+### Added
+
+- Cached-first loading with EventStore across the app
+  - Instant display of cached highlights and writings from local event store
+  - Progressive loading with streaming updates from relays
+  - Centralized event storage for improved performance and offline support
+- Default explore scope setting for controlling content visibility
+  - Configurable default scope for explore page content
+  - Dedicated Explore section in settings for better organization
+
+### Changed
+
+- Highlights and writings now load from cache first, then stream from relays
+- Explore page shows cached content instantly before network updates
+- Article-specific highlights stored in centralized event store for faster access
+- Nostrverse content cached locally for improved performance
+
+### Fixed
+
+- Prevent "No highlights yet" flash on `/me/highlights` page
+- Force React to remount tab content when switching tabs for proper state management
+- Deduplicate blog posts by author:d-tag instead of event ID for better accuracy
+- Show skeleton placeholders while highlights are loading for better UX
+
+### Performance
+
+- Local-first loading strategy reduces perceived loading times
+- Cached content displays immediately while background sync occurs
+- Centralized event storage eliminates redundant network requests
+
 ## [0.7.0] - 2025-10-18
 
 ### Added
@@ -1878,7 +1910,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/dergigi/boris/compare/v0.7.0...v0.7.2
 [0.7.0]: https://github.com/dergigi/boris/compare/v0.6.24...v0.7.0
 [0.6.24]: https://github.com/dergigi/boris/compare/v0.6.23...v0.6.24
 [0.6.23]: https://github.com/dergigi/boris/compare/v0.6.22...v0.6.23
