@@ -20,7 +20,8 @@ export const fetchNostrverseBlogPosts = async (
   relayPool: RelayPool,
   relayUrls: string[],
   limit = 50,
-  eventStore?: IEventStore
+  eventStore?: IEventStore,
+  onPost?: (post: BlogPostPreview) => void
 ): Promise<BlogPostPreview[]> => {
   try {
     console.log('[NOSTRVERSE] 📚 Fetching blog posts (kind 30023), limit:', limit)
@@ -44,6 +45,19 @@ export const fetchNostrverseBlogPosts = async (
           const existing = uniqueEvents.get(key)
           if (!existing || event.created_at > existing.created_at) {
             uniqueEvents.set(key, event)
+
+            // Stream post immediately if callback provided
+            if (onPost) {
+              const post: BlogPostPreview = {
+                event,
+                title: getArticleTitle(event) || 'Untitled',
+                summary: getArticleSummary(event),
+                image: getArticleImage(event),
+                published: getArticlePublished(event),
+                author: event.pubkey
+              }
+              onPost(post)
+            }
           }
         }
       }
