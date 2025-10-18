@@ -195,6 +195,18 @@
   flex-shrink: 0;
 }
 
+.login-error a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.login-error a:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
 .login-footer {
   margin: 0;
   text-align: center;
