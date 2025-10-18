@@ -246,12 +246,14 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         })
 
         // Merge and deduplicate all highlights (mine from controller + friends + nostrverse)
+        console.log('📊 Highlight counts - mine:', myHighlights.length, 'friends:', friendsHighlights.length, 'nostrverse:', nostriverseHighlights.length)
         const allHighlights = [...myHighlights, ...friendsHighlights, ...nostriverseHighlights]
         const highlightsByKey = new Map<string, Highlight>()
         for (const highlight of allHighlights) {
           highlightsByKey.set(highlight.id, highlight)
         }
         const uniqueHighlights = Array.from(highlightsByKey.values()).sort((a, b) => b.created_at - a.created_at)
+        console.log('📊 Total unique highlights after merge:', uniqueHighlights.length)
 
         // Fetch profiles for all blog post authors to cache them
         if (uniquePosts.length > 0) {
@@ -306,12 +308,18 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   // Classify highlights with levels based on user context and apply visibility filters
   const classifiedHighlights = useMemo(() => {
     const classified = classifyHighlights(highlights, activeAccount?.pubkey, followedPubkeys)
-    return classified.filter(h => {
+    const levelCounts = { mine: 0, friends: 0, nostrverse: 0 }
+    classified.forEach(h => levelCounts[h.level]++)
+    console.log('📊 Classified highlights by level:', levelCounts, 'visibility:', visibility)
+    
+    const filtered = classified.filter(h => {
       if (h.level === 'mine' && !visibility.mine) return false
       if (h.level === 'friends' && !visibility.friends) return false
       if (h.level === 'nostrverse' && !visibility.nostrverse) return false
       return true
     })
+    console.log('📊 After visibility filter:', filtered.length, 'highlights')
+    return filtered
   }, [highlights, activeAccount?.pubkey, followedPubkeys, visibility])
 
   // Filter blog posts by future dates and visibility, and add level classification
