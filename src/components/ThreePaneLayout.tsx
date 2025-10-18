@@ -368,7 +368,9 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
               summary={props.readerContent?.summary}
               published={props.readerContent?.published}
               selectedUrl={props.selectedUrl}
-              highlights={props.classifiedHighlights}
+              highlights={props.selectedUrl && props.selectedUrl.startsWith('nostr:')
+                ? props.highlights // article-specific highlights only
+                : props.classifiedHighlights}
               showHighlights={props.showHighlights}
               highlightStyle={props.settings.highlightStyle || 'marker'}
               highlightColor={props.settings.highlightColor || '#ffff00'}
