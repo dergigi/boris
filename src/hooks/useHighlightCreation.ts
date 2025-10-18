@@ -9,6 +9,7 @@ import { ReadableContent } from '../services/readerService'
 import { createHighlight } from '../services/highlightCreationService'
 import { HighlightButtonRef } from '../components/HighlightButton'
 import { UserSettings } from '../services/settingsService'
+import { useToast } from './useToast'
 
 interface UseHighlightCreationParams {
   activeAccount: IAccount | undefined
@@ -32,6 +33,7 @@ export const useHighlightCreation = ({
   settings
 }: UseHighlightCreationParams) => {
   const highlightButtonRef = useRef<HighlightButtonRef>(null)
+  const { showToast } = useToast()
 
   const handleTextSelection = useCallback((text: string) => {
     highlightButtonRef.current?.updateSelection(text)
@@ -92,10 +94,19 @@ export const useHighlightCreation = ({
       })
     } catch (error) {
       console.error('❌ Failed to create highlight:', error)
+      
+      // Show user-friendly error messages
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create highlight'
+      if (errorMessage.toLowerCase().includes('permission') || errorMessage.toLowerCase().includes('unauthorized')) {
+        showToast('Reconnect bunker and approve signing permissions to create highlights')
+      } else {
+        showToast(`Failed to create highlight: ${errorMessage}`)
+      }
+      
       // Re-throw to allow parent to handle
       throw error
     }
-  }, [activeAccount, relayPool, eventStore, currentArticle, selectedUrl, readerContent, onHighlightCreated, settings])
+  }, [activeAccount, relayPool, eventStore, currentArticle, selectedUrl, readerContent, onHighlightCreated, settings, showToast])
 
   return {
     highlightButtonRef,

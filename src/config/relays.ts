@@ -7,6 +7,7 @@
 export const RELAYS = [
   'ws://localhost:10547',
   'ws://localhost:4869',
+  'wss://relay.nsec.app',
   'wss://relay.damus.io',
   'wss://nos.lol',
   'wss://relay.nostr.band',

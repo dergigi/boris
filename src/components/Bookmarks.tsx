@@ -13,6 +13,7 @@ import { useHighlightCreation } from '../hooks/useHighlightCreation'
 import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import { useRelayStatus } from '../hooks/useRelayStatus'
 import { useOfflineSync } from '../hooks/useOfflineSync'
+import { Bookmark } from '../types/bookmarks'
 import ThreePaneLayout from './ThreePaneLayout'
 import Explore from './Explore'
 import Me from './Me'
@@ -24,9 +25,18 @@ export type ViewMode = 'compact' | 'cards' | 'large'
 interface BookmarksProps {
   relayPool: RelayPool | null
   onLogout: () => void
+  bookmarks: Bookmark[]
+  bookmarksLoading: boolean
+  onRefreshBookmarks: () => Promise<void>
 }
 
-const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
+const Bookmarks: React.FC<BookmarksProps> = ({ 
+  relayPool, 
+  onLogout, 
+  bookmarks, 
+  bookmarksLoading, 
+  onRefreshBookmarks 
+}) => {
   const { naddr, npub } = useParams<{ naddr?: string; npub?: string }>()
   const location = useLocation()
   const navigate = useNavigate()
@@ -152,8 +162,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   }, [navigationState, setIsHighlightsCollapsed, setSelectedHighlightId, navigate, location.pathname])
 
   const {
-    bookmarks,
-    bookmarksLoading,
     highlights,
     setHighlights,
     highlightsLoading,
@@ -166,12 +174,12 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
   } = useBookmarksData({
     relayPool,
     activeAccount,
-    accountManager,
     naddr,
     externalUrl,
     currentArticleCoordinate,
     currentArticleEventId,
-    settings
+    settings,
+    onRefreshBookmarks
   })
 
   const {
@@ -317,10 +325,10 @@ const Bookmarks: React.FC<BookmarksProps> = ({ relayPool, onLogout }) => {
         relayPool ? <Explore relayPool={relayPool} eventStore={eventStore} settings={settings} activeTab={exploreTab} /> : null
       ) : undefined}
       me={showMe ? (
-        relayPool ? <Me relayPool={relayPool} activeTab={meTab} /> : null
+        relayPool ? <Me relayPool={relayPool} activeTab={meTab} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} /> : null
       ) : undefined}
       profile={showProfile && profilePubkey ? (
-        relayPool ? <Me relayPool={relayPool} activeTab={profileTab} pubkey={profilePubkey} /> : null
+        relayPool ? <Me relayPool={relayPool} activeTab={profileTab} pubkey={profilePubkey} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} /> : null
       ) : undefined}
       support={showSupport ? (
         relayPool ? <Support relayPool={relayPool} eventStore={eventStore} settings={settings} /> : null

@@ -1,20 +1,18 @@
 import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
-import { Observable, merge, takeUntil, timer, toArray, tap, lastValueFrom } from 'rxjs'
+import { Observable, merge, toArray, tap, lastValueFrom } from 'rxjs'
 import { NostrEvent } from 'nostr-tools'
 import { Filter } from 'nostr-tools/filter'
 import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
-import { LOCAL_TIMEOUT_MS, REMOTE_TIMEOUT_MS } from '../config/network'
 
 export interface QueryOptions {
   relayUrls?: string[]
-  localTimeoutMs?: number
-  remoteTimeoutMs?: number
   onEvent?: (event: NostrEvent) => void
 }
 
 /**
  * Unified local-first query helper with optional streaming callback.
- * Returns all collected events (deduped by id) after both streams complete or time out.
+ * Returns all collected events (deduped by id) after both streams complete (EOSE).
+ * Trusts relay EOSE signals - no artificial timeouts.
  */
 export async function queryEvents(
   relayPool: RelayPool,
@@ -23,8 +21,6 @@ export async function queryEvents(
 ): Promise<NostrEvent[]> {
   const {
     relayUrls,
-    localTimeoutMs = LOCAL_TIMEOUT_MS,
-    remoteTimeoutMs = REMOTE_TIMEOUT_MS,
     onEvent
   } = options
 
@@ -41,8 +37,7 @@ export async function queryEvents(
         .pipe(
           onlyEvents(),
           onEvent ? tap((e: NostrEvent) => onEvent(e)) : tap(() => {}),
-          completeOnEose(),
-          takeUntil(timer(localTimeoutMs))
+          completeOnEose()
         ) as unknown as Observable<NostrEvent>
     : new Observable<NostrEvent>((sub) => sub.complete())
 
@@ -52,8 +47,7 @@ export async function queryEvents(
         .pipe(
           onlyEvents(),
           onEvent ? tap((e: NostrEvent) => onEvent(e)) : tap(() => {}),
-          completeOnEose(),
-          takeUntil(timer(remoteTimeoutMs))
+          completeOnEose()
         ) as unknown as Observable<NostrEvent>
     : new Observable<NostrEvent>((sub) => sub.complete())
 

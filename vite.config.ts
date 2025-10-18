@@ -123,7 +123,8 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
-        globIgnores: ['**/_headers', '**/_redirects', '**/robots.txt']
+        globIgnores: ['**/_headers', '**/_redirects', '**/robots.txt'],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024 // 3 MiB
       },
       devOptions: {
         enabled: true,
@@ -141,7 +142,7 @@ export default defineConfig({
     mainFields: ['module', 'jsnext:main', 'jsnext', 'main']
   },
   optimizeDeps: {
-    include: ['applesauce-core', 'applesauce-factory', 'applesauce-relay', 'applesauce-react'],
+    include: ['applesauce-core', 'applesauce-factory', 'applesauce-relay', 'applesauce-react', 'applesauce-accounts', 'applesauce-signers'],
     esbuildOptions: {
       resolveExtensions: ['.js', '.ts', '.tsx', '.json']
     }
@@ -158,7 +159,7 @@ export default defineConfig({
     }
   },
   ssr: {
-    noExternal: ['applesauce-core', 'applesauce-factory', 'applesauce-relay']
+    noExternal: ['applesauce-core', 'applesauce-factory', 'applesauce-relay', 'applesauce-accounts', 'applesauce-signers']
   }
 })
 

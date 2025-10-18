@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare, faLink } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare, faLink, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
 import { RelayPool } from 'applesauce-relay'
@@ -9,7 +9,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
-import { fetchBookmarks } from '../services/bookmarkService'
 import { fetchAllReads, ReadItem } from '../services/readsService'
 import { fetchLinks } from '../services/linksService'
 import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
@@ -37,6 +36,8 @@ interface MeProps {
   relayPool: RelayPool
   activeTab?: TabType
   pubkey?: string // Optional pubkey for viewing other users' profiles
+  bookmarks: Bookmark[] // From centralized App.tsx state
+  bookmarksLoading?: boolean // From centralized App.tsx state (reserved for future use)
 }
 
 type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
@@ -44,7 +45,12 @@ type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
 // Valid reading progress filters
 const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed']
 
-const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: propPubkey }) => {
+const Me: React.FC<MeProps> = ({ 
+  relayPool, 
+  activeTab: propActiveTab, 
+  pubkey: propPubkey,
+  bookmarks
+}) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
   const { filter: urlFilter } = useParams<{ filter?: string }>()
@@ -54,7 +60,6 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const viewingPubkey = propPubkey || activeAccount?.pubkey
   const isOwnProfile = !propPubkey || (activeAccount?.pubkey === propPubkey)
   const [highlights, setHighlights] = useState<Highlight[]>([])
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [reads, setReads] = useState<ReadItem[]>([])
   const [, setReadsMap] = useState<Map<string, ReadItem>>(new Map())
   const [links, setLinks] = useState<ReadItem[]>([])
@@ -65,6 +70,16 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
+  const [groupingMode, setGroupingMode] = useState<'grouped' | 'flat'>(() => {
+    const saved = localStorage.getItem('bookmarkGroupingMode')
+    return saved === 'flat' ? 'flat' : 'grouped'
+  })
+  
+  const toggleGroupingMode = () => {
+    const newMode = groupingMode === 'grouped' ? 'flat' : 'grouped'
+    setGroupingMode(newMode)
+    localStorage.setItem('bookmarkGroupingMode', newMode)
+  }
   
   // Initialize reading progress filter from URL param
   const initialFilter = urlFilter && VALID_FILTERS.includes(urlFilter as ReadingProgressFilterType) 
@@ -142,14 +157,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     
     try {
       if (!hasBeenLoaded) setLoading(true)
-      try {
-        await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
-          setBookmarks(newBookmarks)
-        })
-      } catch (err) {
-        console.warn('Failed to load bookmarks:', err)
-        setBookmarks([])
-      }
+      // Bookmarks come from centralized loading in App.tsx
       setLoadedTabs(prev => new Set(prev).add('reading-list'))
     } catch (err) {
       console.error('Failed to load reading list:', err)
@@ -166,22 +174,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Ensure bookmarks are loaded
-      let fetchedBookmarks: Bookmark[] = bookmarks
-      if (bookmarks.length === 0) {
-        try {
-          await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
-            fetchedBookmarks = newBookmarks
-            setBookmarks(newBookmarks)
-          })
-        } catch (err) {
-          console.warn('Failed to load bookmarks:', err)
-          fetchedBookmarks = []
-        }
-      }
-
-      // Derive reads from bookmarks immediately
-      const initialReads = deriveReadsFromBookmarks(fetchedBookmarks)
+      // Derive reads from bookmarks immediately (bookmarks come from centralized loading in App.tsx)
+      const initialReads = deriveReadsFromBookmarks(bookmarks)
       const initialMap = new Map(initialReads.map(item => [item.id, item]))
       setReadsMap(initialMap)
       setReads(initialReads)
@@ -190,7 +184,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       
       // Background enrichment: merge reading progress and mark-as-read
       // Only update items that are already in our map
-      fetchAllReads(relayPool, viewingPubkey, fetchedBookmarks, (item) => {
+      fetchAllReads(relayPool, viewingPubkey, bookmarks, (item) => {
         console.log('📈 [Reads] Enrichment item received:', {
           id: item.id.slice(0, 20) + '...',
           progress: item.readingProgress,
@@ -230,22 +224,8 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Ensure bookmarks are loaded
-      let fetchedBookmarks: Bookmark[] = bookmarks
-      if (bookmarks.length === 0) {
-        try {
-          await fetchBookmarks(relayPool, activeAccount, (newBookmarks) => {
-            fetchedBookmarks = newBookmarks
-            setBookmarks(newBookmarks)
-          })
-        } catch (err) {
-          console.warn('Failed to load bookmarks:', err)
-          fetchedBookmarks = []
-        }
-      }
-
-      // Derive links from bookmarks immediately
-      const initialLinks = deriveLinksFromBookmarks(fetchedBookmarks)
+      // Derive links from bookmarks immediately (bookmarks come from centralized loading in App.tsx)
+      const initialLinks = deriveLinksFromBookmarks(bookmarks)
       const initialMap = new Map(initialLinks.map(item => [item.id, item]))
       setLinksMap(initialMap)
       setLinks(initialLinks)
@@ -287,7 +267,7 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
       const cached = getCachedMeData(viewingPubkey)
       if (cached) {
         setHighlights(cached.highlights)
-        setBookmarks(cached.bookmarks)
+        // Bookmarks come from App.tsx centralized state, no local caching needed
         setReads(cached.reads || [])
         setLinks(cached.links || [])
       }
@@ -421,12 +401,16 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
   // Apply reading progress filter
   const filteredReads = filterByReadingProgress(reads, readingProgressFilter)
   const filteredLinks = filterByReadingProgress(links, readingProgressFilter)
-  const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
-    { key: 'private', title: 'Private Bookmarks', items: groups.privateItems },
-    { key: 'public', title: 'Public Bookmarks', items: groups.publicItems },
-    { key: 'web', title: 'Web Bookmarks', items: groups.web },
-    { key: 'amethyst', title: 'Legacy Bookmarks', items: groups.amethyst }
-  ]
+  const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
+    groupingMode === 'flat'
+      ? [{ key: 'all', title: `All Bookmarks (${filteredBookmarks.length})`, items: filteredBookmarks }]
+      : [
+          { key: 'nip51-private', title: 'Private Bookmarks', items: groups.nip51Private },
+          { key: 'nip51-public', title: 'My Bookmarks', items: groups.nip51Public },
+          { key: 'amethyst-private', title: 'Amethyst Private', items: groups.amethystPrivate },
+          { key: 'amethyst-public', title: 'Amethyst Lists', items: groups.amethystPublic },
+          { key: 'web', title: 'Web Bookmarks', items: groups.standaloneWeb }
+        ]
 
   // Show content progressively - no blocking error screens
   const hasData = highlights.length > 0 || bookmarks.length > 0 || reads.length > 0 || links.length > 0 || writings.length > 0
@@ -514,6 +498,13 @@ const Me: React.FC<MeProps> = ({ relayPool, activeTab: propActiveTab, pubkey: pr
               marginTop: '1rem',
               borderTop: '1px solid var(--border-color)'
             }}>
+              <IconButton
+                icon={groupingMode === 'grouped' ? faLayerGroup : faBars}
+                onClick={toggleGroupingMode}
+                title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
+                ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
+                variant="ghost"
+              />
               <IconButton
                 icon={faList}
                 onClick={() => setViewMode('compact')}

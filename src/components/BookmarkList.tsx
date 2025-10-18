@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate, faHeart, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate, faHeart, faPlus, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
 import { formatDistanceToNow } from 'date-fns'
 import { RelayPool } from 'applesauce-relay'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
@@ -21,6 +21,7 @@ import { RELAYS } from '../config/relays'
 import { Hooks } from 'applesauce-react'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
+import LoginOptions from './LoginOptions'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -64,7 +65,17 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const friendsColor = settings?.highlightColorFriends || '#f97316'
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState<BookmarkFilterType>('all')
+  const [groupingMode, setGroupingMode] = useState<'grouped' | 'flat'>(() => {
+    const saved = localStorage.getItem('bookmarkGroupingMode')
+    return saved === 'flat' ? 'flat' : 'grouped'
+  })
   const activeAccount = Hooks.useActiveAccount()
+
+  const toggleGroupingMode = () => {
+    const newMode = groupingMode === 'grouped' ? 'flat' : 'grouped'
+    setGroupingMode(newMode)
+    localStorage.setItem('bookmarkGroupingMode', newMode)
+  }
 
   const handleSaveBookmark = async (url: string, title?: string, description?: string, tags?: string[]) => {
     if (!activeAccount || !relayPool) {
@@ -97,14 +108,18 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const bookmarksWithoutSet = getBookmarksWithoutSet(filteredBookmarks)
   const bookmarkSets = getBookmarkSets(filteredBookmarks)
   
-  // Group non-set bookmarks as before
+  // Group non-set bookmarks by source or flatten based on mode
   const groups = groupIndividualBookmarks(bookmarksWithoutSet)
-  const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = [
-    { key: 'private', title: 'Private Bookmarks', items: groups.privateItems },
-    { key: 'public', title: 'Public Bookmarks', items: groups.publicItems },
-    { key: 'web', title: 'Web Bookmarks', items: groups.web },
-    { key: 'amethyst', title: 'Legacy Bookmarks', items: groups.amethyst }
-  ]
+  const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
+    groupingMode === 'flat'
+      ? [{ key: 'all', title: `All Bookmarks (${bookmarksWithoutSet.length})`, items: bookmarksWithoutSet }]
+      : [
+          { key: 'nip51-private', title: 'Private Bookmarks', items: groups.nip51Private },
+          { key: 'nip51-public', title: 'My Bookmarks', items: groups.nip51Public },
+          { key: 'amethyst-private', title: 'Amethyst Private', items: groups.amethystPrivate },
+          { key: 'amethyst-public', title: 'Amethyst Lists', items: groups.amethystPublic },
+          { key: 'web', title: 'Web Bookmarks', items: groups.standaloneWeb }
+        ]
   
   // Add bookmark sets as additional sections
   bookmarkSets.forEach(set => {
@@ -153,7 +168,9 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         />
       )}
       
-      {filteredBookmarks.length === 0 && allIndividualBookmarks.length > 0 ? (
+      {!activeAccount ? (
+        <LoginOptions />
+      ) : filteredBookmarks.length === 0 && allIndividualBookmarks.length > 0 ? (
         <div className="empty-state">
           <p>No bookmarks match this filter.</p>
         </div>
@@ -170,7 +187,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
           <div className="empty-state">
             <p>No bookmarks found.</p>
             <p>Add bookmarks using your nostr client to see them here.</p>
-            <p>If you aren't on nostr yet, start here: <a href="https://nstart.me/" target="_blank" rel="noopener noreferrer">nstart.me</a></p>
           </div>
         )
       ) : (
@@ -222,40 +238,49 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
             style={{ color: friendsColor }}
           />
         </div>
-        <div className="view-mode-right">
-          {onRefresh && (
+        {activeAccount && (
+          <div className="view-mode-right">
+            {onRefresh && (
+              <IconButton
+                icon={faRotate}
+                onClick={onRefresh}
+                title={lastFetchTime ? `Refresh bookmarks (updated ${formatDistanceToNow(lastFetchTime, { addSuffix: true })})` : 'Refresh bookmarks'}
+                ariaLabel="Refresh bookmarks"
+                variant="ghost"
+                disabled={isRefreshing}
+                spin={isRefreshing}
+              />
+            )}
             <IconButton
-              icon={faRotate}
-              onClick={onRefresh}
-              title={lastFetchTime ? `Refresh bookmarks (updated ${formatDistanceToNow(lastFetchTime, { addSuffix: true })})` : 'Refresh bookmarks'}
-              ariaLabel="Refresh bookmarks"
+              icon={groupingMode === 'grouped' ? faLayerGroup : faBars}
+              onClick={toggleGroupingMode}
+              title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
+              ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
               variant="ghost"
-              disabled={isRefreshing}
-              spin={isRefreshing}
             />
-          )}
-          <IconButton
-            icon={faList}
-            onClick={() => onViewModeChange('compact')}
-            title="Compact list view"
-            ariaLabel="Compact list view"
-            variant={viewMode === 'compact' ? 'primary' : 'ghost'}
-          />
-          <IconButton
-            icon={faThLarge}
-            onClick={() => onViewModeChange('cards')}
-            title="Cards view"
-            ariaLabel="Cards view"
-            variant={viewMode === 'cards' ? 'primary' : 'ghost'}
-          />
-          <IconButton
-            icon={faImage}
-            onClick={() => onViewModeChange('large')}
-            title="Large preview view"
-            ariaLabel="Large preview view"
-            variant={viewMode === 'large' ? 'primary' : 'ghost'}
-          />
-        </div>
+            <IconButton
+              icon={faList}
+              onClick={() => onViewModeChange('compact')}
+              title="Compact list view"
+              ariaLabel="Compact list view"
+              variant={viewMode === 'compact' ? 'primary' : 'ghost'}
+            />
+            <IconButton
+              icon={faThLarge}
+              onClick={() => onViewModeChange('cards')}
+              title="Cards view"
+              ariaLabel="Cards view"
+              variant={viewMode === 'cards' ? 'primary' : 'ghost'}
+            />
+            <IconButton
+              icon={faImage}
+              onClick={() => onViewModeChange('large')}
+              title="Large preview view"
+              ariaLabel="Large preview view"
+              variant={viewMode === 'large' ? 'primary' : 'ghost'}
+            />
+          </div>
+        )}
       </div>
       {showAddModal && (
         <AddBookmarkModal

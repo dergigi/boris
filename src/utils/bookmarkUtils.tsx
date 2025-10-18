@@ -92,19 +92,30 @@ export const sortIndividualBookmarks = (items: IndividualBookmark[]) => {
 
 export function groupIndividualBookmarks(items: IndividualBookmark[]) {
   const sorted = sortIndividualBookmarks(items)
-  const web = sorted.filter(i => i.kind === 39701 || i.type === 'web')
-  // Only non-encrypted legacy bookmarks go to the amethyst section
-  const amethyst = sorted.filter(i => i.sourceKind === 30001 && !i.isPrivate)
-  const isIn = (list: IndividualBookmark[], x: IndividualBookmark) => list.some(i => i.id === x.id)
-  // Private items include encrypted legacy bookmarks
-  const privateItems = sorted.filter(i => i.isPrivate && !isIn(web, i))
-  const publicItems = sorted.filter(i => !i.isPrivate && !isIn(amethyst, i) && !isIn(web, i))
-  return { privateItems, publicItems, web, amethyst }
+  
+  // Group by source list, not by content type
+  const nip51Public = sorted.filter(i => i.sourceKind === 10003 && !i.isPrivate)
+  const nip51Private = sorted.filter(i => i.sourceKind === 10003 && i.isPrivate)
+  // Amethyst bookmarks: kind:30001 (any d-tag or undefined)
+  const amethystPublic = sorted.filter(i => i.sourceKind === 30001 && !i.isPrivate)
+  const amethystPrivate = sorted.filter(i => i.sourceKind === 30001 && i.isPrivate)
+  const standaloneWeb = sorted.filter(i => i.sourceKind === 39701)
+  
+  return { 
+    nip51Public, 
+    nip51Private, 
+    amethystPublic, 
+    amethystPrivate,
+    standaloneWeb
+  }
 }
 
-// Simple filter: only exclude bookmarks with empty/whitespace-only content
+// Simple filter: show bookmarks that have content OR just an ID (placeholder)
 export function hasContent(bookmark: IndividualBookmark): boolean {
-  return !!(bookmark.content && bookmark.content.trim().length > 0)
+  // Show if has content OR has an ID (placeholder until events are fetched)
+  const hasValidContent = !!(bookmark.content && bookmark.content.trim().length > 0)
+  const hasId = !!(bookmark.id && bookmark.id.trim().length > 0)
+  return hasValidContent || hasId
 }
 
 // Bookmark sets helpers (kind 30003)

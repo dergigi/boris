@@ -52,6 +52,11 @@ export async function publishEvent(
     })
     .catch((error) => {
       console.warn('⚠️ Failed to publish event to relays (event still saved locally):', error)
+      
+      // Surface common bunker signing errors for debugging
+      if (error instanceof Error && error.message.includes('permission')) {
+        console.warn('💡 Hint: This may be a bunker permission issue. Ensure your bunker connection has signing permissions.')
+      }
     })
 }
 
