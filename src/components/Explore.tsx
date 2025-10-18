@@ -51,6 +51,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [hasLoadedNostrverse, setHasLoadedNostrverse] = useState(false)
   const [hasLoadedMine, setHasLoadedMine] = useState(false)
+  const [hasLoadedNostrverseHighlights, setHasLoadedNostrverseHighlights] = useState(false)
   
   // Get myHighlights directly from controller
   const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
@@ -134,6 +135,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       // When logged out, show nostrverse by default
       setVisibility(prev => ({ ...prev, nostrverse: true, friends: false, mine: false }))
       setHasLoadedNostrverse(true) // logged out path loads nostrverse immediately
+      setHasLoadedNostrverseHighlights(true)
     } else {
       // When logged in, use settings defaults
       setVisibility({
@@ -142,6 +144,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         mine: settings?.defaultExploreScopeMine ?? false
       })
       setHasLoadedNostrverse(false)
+      setHasLoadedNostrverseHighlights(false)
     }
   }, [activeAccount, settings])
 
@@ -473,6 +476,19 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       })
     }).catch(() => {})
   }, [visibility.nostrverse, activeAccount, relayPool, eventStore, hasLoadedNostrverse])
+
+  // Lazy-load nostrverse highlights when user toggles it on (logged in)
+  useEffect(() => {
+    if (!activeAccount || !relayPool || !visibility.nostrverse || hasLoadedNostrverseHighlights) return
+    setHasLoadedNostrverseHighlights(true)
+    fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
+      .then((hl) => {
+        if (hl && hl.length > 0) {
+          setHighlights(prev => dedupeHighlightsById([...prev, ...hl]).sort((a, b) => b.created_at - a.created_at))
+        }
+      })
+      .catch(() => {})
+  }, [visibility.nostrverse, activeAccount, relayPool, eventStore, hasLoadedNostrverseHighlights])
 
   // Lazy-load my writings when user toggles "mine" on (logged in)
   // No direct fetch here; writingsController streams my posts centrally
