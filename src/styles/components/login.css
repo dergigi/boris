@@ -57,8 +57,10 @@
   min-height: var(--min-touch-target);
 }
 
-.login-button i {
+.login-button svg {
   font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 .login-button-primary {
@@ -185,8 +187,10 @@
   line-height: 1.5;
 }
 
-.login-error i {
+.login-error svg {
   font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
   color: rgb(251, 191, 36);
   flex-shrink: 0;
 }

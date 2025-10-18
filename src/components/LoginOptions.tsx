@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPuzzlePiece, faShieldHalved, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { Accounts } from 'applesauce-accounts'
 import { NostrConnectSigner } from 'applesauce-signers'
@@ -87,7 +89,7 @@ const LoginOptions: React.FC = () => {
             disabled={isLoading}
             className="login-button login-button-primary"
           >
-            <i className="fa-solid fa-puzzle-piece" />
+            <FontAwesomeIcon icon={faPuzzlePiece} />
             <span>{isLoading && !showBunkerInput ? 'Connecting...' : 'Login with Extension'}</span>
           </button>
           
@@ -97,7 +99,7 @@ const LoginOptions: React.FC = () => {
               disabled={isLoading}
               className="login-button login-button-secondary"
             >
-              <i className="fa-solid fa-shield-halved" />
+              <FontAwesomeIcon icon={faShieldHalved} />
               <span>Login with Bunker</span>
             </button>
           ) : (
@@ -141,7 +143,7 @@ const LoginOptions: React.FC = () => {
         
         {error && (
           <div className="login-error">
-            <i className="fa-solid fa-circle-info" />
+            <FontAwesomeIcon icon={faCircleInfo} />
             <span>{error}</span>
           </div>
         )}
