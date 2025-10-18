@@ -126,18 +126,14 @@ class BookmarkController {
     generation: number
   ): void {
     if (!this.eventLoader) {
-      console.warn('[bookmark] ⚠️ EventLoader not initialized')
       return
     }
 
     // Filter to unique IDs not already hydrated
     const unique = Array.from(new Set(ids)).filter(id => !idToEvent.has(id))
     if (unique.length === 0) {
-      console.log('[bookmark] 🔧 All IDs already hydrated, skipping')
       return
     }
-
-    console.log('[bookmark] 🔧 Hydrating', unique.length, 'IDs using EventLoader')
     
     // Convert IDs to EventPointers
     const pointers: EventPointer[] = unique.map(id => ({ id }))
@@ -159,8 +155,8 @@ class BookmarkController {
         
         onProgress()
       },
-      error: (error) => {
-        console.error('[bookmark] ❌ EventLoader error:', error)
+      error: () => {
+        // Silent error - EventLoader handles retries
       }
     })
   }
@@ -175,13 +171,10 @@ class BookmarkController {
     generation: number
   ): void {
     if (!this.addressLoader) {
-      console.warn('[bookmark] ⚠️ AddressLoader not initialized')
       return
     }
 
     if (coords.length === 0) return
-
-    console.log('[bookmark] 🔧 Hydrating', coords.length, 'coordinates using AddressLoader')
 
     // Convert coordinates to AddressPointers
     const pointers = coords.map(c => ({
@@ -203,8 +196,8 @@ class BookmarkController {
         
         onProgress()
       },
-      error: (error) => {
-        console.error('[bookmark] ❌ AddressLoader error:', error)
+      error: () => {
+        // Silent error - AddressLoader handles retries
       }
     })
   }
@@ -223,10 +216,6 @@ class BookmarkController {
       return this.decryptedResults.has(getEventKey(evt))
     })
     
-    const unencryptedCount = allEvents.filter(evt => !hasEncryptedContent(evt)).length
-    const decryptedCount = readyEvents.length - unencryptedCount
-    console.log('[bookmark] 📋 Building bookmarks:', unencryptedCount, 'unencrypted,', decryptedCount, 'decrypted, of', allEvents.length, 'total')
-    
     if (readyEvents.length === 0) {
       this.bookmarksListeners.forEach(cb => cb([]))
       return
@@ -237,17 +226,14 @@ class BookmarkController {
       const unencryptedEvents = readyEvents.filter(evt => !hasEncryptedContent(evt))
       const decryptedEvents = readyEvents.filter(evt => hasEncryptedContent(evt))
       
-      console.log('[bookmark] 🔧 Processing', unencryptedEvents.length, 'unencrypted events')
       // Process unencrypted events
       const { publicItemsAll: publicUnencrypted, privateItemsAll: privateUnencrypted, newestCreatedAt, latestContent, allTags } = 
         await collectBookmarksFromEvents(unencryptedEvents, activeAccount, signerCandidate)
-      console.log('[bookmark] 🔧 Unencrypted returned:', publicUnencrypted.length, 'public,', privateUnencrypted.length, 'private')
       
       // Merge in decrypted results
       let publicItemsAll = [...publicUnencrypted]
       let privateItemsAll = [...privateUnencrypted]
       
-      console.log('[bookmark] 🔧 Merging', decryptedEvents.length, 'decrypted events')
       decryptedEvents.forEach(evt => {
         const eventKey = getEventKey(evt)
         const decrypted = this.decryptedResults.get(eventKey)
@@ -256,11 +242,8 @@ class BookmarkController {
           privateItemsAll = [...privateItemsAll, ...decrypted.privateItems]
         }
       })
-      
-      console.log('[bookmark] 🔧 Total after merge:', publicItemsAll.length, 'public,', privateItemsAll.length, 'private')
 
       const allItems = [...publicItemsAll, ...privateItemsAll]
-      console.log('[bookmark] 🔧 Total items to process:', allItems.length)
       
       // Separate hex IDs from coordinates
       const noteIds: string[] = []
@@ -276,14 +259,11 @@ class BookmarkController {
       
       // Helper to build and emit bookmarks
       const emitBookmarks = (idToEvent: Map<string, NostrEvent>) => {
-        console.log('[bookmark] 🔧 Building final bookmarks list...')
         const allBookmarks = dedupeBookmarksById([
           ...hydrateItems(publicItemsAll, idToEvent),
           ...hydrateItems(privateItemsAll, idToEvent)
         ])
-        console.log('[bookmark] 🔧 After hydration and dedup:', allBookmarks.length, 'bookmarks')
 
-        console.log('[bookmark] 🔧 Enriching and sorting...')
         const enriched = allBookmarks.map(b => ({
           ...b,
           tags: b.tags || [],
@@ -293,9 +273,7 @@ class BookmarkController {
         const sortedBookmarks = enriched
           .map(b => ({ ...b, urlReferences: extractUrlsFromContent(b.content) }))
           .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
-        console.log('[bookmark] 🔧 Sorted:', sortedBookmarks.length, 'bookmarks')
 
-        console.log('[bookmark] 🔧 Creating final Bookmark object...')
         const bookmark: Bookmark = {
           id: `${activeAccount.pubkey}-bookmarks`,
           title: `Bookmarks (${sortedBookmarks.length})`,
@@ -310,18 +288,14 @@ class BookmarkController {
           encryptedContent: undefined
         }
         
-        console.log('[bookmark] 📋 Built bookmark with', sortedBookmarks.length, 'items')
-        console.log('[bookmark] 📤 Emitting to', this.bookmarksListeners.length, 'listeners')
         this.bookmarksListeners.forEach(cb => cb([bookmark]))
       }
 
       // Emit immediately with empty metadata (show placeholders)
       const idToEvent: Map<string, NostrEvent> = new Map()
-      console.log('[bookmark] 🚀 Emitting initial bookmarks with placeholders (IDs only)...')
       emitBookmarks(idToEvent)
 
       // Now fetch events progressively in background using batched hydrators
-      console.log('[bookmark] 🔧 Background hydration:', noteIds.length, 'note IDs and', coordinates.length, 'coordinates')
       
       const generation = this.hydrationGeneration
       const onProgress = () => emitBookmarks(idToEvent)
@@ -341,9 +315,7 @@ class BookmarkController {
       this.hydrateByIds(noteIds, idToEvent, onProgress, generation)
       this.hydrateByCoordinates(coordObjs, idToEvent, onProgress, generation)
     } catch (error) {
-      console.error('[bookmark] ❌ Failed to build bookmarks:', error)
-      console.error('[bookmark] ❌ Error details:', error instanceof Error ? error.message : String(error))
-      console.error('[bookmark] ❌ Stack:', error instanceof Error ? error.stack : 'no stack')
+      console.error('Failed to build bookmarks:', error)
       this.bookmarksListeners.forEach(cb => cb([]))
     }
   }
@@ -356,7 +328,6 @@ class BookmarkController {
     const { relayPool, activeAccount, accountManager } = options
 
     if (!activeAccount || typeof (activeAccount as { pubkey?: string }).pubkey !== 'string') {
-      console.error('[bookmark] Invalid activeAccount')
       return
     }
 
@@ -366,7 +337,6 @@ class BookmarkController {
     this.hydrationGeneration++
     
     // Initialize loaders for this session
-    console.log('[bookmark] 🔧 Initializing EventLoader and AddressLoader with', RELAYS.length, 'relays')
     this.eventLoader = createEventLoader(relayPool, { 
       eventStore: this.eventStore,
       extraRelays: RELAYS 
@@ -377,7 +347,6 @@ class BookmarkController {
     })
     
     this.setLoading(true)
-    console.log('[bookmark] 🔍 Starting bookmark load for', account.pubkey.slice(0, 8))
 
     try {
       // Get signer for auto-decryption
@@ -405,7 +374,6 @@ class BookmarkController {
             
             // Add/update event
             this.currentEvents.set(key, evt)
-            console.log('[bookmark] 📨 Event:', evt.kind, evt.id.slice(0, 8), 'encrypted:', hasEncryptedContent(evt))
             
             // Emit raw event for Debug UI
             this.emitRawEvent(evt)
@@ -415,12 +383,13 @@ class BookmarkController {
             if (!isEncrypted) {
               // For unencrypted events, build bookmarks immediately (progressive update)
               this.buildAndEmitBookmarks(maybeAccount, signerCandidate)
-                .catch(err => console.error('[bookmark] ❌ Failed to update after event:', err))
+                .catch(() => {
+                  // Silent error - will retry on next event
+                })
             }
             
             // Auto-decrypt if event has encrypted content (fire-and-forget, non-blocking)
             if (isEncrypted) {
-              console.log('[bookmark] 🔓 Auto-decrypting event', evt.id.slice(0, 8))
               // Don't await - let it run in background
               collectBookmarksFromEvents([evt], account, signerCandidate)
                 .then(({ publicItemsAll, privateItemsAll, newestCreatedAt, latestContent, allTags }) => {
@@ -433,10 +402,6 @@ class BookmarkController {
                     latestContent,
                     allTags
                   })
-                  console.log('[bookmark] ✅ Auto-decrypted:', evt.id.slice(0, 8), {
-                    public: publicItemsAll.length,
-                    private: privateItemsAll.length
-                  })
                   
                   // Emit decrypt complete for Debug UI
                   this.decryptCompleteListeners.forEach(cb => 
@@ -445,10 +410,12 @@ class BookmarkController {
                   
                   // Rebuild bookmarks with newly decrypted content (progressive update)
                   this.buildAndEmitBookmarks(maybeAccount, signerCandidate)
-                    .catch(err => console.error('[bookmark] ❌ Failed to update after decrypt:', err))
+                    .catch(() => {
+                      // Silent error - will retry on next event
+                    })
                 })
-                .catch((error) => {
-                  console.error('[bookmark] ❌ Auto-decrypt failed:', evt.id.slice(0, 8), error)
+                .catch(() => {
+                  // Silent error - decrypt failed
                 })
             }
           }
@@ -457,9 +424,8 @@ class BookmarkController {
 
       // Final update after EOSE
       await this.buildAndEmitBookmarks(maybeAccount, signerCandidate)
-      console.log('[bookmark] ✅ Bookmark load complete')
     } catch (error) {
-      console.error('[bookmark] ❌ Failed to load bookmarks:', error)
+      console.error('Failed to load bookmarks:', error)
       this.bookmarksListeners.forEach(cb => cb([]))
     } finally {
       this.setLoading(false)
