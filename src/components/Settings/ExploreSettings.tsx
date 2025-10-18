@@ -11,7 +11,7 @@ interface ExploreSettingsProps {
 const ExploreSettings: React.FC<ExploreSettingsProps> = ({ settings, onUpdate }) => {
   return (
     <div className="settings-section">
-      <h3>Explore</h3>
+      <h3 className="section-title">Explore</h3>
 
       <div className="setting-group setting-inline">
         <label>Default Explore Scope</label>
