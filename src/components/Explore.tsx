@@ -55,7 +55,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   
   // Get myHighlights directly from controller
   const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
-  const [myHighlightsLoading, setMyHighlightsLoading] = useState(false)
+  // Remove unused loading state to avoid warnings
   
   // Load cached content from event store (instant display)
   const cachedHighlights = useStoreTimeline(eventStore, { kinds: [KINDS.Highlights] }, eventToHighlight, [])
@@ -94,10 +94,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   // Subscribe to highlights controller
   useEffect(() => {
     const unsubHighlights = highlightsController.onHighlights(setMyHighlights)
-    const unsubLoading = highlightsController.onLoading(setMyHighlightsLoading)
     return () => {
       unsubHighlights()
-      unsubLoading()
     }
   }, [])
 
@@ -634,9 +632,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
   }
 
-  // Show content progressively - no blocking error screens
+  // Show skeletons while first load in this session
   const hasData = highlights.length > 0 || blogPosts.length > 0
-  const showSkeletons = (loading || myHighlightsLoading) && !hasData
+  const showSkeletons = loading && !hasData
 
   return (
     <div className="explore-container">
