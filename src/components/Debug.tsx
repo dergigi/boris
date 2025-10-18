@@ -76,6 +76,7 @@ const Debug: React.FC<DebugProps> = ({
   const [bookmarkStats, setBookmarkStats] = useState<{ public: number; private: number } | null>(null)
   const [tLoadBookmarks, setTLoadBookmarks] = useState<number | null>(null)
   const [tDecryptBookmarks, setTDecryptBookmarks] = useState<number | null>(null)
+  const [tFirstBookmark, setTFirstBookmark] = useState<number | null>(null)
   
   // Individual event decryption results
   const [decryptedEvents, setDecryptedEvents] = useState<Map<string, { public: number; private: number }>>(new Map())
@@ -254,10 +255,12 @@ const Debug: React.FC<DebugProps> = ({
       setBookmarkStats(null)
       setBookmarkEvents([]) // Clear existing events
       setDecryptedEvents(new Map())
+      setTFirstBookmark(null)
       DebugBus.info('debug', 'Loading bookmark events...')
 
       // Start timing
       const start = performance.now()
+      let firstEventTime: number | null = null
       setLiveTiming(prev => ({ ...prev, loadBookmarks: { startTime: start } }))
 
       // Import controller at runtime to avoid circular dependencies
@@ -265,6 +268,12 @@ const Debug: React.FC<DebugProps> = ({
       
       // Subscribe to raw events for Debug UI display
       const unsubscribeRaw = bookmarkController.onRawEvent((evt) => {
+        // Track time to first event
+        if (firstEventTime === null) {
+          firstEventTime = performance.now() - start
+          setTFirstBookmark(Math.round(firstEventTime))
+        }
+        
         // Add event immediately with live deduplication
         setBookmarkEvents(prev => {
           const key = getEventKey(evt)
@@ -322,6 +331,7 @@ const Debug: React.FC<DebugProps> = ({
     setBookmarkStats(null)
     setTLoadBookmarks(null)
     setTDecryptBookmarks(null)
+    setTFirstBookmark(null)
     setDecryptedEvents(new Map())
     DebugBus.info('debug', 'Cleared bookmark data')
   }
@@ -690,7 +700,8 @@ const Debug: React.FC<DebugProps> = ({
           </div>
 
           <div className="mb-3 flex gap-2 flex-wrap">
-            <Stat label="load" value={tLoadBookmarks} bookmarkOp="loadBookmarks" />
+            <Stat label="total" value={tLoadBookmarks} bookmarkOp="loadBookmarks" />
+            <Stat label="first event" value={tFirstBookmark} />
             <Stat label="decrypt" value={tDecryptBookmarks} bookmarkOp="decryptBookmarks" />
           </div>
 
