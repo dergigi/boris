@@ -6,6 +6,7 @@ import IconButton from './IconButton'
 import { loadFont } from '../utils/fontLoader'
 import ThemeSettings from './Settings/ThemeSettings'
 import ReadingDisplaySettings from './Settings/ReadingDisplaySettings'
+import ExploreSettings from './Settings/ExploreSettings'
 import LayoutBehaviorSettings from './Settings/LayoutBehaviorSettings'
 import ZapSettings from './Settings/ZapSettings'
 import RelaySettings from './Settings/RelaySettings'
@@ -166,6 +167,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPoo
       <div className="settings-content">
         <ThemeSettings settings={localSettings} onUpdate={handleUpdate} />
         <ReadingDisplaySettings settings={localSettings} onUpdate={handleUpdate} />
+        <ExploreSettings settings={localSettings} onUpdate={handleUpdate} />
         <ZapSettings settings={localSettings} onUpdate={handleUpdate} />
         <LayoutBehaviorSettings settings={localSettings} onUpdate={handleUpdate} />
         <PWASettings settings={localSettings} onUpdate={handleUpdate} onClose={onClose} />
