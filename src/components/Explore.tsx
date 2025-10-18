@@ -13,6 +13,7 @@ import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreS
 import { fetchHighlightsFromAuthors } from '../services/highlightService'
 import { fetchProfiles } from '../services/profileService'
 import { fetchNostrverseBlogPosts, fetchNostrverseHighlights } from '../services/nostrverseService'
+import { nostrverseHighlightsController } from '../services/nostrverseHighlightsController'
 import { highlightsController } from '../services/highlightsController'
 import { Highlight } from '../types/highlights'
 import { UserSettings } from '../services/settingsService'
@@ -27,6 +28,8 @@ import { KINDS } from '../config/kinds'
 import { eventToHighlight } from '../services/highlightEventProcessor'
 import { useStoreTimeline } from '../hooks/useStoreTimeline'
 import { dedupeHighlightsById, dedupeWritingsByReplaceable } from '../utils/dedupe'
+import { writingsController } from '../services/writingsController'
+import { nostrverseWritingsController } from '../services/nostrverseWritingsController'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -48,10 +51,13 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [hasLoadedNostrverse, setHasLoadedNostrverse] = useState(false)
+  const [hasLoadedMine, setHasLoadedMine] = useState(false)
+  const [hasLoadedNostrverseHighlights, setHasLoadedNostrverseHighlights] = useState(false)
   
   // Get myHighlights directly from controller
   const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
-  const [myHighlightsLoading, setMyHighlightsLoading] = useState(false)
+  // Remove unused loading state to avoid warnings
   
   // Load cached content from event store (instant display)
   const cachedHighlights = useStoreTimeline(eventStore, { kinds: [KINDS.Highlights] }, eventToHighlight, [])
@@ -66,23 +72,122 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   }), [])
   
   const cachedWritings = useStoreTimeline(eventStore, { kinds: [30023] }, toBlogPostPreview, [])
+
   
-  // Visibility filters (defaults from settings)
+  
+  // Visibility filters (defaults from settings or nostrverse when logged out)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
-    nostrverse: settings?.defaultExploreScopeNostrverse ?? false,
+    nostrverse: activeAccount ? (settings?.defaultExploreScopeNostrverse ?? false) : true,
     friends: settings?.defaultExploreScopeFriends ?? true,
     mine: settings?.defaultExploreScopeMine ?? false
   })
 
+  // Ensure at least one scope remains active
+  const toggleScope = useCallback((key: 'nostrverse' | 'friends' | 'mine') => {
+    setVisibility(prev => {
+      const next = { ...prev, [key]: !prev[key] }
+      if (!next.nostrverse && !next.friends && !next.mine) {
+        return prev // ignore toggle that would disable all scopes
+      }
+      return next
+    })
+  }, [])
+
   // Subscribe to highlights controller
   useEffect(() => {
     const unsubHighlights = highlightsController.onHighlights(setMyHighlights)
-    const unsubLoading = highlightsController.onLoading(setMyHighlightsLoading)
     return () => {
       unsubHighlights()
-      unsubLoading()
     }
   }, [])
+
+  // Subscribe to nostrverse highlights controller for global stream
+  useEffect(() => {
+    const apply = (incoming: Highlight[]) => {
+      setHighlights(prev => {
+        const byId = new Map(prev.map(h => [h.id, h]))
+        for (const h of incoming) byId.set(h.id, h)
+        return Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
+      })
+    }
+    // seed immediately
+    apply(nostrverseHighlightsController.getHighlights())
+    const unsub = nostrverseHighlightsController.onHighlights(apply)
+    return () => unsub()
+  }, [])
+
+  // Subscribe to nostrverse writings controller for global stream
+  useEffect(() => {
+    const apply = (incoming: BlogPostPreview[]) => {
+      setBlogPosts(prev => {
+        const byKey = new Map<string, BlogPostPreview>()
+        for (const p of prev) {
+          const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+          const key = `${p.author}:${dTag}`
+          byKey.set(key, p)
+        }
+        for (const p of incoming) {
+          const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+          const key = `${p.author}:${dTag}`
+          const existing = byKey.get(key)
+          if (!existing || p.event.created_at > existing.event.created_at) byKey.set(key, p)
+        }
+        return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+      })
+    }
+    apply(nostrverseWritingsController.getWritings())
+    const unsub = nostrverseWritingsController.onWritings(apply)
+    return () => unsub()
+  }, [])
+
+  // Subscribe to writings controller for "mine" posts and seed immediately
+  useEffect(() => {
+    // Seed from controller's current state
+    const seed = writingsController.getWritings()
+    if (seed.length > 0) {
+      setBlogPosts(prev => {
+        const merged = dedupeWritingsByReplaceable([...prev, ...seed])
+        return merged.sort((a, b) => {
+          const timeA = a.published || a.event.created_at
+          const timeB = b.published || b.event.created_at
+          return timeB - timeA
+        })
+      })
+    }
+
+    // Stream updates
+    const unsub = writingsController.onWritings((posts) => {
+      setBlogPosts(prev => {
+        const merged = dedupeWritingsByReplaceable([...prev, ...posts])
+        return merged.sort((a, b) => {
+          const timeA = a.published || a.event.created_at
+          const timeB = b.published || b.event.created_at
+          return timeB - timeA
+        })
+      })
+    })
+
+    return () => unsub()
+  }, [])
+
+  // Update visibility when settings/login state changes
+  useEffect(() => {
+    if (!activeAccount) {
+      // When logged out, show nostrverse by default
+      setVisibility(prev => ({ ...prev, nostrverse: true, friends: false, mine: false }))
+      setHasLoadedNostrverse(true) // logged out path loads nostrverse immediately
+      setHasLoadedNostrverseHighlights(true)
+    } else {
+      // When logged in, use settings defaults immediately
+      setVisibility({
+        nostrverse: settings?.defaultExploreScopeNostrverse ?? false,
+        friends: settings?.defaultExploreScopeFriends ?? true,
+        mine: settings?.defaultExploreScopeMine ?? false
+      })
+      setHasLoadedNostrverse(false)
+      setHasLoadedNostrverseHighlights(false)
+    }
+  }, [activeAccount, settings?.defaultExploreScopeNostrverse, settings?.defaultExploreScopeFriends, settings?.defaultExploreScopeMine])
 
   // Update local state when prop changes
   useEffect(() => {
@@ -93,21 +198,22 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
 
   useEffect(() => {
     const loadData = async () => {
-      if (!activeAccount) {
-        setLoading(false)
-        return
-      }
-
       try {
-        // show spinner but keep existing data
+        // begin load, but do not block rendering
         setLoading(true)
 
+        // If not logged in, only fetch nostrverse content with streaming posts
+        if (!activeAccount) {
+          // Logged out: rely entirely on centralized controllers; do not fetch here
+          setLoading(false)
+        }
+
         // Seed from in-memory cache if available to avoid empty flash
-        const memoryCachedPosts = getCachedPosts(activeAccount.pubkey)
+        const memoryCachedPosts = activeAccount ? getCachedPosts(activeAccount.pubkey) : []
         if (memoryCachedPosts && memoryCachedPosts.length > 0) {
           setBlogPosts(prev => prev.length === 0 ? memoryCachedPosts : prev)
         }
-        const memoryCachedHighlights = getCachedHighlights(activeAccount.pubkey)
+        const memoryCachedHighlights = activeAccount ? getCachedHighlights(activeAccount.pubkey) : []
         if (memoryCachedHighlights && memoryCachedHighlights.length > 0) {
           setHighlights(prev => prev.length === 0 ? memoryCachedHighlights : prev)
         }
@@ -133,10 +239,13 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           })
         }
 
+        // At this point, we have seeded any available data; lift the loading state
+        setLoading(false)
+
         // Fetch the user's contacts (friends)
         const contacts = await fetchContacts(
           relayPool,
-          activeAccount.pubkey,
+          activeAccount?.pubkey || '',
           (partial) => {
             // Store followed pubkeys for highlight classification
             setFollowedPubkeys(partial)
@@ -184,7 +293,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                       return timeB - timeA
                     })
                   })
-                  setCachedPosts(activeAccount.pubkey, upsertCachedPost(activeAccount.pubkey, post))
+                  if (activeAccount) setCachedPosts(activeAccount.pubkey, upsertCachedPost(activeAccount.pubkey, post))
                 }
               ).then((all) => {
                 setBlogPosts((prev) => {
@@ -213,7 +322,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                     const timeB = b.published || b.event.created_at
                     return timeB - timeA
                   })
-                  setCachedPosts(activeAccount.pubkey, merged)
+                  if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
                   return merged
                 })
               })
@@ -229,14 +338,14 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                     const next = [...prev, highlight]
                     return next.sort((a, b) => b.created_at - a.created_at)
                   })
-                  setCachedHighlights(activeAccount.pubkey, upsertCachedHighlight(activeAccount.pubkey, highlight))
+                  if (activeAccount) setCachedHighlights(activeAccount.pubkey, upsertCachedHighlight(activeAccount.pubkey, highlight))
                 }
               ).then((all) => {
                 setHighlights((prev) => {
                   const byId = new Map(prev.map(h => [h.id, h]))
                   for (const highlight of all) byId.set(highlight.id, highlight)
                   const merged = Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
-                  setCachedHighlights(activeAccount.pubkey, merged)
+                  if (activeAccount) setCachedHighlights(activeAccount.pubkey, merged)
                   return merged
                 })
               })
@@ -250,52 +359,143 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         // Store final followed pubkeys
         setFollowedPubkeys(contacts)
 
-        // Fetch both friends content and nostrverse content in parallel
+        // Fetch friends content and (optionally) nostrverse + mine content in parallel
         const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
         const contactsArray = Array.from(contacts)
-        const [friendsPosts, friendsHighlights, nostrversePosts, nostriverseHighlights] = await Promise.all([
-          fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls),
-          fetchHighlightsFromAuthors(relayPool, contactsArray),
-          fetchNostrverseBlogPosts(relayPool, relayUrls, 50, eventStore || undefined),
-          fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
-        ])
+        // Use centralized writingsController for my posts (non-blocking)
+        // pull from writingsController; no need to store promise
+        setBlogPosts(prev => dedupeWritingsByReplaceable([...prev, ...writingsController.getWritings()]).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at)))
+        setHasLoadedMine(true)
+        const nostrversePostsPromise = visibility.nostrverse
+          ? fetchNostrverseBlogPosts(relayPool, relayUrls, 50, eventStore || undefined, (post) => {
+              // Stream nostrverse posts too when logged in
+              setBlogPosts(prev => {
+                const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                const key = `${post.author}:${dTag}`
+                const existingIndex = prev.findIndex(p => {
+                  const pDTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+                  return `${p.author}:${pDTag}` === key
+                })
+                if (existingIndex >= 0) {
+                  const existing = prev[existingIndex]
+                  if (post.event.created_at <= existing.event.created_at) return prev
+                  const next = [...prev]
+                  next[existingIndex] = post
+                  return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+                }
+                const next = [...prev, post]
+                return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+              })
+            })
+          : Promise.resolve([] as BlogPostPreview[])
 
-        // Merge and deduplicate all posts
-        const allPosts = [...friendsPosts, ...nostrversePosts]
-        const uniquePosts = dedupeWritingsByReplaceable(allPosts).sort((a, b) => {
-          const timeA = a.published || a.event.created_at
-          const timeB = b.published || b.event.created_at
-          return timeB - timeA
-        })
+        // Fire non-blocking fetches and merge as they resolve
+        fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls)
+          .then((friendsPosts) => {
+            setBlogPosts(prev => {
+              const merged = dedupeWritingsByReplaceable([...prev, ...friendsPosts])
+              const sorted = merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+              if (activeAccount) setCachedPosts(activeAccount.pubkey, sorted)
+              // Pre-cache profiles in background
+              const authorPubkeys = Array.from(new Set(sorted.map(p => p.author)))
+              fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch(() => {})
+              return sorted
+            })
+          }).catch(() => {})
 
-        // Merge and deduplicate all highlights (mine from controller + friends + nostrverse)
-        const allHighlights = [...myHighlights, ...friendsHighlights, ...nostriverseHighlights]
-        const uniqueHighlights = dedupeHighlightsById(allHighlights).sort((a, b) => b.created_at - a.created_at)
+        fetchHighlightsFromAuthors(relayPool, contactsArray)
+          .then((friendsHighlights) => {
+            setHighlights(prev => {
+              const merged = dedupeHighlightsById([...prev, ...friendsHighlights])
+              const sorted = merged.sort((a, b) => b.created_at - a.created_at)
+              if (activeAccount) setCachedHighlights(activeAccount.pubkey, sorted)
+              return sorted
+            })
+          }).catch(() => {})
 
-        // Fetch profiles for all blog post authors to cache them
-        if (uniquePosts.length > 0) {
-          const authorPubkeys = Array.from(new Set(uniquePosts.map(p => p.author)))
-          fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch(err => {
-            console.error('Failed to fetch author profiles:', err)
-          })
-        }
+        nostrversePostsPromise.then((nostrversePosts) => {
+          setBlogPosts(prev => dedupeWritingsByReplaceable([...prev, ...nostrversePosts]).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at)))
+        }).catch(() => {})
 
-        // No blocking errors - let empty states handle messaging
-        setBlogPosts(uniquePosts)
-        setCachedPosts(activeAccount.pubkey, uniquePosts)
-
-        setHighlights(uniqueHighlights)
-        setCachedHighlights(activeAccount.pubkey, uniqueHighlights)
+        fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
+          .then((nostriverseHighlights) => {
+            setHighlights(prev => dedupeHighlightsById([...prev, ...nostriverseHighlights]).sort((a, b) => b.created_at - a.created_at))
+          }).catch(() => {})
       } catch (err) {
         console.error('Failed to load data:', err)
         // No blocking error - user can pull-to-refresh
       } finally {
-        setLoading(false)
+        // loading is already turned off after seeding
       }
     }
 
     loadData()
-  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings, myHighlights, cachedHighlights, cachedWritings])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
+
+  // Lazy-load nostrverse writings when user toggles it on (logged in)
+  useEffect(() => {
+    if (!activeAccount || !relayPool || !visibility.nostrverse || hasLoadedNostrverse) return
+    const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+    setHasLoadedNostrverse(true)
+    fetchNostrverseBlogPosts(
+      relayPool,
+      relayUrls,
+      50,
+      eventStore || undefined,
+      (post) => {
+        setBlogPosts(prev => {
+          const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+          const key = `${post.author}:${dTag}`
+          const existingIndex = prev.findIndex(p => {
+            const pDTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+            return `${p.author}:${pDTag}` === key
+          })
+          if (existingIndex >= 0) {
+            const existing = prev[existingIndex]
+            if (post.event.created_at <= existing.event.created_at) return prev
+            const next = [...prev]
+            next[existingIndex] = post
+            return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+          }
+          const next = [...prev, post]
+          return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+        })
+      }
+    ).then((finalPosts) => {
+      // Ensure final deduped list
+      setBlogPosts(prev => {
+        const byKey = new Map<string, BlogPostPreview>()
+        for (const p of [...prev, ...finalPosts]) {
+          const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
+          const key = `${p.author}:${dTag}`
+          const existing = byKey.get(key)
+          if (!existing || p.event.created_at > existing.event.created_at) byKey.set(key, p)
+        }
+        return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+      })
+    }).catch(() => {})
+  }, [visibility.nostrverse, activeAccount, relayPool, eventStore, hasLoadedNostrverse])
+
+  // Lazy-load nostrverse highlights when user toggles it on (logged in)
+  useEffect(() => {
+    if (!activeAccount || !relayPool || !visibility.nostrverse || hasLoadedNostrverseHighlights) return
+    setHasLoadedNostrverseHighlights(true)
+    fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
+      .then((hl) => {
+        if (hl && hl.length > 0) {
+          setHighlights(prev => dedupeHighlightsById([...prev, ...hl]).sort((a, b) => b.created_at - a.created_at))
+        }
+      })
+      .catch(() => {})
+  }, [visibility.nostrverse, activeAccount, relayPool, eventStore, hasLoadedNostrverseHighlights])
+
+  // Lazy-load my writings when user toggles "mine" on (logged in)
+  // No direct fetch here; writingsController streams my posts centrally
+  useEffect(() => {
+    if (!activeAccount || !visibility.mine || hasLoadedMine) return
+    setHasLoadedMine(true)
+  }, [visibility.mine, activeAccount, hasLoadedMine])
 
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
@@ -333,10 +533,20 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     })
   }, [highlights, activeAccount?.pubkey, followedPubkeys, visibility])
 
+  // Dedupe and sort posts once for rendering
+  const uniqueSortedPosts = useMemo(() => {
+    const unique = dedupeWritingsByReplaceable(blogPosts)
+    return unique.sort((a, b) => {
+      const timeA = a.published || a.event.created_at
+      const timeB = b.published || b.event.created_at
+      return timeB - timeA
+    })
+  }, [blogPosts])
+
   // Filter blog posts by future dates and visibility, and add level classification
   const filteredBlogPosts = useMemo(() => {
     const maxFutureTime = Date.now() / 1000 + (24 * 60 * 60) // 1 day from now
-    return blogPosts
+    return uniqueSortedPosts
       .filter(post => {
         // Filter out future dates
         const publishedTime = post.published || post.event.created_at
@@ -360,7 +570,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         const level: 'mine' | 'friends' | 'nostrverse' = isMine ? 'mine' : isFriend ? 'friends' : 'nostrverse'
         return { ...post, level }
       })
-  }, [blogPosts, activeAccount, followedPubkeys, visibility])
+  }, [uniqueSortedPosts, activeAccount, followedPubkeys, visibility])
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -403,7 +613,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         }
         return classifiedHighlights.length === 0 ? (
           <div className="explore-loading" style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+            <span>No highlights to show for the selected scope.</span>
           </div>
         ) : (
           <div className="explore-grid">
@@ -422,9 +632,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
   }
 
-  // Show content progressively - no blocking error screens
+  // Show skeletons while first load in this session
   const hasData = highlights.length > 0 || blogPosts.length > 0
-  const showSkeletons = (loading || myHighlightsLoading) && !hasData
+  const showSkeletons = loading && !hasData
 
   return (
     <div className="explore-container">
@@ -451,7 +661,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           />
           <IconButton
             icon={faNetworkWired}
-            onClick={() => setVisibility({ ...visibility, nostrverse: !visibility.nostrverse })}
+            onClick={() => toggleScope('nostrverse')}
             title="Toggle nostrverse content"
             ariaLabel="Toggle nostrverse content"
             variant="ghost"
@@ -462,7 +672,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           />
           <IconButton
             icon={faUserGroup}
-            onClick={() => setVisibility({ ...visibility, friends: !visibility.friends })}
+            onClick={() => toggleScope('friends')}
             title={activeAccount ? "Toggle friends content" : "Login to see friends content"}
             ariaLabel="Toggle friends content"
             variant="ghost"
@@ -474,7 +684,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           />
           <IconButton
             icon={faUser}
-            onClick={() => setVisibility({ ...visibility, mine: !visibility.mine })}
+            onClick={() => toggleScope('mine')}
             title={activeAccount ? "Toggle my content" : "Login to see your content"}
             ariaLabel="Toggle my content"
             variant="ghost"

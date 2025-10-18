@@ -11,6 +11,7 @@ import { contactsController } from '../services/contactsController'
 import { useStoreTimeline } from './useStoreTimeline'
 import { eventToHighlight } from '../services/highlightEventProcessor'
 import { KINDS } from '../config/kinds'
+import { nip19 } from 'nostr-tools'
 
 interface UseBookmarksDataParams {
   relayPool: RelayPool | null
@@ -44,21 +45,38 @@ export const useBookmarksData = ({
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null)
 
+  // Determine effective article coordinate as early as possible
+  // Prefer state-derived coordinate, but fall back to route naddr before content loads
+  const effectiveArticleCoordinate = useMemo(() => {
+    if (currentArticleCoordinate) return currentArticleCoordinate
+    if (!naddr) return undefined
+    try {
+      const decoded = nip19.decode(naddr)
+      if (decoded.type === 'naddr') {
+        const ptr = decoded.data as { kind: number; pubkey: string; identifier: string }
+        return `${ptr.kind}:${ptr.pubkey}:${ptr.identifier}`
+      }
+    } catch {
+      // ignore decode failure; treat as no coordinate yet
+    }
+    return undefined
+  }, [currentArticleCoordinate, naddr])
+
   // Load cached article-specific highlights from event store
   const articleFilter = useMemo(() => {
-    if (!currentArticleCoordinate) return null
+    if (!effectiveArticleCoordinate) return null
     return {
       kinds: [KINDS.Highlights],
-      '#a': [currentArticleCoordinate],
+      '#a': [effectiveArticleCoordinate],
       ...(currentArticleEventId ? { '#e': [currentArticleEventId] } : {})
     }
-  }, [currentArticleCoordinate, currentArticleEventId])
+  }, [effectiveArticleCoordinate, currentArticleEventId])
   
   const cachedArticleHighlights = useStoreTimeline(
     eventStore || null,
     articleFilter || { kinds: [KINDS.Highlights], limit: 0 }, // empty filter if no article
     eventToHighlight,
-    [currentArticleCoordinate, currentArticleEventId]
+    [effectiveArticleCoordinate, currentArticleEventId]
   )
 
   // Subscribe to centralized controllers
@@ -84,7 +102,7 @@ export const useBookmarksData = ({
     
     setHighlightsLoading(true)
     try {
-      if (currentArticleCoordinate) {
+      if (effectiveArticleCoordinate) {
         // Seed with cached highlights first
         if (cachedArticleHighlights.length > 0) {
           setArticleHighlights(cachedArticleHighlights.sort((a, b) => b.created_at - a.created_at))
@@ -97,7 +115,7 @@ export const useBookmarksData = ({
         
         await fetchHighlightsForArticle(
           relayPool, 
-          currentArticleCoordinate, 
+          effectiveArticleCoordinate, 
           currentArticleEventId,
           (highlight) => {
             // Deduplicate highlights by ID as they arrive
@@ -120,7 +138,7 @@ export const useBookmarksData = ({
     } finally {
       setHighlightsLoading(false)
     }
-  }, [relayPool, currentArticleCoordinate, currentArticleEventId, settings, eventStore, cachedArticleHighlights])
+  }, [relayPool, effectiveArticleCoordinate, currentArticleEventId, settings, eventStore, cachedArticleHighlights])
 
   const handleRefreshAll = useCallback(async () => {
     if (!relayPool || !activeAccount || isRefreshing) return
@@ -143,19 +161,20 @@ export const useBookmarksData = ({
     if (!relayPool || !activeAccount) return
     // Fetch article-specific highlights when viewing an article
     // External URLs have their highlights fetched by useExternalUrlLoader
-    if (currentArticleCoordinate && !externalUrl) {
+    if (effectiveArticleCoordinate && !externalUrl) {
       handleFetchHighlights()
     } else if (!naddr && !externalUrl) {
       // Clear article highlights when not viewing an article
       setArticleHighlights([])
       setHighlightsLoading(false)
     }
-  }, [relayPool, activeAccount, currentArticleCoordinate, naddr, externalUrl, handleFetchHighlights])
+  }, [relayPool, activeAccount, effectiveArticleCoordinate, naddr, externalUrl, handleFetchHighlights])
 
-  // Merge highlights from controller with article-specific highlights
-  const highlights = [...myHighlights, ...articleHighlights]
-    .filter((h, i, arr) => arr.findIndex(x => x.id === h.id) === i) // Deduplicate
-    .sort((a, b) => b.created_at - a.created_at)
+  // When viewing an article, show only article-specific highlights
+  // Otherwise, show user's highlights from controller
+  const highlights = effectiveArticleCoordinate || externalUrl
+    ? articleHighlights.sort((a, b) => b.created_at - a.created_at)
+    : myHighlights
 
   return {
     highlights,

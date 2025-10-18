@@ -11,6 +11,7 @@ import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
 import { highlightsController } from '../services/highlightsController'
+import { writingsController } from '../services/writingsController'
 import { fetchAllReads, ReadItem } from '../services/readsService'
 import { fetchLinks } from '../services/linksService'
 import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
@@ -81,6 +82,10 @@ const Me: React.FC<MeProps> = ({
   const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
   const [myHighlightsLoading, setMyHighlightsLoading] = useState(false)
   
+  // Get myWritings directly from controller
+  const [myWritings, setMyWritings] = useState<BlogPostPreview[]>([])
+  const [myWritingsLoading, setMyWritingsLoading] = useState(false)
+  
   // Load cached data from event store for OTHER profiles (not own)
   const cachedHighlights = useStoreTimeline(
     eventStore,
@@ -134,6 +139,20 @@ const Me: React.FC<MeProps> = ({
     const unsubLoading = highlightsController.onLoading(setMyHighlightsLoading)
     return () => {
       unsubHighlights()
+      unsubLoading()
+    }
+  }, [])
+
+  // Subscribe to writings controller
+  useEffect(() => {
+    // Get initial state immediately
+    setMyWritings(writingsController.getWritings())
+    
+    // Subscribe to updates
+    const unsubWritings = writingsController.onWritings(setMyWritings)
+    const unsubLoading = writingsController.onLoading(setMyWritingsLoading)
+    return () => {
+      unsubWritings()
       unsubLoading()
     }
   }, [])
@@ -204,8 +223,20 @@ const Me: React.FC<MeProps> = ({
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Seed with cached writings first
-      if (!isOwnProfile && cachedWritings.length > 0) {
+      // For own profile, use centralized controller
+      if (isOwnProfile) {
+        await writingsController.start({ 
+          relayPool, 
+          eventStore, 
+          pubkey: viewingPubkey,
+          force: refreshTrigger > 0
+        })
+        setLoadedTabs(prev => new Set(prev).add('writings'))
+        return
+      }
+      
+      // For other profiles, seed with cached writings first
+      if (cachedWritings.length > 0) {
         setWritings(cachedWritings.sort((a, b) => {
           const timeA = a.published || a.event.created_at
           const timeB = b.published || b.event.created_at
@@ -213,7 +244,7 @@ const Me: React.FC<MeProps> = ({
         }))
       }
       
-      // Fetch fresh writings
+      // Fetch fresh writings for other profiles
       const userWritings = await fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
       setWritings(userWritings)
       setLoadedTabs(prev => new Set(prev).add('writings'))
@@ -374,6 +405,13 @@ const Me: React.FC<MeProps> = ({
       setHighlights(myHighlights)
     }
   }, [isOwnProfile, myHighlights])
+
+  // Sync myWritings from controller when viewing own profile
+  useEffect(() => {
+    if (isOwnProfile) {
+      setWritings(myWritings)
+    }
+  }, [isOwnProfile, myWritings])
 
   // Pull-to-refresh - reload active tab without clearing state
   const { isRefreshing, pullPosition } = usePullToRefresh({
@@ -714,7 +752,7 @@ const Me: React.FC<MeProps> = ({
             </div>
           )
         }
-        return writings.length === 0 && !loading ? (
+        return writings.length === 0 && !loading && !(isOwnProfile && myWritingsLoading) ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
             No articles written yet.
           </div>

@@ -23,6 +23,10 @@ import { Bookmark } from './types/bookmarks'
 import { bookmarkController } from './services/bookmarkController'
 import { contactsController } from './services/contactsController'
 import { highlightsController } from './services/highlightsController'
+import { writingsController } from './services/writingsController'
+// import { fetchNostrverseHighlights } from './services/nostrverseService'
+import { nostrverseHighlightsController } from './services/nostrverseHighlightsController'
+import { nostrverseWritingsController } from './services/nostrverseWritingsController'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -109,8 +113,28 @@ function AppRoutes({
         console.log('[highlights] 🚀 Auto-loading highlights on mount/login')
         highlightsController.start({ relayPool, eventStore, pubkey })
       }
+
+      // Load writings (controller manages its own state)
+      if (pubkey && eventStore && !writingsController.isLoadedFor(pubkey)) {
+        console.log('[writings] 🚀 Auto-loading writings on mount/login')
+        writingsController.start({ relayPool, eventStore, pubkey })
+      }
+
+      // Start centralized nostrverse highlights controller (non-blocking)
+      if (eventStore) {
+        nostrverseHighlightsController.start({ relayPool, eventStore })
+        nostrverseWritingsController.start({ relayPool, eventStore })
+      }
     }
   }, [activeAccount, relayPool, eventStore, bookmarks.length, bookmarksLoading, contacts.size, contactsLoading, accountManager])
+
+  // Ensure nostrverse controllers run even when logged out
+  useEffect(() => {
+    if (relayPool && eventStore) {
+      nostrverseHighlightsController.start({ relayPool, eventStore })
+      nostrverseWritingsController.start({ relayPool, eventStore })
+    }
+  }, [relayPool, eventStore])
 
   // Manual refresh (for sidebar button)
   const handleRefreshBookmarks = useCallback(async () => {
