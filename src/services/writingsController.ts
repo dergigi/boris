@@ -1,0 +1,250 @@
+import { RelayPool } from 'applesauce-relay'
+import { IEventStore, Helpers } from 'applesauce-core'
+import { NostrEvent } from 'nostr-tools'
+import { KINDS } from '../config/kinds'
+import { queryEvents } from './dataFetch'
+import { BlogPostPreview } from './exploreService'
+
+const { getArticleTitle, getArticleSummary, getArticleImage, getArticlePublished } = Helpers
+
+type WritingsCallback = (posts: BlogPostPreview[]) => void
+type LoadingCallback = (loading: boolean) => void
+
+const LAST_SYNCED_KEY = 'writings_last_synced'
+
+/**
+ * Shared writings controller
+ * Manages the user's nostr-native long-form articles (kind:30023) centrally,
+ * similar to highlightsController
+ */
+class WritingsController {
+  private writingsListeners: WritingsCallback[] = []
+  private loadingListeners: LoadingCallback[] = []
+  
+  private currentPosts: BlogPostPreview[] = []
+  private lastLoadedPubkey: string | null = null
+  private generation = 0
+
+  onWritings(cb: WritingsCallback): () => void {
+    this.writingsListeners.push(cb)
+    return () => {
+      this.writingsListeners = this.writingsListeners.filter(l => l !== cb)
+    }
+  }
+
+  onLoading(cb: LoadingCallback): () => void {
+    this.loadingListeners.push(cb)
+    return () => {
+      this.loadingListeners = this.loadingListeners.filter(l => l !== cb)
+    }
+  }
+
+  private setLoading(loading: boolean): void {
+    this.loadingListeners.forEach(cb => cb(loading))
+  }
+
+  private emitWritings(posts: BlogPostPreview[]): void {
+    this.writingsListeners.forEach(cb => cb(posts))
+  }
+
+  /**
+   * Get current writings without triggering a reload
+   */
+  getWritings(): BlogPostPreview[] {
+    return [...this.currentPosts]
+  }
+
+  /**
+   * Check if writings are loaded for a specific pubkey
+   */
+  isLoadedFor(pubkey: string): boolean {
+    return this.lastLoadedPubkey === pubkey && this.currentPosts.length >= 0
+  }
+
+  /**
+   * Reset state (for logout or manual refresh)
+   */
+  reset(): void {
+    this.generation++
+    this.currentPosts = []
+    this.lastLoadedPubkey = null
+    this.emitWritings(this.currentPosts)
+  }
+
+  /**
+   * Get last synced timestamp for incremental loading
+   */
+  private getLastSyncedAt(pubkey: string): number | null {
+    try {
+      const data = localStorage.getItem(LAST_SYNCED_KEY)
+      if (!data) return null
+      const parsed = JSON.parse(data)
+      return parsed[pubkey] || null
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Update last synced timestamp
+   */
+  private setLastSyncedAt(pubkey: string, timestamp: number): void {
+    try {
+      const data = localStorage.getItem(LAST_SYNCED_KEY)
+      const parsed = data ? JSON.parse(data) : {}
+      parsed[pubkey] = timestamp
+      localStorage.setItem(LAST_SYNCED_KEY, JSON.stringify(parsed))
+    } catch (err) {
+      console.warn('[writings] Failed to save last synced timestamp:', err)
+    }
+  }
+
+  /**
+   * Convert NostrEvent to BlogPostPreview using applesauce Helpers
+   */
+  private toPreview(event: NostrEvent): BlogPostPreview {
+    return {
+      event,
+      title: getArticleTitle(event) || 'Untitled',
+      summary: getArticleSummary(event),
+      image: getArticleImage(event),
+      published: getArticlePublished(event),
+      author: event.pubkey
+    }
+  }
+
+  /**
+   * Sort posts by published/created date (most recent first)
+   */
+  private sortPosts(posts: BlogPostPreview[]): BlogPostPreview[] {
+    return posts.slice().sort((a, b) => {
+      const timeA = a.published || a.event.created_at
+      const timeB = b.published || b.event.created_at
+      return timeB - timeA
+    })
+  }
+
+  /**
+   * Load writings for a user (kind:30023)
+   * Streams results and stores in event store
+   */
+  async start(options: {
+    relayPool: RelayPool
+    eventStore: IEventStore
+    pubkey: string
+    force?: boolean
+  }): Promise<void> {
+    const { relayPool, eventStore, pubkey, force = false } = options
+
+    // Skip if already loaded for this pubkey (unless forced)
+    if (!force && this.isLoadedFor(pubkey)) {
+      console.log('[writings] ✅ Already loaded for', pubkey.slice(0, 8))
+      this.emitWritings(this.currentPosts)
+      return
+    }
+
+    // Increment generation to cancel any in-flight work
+    this.generation++
+    const currentGeneration = this.generation
+
+    this.setLoading(true)
+    console.log('[writings] 🔍 Loading writings for', pubkey.slice(0, 8))
+
+    try {
+      const seenIds = new Set<string>()
+      const uniqueByReplaceable = new Map<string, BlogPostPreview>()
+
+      // Get last synced timestamp for incremental loading
+      const lastSyncedAt = force ? null : this.getLastSyncedAt(pubkey)
+      const filter: { kinds: number[]; authors: string[]; since?: number } = {
+        kinds: [KINDS.BlogPost],
+        authors: [pubkey]
+      }
+      if (lastSyncedAt) {
+        filter.since = lastSyncedAt
+        console.log('[writings] 📅 Incremental sync since', new Date(lastSyncedAt * 1000).toISOString())
+      }
+
+      const events = await queryEvents(
+        relayPool,
+        filter,
+        {
+          onEvent: (evt) => {
+            // Check if this generation is still active
+            if (currentGeneration !== this.generation) return
+
+            if (seenIds.has(evt.id)) return
+            seenIds.add(evt.id)
+
+            // Store in event store immediately
+            eventStore.add(evt)
+
+            // Dedupe by replaceable key (author + d-tag)
+            const dTag = evt.tags.find(t => t[0] === 'd')?.[1] || ''
+            const key = `${evt.pubkey}:${dTag}`
+            
+            const preview = this.toPreview(evt)
+            const existing = uniqueByReplaceable.get(key)
+            
+            // Keep the newest version for replaceable events
+            if (!existing || evt.created_at > existing.event.created_at) {
+              uniqueByReplaceable.set(key, preview)
+
+              // Stream to listeners
+              const sortedPosts = this.sortPosts(Array.from(uniqueByReplaceable.values()))
+              this.currentPosts = sortedPosts
+              this.emitWritings(sortedPosts)
+            }
+          }
+        }
+      )
+
+      // Check if still active after async operation
+      if (currentGeneration !== this.generation) {
+        console.log('[writings] ⚠️ Load cancelled (generation mismatch)')
+        return
+      }
+
+      // Store all events in event store
+      events.forEach(evt => eventStore.add(evt))
+
+      // Final processing - ensure we have the latest version of each replaceable
+      events.forEach(evt => {
+        const dTag = evt.tags.find(t => t[0] === 'd')?.[1] || ''
+        const key = `${evt.pubkey}:${dTag}`
+        const existing = uniqueByReplaceable.get(key)
+        
+        if (!existing || evt.created_at > existing.event.created_at) {
+          uniqueByReplaceable.set(key, this.toPreview(evt))
+        }
+      })
+
+      const sorted = this.sortPosts(Array.from(uniqueByReplaceable.values()))
+
+      this.currentPosts = sorted
+      this.lastLoadedPubkey = pubkey
+      this.emitWritings(sorted)
+
+      // Update last synced timestamp
+      if (sorted.length > 0) {
+        const newestTimestamp = Math.max(...sorted.map(p => p.event.created_at))
+        this.setLastSyncedAt(pubkey, newestTimestamp)
+      }
+
+      console.log('[writings] ✅ Loaded', sorted.length, 'writings')
+    } catch (error) {
+      console.error('[writings] ❌ Failed to load writings:', error)
+      this.currentPosts = []
+      this.emitWritings(this.currentPosts)
+    } finally {
+      // Only clear loading if this generation is still active
+      if (currentGeneration === this.generation) {
+        this.setLoading(false)
+      }
+    }
+  }
+}
+
+// Singleton instance
+export const writingsController = new WritingsController()
+
