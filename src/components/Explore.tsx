@@ -184,8 +184,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         const [friendsPosts, friendsHighlights, nostrversePosts, nostriverseHighlights] = await Promise.all([
           fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls),
           fetchHighlightsFromAuthors(relayPool, contactsArray),
-          fetchNostrverseBlogPosts(relayPool, relayUrls, 50),
-          fetchNostrverseHighlights(relayPool, 100)
+          fetchNostrverseBlogPosts(relayPool, relayUrls, 50, eventStore || undefined),
+          fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
         ])
 
         // Merge and deduplicate all posts
