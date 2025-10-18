@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHighlighter, faBookmark, faList, faThLarge, faImage, faPenToSquare, faLink, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faBookmark, faPenToSquare, faLink, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { IEventStore, Helpers } from 'applesauce-core'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
@@ -21,7 +21,6 @@ import AuthorCard from './AuthorCard'
 import BlogPostCard from './BlogPostCard'
 import { BookmarkItem } from './BookmarkItem'
 import IconButton from './IconButton'
-import { ViewMode } from './Bookmarks'
 import { getCachedMeData, updateCachedHighlights } from '../services/meCache'
 import { faBooks } from '../icons/customIcons'
 import { usePullToRefresh } from 'use-pull-to-refresh'
@@ -109,7 +108,6 @@ const Me: React.FC<MeProps> = ({
     toBlogPostPreview,
     [viewingPubkey, isOwnProfile]
   )
-  const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
   const [groupingMode, setGroupingMode] = useState<'grouped' | 'flat'>(() => {
@@ -567,9 +565,9 @@ const Me: React.FC<MeProps> = ({
         if (showSkeletons) {
           return (
             <div className="bookmarks-list">
-              <div className={`bookmarks-grid bookmarks-${viewMode}`}>
+              <div className="bookmarks-grid bookmarks-cards">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <BookmarkSkeleton key={i} viewMode={viewMode} />
+                  <BookmarkSkeleton key={i} viewMode="cards" />
                 ))}
               </div>
             </div>
@@ -595,13 +593,13 @@ const Me: React.FC<MeProps> = ({
               sections.filter(s => s.items.length > 0).map(section => (
               <div key={section.key} className="bookmarks-section">
                 <h3 className="bookmarks-section-title">{section.title}</h3>
-                <div className={`bookmarks-grid bookmarks-${viewMode}`}>
+                <div className="bookmarks-grid bookmarks-cards">
                   {section.items.map((individualBookmark, index) => (
                     <BookmarkItem
                       key={`${section.key}-${individualBookmark.id}-${index}`}
                       bookmark={individualBookmark}
                       index={index}
-                      viewMode={viewMode}
+                      viewMode="cards"
                       onSelectUrl={handleSelectUrl}
                     />
                   ))}
@@ -622,27 +620,6 @@ const Me: React.FC<MeProps> = ({
                 title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
                 ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
                 variant="ghost"
-              />
-              <IconButton
-                icon={faList}
-                onClick={() => setViewMode('compact')}
-                title="Compact list view"
-                ariaLabel="Compact list view"
-                variant={viewMode === 'compact' ? 'primary' : 'ghost'}
-              />
-              <IconButton
-                icon={faThLarge}
-                onClick={() => setViewMode('cards')}
-                title="Cards view"
-                ariaLabel="Cards view"
-                variant={viewMode === 'cards' ? 'primary' : 'ghost'}
-              />
-              <IconButton
-                icon={faImage}
-                onClick={() => setViewMode('large')}
-                title="Large preview view"
-                ariaLabel="Large preview view"
-                variant={viewMode === 'large' ? 'primary' : 'ghost'}
               />
             </div>
           </div>
