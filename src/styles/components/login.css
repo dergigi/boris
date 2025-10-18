@@ -99,6 +99,8 @@
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .bunker-input {
@@ -110,6 +112,8 @@
   color: var(--color-text);
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .bunker-input:focus {
