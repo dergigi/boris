@@ -85,7 +85,20 @@ const LoginOptions: React.FC = () => {
       if (errorMessage.toLowerCase().includes('permission') || errorMessage.toLowerCase().includes('unauthorized')) {
         setError('Your bunker connection is missing signing permissions. Reconnect and approve signing.')
       } else {
-        setError(errorMessage)
+        // Show helpful message for bunker connection failures
+        setError(
+          <>
+            {errorMessage}. Don't have a signer? Give{' '}
+            <a href="https://github.com/greenart7c3/Amber" target="_blank" rel="noopener noreferrer">
+              Amber
+            </a>
+            {' '}or{' '}
+            <a href="https://testflight.apple.com/join/DUzVMDMK" target="_blank" rel="noopener noreferrer">
+              Aegis
+            </a>
+            {' '}a try.
+          </>
+        )
       }
     } finally {
       setIsLoading(false)
