@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faClock, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
-import { useEventStore } from 'applesauce-react/hooks'
 import { Accounts } from 'applesauce-accounts'
 import { NostrConnectSigner } from 'applesauce-signers'
 import { RelayPool } from 'applesauce-relay'
-import { Helpers } from 'applesauce-core'
+import { Helpers, IEventStore } from 'applesauce-core'
 import { nip19 } from 'nostr-tools'
 import { getDefaultBunkerPermissions } from '../services/nostrConnect'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
@@ -24,6 +23,7 @@ const defaultPayload = 'The quick brown fox jumps over the lazy dog.'
 
 interface DebugProps {
   relayPool: RelayPool | null
+  eventStore: IEventStore | null
   bookmarks: Bookmark[]
   bookmarksLoading: boolean
   onRefreshBookmarks: () => Promise<void>
@@ -32,6 +32,7 @@ interface DebugProps {
 
 const Debug: React.FC<DebugProps> = ({ 
   relayPool, 
+  eventStore,
   bookmarks, 
   bookmarksLoading, 
   onRefreshBookmarks,
@@ -40,11 +41,10 @@ const Debug: React.FC<DebugProps> = ({
   const navigate = useNavigate()
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
-  const eventStore = useEventStore()
   
   const { settings, saveSettings } = useSettings({
     relayPool,
-    eventStore,
+    eventStore: eventStore!,
     pubkey: activeAccount?.pubkey,
     accountManager
   })
@@ -450,7 +450,7 @@ const Debug: React.FC<DebugProps> = ({
           const next = [...prev, { ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent]
           return next.sort((a, b) => b.created_at - a.created_at)
         })
-      }, settings)
+      }, settings, false, eventStore || undefined)
     } finally {
       setIsLoadingHighlights(false)
       const elapsed = Math.round(performance.now() - start)
@@ -492,7 +492,7 @@ const Debug: React.FC<DebugProps> = ({
           const next = [...prev, { ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent]
           return next.sort((a, b) => b.created_at - a.created_at)
         })
-      })
+      }, eventStore || undefined)
     } finally {
       setIsLoadingHighlights(false)
       const elapsed = Math.round(performance.now() - start)

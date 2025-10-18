@@ -1,5 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
+import { IEventStore } from 'applesauce-core'
 import { Highlight } from '../../types/highlights'
 import { KINDS } from '../../config/kinds'
 import { eventToHighlight, dedupeHighlights, sortHighlights } from '../highlightEventProcessor'
@@ -13,7 +14,8 @@ export const fetchHighlightsForUrl = async (
   url: string,
   onHighlight?: (highlight: Highlight) => void,
   settings?: UserSettings,
-  force = false
+  force = false,
+  eventStore?: IEventStore
 ): Promise<Highlight[]> => {
   // Check cache first unless force refresh
   if (!force) {
@@ -37,12 +39,23 @@ export const fetchHighlightsForUrl = async (
         onEvent: (event: NostrEvent) => {
           if (seenIds.has(event.id)) return
           seenIds.add(event.id)
+          
+          // Store in event store if provided
+          if (eventStore) {
+            eventStore.add(event)
+          }
+          
           if (onHighlight) onHighlight(eventToHighlight(event))
         }
       }
     )
 
     console.log(`📌 Fetched ${rawEvents.length} highlight events for URL:`, url)
+
+    // Store all events in event store if provided
+    if (eventStore) {
+      rawEvents.forEach(evt => eventStore.add(evt))
+    }
 
     // Rebroadcast events - but don't let errors here break the highlight display
     try {

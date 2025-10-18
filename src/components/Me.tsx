@@ -9,6 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
+import { highlightsController } from '../services/highlightsController'
 import { fetchAllReads, ReadItem } from '../services/readsService'
 import { fetchLinks } from '../services/linksService'
 import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
@@ -123,8 +124,17 @@ const Me: React.FC<MeProps> = ({
     
     try {
       if (!hasBeenLoaded) setLoading(true)
-      const userHighlights = await fetchHighlights(relayPool, viewingPubkey)
-      setHighlights(userHighlights)
+      
+      // For own profile, prefer controller (already loaded on app start)
+      if (isOwnProfile) {
+        const userHighlights = highlightsController.getHighlights()
+        setHighlights(userHighlights)
+      } else {
+        // For viewing other users, fetch on-demand
+        const userHighlights = await fetchHighlights(relayPool, viewingPubkey)
+        setHighlights(userHighlights)
+      }
+      
       setLoadedTabs(prev => new Set(prev).add('highlights'))
     } catch (err) {
       console.error('Failed to load highlights:', err)

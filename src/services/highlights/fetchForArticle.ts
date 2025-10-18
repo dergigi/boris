@@ -1,5 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
+import { IEventStore } from 'applesauce-core'
 import { Highlight } from '../../types/highlights'
 import { KINDS } from '../../config/kinds'
 import { eventToHighlight, dedupeHighlights, sortHighlights } from '../highlightEventProcessor'
@@ -14,7 +15,8 @@ export const fetchHighlightsForArticle = async (
   eventId?: string,
   onHighlight?: (highlight: Highlight) => void,
   settings?: UserSettings,
-  force = false
+  force = false,
+  eventStore?: IEventStore
 ): Promise<Highlight[]> => {
   // Check cache first unless force refresh
   if (!force) {
@@ -34,6 +36,12 @@ export const fetchHighlightsForArticle = async (
     const onEvent = (event: NostrEvent) => {
       if (seenIds.has(event.id)) return
       seenIds.add(event.id)
+      
+      // Store in event store if provided
+      if (eventStore) {
+        eventStore.add(event)
+      }
+      
       if (onHighlight) onHighlight(eventToHighlight(event))
     }
 
@@ -47,6 +55,11 @@ export const fetchHighlightsForArticle = async (
 
     const rawEvents = [...aTagEvents, ...eTagEvents]
     console.log(`📌 Fetched ${rawEvents.length} highlight events for article:`, articleCoordinate)
+
+    // Store all events in event store if provided
+    if (eventStore) {
+      rawEvents.forEach(evt => eventStore.add(evt))
+    }
 
     try {
       await rebroadcastEvents(rawEvents, relayPool, settings)
