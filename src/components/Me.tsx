@@ -186,30 +186,41 @@ const Me: React.FC<MeProps> = ({
   const loadHighlightsTab = async () => {
     if (!viewingPubkey) return
     
-    // Only show loading skeleton if tab hasn't been loaded yet
+    // Only show loading skeleton if tab hasn't been loaded yet AND no cached data
     const hasBeenLoaded = loadedTabs.has('highlights')
+    const hasCachedData = cachedHighlights.length > 0
     
     try {
-      if (!hasBeenLoaded) setLoading(true)
-      
       // For own profile, highlights come from controller subscription (sync effect handles it)
-      // For viewing other users, seed with cached data then fetch fresh
-      if (!isOwnProfile) {
-        // Seed with cached highlights first
-        if (cachedHighlights.length > 0) {
-          setHighlights(cachedHighlights.sort((a, b) => b.created_at - a.created_at))
-        }
-        
-        // Fetch fresh highlights
-        const userHighlights = await fetchHighlights(relayPool, viewingPubkey)
-        setHighlights(userHighlights)
+      if (isOwnProfile) {
+        setLoadedTabs(prev => new Set(prev).add('highlights'))
+        setLoading(false)
+        return
       }
       
-      setLoadedTabs(prev => new Set(prev).add('highlights'))
+      // For viewing other users, seed with cached data immediately (non-blocking)
+      if (hasCachedData) {
+        setHighlights(cachedHighlights.sort((a, b) => b.created_at - a.created_at))
+        setLoadedTabs(prev => new Set(prev).add('highlights'))
+        setLoading(false)
+      } else if (!hasBeenLoaded) {
+        setLoading(true)
+      }
+      
+      // Fetch fresh highlights in background and merge
+      fetchHighlights(relayPool, viewingPubkey)
+        .then(userHighlights => {
+          setHighlights(userHighlights)
+          setLoadedTabs(prev => new Set(prev).add('highlights'))
+          setLoading(false)
+        })
+        .catch(err => {
+          console.error('Failed to load highlights:', err)
+          setLoading(false)
+        })
     } catch (err) {
       console.error('Failed to load highlights:', err)
-    } finally {
-      if (!hasBeenLoaded) setLoading(false)
+      setLoading(false)
     }
   }
 
@@ -217,10 +228,9 @@ const Me: React.FC<MeProps> = ({
     if (!viewingPubkey) return
     
     const hasBeenLoaded = loadedTabs.has('writings')
+    const hasCachedData = cachedWritings.length > 0
     
     try {
-      if (!hasBeenLoaded) setLoading(true)
-      
       // For own profile, use centralized controller
       if (isOwnProfile) {
         await writingsController.start({ 
@@ -230,26 +240,37 @@ const Me: React.FC<MeProps> = ({
           force: refreshTrigger > 0
         })
         setLoadedTabs(prev => new Set(prev).add('writings'))
+        setLoading(false)
         return
       }
       
-      // For other profiles, seed with cached writings first
-      if (cachedWritings.length > 0) {
+      // For other profiles, seed with cached writings immediately (non-blocking)
+      if (hasCachedData) {
         setWritings(cachedWritings.sort((a, b) => {
           const timeA = a.published || a.event.created_at
           const timeB = b.published || b.event.created_at
           return timeB - timeA
         }))
+        setLoadedTabs(prev => new Set(prev).add('writings'))
+        setLoading(false)
+      } else if (!hasBeenLoaded) {
+        setLoading(true)
       }
       
-      // Fetch fresh writings for other profiles
-      const userWritings = await fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
-      setWritings(userWritings)
-      setLoadedTabs(prev => new Set(prev).add('writings'))
+      // Fetch fresh writings in background and merge
+      fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
+        .then(userWritings => {
+          setWritings(userWritings)
+          setLoadedTabs(prev => new Set(prev).add('writings'))
+          setLoading(false)
+        })
+        .catch(err => {
+          console.error('Failed to load writings:', err)
+          setLoading(false)
+        })
     } catch (err) {
       console.error('Failed to load writings:', err)
-    } finally {
-      if (!hasBeenLoaded) setLoading(false)
+      setLoading(false)
     }
   }
 
