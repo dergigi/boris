@@ -411,6 +411,34 @@ const Me: React.FC<MeProps> = ({
     }
   }, [isOwnProfile, myWritings])
 
+  // Preload all highlights and writings for profile pages (non-blocking)
+  useEffect(() => {
+    if (!isOwnProfile && viewingPubkey && relayPool && eventStore) {
+      // Fire and forget - non-blocking background fetch
+      console.log('🔄 [Profile] Preloading highlights and writings for', viewingPubkey.slice(0, 8))
+      
+      // Fetch highlights in background
+      fetchHighlights(relayPool, viewingPubkey, undefined, undefined, false, eventStore)
+        .then(highlights => {
+          console.log('✅ [Profile] Preloaded', highlights.length, 'highlights into event store')
+        })
+        .catch(err => {
+          console.warn('⚠️ [Profile] Failed to preload highlights:', err)
+        })
+      
+      // Fetch writings in background
+      fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
+        .then(writings => {
+          // Store writings in event store
+          writings.forEach(w => eventStore.add(w.event))
+          console.log('✅ [Profile] Preloaded', writings.length, 'writings into event store')
+        })
+        .catch(err => {
+          console.warn('⚠️ [Profile] Failed to preload writings:', err)
+        })
+    }
+  }, [isOwnProfile, viewingPubkey, relayPool, eventStore])
+
   // Pull-to-refresh - reload active tab without clearing state
   const { isRefreshing, pullPosition } = usePullToRefresh({
     onRefresh: () => {
