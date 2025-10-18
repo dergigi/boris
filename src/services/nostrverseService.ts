@@ -106,6 +106,8 @@ export const fetchNostrverseHighlights = async (
     console.log('[NOSTRVERSE] 💡 Fetching highlights (kind 9802), limit:', limit)
 
     const seenIds = new Set<string>()
+    // Collect but do not block callers awaiting network completion
+    const collected: NostrEvent[] = []
     const rawEvents = await queryEvents(
       relayPool,
       { kinds: [9802], limit },
@@ -118,6 +120,7 @@ export const fetchNostrverseHighlights = async (
           if (eventStore) {
             eventStore.add(event)
           }
+          collected.push(event)
         }
       }
     )
@@ -127,7 +130,7 @@ export const fetchNostrverseHighlights = async (
       rawEvents.forEach(evt => eventStore.add(evt))
     }
 
-    const uniqueEvents = dedupeHighlights(rawEvents)
+    const uniqueEvents = dedupeHighlights([...collected, ...rawEvents])
     const highlights = uniqueEvents.map(eventToHighlight)
     
     console.log('[NOSTRVERSE] 💡 Processed', highlights.length, 'unique highlights')

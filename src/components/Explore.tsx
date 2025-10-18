@@ -615,7 +615,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         }
         return classifiedHighlights.length === 0 ? (
           <div className="explore-loading" style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
+            <span>No highlights to show for the selected scope.</span>
           </div>
         ) : (
           <div className="explore-grid">
