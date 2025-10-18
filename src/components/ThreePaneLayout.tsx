@@ -414,7 +414,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
           />
         </div>
       </div>
-      {props.hasActiveAccount && (props.currentArticle || (props.selectedUrl && props.selectedUrl.startsWith('nostr:'))) && (
+      {props.hasActiveAccount && props.readerContent && (
         <HighlightButton 
           ref={props.highlightButtonRef} 
           onHighlight={props.onCreateHighlight}
