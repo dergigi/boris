@@ -97,7 +97,7 @@ const LoginOptions: React.FC = () => {
       <div className="login-content">
         <h2 className="login-title">Hi! I'm Boris.</h2>
         <p className="login-description">
-          Connect your nostr npub to see your bookmarks, explore long-form articles, and create <mark className="login-highlight">your own highlights</mark>.
+          Connect your npub to see your bookmarks, explore long-form articles, and create <mark className="login-highlight">your own highlights</mark>.
         </p>
         
         <div className="login-buttons">
