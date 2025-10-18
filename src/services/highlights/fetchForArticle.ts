@@ -6,14 +6,29 @@ import { eventToHighlight, dedupeHighlights, sortHighlights } from '../highlight
 import { UserSettings } from '../settingsService'
 import { rebroadcastEvents } from '../rebroadcastService'
 import { queryEvents } from '../dataFetch'
+import { highlightCache } from './cache'
 
 export const fetchHighlightsForArticle = async (
   relayPool: RelayPool,
   articleCoordinate: string,
   eventId?: string,
   onHighlight?: (highlight: Highlight) => void,
-  settings?: UserSettings
+  settings?: UserSettings,
+  force = false
 ): Promise<Highlight[]> => {
+  // Check cache first unless force refresh
+  if (!force) {
+    const cacheKey = highlightCache.articleKey(articleCoordinate)
+    const cached = highlightCache.get(cacheKey)
+    if (cached) {
+      console.log(`📌 Using cached highlights for article (${cached.length} items)`)
+      // Stream cached highlights if callback provided
+      if (onHighlight) {
+        cached.forEach(h => onHighlight(h))
+      }
+      return cached
+    }
+  }
   try {
     const seenIds = new Set<string>()
     const onEvent = (event: NostrEvent) => {
@@ -41,7 +56,13 @@ export const fetchHighlightsForArticle = async (
 
     const uniqueEvents = dedupeHighlights(rawEvents)
     const highlights: Highlight[] = uniqueEvents.map(eventToHighlight)
-    return sortHighlights(highlights)
+    const sorted = sortHighlights(highlights)
+    
+    // Cache the results
+    const cacheKey = highlightCache.articleKey(articleCoordinate)
+    highlightCache.set(cacheKey, sorted)
+    
+    return sorted
   } catch {
     return []
   }

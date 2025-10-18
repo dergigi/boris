@@ -6,13 +6,28 @@ import { UserSettings } from '../settingsService'
 import { rebroadcastEvents } from '../rebroadcastService'
 import { KINDS } from '../../config/kinds'
 import { queryEvents } from '../dataFetch'
+import { highlightCache } from './cache'
 
 export const fetchHighlights = async (
   relayPool: RelayPool,
   pubkey: string,
   onHighlight?: (highlight: Highlight) => void,
-  settings?: UserSettings
+  settings?: UserSettings,
+  force = false
 ): Promise<Highlight[]> => {
+  // Check cache first unless force refresh
+  if (!force) {
+    const cacheKey = highlightCache.authorKey(pubkey)
+    const cached = highlightCache.get(cacheKey)
+    if (cached) {
+      console.log(`📌 Using cached highlights for author (${cached.length} items)`)
+      // Stream cached highlights if callback provided
+      if (onHighlight) {
+        cached.forEach(h => onHighlight(h))
+      }
+      return cached
+    }
+  }
   try {
     const seenIds = new Set<string>()
     const rawEvents: NostrEvent[] = await queryEvents(
@@ -37,7 +52,13 @@ export const fetchHighlights = async (
 
     const uniqueEvents = dedupeHighlights(rawEvents)
     const highlights = uniqueEvents.map(eventToHighlight)
-    return sortHighlights(highlights)
+    const sorted = sortHighlights(highlights)
+    
+    // Cache the results
+    const cacheKey = highlightCache.authorKey(pubkey)
+    highlightCache.set(cacheKey, sorted)
+    
+    return sorted
   } catch {
     return []
   }

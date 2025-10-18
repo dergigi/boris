@@ -6,13 +6,28 @@ import { eventToHighlight, dedupeHighlights, sortHighlights } from '../highlight
 import { UserSettings } from '../settingsService'
 import { rebroadcastEvents } from '../rebroadcastService'
 import { queryEvents } from '../dataFetch'
+import { highlightCache } from './cache'
 
 export const fetchHighlightsForUrl = async (
   relayPool: RelayPool,
   url: string,
   onHighlight?: (highlight: Highlight) => void,
-  settings?: UserSettings
+  settings?: UserSettings,
+  force = false
 ): Promise<Highlight[]> => {
+  // Check cache first unless force refresh
+  if (!force) {
+    const cacheKey = highlightCache.urlKey(url)
+    const cached = highlightCache.get(cacheKey)
+    if (cached) {
+      console.log(`📌 Using cached highlights for URL (${cached.length} items)`)
+      // Stream cached highlights if callback provided
+      if (onHighlight) {
+        cached.forEach(h => onHighlight(h))
+      }
+      return cached
+    }
+  }
   try {
     const seenIds = new Set<string>()
     const rawEvents: NostrEvent[] = await queryEvents(
@@ -38,7 +53,13 @@ export const fetchHighlightsForUrl = async (
 
     const uniqueEvents = dedupeHighlights(rawEvents)
     const highlights: Highlight[] = uniqueEvents.map(eventToHighlight)
-    return sortHighlights(highlights)
+    const sorted = sortHighlights(highlights)
+    
+    // Cache the results
+    const cacheKey = highlightCache.urlKey(url)
+    highlightCache.set(cacheKey, sorted)
+    
+    return sorted
   } catch (err) {
     console.error('Error fetching highlights for URL:', err)
     return []
