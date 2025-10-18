@@ -3,9 +3,10 @@ import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { Bookmark } from '../types/bookmarks'
 import { Highlight } from '../types/highlights'
-import { fetchHighlights, fetchHighlightsForArticle } from '../services/highlightService'
-import { fetchContacts } from '../services/contactService'
+import { fetchHighlightsForArticle } from '../services/highlightService'
 import { UserSettings } from '../services/settingsService'
+import { highlightsController } from '../services/highlightsController'
+import { contactsController } from '../services/contactsController'
 
 interface UseBookmarksDataParams {
   relayPool: RelayPool | null
@@ -30,17 +31,30 @@ export const useBookmarksData = ({
   settings,
   onRefreshBookmarks
 }: Omit<UseBookmarksDataParams, 'bookmarks' | 'bookmarksLoading'>) => {
-  const [highlights, setHighlights] = useState<Highlight[]>([])
+  const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
+  const [articleHighlights, setArticleHighlights] = useState<Highlight[]>([])
   const [highlightsLoading, setHighlightsLoading] = useState(true)
   const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null)
 
-  const handleFetchContacts = useCallback(async () => {
-    if (!relayPool || !activeAccount) return
-    const contacts = await fetchContacts(relayPool, activeAccount.pubkey)
-    setFollowedPubkeys(contacts)
-  }, [relayPool, activeAccount])
+  // Subscribe to centralized controllers
+  useEffect(() => {
+    // Get initial state immediately
+    setMyHighlights(highlightsController.getHighlights())
+    setFollowedPubkeys(new Set(contactsController.getContacts()))
+    
+    // Subscribe to updates
+    const unsubHighlights = highlightsController.onHighlights(setMyHighlights)
+    const unsubContacts = contactsController.onContacts((contacts) => {
+      setFollowedPubkeys(new Set(contacts))
+    })
+    
+    return () => {
+      unsubHighlights()
+      unsubContacts()
+    }
+  }, [])
 
   const handleFetchHighlights = useCallback(async () => {
     if (!relayPool) return
@@ -48,6 +62,7 @@ export const useBookmarksData = ({
     setHighlightsLoading(true)
     try {
       if (currentArticleCoordinate) {
+        // Fetch article-specific highlights (from all users)
         const highlightsMap = new Map<string, Highlight>()
         await fetchHighlightsForArticle(
           relayPool, 
@@ -58,22 +73,22 @@ export const useBookmarksData = ({
             if (!highlightsMap.has(highlight.id)) {
               highlightsMap.set(highlight.id, highlight)
               const highlightsList = Array.from(highlightsMap.values())
-              setHighlights(highlightsList.sort((a, b) => b.created_at - a.created_at))
+              setArticleHighlights(highlightsList.sort((a, b) => b.created_at - a.created_at))
             }
           },
           settings
         )
         console.log(`🔄 Refreshed ${highlightsMap.size} highlights for article`)
-      } else if (activeAccount) {
-        const fetchedHighlights = await fetchHighlights(relayPool, activeAccount.pubkey, undefined, settings)
-        setHighlights(fetchedHighlights)
+      } else {
+        // No article selected - clear article highlights
+        setArticleHighlights([])
       }
     } catch (err) {
       console.error('Failed to fetch highlights:', err)
     } finally {
       setHighlightsLoading(false)
     }
-  }, [relayPool, activeAccount, currentArticleCoordinate, currentArticleEventId, settings])
+  }, [relayPool, currentArticleCoordinate, currentArticleEventId, settings])
 
   const handleRefreshAll = useCallback(async () => {
     if (!relayPool || !activeAccount || isRefreshing) return
@@ -82,29 +97,37 @@ export const useBookmarksData = ({
     try {
       await onRefreshBookmarks()
       await handleFetchHighlights()
-      await handleFetchContacts()
+      // Contacts and own highlights are managed by controllers
       setLastFetchTime(Date.now())
     } catch (err) {
       console.error('Failed to refresh data:', err)
     } finally {
       setIsRefreshing(false)
     }
-  }, [relayPool, activeAccount, isRefreshing, onRefreshBookmarks, handleFetchHighlights, handleFetchContacts])
+  }, [relayPool, activeAccount, isRefreshing, onRefreshBookmarks, handleFetchHighlights])
 
-  // Fetch highlights/contacts independently
+  // Fetch article-specific highlights when viewing an article
   useEffect(() => {
     if (!relayPool || !activeAccount) return
-    // Only fetch general highlights when not viewing an article (naddr) or external URL
+    // Fetch article-specific highlights when viewing an article
     // External URLs have their highlights fetched by useExternalUrlLoader
-    if (!naddr && !externalUrl) {
+    if (currentArticleCoordinate && !externalUrl) {
       handleFetchHighlights()
+    } else if (!naddr && !externalUrl) {
+      // Clear article highlights when not viewing an article
+      setArticleHighlights([])
+      setHighlightsLoading(false)
     }
-    handleFetchContacts()
-  }, [relayPool, activeAccount, naddr, externalUrl, handleFetchHighlights, handleFetchContacts])
+  }, [relayPool, activeAccount, currentArticleCoordinate, naddr, externalUrl, handleFetchHighlights])
+
+  // Merge highlights from controller with article-specific highlights
+  const highlights = [...myHighlights, ...articleHighlights]
+    .filter((h, i, arr) => arr.findIndex(x => x.id === h.id) === i) // Deduplicate
+    .sort((a, b) => b.created_at - a.created_at)
 
   return {
     highlights,
-    setHighlights,
+    setHighlights: setArticleHighlights, // For external updates (like from useExternalUrlLoader)
     highlightsLoading,
     setHighlightsLoading,
     followedPubkeys,
