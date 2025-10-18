@@ -70,6 +70,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   }), [])
   
   const cachedWritings = useStoreTimeline(eventStore, { kinds: [30023] }, toBlogPostPreview, [])
+
+  
   
   // Visibility filters (defaults from settings or nostrverse when logged out)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
@@ -129,7 +131,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     return () => unsub()
   }, [])
 
-  // Update visibility when login state changes
+  // Update visibility when settings/login state changes
   useEffect(() => {
     if (!activeAccount) {
       // When logged out, show nostrverse by default
@@ -137,7 +139,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       setHasLoadedNostrverse(true) // logged out path loads nostrverse immediately
       setHasLoadedNostrverseHighlights(true)
     } else {
-      // When logged in, use settings defaults
+      // When logged in, use settings defaults immediately
       setVisibility({
         nostrverse: settings?.defaultExploreScopeNostrverse ?? false,
         friends: settings?.defaultExploreScopeFriends ?? true,
@@ -146,7 +148,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       setHasLoadedNostrverse(false)
       setHasLoadedNostrverseHighlights(false)
     }
-  }, [activeAccount, settings])
+  }, [activeAccount, settings?.defaultExploreScopeNostrverse, settings?.defaultExploreScopeFriends, settings?.defaultExploreScopeMine])
 
   // Update local state when prop changes
   useEffect(() => {
