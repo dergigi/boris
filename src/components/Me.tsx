@@ -9,7 +9,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { fetchHighlights } from '../services/highlightService'
-import { highlightsController } from '../services/highlightsController'
 import { fetchAllReads, ReadItem } from '../services/readsService'
 import { fetchLinks } from '../services/linksService'
 import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
@@ -39,6 +38,8 @@ interface MeProps {
   pubkey?: string // Optional pubkey for viewing other users' profiles
   bookmarks: Bookmark[] // From centralized App.tsx state
   bookmarksLoading?: boolean // From centralized App.tsx state (reserved for future use)
+  myHighlights?: Highlight[] // From highlightsController (for own profile)
+  myHighlightsLoading?: boolean // Loading state from highlightsController
 }
 
 type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
@@ -50,7 +51,9 @@ const Me: React.FC<MeProps> = ({
   relayPool, 
   activeTab: propActiveTab, 
   pubkey: propPubkey,
-  bookmarks
+  bookmarks,
+  myHighlights = [],
+  myHighlightsLoading = false
 }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
@@ -125,10 +128,9 @@ const Me: React.FC<MeProps> = ({
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // For own profile, prefer controller (already loaded on app start)
+      // For own profile, use myHighlights from controller (already loaded on app start)
       if (isOwnProfile) {
-        const userHighlights = highlightsController.getHighlights()
-        setHighlights(userHighlights)
+        setHighlights(myHighlights)
       } else {
         // For viewing other users, fetch on-demand
         const userHighlights = await fetchHighlights(relayPool, viewingPubkey)
@@ -304,6 +306,12 @@ const Me: React.FC<MeProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, viewingPubkey, refreshTrigger])
 
+  // Sync myHighlights from controller when viewing own profile
+  useEffect(() => {
+    if (isOwnProfile && myHighlights.length > 0) {
+      setHighlights(myHighlights)
+    }
+  }, [isOwnProfile, myHighlights])
 
   // Pull-to-refresh - reload active tab without clearing state
   const { isRefreshing, pullPosition } = usePullToRefresh({
@@ -424,7 +432,7 @@ const Me: React.FC<MeProps> = ({
 
   // Show content progressively - no blocking error screens
   const hasData = highlights.length > 0 || bookmarks.length > 0 || reads.length > 0 || links.length > 0 || writings.length > 0
-  const showSkeletons = loading && !hasData
+  const showSkeletons = (loading || (isOwnProfile && myHighlightsLoading)) && !hasData
 
   const renderTabContent = () => {
     switch (activeTab) {

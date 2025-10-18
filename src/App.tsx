@@ -166,6 +166,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -179,6 +180,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -192,6 +194,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -205,6 +208,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -218,6 +222,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -231,6 +236,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -248,6 +254,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -261,6 +268,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -274,6 +282,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -287,6 +296,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -300,6 +310,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -313,6 +324,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -326,6 +338,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />
@@ -339,6 +352,7 @@ function AppRoutes({
             bookmarksLoading={bookmarksLoading}
             onRefreshBookmarks={handleRefreshBookmarks}
             myHighlights={highlights}
+            myHighlightsLoading={highlightsLoading}
           />
         } 
       />

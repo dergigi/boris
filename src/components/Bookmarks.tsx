@@ -30,6 +30,7 @@ interface BookmarksProps {
   bookmarksLoading: boolean
   onRefreshBookmarks: () => Promise<void>
   myHighlights: Highlight[]
+  myHighlightsLoading: boolean
 }
 
 const Bookmarks: React.FC<BookmarksProps> = ({ 
@@ -38,7 +39,8 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   bookmarks, 
   bookmarksLoading, 
   onRefreshBookmarks,
-  myHighlights
+  myHighlights,
+  myHighlightsLoading
 }) => {
   const { naddr, npub } = useParams<{ naddr?: string; npub?: string }>()
   const location = useLocation()
@@ -325,10 +327,10 @@ const Bookmarks: React.FC<BookmarksProps> = ({
       onCreateHighlight={handleCreateHighlight}
       hasActiveAccount={!!(activeAccount && relayPool)}
       explore={showExplore ? (
-        relayPool ? <Explore relayPool={relayPool} eventStore={eventStore} settings={settings} activeTab={exploreTab} myHighlights={myHighlights} /> : null
+        relayPool ? <Explore relayPool={relayPool} eventStore={eventStore} settings={settings} activeTab={exploreTab} myHighlights={myHighlights} myHighlightsLoading={myHighlightsLoading} /> : null
       ) : undefined}
       me={showMe ? (
-        relayPool ? <Me relayPool={relayPool} activeTab={meTab} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} /> : null
+        relayPool ? <Me relayPool={relayPool} activeTab={meTab} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} myHighlights={myHighlights} myHighlightsLoading={myHighlightsLoading} /> : null
       ) : undefined}
       profile={showProfile && profilePubkey ? (
         relayPool ? <Me relayPool={relayPool} activeTab={profileTab} pubkey={profilePubkey} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} /> : null

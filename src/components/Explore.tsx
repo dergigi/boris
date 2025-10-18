@@ -29,11 +29,12 @@ interface ExploreProps {
   settings?: UserSettings
   activeTab?: TabType
   myHighlights?: Highlight[] // From highlightsController in App.tsx
+  myHighlightsLoading?: boolean // Loading state from highlightsController
 }
 
 type TabType = 'writings' | 'highlights'
 
-const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, activeTab: propActiveTab, myHighlights = [] }) => {
+const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, activeTab: propActiveTab, myHighlights = [], myHighlightsLoading = false }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
@@ -350,7 +351,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
 
   // Show content progressively - no blocking error screens
   const hasData = highlights.length > 0 || blogPosts.length > 0
-  const showSkeletons = loading && !hasData
+  const showSkeletons = (loading || myHighlightsLoading) && !hasData
 
   return (
     <div className="explore-container">
