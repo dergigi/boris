@@ -1,12 +1,11 @@
-import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
-import { lastValueFrom, merge, Observable, takeUntil, timer, tap, toArray } from 'rxjs'
+import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { Highlight } from '../../types/highlights'
-import { RELAYS } from '../../config/relays'
-import { prioritizeLocalRelays, partitionRelays } from '../../utils/helpers'
+import { KINDS } from '../../config/kinds'
 import { eventToHighlight, dedupeHighlights, sortHighlights } from '../highlightEventProcessor'
 import { UserSettings } from '../settingsService'
 import { rebroadcastEvents } from '../rebroadcastService'
+import { queryEvents } from '../dataFetch'
 
 export const fetchHighlightsForArticle = async (
   relayPool: RelayPool,
@@ -17,76 +16,29 @@ export const fetchHighlightsForArticle = async (
 ): Promise<Highlight[]> => {
   try {
     const seenIds = new Set<string>()
-    const processEvent = (event: NostrEvent): Highlight | null => {
-      if (seenIds.has(event.id)) return null
+    const onEvent = (event: NostrEvent) => {
+      if (seenIds.has(event.id)) return
       seenIds.add(event.id)
-      return eventToHighlight(event)
+      if (onHighlight) onHighlight(eventToHighlight(event))
     }
 
-    const orderedRelays = prioritizeLocalRelays(RELAYS)
-    const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
-
-    const aLocal$ = localRelays.length > 0
-      ? relayPool
-          .req(localRelays, { kinds: [9802], '#a': [articleCoordinate] })
-          .pipe(
-            onlyEvents(),
-            tap((event: NostrEvent) => {
-              const highlight = processEvent(event)
-              if (highlight && onHighlight) onHighlight(highlight)
-            }),
-            completeOnEose(),
-            takeUntil(timer(1200))
-          )
-      : new Observable<NostrEvent>((sub) => sub.complete())
-    const aRemote$ = remoteRelays.length > 0
-      ? relayPool
-          .req(remoteRelays, { kinds: [9802], '#a': [articleCoordinate] })
-          .pipe(
-            onlyEvents(),
-            tap((event: NostrEvent) => {
-              const highlight = processEvent(event)
-              if (highlight && onHighlight) onHighlight(highlight)
-            }),
-            completeOnEose(),
-            takeUntil(timer(6000))
-          )
-      : new Observable<NostrEvent>((sub) => sub.complete())
-    const aTagEvents: NostrEvent[] = await lastValueFrom(merge(aLocal$, aRemote$).pipe(toArray()))
-
-    let eTagEvents: NostrEvent[] = []
-    if (eventId) {
-      const eLocal$ = localRelays.length > 0
-        ? relayPool
-            .req(localRelays, { kinds: [9802], '#e': [eventId] })
-            .pipe(
-              onlyEvents(),
-              tap((event: NostrEvent) => {
-                const highlight = processEvent(event)
-                if (highlight && onHighlight) onHighlight(highlight)
-              }),
-              completeOnEose(),
-              takeUntil(timer(1200))
-            )
-        : new Observable<NostrEvent>((sub) => sub.complete())
-      const eRemote$ = remoteRelays.length > 0
-        ? relayPool
-            .req(remoteRelays, { kinds: [9802], '#e': [eventId] })
-            .pipe(
-              onlyEvents(),
-              tap((event: NostrEvent) => {
-                const highlight = processEvent(event)
-                if (highlight && onHighlight) onHighlight(highlight)
-              }),
-              completeOnEose(),
-              takeUntil(timer(6000))
-            )
-        : new Observable<NostrEvent>((sub) => sub.complete())
-      eTagEvents = await lastValueFrom(merge(eLocal$, eRemote$).pipe(toArray()))
-    }
+    // Query for both #a and #e tags in parallel
+    const [aTagEvents, eTagEvents] = await Promise.all([
+      queryEvents(relayPool, { kinds: [KINDS.Highlights], '#a': [articleCoordinate] }, { onEvent }),
+      eventId
+        ? queryEvents(relayPool, { kinds: [KINDS.Highlights], '#e': [eventId] }, { onEvent })
+        : Promise.resolve([] as NostrEvent[])
+    ])
 
     const rawEvents = [...aTagEvents, ...eTagEvents]
-    await rebroadcastEvents(rawEvents, relayPool, settings)
+    console.log(`📌 Fetched ${rawEvents.length} highlight events for article:`, articleCoordinate)
+
+    try {
+      await rebroadcastEvents(rawEvents, relayPool, settings)
+    } catch (err) {
+      console.warn('Failed to rebroadcast highlight events:', err)
+    }
+
     const uniqueEvents = dedupeHighlights(rawEvents)
     const highlights: Highlight[] = uniqueEvents.map(eventToHighlight)
     return sortHighlights(highlights)
