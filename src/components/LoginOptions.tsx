@@ -25,7 +25,7 @@ const LoginOptions: React.FC = () => {
       const errorMessage = err instanceof Error ? err.message : String(err)
       
       // Check if extension is not installed
-      if (errorMessage.includes('window.nostr') || errorMessage.includes('not found') || errorMessage.includes('undefined')) {
+      if (errorMessage.includes('Signer extension missing') || errorMessage.includes('window.nostr') || errorMessage.includes('not found') || errorMessage.includes('undefined') || errorMessage.toLowerCase().includes('extension missing')) {
         setError(
           <>
             No browser extension found. Please install{' '}
