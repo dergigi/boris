@@ -13,6 +13,7 @@ import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreS
 import { fetchHighlightsFromAuthors } from '../services/highlightService'
 import { fetchProfiles } from '../services/profileService'
 import { fetchNostrverseBlogPosts, fetchNostrverseHighlights } from '../services/nostrverseService'
+import { nostrverseHighlightsController } from '../services/nostrverseHighlightsController'
 import { highlightsController } from '../services/highlightsController'
 import { Highlight } from '../types/highlights'
 import { UserSettings } from '../services/settingsService'
@@ -97,6 +98,21 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     return () => {
       unsubHighlights()
     }
+  }, [])
+
+  // Subscribe to nostrverse highlights controller for global stream
+  useEffect(() => {
+    const apply = (incoming: Highlight[]) => {
+      setHighlights(prev => {
+        const byId = new Map(prev.map(h => [h.id, h]))
+        for (const h of incoming) byId.set(h.id, h)
+        return Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
+      })
+    }
+    // seed immediately
+    apply(nostrverseHighlightsController.getHighlights())
+    const unsub = nostrverseHighlightsController.onHighlights(apply)
+    return () => unsub()
   }, [])
 
   // Subscribe to writings controller for "mine" posts and seed immediately

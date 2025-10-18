@@ -24,7 +24,8 @@ import { bookmarkController } from './services/bookmarkController'
 import { contactsController } from './services/contactsController'
 import { highlightsController } from './services/highlightsController'
 import { writingsController } from './services/writingsController'
-import { fetchNostrverseHighlights } from './services/nostrverseService'
+// import { fetchNostrverseHighlights } from './services/nostrverseService'
+import { nostrverseHighlightsController } from './services/nostrverseHighlightsController'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -118,17 +119,9 @@ function AppRoutes({
         writingsController.start({ relayPool, eventStore, pubkey })
       }
 
-      // Preload some nostrverse highlights into the event store (non-blocking)
-      // so Explore can show nostrverse immediately when toggled
+      // Start centralized nostrverse highlights controller (non-blocking)
       if (eventStore) {
-        try {
-          // Fire-and-forget
-          ;(async () => {
-            try {
-              await fetchNostrverseHighlights(relayPool, 100, eventStore)
-            } catch (e) { /* ignore */ }
-          })()
-        } catch { /* ignore */ }
+        nostrverseHighlightsController.start({ relayPool, eventStore })
       }
     }
   }, [activeAccount, relayPool, eventStore, bookmarks.length, bookmarksLoading, contacts.size, contactsLoading, accountManager])
