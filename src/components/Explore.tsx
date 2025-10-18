@@ -4,10 +4,12 @@ import { faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired, faArro
 import IconButton from './IconButton'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { Hooks } from 'applesauce-react'
+import { useObservableMemo } from 'applesauce-react/hooks'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { nip19 } from 'nostr-tools'
 import { useNavigate } from 'react-router-dom'
+import { startWith } from 'rxjs'
 import { fetchContacts } from '../services/contactService'
 import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
 import { fetchHighlightsFromAuthors } from '../services/highlightService'
@@ -23,6 +25,8 @@ import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { classifyHighlights } from '../utils/highlightClassification'
 import { HighlightVisibility } from './HighlightsPanel'
+import { KINDS } from '../config/kinds'
+import { eventToHighlight } from '../services/highlightEventProcessor'
 
 interface ExploreProps {
   relayPool: RelayPool
@@ -46,6 +50,16 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   // Get myHighlights directly from controller
   const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
   const [myHighlightsLoading, setMyHighlightsLoading] = useState(false)
+  
+  // Load cached highlights from event store (instant display)
+  const cachedHighlightEvents = useObservableMemo(
+    () => eventStore.timeline({ kinds: [KINDS.Highlights] }).pipe(startWith([])),
+    []
+  )
+  const cachedHighlights = useMemo(
+    () => cachedHighlightEvents?.map(eventToHighlight) ?? [],
+    [cachedHighlightEvents]
+  )
   
   // Visibility filters (defaults from settings)
   const [visibility, setVisibility] = useState<HighlightVisibility>({
@@ -88,9 +102,19 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         if (cachedPosts && cachedPosts.length > 0) {
           setBlogPosts(prev => prev.length === 0 ? cachedPosts : prev)
         }
-        const cachedHighlights = getCachedHighlights(activeAccount.pubkey)
-        if (cachedHighlights && cachedHighlights.length > 0) {
-          setHighlights(prev => prev.length === 0 ? cachedHighlights : prev)
+        const memoryCachedHighlights = getCachedHighlights(activeAccount.pubkey)
+        if (memoryCachedHighlights && memoryCachedHighlights.length > 0) {
+          setHighlights(prev => prev.length === 0 ? memoryCachedHighlights : prev)
+        }
+        
+        // Seed with cached highlights from event store (instant display)
+        console.log('[NOSTRVERSE] 💾 Seeding from event store:', cachedHighlights.length, 'highlights')
+        if (cachedHighlights.length > 0) {
+          setHighlights(prev => {
+            const byId = new Map(prev.map(h => [h.id, h]))
+            for (const h of cachedHighlights) byId.set(h.id, h)
+            return Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
+          })
         }
         
         // Seed with myHighlights from controller (already loaded on app start)
@@ -278,7 +302,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
 
     loadData()
-  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings, myHighlights])
+  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings, myHighlights, cachedHighlights])
 
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
