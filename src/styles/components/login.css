@@ -27,6 +27,14 @@
   text-align: center;
 }
 
+.login-highlight {
+  background-color: var(--highlight-color-mine, #fde047);
+  color: var(--color-text);
+  padding: 0.125rem 0.25rem;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
 .login-buttons {
   display: flex;
   flex-direction: column;

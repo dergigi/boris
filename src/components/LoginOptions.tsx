@@ -78,7 +78,7 @@ const LoginOptions: React.FC = () => {
       <div className="login-content">
         <h2 className="login-title">Welcome to Boris</h2>
         <p className="login-description">
-          Login to see your bookmarks, explore long-form articles, and create your own highlights.
+          Login to see your bookmarks, explore long-form articles, and create <mark className="login-highlight">your own highlights</mark>.
         </p>
         
         <div className="login-buttons">
