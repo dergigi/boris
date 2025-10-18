@@ -17,6 +17,7 @@ import { Bookmark } from '../types/bookmarks'
 import ThreePaneLayout from './ThreePaneLayout'
 import Explore from './Explore'
 import Me from './Me'
+import Profile from './Profile'
 import Support from './Support'
 import { classifyHighlights } from '../utils/highlightClassification'
 
@@ -330,7 +331,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
         relayPool ? <Me relayPool={relayPool} eventStore={eventStore} activeTab={meTab} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} /> : null
       ) : undefined}
       profile={showProfile && profilePubkey ? (
-        relayPool ? <Me relayPool={relayPool} eventStore={eventStore} activeTab={profileTab} pubkey={profilePubkey} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} /> : null
+        relayPool ? <Profile relayPool={relayPool} eventStore={eventStore} pubkey={profilePubkey} activeTab={profileTab} /> : null
       ) : undefined}
       support={showSupport ? (
         relayPool ? <Support relayPool={relayPool} eventStore={eventStore} settings={settings} /> : null

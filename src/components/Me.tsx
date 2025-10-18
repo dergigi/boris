@@ -1,21 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter, faBookmark, faPenToSquare, faLink, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
-import { IEventStore, Helpers } from 'applesauce-core'
+import { IEventStore } from 'applesauce-core'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
 import { RelayPool } from 'applesauce-relay'
-import { nip19, NostrEvent } from 'nostr-tools'
+import { nip19 } from 'nostr-tools'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
-import { fetchHighlights } from '../services/highlightService'
 import { highlightsController } from '../services/highlightsController'
 import { writingsController } from '../services/writingsController'
 import { fetchAllReads, ReadItem } from '../services/readsService'
 import { fetchLinks } from '../services/linksService'
-import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
-import { RELAYS } from '../config/relays'
+import { BlogPostPreview } from '../services/exploreService'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import AuthorCard from './AuthorCard'
 import BlogPostCard from './BlogPostCard'
@@ -33,17 +31,11 @@ import { filterByReadingProgress } from '../utils/readingProgressUtils'
 import { deriveReadsFromBookmarks } from '../utils/readsFromBookmarks'
 import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
 import { mergeReadItem } from '../utils/readItemMerge'
-import { useStoreTimeline } from '../hooks/useStoreTimeline'
-import { eventToHighlight } from '../services/highlightEventProcessor'
-import { KINDS } from '../config/kinds'
-
-const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 interface MeProps {
   relayPool: RelayPool
   eventStore: IEventStore
   activeTab?: TabType
-  pubkey?: string // Optional pubkey for viewing other users' profiles
   bookmarks: Bookmark[] // From centralized App.tsx state
   bookmarksLoading?: boolean // From centralized App.tsx state (reserved for future use)
 }
@@ -56,8 +48,7 @@ const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started'
 const Me: React.FC<MeProps> = ({ 
   relayPool, 
   eventStore,
-  activeTab: propActiveTab, 
-  pubkey: propPubkey,
+  activeTab: propActiveTab,
   bookmarks
 }) => {
   const activeAccount = Hooks.useActiveAccount()
@@ -65,9 +56,8 @@ const Me: React.FC<MeProps> = ({
   const { filter: urlFilter } = useParams<{ filter?: string }>()
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
   
-  // Use provided pubkey or fall back to active account
-  const viewingPubkey = propPubkey || activeAccount?.pubkey
-  const isOwnProfile = !propPubkey || (activeAccount?.pubkey === propPubkey)
+  // Only for own profile
+  const viewingPubkey = activeAccount?.pubkey
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [reads, setReads] = useState<ReadItem[]>([])
   const [, setReadsMap] = useState<Map<string, ReadItem>>(new Map())
@@ -85,29 +75,6 @@ const Me: React.FC<MeProps> = ({
   const [myWritings, setMyWritings] = useState<BlogPostPreview[]>([])
   const [myWritingsLoading, setMyWritingsLoading] = useState(false)
   
-  // Load cached data from event store for OTHER profiles (not own)
-  const cachedHighlights = useStoreTimeline(
-    eventStore,
-    !isOwnProfile && viewingPubkey ? { kinds: [KINDS.Highlights], authors: [viewingPubkey] } : { kinds: [KINDS.Highlights], limit: 0 },
-    eventToHighlight,
-    [viewingPubkey, isOwnProfile]
-  )
-  
-  const toBlogPostPreview = useMemo(() => (event: NostrEvent): BlogPostPreview => ({
-    event,
-    title: getArticleTitle(event) || 'Untitled',
-    summary: getArticleSummary(event),
-    image: getArticleImage(event),
-    published: getArticlePublished(event),
-    author: event.pubkey
-  }), [])
-  
-  const cachedWritings = useStoreTimeline(
-    eventStore,
-    !isOwnProfile && viewingPubkey ? { kinds: [30023], authors: [viewingPubkey] } : { kinds: [30023], limit: 0 },
-    toBlogPostPreview,
-    [viewingPubkey, isOwnProfile]
-  )
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [bookmarkFilter, setBookmarkFilter] = useState<BookmarkFilterType>('all')
   const [groupingMode, setGroupingMode] = useState<'grouped' | 'flat'>(() => {
@@ -186,88 +153,24 @@ const Me: React.FC<MeProps> = ({
   const loadHighlightsTab = async () => {
     if (!viewingPubkey) return
     
-    // Only show loading skeleton if tab hasn't been loaded yet AND no cached data
-    const hasBeenLoaded = loadedTabs.has('highlights')
-    const hasCachedData = cachedHighlights.length > 0
-    
-    try {
-      // For own profile, highlights come from controller subscription (sync effect handles it)
-      if (isOwnProfile) {
-        setLoadedTabs(prev => new Set(prev).add('highlights'))
-        setLoading(false)
-        return
-      }
-      
-      // For viewing other users, seed with cached data immediately (non-blocking)
-      if (hasCachedData) {
-        setHighlights(cachedHighlights.sort((a, b) => b.created_at - a.created_at))
-        setLoadedTabs(prev => new Set(prev).add('highlights'))
-        setLoading(false)
-      } else if (!hasBeenLoaded) {
-        setLoading(true)
-      }
-      
-      // Fetch fresh highlights in background and merge
-      fetchHighlights(relayPool, viewingPubkey)
-        .then(userHighlights => {
-          setHighlights(userHighlights)
-          setLoadedTabs(prev => new Set(prev).add('highlights'))
-          setLoading(false)
-        })
-        .catch(err => {
-          console.error('Failed to load highlights:', err)
-          setLoading(false)
-        })
-    } catch (err) {
-      console.error('Failed to load highlights:', err)
-      setLoading(false)
-    }
+    // Highlights come from controller subscription (sync effect handles it)
+    setLoadedTabs(prev => new Set(prev).add('highlights'))
+    setLoading(false)
   }
 
   const loadWritingsTab = async () => {
     if (!viewingPubkey) return
     
-    const hasBeenLoaded = loadedTabs.has('writings')
-    const hasCachedData = cachedWritings.length > 0
-    
     try {
-      // For own profile, use centralized controller
-      if (isOwnProfile) {
-        await writingsController.start({ 
-          relayPool, 
-          eventStore, 
-          pubkey: viewingPubkey,
-          force: refreshTrigger > 0
-        })
-        setLoadedTabs(prev => new Set(prev).add('writings'))
-        setLoading(false)
-        return
-      }
-      
-      // For other profiles, seed with cached writings immediately (non-blocking)
-      if (hasCachedData) {
-        setWritings(cachedWritings.sort((a, b) => {
-          const timeA = a.published || a.event.created_at
-          const timeB = b.published || b.event.created_at
-          return timeB - timeA
-        }))
-        setLoadedTabs(prev => new Set(prev).add('writings'))
-        setLoading(false)
-      } else if (!hasBeenLoaded) {
-        setLoading(true)
-      }
-      
-      // Fetch fresh writings in background and merge
-      fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
-        .then(userWritings => {
-          setWritings(userWritings)
-          setLoadedTabs(prev => new Set(prev).add('writings'))
-          setLoading(false)
-        })
-        .catch(err => {
-          console.error('Failed to load writings:', err)
-          setLoading(false)
-        })
+      // Use centralized controller
+      await writingsController.start({ 
+        relayPool, 
+        eventStore, 
+        pubkey: viewingPubkey,
+        force: refreshTrigger > 0
+      })
+      setLoadedTabs(prev => new Set(prev).add('writings'))
+      setLoading(false)
     } catch (err) {
       console.error('Failed to load writings:', err)
       setLoading(false)
@@ -275,7 +178,7 @@ const Me: React.FC<MeProps> = ({
   }
 
   const loadReadingListTab = async () => {
-    if (!viewingPubkey || !isOwnProfile || !activeAccount) return
+    if (!viewingPubkey || !activeAccount) return
     
     const hasBeenLoaded = loadedTabs.has('reading-list')
     
@@ -291,7 +194,7 @@ const Me: React.FC<MeProps> = ({
   }
 
   const loadReadsTab = async () => {
-    if (!viewingPubkey || !isOwnProfile || !activeAccount) return
+    if (!viewingPubkey || !activeAccount) return
     
     const hasBeenLoaded = loadedTabs.has('reads')
     
@@ -341,7 +244,7 @@ const Me: React.FC<MeProps> = ({
   }
 
   const loadLinksTab = async () => {
-    if (!viewingPubkey || !isOwnProfile || !activeAccount) return
+    if (!viewingPubkey || !activeAccount) return
     
     const hasBeenLoaded = loadedTabs.has('links')
     
@@ -387,14 +290,12 @@ const Me: React.FC<MeProps> = ({
     }
 
     // Load cached data immediately if available
-    if (isOwnProfile) {
-      const cached = getCachedMeData(viewingPubkey)
-      if (cached) {
-        setHighlights(cached.highlights)
-        // Bookmarks come from App.tsx centralized state, no local caching needed
-        setReads(cached.reads || [])
-        setLinks(cached.links || [])
-      }
+    const cached = getCachedMeData(viewingPubkey)
+    if (cached) {
+      setHighlights(cached.highlights)
+      // Bookmarks come from App.tsx centralized state, no local caching needed
+      setReads(cached.reads || [])
+      setLinks(cached.links || [])
     }
 
     // Load data for active tab (refresh in background if already loaded)
@@ -418,47 +319,15 @@ const Me: React.FC<MeProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, viewingPubkey, refreshTrigger])
 
-  // Sync myHighlights from controller when viewing own profile
+  // Sync myHighlights from controller
   useEffect(() => {
-    if (isOwnProfile) {
-      setHighlights(myHighlights)
-    }
-  }, [isOwnProfile, myHighlights])
+    setHighlights(myHighlights)
+  }, [myHighlights])
 
-  // Sync myWritings from controller when viewing own profile
+  // Sync myWritings from controller
   useEffect(() => {
-    if (isOwnProfile) {
-      setWritings(myWritings)
-    }
-  }, [isOwnProfile, myWritings])
-
-  // Preload all highlights and writings for profile pages (non-blocking)
-  useEffect(() => {
-    if (!isOwnProfile && viewingPubkey && relayPool && eventStore) {
-      // Fire and forget - non-blocking background fetch
-      console.log('🔄 [Profile] Preloading highlights and writings for', viewingPubkey.slice(0, 8))
-      
-      // Fetch highlights in background
-      fetchHighlights(relayPool, viewingPubkey, undefined, undefined, false, eventStore)
-        .then(highlights => {
-          console.log('✅ [Profile] Preloaded', highlights.length, 'highlights into event store')
-        })
-        .catch(err => {
-          console.warn('⚠️ [Profile] Failed to preload highlights:', err)
-        })
-      
-      // Fetch writings in background
-      fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], RELAYS)
-        .then(writings => {
-          // Store writings in event store
-          writings.forEach(w => eventStore.add(w.event))
-          console.log('✅ [Profile] Preloaded', writings.length, 'writings into event store')
-        })
-        .catch(err => {
-          console.warn('⚠️ [Profile] Failed to preload writings:', err)
-        })
-    }
-  }, [isOwnProfile, viewingPubkey, relayPool, eventStore])
+    setWritings(myWritings)
+  }, [myWritings])
 
   // Pull-to-refresh - reload active tab without clearing state
   const { isRefreshing, pullPosition } = usePullToRefresh({
@@ -474,8 +343,8 @@ const Me: React.FC<MeProps> = ({
   const handleHighlightDelete = (highlightId: string) => {
     setHighlights(prev => {
       const updated = prev.filter(h => h.id !== highlightId)
-      // Update cache when highlight is deleted (own profile only)
-      if (isOwnProfile && viewingPubkey) {
+      // Update cache when highlight is deleted
+      if (viewingPubkey) {
         updateCachedHighlights(viewingPubkey, updated)
       }
       return updated
@@ -579,7 +448,7 @@ const Me: React.FC<MeProps> = ({
 
   // Show content progressively - no blocking error screens
   const hasData = highlights.length > 0 || bookmarks.length > 0 || reads.length > 0 || links.length > 0 || writings.length > 0
-  const showSkeletons = (loading || (isOwnProfile && myHighlightsLoading)) && !hasData
+  const showSkeletons = (loading || myHighlightsLoading) && !hasData
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -593,7 +462,7 @@ const Me: React.FC<MeProps> = ({
             </div>
           )
         }
-        return highlights.length === 0 && !loading && !(isOwnProfile && myHighlightsLoading) ? (
+        return highlights.length === 0 && !loading && !myHighlightsLoading ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
             No highlights yet.
           </div>
@@ -778,7 +647,7 @@ const Me: React.FC<MeProps> = ({
             </div>
           )
         }
-        return writings.length === 0 && !loading && !(isOwnProfile && myWritingsLoading) ? (
+        return writings.length === 0 && !loading && !myWritingsLoading ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
             No articles written yet.
           </div>
@@ -812,43 +681,39 @@ const Me: React.FC<MeProps> = ({
           <button
             className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
             data-tab="highlights"
-            onClick={() => navigate(isOwnProfile ? '/me/highlights' : `/p/${propPubkey && nip19.npubEncode(propPubkey)}`)}
+            onClick={() => navigate('/me/highlights')}
           >
             <FontAwesomeIcon icon={faHighlighter} />
             <span className="tab-label">Highlights</span>
           </button>
-          {isOwnProfile && (
-            <>
-              <button
-                className={`me-tab ${activeTab === 'reading-list' ? 'active' : ''}`}
-                data-tab="reading-list"
-                onClick={() => navigate('/me/reading-list')}
-              >
-                <FontAwesomeIcon icon={faBookmark} />
-                <span className="tab-label">Bookmarks</span>
-              </button>
-              <button
-                className={`me-tab ${activeTab === 'reads' ? 'active' : ''}`}
-                data-tab="reads"
-                onClick={() => navigate('/me/reads')}
-              >
-                <FontAwesomeIcon icon={faBooks} />
-                <span className="tab-label">Reads</span>
-              </button>
-              <button
-                className={`me-tab ${activeTab === 'links' ? 'active' : ''}`}
-                data-tab="links"
-                onClick={() => navigate('/me/links')}
-              >
-                <FontAwesomeIcon icon={faLink} />
-                <span className="tab-label">Links</span>
-              </button>
-            </>
-          )}
+          <button
+            className={`me-tab ${activeTab === 'reading-list' ? 'active' : ''}`}
+            data-tab="reading-list"
+            onClick={() => navigate('/me/reading-list')}
+          >
+            <FontAwesomeIcon icon={faBookmark} />
+            <span className="tab-label">Bookmarks</span>
+          </button>
+          <button
+            className={`me-tab ${activeTab === 'reads' ? 'active' : ''}`}
+            data-tab="reads"
+            onClick={() => navigate('/me/reads')}
+          >
+            <FontAwesomeIcon icon={faBooks} />
+            <span className="tab-label">Reads</span>
+          </button>
+          <button
+            className={`me-tab ${activeTab === 'links' ? 'active' : ''}`}
+            data-tab="links"
+            onClick={() => navigate('/me/links')}
+          >
+            <FontAwesomeIcon icon={faLink} />
+            <span className="tab-label">Links</span>
+          </button>
           <button
             className={`me-tab ${activeTab === 'writings' ? 'active' : ''}`}
             data-tab="writings"
-            onClick={() => navigate(isOwnProfile ? '/me/writings' : `/p/${propPubkey && nip19.npubEncode(propPubkey)}/writings`)}
+            onClick={() => navigate('/me/writings')}
           >
             <FontAwesomeIcon icon={faPenToSquare} />
             <span className="tab-label">Writings</span>
