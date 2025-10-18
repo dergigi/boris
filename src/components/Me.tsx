@@ -94,6 +94,10 @@ const Me: React.FC<MeProps> = ({
 
   // Subscribe to highlights controller
   useEffect(() => {
+    // Get initial state immediately
+    setMyHighlights(highlightsController.getHighlights())
+    
+    // Subscribe to updates
     const unsubHighlights = highlightsController.onHighlights(setMyHighlights)
     const unsubLoading = highlightsController.onLoading(setMyHighlightsLoading)
     return () => {
