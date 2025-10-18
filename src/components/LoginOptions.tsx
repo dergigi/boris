@@ -144,7 +144,7 @@ const LoginOptions: React.FC = () => {
               className="login-button login-button-secondary"
             >
               <FontAwesomeIcon icon={faShieldHalved} />
-              <span>Bunker</span>
+              <span>Signer</span>
             </button>
           ) : (
             <div className="bunker-input-container">
