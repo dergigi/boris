@@ -463,10 +463,20 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     })
   }, [highlights, activeAccount?.pubkey, followedPubkeys, visibility])
 
+  // Dedupe and sort posts once for rendering
+  const uniqueSortedPosts = useMemo(() => {
+    const unique = dedupeWritingsByReplaceable(blogPosts)
+    return unique.sort((a, b) => {
+      const timeA = a.published || a.event.created_at
+      const timeB = b.published || b.event.created_at
+      return timeB - timeA
+    })
+  }, [blogPosts])
+
   // Filter blog posts by future dates and visibility, and add level classification
   const filteredBlogPosts = useMemo(() => {
     const maxFutureTime = Date.now() / 1000 + (24 * 60 * 60) // 1 day from now
-    return blogPosts
+    return uniqueSortedPosts
       .filter(post => {
         // Filter out future dates
         const publishedTime = post.published || post.event.created_at
@@ -490,7 +500,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         const level: 'mine' | 'friends' | 'nostrverse' = isMine ? 'mine' : isFriend ? 'friends' : 'nostrverse'
         return { ...post, level }
       })
-  }, [blogPosts, activeAccount, followedPubkeys, visibility])
+  }, [uniqueSortedPosts, activeAccount, followedPubkeys, visibility])
 
   const renderTabContent = () => {
     switch (activeTab) {
