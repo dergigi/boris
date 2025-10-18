@@ -399,6 +399,7 @@ const Debug: React.FC<DebugProps> = ({
       const elapsed = Math.round(performance.now() - start)
       setTLoadHighlights(elapsed)
       setLiveTiming(prev => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
         const { loadHighlights, ...rest } = prev
         return rest
       })
