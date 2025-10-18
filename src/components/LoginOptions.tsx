@@ -90,7 +90,7 @@ const LoginOptions: React.FC = () => {
             className="login-button login-button-primary"
           >
             <FontAwesomeIcon icon={faPuzzlePiece} />
-            <span>{isLoading && !showBunkerInput ? 'Connecting...' : 'Login with Extension'}</span>
+            <span>{isLoading && !showBunkerInput ? 'Connecting...' : 'Extension Login'}</span>
           </button>
           
           {!showBunkerInput ? (
@@ -100,7 +100,7 @@ const LoginOptions: React.FC = () => {
               className="login-button login-button-secondary"
             >
               <FontAwesomeIcon icon={faShieldHalved} />
-              <span>Login with Bunker</span>
+              <span>Bunker Login</span>
             </button>
           ) : (
             <div className="bunker-input-container">
