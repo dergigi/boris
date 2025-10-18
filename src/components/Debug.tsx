@@ -81,7 +81,7 @@ const Debug: React.FC<DebugProps> = ({
   const [decryptedEvents, setDecryptedEvents] = useState<Map<string, { public: number; private: number }>>(new Map())
   
   // Highlight loading state
-  const [highlightMode, setHighlightMode] = useState<'article' | 'url' | 'author'>('article')
+  const [highlightMode, setHighlightMode] = useState<'article' | 'url' | 'author'>('author')
   const [highlightArticleCoord, setHighlightArticleCoord] = useState<string>('')
   const [highlightUrl, setHighlightUrl] = useState<string>('')
   const [highlightAuthor, setHighlightAuthor] = useState<string>('')
@@ -332,15 +332,17 @@ const Debug: React.FC<DebugProps> = ({
       return
     }
 
+    // Default to logged-in user's highlights if no specific query provided
     const getValue = () => {
       if (highlightMode === 'article') return highlightArticleCoord.trim()
       if (highlightMode === 'url') return highlightUrl.trim()
-      return highlightAuthor.trim()
+      const authorValue = highlightAuthor.trim()
+      return authorValue || pubkey || ''
     }
 
     const value = getValue()
     if (!value) {
-      DebugBus.warn('debug', 'Please provide a value to query')
+      DebugBus.warn('debug', 'Please provide a value to query or log in')
       return
     }
 
@@ -742,7 +744,7 @@ const Debug: React.FC<DebugProps> = ({
         {/* Highlight Loading Section */}
         <div className="settings-section">
           <h3 className="section-title">Highlight Loading</h3>
-          <div className="text-sm opacity-70 mb-3">Test highlight loading with EOSE-based queryEvents (kind: 9802)</div>
+          <div className="text-sm opacity-70 mb-3">Test highlight loading with EOSE-based queryEvents (kind: 9802). Author mode defaults to your highlights.</div>
           
           <div className="mb-3">
             <div className="text-sm opacity-70 mb-2">Query Mode:</div>
@@ -799,7 +801,7 @@ const Debug: React.FC<DebugProps> = ({
               <input
                 type="text"
                 className="input w-full"
-                placeholder="pubkey (hex)"
+                placeholder={pubkey ? `${pubkey.slice(0, 16)}... (logged-in user)` : 'pubkey (hex)'}
                 value={highlightAuthor}
                 onChange={(e) => setHighlightAuthor(e.target.value)}
                 disabled={isLoadingHighlights}
