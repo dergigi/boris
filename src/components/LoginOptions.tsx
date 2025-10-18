@@ -84,14 +84,16 @@ const LoginOptions: React.FC = () => {
         </p>
         
         <div className="login-buttons">
-          <button
-            onClick={handleExtensionLogin}
-            disabled={isLoading}
-            className="login-button login-button-primary"
-          >
-            <FontAwesomeIcon icon={faPuzzlePiece} />
-            <span>{isLoading && !showBunkerInput ? 'Connecting...' : 'Extension'}</span>
-          </button>
+          {!showBunkerInput && (
+            <button
+              onClick={handleExtensionLogin}
+              disabled={isLoading}
+              className="login-button login-button-primary"
+            >
+              <FontAwesomeIcon icon={faPuzzlePiece} />
+              <span>{isLoading ? 'Connecting...' : 'Extension'}</span>
+            </button>
+          )}
           
           {!showBunkerInput ? (
             <button
