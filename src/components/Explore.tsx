@@ -319,7 +319,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
 
     loadData()
-  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings, myHighlights, cachedHighlights, cachedWritings])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relayPool, activeAccount, refreshTrigger, eventStore, settings])
 
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
