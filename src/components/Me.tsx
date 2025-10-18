@@ -139,11 +139,9 @@ const Me: React.FC<MeProps> = ({
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // For own profile, use myHighlights from controller (already loaded on app start)
-      if (isOwnProfile) {
-        setHighlights(myHighlights)
-      } else {
-        // For viewing other users, fetch on-demand
+      // For own profile, highlights come from controller subscription (sync effect handles it)
+      // For viewing other users, fetch on-demand
+      if (!isOwnProfile) {
         const userHighlights = await fetchHighlights(relayPool, viewingPubkey)
         setHighlights(userHighlights)
       }
