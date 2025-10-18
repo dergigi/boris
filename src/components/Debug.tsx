@@ -469,22 +469,58 @@ const Debug: React.FC<DebugProps> = ({
     setIsLoadingHighlights(true)
     setTLoadHighlights(null)
     setTFirstHighlight(null)
-    DebugBus.info('debug', 'Loading friends highlights...')
+    DebugBus.info('debug', 'Loading friends highlights (non-blocking)...')
+    
+    let firstEventTime: number | null = null
+    const seenAuthors = new Set<string>()
+    
     try {
-      const contacts = await fetchContacts(relayPool, activeAccount.pubkey)
-      DebugBus.info('debug', `Found ${contacts.size} friends`)
-      let firstEventTime: number | null = null
-      await fetchHighlightsFromAuthors(relayPool, Array.from(contacts), (h) => {
-        if (firstEventTime === null) {
-          firstEventTime = performance.now() - start
-          setTFirstHighlight(Math.round(firstEventTime))
+      const contacts = await fetchContacts(
+        relayPool,
+        activeAccount.pubkey,
+        (partial) => {
+          // Non-blocking: start fetching as soon as we get partial contacts
+          if (partial.size > 0) {
+            const partialArray = Array.from(partial).filter(pk => !seenAuthors.has(pk))
+            if (partialArray.length > 0) {
+              partialArray.forEach(pk => seenAuthors.add(pk))
+              DebugBus.info('debug', `Fetching highlights from ${partialArray.length} friends (${seenAuthors.size} total)`)
+              
+              // Fire and forget - don't await
+              fetchHighlightsFromAuthors(relayPool, partialArray, (h) => {
+                if (firstEventTime === null) {
+                  firstEventTime = performance.now() - start
+                  setTFirstHighlight(Math.round(firstEventTime))
+                }
+                setHighlightEvents(prev => {
+                  if (prev.some(x => x.id === h.id)) return prev
+                  const next = [...prev, { ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent]
+                  return next.sort((a, b) => b.created_at - a.created_at)
+                })
+              }).catch(err => console.error('Error fetching highlights from partial:', err))
+            }
+          }
         }
-        setHighlightEvents(prev => {
-          if (prev.some(x => x.id === h.id)) return prev
-          const next = [...prev, { ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent]
-          return next.sort((a, b) => b.created_at - a.created_at)
+      )
+      
+      DebugBus.info('debug', `Found ${contacts.size} total friends`)
+      
+      // Fetch any remaining authors not covered by partials
+      const finalAuthors = Array.from(contacts).filter(pk => !seenAuthors.has(pk))
+      if (finalAuthors.length > 0) {
+        DebugBus.info('debug', `Fetching highlights from ${finalAuthors.length} remaining friends`)
+        await fetchHighlightsFromAuthors(relayPool, finalAuthors, (h) => {
+          if (firstEventTime === null) {
+            firstEventTime = performance.now() - start
+            setTFirstHighlight(Math.round(firstEventTime))
+          }
+          setHighlightEvents(prev => {
+            if (prev.some(x => x.id === h.id)) return prev
+            const next = [...prev, { ...h, pubkey: h.pubkey, created_at: h.created_at, id: h.id, kind: 9802, tags: [], content: h.content, sig: '' } as NostrEvent]
+            return next.sort((a, b) => b.created_at - a.created_at)
+          })
         })
-      })
+      }
     } finally {
       setIsLoadingHighlights(false)
       const elapsed = Math.round(performance.now() - start)
