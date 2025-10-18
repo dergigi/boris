@@ -204,53 +204,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
 
         // If not logged in, only fetch nostrverse content with streaming posts
         if (!activeAccount) {
-          const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-          const highlightPromise = fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
-
-          // Stream posts as they arrive
-          const postsPromise = fetchNostrverseBlogPosts(
-            relayPool,
-            relayUrls,
-            50,
-            eventStore || undefined,
-            (post) => {
-              setBlogPosts(prev => {
-                const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
-                const key = `${post.author}:${dTag}`
-                const existingIndex = prev.findIndex(p => {
-                  const pDTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-                  return `${p.author}:${pDTag}` === key
-                })
-                if (existingIndex >= 0) {
-                  const existing = prev[existingIndex]
-                  if (post.event.created_at <= existing.event.created_at) return prev
-                  const next = [...prev]
-                  next[existingIndex] = post
-                  return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-                }
-                const next = [...prev, post]
-                return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-              })
-            }
-          )
-
-          // When each finishes, merge without blocking initial render
-          postsPromise.then((finalPosts) => {
-            setBlogPosts(prev => {
-              const byKey = new Map<string, BlogPostPreview>()
-              for (const p of [...prev, ...finalPosts]) {
-                const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-                const key = `${p.author}:${dTag}`
-                const existing = byKey.get(key)
-                if (!existing || p.event.created_at > existing.event.created_at) byKey.set(key, p)
-              }
-              return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-            })
-          }).catch(() => {})
-          highlightPromise.then((nostriverseHighlights) => {
-            setHighlights(prev => dedupeHighlightsById([...prev, ...nostriverseHighlights]).sort((a, b) => b.created_at - a.created_at))
-          }).catch(() => {})
-          // drop through; do not early return so post-login path runs seeding too
+          // Logged out: rely entirely on centralized controllers; do not fetch here
+          setLoading(false)
         }
 
         // Seed from in-memory cache if available to avoid empty flash

@@ -128,6 +128,14 @@ function AppRoutes({
     }
   }, [activeAccount, relayPool, eventStore, bookmarks.length, bookmarksLoading, contacts.size, contactsLoading, accountManager])
 
+  // Ensure nostrverse controllers run even when logged out
+  useEffect(() => {
+    if (relayPool && eventStore) {
+      nostrverseHighlightsController.start({ relayPool, eventStore })
+      nostrverseWritingsController.start({ relayPool, eventStore })
+    }
+  }, [relayPool, eventStore])
+
   // Manual refresh (for sidebar button)
   const handleRefreshBookmarks = useCallback(async () => {
     if (!relayPool || !activeAccount) {
