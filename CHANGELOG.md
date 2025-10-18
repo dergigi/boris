@@ -7,6 +7,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3] - 2025-10-18
+
+### Added
+
+- Centralized nostrverse writings controller for kind 30023 content
+  - Automatically starts at app initialization
+  - Streams nostrverse blog posts progressively to Explore page
+  - Provides non-blocking, cache-first loading strategy
+- Centralized nostrverse highlights controller
+  - Pre-loads nostrverse highlights at app start for instant toggling
+  - Streams highlights progressively to Explore page
+  - Integrated with EventStore for caching
+- Writings loading debug section on `/debug` page
+  - Diagnostics for writings controller and loading states
+
+### Changed
+
+- Explore page now uses centralized `writingsController` for user's own writings
+  - Auto-loads user writings at login for instant availability
+  - Non-blocking fetch with progressive streaming
+- Explore page loading strategy optimized
+  - Shows skeleton placeholders instead of blocking spinners
+  - Seeds from cache, then streams and merges results progressively
+  - Keeps nostrverse fetches non-blocking
+- User's own writings now included in Explore when enabled
+  - Lazy-loads on 'mine' toggle when logged in
+  - Streams in parallel with friends/nostrverse content
+
+### Fixed
+
+- Explore page works correctly in logged-out mode
+  - Relies solely on centralized nostrverse controllers
+  - Controllers start even when logged out
+  - Fetches nostrverse content properly without authentication
+- Explore page no longer allows disabling all scope filters
+  - Ensures at least one filter (mine/friends/nostrverse) remains active
+  - Prevents blank content state
+- Explore page reflects default scope setting immediately
+  - No more blank lists on initial load
+  - Pre-loads and merges nostrverse from event store
+- Explore page highlights properly scoped
+  - Nostrverse highlights never block the page
+  - Shows empty state instead of spinner
+  - Streams results into store immediately
+  - Highlights are merged and loaded correctly
+- Article-specific highlights properly filtered
+  - Highlights scoped to current article on `/a/` and `/r/` routes
+  - Derives coordinate from naddr for early filtering
+  - Sidebar and content only show relevant highlights
+  - ContentPanel shows only article-specific highlights for nostr articles
+- Explore writings properly deduplicated
+  - Deduplication by replaceable event (author:d-tag) happens before visibility filtering
+  - Consistent dedupe/sort behavior across all loading scenarios
+- Debug page writings loading section added
+  - No infinite loop when loading nostrverse content
+
+### Performance
+
+- Non-blocking explore page loading
+  - Fully non-blocking loading strategy
+  - Seeds caches then streams and merges results progressively
+- Lazy-loading for content filters
+  - Nostrverse writings lazy-load when toggled on while logged in
+  - Avoids redundant loading with guard flags
+- Streaming callbacks for progressive updates
+  - Writings stream to UI via onPost callback
+  - Posts appear instantly as they arrive from cache or network
+
 ## [0.7.2] - 2025-01-27
 
 ### Added
@@ -1910,7 +1978,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.7.2...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.7.3...HEAD
+[0.7.3]: https://github.com/dergigi/boris/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/dergigi/boris/compare/v0.7.0...v0.7.2
 [0.7.0]: https://github.com/dergigi/boris/compare/v0.6.24...v0.7.0
 [0.6.24]: https://github.com/dergigi/boris/compare/v0.6.23...v0.6.24
