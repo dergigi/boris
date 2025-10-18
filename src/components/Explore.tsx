@@ -27,6 +27,7 @@ import { KINDS } from '../config/kinds'
 import { eventToHighlight } from '../services/highlightEventProcessor'
 import { useStoreTimeline } from '../hooks/useStoreTimeline'
 import { dedupeHighlightsById, dedupeWritingsByReplaceable } from '../utils/dedupe'
+import { writingsController } from '../services/writingsController'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -95,6 +96,36 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       unsubHighlights()
       unsubLoading()
     }
+  }, [])
+
+  // Subscribe to writings controller for "mine" posts and seed immediately
+  useEffect(() => {
+    // Seed from controller's current state
+    const seed = writingsController.getWritings()
+    if (seed.length > 0) {
+      setBlogPosts(prev => {
+        const merged = dedupeWritingsByReplaceable([...prev, ...seed])
+        return merged.sort((a, b) => {
+          const timeA = a.published || a.event.created_at
+          const timeB = b.published || b.event.created_at
+          return timeB - timeA
+        })
+      })
+    }
+
+    // Stream updates
+    const unsub = writingsController.onWritings((posts) => {
+      setBlogPosts(prev => {
+        const merged = dedupeWritingsByReplaceable([...prev, ...posts])
+        return merged.sort((a, b) => {
+          const timeA = a.published || a.event.created_at
+          const timeB = b.published || b.event.created_at
+          return timeB - timeA
+        })
+      })
+    })
+
+    return () => unsub()
   }, [])
 
   // Update visibility when login state changes
@@ -327,31 +358,8 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         // Fetch friends content and (optionally) nostrverse + mine content in parallel
         const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
         const contactsArray = Array.from(contacts)
-        const myPostsPromise = fetchBlogPostsFromAuthors(
-          relayPool,
-          activeAccount ? [activeAccount.pubkey] : [],
-          relayUrls,
-          (post) => {
-            // Stream my posts
-            setBlogPosts(prev => {
-              const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
-              const key = `${post.author}:${dTag}`
-              const existingIndex = prev.findIndex(p => {
-                const pDTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-                return `${p.author}:${pDTag}` === key
-              })
-              if (existingIndex >= 0) {
-                const existing = prev[existingIndex]
-                if (post.event.created_at <= existing.event.created_at) return prev
-                const next = [...prev]
-                next[existingIndex] = post
-                return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-              }
-              const next = [...prev, post]
-              return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-            })
-          }
-        )
+        // Use centralized writingsController for my posts (non-blocking)
+        const myPostsPromise: Promise<BlogPostPreview[]> = Promise.resolve(writingsController.getWritings())
         setHasLoadedMine(true)
         const nostrversePostsPromise = visibility.nostrverse
           ? fetchNostrverseBlogPosts(relayPool, relayUrls, 50, eventStore || undefined, (post) => {
@@ -467,46 +475,11 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   }, [visibility.nostrverse, activeAccount, relayPool, eventStore, hasLoadedNostrverse])
 
   // Lazy-load my writings when user toggles "mine" on (logged in)
+  // No direct fetch here; writingsController streams my posts centrally
   useEffect(() => {
-    if (!activeAccount || !relayPool || !visibility.mine || hasLoadedMine) return
-    const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+    if (!activeAccount || !visibility.mine || hasLoadedMine) return
     setHasLoadedMine(true)
-    fetchBlogPostsFromAuthors(
-      relayPool,
-      [activeAccount.pubkey],
-      relayUrls,
-      (post) => {
-        setBlogPosts(prev => {
-          const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
-          const key = `${post.author}:${dTag}`
-          const existingIndex = prev.findIndex(p => {
-            const pDTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-            return `${p.author}:${pDTag}` === key
-          })
-          if (existingIndex >= 0) {
-            const existing = prev[existingIndex]
-            if (post.event.created_at <= existing.event.created_at) return prev
-            const next = [...prev]
-            next[existingIndex] = post
-            return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-          }
-          const next = [...prev, post]
-          return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-        })
-      }
-    ).then((finalPosts) => {
-      setBlogPosts(prev => {
-        const byKey = new Map<string, BlogPostPreview>()
-        for (const p of [...prev, ...finalPosts]) {
-          const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-          const key = `${p.author}:${dTag}`
-          const existing = byKey.get(key)
-          if (!existing || p.event.created_at > existing.event.created_at) byKey.set(key, p)
-        }
-        return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-      })
-    }).catch(() => {})
-  }, [visibility.mine, activeAccount, relayPool, hasLoadedMine])
+  }, [visibility.mine, activeAccount, hasLoadedMine])
 
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
