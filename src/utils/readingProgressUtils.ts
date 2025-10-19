@@ -1,6 +1,7 @@
 import { ReadItem } from '../services/readsService'
 import { ReadingProgressFilterType } from '../components/ReadingProgressFilters'
 import { Highlight } from '../types/highlights'
+import { nip19 } from 'nostr-tools'
 
 /**
  * Filters ReadItems by reading progress
@@ -11,12 +12,34 @@ export function filterByReadingProgress(
   highlights?: Highlight[]
 ): ReadItem[] {
   // Build a map of article references to highlight count
+  // Normalize both coordinate and naddr formats for matching
   const articleHighlightCount = new Map<string, number>()
   if (highlights) {
     highlights.forEach(h => {
       if (h.eventReference) {
-        const count = articleHighlightCount.get(h.eventReference) || 0
-        articleHighlightCount.set(h.eventReference, count + 1)
+        // eventReference could be a hex ID or a coordinate (30023:pubkey:identifier)
+        let normalizedRef = h.eventReference
+        
+        // If it's a coordinate, convert to naddr format for matching
+        if (h.eventReference.includes(':')) {
+          const parts = h.eventReference.split(':')
+          if (parts.length === 3) {
+            const [kind, pubkey, identifier] = parts
+            try {
+              normalizedRef = nip19.naddrEncode({
+                kind: parseInt(kind),
+                pubkey,
+                identifier
+              })
+            } catch {
+              // If conversion fails, use the original reference
+              normalizedRef = h.eventReference
+            }
+          }
+        }
+        
+        const count = articleHighlightCount.get(normalizedRef) || 0
+        articleHighlightCount.set(normalizedRef, count + 1)
       }
       if (h.urlReference) {
         const count = articleHighlightCount.get(h.urlReference) || 0
