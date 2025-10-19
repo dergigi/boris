@@ -114,8 +114,8 @@ export async function saveReadingPosition(
   articleIdentifier: string,
   position: ReadingPosition
 ): Promise<void> {
-  console.log('💾 [ReadingProgress] Saving position:', {
-    identifier: articleIdentifier.slice(0, 32) + '...',
+  console.log('[progress] 💾 saveReadingPosition: Starting save:', {
+    identifier: articleIdentifier.slice(0, 50) + '...',
     position: position.position,
     positionPercent: Math.round(position.position * 100) + '%',
     timestamp: position.timestamp,
@@ -133,6 +133,13 @@ export async function saveReadingPosition(
   
   const tags = generateProgressTags(articleIdentifier)
   
+  console.log('[progress] 📝 Creating event with:', {
+    kind: READING_PROGRESS_KIND,
+    content: progressContent,
+    tags: tags.map(t => `[${t.join(', ')}]`).join(', '),
+    created_at: now
+  })
+  
   const draft = await factory.create(async () => ({
     kind: READING_PROGRESS_KIND,
     content: JSON.stringify(progressContent),
@@ -140,10 +147,20 @@ export async function saveReadingPosition(
     created_at: now
   }))
 
+  console.log('[progress] ✍️ Signing event...')
   const signed = await factory.sign(draft)
+  
+  console.log('[progress] 📡 Publishing event:', {
+    id: signed.id,
+    kind: signed.kind,
+    pubkey: signed.pubkey.slice(0, 8) + '...',
+    content: signed.content,
+    tags: signed.tags
+  })
+  
   await publishEvent(relayPool, eventStore, signed)
   
-  console.log('✅ [ReadingProgress] Saved, event ID:', signed.id.slice(0, 8))
+  console.log('[progress] ✅ Event published successfully, ID:', signed.id.slice(0, 16))
 }
 
 /**

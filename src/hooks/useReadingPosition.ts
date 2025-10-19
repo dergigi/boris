@@ -45,7 +45,9 @@ export const useReadingPosition = ({
     }
 
     // Schedule new save
+    console.log('[progress] ⏰ Scheduling save in', autoSaveInterval + 'ms for position:', Math.round(currentPosition * 100) + '%')
     saveTimerRef.current = setTimeout(() => {
+      console.log('[progress] 💾 Auto-saving position:', Math.round(currentPosition * 100) + '%')
       lastSavedPosition.current = currentPosition
       onSave(currentPosition)
     }, autoSaveInterval)
@@ -63,8 +65,11 @@ export const useReadingPosition = ({
 
     // Save if position is meaningful (>= 5%)
     if (position >= 0.05) {
+      console.log('[progress] 💾 Immediate save triggered for position:', Math.round(position * 100) + '%')
       lastSavedPosition.current = position
       onSave(position)
+    } else {
+      console.log('[progress] ⏭️ Skipping save - position too low:', Math.round(position * 100) + '%')
     }
   }, [syncEnabled, onSave, position])
 
@@ -88,6 +93,17 @@ export const useReadingPosition = ({
       // If we're within 5px of the bottom, consider it 100%
       const isAtBottom = scrollTop + windowHeight >= documentHeight - 5
       const clampedProgress = isAtBottom ? 1 : Math.max(0, Math.min(1, scrollProgress))
+      
+      // Only log on significant changes (every 5%) to avoid flooding console
+      const prevPercent = Math.floor(position * 20) // Groups by 5%
+      const newPercent = Math.floor(clampedProgress * 20)
+      if (prevPercent !== newPercent) {
+        console.log('[progress] 📏 useReadingPosition:', Math.round(clampedProgress * 100) + '%', {
+          scrollTop,
+          documentHeight,
+          isAtBottom
+        })
+      }
       
       setPosition(clampedProgress)
       onPositionChange?.(clampedProgress)
