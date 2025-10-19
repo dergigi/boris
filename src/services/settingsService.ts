@@ -60,6 +60,7 @@ export interface UserSettings {
   paragraphAlignment?: 'left' | 'justify' // default: justify
   // Reading position sync
   syncReadingPosition?: boolean // default: false (opt-in)
+  autoMarkAsReadOnCompletion?: boolean // default: false (opt-in)
 }
 
 export async function loadSettings(

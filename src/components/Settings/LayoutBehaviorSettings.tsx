@@ -117,6 +117,19 @@ const LayoutBehaviorSettings: React.FC<LayoutBehaviorSettingsProps> = ({ setting
           <span>Sync reading position across devices</span>
         </label>
       </div>
+
+      <div className="setting-group">
+        <label htmlFor="autoMarkAsReadOnCompletion" className="checkbox-label">
+          <input
+            id="autoMarkAsReadOnCompletion"
+            type="checkbox"
+            checked={settings.autoMarkAsReadOnCompletion ?? false}
+            onChange={(e) => onUpdate({ autoMarkAsReadOnCompletion: e.target.checked })}
+            className="setting-checkbox"
+          />
+          <span>Automatically mark as read at 100%</span>
+        </label>
+      </div>
     </div>
   )
 }

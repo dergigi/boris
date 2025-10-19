@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4] - 2025-10-18
+
+### Added
+
+- Profile page data preloading for instant tab switching
+  - Automatically preloads all highlights and writings when viewing a profile (`/p/` pages)
+  - Non-blocking background fetch stores all events in event store
+  - Tab switching becomes instant after initial preload
+
+### Changed
+
+- `/me/bookmarks` tab now displays in cards view only
+  - Removed view mode toggle buttons (compact, large) from bookmarks tab
+  - Cards view provides optimal bookmark browsing experience
+  - Grouping toggle (grouped/flat) still available
+- Highlights sidebar filters simplified when logged out
+  - Only nostrverse filter button shown when not logged in
+  - Friends and personal highlight filters hidden when logged out
+  - Cleaner UX showing only available options
+
+### Fixed
+
+- Profile page tabs now display cached content instantly
+  - Highlights and writings show immediately from event store cache
+  - Network fetches happen in background without blocking UI
+  - Matches Explore and Debug page non-blocking loading pattern
+  - Eliminated loading delays when switching between tabs
+
+### Performance
+
+- Cache-first profile loading strategy
+  - Instant display of cached highlights and writings from event store
+  - Background refresh updates data without blocking
+  - Tab switches show content immediately without loading states
+
 ## [0.7.3] - 2025-10-18
 
 ### Added
@@ -1978,7 +2013,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.7.3...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.7.4...HEAD
+[0.7.4]: https://github.com/dergigi/boris/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/dergigi/boris/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/dergigi/boris/compare/v0.7.0...v0.7.2
 [0.7.0]: https://github.com/dergigi/boris/compare/v0.6.24...v0.7.0

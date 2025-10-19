@@ -4,40 +4,53 @@ interface UseReadingPositionOptions {
   enabled?: boolean
   onPositionChange?: (position: number) => void
   onReadingComplete?: () => void
-  readingCompleteThreshold?: number // Default 0.9 (90%)
+  readingCompleteThreshold?: number // Default 0.95 (95%) - matches filter threshold
   syncEnabled?: boolean // Whether to sync positions to Nostr
   onSave?: (position: number) => void // Callback for saving position
   autoSaveInterval?: number // Auto-save interval in ms (default 5000)
+  completionHoldMs?: number // How long to hold at 100% before firing complete (default 2000)
 }
 
 export const useReadingPosition = ({
   enabled = true,
   onPositionChange,
   onReadingComplete,
-  readingCompleteThreshold = 0.9,
+  readingCompleteThreshold = 0.95, // Match filter threshold for consistency
   syncEnabled = false,
   onSave,
-  autoSaveInterval = 5000
+  autoSaveInterval = 5000,
+  completionHoldMs = 2000
 }: UseReadingPositionOptions = {}) => {
   const [position, setPosition] = useState(0)
   const [isReadingComplete, setIsReadingComplete] = useState(false)
   const hasTriggeredComplete = useRef(false)
   const lastSavedPosition = useRef(0)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hasSavedOnce = useRef(false)
+  const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Debounced save function
   const scheduleSave = useCallback((currentPosition: number) => {
-    if (!syncEnabled || !onSave) return
-    
-    // Don't save if position is too low (< 5%)
-    if (currentPosition < 0.05) return
-    
+    if (!syncEnabled || !onSave) {
+      console.log('[progress] ⏭️ scheduleSave skipped:', { syncEnabled, hasOnSave: !!onSave, position: Math.round(currentPosition * 100) + '%' })
+      return
+    }
+
     // Don't save if position hasn't changed significantly (less than 1%)
     // But always save if we've reached 100% (completion)
     const hasSignificantChange = Math.abs(currentPosition - lastSavedPosition.current) >= 0.01
     const hasReachedCompletion = currentPosition === 1 && lastSavedPosition.current < 1
+    const isInitialSave = !hasSavedOnce.current
     
-    if (!hasSignificantChange && !hasReachedCompletion) return
+    if (!hasSignificantChange && !hasReachedCompletion && !isInitialSave) {
+      console.log('[progress] ⏭️ No significant change:', {
+        current: Math.round(currentPosition * 100) + '%',
+        last: Math.round(lastSavedPosition.current * 100) + '%',
+        diff: Math.abs(currentPosition - lastSavedPosition.current),
+        isInitialSave
+      })
+      return
+    }
 
     // Clear existing timer
     if (saveTimerRef.current) {
@@ -45,8 +58,11 @@ export const useReadingPosition = ({
     }
 
     // Schedule new save
+    console.log('[progress] ⏰ Scheduling save in', autoSaveInterval + 'ms for position:', Math.round(currentPosition * 100) + '%')
     saveTimerRef.current = setTimeout(() => {
+      console.log('[progress] 💾 Auto-saving position:', Math.round(currentPosition * 100) + '%')
       lastSavedPosition.current = currentPosition
+      hasSavedOnce.current = true
       onSave(currentPosition)
     }, autoSaveInterval)
   }, [syncEnabled, onSave, autoSaveInterval])
@@ -61,11 +77,11 @@ export const useReadingPosition = ({
       saveTimerRef.current = null
     }
 
-    // Save if position is meaningful (>= 5%)
-    if (position >= 0.05) {
-      lastSavedPosition.current = position
-      onSave(position)
-    }
+    // Always allow immediate save (including 0%)
+    console.log('[progress] 💾 Immediate save triggered for position:', Math.round(position * 100) + '%')
+    lastSavedPosition.current = position
+    hasSavedOnce.current = true
+    onSave(position)
   }, [syncEnabled, onSave, position])
 
   useEffect(() => {
@@ -89,17 +105,53 @@ export const useReadingPosition = ({
       const isAtBottom = scrollTop + windowHeight >= documentHeight - 5
       const clampedProgress = isAtBottom ? 1 : Math.max(0, Math.min(1, scrollProgress))
       
+      // Only log on significant changes (every 5%) to avoid flooding console
+      const prevPercent = Math.floor(position * 20) // Groups by 5%
+      const newPercent = Math.floor(clampedProgress * 20)
+      if (prevPercent !== newPercent) {
+        console.log('[progress] 📏 useReadingPosition:', Math.round(clampedProgress * 100) + '%', {
+          scrollTop,
+          documentHeight,
+          isAtBottom
+        })
+      }
+      
       setPosition(clampedProgress)
       onPositionChange?.(clampedProgress)
 
       // Schedule auto-save if sync is enabled
       scheduleSave(clampedProgress)
 
-      // Check if reading is complete
-      if (clampedProgress >= readingCompleteThreshold && !hasTriggeredComplete.current) {
-        setIsReadingComplete(true)
-        hasTriggeredComplete.current = true
-        onReadingComplete?.()
+      // Completion detection with 2s hold at 100%
+      if (!hasTriggeredComplete.current) {
+        // If at exact 100%, start a hold timer; cancel if we scroll up
+        if (clampedProgress === 1) {
+          if (!completionTimerRef.current) {
+            completionTimerRef.current = setTimeout(() => {
+              if (!hasTriggeredComplete.current && position === 1) {
+                setIsReadingComplete(true)
+                hasTriggeredComplete.current = true
+                console.log('[progress] ✅ Completion hold satisfied (100% for', completionHoldMs, 'ms)')
+                onReadingComplete?.()
+              }
+              completionTimerRef.current = null
+            }, completionHoldMs)
+            console.log('[progress] ⏳ Completion hold started (waiting', completionHoldMs, 'ms)')
+          }
+        } else {
+          // If we moved off 100%, cancel any pending completion hold
+          if (completionTimerRef.current) {
+            clearTimeout(completionTimerRef.current)
+            completionTimerRef.current = null
+            // still allow threshold-based completion for near-bottom if configured
+            if (clampedProgress >= readingCompleteThreshold) {
+              setIsReadingComplete(true)
+              hasTriggeredComplete.current = true
+              console.log('[progress] ✅ Completion via threshold:', readingCompleteThreshold)
+              onReadingComplete?.()
+            }
+          }
+        }
       }
     }
 
@@ -118,7 +170,12 @@ export const useReadingPosition = ({
       if (saveTimerRef.current) {
         clearTimeout(saveTimerRef.current)
       }
+      if (completionTimerRef.current) {
+        clearTimeout(completionTimerRef.current)
+      }
     }
+    // position is intentionally not in deps - it's computed from scroll and would cause infinite re-renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, onPositionChange, onReadingComplete, readingCompleteThreshold, scheduleSave])
 
   // Reset reading complete state when enabled changes
@@ -126,6 +183,12 @@ export const useReadingPosition = ({
     if (!enabled) {
       setIsReadingComplete(false)
       hasTriggeredComplete.current = false
+      hasSavedOnce.current = false
+      lastSavedPosition.current = 0
+      if (completionTimerRef.current) {
+        clearTimeout(completionTimerRef.current)
+        completionTimerRef.current = null
+      }
     }
   }, [enabled])
 

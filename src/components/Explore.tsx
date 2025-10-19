@@ -30,6 +30,7 @@ import { useStoreTimeline } from '../hooks/useStoreTimeline'
 import { dedupeHighlightsById, dedupeWritingsByReplaceable } from '../utils/dedupe'
 import { writingsController } from '../services/writingsController'
 import { nostrverseWritingsController } from '../services/nostrverseWritingsController'
+import { readingProgressController } from '../services/readingProgressController'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -58,6 +59,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   // Get myHighlights directly from controller
   const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
   // Remove unused loading state to avoid warnings
+  
+  // Reading progress state (naddr -> progress 0-1)
+  const [readingProgressMap, setReadingProgressMap] = useState<Map<string, number>>(new Map())
   
   // Load cached content from event store (instant display)
   const cachedHighlights = useStoreTimeline(eventStore, { kinds: [KINDS.Highlights] }, eventToHighlight, [])
@@ -169,6 +173,38 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
 
     return () => unsub()
   }, [])
+  
+  // Subscribe to reading progress controller
+  useEffect(() => {
+    // Get initial state immediately
+    const initialMap = readingProgressController.getProgressMap()
+    console.log('[progress] 🎯 Explore: Initial progress map size:', initialMap.size)
+    setReadingProgressMap(initialMap)
+    
+    // Subscribe to updates
+    const unsubProgress = readingProgressController.onProgress((newMap) => {
+      console.log('[progress] 🎯 Explore: Received progress update, size:', newMap.size)
+      setReadingProgressMap(newMap)
+    })
+    
+    return () => {
+      unsubProgress()
+    }
+  }, [])
+  
+  // Load reading progress data when logged in
+  useEffect(() => {
+    if (!activeAccount?.pubkey) {
+      return
+    }
+    
+    readingProgressController.start({
+      relayPool,
+      eventStore,
+      pubkey: activeAccount.pubkey,
+      force: refreshTrigger > 0
+    })
+  }, [activeAccount?.pubkey, relayPool, eventStore, refreshTrigger])
 
   // Update visibility when settings/login state changes
   useEffect(() => {
@@ -571,6 +607,39 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         return { ...post, level }
       })
   }, [uniqueSortedPosts, activeAccount, followedPubkeys, visibility])
+  
+  // Helper to get reading progress for a post
+  const getReadingProgress = useCallback((post: BlogPostPreview): number | undefined => {
+    const dTag = post.event.tags.find(t => t[0] === 'd')?.[1]
+    if (!dTag) {
+      console.log('[progress] ⚠️ No d-tag for post:', post.title)
+      return undefined
+    }
+    
+    try {
+      const naddr = nip19.naddrEncode({
+        kind: 30023,
+        pubkey: post.author,
+        identifier: dTag
+      })
+      const progress = readingProgressMap.get(naddr)
+      
+      // Only log first lookup to avoid spam, or when found
+      if (progress || readingProgressMap.size === 0) {
+        console.log('[progress] 🔍 Looking up:', {
+          title: post.title.slice(0, 30),
+          naddr: naddr.slice(0, 80),
+          mapSize: readingProgressMap.size,
+          mapKeys: readingProgressMap.size > 0 ? Array.from(readingProgressMap.keys()).slice(0, 3).map(k => k.slice(0, 80)) : [],
+          progress: progress ? Math.round(progress * 100) + '%' : 'not found'
+        })
+      }
+      return progress
+    } catch (err) {
+      console.error('[progress] ❌ Error encoding naddr:', err)
+      return undefined
+    }
+  }, [readingProgressMap])
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -596,6 +665,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                 post={post}
                 href={getPostUrl(post)}
                 level={post.level}
+                readingProgress={getReadingProgress(post)}
               />
             ))}
           </div>

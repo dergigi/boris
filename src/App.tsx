@@ -24,6 +24,7 @@ import { bookmarkController } from './services/bookmarkController'
 import { contactsController } from './services/contactsController'
 import { highlightsController } from './services/highlightsController'
 import { writingsController } from './services/writingsController'
+import { readingProgressController } from './services/readingProgressController'
 // import { fetchNostrverseHighlights } from './services/nostrverseService'
 import { nostrverseHighlightsController } from './services/nostrverseHighlightsController'
 import { nostrverseWritingsController } from './services/nostrverseWritingsController'
@@ -54,18 +55,14 @@ function AppRoutes({
 
   // Subscribe to bookmark controller
   useEffect(() => {
-    console.log('[bookmark] 🎧 Subscribing to bookmark controller')
     const unsubBookmarks = bookmarkController.onBookmarks((bookmarks) => {
-      console.log('[bookmark] 📥 Received bookmarks:', bookmarks.length)
       setBookmarks(bookmarks)
     })
     const unsubLoading = bookmarkController.onLoading((loading) => {
-      console.log('[bookmark] 📥 Loading state:', loading)
       setBookmarksLoading(loading)
     })
     
     return () => {
-      console.log('[bookmark] 🔇 Unsubscribing from bookmark controller')
       unsubBookmarks()
       unsubLoading()
     }
@@ -98,7 +95,6 @@ function AppRoutes({
       
       // Load bookmarks
       if (bookmarks.length === 0 && !bookmarksLoading) {
-        console.log('[bookmark] 🚀 Auto-loading bookmarks on mount/login')
         bookmarkController.start({ relayPool, activeAccount, accountManager })
       }
       
@@ -139,10 +135,8 @@ function AppRoutes({
   // Manual refresh (for sidebar button)
   const handleRefreshBookmarks = useCallback(async () => {
     if (!relayPool || !activeAccount) {
-      console.warn('[bookmark] Cannot refresh: missing relayPool or activeAccount')
       return
     }
-    console.log('[bookmark] 🔄 Manual refresh triggered')
     bookmarkController.reset()
     await bookmarkController.start({ relayPool, activeAccount, accountManager })
   }, [relayPool, activeAccount, accountManager])
@@ -152,6 +146,7 @@ function AppRoutes({
     bookmarkController.reset() // Clear bookmarks via controller
     contactsController.reset() // Clear contacts via controller
     highlightsController.reset() // Clear highlights via controller
+    readingProgressController.reset() // Clear reading progress via controller
     showToast('Logged out successfully')
   }
 

@@ -4,12 +4,12 @@ import { queryEvents } from './dataFetch'
 import { RELAYS } from '../config/relays'
 import { KINDS } from '../config/kinds'
 import { ReadItem } from './readsService'
-import { processReadingPositions, processMarkedAsRead, filterValidItems, sortByReadingActivity } from './readingDataProcessor'
+import { processReadingProgress, processMarkedAsRead, filterValidItems, sortByReadingActivity } from './readingDataProcessor'
 import { mergeReadItem } from '../utils/readItemMerge'
 
 /**
  * Fetches external URL links with reading progress from:
- * - URLs with reading progress (kind:30078)
+ * - URLs with reading progress (kind:39802)
  * - Manually marked as read URLs (kind:7, kind:17)
  */
 export async function fetchLinks(
@@ -32,18 +32,18 @@ export async function fetchLinks(
   
   try {
     // Fetch all data sources in parallel
-    const [readingPositionEvents, markedAsReadArticles] = await Promise.all([
-      queryEvents(relayPool, { kinds: [KINDS.AppData], authors: [userPubkey] }, { relayUrls: RELAYS }),
+    const [progressEvents, markedAsReadArticles] = await Promise.all([
+      queryEvents(relayPool, { kinds: [KINDS.ReadingProgress], authors: [userPubkey] }, { relayUrls: RELAYS }),
       fetchReadArticles(relayPool, userPubkey)
     ])
 
     console.log('📊 [Links] Data fetched:', {
-      readingPositions: readingPositionEvents.length,
+      readingProgress: progressEvents.length,
       markedAsRead: markedAsReadArticles.length
     })
 
-    // Process reading positions and emit external items
-    processReadingPositions(readingPositionEvents, linksMap)
+    // Process reading progress events (kind 39802)
+    processReadingProgress(progressEvents, linksMap)
     if (onItem) {
       linksMap.forEach(item => {
         if (item.type === 'external') {

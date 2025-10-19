@@ -14,9 +14,12 @@ export async function publishEvent(
   eventStore: IEventStore,
   event: NostrEvent
 ): Promise<void> {
+  const isProgressEvent = event.kind === 39802
+  const logPrefix = isProgressEvent ? '[progress]' : ''
+  
   // Store the event in the local EventStore FIRST for immediate UI display
   eventStore.add(event)
-  console.log('💾 Stored event in EventStore:', event.id.slice(0, 8), `(kind ${event.kind})`)
+  console.log(`${logPrefix} 💾 Stored event in EventStore:`, event.id.slice(0, 8), `(kind ${event.kind})`)
 
   // Check current connection status - are we online or in flight mode?
   const connectedRelays = Array.from(relayPool.relays.values())
@@ -32,12 +35,13 @@ export async function publishEvent(
 
   const isLocalOnly = areAllRelaysLocal(expectedSuccessRelays)
 
-  console.log('📍 Event relay status:', {
+  console.log(`${logPrefix} 📍 Event relay status:`, {
     targetRelays: RELAYS.length,
     expectedSuccessRelays: expectedSuccessRelays.length,
     isLocalOnly,
     hasRemoteConnection,
-    eventId: event.id.slice(0, 8)
+    eventId: event.id.slice(0, 8),
+    connectedRelays: connectedRelays.length
   })
 
   // If we're in local-only mode, mark this event for later sync
@@ -46,12 +50,13 @@ export async function publishEvent(
   }
 
   // Publish to all configured relays in the background (non-blocking)
+  console.log(`${logPrefix} 📤 Publishing to relays:`, RELAYS)
   relayPool.publish(RELAYS, event)
     .then(() => {
-      console.log('✅ Event published to', RELAYS.length, 'relay(s):', event.id.slice(0, 8))
+      console.log(`${logPrefix} ✅ Event published to`, RELAYS.length, 'relay(s):', event.id.slice(0, 8))
     })
     .catch((error) => {
-      console.warn('⚠️ Failed to publish event to relays (event still saved locally):', error)
+      console.warn(`${logPrefix} ⚠️ Failed to publish event to relays (event still saved locally):`, error)
       
       // Surface common bunker signing errors for debugging
       if (error instanceof Error && error.message.includes('permission')) {

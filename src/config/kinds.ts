@@ -1,8 +1,9 @@
 // Nostr event kinds used throughout the application
 export const KINDS = {
-  Highlights: 9802,              // NIP-?? user highlights
+  Highlights: 9802,              // NIP-84 user highlights
   BlogPost: 30023,               // NIP-23 long-form article
-  AppData: 30078,                // NIP-78 application data (reading positions)
+  AppData: 30078,                // NIP-78 application data
+  ReadingProgress: 39802,        // NIP-85 reading progress
   List: 30001,                   // NIP-51 list (addressable)
   ListReplaceable: 30003,        // NIP-51 replaceable list
   ListSimple: 10003,             // NIP-51 simple list

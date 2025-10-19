@@ -46,36 +46,38 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
                   opacity: highlightVisibility.nostrverse ? 1 : 0.4 
                 }}
               />
-              <IconButton
-                icon={faUserGroup}
-                onClick={() => onHighlightVisibilityChange({ 
-                  ...highlightVisibility, 
-                  friends: !highlightVisibility.friends 
-                })}
-                title={currentUserPubkey ? "Toggle friends highlights" : "Login to see friends highlights"}
-                ariaLabel="Toggle friends highlights"
-                variant="ghost"
-                disabled={!currentUserPubkey}
-                style={{ 
-                  color: highlightVisibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined,
-                  opacity: highlightVisibility.friends ? 1 : 0.4 
-                }}
-              />
-              <IconButton
-                icon={faUser}
-                onClick={() => onHighlightVisibilityChange({ 
-                  ...highlightVisibility, 
-                  mine: !highlightVisibility.mine 
-                })}
-                title={currentUserPubkey ? "Toggle my highlights" : "Login to see your highlights"}
-                ariaLabel="Toggle my highlights"
-                variant="ghost"
-                disabled={!currentUserPubkey}
-                style={{ 
-                  color: highlightVisibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined,
-                  opacity: highlightVisibility.mine ? 1 : 0.4 
-                }}
-              />
+              {currentUserPubkey && (
+                <>
+                  <IconButton
+                    icon={faUserGroup}
+                    onClick={() => onHighlightVisibilityChange({ 
+                      ...highlightVisibility, 
+                      friends: !highlightVisibility.friends 
+                    })}
+                    title="Toggle friends highlights"
+                    ariaLabel="Toggle friends highlights"
+                    variant="ghost"
+                    style={{ 
+                      color: highlightVisibility.friends ? 'var(--highlight-color-friends, #f97316)' : undefined,
+                      opacity: highlightVisibility.friends ? 1 : 0.4 
+                    }}
+                  />
+                  <IconButton
+                    icon={faUser}
+                    onClick={() => onHighlightVisibilityChange({ 
+                      ...highlightVisibility, 
+                      mine: !highlightVisibility.mine 
+                    })}
+                    title="Toggle my highlights"
+                    ariaLabel="Toggle my highlights"
+                    variant="ghost"
+                    style={{ 
+                      color: highlightVisibility.mine ? 'var(--highlight-color-mine, #eab308)' : undefined,
+                      opacity: highlightVisibility.mine ? 1 : 0.4 
+                    }}
+                  />
+                </>
+              )}
             </div>
           )}
           {onRefresh && (

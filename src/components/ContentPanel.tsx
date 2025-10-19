@@ -151,7 +151,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Callback to save reading position
   const handleSavePosition = useCallback(async (position: number) => {
     if (!activeAccount || !relayPool || !eventStore || !articleIdentifier) {
-      console.log('⏭️ [ContentPanel] Skipping save - missing requirements:', {
+      console.log('[progress] ⏭️ ContentPanel: Skipping save - missing requirements:', {
         hasAccount: !!activeAccount,
         hasRelayPool: !!relayPool,
         hasEventStore: !!eventStore,
@@ -160,11 +160,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       return
     }
     if (!settings?.syncReadingPosition) {
-      console.log('⏭️ [ContentPanel] Sync disabled in settings')
+      console.log('[progress] ⏭️ ContentPanel: Sync disabled in settings')
       return
     }
 
-    console.log('💾 [ContentPanel] Saving position:', Math.round(position * 100) + '%', 'for article:', selectedUrl?.slice(0, 50))
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+    console.log('[progress] 💾 ContentPanel: Saving position:', {
+      position,
+      percentage: Math.round(position * 100) + '%',
+      scrollTop,
+      articleIdentifier: articleIdentifier.slice(0, 50) + '...',
+      url: selectedUrl?.slice(0, 50)
+    })
 
     try {
       const factory = new EventFactory({ signer: activeAccount })
@@ -176,25 +183,40 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         {
           position,
           timestamp: Math.floor(Date.now() / 1000),
-          scrollTop: window.pageYOffset || document.documentElement.scrollTop
+          scrollTop
         }
       )
+      console.log('[progress] ✅ ContentPanel: Save completed successfully')
     } catch (error) {
-      console.error('❌ [ContentPanel] Failed to save reading position:', error)
+      console.error('[progress] ❌ ContentPanel: Failed to save reading position:', error)
     }
   }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl])
 
   const { isReadingComplete, progressPercentage, saveNow } = useReadingPosition({
     enabled: isTextContent,
-    syncEnabled: settings?.syncReadingPosition,
+    syncEnabled: settings?.syncReadingPosition !== false,
     onSave: handleSavePosition,
     onReadingComplete: () => {
-      // Optional: Auto-mark as read when reading is complete
-      if (activeAccount && !isMarkedAsRead) {
-        // Could trigger auto-mark as read here if desired
+      // Auto-mark as read when reading is complete (if enabled in settings)
+      if (activeAccount && !isMarkedAsRead && settings?.autoMarkAsReadOnCompletion) {
+        console.log('[progress] 📖 Auto-marking as read on completion')
+        handleMarkAsRead()
       }
     }
   })
+  
+  // Log sync status when it changes
+  useEffect(() => {
+    console.log('[progress] 📊 ContentPanel reading position sync status:', {
+      enabled: isTextContent,
+      syncEnabled: settings?.syncReadingPosition !== false,
+      hasAccount: !!activeAccount,
+      hasRelayPool: !!relayPool,
+      hasEventStore: !!eventStore,
+      hasArticleIdentifier: !!articleIdentifier,
+      currentProgress: progressPercentage + '%'
+    })
+  }, [isTextContent, settings?.syncReadingPosition, activeAccount, relayPool, eventStore, articleIdentifier, progressPercentage])
 
   // Load saved reading position when article loads
   useEffect(() => {
@@ -208,8 +230,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       })
       return
     }
-    if (!settings?.syncReadingPosition) {
-      console.log('⏭️ [ContentPanel] Sync disabled - not restoring position')
+    if (settings?.syncReadingPosition === false) {
+      console.log('⏭️ [ContentPanel] Sync disabled in settings - not restoring position')
       return
     }
 
