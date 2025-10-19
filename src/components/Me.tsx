@@ -28,7 +28,6 @@ import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
 import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProgressFilters'
 import { filterByReadingProgress } from '../utils/readingProgressUtils'
-import { deriveReadsFromBookmarks } from '../utils/readsFromBookmarks'
 import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
 import { mergeReadItem } from '../utils/readItemMerge'
 import { readingProgressController } from '../services/readingProgressController'
@@ -232,33 +231,21 @@ const Me: React.FC<MeProps> = ({
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Derive reads from bookmarks immediately (bookmarks come from centralized loading in App.tsx)
-      const initialReads = deriveReadsFromBookmarks(bookmarks)
-      const initialMap = new Map(initialReads.map(item => [item.id, item]))
+      // Load all reads from all sources (reading progress, marks as read, bookmarks, etc.)
+      const allReads = await fetchAllReads(relayPool, viewingPubkey, bookmarks, (item) => {
+        setReadsMap(prevMap => {
+          const newMap = new Map(prevMap)
+          mergeReadItem(newMap, item)
+          setReads(Array.from(newMap.values()))
+          return newMap
+        })
+      })
+      
+      const initialMap = new Map(allReads.map(item => [item.id, item]))
       setReadsMap(initialMap)
-      setReads(initialReads)
+      setReads(allReads)
       setLoadedTabs(prev => new Set(prev).add('reads'))
       if (!hasBeenLoaded) setLoading(false)
-      
-      // Background enrichment: merge reading progress and mark-as-read
-      // Only update items that are already in our map
-      fetchAllReads(relayPool, viewingPubkey, bookmarks, (item) => {
-        setReadsMap(prevMap => {
-          // Only update if item exists in our current map
-          if (!prevMap.has(item.id)) {
-            return prevMap
-          }
-          
-          const newMap = new Map(prevMap)
-          const merged = mergeReadItem(newMap, item)
-          if (merged) {
-            // Update reads array after map is updated
-            setReads(Array.from(newMap.values()))
-            return newMap
-          }
-          return prevMap
-        })
-      }).catch(err => console.warn('Failed to enrich reads:', err))
       
     } catch (err) {
       console.error('Failed to load reads:', err)
