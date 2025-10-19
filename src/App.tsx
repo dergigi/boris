@@ -116,6 +116,12 @@ function AppRoutes({
         writingsController.start({ relayPool, eventStore, pubkey })
       }
 
+      // Load reading progress (controller manages its own state)
+      if (pubkey && eventStore && !readingProgressController.isLoadedFor(pubkey)) {
+        console.log('[progress] 🚀 Auto-loading reading progress on mount/login')
+        readingProgressController.start({ relayPool, eventStore, pubkey })
+      }
+
       // Start centralized nostrverse highlights controller (non-blocking)
       if (eventStore) {
         nostrverseHighlightsController.start({ relayPool, eventStore })
