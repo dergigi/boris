@@ -6,6 +6,7 @@ import { KINDS } from '../config/kinds'
 import { RELAYS } from '../config/relays'
 import { processReadingProgress } from './readingDataProcessor'
 import { ReadItem } from './readsService'
+import { MARK_AS_READ_EMOJI } from './reactionService'
 
 type ProgressMapCallback = (progressMap: Map<string, number>) => void
 type LoadingCallback = (loading: boolean) => void
@@ -22,6 +23,7 @@ class ReadingProgressController {
   private loadingListeners: LoadingCallback[] = []
   
   private currentProgressMap: Map<string, number> = new Map()
+  private markedAsReadIds: Set<string> = new Set()
   private lastLoadedPubkey: string | null = null
   private generation = 0
   private timelineSubscription: { unsubscribe: () => void } | null = null
@@ -89,6 +91,13 @@ class ReadingProgressController {
    */
   getProgress(naddr: string): number | undefined {
     return this.currentProgressMap.get(naddr)
+  }
+
+  /**
+   * Check if article is marked as read
+   */
+  isMarkedAsRead(naddr: string): boolean {
+    return this.markedAsReadIds.has(naddr)
   }
 
   /**
@@ -227,6 +236,34 @@ class ReadingProgressController {
         const now = Math.floor(Date.now() / 1000)
         this.updateLastSyncedAt(pubkey, now)
       }
+
+      // Also fetch mark-as-read reactions in parallel
+      const [kind7Events, kind17Events] = await Promise.all([
+        queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { relayUrls: RELAYS }),
+        queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { relayUrls: RELAYS })
+      ])
+
+      if (startGeneration !== this.generation) {
+        return
+      }
+
+      // Process mark-as-read reactions
+      ;[...kind7Events, ...kind17Events].forEach((evt) => {
+        if (evt.content === MARK_AS_READ_EMOJI) {
+          // Extract article ID from tags
+          const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
+          const rTag = evt.tags.find(t => t[0] === 'r')?.[1]
+          
+          if (eTag) {
+            // For kind:7, look up the article from progress map by event ID
+            const articleId = Array.from(this.currentProgressMap.keys()).find(id => id.includes(eTag))
+            if (articleId) this.markedAsReadIds.add(articleId)
+          } else if (rTag) {
+            // For kind:17, the URL is the article ID
+            this.markedAsReadIds.add(rTag)
+          }
+        }
+      })
     } catch (err) {
       console.error('📊 [ReadingProgress] Failed to load:', err)
     } finally {

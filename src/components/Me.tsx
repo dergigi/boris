@@ -157,7 +157,20 @@ const Me: React.FC<MeProps> = ({
     setReadingProgressMap(readingProgressController.getProgressMap())
     
     // Subscribe to updates
-    const unsubProgress = readingProgressController.onProgress(setReadingProgressMap)
+    const unsubProgress = readingProgressController.onProgress((progressMap) => {
+      const readItems: ReadItem[] = Array.from(progressMap.entries()).map(([id, progress]) => ({
+        id,
+        source: 'reading-progress',
+        type: 'article',
+        readingProgress: progress,
+        markedAsRead: readingProgressController.isMarkedAsRead(id),
+        readingTimestamp: Math.floor(Date.now() / 1000)
+      }))
+      
+      const readsMap = new Map(readItems.map(item => [item.id, item]))
+      setReadsMap(readsMap)
+      setReads(readItems)
+    })
     
     return () => {
       unsubProgress()
@@ -240,6 +253,7 @@ const Me: React.FC<MeProps> = ({
         source: 'reading-progress',
         type: 'article',
         readingProgress: progress,
+        markedAsRead: readingProgressController.isMarkedAsRead(id),
         readingTimestamp: Math.floor(Date.now() / 1000)
       }))
       
@@ -264,6 +278,7 @@ const Me: React.FC<MeProps> = ({
         source: 'reading-progress',
         type: 'article',
         readingProgress: progress,
+        markedAsRead: readingProgressController.isMarkedAsRead(id),
         readingTimestamp: Math.floor(Date.now() / 1000)
       }))
       
