@@ -623,7 +623,11 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         identifier: dTag
       })
       const progress = readingProgressMap.get(naddr)
-      console.log('[progress] 🔍 Looking up:', naddr.slice(0, 50) + '... =>', progress ? Math.round(progress * 100) + '%' : 'not found')
+      console.log('[progress] 🔍 Looking up:', {
+        naddr: naddr.slice(0, 80),
+        mapKeys: Array.from(readingProgressMap.keys()).map(k => k.slice(0, 80)),
+        progress: progress ? Math.round(progress * 100) + '%' : 'not found'
+      })
       return progress
     } catch (err) {
       console.error('[progress] ❌ Error encoding naddr:', err)

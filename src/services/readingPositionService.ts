@@ -48,7 +48,12 @@ function generateDTag(naddrOrUrl: string): string {
     try {
       const decoded = nip19.decode(naddrOrUrl)
       if (decoded.type === 'naddr') {
-        return `${decoded.data.kind}:${decoded.data.pubkey}:${decoded.data.identifier || ''}`
+        const dTag = `${decoded.data.kind}:${decoded.data.pubkey}:${decoded.data.identifier || ''}`
+        console.log('[progress] 📋 Generated d-tag from naddr:', {
+          naddr: naddrOrUrl.slice(0, 50) + '...',
+          dTag: dTag.slice(0, 80) + '...'
+        })
+        return dTag
       }
     } catch (e) {
       console.warn('Failed to decode naddr:', naddrOrUrl)
