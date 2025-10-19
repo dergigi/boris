@@ -130,6 +130,19 @@ const LayoutBehaviorSettings: React.FC<LayoutBehaviorSettingsProps> = ({ setting
           <span>Automatically mark as read at 100%</span>
         </label>
       </div>
+
+      <div className="setting-group">
+        <label htmlFor="hideBookmarksWithoutCreationDate" className="checkbox-label">
+          <input
+            id="hideBookmarksWithoutCreationDate"
+            type="checkbox"
+            checked={settings.hideBookmarksWithoutCreationDate ?? false}
+            onChange={(e) => onUpdate({ hideBookmarksWithoutCreationDate: e.target.checked })}
+            className="setting-checkbox"
+          />
+          <span>Hide bookmarks missing a creation date</span>
+        </label>
+      </div>
     </div>
   )
 }

@@ -13,7 +13,7 @@ import { ViewMode } from './Bookmarks'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { BookmarkSkeleton } from './Skeletons'
-import { groupIndividualBookmarks, hasContent, getBookmarkSets, getBookmarksWithoutSet } from '../utils/bookmarkUtils'
+import { groupIndividualBookmarks, hasContent, getBookmarkSets, getBookmarksWithoutSet, hasCreationDate } from '../utils/bookmarkUtils'
 import { UserSettings } from '../services/settingsService'
 import AddBookmarkModal from './AddBookmarkModal'
 import { createWebBookmark } from '../services/webBookmarkService'
@@ -100,6 +100,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   // Merge and flatten all individual bookmarks from all lists
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(hasContent)
+    .filter(b => !settings?.hideBookmarksWithoutCreationDate || hasCreationDate(b))
   
   // Apply filter
   const filteredBookmarks = filterBookmarksByType(allIndividualBookmarks, selectedFilter)

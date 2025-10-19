@@ -118,6 +118,16 @@ export function hasContent(bookmark: IndividualBookmark): boolean {
   return hasValidContent || hasId
 }
 
+// Check if bookmark has a real creation date (not "Now" / current time)
+export function hasCreationDate(bookmark: IndividualBookmark): boolean {
+  if (!bookmark.created_at) return false
+  // If timestamp is missing or equals current time (within 1 second), consider it invalid
+  const now = Math.floor(Date.now() / 1000)
+  const createdAt = Math.floor(bookmark.created_at)
+  // If created_at is within 1 second of now, it's likely missing/placeholder
+  return Math.abs(createdAt - now) > 1
+}
+
 // Bookmark sets helpers (kind 30003)
 export interface BookmarkSet {
   name: string

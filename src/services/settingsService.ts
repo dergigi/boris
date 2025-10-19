@@ -61,6 +61,8 @@ export interface UserSettings {
   // Reading position sync
   syncReadingPosition?: boolean // default: false (opt-in)
   autoMarkAsReadOnCompletion?: boolean // default: false (opt-in)
+  // Bookmark filtering
+  hideBookmarksWithoutCreationDate?: boolean // default: false
 }
 
 export async function loadSettings(

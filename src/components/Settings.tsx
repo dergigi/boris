@@ -41,6 +41,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   paragraphAlignment: 'justify',
   syncReadingPosition: true,
   autoMarkAsReadOnCompletion: false,
+  hideBookmarksWithoutCreationDate: false,
 }
 
 interface SettingsProps {
