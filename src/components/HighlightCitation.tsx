@@ -44,6 +44,12 @@ export const HighlightCitation: React.FC<HighlightCitationProps> = ({
       try {
         if (!highlight.eventReference) return
         
+        // Skip if it's a raw event ID (hex string without colons)
+        // Raw event IDs cannot be decoded to nadrs without additional context
+        if (!highlight.eventReference.includes(':') && !highlight.eventReference.startsWith('naddr')) {
+          return
+        }
+        
         // Convert eventReference to naddr if needed
         let naddr: string
         if (highlight.eventReference.includes(':')) {
