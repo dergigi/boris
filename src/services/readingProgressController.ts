@@ -23,6 +23,7 @@ class ReadingProgressController {
   private currentProgressMap: Map<string, number> = new Map()
   private lastLoadedPubkey: string | null = null
   private generation = 0
+  private timelineSubscription: { unsubscribe: () => void } | null = null
 
   onProgress(cb: ProgressMapCallback): () => void {
     this.progressListeners.push(cb)
@@ -73,6 +74,11 @@ class ReadingProgressController {
    */
   reset(): void {
     this.generation++
+    // Unsubscribe from any active timeline subscription
+    if (this.timelineSubscription) {
+      try { this.timelineSubscription.unsubscribe() } catch {}
+      this.timelineSubscription = null
+    }
     this.currentProgressMap = new Map()
     this.lastLoadedPubkey = null
     this.emitProgress(this.currentProgressMap)
@@ -130,6 +136,26 @@ class ReadingProgressController {
     this.lastLoadedPubkey = pubkey
 
     try {
+      // Subscribe to local timeline for immediate and reactive updates
+      // Clean up any previous subscription first
+      if (this.timelineSubscription) {
+        try { this.timelineSubscription.unsubscribe() } catch {}
+        this.timelineSubscription = null
+      }
+
+      const timeline$ = eventStore.timeline({
+        kinds: [KINDS.ReadingProgress],
+        authors: [pubkey]
+      })
+      const generationAtSubscribe = this.generation
+      this.timelineSubscription = timeline$.subscribe((localEvents: NostrEvent[]) => {
+        // Ignore if controller generation has changed (e.g., logout/login)
+        if (generationAtSubscribe !== this.generation) return
+        if (!Array.isArray(localEvents) || localEvents.length === 0) return
+        console.log('📊 [ReadingProgress] Timeline update with', localEvents.length, 'event(s)')
+        this.processEvents(localEvents)
+      })
+
       // Query events from relays
       // Force full sync if map is empty (first load) or if explicitly forced
       const needsFullSync = force || this.currentProgressMap.size === 0
