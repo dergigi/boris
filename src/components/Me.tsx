@@ -231,19 +231,17 @@ const Me: React.FC<MeProps> = ({
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Load all reads from all sources (reading progress, marks as read, bookmarks, etc.)
-      const allReads = await fetchAllReads(relayPool, viewingPubkey, bookmarks, (item) => {
-        setReadsMap(prevMap => {
-          const newMap = new Map(prevMap)
-          mergeReadItem(newMap, item)
-          setReads(Array.from(newMap.values()))
-          return newMap
-        })
-      })
+      // Start with empty state - let it stream in
+      const readsMap = new Map<string, ReadItem>()
       
-      const initialMap = new Map(allReads.map(item => [item.id, item]))
-      setReadsMap(initialMap)
-      setReads(allReads)
+      // Stream items as they're fetched (like debug page does)
+      // This doesn't block the UI - updates flow in as data arrives
+      fetchAllReads(relayPool, viewingPubkey, bookmarks, (item) => {
+        mergeReadItem(readsMap, item)
+        setReadsMap(new Map(readsMap))
+        setReads(Array.from(readsMap.values()))
+      }).catch(err => console.warn('Failed to fetch reads:', err))
+      
       setLoadedTabs(prev => new Set(prev).add('reads'))
       if (!hasBeenLoaded) setLoading(false)
       
