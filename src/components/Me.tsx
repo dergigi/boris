@@ -44,7 +44,7 @@ interface MeProps {
 type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
 
 // Valid reading progress filters
-const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed']
+const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed', 'highlighted']
 
 const Me: React.FC<MeProps> = ({ 
   relayPool, 
@@ -481,8 +481,8 @@ const Me: React.FC<MeProps> = ({
   const groups = groupIndividualBookmarks(filteredBookmarks)
 
   // Apply reading progress filter
-  const filteredReads = filterByReadingProgress(reads, readingProgressFilter)
-  const filteredLinks = filterByReadingProgress(links, readingProgressFilter)
+  const filteredReads = filterByReadingProgress(reads, readingProgressFilter, highlights)
+  const filteredLinks = filterByReadingProgress(links, readingProgressFilter, highlights)
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
     groupingMode === 'flat'
       ? [{ key: 'all', title: `All Bookmarks (${filteredBookmarks.length})`, items: filteredBookmarks }]

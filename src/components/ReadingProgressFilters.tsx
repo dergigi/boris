@@ -1,9 +1,9 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBookOpen, faCheckCircle, faAsterisk } from '@fortawesome/free-solid-svg-icons'
+import { faBookOpen, faCheckCircle, faAsterisk, faHighlighter } from '@fortawesome/free-solid-svg-icons'
 import { faEnvelope, faEnvelopeOpen } from '@fortawesome/free-regular-svg-icons'
 
-export type ReadingProgressFilterType = 'all' | 'unopened' | 'started' | 'reading' | 'completed'
+export type ReadingProgressFilterType = 'all' | 'unopened' | 'started' | 'reading' | 'completed' | 'highlighted'
 
 interface ReadingProgressFiltersProps {
   selectedFilter: ReadingProgressFilterType
@@ -16,15 +16,23 @@ const ReadingProgressFilters: React.FC<ReadingProgressFiltersProps> = ({ selecte
     { type: 'unopened' as const, icon: faEnvelope, label: 'Unopened' },
     { type: 'started' as const, icon: faEnvelopeOpen, label: 'Started' },
     { type: 'reading' as const, icon: faBookOpen, label: 'Reading' },
-    { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' }
+    { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' },
+    { type: 'highlighted' as const, icon: faHighlighter, label: 'Highlighted' }
   ]
 
   return (
     <div className="bookmark-filters">
       {filters.map(filter => {
         const isActive = selectedFilter === filter.type
-        // Only "completed" gets green color, everything else uses default blue
-        const activeStyle = isActive && filter.type === 'completed' ? { color: '#10b981' } : undefined
+        // Only "completed" gets green color, "highlighted" gets yellow, everything else uses default blue
+        let activeStyle: Record<string, string> | undefined = undefined
+        if (isActive) {
+          if (filter.type === 'completed') {
+            activeStyle = { color: '#10b981' } // green
+          } else if (filter.type === 'highlighted') {
+            activeStyle = { color: '#fde047' } // yellow
+          }
+        }
         
         return (
           <button
