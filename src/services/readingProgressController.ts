@@ -102,6 +102,13 @@ class ReadingProgressController {
   }
 
   /**
+   * Get all marked as read IDs (for debugging)
+   */
+  getMarkedAsReadIds(): string[] {
+    return Array.from(this.markedAsReadIds)
+  }
+
+  /**
    * Check if reading progress is loaded for a specific pubkey
    */
   isLoadedFor(pubkey: string): boolean {
@@ -326,6 +333,10 @@ class ReadingProgressController {
       if (startGeneration === this.generation) {
         this.setLoading(false)
       }
+      // Debug: Show what we have
+      console.log('[readingProgress] === FINAL STATE ===')
+      console.log('[readingProgress] progressMap keys:', Array.from(this.currentProgressMap.keys()))
+      console.log('[readingProgress] markedAsReadIds:', Array.from(this.markedAsReadIds))
     }
   }
 
