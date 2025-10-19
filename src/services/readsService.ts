@@ -72,7 +72,7 @@ export async function fetchAllReads(
     processMarkedAsRead(markedAsReadArticles, readsMap)
     if (onItem) {
       readsMap.forEach(item => {
-        if (item.type === 'article') onItem(item)
+        onItem(item)
       })
     }
 
