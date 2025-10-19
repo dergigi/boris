@@ -129,7 +129,19 @@ class ReadingProgressController {
     this.lastLoadedPubkey = pubkey
 
     try {
-      // Fetch from relays (incremental or full)
+      // 1. First, load from local event store (instant, non-blocking)
+      const localEvents = eventStore.getEvents({
+        kinds: [KINDS.ReadingProgress],
+        authors: [pubkey]
+      })
+      
+      console.log('📊 [ReadingProgress] Found', localEvents.length, 'events in local store')
+      
+      if (localEvents.length > 0) {
+        this.processEvents(localEvents)
+      }
+      
+      // 2. Then fetch from relays (incremental or full) to augment local data
       const lastSynced = force ? null : this.getLastSyncedAt(pubkey)
       const filter: any = {
         kinds: [KINDS.ReadingProgress],
@@ -138,29 +150,31 @@ class ReadingProgressController {
       
       if (lastSynced && !force) {
         filter.since = lastSynced
-        console.log('📊 [ReadingProgress] Incremental sync since', new Date(lastSynced * 1000).toISOString())
+        console.log('📊 [ReadingProgress] Incremental sync from relays since', new Date(lastSynced * 1000).toISOString())
+      } else {
+        console.log('📊 [ReadingProgress] Full sync from relays')
       }
 
-      const events = await queryEvents(relayPool, filter, { relayUrls: RELAYS })
+      const relayEvents = await queryEvents(relayPool, filter, { relayUrls: RELAYS })
       
       if (startGeneration !== this.generation) {
         console.log('📊 [ReadingProgress] Cancelled (generation changed)')
         return
       }
 
-      if (events.length > 0) {
+      if (relayEvents.length > 0) {
         // Add to event store
-        events.forEach(e => eventStore.add(e))
+        relayEvents.forEach(e => eventStore.add(e))
         
-        // Process and emit
-        this.processEvents(events)
-        console.log('📊 [ReadingProgress] Loaded', events.length, 'events')
+        // Process and emit (merge with existing)
+        this.processEvents(relayEvents)
+        console.log('📊 [ReadingProgress] Loaded', relayEvents.length, 'events from relays')
         
         // Update last synced
         const now = Math.floor(Date.now() / 1000)
         this.updateLastSyncedAt(pubkey, now)
       } else {
-        console.log('📊 [ReadingProgress] No progress events found')
+        console.log('📊 [ReadingProgress] No new events from relays')
       }
     } catch (err) {
       console.error('📊 [ReadingProgress] Failed to load:', err)
