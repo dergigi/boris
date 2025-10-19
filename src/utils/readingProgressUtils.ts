@@ -62,7 +62,11 @@ export function filterByReadingProgress(
       case 'reading':
         return progress > 0.10 && progress <= 0.94 && !isMarked
       case 'completed':
-        return progress >= 0.95 || isMarked
+        // Completed is 95%+ progress only (no emoji fallback)
+        return progress >= 0.95
+      case 'emoji':
+        // Emoji-marked items regardless of progress
+        return isMarked
       case 'highlighted':
         return hasHighlights
       case 'all':

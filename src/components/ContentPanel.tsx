@@ -648,7 +648,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       {isTextContent && (
         <ReadingProgressIndicator 
           progress={progressPercentage}
-          isComplete={isReadingComplete}
+          // Consider complete only at 95%+
+          isComplete={progressPercentage >= 95}
           showPercentage={true}
           isSidebarCollapsed={isSidebarCollapsed}
           isHighlightsCollapsed={isHighlightsCollapsed}

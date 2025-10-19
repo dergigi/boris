@@ -42,7 +42,7 @@ interface MeProps {
 type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
 
 // Valid reading progress filters
-const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed', 'highlighted']
+const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed', 'highlighted', 'emoji']
 
 const Me: React.FC<MeProps> = ({ 
   relayPool, 

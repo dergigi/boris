@@ -1,9 +1,10 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBookOpen, faCheckCircle, faAsterisk, faHighlighter } from '@fortawesome/free-solid-svg-icons'
+import { faBook } from '@fortawesome/free-solid-svg-icons'
 import { faEnvelope, faEnvelopeOpen } from '@fortawesome/free-regular-svg-icons'
 
-export type ReadingProgressFilterType = 'all' | 'unopened' | 'started' | 'reading' | 'completed' | 'highlighted'
+export type ReadingProgressFilterType = 'all' | 'unopened' | 'started' | 'reading' | 'completed' | 'highlighted' | 'emoji'
 
 interface ReadingProgressFiltersProps {
   selectedFilter: ReadingProgressFilterType
@@ -17,7 +18,9 @@ const ReadingProgressFilters: React.FC<ReadingProgressFiltersProps> = ({ selecte
     { type: 'started' as const, icon: faEnvelopeOpen, label: 'Started' },
     { type: 'reading' as const, icon: faBookOpen, label: 'Reading' },
     { type: 'highlighted' as const, icon: faHighlighter, label: 'Highlighted' },
-    { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' }
+    { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' },
+    // Emoji-marked items (marked via reaction emoji)
+    { type: 'emoji' as const, icon: faBook, label: 'Emoji' }
   ]
 
   return (
@@ -31,6 +34,8 @@ const ReadingProgressFilters: React.FC<ReadingProgressFiltersProps> = ({ selecte
             activeStyle = { color: '#10b981' } // green
           } else if (filter.type === 'highlighted') {
             activeStyle = { color: '#fde047' } // yellow
+          } else if (filter.type === 'emoji') {
+            activeStyle = { color: '#60a5fa' } // blue accent
           }
         }
         
