@@ -175,8 +175,11 @@ class ReadingProgressController {
     const { relayPool, eventStore, pubkey, force = false } = params
     const startGeneration = this.generation
 
+    console.log('[readingProgress] start() called for pubkey:', pubkey.slice(0, 16), '...', 'force:', force)
+
     // Skip if already loaded for this pubkey and not forcing
     if (!force && this.isLoadedFor(pubkey)) {
+      console.log('[readingProgress] Already loaded for pubkey, skipping')
       return
     }
 
