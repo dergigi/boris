@@ -250,6 +250,7 @@ class ReadingProgressController {
       }
 
       // Also fetch mark-as-read reactions in parallel
+      console.log('[readingProgress] Fetching mark-as-read reactions for pubkey:', pubkey)
       const [kind17Events] = await Promise.all([
         queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { relayUrls: RELAYS })
       ])
