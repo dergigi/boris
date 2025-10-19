@@ -14,10 +14,10 @@ interface ReadingProgressFiltersProps {
 const ReadingProgressFilters: React.FC<ReadingProgressFiltersProps> = ({ selectedFilter, onFilterChange }) => {
   const filters = [
     { type: 'all' as const, icon: faAsterisk, label: 'All' },
+    { type: 'highlighted' as const, icon: faHighlighter, label: 'Highlighted' },
     { type: 'unopened' as const, icon: faEnvelope, label: 'Unopened' },
     { type: 'started' as const, icon: faEnvelopeOpen, label: 'Started' },
     { type: 'reading' as const, icon: faBookOpen, label: 'Reading' },
-    { type: 'highlighted' as const, icon: faHighlighter, label: 'Highlighted' },
     { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' },
     // Emoji-marked items (marked via reaction emoji)
     { type: 'emoji' as const, icon: faBook, label: 'Emoji' }
