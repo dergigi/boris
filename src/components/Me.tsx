@@ -348,7 +348,7 @@ const Me: React.FC<MeProps> = ({
         break
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, viewingPubkey, refreshTrigger])
+  }, [activeTab, viewingPubkey, refreshTrigger, bookmarks])
 
   // Sync myHighlights from controller
   useEffect(() => {
