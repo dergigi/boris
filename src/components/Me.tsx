@@ -231,20 +231,6 @@ const Me: React.FC<MeProps> = ({
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Subscribe to controller updates
-      const unsubReads = readsController.onReads((reads) => {
-        const readsMap = new Map(reads.map(item => [item.id, item]))
-        setReadsMap(readsMap)
-        setReads(reads)
-      })
-      
-      const unsubLoading = readsController.onLoading((loading) => {
-        if (!loading && hasBeenLoaded) {
-          // Only set false if we were already loaded
-          setLoading(false)
-        }
-      })
-      
       // Start loading via controller
       await readsController.start({
         relayPool,
@@ -257,17 +243,31 @@ const Me: React.FC<MeProps> = ({
       setLoadedTabs(prev => new Set(prev).add('reads'))
       if (!hasBeenLoaded) setLoading(false)
       
-      // Cleanup subscriptions on unmount (handled by useEffect)
-      return () => {
-        unsubReads()
-        unsubLoading()
-      }
-      
     } catch (err) {
       console.error('Failed to load reads:', err)
       if (!hasBeenLoaded) setLoading(false)
     }
   }
+  
+  // Subscribe to reads controller updates
+  useEffect(() => {
+    const unsubReads = readsController.onReads((reads) => {
+      const readsMap = new Map(reads.map(item => [item.id, item]))
+      setReadsMap(readsMap)
+      setReads(reads)
+    })
+    
+    const unsubLoading = readsController.onLoading((loading) => {
+      if (loading === false) {
+        setLoading(false)
+      }
+    })
+    
+    return () => {
+      unsubReads()
+      unsubLoading()
+    }
+  }, [])
 
   const loadLinksTab = async () => {
     if (!viewingPubkey || !activeAccount) return
