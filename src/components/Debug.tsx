@@ -1573,6 +1573,43 @@ const Debug: React.FC<DebugProps> = ({
           {deduplicatedProgressMap.size > 0 && (
             <div className="mb-3">
               <div className="text-sm opacity-70 mb-2">Deduplicated Reading Progress ({deduplicatedProgressMap.size} articles):</div>
+              
+              {/* Category breakdown */}
+              <div className="mb-3 p-2 bg-purple-50 dark:bg-purple-900/20 rounded border border-purple-200 dark:border-purple-700">
+                <div className="text-sm font-semibold mb-2">Breakdown by Category:</div>
+                <div className="space-y-1">
+                  {(() => {
+                    let unopened = 0, started = 0, reading = 0, completed = 0
+                    for (const progress of deduplicatedProgressMap.values()) {
+                      if (progress === 0) unopened++
+                      else if (progress > 0 && progress <= 0.10) started++
+                      else if (progress > 0.10 && progress <= 0.94) reading++
+                      else if (progress >= 0.95) completed++
+                    }
+                    return (
+                      <>
+                        <div className="flex justify-between text-xs">
+                          <span>Unopened (0%):</span>
+                          <span className="font-semibold">{unopened}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span>Started (0% &lt; progress ≤ 10%):</span>
+                          <span className="font-semibold">{started}</span>
+                        </div>
+                        <div className="flex justify-between text-xs bg-green-100 dark:bg-green-900/30 px-1 py-0.5 rounded">
+                          <span>Reading (10% &lt; progress ≤ 94%) ✓:</span>
+                          <span className="font-semibold text-green-700 dark:text-green-400">{reading}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span>Completed (≥ 95%):</span>
+                          <span className="font-semibold">{completed}</span>
+                        </div>
+                      </>
+                    )
+                  })()}
+                </div>
+              </div>
+              
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {Array.from(deduplicatedProgressMap.entries()).map(([articleId, progress], idx) => {
                   return (
