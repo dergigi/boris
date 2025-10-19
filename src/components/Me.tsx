@@ -11,8 +11,8 @@ import { Highlight } from '../types/highlights'
 import { HighlightItem } from './HighlightItem'
 import { highlightsController } from '../services/highlightsController'
 import { writingsController } from '../services/writingsController'
-import { fetchAllReads, ReadItem } from '../services/readsService'
 import { fetchLinks } from '../services/linksService'
+import { ReadItem } from '../services/readsService'
 import { BlogPostPreview } from '../services/exploreService'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import AuthorCard from './AuthorCard'
@@ -29,8 +29,8 @@ import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
 import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProgressFilters'
 import { filterByReadingProgress } from '../utils/readingProgressUtils'
 import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
-import { mergeReadItem } from '../utils/readItemMerge'
 import { readingProgressController } from '../services/readingProgressController'
+import { readsController } from '../services/readsController'
 
 interface MeProps {
   relayPool: RelayPool
@@ -231,19 +231,37 @@ const Me: React.FC<MeProps> = ({
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Start with empty state - let it stream in
-      const readsMap = new Map<string, ReadItem>()
+      // Subscribe to controller updates
+      const unsubReads = readsController.onReads((reads) => {
+        const readsMap = new Map(reads.map(item => [item.id, item]))
+        setReadsMap(readsMap)
+        setReads(reads)
+      })
       
-      // Stream items as they're fetched (like debug page does)
-      // This doesn't block the UI - updates flow in as data arrives
-      fetchAllReads(relayPool, viewingPubkey, bookmarks, (item) => {
-        mergeReadItem(readsMap, item)
-        setReadsMap(new Map(readsMap))
-        setReads(Array.from(readsMap.values()))
-      }).catch(err => console.warn('Failed to fetch reads:', err))
+      const unsubLoading = readsController.onLoading((loading) => {
+        if (!loading && hasBeenLoaded) {
+          // Only set false if we were already loaded
+          setLoading(false)
+        }
+      })
+      
+      // Start loading via controller
+      await readsController.start({
+        relayPool,
+        eventStore,
+        pubkey: viewingPubkey,
+        bookmarks,
+        force: false
+      })
       
       setLoadedTabs(prev => new Set(prev).add('reads'))
       if (!hasBeenLoaded) setLoading(false)
+      
+      // Cleanup subscriptions on unmount (handled by useEffect)
+      return () => {
+        unsubReads()
+        unsubLoading()
+      }
       
     } catch (err) {
       console.error('Failed to load reads:', err)
@@ -275,12 +293,13 @@ const Me: React.FC<MeProps> = ({
           if (!prevMap.has(item.id)) return prevMap
           
           const newMap = new Map(prevMap)
-          if (mergeReadItem(newMap, item)) {
-            // Update links array after map is updated
-            setLinks(Array.from(newMap.values()))
-            return newMap
+          if (item.type === 'article' && item.author) {
+            const progress = readingProgressMap.get(item.id)
+            if (progress !== undefined) {
+              newMap.set(item.id, { ...item, readingProgress: progress })
+            }
           }
-          return prevMap
+          return newMap
         })
       }).catch(err => console.warn('Failed to enrich links:', err))
       
