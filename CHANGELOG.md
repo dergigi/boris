@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2025-10-19
+
+### Added
+
+- Reading progress indicator in compact bookmark cards
+  - Shows progress bar for articles and web bookmarks with reading data
+  - Progress bar aligned with bookmark text for better visual association
+  - Color-coded progress (blue for reading, green for completed, gray for started)
+
+### Changed
+
+- Compact cards layout optimizations for more space-efficient display
+  - Reduced vertical padding from 0.5rem to 0.25rem
+  - Reduced compact row height from 28px to 24px
+  - Reduced gap between compact cards from 0.5rem to 0.25rem
+- Reading progress bar styling for compact view
+  - Bar height reduced from 2px to 1px for more subtle appearance
+  - Left margin of 1.5rem aligns bar with bookmark text instead of appearing as separator
+
+### Fixed
+
+- Removed borders from compact bookmarks in bookmarks sidebar
+  - Border styling from `.bookmarks-list` no longer applies to compact cards
+  - Compact cards now display as truly borderless and transparent
+
 ## [0.8.0] - 2025-10-19
 
 ### Added
@@ -2044,7 +2069,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.8.2...HEAD
+[0.8.2]: https://github.com/dergigi/boris/compare/v0.8.0...v0.8.2
 [0.8.0]: https://github.com/dergigi/boris/compare/v0.7.4...v0.8.0
 [0.7.4]: https://github.com/dergigi/boris/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/dergigi/boris/compare/v0.7.2...v0.7.3
