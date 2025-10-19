@@ -35,7 +35,6 @@ Reading progress events use NIP-33 parameterized replaceable semantics. The `d` 
 - `a` (optional but recommended for Nostr articles): Article coordinate `30023:<pubkey>:<identifier>`
 - `r` (optional but recommended for URLs): Raw URL of the external content
   - Clients SHOULD clean URLs from tracking parameters and non-essential query strings before tagging
-- `client` (optional): Client application identifier
 
 ### Content
 
@@ -69,8 +68,7 @@ The content is a JSON object with the following fields:
   "content": "{\"progress\":0.66,\"loc\":1432,\"ts\":1734635012,\"ver\":\"1\"}",
   "tags": [
     ["d", "30023:<author-pubkey>:<article-identifier>"],
-    ["a", "30023:<author-pubkey>:<article-identifier>"],
-    ["client", "boris"]
+    ["a", "30023:<author-pubkey>:<article-identifier>"]
   ],
   "id": "<event-id>",
   "sig": "<signature>"
@@ -87,8 +85,7 @@ The content is a JSON object with the following fields:
   "content": "{\"progress\":1,\"ts\":1734635999,\"ver\":\"1\"}",
   "tags": [
     ["d", "url:aHR0cHM6Ly9leGFtcGxlLmNvbS9wb3N0"],
-    ["r", "https://example.com/post"],
-    ["client", "boris"]
+    ["r", "https://example.com/post"]
   ],
   "id": "<event-id>",
   "sig": "<signature>"

@@ -66,7 +66,7 @@ function generateDTag(naddrOrUrl: string): string {
 // Generate tags for kind 39802 event
 function generateProgressTags(naddrOrUrl: string): string[][] {
   const dTag = generateDTag(naddrOrUrl)
-  const tags: string[][] = [['d', dTag], ['client', 'boris']]
+  const tags: string[][] = [['d', dTag]]
   
   // Add 'a' tag for nostr articles
   if (naddrOrUrl.startsWith('naddr1')) {
