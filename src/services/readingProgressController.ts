@@ -42,6 +42,7 @@ class ReadingProgressController {
   }
 
   private emitProgress(progressMap: Map<string, number>): void {
+    console.log('[progress] 📡 Emitting to', this.progressListeners.length, 'listeners with', progressMap.size, 'items')
     this.progressListeners.forEach(cb => cb(new Map(progressMap)))
   }
 
@@ -174,6 +175,8 @@ class ReadingProgressController {
    * Process events and update progress map
    */
   private processEvents(events: any[]): void {
+    console.log('[progress] 🔄 Processing', events.length, 'events')
+    
     const readsMap = new Map<string, ReadItem>()
     
     // Merge with existing progress
@@ -186,16 +189,23 @@ class ReadingProgressController {
       })
     }
     
+    console.log('[progress] 📦 Starting with', readsMap.size, 'existing items')
+    
     // Process new events
     processReadingProgress(events, readsMap)
+    
+    console.log('[progress] 📦 After processing:', readsMap.size, 'items')
     
     // Convert back to progress map (naddr -> progress)
     const newProgressMap = new Map<string, number>()
     for (const [id, item] of readsMap.entries()) {
       if (item.readingProgress !== undefined && item.type === 'article') {
         newProgressMap.set(id, item.readingProgress)
+        console.log('[progress] ✅ Added:', id.slice(0, 50) + '...', '=', Math.round(item.readingProgress * 100) + '%')
       }
     }
+    
+    console.log('[progress] 📊 Final progress map size:', newProgressMap.size)
     
     this.currentProgressMap = newProgressMap
     this.emitProgress(this.currentProgressMap)

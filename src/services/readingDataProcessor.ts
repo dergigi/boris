@@ -27,19 +27,31 @@ export function processReadingProgress(
   events: NostrEvent[],
   readsMap: Map<string, ReadItem>
 ): void {
+  console.log('[progress] 🔧 processReadingProgress called with', events.length, 'events')
+  
   for (const event of events) {
-    if (event.kind !== READING_PROGRESS_KIND) continue
+    if (event.kind !== READING_PROGRESS_KIND) {
+      console.log('[progress] ⏭️ Skipping event with wrong kind:', event.kind)
+      continue
+    }
     
     const dTag = event.tags.find(t => t[0] === 'd')?.[1]
-    if (!dTag) continue
+    if (!dTag) {
+      console.log('[progress] ⚠️ Event missing d-tag:', event.id.slice(0, 8))
+      continue
+    }
+    
+    console.log('[progress] 📝 Processing event:', event.id.slice(0, 8), 'd-tag:', dTag.slice(0, 50))
     
     try {
       const content = JSON.parse(event.content)
       const position = content.progress || 0
       
+      console.log('[progress] 📊 Progress value:', position, '(' + Math.round(position * 100) + '%)')
+      
       // Validate progress is between 0 and 1 (NIP-85 requirement)
       if (position < 0 || position > 1) {
-        console.warn('Invalid progress value (must be 0-1):', position, 'event:', event.id.slice(0, 8))
+        console.warn('[progress] ❌ Invalid progress value (must be 0-1):', position, 'event:', event.id.slice(0, 8))
         continue
       }
       
@@ -64,11 +76,13 @@ export function processReadingProgress(
             })
             itemId = naddr
             itemType = 'article'
+            console.log('[progress] ✅ Converted coordinate to naddr:', naddr.slice(0, 50))
           } catch (e) {
-            console.warn('Failed to encode naddr from coordinate:', dTag)
+            console.warn('[progress] ❌ Failed to encode naddr from coordinate:', dTag)
             continue
           }
         } else {
+          console.warn('[progress] ⚠️ Invalid coordinate format:', dTag)
           continue
         }
       } else if (dTag.startsWith('url:')) {
@@ -78,12 +92,13 @@ export function processReadingProgress(
           itemUrl = atob(encoded.replace(/-/g, '+').replace(/_/g, '/'))
           itemId = itemUrl
           itemType = 'external'
+          console.log('[progress] ✅ Decoded URL:', itemUrl.slice(0, 50))
         } catch (e) {
-          console.warn('Failed to decode URL from d tag:', dTag)
+          console.warn('[progress] ❌ Failed to decode URL from d tag:', dTag)
           continue
         }
       } else {
-        // Unknown format, skip
+        console.warn('[progress] ⚠️ Unknown d-tag format:', dTag)
         continue
       }
 
@@ -99,11 +114,16 @@ export function processReadingProgress(
           readingProgress: position,
           readingTimestamp: timestamp
         })
+        console.log('[progress] ✅ Added/updated item in readsMap:', itemId.slice(0, 50), '=', Math.round(position * 100) + '%')
+      } else {
+        console.log('[progress] ⏭️ Skipping older event for:', itemId.slice(0, 50))
       }
     } catch (error) {
-      console.warn('Failed to parse reading progress event:', error)
+      console.warn('[progress] ❌ Failed to parse reading progress event:', error)
     }
   }
+  
+  console.log('[progress] 🏁 processReadingProgress finished, readsMap size:', readsMap.size)
 }
 
 /**
