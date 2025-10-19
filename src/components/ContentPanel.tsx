@@ -177,12 +177,16 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           position,
           timestamp: Math.floor(Date.now() / 1000),
           scrollTop: window.pageYOffset || document.documentElement.scrollTop
+        },
+        {
+          useProgressKind: settings?.useReadingProgressKind !== false,
+          writeLegacy: settings?.writeLegacyReadingPosition !== false
         }
       )
     } catch (error) {
       console.error('❌ [ContentPanel] Failed to save reading position:', error)
     }
-  }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl])
+  }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, settings?.useReadingProgressKind, settings?.writeLegacyReadingPosition, selectedUrl])
 
   const { isReadingComplete, progressPercentage, saveNow } = useReadingPosition({
     enabled: isTextContent,
@@ -221,7 +225,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           relayPool,
           eventStore,
           activeAccount.pubkey,
-          articleIdentifier
+          articleIdentifier,
+          {
+            useProgressKind: settings?.useReadingProgressKind !== false
+          }
         )
 
         if (savedPosition && savedPosition.position > 0.05 && savedPosition.position < 1) {

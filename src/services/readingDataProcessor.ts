@@ -1,8 +1,10 @@
-import { NostrEvent } from 'nostr-tools'
+import { NostrEvent, nip19 } from 'nostr-tools'
 import { ReadItem } from './readsService'
 import { fallbackTitleFromUrl } from '../utils/readItemMerge'
+import { KINDS } from '../config/kinds'
 
 const READING_POSITION_PREFIX = 'boris:reading-position:'
+const READING_PROGRESS_KIND = KINDS.ReadingProgress // 39802
 
 interface ReadArticle {
   id: string
@@ -13,7 +15,86 @@ interface ReadArticle {
 }
 
 /**
- * Processes reading position events into ReadItems
+ * Processes reading progress events (kind 39802) into ReadItems
+ */
+export function processReadingProgress(
+  events: NostrEvent[],
+  readsMap: Map<string, ReadItem>
+): void {
+  for (const event of events) {
+    if (event.kind !== READING_PROGRESS_KIND) continue
+    
+    const dTag = event.tags.find(t => t[0] === 'd')?.[1]
+    if (!dTag) continue
+    
+    try {
+      const content = JSON.parse(event.content)
+      const position = content.progress || content.position || 0
+      // Use event.created_at as authoritative timestamp (NIP-39802 spec)
+      const timestamp = event.created_at
+
+      let itemId: string
+      let itemUrl: string | undefined
+      let itemType: 'article' | 'external' = 'external'
+
+      // Check if d tag is a coordinate (30023:pubkey:identifier)
+      if (dTag.startsWith('30023:')) {
+        // It's a nostr article coordinate
+        const parts = dTag.split(':')
+        if (parts.length === 3) {
+          // Convert to naddr for consistency with the rest of the app
+          try {
+            const naddr = nip19.naddrEncode({
+              kind: parseInt(parts[0]),
+              pubkey: parts[1],
+              identifier: parts[2]
+            })
+            itemId = naddr
+            itemType = 'article'
+          } catch (e) {
+            console.warn('Failed to encode naddr from coordinate:', dTag)
+            continue
+          }
+        } else {
+          continue
+        }
+      } else if (dTag.startsWith('url:')) {
+        // It's a URL with base64url encoding
+        const encoded = dTag.replace('url:', '')
+        try {
+          itemUrl = atob(encoded.replace(/-/g, '+').replace(/_/g, '/'))
+          itemId = itemUrl
+          itemType = 'external'
+        } catch (e) {
+          console.warn('Failed to decode URL from d tag:', dTag)
+          continue
+        }
+      } else {
+        // Unknown format, skip
+        continue
+      }
+
+      // Add or update the item, preferring newer timestamps
+      const existing = readsMap.get(itemId)
+      if (!existing || !existing.readingTimestamp || timestamp > existing.readingTimestamp) {
+        readsMap.set(itemId, {
+          ...existing,
+          id: itemId,
+          source: 'reading-progress',
+          type: itemType,
+          url: itemUrl,
+          readingProgress: position,
+          readingTimestamp: timestamp
+        })
+      }
+    } catch (error) {
+      console.warn('Failed to parse reading progress event:', error)
+    }
+  }
+}
+
+/**
+ * Processes legacy reading position events (kind 30078) into ReadItems
  */
 export function processReadingPositions(
   events: NostrEvent[],
@@ -28,7 +109,8 @@ export function processReadingPositions(
     try {
       const positionData = JSON.parse(event.content)
       const position = positionData.position
-      const timestamp = positionData.timestamp
+      // For legacy events, use content timestamp if available, otherwise created_at
+      const timestamp = positionData.timestamp || event.created_at
 
       let itemId: string
       let itemUrl: string | undefined
