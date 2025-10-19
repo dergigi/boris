@@ -1,5 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
+import { Filter, NostrEvent } from 'nostr-tools'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
 import { RELAYS } from '../config/relays'
@@ -134,7 +135,7 @@ class ReadingProgressController {
       const needsFullSync = force || this.currentProgressMap.size === 0
       const lastSynced = needsFullSync ? null : this.getLastSyncedAt(pubkey)
       
-      const filter: any = {
+      const filter: Filter = {
         kinds: [KINDS.ReadingProgress],
         authors: [pubkey]
       }
@@ -179,7 +180,7 @@ class ReadingProgressController {
   /**
    * Process events and update progress map
    */
-  private processEvents(events: any[]): void {
+  private processEvents(events: NostrEvent[]): void {
     console.log('[progress] 🔄 Processing', events.length, 'events')
     
     const readsMap = new Map<string, ReadItem>()

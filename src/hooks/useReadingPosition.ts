@@ -148,6 +148,8 @@ export const useReadingPosition = ({
         clearTimeout(saveTimerRef.current)
       }
     }
+    // position is intentionally not in deps - it's computed from scroll and would cause infinite re-renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, onPositionChange, onReadingComplete, readingCompleteThreshold, scheduleSave])
 
   // Reset reading complete state when enabled changes
