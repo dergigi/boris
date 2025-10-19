@@ -110,7 +110,6 @@ class HighlightsController {
 
     // Skip if already loaded for this pubkey (unless forced)
     if (!force && this.isLoadedFor(pubkey)) {
-      console.log('[highlights] ✅ Already loaded for', pubkey.slice(0, 8))
       this.emitHighlights(this.currentHighlights)
       return
     }
@@ -120,7 +119,6 @@ class HighlightsController {
     const currentGeneration = this.generation
 
     this.setLoading(true)
-    console.log('[highlights] 🔍 Loading highlights for', pubkey.slice(0, 8))
 
     try {
       const seenIds = new Set<string>()
@@ -134,7 +132,6 @@ class HighlightsController {
       }
       if (lastSyncedAt) {
         filter.since = lastSyncedAt
-        console.log('[highlights] 📅 Incremental sync since', new Date(lastSyncedAt * 1000).toISOString())
       }
 
       const events = await queryEvents(
@@ -165,7 +162,6 @@ class HighlightsController {
 
       // Check if still active after async operation
       if (currentGeneration !== this.generation) {
-        console.log('[highlights] ⚠️ Load cancelled (generation mismatch)')
         return
       }
 
@@ -189,7 +185,6 @@ class HighlightsController {
         this.setLastSyncedAt(pubkey, newestTimestamp)
       }
 
-      console.log('[highlights] ✅ Loaded', sorted.length, 'highlights')
     } catch (error) {
       console.error('[highlights] ❌ Failed to load highlights:', error)
       this.currentHighlights = []

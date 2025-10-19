@@ -49,14 +49,10 @@ function generateDTag(naddrOrUrl: string): string {
       const decoded = nip19.decode(naddrOrUrl)
       if (decoded.type === 'naddr') {
         const dTag = `${decoded.data.kind}:${decoded.data.pubkey}:${decoded.data.identifier || ''}`
-        console.log('[progress] 📋 Generated d-tag from naddr:', {
-          naddr: naddrOrUrl.slice(0, 50) + '...',
-          dTag: dTag.slice(0, 80) + '...'
-        })
         return dTag
       }
     } catch (e) {
-      console.warn('Failed to decode naddr:', naddrOrUrl)
+      // Ignore decode errors
     }
   }
   
@@ -119,14 +115,6 @@ export async function saveReadingPosition(
   articleIdentifier: string,
   position: ReadingPosition
 ): Promise<void> {
-  console.log('[progress] 💾 saveReadingPosition: Starting save:', {
-    identifier: articleIdentifier.slice(0, 50) + '...',
-    position: position.position,
-    positionPercent: Math.round(position.position * 100) + '%',
-    timestamp: position.timestamp,
-    scrollTop: position.scrollTop
-  })
-
   const now = Math.floor(Date.now() / 1000)
 
   const progressContent: ReadingProgressContent = {
@@ -138,13 +126,6 @@ export async function saveReadingPosition(
   
   const tags = generateProgressTags(articleIdentifier)
   
-  console.log('[progress] 📝 Creating event with:', {
-    kind: READING_PROGRESS_KIND,
-    content: progressContent,
-    tags: tags.map(t => `[${t.join(', ')}]`).join(', '),
-    created_at: now
-  })
-  
   const draft = await factory.create(async () => ({
     kind: READING_PROGRESS_KIND,
     content: JSON.stringify(progressContent),
@@ -152,20 +133,9 @@ export async function saveReadingPosition(
     created_at: now
   }))
 
-  console.log('[progress] ✍️ Signing event...')
   const signed = await factory.sign(draft)
   
-  console.log('[progress] 📡 Publishing event:', {
-    id: signed.id,
-    kind: signed.kind,
-    pubkey: signed.pubkey.slice(0, 8) + '...',
-    content: signed.content,
-    tags: signed.tags
-  })
-  
   await publishEvent(relayPool, eventStore, signed)
-  
-  console.log('[progress] ✅ Event published successfully, ID:', signed.id.slice(0, 16))
 }
 
 /**
@@ -179,12 +149,6 @@ export async function loadReadingPosition(
 ): Promise<ReadingPosition | null> {
   const dTag = generateDTag(articleIdentifier)
 
-  console.log('📖 [ReadingProgress] Loading position:', {
-    pubkey: pubkey.slice(0, 8) + '...',
-    identifier: articleIdentifier.slice(0, 32) + '...',
-    dTag: dTag.slice(0, 50) + '...'
-  })
-
   // Check local event store first
   try {
     const localEvent = await firstValueFrom(
@@ -193,12 +157,6 @@ export async function loadReadingPosition(
     if (localEvent) {
       const content = getReadingProgressContent(localEvent)
       if (content) {
-        console.log('✅ [ReadingProgress] Loaded from local store:', {
-          position: content.position,
-          positionPercent: Math.round(content.position * 100) + '%',
-          timestamp: content.timestamp
-        })
-        
         // Fetch from relays in background to get any updates
         relayPool
           .subscription(RELAYS, {
@@ -213,7 +171,7 @@ export async function loadReadingPosition(
       }
     }
   } catch (err) {
-    console.log('📭 No cached reading progress found, fetching from relays...')
+    // Ignore errors and fetch from relays
   }
 
   // Fetch from relays
@@ -226,13 +184,7 @@ export async function loadReadingPosition(
     getReadingProgressContent
   )
   
-  if (result) {
-    console.log('✅ [ReadingProgress] Loaded from relays')
-    return result
-  }
-
-  console.log('📭 No reading progress found')
-  return null
+  return result || null
 }
 
 // Helper function to fetch from relays with timeout

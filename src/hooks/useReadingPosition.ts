@@ -32,7 +32,6 @@ export const useReadingPosition = ({
   // Debounced save function
   const scheduleSave = useCallback((currentPosition: number) => {
     if (!syncEnabled || !onSave) {
-      console.log('[progress] ⏭️ scheduleSave skipped:', { syncEnabled, hasOnSave: !!onSave, position: Math.round(currentPosition * 100) + '%' })
       return
     }
 
@@ -43,7 +42,6 @@ export const useReadingPosition = ({
     const isInitialSave = !hasSavedOnce.current
     
     if (!hasSignificantChange && !hasReachedCompletion && !isInitialSave) {
-      console.log('[progress] ⏭️ No significant change:', {
         current: Math.round(currentPosition * 100) + '%',
         last: Math.round(lastSavedPosition.current * 100) + '%',
         diff: Math.abs(currentPosition - lastSavedPosition.current),
@@ -58,9 +56,7 @@ export const useReadingPosition = ({
     }
 
     // Schedule new save
-    console.log('[progress] ⏰ Scheduling save in', autoSaveInterval + 'ms for position:', Math.round(currentPosition * 100) + '%')
     saveTimerRef.current = setTimeout(() => {
-      console.log('[progress] 💾 Auto-saving position:', Math.round(currentPosition * 100) + '%')
       lastSavedPosition.current = currentPosition
       hasSavedOnce.current = true
       onSave(currentPosition)
@@ -78,7 +74,6 @@ export const useReadingPosition = ({
     }
 
     // Always allow immediate save (including 0%)
-    console.log('[progress] 💾 Immediate save triggered for position:', Math.round(position * 100) + '%')
     lastSavedPosition.current = position
     hasSavedOnce.current = true
     onSave(position)
@@ -109,7 +104,6 @@ export const useReadingPosition = ({
       const prevPercent = Math.floor(position * 20) // Groups by 5%
       const newPercent = Math.floor(clampedProgress * 20)
       if (prevPercent !== newPercent) {
-        console.log('[progress] 📏 useReadingPosition:', Math.round(clampedProgress * 100) + '%', {
           scrollTop,
           documentHeight,
           isAtBottom
@@ -131,12 +125,10 @@ export const useReadingPosition = ({
               if (!hasTriggeredComplete.current && position === 1) {
                 setIsReadingComplete(true)
                 hasTriggeredComplete.current = true
-                console.log('[progress] ✅ Completion hold satisfied (100% for', completionHoldMs, 'ms)')
                 onReadingComplete?.()
               }
               completionTimerRef.current = null
             }, completionHoldMs)
-            console.log('[progress] ⏳ Completion hold started (waiting', completionHoldMs, 'ms)')
           }
         } else {
           // If we moved off 100%, cancel any pending completion hold
@@ -147,7 +139,6 @@ export const useReadingPosition = ({
             if (clampedProgress >= readingCompleteThreshold) {
               setIsReadingComplete(true)
               hasTriggeredComplete.current = true
-              console.log('[progress] ✅ Completion via threshold:', readingCompleteThreshold)
               onReadingComplete?.()
             }
           }

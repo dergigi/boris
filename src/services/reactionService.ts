@@ -42,12 +42,10 @@ export async function createEventReaction(
 
   const signed = await factory.sign(draft)
 
-  console.log('📚 Created kind:7 reaction (mark as read) for event:', eventId.slice(0, 8))
 
   // Publish to relays
   await relayPool.publish(RELAYS, signed)
 
-  console.log('✅ Reaction published to', RELAYS.length, 'relay(s)')
 
   return signed
 }
@@ -94,12 +92,10 @@ export async function createWebsiteReaction(
 
   const signed = await factory.sign(draft)
 
-  console.log('📚 Created kind:17 reaction (mark as read) for URL:', normalizedUrl)
 
   // Publish to relays
   await relayPool.publish(RELAYS, signed)
 
-  console.log('✅ Website reaction published to', RELAYS.length, 'relay(s)')
 
   return signed
 }

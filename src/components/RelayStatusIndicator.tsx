@@ -50,7 +50,6 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({
   
   // Debug logging
   useEffect(() => {
-    console.log('🔌 Relay Status Indicator:', {
       mode: isConnecting ? 'CONNECTING' : offlineMode ? 'OFFLINE' : localOnlyMode ? 'LOCAL_ONLY' : 'ONLINE',
       totalStatuses: relayStatuses.length,
       connectedCount: connectedUrls.length,

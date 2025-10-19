@@ -43,7 +43,6 @@ export function useAdaptiveTextColor(imageUrl: string | undefined): AdaptiveText
           height: Math.floor(height * 0.25)
         })
         
-        console.log('Adaptive color detected:', {
           hex: color.hex,
           rgb: color.rgb,
           isLight: color.isLight,
@@ -52,12 +51,10 @@ export function useAdaptiveTextColor(imageUrl: string | undefined): AdaptiveText
         
         // Use library's built-in isLight check for optimal contrast
         if (color.isLight) {
-          console.log('Light background detected, using black text')
           setColors({
             textColor: '#000000'
           })
         } else {
-          console.log('Dark background detected, using white text')
           setColors({
             textColor: '#ffffff'
           })

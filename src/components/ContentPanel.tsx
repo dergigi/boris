@@ -151,33 +151,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Callback to save reading position
   const handleSavePosition = useCallback(async (position: number) => {
     if (!activeAccount || !relayPool || !eventStore || !articleIdentifier) {
-      console.log('[progress] ⏭️ ContentPanel: Skipping save - missing requirements:', {
-        hasAccount: !!activeAccount,
-        hasRelayPool: !!relayPool,
-        hasEventStore: !!eventStore,
-        hasIdentifier: !!articleIdentifier
-      })
       return
     }
     if (!settings?.syncReadingPosition) {
-      console.log('[progress] ⏭️ ContentPanel: Sync disabled in settings')
       return
     }
     
     // Check if content is long enough to track reading progress
     if (!shouldTrackReadingProgress(html, markdown)) {
-      console.log('[progress] ⏭️ ContentPanel: Content too short to track reading progress')
       return
     }
 
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-    console.log('[progress] 💾 ContentPanel: Saving position:', {
-      position,
-      percentage: Math.round(position * 100) + '%',
-      scrollTop,
-      articleIdentifier: articleIdentifier.slice(0, 50) + '...',
-      url: selectedUrl?.slice(0, 50)
-    })
 
     try {
       const factory = new EventFactory({ signer: activeAccount })
@@ -192,7 +177,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           scrollTop
         }
       )
-      console.log('[progress] ✅ ContentPanel: Save completed successfully')
     } catch (error) {
       console.error('[progress] ❌ ContentPanel: Failed to save reading position:', error)
     }
@@ -205,7 +189,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     onReadingComplete: () => {
       // Auto-mark as read when reading is complete (if enabled in settings)
       if (activeAccount && !isMarkedAsRead && settings?.autoMarkAsReadOnCompletion) {
-        console.log('[progress] 📖 Auto-marking as read on completion')
         handleMarkAsRead()
       }
     }
@@ -213,35 +196,16 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   
   // Log sync status when it changes
   useEffect(() => {
-    console.log('[progress] 📊 ContentPanel reading position sync status:', {
-      enabled: isTextContent,
-      syncEnabled: settings?.syncReadingPosition !== false,
-      hasAccount: !!activeAccount,
-      hasRelayPool: !!relayPool,
-      hasEventStore: !!eventStore,
-      hasArticleIdentifier: !!articleIdentifier,
-      currentProgress: progressPercentage + '%'
-    })
   }, [isTextContent, settings?.syncReadingPosition, activeAccount, relayPool, eventStore, articleIdentifier, progressPercentage])
 
   // Load saved reading position when article loads
   useEffect(() => {
     if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) {
-      console.log('⏭️ [ContentPanel] Skipping position restore - missing requirements:', {
-        isTextContent,
-        hasAccount: !!activeAccount,
-        hasRelayPool: !!relayPool,
-        hasEventStore: !!eventStore,
-        hasIdentifier: !!articleIdentifier
-      })
       return
     }
     if (settings?.syncReadingPosition === false) {
-      console.log('⏭️ [ContentPanel] Sync disabled in settings - not restoring position')
       return
     }
-
-    console.log('📖 [ContentPanel] Loading position for article:', selectedUrl?.slice(0, 50))
 
     const loadPosition = async () => {
       try {
@@ -253,7 +217,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         )
 
         if (savedPosition && savedPosition.position > 0.05 && savedPosition.position < 1) {
-          console.log('🎯 [ContentPanel] Restoring position:', Math.round(savedPosition.position * 100) + '%')
           // Wait for content to be fully rendered before scrolling
           setTimeout(() => {
             const documentHeight = document.documentElement.scrollHeight
@@ -264,14 +227,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               top: scrollTop,
               behavior: 'smooth'
             })
-            
-            console.log('✅ [ContentPanel] Restored to position:', Math.round(savedPosition.position * 100) + '%', 'scrollTop:', scrollTop)
           }, 500) // Give content time to render
         } else if (savedPosition) {
           if (savedPosition.position === 1) {
-            console.log('✅ [ContentPanel] Article completed (100%), starting from top')
           } else {
-            console.log('⏭️ [ContentPanel] Position too early (<5%):', Math.round(savedPosition.position * 100) + '%')
           }
         }
       } catch (error) {
@@ -648,14 +607,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             activeAccount,
             relayPool
           )
-          console.log('✅ Marked nostr article as read')
         } else if (selectedUrl) {
           await createWebsiteReaction(
             selectedUrl,
             activeAccount,
             relayPool
           )
-          console.log('✅ Marked website as read')
         }
       } catch (error) {
         console.error('Failed to mark as read:', error)

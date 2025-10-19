@@ -44,7 +44,6 @@ export function applyTheme(
     
     // Listen for system theme changes
     mediaQueryListener = (e: MediaQueryListEvent) => {
-      console.log('🎨 System theme changed to:', e.matches ? 'dark' : 'light')
       // The CSS media query handles the color changes automatically
     }
     
@@ -59,5 +58,4 @@ export function applyTheme(
     }
   }
   
-  console.log('🎨 Applied theme:', theme, 'with colors:', { dark: darkColorTheme, light: lightColorTheme })
 }

@@ -71,7 +71,6 @@ export async function loadSettings(
   pubkey: string,
   relays: string[]
 ): Promise<UserSettings | null> {
-  console.log('⚙️ Loading settings from nostr...', { pubkey: pubkey.slice(0, 8) + '...', relays })
   
   // First, check if we already have settings in the local event store
   try {
@@ -80,7 +79,6 @@ export async function loadSettings(
     )
     if (localEvent) {
       const content = getAppDataContent<UserSettings>(localEvent)
-      console.log('✅ Settings loaded from local store (cached):', content)
       
       // Still fetch from relays in the background to get any updates
       relayPool
@@ -95,7 +93,6 @@ export async function loadSettings(
       return content || null
     }
   } catch (err) {
-    console.log('📭 No cached settings found, fetching from relays...')
   }
   
   // If not in local store, fetch from relays
@@ -127,10 +124,8 @@ export async function loadSettings(
               )
               if (event) {
                 const content = getAppDataContent<UserSettings>(event)
-                console.log('✅ Settings loaded from relays:', content)
                 resolve(content || null)
               } else {
-                console.log('📭 No settings event found - using defaults')
                 resolve(null)
               }
             } catch (err) {
@@ -161,7 +156,6 @@ export async function saveSettings(
   factory: EventFactory,
   settings: UserSettings
 ): Promise<void> {
-  console.log('💾 Saving settings to nostr:', settings)
 
   // Create NIP-78 application data event manually
   // Note: AppDataBlueprint is not available in the npm package
@@ -177,7 +171,6 @@ export async function saveSettings(
   // Use unified write service
   await publishEvent(relayPool, eventStore, signed)
 
-  console.log('✅ Settings published successfully')
 }
 
 export function watchSettings(

@@ -348,11 +348,9 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       // Publish to all configured relays - let the relay pool handle connection state
       const targetRelays = RELAYS
       
-      console.log('📡 Rebroadcasting highlight to', targetRelays.length, 'relay(s):', targetRelays)
       
       await relayPool.publish(targetRelays, event)
       
-      console.log('✅ Rebroadcast successful!')
       
       // Update the highlight with new relay info
       const isLocalOnly = areAllRelaysLocal(targetRelays)
@@ -449,7 +447,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         relayPool
       )
       
-      console.log('✅ Highlight deletion request published')
       
       // Notify parent to remove this highlight from the list
       if (onHighlightDelete) {

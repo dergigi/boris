@@ -22,7 +22,6 @@ export const fetchHighlightsForUrl = async (
     const cacheKey = highlightCache.urlKey(url)
     const cached = highlightCache.get(cacheKey)
     if (cached) {
-      console.log(`📌 Using cached highlights for URL (${cached.length} items)`)
       // Stream cached highlights if callback provided
       if (onHighlight) {
         cached.forEach(h => onHighlight(h))
@@ -50,7 +49,6 @@ export const fetchHighlightsForUrl = async (
       }
     )
 
-    console.log(`📌 Fetched ${rawEvents.length} highlight events for URL:`, url)
 
     // Store all events in event store if provided
     if (eventStore) {

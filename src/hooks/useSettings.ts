@@ -48,7 +48,6 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       const root = document.documentElement.style
       const fontKey = settings.readingFont || 'system'
       
-      console.log('🎨 Applying settings styles:', { fontKey, fontSize: settings.fontSize, theme: settings.theme })
       
       // Apply theme with color variants (defaults to 'system' if not set)
       applyTheme(
@@ -59,9 +58,7 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       
       // Load font first and wait for it to be ready
       if (fontKey !== 'system') {
-        console.log('⏳ Waiting for font to load...')
         await loadFont(fontKey)
-        console.log('✅ Font loaded, applying styles')
       }
       
       // Apply font settings after font is loaded
@@ -76,7 +73,6 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       // Set paragraph alignment
       root.setProperty('--paragraph-alignment', settings.paragraphAlignment || 'justify')
       
-      console.log('✅ All styles applied')
     }
     
     applyStyles()

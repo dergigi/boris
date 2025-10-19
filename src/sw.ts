@@ -22,7 +22,6 @@ cleanupOutdatedCaches()
 sw.skipWaiting()
 clientsClaim()
 
-console.log('[SW] Boris service worker loaded')
 
 // Runtime cache: Cross-origin images
 // This preserves the existing image caching behavior

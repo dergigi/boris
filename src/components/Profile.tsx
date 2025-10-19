@@ -68,12 +68,10 @@ const Profile: React.FC<ProfileProps> = ({
   useEffect(() => {
     // Get initial state immediately
     const initialMap = readingProgressController.getProgressMap()
-    console.log('[progress] 🎯 Profile: Initial progress map size:', initialMap.size)
     setReadingProgressMap(initialMap)
     
     // Subscribe to updates
     const unsubProgress = readingProgressController.onProgress((newMap) => {
-      console.log('[progress] 🎯 Profile: Received progress update, size:', newMap.size)
       setReadingProgressMap(newMap)
     })
     
@@ -100,12 +98,10 @@ const Profile: React.FC<ProfileProps> = ({
   useEffect(() => {
     if (!pubkey || !relayPool || !eventStore) return
     
-    console.log('🔄 [Profile] Background fetching highlights and writings for', pubkey.slice(0, 8))
     
     // Fetch highlights in background
     fetchHighlights(relayPool, pubkey, undefined, undefined, false, eventStore)
       .then(highlights => {
-        console.log('✅ [Profile] Fetched', highlights.length, 'highlights')
       })
       .catch(err => {
         console.warn('⚠️ [Profile] Failed to fetch highlights:', err)
@@ -115,7 +111,6 @@ const Profile: React.FC<ProfileProps> = ({
     fetchBlogPostsFromAuthors(relayPool, [pubkey], RELAYS, undefined, null)
       .then(writings => {
         writings.forEach(w => eventStore.add(w.event))
-        console.log('✅ [Profile] Fetched', writings.length, 'writings')
       })
       .catch(err => {
         console.warn('⚠️ [Profile] Failed to fetch writings:', err)
@@ -157,7 +152,6 @@ const Profile: React.FC<ProfileProps> = ({
       
       // Only log when found or map is empty
       if (progress || readingProgressMap.size === 0) {
-        console.log('[progress] 🔍 Profile lookup:', {
           title: post.title?.slice(0, 30),
           naddr: naddr.slice(0, 80),
           mapSize: readingProgressMap.size,

@@ -33,11 +33,9 @@ export const fetchBlogPostsFromAuthors = async (
 ): Promise<BlogPostPreview[]> => {
   try {
     if (pubkeys.length === 0) {
-      console.log('⚠️ No pubkeys to fetch blog posts from')
       return []
     }
 
-    console.log('📚 Fetching blog posts (kind 30023) from', pubkeys.length, 'authors', limit ? `(limit: ${limit})` : '(no limit)')
 
     // Deduplicate replaceable events by keeping the most recent version
     // Group by author + d-tag identifier
@@ -75,7 +73,6 @@ export const fetchBlogPostsFromAuthors = async (
       }
     )
 
-    console.log('📊 Blog post events fetched (unique):', uniqueEvents.size)
     
     // Convert to blog post previews and sort by published date (most recent first)
     const blogPosts: BlogPostPreview[] = Array.from(uniqueEvents.values())
@@ -97,7 +94,6 @@ export const fetchBlogPostsFromAuthors = async (
         return timeB - timeA // Most recent first
       })
     
-    console.log('📰 Processed', blogPosts.length, 'unique blog posts')
     
     return blogPosts
   } catch (error) {

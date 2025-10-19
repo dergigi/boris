@@ -19,7 +19,6 @@ export async function publishEvent(
   
   // Store the event in the local EventStore FIRST for immediate UI display
   eventStore.add(event)
-  console.log(`${logPrefix} 💾 Stored event in EventStore:`, event.id.slice(0, 8), `(kind ${event.kind})`)
 
   // Check current connection status - are we online or in flight mode?
   const connectedRelays = Array.from(relayPool.relays.values())
@@ -35,7 +34,6 @@ export async function publishEvent(
 
   const isLocalOnly = areAllRelaysLocal(expectedSuccessRelays)
 
-  console.log(`${logPrefix} 📍 Event relay status:`, {
     targetRelays: RELAYS.length,
     expectedSuccessRelays: expectedSuccessRelays.length,
     isLocalOnly,
@@ -50,10 +48,8 @@ export async function publishEvent(
   }
 
   // Publish to all configured relays in the background (non-blocking)
-  console.log(`${logPrefix} 📤 Publishing to relays:`, RELAYS)
   relayPool.publish(RELAYS, event)
     .then(() => {
-      console.log(`${logPrefix} ✅ Event published to`, RELAYS.length, 'relay(s):', event.id.slice(0, 8))
     })
     .catch((error) => {
       console.warn(`${logPrefix} ⚠️ Failed to publish event to relays (event still saved locally):`, error)

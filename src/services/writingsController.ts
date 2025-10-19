@@ -138,7 +138,6 @@ class WritingsController {
 
     // Skip if already loaded for this pubkey (unless forced)
     if (!force && this.isLoadedFor(pubkey)) {
-      console.log('[writings] ✅ Already loaded for', pubkey.slice(0, 8))
       this.emitWritings(this.currentPosts)
       return
     }
@@ -148,7 +147,6 @@ class WritingsController {
     const currentGeneration = this.generation
 
     this.setLoading(true)
-    console.log('[writings] 🔍 Loading writings for', pubkey.slice(0, 8))
 
     try {
       const seenIds = new Set<string>()
@@ -162,7 +160,6 @@ class WritingsController {
       }
       if (lastSyncedAt) {
         filter.since = lastSyncedAt
-        console.log('[writings] 📅 Incremental sync since', new Date(lastSyncedAt * 1000).toISOString())
       }
 
       const events = await queryEvents(
@@ -201,7 +198,6 @@ class WritingsController {
 
       // Check if still active after async operation
       if (currentGeneration !== this.generation) {
-        console.log('[writings] ⚠️ Load cancelled (generation mismatch)')
         return
       }
 
@@ -231,7 +227,6 @@ class WritingsController {
         this.setLastSyncedAt(pubkey, newestTimestamp)
       }
 
-      console.log('[writings] ✅ Loaded', sorted.length, 'writings')
     } catch (error) {
       console.error('[writings] ❌ Failed to load writings:', error)
       this.currentPosts = []

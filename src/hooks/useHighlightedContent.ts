@@ -32,14 +32,12 @@ export const useHighlightedContent = ({
 }: UseHighlightedContentParams) => {
   // Filter highlights by URL and visibility settings
   const relevantHighlights = useMemo(() => {
-    console.log('🔍 ContentPanel: Processing highlights', {
       totalHighlights: highlights.length,
       selectedUrl,
       showHighlights
     })
     
     const urlFiltered = filterHighlightsByUrl(highlights, selectedUrl)
-    console.log('📌 URL filtered highlights:', urlFiltered.length)
     
     // Apply visibility filtering
     const classified = classifyHighlights(urlFiltered, currentUserPubkey, followedPubkeys)
@@ -49,7 +47,6 @@ export const useHighlightedContent = ({
       return highlightVisibility.nostrverse
     })
       
-    console.log('✅ Relevant highlights after filtering:', filtered.length, filtered.map(h => h.content.substring(0, 30)))
     return filtered
   }, [selectedUrl, highlights, highlightVisibility, currentUserPubkey, followedPubkeys, showHighlights])
 
@@ -57,7 +54,6 @@ export const useHighlightedContent = ({
   const finalHtml = useMemo(() => {
     const sourceHtml = markdown ? renderedMarkdownHtml : html
     
-    console.log('🎨 Preparing final HTML:', {
       hasMarkdown: !!markdown,
       hasHtml: !!html,
       renderedHtmlLength: renderedMarkdownHtml.length,
@@ -72,13 +68,10 @@ export const useHighlightedContent = ({
     }
     
     if (showHighlights && relevantHighlights.length > 0) {
-      console.log('✨ Applying', relevantHighlights.length, 'highlights to HTML')
       const highlightedHtml = applyHighlightsToHTML(sourceHtml, relevantHighlights, highlightStyle)
-      console.log('✅ Highlights applied, result length:', highlightedHtml.length)
       return highlightedHtml
     }
     
-    console.log('📄 Returning source HTML without highlights')
     return sourceHtml
   }, [html, renderedMarkdownHtml, markdown, relevantHighlights, showHighlights, highlightStyle])
 

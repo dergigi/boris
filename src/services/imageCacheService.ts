@@ -13,7 +13,6 @@ const CACHE_NAME = 'boris-image-cache-v1'
 export async function clearImageCache(): Promise<void> {
   try {
     await caches.delete(CACHE_NAME)
-    console.log('🗑️ Cleared all cached images')
   } catch (err) {
     console.error('Failed to clear image cache:', err)
   }

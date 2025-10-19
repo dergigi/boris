@@ -70,18 +70,14 @@ function AppRoutes({
 
   // Subscribe to contacts controller
   useEffect(() => {
-    console.log('[contacts] 🎧 Subscribing to contacts controller')
     const unsubContacts = contactsController.onContacts((contacts) => {
-      console.log('[contacts] 📥 Received contacts:', contacts.size)
       setContacts(contacts)
     })
     const unsubLoading = contactsController.onLoading((loading) => {
-      console.log('[contacts] 📥 Loading state:', loading)
       setContactsLoading(loading)
     })
     
     return () => {
-      console.log('[contacts] 🔇 Unsubscribing from contacts controller')
       unsubContacts()
       unsubLoading()
     }
@@ -100,25 +96,21 @@ function AppRoutes({
       
       // Load contacts
       if (pubkey && contacts.size === 0 && !contactsLoading) {
-        console.log('[contacts] 🚀 Auto-loading contacts on mount/login')
         contactsController.start({ relayPool, pubkey })
       }
       
       // Load highlights (controller manages its own state)
       if (pubkey && eventStore && !highlightsController.isLoadedFor(pubkey)) {
-        console.log('[highlights] 🚀 Auto-loading highlights on mount/login')
         highlightsController.start({ relayPool, eventStore, pubkey })
       }
 
       // Load writings (controller manages its own state)
       if (pubkey && eventStore && !writingsController.isLoadedFor(pubkey)) {
-        console.log('[writings] 🚀 Auto-loading writings on mount/login')
         writingsController.start({ relayPool, eventStore, pubkey })
       }
 
       // Load reading progress (controller manages its own state)
       if (pubkey && eventStore && !readingProgressController.isLoadedFor(pubkey)) {
-        console.log('[progress] 🚀 Auto-loading reading progress on mount/login')
         readingProgressController.start({ relayPool, eventStore, pubkey })
       }
 
@@ -386,40 +378,30 @@ function App() {
         // Return an already-resolved promise so upstream await finishes immediately
         return Promise.resolve()
       }
-      console.log('[bunker] ✅ Wired NostrConnectSigner to RelayPool publish/subscription (before account load)')
       
       // Create a relay group for better event deduplication and management
       pool.group(RELAYS)
-      console.log('[bunker] Created relay group with', RELAYS.length, 'relays (including local)')
       
       // Load persisted accounts from localStorage
       try {
         const accountsJson = localStorage.getItem('accounts')
-        console.log('[bunker] Raw accounts from localStorage:', accountsJson)
         
         const json = JSON.parse(accountsJson || '[]')
-        console.log('[bunker] Parsed accounts:', json.length, 'accounts')
         
         await accounts.fromJSON(json)
-        console.log('[bunker] Loaded', accounts.accounts.length, 'accounts from storage')
-        console.log('[bunker] Account types:', accounts.accounts.map(a => ({ id: a.id, type: a.type })))
         
         // Load active account from storage
         const activeId = localStorage.getItem('active')
-        console.log('[bunker] Active ID from localStorage:', activeId)
         
         if (activeId) {
           const account = accounts.getAccount(activeId)
-          console.log('[bunker] Found account for ID?', !!account, account?.type)
           
           if (account) {
             accounts.setActive(activeId)
-            console.log('[bunker] ✅ Restored active account:', activeId, 'type:', account.type)
           } else {
             console.warn('[bunker] ⚠️  Active ID found but account not in list')
           }
         } else {
-          console.log('[bunker] No active account ID in localStorage')
         }
       } catch (err) {
         console.error('[bunker] ❌ Failed to load accounts from storage:', err)
@@ -444,11 +426,6 @@ function App() {
       const reconnectedAccounts = new Set<string>()
       
             const bunkerReconnectSub = accounts.active$.subscribe(async (account) => {
-              console.log('[bunker] Active account changed:', { 
-                hasAccount: !!account, 
-                type: account?.type,
-                id: account?.id 
-              })
               
               if (account && account.type === 'nostr-connect') {
                 const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
@@ -456,23 +433,15 @@ function App() {
                 try {
                   if (!(nostrConnectAccount as unknown as { disableQueue?: boolean }).disableQueue) {
                     (nostrConnectAccount as unknown as { disableQueue?: boolean }).disableQueue = true
-                    console.log('[bunker] ⚙️  Disabled account request queueing for nostr-connect')
                   }
                 } catch (err) { console.warn('[bunker] failed to disable queue', err) }
                 // Note: for Amber bunker, the remote signer pubkey is the user's pubkey. This is expected.
                 
                 // Skip if we've already reconnected this account
                 if (reconnectedAccounts.has(account.id)) {
-                  console.log('[bunker] ⏭️  Already reconnected this account, skipping')
                   return
                 }
                 
-                console.log('[bunker] Account detected. Status:', {
-                  listening: nostrConnectAccount.signer.listening,
-                  isConnected: nostrConnectAccount.signer.isConnected,
-                  hasRemote: !!nostrConnectAccount.signer.remote,
-                  bunkerRelays: nostrConnectAccount.signer.relays
-                })
                 
                 try {
                   // For restored signers, ensure they have the pool's subscription methods
@@ -486,10 +455,8 @@ function App() {
                   const newBunkerRelays = bunkerRelays.filter(url => !existingRelayUrls.has(url))
                   
                   if (newBunkerRelays.length > 0) {
-                    console.log('[bunker] Adding bunker relays to pool BEFORE signer recreation:', newBunkerRelays)
                     pool.group(newBunkerRelays)
                   } else {
-                    console.log('[bunker] Bunker relays already in pool')
                   }
                   
                   const recreatedSigner = new NostrConnectSigner({
@@ -503,13 +470,11 @@ function App() {
                   try {
                     const mergedRelays = Array.from(new Set([...(signerData.relays || []), ...RELAYS]))
                     recreatedSigner.relays = mergedRelays
-                    console.log('[bunker] 🔗 Signer relays merged with app RELAYS:', mergedRelays)
                   } catch (err) { console.warn('[bunker] failed to merge signer relays', err) }
                   
                   // Replace the signer on the account
                   nostrConnectAccount.signer = recreatedSigner
-                  console.log('[bunker] ✅ Signer recreated with pool context')
-
+                  
                   // Debug: log publish/subscription calls made by signer (decrypt/sign requests)
                   // IMPORTANT: bind originals to preserve `this` context used internally by the signer
                   const originalPublish = (recreatedSigner as unknown as { publishMethod: (relays: string[], event: unknown) => unknown }).publishMethod.bind(recreatedSigner)
@@ -531,7 +496,6 @@ function App() {
                         tags: (event as { tags?: unknown })?.tags,
                         contentLength: typeof content === 'string' ? content.length : undefined
                       }
-                      console.log('[bunker] publish via signer:', summary)
                       try { DebugBus.info('bunker', 'publish', summary) } catch (err) { console.warn('[bunker] failed to log to DebugBus', err) }
                     } catch (err) { console.warn('[bunker] failed to log publish summary', err) }
                     // Fire-and-forget publish: trigger the publish but do not return the
@@ -549,7 +513,6 @@ function App() {
                   const originalSubscribe = (recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod.bind(recreatedSigner)
                   ;(recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod = (relays: string[], filters: unknown[]) => {
                     try {
-                      console.log('[bunker] subscribe via signer:', { relays, filters })
                       try { DebugBus.info('bunker', 'subscribe', { relays, filters }) } catch (err) { console.warn('[bunker] failed to log subscribe to DebugBus', err) }
                     } catch (err) { console.warn('[bunker] failed to log subscribe summary', err) }
                     return originalSubscribe(relays, filters)
@@ -559,20 +522,15 @@ function App() {
                   // Just ensure the signer is listening for responses - don't call connect() again
                   // The fromBunkerURI already connected with permissions during login
                   if (!nostrConnectAccount.signer.listening) {
-                    console.log('[bunker] Opening signer subscription...')
                     await nostrConnectAccount.signer.open()
-                    console.log('[bunker] ✅ Signer subscription opened')
                   } else {
-                    console.log('[bunker] ✅ Signer already listening')
                   }
                   
                   // Attempt a guarded reconnect to ensure Amber authorizes decrypt operations
                   try {
                     if (nostrConnectAccount.signer.remote && !reconnectedAccounts.has(account.id)) {
                       const permissions = getDefaultBunkerPermissions()
-                      console.log('[bunker] Attempting guarded connect() with permissions to ensure decrypt perms', { count: permissions.length })
                       await nostrConnectAccount.signer.connect(undefined, permissions)
-                      console.log('[bunker] ✅ Guarded connect() succeeded with permissions')
                     }
                   } catch (e) {
                     console.warn('[bunker] ⚠️ Guarded connect() failed:', e)
@@ -581,7 +539,6 @@ function App() {
                   // Give the subscription a moment to fully establish before allowing decrypt operations
                   // This ensures the signer is ready to handle and receive responses
                   await new Promise(resolve => setTimeout(resolve, 100))
-                  console.log("[bunker] Subscription ready after startup delay")
                   // Fire-and-forget: probe decrypt path to verify Amber responds to NIP-46 decrypt
                   try {
                     const withTimeout = async <T,>(p: Promise<T>, ms = 10000): Promise<T> => {
@@ -594,38 +551,24 @@ function App() {
                       const self = nostrConnectAccount.pubkey
                       // Try a roundtrip so the bunker can respond successfully
                       try {
-                        console.log('[bunker] 🔎 Probe nip44 roundtrip (encrypt→decrypt)…')
                         const cipher44 = await withTimeout(nostrConnectAccount.signer.nip44!.encrypt(self, 'probe-nip44'))
                         const plain44 = await withTimeout(nostrConnectAccount.signer.nip44!.decrypt(self, cipher44))
-                        console.log('[bunker] 🔎 Probe nip44 responded:', typeof plain44 === 'string' ? plain44 : typeof plain44)
                       } catch (err) {
-                        console.log('[bunker] 🔎 Probe nip44 result:', err instanceof Error ? err.message : err)
                       }
                       try {
-                        console.log('[bunker] 🔎 Probe nip04 roundtrip (encrypt→decrypt)…')
                         const cipher04 = await withTimeout(nostrConnectAccount.signer.nip04!.encrypt(self, 'probe-nip04'))
                         const plain04 = await withTimeout(nostrConnectAccount.signer.nip04!.decrypt(self, cipher04))
-                        console.log('[bunker] 🔎 Probe nip04 responded:', typeof plain04 === 'string' ? plain04 : typeof plain04)
                       } catch (err) {
-                        console.log('[bunker] 🔎 Probe nip04 result:', err instanceof Error ? err.message : err)
                       }
                     }, 0)
                   } catch (err) {
-                    console.log('[bunker] 🔎 Probe setup failed:', err)
                   }
                   // The bunker remembers the permissions from the initial connection
                   nostrConnectAccount.signer.isConnected = true
                   
-                  console.log('[bunker] Final signer status:', {
-                    listening: nostrConnectAccount.signer.listening,
-                    isConnected: nostrConnectAccount.signer.isConnected,
-                    remote: nostrConnectAccount.signer.remote,
-                    relays: nostrConnectAccount.signer.relays
-                  })
                   
                   // Mark this account as reconnected
                   reconnectedAccounts.add(account.id)
-                  console.log('[bunker] 🎉 Signer ready for signing')
                 } catch (error) {
                   console.error('[bunker] ❌ Failed to open signer:', error)
                 }
@@ -639,7 +582,6 @@ function App() {
         next: () => {}, // No-op, we don't care about events
         error: (err) => console.warn('Keep-alive subscription error:', err)
       })
-      console.log('🔗 Created keep-alive subscription for', RELAYS.length, 'relay(s)')
       
       // Store subscription for cleanup
       ;(pool as unknown as { _keepAliveSubscription: typeof keepAliveSub })._keepAliveSubscription = keepAliveSub

@@ -46,7 +46,6 @@ export async function fetchAllReads(
   bookmarks: Bookmark[],
   onItem?: (item: ReadItem) => void
 ): Promise<ReadItem[]> {
-  console.log('📚 [Reads] Fetching all reads for user:', userPubkey.slice(0, 8))
   
   const readsMap = new Map<string, ReadItem>()
   
@@ -66,7 +65,6 @@ export async function fetchAllReads(
       fetchReadArticles(relayPool, userPubkey)
     ])
 
-    console.log('📊 [Reads] Data fetched:', {
       readingProgress: progressEvents.length,
       markedAsRead: markedAsReadArticles.length,
       bookmarks: bookmarks.length
@@ -120,7 +118,6 @@ export async function fetchAllReads(
       .map(item => item.id)
 
     if (articleCoordinates.length > 0) {
-      console.log('📖 [Reads] Fetching article events for', articleCoordinates.length, 'articles')
       
       // Parse coordinates and fetch events
       const articlesToFetch: Array<{ pubkey: string; identifier: string }> = []
@@ -187,7 +184,6 @@ export async function fetchAllReads(
     const validArticles = filterValidItems(articles)
     const sortedReads = sortByReadingActivity(validArticles)
 
-    console.log('✅ [Reads] Processed', sortedReads.length, 'total reads')
     return sortedReads
 
   } catch (error) {

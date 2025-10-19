@@ -51,12 +51,10 @@ export function usePWAInstall() {
       const choiceResult = await deferredPrompt.userChoice
       
       if (choiceResult.outcome === 'accepted') {
-        console.log('✅ PWA installed')
         setIsInstallable(false)
         setDeferredPrompt(null)
         return true
       } else {
-        console.log('❌ PWA installation dismissed')
         return false
       }
     } catch (error) {

@@ -310,7 +310,6 @@ const Debug: React.FC<DebugProps> = ({
 
       // Subscribe to decrypt complete events for Debug UI display
       const unsubscribeDecrypt = bookmarkController.onDecryptComplete((eventId, publicCount, privateCount) => {
-        console.log('[bunker] ✅ Auto-decrypted:', eventId.slice(0, 8), {
           public: publicCount,
           private: privateCount
         })
@@ -742,7 +741,6 @@ const Debug: React.FC<DebugProps> = ({
     
     // Subscribe to controller updates to see streaming
     const unsubscribe = contactsController.onContacts((contacts) => {
-      console.log('[debug] Received contacts update:', contacts.size)
       setFriendsPubkeys(new Set(contacts))
     })
     

@@ -22,7 +22,6 @@ export async function fetchBorisZappers(
   relayPool: RelayPool
 ): Promise<ZapSender[]> {
   try {
-    console.log('⚡ Fetching zap receipts for Boris...', BORIS_PUBKEY)
     
     // Use all configured relays plus specific zap-heavy relays
     const zapRelays = [
@@ -63,7 +62,6 @@ export async function fetchBorisZappers(
       merge(local$, remote$).pipe(toArray())
     )
 
-    console.log(`📊 Fetched ${zapReceipts.length} raw zap receipts`)
 
     // Dedupe by event ID and validate
     const uniqueReceipts = new Map<string, NostrEvent>()
@@ -79,7 +77,6 @@ export async function fetchBorisZappers(
       }
     })
 
-    console.log(`✅ ${uniqueReceipts.size} valid zap receipts (${invalidCount} invalid)`)
 
     // Aggregate by sender using applesauce helpers
     const senderTotals = new Map<string, { totalSats: number; zapCount: number }>()
@@ -102,7 +99,6 @@ export async function fetchBorisZappers(
       })
     }
 
-    console.log(`👥 Found ${senderTotals.size} unique senders`)
 
     // Filter >= 2100 sats, mark whales >= 69420 sats, sort by total desc
     const zappers: ZapSender[] = Array.from(senderTotals.entries())
@@ -115,7 +111,6 @@ export async function fetchBorisZappers(
       }))
       .sort((a, b) => b.totalSats - a.totalSats)
 
-    console.log(`✅ Found ${zappers.length} supporters (${zappers.filter(z => z.isWhale).length} whales)`)
 
     return zappers
   } catch (error) {

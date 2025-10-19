@@ -36,7 +36,6 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
   
   // Debug log
   if (readingProgress !== undefined) {
-    console.log('[progress] 🎴 Card render:', post.title.slice(0, 30), '=> progress:', progressPercent + '%', 'color:', progressColor)
   }
 
   return (

@@ -78,7 +78,6 @@ export async function createWebBookmark(
   // Publish to relays in the background (don't block UI)
   relayPool.publish(relays, signedEvent)
     .then(() => {
-      console.log('✅ Web bookmark published to', relays.length, 'relays:', signedEvent)
     })
     .catch((err) => {
       console.warn('⚠️ Some relays failed to publish bookmark:', err)

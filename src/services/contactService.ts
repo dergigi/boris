@@ -15,7 +15,6 @@ export const fetchContacts = async (
 ): Promise<Set<string>> => {
   try {
     const relayUrls = prioritizeLocalRelays(Array.from(relayPool.relays.values()).map(relay => relay.url))
-    console.log('🔍 Fetching contacts (kind 3) for user:', pubkey)
 
     const partialFollowed = new Set<string>()
     const events = await queryEvents(
@@ -51,9 +50,7 @@ export const fetchContacts = async (
     }
     // merged already via streams
     
-    console.log('📊 Contact events fetched:', events.length)
     
-    console.log('👥 Followed contacts:', followed.size)
     return followed
   } catch (error) {
     console.error('Failed to fetch contacts:', error)

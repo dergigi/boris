@@ -16,18 +16,15 @@ const loadingFonts = new Map<string, Promise<void>>()
 
 export async function loadFont(fontKey: string): Promise<void> {
   if (fontKey === 'system') {
-    console.log('📝 Using system font')
     return Promise.resolve()
   }
   
   if (loadedFonts.has(fontKey)) {
-    console.log('✅ Font already loaded:', fontKey)
     return Promise.resolve()
   }
 
   // If font is currently loading, return the existing promise
   if (loadingFonts.has(fontKey)) {
-    console.log('⏳ Font already loading:', fontKey)
     return loadingFonts.get(fontKey)!
   }
 
@@ -37,7 +34,6 @@ export async function loadFont(fontKey: string): Promise<void> {
     return Promise.resolve()
   }
 
-  console.log('🔤 Loading font:', fontFamily)
 
   // Create a promise for this font loading
   const loadPromise = new Promise<void>((resolve) => {
@@ -48,7 +44,6 @@ export async function loadFont(fontKey: string): Promise<void> {
     
     // Wait for the stylesheet to load
     link.onload = () => {
-      console.log('📄 Stylesheet loaded for:', fontFamily)
       
       // Use Font Loading API to wait for the actual font to be ready
       if ('fonts' in document) {
@@ -56,7 +51,6 @@ export async function loadFont(fontKey: string): Promise<void> {
           document.fonts.load(`400 16px "${fontFamily}"`),
           document.fonts.load(`700 16px "${fontFamily}"`)
         ]).then(() => {
-          console.log('✅ Font ready:', fontFamily)
           loadedFonts.add(fontKey)
           loadingFonts.delete(fontKey)
           resolve()
@@ -69,7 +63,6 @@ export async function loadFont(fontKey: string): Promise<void> {
       } else {
         // Fallback: just wait a bit for older browsers
         setTimeout(() => {
-          console.log('✅ Font assumed ready (no Font Loading API):', fontFamily)
           loadedFonts.add(fontKey)
           loadingFonts.delete(fontKey)
           resolve()

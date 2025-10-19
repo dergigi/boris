@@ -36,12 +36,10 @@ export async function createDeletionRequest(
 
   const signed = await factory.sign(draft)
 
-  console.log('🗑️ Created kind:5 deletion request for event:', eventId.slice(0, 8))
 
   // Publish to relays
   await relayPool.publish(RELAYS, signed)
 
-  console.log('✅ Deletion request published to', RELAYS.length, 'relay(s)')
 
   return signed
 }

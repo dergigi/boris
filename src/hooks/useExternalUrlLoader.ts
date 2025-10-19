@@ -77,7 +77,6 @@ export function useExternalUrlLoader({
         const content = await fetchReadableContent(url)
         setReaderContent(content)
         
-        console.log('🌐 External URL loaded:', content.title)
         
         // Set reader loading to false immediately after content is ready
         setReaderLoading(false)

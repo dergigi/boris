@@ -34,7 +34,6 @@ export async function rebroadcastEvents(
   
   // If we're in flight mode (only local relays connected) and user wants to broadcast to all relays, skip
   if (broadcastToAll && !hasRemoteConnection) {
-    console.log('✈️ Flight mode: skipping rebroadcast to remote relays')
     return
   }
 
@@ -50,7 +49,6 @@ export async function rebroadcastEvents(
   }
 
   if (targetRelays.length === 0) {
-    console.log('📡 No target relays for rebroadcast')
     return
   }
 
@@ -58,7 +56,6 @@ export async function rebroadcastEvents(
   const rebroadcastPromises = events.map(async (event) => {
     try {
       await relayPool.publish(targetRelays, event)
-      console.log('📡 Rebroadcast event', event.id?.slice(0, 8), 'to', targetRelays.length, 'relay(s)')
     } catch (error) {
       console.warn('⚠️ Failed to rebroadcast event', event.id?.slice(0, 8), error)
     }
@@ -69,7 +66,6 @@ export async function rebroadcastEvents(
     console.warn('⚠️ Some rebroadcasts failed:', err)
   })
 
-  console.log(`📡 Rebroadcasting ${events.length} event(s) to ${targetRelays.length} relay(s)`, {
     broadcastToAll,
     useLocalCache,
     targetRelays

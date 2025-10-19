@@ -11,7 +11,6 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker
       .register('/sw.js', { type: 'module' })
       .then(registration => {
-        console.log('✅ Service Worker registered:', registration.scope)
         
         // Check for updates periodically
         setInterval(() => {
@@ -25,7 +24,6 @@ if ('serviceWorker' in navigator) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 // New service worker available
-                console.log('🔄 New version available! Reload to update.')
                 
                 // Optionally show a toast notification
                 const updateAvailable = new CustomEvent('sw-update-available')

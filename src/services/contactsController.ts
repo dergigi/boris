@@ -73,13 +73,11 @@ class ContactsController {
 
     // Skip if already loaded for this pubkey (unless forced)
     if (!force && this.isLoadedFor(pubkey)) {
-      console.log('[contacts] ✅ Already loaded for', pubkey.slice(0, 8))
       this.emitContacts(this.currentContacts)
       return
     }
 
     this.setLoading(true)
-    console.log('[contacts] 🔍 Loading contacts for', pubkey.slice(0, 8))
 
     try {
       const contacts = await fetchContacts(
@@ -89,7 +87,6 @@ class ContactsController {
           // Stream partial updates
           this.currentContacts = new Set(partial)
           this.emitContacts(this.currentContacts)
-          console.log('[contacts] 📥 Partial contacts:', partial.size)
         }
       )
 
@@ -98,7 +95,6 @@ class ContactsController {
       this.lastLoadedPubkey = pubkey
       this.emitContacts(this.currentContacts)
       
-      console.log('[contacts] ✅ Loaded', contacts.size, 'contacts')
     } catch (error) {
       console.error('[contacts] ❌ Failed to load contacts:', error)
       this.currentContacts.clear()

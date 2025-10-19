@@ -22,7 +22,6 @@ export const fetchHighlights = async (
     const cacheKey = highlightCache.authorKey(pubkey)
     const cached = highlightCache.get(cacheKey)
     if (cached) {
-      console.log(`📌 Using cached highlights for author (${cached.length} items)`)
       // Stream cached highlights if callback provided
       if (onHighlight) {
         cached.forEach(h => onHighlight(h))
@@ -50,7 +49,6 @@ export const fetchHighlights = async (
       }
     )
 
-    console.log(`📌 Fetched ${rawEvents.length} highlight events for author:`, pubkey.slice(0, 8))
 
     // Store all events in event store if provided
     if (eventStore) {

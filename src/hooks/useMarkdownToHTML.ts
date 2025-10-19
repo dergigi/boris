@@ -43,7 +43,6 @@ export const useMarkdownToHTML = (
           
           // Replace nostr URIs with resolved titles
           processed = replaceNostrUrisInMarkdownWithTitles(markdown, articleTitles)
-          console.log(`📚 Resolved ${articleTitles.size} article titles`)
         } catch (error) {
           console.warn('Failed to fetch article titles:', error)
           // Fall back to basic replacement
@@ -58,12 +57,10 @@ export const useMarkdownToHTML = (
       
       setProcessedMarkdown(processed)
 
-      console.log('📝 Converting markdown to HTML...')
       
       const rafId = requestAnimationFrame(() => {
         if (previewRef.current && !isCancelled) {
           const html = previewRef.current.innerHTML
-          console.log('✅ Markdown converted to HTML:', html.length, 'chars')
           setRenderedHtml(html)
         } else if (!isCancelled) {
           console.warn('⚠️ markdownPreviewRef.current is null')

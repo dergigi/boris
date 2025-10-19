@@ -22,7 +22,6 @@ export const fetchProfiles = async (
     }
 
     const uniquePubkeys = Array.from(new Set(pubkeys))
-    console.log('👤 Fetching profiles (kind:0) for', uniquePubkeys.length, 'authors')
 
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
     const prioritized = prioritizeLocalRelays(relayUrls)
@@ -65,7 +64,6 @@ export const fetchProfiles = async (
     await lastValueFrom(merge(local$, remote$).pipe(toArray()))
 
     const profiles = Array.from(profilesByPubkey.values())
-    console.log('✅ Fetched', profiles.length, 'unique profiles')
 
     // Rebroadcast profiles to local/all relays based on settings
     if (profiles.length > 0) {

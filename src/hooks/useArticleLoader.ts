@@ -64,8 +64,6 @@ export function useArticleLoader({
         setCurrentArticleEventId(article.event.id)
         setCurrentArticle?.(article.event)
         
-        console.log('📰 Article loaded:', article.title)
-        console.log('📍 Coordinate:', articleCoordinate)
         
         // Set reader loading to false immediately after article content is ready
         // Don't wait for highlights to finish loading
@@ -92,7 +90,6 @@ export function useArticleLoader({
             },
             settings
           )
-          console.log(`📌 Found ${highlightsMap.size} highlights`)
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {

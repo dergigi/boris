@@ -17,7 +17,6 @@ export async function fetchLinks(
   userPubkey: string,
   onItem?: (item: ReadItem) => void
 ): Promise<ReadItem[]> {
-  console.log('🔗 [Links] Fetching external links for user:', userPubkey.slice(0, 8))
   
   const linksMap = new Map<string, ReadItem>()
   
@@ -37,7 +36,6 @@ export async function fetchLinks(
       fetchReadArticles(relayPool, userPubkey)
     ])
 
-    console.log('📊 [Links] Data fetched:', {
       readingProgress: progressEvents.length,
       markedAsRead: markedAsReadArticles.length
     })
@@ -79,7 +77,6 @@ export async function fetchLinks(
     const validLinks = filterValidItems(links)
     const sortedLinks = sortByReadingActivity(validLinks)
 
-    console.log('✅ [Links] Processed', sortedLinks.length, 'total links')
     return sortedLinks
 
   } catch (error) {

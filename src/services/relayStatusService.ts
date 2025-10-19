@@ -40,11 +40,8 @@ export function updateAndGetRelayStatuses(relayPool: RelayPool): RelayStatus[] {
   const connectedCount = statuses.filter(s => s.isInPool).length
   const disconnectedCount = statuses.filter(s => !s.isInPool).length
   if (connectedCount === 0 || disconnectedCount > 0) {
-    console.log(`🔌 Relay status: ${connectedCount} connected, ${disconnectedCount} disconnected`)
     const connected = statuses.filter(s => s.isInPool).map(s => s.url.replace(/^wss?:\/\//, ''))
     const disconnected = statuses.filter(s => !s.isInPool).map(s => s.url.replace(/^wss?:\/\//, ''))
-    if (connected.length > 0) console.log('✅ Connected:', connected.join(', '))
-    if (disconnected.length > 0) console.log('❌ Disconnected:', disconnected.join(', '))
   }
   
   // Add recently seen relays that are no longer connected

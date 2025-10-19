@@ -24,7 +24,6 @@ export const fetchNostrverseBlogPosts = async (
   onPost?: (post: BlogPostPreview) => void
 ): Promise<BlogPostPreview[]> => {
   try {
-    console.log('[NOSTRVERSE] 📚 Fetching blog posts (kind 30023), limit:', limit)
 
     // Deduplicate replaceable events by keeping the most recent version
     const uniqueEvents = new Map<string, NostrEvent>()
@@ -63,7 +62,6 @@ export const fetchNostrverseBlogPosts = async (
       }
     )
 
-    console.log('[NOSTRVERSE] 📊 Blog post events fetched (unique):', uniqueEvents.size)
     
     // Convert to blog post previews and sort by published date (most recent first)
     const blogPosts: BlogPostPreview[] = Array.from(uniqueEvents.values())
@@ -81,7 +79,6 @@ export const fetchNostrverseBlogPosts = async (
         return timeB - timeA // Most recent first
       })
     
-    console.log('[NOSTRVERSE] 📰 Processed', blogPosts.length, 'unique blog posts')
     
     return blogPosts
   } catch (error) {
@@ -103,7 +100,6 @@ export const fetchNostrverseHighlights = async (
   eventStore?: IEventStore
 ): Promise<Highlight[]> => {
   try {
-    console.log('[NOSTRVERSE] 💡 Fetching highlights (kind 9802), limit:', limit)
 
     const seenIds = new Set<string>()
     // Collect but do not block callers awaiting network completion
@@ -133,7 +129,6 @@ export const fetchNostrverseHighlights = async (
     const uniqueEvents = dedupeHighlights([...collected, ...rawEvents])
     const highlights = uniqueEvents.map(eventToHighlight)
     
-    console.log('[NOSTRVERSE] 💡 Processed', highlights.length, 'unique highlights')
     
     return sortHighlights(highlights)
   } catch (error) {

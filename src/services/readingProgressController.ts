@@ -45,7 +45,6 @@ class ReadingProgressController {
   }
 
   private emitProgress(progressMap: Map<string, number>): void {
-    console.log('[progress] 📡 Emitting to', this.progressListeners.length, 'listeners with', progressMap.size, 'items')
     this.progressListeners.forEach(cb => cb(new Map(progressMap)))
   }
 
@@ -81,7 +80,7 @@ class ReadingProgressController {
       parsed[pubkey] = Object.fromEntries(progressMap.entries())
       localStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify(parsed))
     } catch (err) {
-      console.warn('[progress] ⚠️ Failed to persist reading progress cache:', err)
+      // Silently fail cache persistence
     }
   }
 
@@ -109,7 +108,7 @@ class ReadingProgressController {
       try {
         this.timelineSubscription.unsubscribe()
       } catch (err) {
-        console.warn('[progress] ⚠️ Failed to unsubscribe timeline on reset:', err)
+        // Silently fail on unsubscribe
       }
       this.timelineSubscription = null
     }
@@ -142,7 +141,7 @@ class ReadingProgressController {
       parsed[pubkey] = timestamp
       localStorage.setItem(LAST_SYNCED_KEY, JSON.stringify(parsed))
     } catch (err) {
-      console.warn('Failed to update last synced timestamp:', err)
+      // Silently fail
     }
   }
 
@@ -160,12 +159,9 @@ class ReadingProgressController {
 
     // Skip if already loaded for this pubkey and not forcing
     if (!force && this.isLoadedFor(pubkey)) {
-      console.log('📊 [ReadingProgress] Already loaded for', pubkey.slice(0, 8))
       return
     }
 
-    console.log('📊 [ReadingProgress] Loading for', pubkey.slice(0, 8), force ? '(forced)' : '')
-    
     this.setLoading(true)
     this.lastLoadedPubkey = pubkey
 
@@ -173,7 +169,6 @@ class ReadingProgressController {
       // Seed from local cache immediately (survives refresh/flight mode)
       const cached = this.loadCachedProgress(pubkey)
       if (cached.size > 0) {
-        console.log('📊 [ReadingProgress] Seeded from cache:', cached.size, 'items')
         this.currentProgressMap = cached
         this.emitProgress(this.currentProgressMap)
       }
@@ -184,7 +179,7 @@ class ReadingProgressController {
         try {
           this.timelineSubscription.unsubscribe()
         } catch (err) {
-          console.warn('[progress] ⚠️ Failed to unsubscribe previous timeline:', err)
+          // Silently fail
         }
         this.timelineSubscription = null
       }
@@ -198,7 +193,6 @@ class ReadingProgressController {
         // Ignore if controller generation has changed (e.g., logout/login)
         if (generationAtSubscribe !== this.generation) return
         if (!Array.isArray(localEvents) || localEvents.length === 0) return
-        console.log('📊 [ReadingProgress] Timeline update with', localEvents.length, 'event(s)')
         this.processEvents(localEvents)
       })
 
@@ -214,15 +208,11 @@ class ReadingProgressController {
       
       if (lastSynced && !needsFullSync) {
         filter.since = lastSynced
-        console.log('📊 [ReadingProgress] Incremental sync since', new Date(lastSynced * 1000).toISOString())
-      } else {
-        console.log('📊 [ReadingProgress] Full sync (map size:', this.currentProgressMap.size + ')')
       }
 
       const relayEvents = await queryEvents(relayPool, filter, { relayUrls: RELAYS })
       
       if (startGeneration !== this.generation) {
-        console.log('📊 [ReadingProgress] Cancelled (generation changed)')
         return
       }
 
@@ -232,13 +222,10 @@ class ReadingProgressController {
         
         // Process and emit (merge with existing)
         this.processEvents(relayEvents)
-        console.log('📊 [ReadingProgress] Loaded', relayEvents.length, 'events from relays')
         
         // Update last synced
         const now = Math.floor(Date.now() / 1000)
         this.updateLastSyncedAt(pubkey, now)
-      } else {
-        console.log('📊 [ReadingProgress] No new events from relays')
       }
     } catch (err) {
       console.error('📊 [ReadingProgress] Failed to load:', err)
@@ -253,8 +240,6 @@ class ReadingProgressController {
    * Process events and update progress map
    */
   private processEvents(events: NostrEvent[]): void {
-    console.log('[progress] 🔄 Processing', events.length, 'events')
-    
     const readsMap = new Map<string, ReadItem>()
     
     // Merge with existing progress
@@ -267,23 +252,16 @@ class ReadingProgressController {
       })
     }
     
-    console.log('[progress] 📦 Starting with', readsMap.size, 'existing items')
-    
     // Process new events
     processReadingProgress(events, readsMap)
-    
-    console.log('[progress] 📦 After processing:', readsMap.size, 'items')
     
     // Convert back to progress map (naddr -> progress)
     const newProgressMap = new Map<string, number>()
     for (const [id, item] of readsMap.entries()) {
       if (item.readingProgress !== undefined && item.type === 'article') {
         newProgressMap.set(id, item.readingProgress)
-        console.log('[progress] ✅ Added:', id.slice(0, 50) + '...', '=', Math.round(item.readingProgress * 100) + '%')
       }
     }
-    
-    console.log('[progress] 📊 Final progress map size:', newProgressMap.size)
     
     this.currentProgressMap = newProgressMap
     this.emitProgress(this.currentProgressMap)

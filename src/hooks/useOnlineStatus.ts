@@ -5,12 +5,10 @@ export function useOnlineStatus() {
 
   useEffect(() => {
     const handleOnline = () => {
-      console.log('🌐 Back online')
       setIsOnline(true)
     }
 
     const handleOffline = () => {
-      console.log('📴 Gone offline')
       setIsOnline(false)
     }
 

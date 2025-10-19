@@ -27,7 +27,6 @@ export const HighlightCitation: React.FC<HighlightCitationProps> = ({
     // Fallback: extract directly from p tag
     const pTag = highlight.tags.find(t => t[0] === 'p')
     if (pTag && pTag[1]) {
-      console.log('📝 Found author from p tag:', pTag[1])
       return pTag[1]
     }
     

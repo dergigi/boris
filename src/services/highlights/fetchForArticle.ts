@@ -23,7 +23,6 @@ export const fetchHighlightsForArticle = async (
     const cacheKey = highlightCache.articleKey(articleCoordinate)
     const cached = highlightCache.get(cacheKey)
     if (cached) {
-      console.log(`📌 Using cached highlights for article (${cached.length} items)`)
       // Stream cached highlights if callback provided
       if (onHighlight) {
         cached.forEach(h => onHighlight(h))
@@ -54,7 +53,6 @@ export const fetchHighlightsForArticle = async (
     ])
 
     const rawEvents = [...aTagEvents, ...eTagEvents]
-    console.log(`📌 Fetched ${rawEvents.length} highlight events for article:`, articleCoordinate)
 
     // Store all events in event store if provided
     if (eventStore) {

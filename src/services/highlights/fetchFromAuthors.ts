@@ -21,11 +21,9 @@ export const fetchHighlightsFromAuthors = async (
 ): Promise<Highlight[]> => {
   try {
     if (pubkeys.length === 0) {
-      console.log('⚠️ No pubkeys to fetch highlights from')
       return []
     }
 
-    console.log('💡 Fetching highlights (kind 9802) from', pubkeys.length, 'authors')
 
     const seenIds = new Set<string>()
     const rawEvents = await queryEvents(
@@ -55,7 +53,6 @@ export const fetchHighlightsFromAuthors = async (
     const uniqueEvents = dedupeHighlights(rawEvents)
     const highlights = uniqueEvents.map(eventToHighlight)
     
-    console.log('💡 Processed', highlights.length, 'unique highlights')
     
     return sortHighlights(highlights)
   } catch (error) {

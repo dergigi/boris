@@ -31,7 +31,6 @@ async function decryptEvent(
         try {
           await Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner, 'nip44' as UnlockMode)
         } catch (err) {
-          console.log("[bunker] ❌ nip44.decrypt failed:", err instanceof Error ? err.message : String(err))
         }
       }
     } else if (evt.content && evt.content.length > 0) {
@@ -46,7 +45,6 @@ async function decryptEvent(
         try {
           decryptedContent = await (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(evt.pubkey, evt.content)
         } catch (err) {
-          console.log("[bunker] ❌ nip44.decrypt failed:", err instanceof Error ? err.message : String(err))
         }
       }
 
@@ -55,7 +53,6 @@ async function decryptEvent(
         try {
           decryptedContent = await (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(evt.pubkey, evt.content)
         } catch (err) {
-          console.log("[bunker] ❌ nip04.decrypt failed:", err instanceof Error ? err.message : String(err))
         }
       }
 

@@ -48,7 +48,6 @@ function getFromCache(naddr: string): ArticleContent | null {
       return null
     }
 
-    console.log('📦 Loaded article from cache:', naddr)
     return content
   } catch {
     return null
@@ -63,7 +62,6 @@ function saveToCache(naddr: string, content: ArticleContent): void {
       timestamp: Date.now()
     }
     localStorage.setItem(cacheKey, JSON.stringify(cached))
-    console.log('💾 Saved article to cache:', naddr)
   } catch (err) {
     console.warn('Failed to cache article:', err)
     // Silently fail if storage is full or unavailable

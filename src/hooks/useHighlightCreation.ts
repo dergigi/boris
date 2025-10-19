@@ -60,7 +60,6 @@ export const useHighlightCreation = ({
         ? currentArticle.content 
         : readerContent?.markdown || readerContent?.html
       
-      console.log('🎯 Creating highlight...', { text: text.substring(0, 50) + '...' })
       
       const newHighlight = await createHighlight(
         text,
@@ -73,7 +72,6 @@ export const useHighlightCreation = ({
         settings
       )
       
-      console.log('✅ Highlight created successfully!', {
         id: newHighlight.id,
         isLocalOnly: newHighlight.isLocalOnly,
         isOfflineCreated: newHighlight.isOfflineCreated,

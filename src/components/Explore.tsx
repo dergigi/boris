@@ -178,12 +178,10 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   useEffect(() => {
     // Get initial state immediately
     const initialMap = readingProgressController.getProgressMap()
-    console.log('[progress] 🎯 Explore: Initial progress map size:', initialMap.size)
     setReadingProgressMap(initialMap)
     
     // Subscribe to updates
     const unsubProgress = readingProgressController.onProgress((newMap) => {
-      console.log('[progress] 🎯 Explore: Received progress update, size:', newMap.size)
       setReadingProgressMap(newMap)
     })
     
@@ -612,7 +610,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const getReadingProgress = useCallback((post: BlogPostPreview): number | undefined => {
     const dTag = post.event.tags.find(t => t[0] === 'd')?.[1]
     if (!dTag) {
-      console.log('[progress] ⚠️ No d-tag for post:', post.title)
       return undefined
     }
     
@@ -624,16 +621,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       })
       const progress = readingProgressMap.get(naddr)
       
-      // Only log first lookup to avoid spam, or when found
-      if (progress || readingProgressMap.size === 0) {
-        console.log('[progress] 🔍 Looking up:', {
-          title: post.title.slice(0, 30),
-          naddr: naddr.slice(0, 80),
-          mapSize: readingProgressMap.size,
-          mapKeys: readingProgressMap.size > 0 ? Array.from(readingProgressMap.keys()).slice(0, 3).map(k => k.slice(0, 80)) : [],
-          progress: progress ? Math.round(progress * 100) + '%' : 'not found'
-        })
-      }
       return progress
     } catch (err) {
       console.error('[progress] ❌ Error encoding naddr:', err)
