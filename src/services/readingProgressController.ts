@@ -1,6 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
-import { Filter, NostrEvent } from 'nostr-tools'
+import { NostrEvent } from 'nostr-tools'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
 import { RELAYS } from '../config/relays'
@@ -139,20 +139,6 @@ class ReadingProgressController {
   }
 
   /**
-   * Get last synced timestamp for incremental loading
-   */
-  private getLastSyncedAt(pubkey: string): number | null {
-    try {
-      const data = localStorage.getItem(LAST_SYNCED_KEY)
-      if (!data) return null
-      const parsed = JSON.parse(data)
-      return parsed[pubkey] || null
-    } catch {
-      return null
-    }
-  }
-
-  /**
    * Update last synced timestamp
    */
   private updateLastSyncedAt(pubkey: string, timestamp: number): void {
@@ -203,8 +189,8 @@ class ReadingProgressController {
         this.emitProgress(this.currentProgressMap)
       }
 
-      // Subscribe to local timeline for immediate and reactive updates
-      // Clean up any previous subscription first
+      // Subscribe to local eventStore timeline for immediate and reactive updates
+      // This handles both local writes and synced events from relays
       if (this.timelineSubscription) {
         try {
           this.timelineSubscription.unsubscribe()
@@ -214,149 +200,54 @@ class ReadingProgressController {
         this.timelineSubscription = null
       }
 
-      console.log('[readingProgress] Setting up timeline subscription...')
+      console.log('[readingProgress] Setting up eventStore subscription...')
       const timeline$ = eventStore.timeline({
         kinds: [KINDS.ReadingProgress],
         authors: [pubkey]
       })
       const generationAtSubscribe = this.generation
       this.timelineSubscription = timeline$.subscribe((localEvents: NostrEvent[]) => {
-        // Ignore if controller generation has changed (e.g., logout/login)
         if (generationAtSubscribe !== this.generation) return
         if (!Array.isArray(localEvents) || localEvents.length === 0) return
         this.processEvents(localEvents)
       })
-      console.log('[readingProgress] Timeline subscription ready')
+      console.log('[readingProgress] EventStore subscription ready - updates streaming')
 
-      // Query events from relays
-      // Force full sync if map is empty (first load) or if explicitly forced
-      const needsFullSync = force || this.currentProgressMap.size === 0
-      const lastSynced = needsFullSync ? null : this.getLastSyncedAt(pubkey)
-      
-      const filter: Filter = {
+      // Mark as loaded immediately - queries run in background non-blocking
+      this.lastLoadedPubkey = pubkey
+
+      // Query reading progress from relays in background (non-blocking, fire-and-forget)
+      console.log('[readingProgress] Starting background relay query for reading progress...')
+      queryEvents(relayPool, {
         kinds: [KINDS.ReadingProgress],
         authors: [pubkey]
-      }
-      
-      if (lastSynced && !needsFullSync) {
-        filter.since = lastSynced
-      }
-
-      console.log('[readingProgress] Querying reading progress events...')
-      const relayEvents = await queryEvents(relayPool, filter, { relayUrls: RELAYS })
-      console.log('[readingProgress] Got reading progress events:', relayEvents.length)
-      
-      if (startGeneration !== this.generation) {
-        console.log('[readingProgress] Generation changed, aborting')
-        return
-      }
-
-      if (relayEvents.length > 0) {
-        // Add to event store
-        relayEvents.forEach(e => eventStore.add(e))
-        
-        // Process and emit (merge with existing)
-        this.processEvents(relayEvents)
-        
-        // Update last synced
-        const now = Math.floor(Date.now() / 1000)
-        this.updateLastSyncedAt(pubkey, now)
-      }
-
-      // Also fetch mark-as-read reactions in parallel
-      console.log('[readingProgress] Fetching mark-as-read reactions for pubkey:', pubkey)
-      const [kind17Events] = await Promise.all([
-        queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { relayUrls: RELAYS })
-      ])
-
-      if (startGeneration !== this.generation) {
-        return
-      }
-
-      // Process mark-as-read reactions
-      [...kind17Events].forEach((evt) => {
-        if (evt.content === MARK_AS_READ_EMOJI) {
-          // For kind:17, the URL is in the #r tag
-          const rTag = evt.tags.find(t => t[0] === 'r')?.[1]
-          console.log('[readingProgress] kind:17 mark-as-read:', { eventId: evt.id, rTag, emoji: evt.content })
-          if (rTag) {
-            this.markedAsReadIds.add(rTag)
-            console.log('[readingProgress] Added kind:17 URL to markedAsReadIds:', rTag)
+      }, { relayUrls: RELAYS })
+        .then((relayEvents) => {
+          if (startGeneration !== this.generation) return
+          console.log('[readingProgress] Got reading progress from relays:', relayEvents.length)
+          if (relayEvents.length > 0) {
+            relayEvents.forEach(e => eventStore.add(e))
+            this.processEvents(relayEvents)
+            const now = Math.floor(Date.now() / 1000)
+            this.updateLastSyncedAt(pubkey, now)
           }
-        }
-      })
+        })
+        .catch((err) => {
+          console.warn('[readingProgress] Background reading progress query failed:', err)
+        })
 
-      // Also fetch kind:7 reactions (for Nostr articles)
-      const kind7Events = await queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { relayUrls: RELAYS })
-      console.log('[readingProgress] Fetched kind:7 events:', kind7Events.length)
+      // Load mark-as-read reactions in background (non-blocking, fire-and-forget)
+      console.log('[readingProgress] Starting background relay query for mark-as-read reactions...')
+      this.loadMarkAsReadReactions(relayPool, eventStore, pubkey, startGeneration)
 
-      if (startGeneration !== this.generation) {
-        return
-      }
-
-      // Process kind:7 reactions - need to map event IDs to nadrs
-      const kind7WithMarkAsRead = kind7Events.filter(evt => evt.content === MARK_AS_READ_EMOJI)
-      console.log('[readingProgress] kind:7 with MARK_AS_READ_EMOJI:', kind7WithMarkAsRead.length)
-      
-      if (kind7WithMarkAsRead.length > 0) {
-        // Extract event IDs from #e tags
-        const eventIds = Array.from(new Set(
-          kind7WithMarkAsRead
-            .flatMap(evt => evt.tags.filter(t => t[0] === 'e'))
-            .map(t => t[1])
-        ))
-        console.log('[readingProgress] Event IDs to look up:', eventIds)
-
-        // Fetch the articles to get their coordinates
-        if (eventIds.length > 0) {
-          const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids: eventIds }, { relayUrls: RELAYS })
-          console.log('[readingProgress] Fetched articles:', articleEvents.length)
-          
-          // Build a mapping of event IDs to nadrs
-          const eventIdToNaddr = new Map<string, string>()
-          for (const article of articleEvents) {
-            const dTag = article.tags.find(t => t[0] === 'd')?.[1]
-            console.log('[readingProgress] Article:', { id: article.id, dTag, pubkey: article.pubkey })
-            if (dTag) {
-              try {
-                const naddr = nip19.naddrEncode({
-                  kind: KINDS.BlogPost,
-                  pubkey: article.pubkey,
-                  identifier: dTag
-                })
-                eventIdToNaddr.set(article.id, naddr)
-                console.log('[readingProgress] Mapped event ID to naddr:', { eventId: article.id, naddr })
-              } catch (e) {
-                console.error('[readingProgress] Failed to encode naddr:', e)
-              }
-            }
-          }
-
-          // Add marked articles to our set using their nadrs
-          kind7WithMarkAsRead.forEach(evt => {
-            const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
-            console.log('[readingProgress] Processing kind:7 reaction:', { reactionId: evt.id, eTag, hasMappedNaddr: eventIdToNaddr.has(eTag || '') })
-            if (eTag && eventIdToNaddr.has(eTag)) {
-              const naddr = eventIdToNaddr.get(eTag)!
-              this.markedAsReadIds.add(naddr)
-              console.log('[readingProgress] Added kind:7 article to markedAsReadIds:', naddr)
-            }
-          })
-          console.log('[readingProgress] Final markedAsReadIds:', Array.from(this.markedAsReadIds))
-        }
-      }
-
-      // Mark as loaded AFTER everything is fetched
-      this.lastLoadedPubkey = pubkey
     } catch (err) {
-      console.error('📊 [ReadingProgress] Failed to load:', err)
+      console.error('📊 [ReadingProgress] Failed to setup:', err)
     } finally {
       if (startGeneration === this.generation) {
         this.setLoading(false)
-        this.isLoading = false
       }
-      // Debug: Show what we have
-      console.log('[readingProgress] === FINAL STATE ===')
+      this.isLoading = false
+      console.log('[readingProgress] === LOADED ===')
       console.log('[readingProgress] progressMap keys:', Array.from(this.currentProgressMap.keys()))
       console.log('[readingProgress] markedAsReadIds:', Array.from(this.markedAsReadIds))
     }
@@ -395,6 +286,83 @@ class ReadingProgressController {
     // Persist for current user so it survives refresh/flight mode
     if (this.lastLoadedPubkey) {
       this.persistProgress(this.lastLoadedPubkey, this.currentProgressMap)
+    }
+  }
+
+  /**
+   * Load mark-as-read reactions in background (non-blocking)
+   */
+  private async loadMarkAsReadReactions(
+    relayPool: RelayPool,
+    _eventStore: IEventStore,
+    pubkey: string,
+    generation: number
+  ): Promise<void> {
+    try {
+      // Query kind:17 (URL reactions) in parallel with kind:7 (event reactions)
+      const [kind17Events, kind7Events] = await Promise.all([
+        queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { relayUrls: RELAYS }),
+        queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { relayUrls: RELAYS })
+      ])
+
+      if (generation !== this.generation) return
+
+      // Process kind:17 reactions (URLs)
+      kind17Events.forEach((evt) => {
+        if (evt.content === MARK_AS_READ_EMOJI) {
+          const rTag = evt.tags.find(t => t[0] === 'r')?.[1]
+          if (rTag) {
+            this.markedAsReadIds.add(rTag)
+            console.log('[readingProgress] Added kind:17 URL to markedAsReadIds:', rTag)
+          }
+        }
+      })
+
+      // Process kind:7 reactions (Nostr articles)
+      const kind7WithMarkAsRead = kind7Events.filter(evt => evt.content === MARK_AS_READ_EMOJI)
+      if (kind7WithMarkAsRead.length > 0) {
+        const eventIds = Array.from(new Set(
+          kind7WithMarkAsRead
+            .flatMap(evt => evt.tags.filter(t => t[0] === 'e'))
+            .map(t => t[1])
+        ))
+
+        if (eventIds.length > 0) {
+          const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids: eventIds }, { relayUrls: RELAYS })
+          
+          if (generation !== this.generation) return
+
+          const eventIdToNaddr = new Map<string, string>()
+          for (const article of articleEvents) {
+            const dTag = article.tags.find(t => t[0] === 'd')?.[1]
+            if (dTag) {
+              try {
+                const naddr = nip19.naddrEncode({
+                  kind: KINDS.BlogPost,
+                  pubkey: article.pubkey,
+                  identifier: dTag
+                })
+                eventIdToNaddr.set(article.id, naddr)
+              } catch (e) {
+                // Skip if encoding fails
+              }
+            }
+          }
+
+          kind7WithMarkAsRead.forEach(evt => {
+            const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
+            if (eTag && eventIdToNaddr.has(eTag)) {
+              const naddr = eventIdToNaddr.get(eTag)!
+              this.markedAsReadIds.add(naddr)
+              console.log('[readingProgress] Added kind:7 article to markedAsReadIds:', naddr)
+            }
+          })
+        }
+      }
+
+      console.log('[readingProgress] Mark-as-read reactions loaded:', Array.from(this.markedAsReadIds))
+    } catch (err) {
+      console.warn('[readingProgress] Failed to load mark-as-read reactions:', err)
     }
   }
 }
