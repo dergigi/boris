@@ -32,11 +32,6 @@ export const useHighlightedContent = ({
 }: UseHighlightedContentParams) => {
   // Filter highlights by URL and visibility settings
   const relevantHighlights = useMemo(() => {
-      totalHighlights: highlights.length,
-      selectedUrl,
-      showHighlights
-    })
-    
     const urlFiltered = filterHighlightsByUrl(highlights, selectedUrl)
     
     // Apply visibility filtering
@@ -48,22 +43,14 @@ export const useHighlightedContent = ({
     })
       
     return filtered
-  }, [selectedUrl, highlights, highlightVisibility, currentUserPubkey, followedPubkeys, showHighlights])
+  }, [selectedUrl, highlights, highlightVisibility, currentUserPubkey, followedPubkeys])
 
   // Prepare the final HTML with highlights applied
   const finalHtml = useMemo(() => {
     const sourceHtml = markdown ? renderedMarkdownHtml : html
     
-      hasMarkdown: !!markdown,
-      hasHtml: !!html,
-      renderedHtmlLength: renderedMarkdownHtml.length,
-      sourceHtmlLength: sourceHtml?.length || 0,
-      showHighlights,
-      relevantHighlightsCount: relevantHighlights.length
-    })
-    
+    // Prepare final HTML
     if (!sourceHtml) {
-      console.warn('⚠️ No source HTML available')
       return ''
     }
     
@@ -73,6 +60,7 @@ export const useHighlightedContent = ({
     }
     
     return sourceHtml
+
   }, [html, renderedMarkdownHtml, markdown, relevantHighlights, showHighlights, highlightStyle])
 
   return { finalHtml, relevantHighlights }

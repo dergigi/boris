@@ -310,9 +310,6 @@ const Debug: React.FC<DebugProps> = ({
 
       // Subscribe to decrypt complete events for Debug UI display
       const unsubscribeDecrypt = bookmarkController.onDecryptComplete((eventId, publicCount, privateCount) => {
-          public: publicCount,
-          private: privateCount
-        })
         setDecryptedEvents(prev => new Map(prev).set(eventId, { 
           public: publicCount, 
           private: privateCount 

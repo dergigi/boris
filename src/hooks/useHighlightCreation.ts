@@ -72,11 +72,7 @@ export const useHighlightCreation = ({
         settings
       )
       
-        id: newHighlight.id,
-        isLocalOnly: newHighlight.isLocalOnly,
-        isOfflineCreated: newHighlight.isOfflineCreated,
-        publishedRelays: newHighlight.publishedRelays
-      })
+      // Highlight created successfully
       
       // Clear the browser's text selection immediately to allow DOM update
       const selection = window.getSelection()

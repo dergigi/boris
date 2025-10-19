@@ -65,18 +65,8 @@ export async function fetchAllReads(
       fetchReadArticles(relayPool, userPubkey)
     ])
 
-      readingProgress: progressEvents.length,
-      markedAsRead: markedAsReadArticles.length,
-      bookmarks: bookmarks.length
-    })
-
     // Process reading progress events (kind 39802)
     processReadingProgress(progressEvents, readsMap)
-    if (onItem) {
-      readsMap.forEach(item => {
-        if (item.type === 'article') onItem(item)
-      })
-    }
     
     // Process marked-as-read and emit items
     processMarkedAsRead(markedAsReadArticles, readsMap)

@@ -102,13 +102,11 @@ export async function syncLocalEventsToRemote(
     })
 
     // Publish to remote relays
-    let successCount = 0
     const successfulIds: string[] = []
     
     for (const event of uniqueEvents) {
       try {
         await relayPool.publish(remoteRelays, event)
-        successCount++
         successfulIds.push(event.id)
       } catch (error) {
         // Silently fail for individual events

@@ -34,13 +34,7 @@ export async function publishEvent(
 
   const isLocalOnly = areAllRelaysLocal(expectedSuccessRelays)
 
-    targetRelays: RELAYS.length,
-    expectedSuccessRelays: expectedSuccessRelays.length,
-    isLocalOnly,
-    hasRemoteConnection,
-    eventId: event.id.slice(0, 8),
-    connectedRelays: connectedRelays.length
-  })
+  // Publishing event
 
   // If we're in local-only mode, mark this event for later sync
   if (isLocalOnly) {

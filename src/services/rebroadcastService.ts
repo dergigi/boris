@@ -65,10 +65,5 @@ export async function rebroadcastEvents(
   Promise.all(rebroadcastPromises).catch((err) => {
     console.warn('⚠️ Some rebroadcasts failed:', err)
   })
-
-    broadcastToAll,
-    useLocalCache,
-    targetRelays
-  })
 }
 

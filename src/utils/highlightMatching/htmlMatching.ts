@@ -10,9 +10,6 @@ export function applyHighlightsToHTML(
   highlightStyle: 'marker' | 'underline' = 'marker'
 ): string {
   if (!html || highlights.length === 0) {
-      htmlLength: html?.length, 
-      highlightsCount: highlights.length 
-    })
     return html
   }
   
@@ -29,8 +26,6 @@ export function applyHighlightsToHTML(
     mark.parentNode?.replaceChild(textNode, mark)
   })
   
-  
-  let appliedCount = 0
   
   for (const highlight of highlights) {
     const searchText = highlight.content.trim()
@@ -51,9 +46,7 @@ export function applyHighlightsToHTML(
     const found = tryMarkInTextNodes(textNodes, searchText, highlight, false, highlightStyle) ||
                   tryMarkInTextNodes(textNodes, searchText, highlight, true, highlightStyle)
     
-    if (found) {
-      appliedCount++
-    } else {
+    if (!found) {
       console.warn('❌ Could not find match for highlight:', searchText.substring(0, 50))
     }
   }

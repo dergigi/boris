@@ -42,11 +42,7 @@ export const useReadingPosition = ({
     const isInitialSave = !hasSavedOnce.current
     
     if (!hasSignificantChange && !hasReachedCompletion && !isInitialSave) {
-        current: Math.round(currentPosition * 100) + '%',
-        last: Math.round(lastSavedPosition.current * 100) + '%',
-        diff: Math.abs(currentPosition - lastSavedPosition.current),
-        isInitialSave
-      })
+      // Not significant enough to save
       return
     }
 
@@ -104,10 +100,7 @@ export const useReadingPosition = ({
       const prevPercent = Math.floor(position * 20) // Groups by 5%
       const newPercent = Math.floor(clampedProgress * 20)
       if (prevPercent !== newPercent) {
-          scrollTop,
-          documentHeight,
-          isAtBottom
-        })
+        // Position threshold crossed
       }
       
       setPosition(clampedProgress)

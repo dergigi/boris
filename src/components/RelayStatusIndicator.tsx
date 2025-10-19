@@ -50,15 +50,8 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({
   
   // Debug logging
   useEffect(() => {
-      mode: isConnecting ? 'CONNECTING' : offlineMode ? 'OFFLINE' : localOnlyMode ? 'LOCAL_ONLY' : 'ONLINE',
-      totalStatuses: relayStatuses.length,
-      connectedCount: connectedUrls.length,
-      connectedUrls: connectedUrls.map(u => u.replace(/^wss?:\/\//, '')),
-      hasLocalRelay,
-      hasRemoteRelay,
-      isConnecting
-    })
-  }, [offlineMode, localOnlyMode, connectedUrls, relayStatuses.length, hasLocalRelay, hasRemoteRelay, isConnecting])
+    // Mode and relay status determined
+  }, [isConnecting, offlineMode, localOnlyMode, relayStatuses, hasLocalRelay, hasRemoteRelay])
   
   // Don't show indicator when fully connected (but show when connecting)
   if (!localOnlyMode && !offlineMode && !isConnecting) return null

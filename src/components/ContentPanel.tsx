@@ -180,7 +180,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     } catch (error) {
       console.error('[progress] ❌ ContentPanel: Failed to save reading position:', error)
     }
-  }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl, html, markdown])
+  }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, html, markdown])
 
   const { isReadingComplete, progressPercentage, saveNow } = useReadingPosition({
     enabled: isTextContent,
@@ -230,7 +230,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           }, 500) // Give content time to render
         } else if (savedPosition) {
           if (savedPosition.position === 1) {
+            // Article was completed, start from top
           } else {
+            // Position was too early, skip restore
           }
         }
       } catch (error) {

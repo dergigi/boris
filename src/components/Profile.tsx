@@ -101,7 +101,8 @@ const Profile: React.FC<ProfileProps> = ({
     
     // Fetch highlights in background
     fetchHighlights(relayPool, pubkey, undefined, undefined, false, eventStore)
-      .then(highlights => {
+      .then(() => {
+        // Highlights fetched
       })
       .catch(err => {
         console.warn('⚠️ [Profile] Failed to fetch highlights:', err)
@@ -152,13 +153,9 @@ const Profile: React.FC<ProfileProps> = ({
       
       // Only log when found or map is empty
       if (progress || readingProgressMap.size === 0) {
-          title: post.title?.slice(0, 30),
-          naddr: naddr.slice(0, 80),
-          mapSize: readingProgressMap.size,
-          mapKeys: readingProgressMap.size > 0 ? Array.from(readingProgressMap.keys()).slice(0, 3).map(k => k.slice(0, 80)) : [],
-          progress: progress ? Math.round(progress * 100) + '%' : 'not found'
-        })
+        // Progress found or map is empty
       }
+      
       return progress
     } catch (err) {
       return undefined

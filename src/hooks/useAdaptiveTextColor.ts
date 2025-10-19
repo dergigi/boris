@@ -43,11 +43,7 @@ export function useAdaptiveTextColor(imageUrl: string | undefined): AdaptiveText
           height: Math.floor(height * 0.25)
         })
         
-          hex: color.hex,
-          rgb: color.rgb,
-          isLight: color.isLight,
-          isDark: color.isDark
-        })
+        // Color analysis complete
         
         // Use library's built-in isLight check for optimal contrast
         if (color.isLight) {

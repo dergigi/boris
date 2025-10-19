@@ -43,7 +43,7 @@ export function applyTheme(
     root.classList.add(`light-${lightColorTheme}`)
     
     // Listen for system theme changes
-    mediaQueryListener = (e: MediaQueryListEvent) => {
+    mediaQueryListener = () => {
       // The CSS media query handles the color changes automatically
     }
     

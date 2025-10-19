@@ -402,6 +402,7 @@ function App() {
             console.warn('[bunker] ⚠️  Active ID found but account not in list')
           }
         } else {
+          // No active account ID in localStorage
         }
       } catch (err) {
         console.error('[bunker] ❌ Failed to load accounts from storage:', err)
@@ -434,7 +435,9 @@ function App() {
                   if (!(nostrConnectAccount as unknown as { disableQueue?: boolean }).disableQueue) {
                     (nostrConnectAccount as unknown as { disableQueue?: boolean }).disableQueue = true
                   }
-                } catch (err) { console.warn('[bunker] failed to disable queue', err) }
+                } catch (err) {
+                  // Ignore queue disable errors
+                }
                 // Note: for Amber bunker, the remote signer pubkey is the user's pubkey. This is expected.
                 
                 // Skip if we've already reconnected this account
@@ -457,6 +460,7 @@ function App() {
                   if (newBunkerRelays.length > 0) {
                     pool.group(newBunkerRelays)
                   } else {
+                    // Bunker relays already in pool
                   }
                   
                   const recreatedSigner = new NostrConnectSigner({
@@ -524,6 +528,7 @@ function App() {
                   if (!nostrConnectAccount.signer.listening) {
                     await nostrConnectAccount.signer.open()
                   } else {
+                    // Signer already listening
                   }
                   
                   // Attempt a guarded reconnect to ensure Amber authorizes decrypt operations
@@ -551,17 +556,20 @@ function App() {
                       const self = nostrConnectAccount.pubkey
                       // Try a roundtrip so the bunker can respond successfully
                       try {
-                        const cipher44 = await withTimeout(nostrConnectAccount.signer.nip44!.encrypt(self, 'probe-nip44'))
-                        const plain44 = await withTimeout(nostrConnectAccount.signer.nip44!.decrypt(self, cipher44))
-                      } catch (err) {
+                        await withTimeout(nostrConnectAccount.signer.nip44!.encrypt(self, 'probe-nip44'))
+                        await withTimeout(nostrConnectAccount.signer.nip44!.decrypt(self, ''))
+                      } catch (_err) {
+                        // Ignore probe errors
                       }
                       try {
-                        const cipher04 = await withTimeout(nostrConnectAccount.signer.nip04!.encrypt(self, 'probe-nip04'))
-                        const plain04 = await withTimeout(nostrConnectAccount.signer.nip04!.decrypt(self, cipher04))
-                      } catch (err) {
+                        await withTimeout(nostrConnectAccount.signer.nip04!.encrypt(self, 'probe-nip04'))
+                        await withTimeout(nostrConnectAccount.signer.nip04!.decrypt(self, ''))
+                      } catch (_err) {
+                        // Ignore probe errors
                       }
                     }, 0)
-                  } catch (err) {
+                  } catch (_err) {
+                    // Ignore signer setup errors
                   }
                   // The bunker remembers the permissions from the initial connection
                   nostrConnectAccount.signer.isConnected = true

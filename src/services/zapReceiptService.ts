@@ -65,14 +65,11 @@ export async function fetchBorisZappers(
 
     // Dedupe by event ID and validate
     const uniqueReceipts = new Map<string, NostrEvent>()
-    let invalidCount = 0
     
     zapReceipts.forEach(receipt => {
       if (!uniqueReceipts.has(receipt.id)) {
         if (isValidZap(receipt)) {
           uniqueReceipts.set(receipt.id, receipt)
-        } else {
-          invalidCount++
         }
       }
     })

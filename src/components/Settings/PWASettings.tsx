@@ -27,6 +27,7 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
     if (isInstalled) return
     const success = await installApp()
     if (success) {
+      // Installation successful
     }
   }
 

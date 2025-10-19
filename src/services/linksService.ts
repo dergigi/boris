@@ -36,10 +36,6 @@ export async function fetchLinks(
       fetchReadArticles(relayPool, userPubkey)
     ])
 
-      readingProgress: progressEvents.length,
-      markedAsRead: markedAsReadArticles.length
-    })
-
     // Process reading progress events (kind 39802)
     processReadingProgress(progressEvents, linksMap)
     if (onItem) {

@@ -34,8 +34,9 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
     progressColor = 'var(--color-text)' // Neutral text color (started)
   }
   
-  // Debug log
+  // Debug log - reading progress shown as visual indicator
   if (readingProgress !== undefined) {
+    // Reading progress display
   }
 
   return (

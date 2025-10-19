@@ -215,11 +215,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const debugEnabled = req.query.debug === '1' || req.headers['x-boris-debug'] === '1'
   if (debugEnabled) {
-      naddr,
-      ua: userAgent || null,
-      isCrawlerRequest,
-      path: req.url || null
-    }))
     res.setHeader('X-Boris-Debug', '1')
   }
 
@@ -256,6 +251,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
     if (debugEnabled) {
+      // Debug mode enabled
     }
     return res.status(200).send(html)
   }
@@ -266,6 +262,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (cached && cached.expires > now) {
     setCacheHeaders(res)
     if (debugEnabled) {
+      // Debug mode enabled
     }
     return res.status(200).send(cached.html)
   }
@@ -283,6 +280,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Send response
     setCacheHeaders(res)
     if (debugEnabled) {
+      // Debug mode enabled
     }
     return res.status(200).send(html)
   } catch (err) {
@@ -292,6 +290,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const html = generateHtml(naddr, null)
     setCacheHeaders(res, 3600)
     if (debugEnabled) {
+      // Debug mode enabled
     }
     return res.status(200).send(html)
   }

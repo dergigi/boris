@@ -92,7 +92,8 @@ export async function loadSettings(
       
       return content || null
     }
-  } catch (err) {
+  } catch (_err) {
+    // Ignore local store errors
   }
   
   // If not in local store, fetch from relays

@@ -34,7 +34,9 @@ export function filterHighlightsByUrl(highlights: Highlight[], selectedUrl: stri
            normalizedRef.includes(normalizedSelected)
     
     if (matches) {
+      // URLs match
     } else {
+      // URLs do not match
     }
     
     return matches

@@ -30,7 +30,8 @@ async function decryptEvent(
       } catch {
         try {
           await Helpers.unlockHiddenTags(evt, signerCandidate as HiddenContentSigner, 'nip44' as UnlockMode)
-        } catch (err) {
+        } catch (_err) {
+          // Ignore unlock errors
         }
       }
     } else if (evt.content && evt.content.length > 0) {
@@ -44,7 +45,8 @@ async function decryptEvent(
       if (looksLikeNip44 && hasNip44Decrypt(signerCandidate)) {
         try {
           decryptedContent = await (signerCandidate as { nip44: { decrypt: DecryptFn } }).nip44.decrypt(evt.pubkey, evt.content)
-        } catch (err) {
+        } catch (_err) {
+          // Ignore NIP-44 decryption errors
         }
       }
 
@@ -52,7 +54,8 @@ async function decryptEvent(
       if (!decryptedContent && hasNip04Decrypt(signerCandidate)) {
         try {
           decryptedContent = await (signerCandidate as { nip04: { decrypt: DecryptFn } }).nip04.decrypt(evt.pubkey, evt.content)
-        } catch (err) {
+        } catch (_err) {
+          // Ignore NIP-04 decryption errors
         }
       }
 
