@@ -109,6 +109,16 @@
   background: var(--color-bg-elevated) !important;
 }
 
+.bookmarks-list .individual-bookmark.compact {
+  border: none !important;
+  background: transparent !important;
+}
+
+.bookmarks-list .individual-bookmark.compact:hover {
+  border-color: transparent !important;
+  background: var(--color-bg-elevated) !important;
+}
+
 .bookmark-item {
   padding: 1rem;
   background: var(--color-bg);
