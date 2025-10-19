@@ -7,7 +7,7 @@ import { publishEvent } from './writeService'
 import { RELAYS } from '../config/relays'
 import { KINDS } from '../config/kinds'
 
-const READING_PROGRESS_KIND = KINDS.ReadingProgress // 39802 - NIP-39802 Reading Progress
+const READING_PROGRESS_KIND = KINDS.ReadingProgress // 39802 - NIP-85 Reading Progress
 
 export interface ReadingPosition {
   position: number // 0-1 scroll progress

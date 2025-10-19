@@ -3,7 +3,7 @@ import { ReadItem } from './readsService'
 import { fallbackTitleFromUrl } from '../utils/readItemMerge'
 import { KINDS } from '../config/kinds'
 
-const READING_PROGRESS_KIND = KINDS.ReadingProgress // 39802
+const READING_PROGRESS_KIND = KINDS.ReadingProgress // 39802 - NIP-85
 
 interface ReadArticle {
   id: string
@@ -37,13 +37,13 @@ export function processReadingProgress(
       const content = JSON.parse(event.content)
       const position = content.progress || 0
       
-      // Validate progress is between 0 and 1 (NIP-39802 requirement)
+      // Validate progress is between 0 and 1 (NIP-85 requirement)
       if (position < 0 || position > 1) {
         console.warn('Invalid progress value (must be 0-1):', position, 'event:', event.id.slice(0, 8))
         continue
       }
       
-      // Use event.created_at as authoritative timestamp (NIP-39802 spec)
+      // Use event.created_at as authoritative timestamp (NIP-85 spec)
       const timestamp = event.created_at
 
       let itemId: string

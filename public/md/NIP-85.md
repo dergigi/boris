@@ -1,10 +1,23 @@
-# NIP-39802
+# NIP-85
 
 ## Reading Progress
 
 `draft` `optional`
 
-This NIP defines a parameterized replaceable event kind for tracking reading progress across articles and web content.
+This NIP defines kind `39802`, a parameterized replaceable event for tracking reading progress across articles and web content.
+
+## Table of Contents
+
+* [Event Kind](#event-kind)
+* [Event Structure](#event-structure)
+  * [Tags](#tags)
+  * [Content](#content)
+  * [Semantics](#semantics)
+* [Examples](#examples)
+* [Querying](#querying)
+* [Privacy Considerations](#privacy-considerations)
+* [Rationale](#rationale)
+* [Implementation Notes](#implementation-notes)
 
 ## Event Kind
 
