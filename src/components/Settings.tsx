@@ -40,6 +40,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   rebroadcastToAllRelays: false,
   paragraphAlignment: 'justify',
   syncReadingPosition: true,
+  autoMarkAsReadOnCompletion: false,
 }
 
 interface SettingsProps {
