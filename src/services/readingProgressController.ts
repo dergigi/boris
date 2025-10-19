@@ -214,6 +214,7 @@ class ReadingProgressController {
         this.timelineSubscription = null
       }
 
+      console.log('[readingProgress] Setting up timeline subscription...')
       const timeline$ = eventStore.timeline({
         kinds: [KINDS.ReadingProgress],
         authors: [pubkey]
@@ -225,6 +226,7 @@ class ReadingProgressController {
         if (!Array.isArray(localEvents) || localEvents.length === 0) return
         this.processEvents(localEvents)
       })
+      console.log('[readingProgress] Timeline subscription ready')
 
       // Query events from relays
       // Force full sync if map is empty (first load) or if explicitly forced
@@ -240,9 +242,12 @@ class ReadingProgressController {
         filter.since = lastSynced
       }
 
+      console.log('[readingProgress] Querying reading progress events...')
       const relayEvents = await queryEvents(relayPool, filter, { relayUrls: RELAYS })
+      console.log('[readingProgress] Got reading progress events:', relayEvents.length)
       
       if (startGeneration !== this.generation) {
+        console.log('[readingProgress] Generation changed, aborting')
         return
       }
 
