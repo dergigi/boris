@@ -81,7 +81,8 @@ export const CompactView: React.FC<CompactViewProps> = ({
             width: '100%',
             background: 'var(--color-border)',
             overflow: 'hidden',
-            margin: '0'
+            margin: '0',
+            paddingLeft: '1.85rem'
           }}
         >
           <div
