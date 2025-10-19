@@ -250,13 +250,15 @@ class ReadingProgressController {
 
       // Load mark-as-read reactions in background (non-blocking, fire-and-forget)
       console.log('[readingProgress] Starting background relay query for mark-as-read reactions...')
-      this.loadMarkAsReadReactions(relayPool, eventStore, pubkey, startGeneration)
-        .then(() => {
-          console.log('[readingProgress] Mark-as-read reactions loading complete')
-        })
-        .catch((err) => {
-          console.warn('[readingProgress] Mark-as-read reactions loading failed:', err)
-        })
+      // TODO: Fix queryEvents hanging for reaction queries
+      // this.loadMarkAsReadReactions(relayPool, eventStore, pubkey, startGeneration)
+      //   .then(() => {
+      //     console.log('[readingProgress] Mark-as-read reactions loading complete')
+      //   })
+      //   .catch((err) => {
+      //     console.warn('[readingProgress] Mark-as-read reactions loading failed:', err)
+      //   })
+      console.log('[readingProgress] [SKIPPED] Mark-as-read reactions loading disabled for now')
 
     } catch (err) {
       console.error('📊 [ReadingProgress] Failed to setup:', err)
