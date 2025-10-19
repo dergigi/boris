@@ -146,9 +146,11 @@ class ReadingProgressController {
       subscription.unsubscribe()
       
       console.log('📊 [ReadingProgress] Processing', localEvents.length, 'events from local store')
+      console.log('📊 [ReadingProgress] Sample event:', localEvents[0] ? { kind: localEvents[0].kind, author: localEvents[0].pubkey?.slice(0, 8), tags: localEvents[0].tags } : 'none')
       
       if (localEvents.length > 0) {
         this.processEvents(localEvents)
+        console.log('📊 [ReadingProgress] After processEvents, map size:', this.currentProgressMap.size)
       }
       
       // 2. Then fetch from relays (incremental or full) to augment local data
