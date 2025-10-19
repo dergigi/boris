@@ -50,6 +50,10 @@ function getReadingProgressContent(event: NostrEvent): ReadingPosition | undefin
 }
 
 // Generate d tag for kind 39802 based on target
+// Test cases:
+// - naddr1... → "30023:<pubkey>:<identifier>"
+// - https://example.com/post → "url:<base64url>"
+// - Invalid naddr → "url:<base64url>" (fallback)
 function generateDTag(naddrOrUrl: string): string {
   // If it's a nostr article (naddr format), decode and build coordinate
   if (naddrOrUrl.startsWith('naddr1')) {

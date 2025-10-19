@@ -16,6 +16,13 @@ interface ReadArticle {
 
 /**
  * Processes reading progress events (kind 39802) into ReadItems
+ * 
+ * Test scenarios:
+ * - Kind 39802 with d="30023:..." → article ReadItem with naddr id
+ * - Kind 39802 with d="url:..." → external ReadItem with decoded URL
+ * - Newer event.created_at overwrites older timestamp
+ * - Invalid d tag format → skip event
+ * - Malformed JSON content → skip event
  */
 export function processReadingProgress(
   events: NostrEvent[],
