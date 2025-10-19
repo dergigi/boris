@@ -24,6 +24,7 @@ const PROGRESS_CACHE_KEY = 'reading_progress_cache_v1'
 class ReadingProgressController {
   private progressListeners: ProgressMapCallback[] = []
   private loadingListeners: LoadingCallback[] = []
+  private markedAsReadListeners: (() => void)[] = []
   
   private currentProgressMap: Map<string, number> = new Map()
   private markedAsReadIds: Set<string> = new Set()
@@ -46,12 +47,23 @@ class ReadingProgressController {
     }
   }
 
+  onMarkedAsReadChanged(cb: () => void): () => void {
+    this.markedAsReadListeners.push(cb)
+    return () => {
+      this.markedAsReadListeners = this.markedAsReadListeners.filter(l => l !== cb)
+    }
+  }
+
   private setLoading(loading: boolean): void {
     this.loadingListeners.forEach(cb => cb(loading))
   }
 
   private emitProgress(progressMap: Map<string, number>): void {
     this.progressListeners.forEach(cb => cb(new Map(progressMap)))
+  }
+
+  private emitMarkedAsReadChanged(): void {
+    this.markedAsReadListeners.forEach(cb => cb())
   }
 
   /**
@@ -378,6 +390,7 @@ class ReadingProgressController {
       }
 
       console.log('[readingProgress] Mark-as-read reactions complete. Total:', Array.from(this.markedAsReadIds).length)
+      this.emitMarkedAsReadChanged()
     } catch (err) {
       console.warn('[readingProgress] Failed to load mark-as-read reactions:', err)
     }
