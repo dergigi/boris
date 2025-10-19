@@ -102,6 +102,18 @@ const Debug: React.FC<DebugProps> = ({
   const [tLoadWritings, setTLoadWritings] = useState<number | null>(null)
   const [tFirstWriting, setTFirstWriting] = useState<number | null>(null)
   
+  // Reading Progress loading state
+  const [isLoadingReadingProgress, setIsLoadingReadingProgress] = useState(false)
+  const [readingProgressEvents, setReadingProgressEvents] = useState<NostrEvent[]>([])
+  const [tLoadReadingProgress, setTLoadReadingProgress] = useState<number | null>(null)
+  const [tFirstReadingProgress, setTFirstReadingProgress] = useState<number | null>(null)
+  
+  // Mark-as-read reactions loading state
+  const [isLoadingMarkAsRead, setIsLoadingMarkAsRead] = useState(false)
+  const [markAsReadReactions, setMarkAsReadReactions] = useState<NostrEvent[]>([])
+  const [tLoadMarkAsRead, setTLoadMarkAsRead] = useState<number | null>(null)
+  const [tFirstMarkAsRead, setTFirstMarkAsRead] = useState<number | null>(null)
+  
   // Live timing state
   const [liveTiming, setLiveTiming] = useState<{
     nip44?: { type: 'encrypt' | 'decrypt'; startTime: number }
@@ -109,6 +121,8 @@ const Debug: React.FC<DebugProps> = ({
     loadBookmarks?: { startTime: number }
     decryptBookmarks?: { startTime: number }
     loadHighlights?: { startTime: number }
+    loadReadingProgress?: { startTime: number }
+    loadMarkAsRead?: { startTime: number }
   }>({})
   
   // Web of Trust state
@@ -722,6 +736,131 @@ const Debug: React.FC<DebugProps> = ({
     setWritingPosts([])
     setTLoadWritings(null)
     setTFirstWriting(null)
+  }
+
+  const handleLoadReadingProgress = async () => {
+    if (!relayPool || !activeAccount?.pubkey) {
+      DebugBus.warn('debug', 'Please log in to load reading progress')
+      return
+    }
+
+    try {
+      setIsLoadingReadingProgress(true)
+      setReadingProgressEvents([])
+      setTLoadReadingProgress(null)
+      setTFirstReadingProgress(null)
+      DebugBus.info('debug', 'Loading reading progress events...')
+
+      const start = performance.now()
+      let firstEventTime: number | null = null
+      setLiveTiming(prev => ({ ...prev, loadReadingProgress: { startTime: start } }))
+
+      const { queryEvents } = await import('../services/dataFetch')
+      const { KINDS } = await import('../config/kinds')
+
+      const events = await queryEvents(relayPool, { kinds: [KINDS.ReadingProgress], authors: [activeAccount.pubkey] }, {
+        onEvent: (evt) => {
+          if (firstEventTime === null) {
+            firstEventTime = performance.now() - start
+            setTFirstReadingProgress(Math.round(firstEventTime))
+          }
+          setReadingProgressEvents(prev => [...prev, evt])
+        }
+      })
+
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadReadingProgress(elapsed)
+      setLiveTiming(prev => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+        const { loadReadingProgress, ...rest } = prev
+        return rest
+      })
+
+      DebugBus.info('debug', `Loaded ${events.length} reading progress events in ${elapsed}ms`)
+    } catch (err) {
+      console.error('Failed to load reading progress:', err)
+      DebugBus.error('debug', `Failed to load reading progress: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setIsLoadingReadingProgress(false)
+    }
+  }
+
+  const handleClearReadingProgress = () => {
+    setReadingProgressEvents([])
+    setTLoadReadingProgress(null)
+    setTFirstReadingProgress(null)
+    DebugBus.info('debug', 'Cleared reading progress data')
+  }
+
+  const handleLoadMarkAsReadReactions = async () => {
+    if (!relayPool || !activeAccount?.pubkey) {
+      DebugBus.warn('debug', 'Please log in to load mark-as-read reactions')
+      return
+    }
+
+    try {
+      setIsLoadingMarkAsRead(true)
+      setMarkAsReadReactions([])
+      setTLoadMarkAsRead(null)
+      setTFirstMarkAsRead(null)
+      DebugBus.info('debug', 'Loading mark-as-read reactions...')
+
+      const start = performance.now()
+      let firstEventTime: number | null = null
+      setLiveTiming(prev => ({ ...prev, loadMarkAsRead: { startTime: start } }))
+
+      const { queryEvents } = await import('../services/dataFetch')
+      const { MARK_AS_READ_EMOJI } = await import('../services/reactionService')
+
+      // Load both kind:7 (reactions to events) and kind:17 (reactions to URLs)
+      const [kind7Events, kind17Events] = await Promise.all([
+        queryEvents(relayPool, { kinds: [7], authors: [activeAccount.pubkey] }, {
+          onEvent: (evt) => {
+            if (evt.content === MARK_AS_READ_EMOJI) {
+              if (firstEventTime === null) {
+                firstEventTime = performance.now() - start
+                setTFirstMarkAsRead(Math.round(firstEventTime))
+              }
+              setMarkAsReadReactions(prev => [...prev, evt])
+            }
+          }
+        }),
+        queryEvents(relayPool, { kinds: [17], authors: [activeAccount.pubkey] }, {
+          onEvent: (evt) => {
+            if (evt.content === MARK_AS_READ_EMOJI) {
+              if (firstEventTime === null) {
+                firstEventTime = performance.now() - start
+                setTFirstMarkAsRead(Math.round(firstEventTime))
+              }
+              setMarkAsReadReactions(prev => [...prev, evt])
+            }
+          }
+        })
+      ])
+
+      const totalEvents = kind7Events.length + kind17Events.length
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadMarkAsRead(elapsed)
+      setLiveTiming(prev => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+        const { loadMarkAsRead, ...rest } = prev
+        return rest
+      })
+
+      DebugBus.info('debug', `Loaded ${totalEvents} mark-as-read reactions in ${elapsed}ms`)
+    } catch (err) {
+      console.error('Failed to load mark-as-read reactions:', err)
+      DebugBus.error('debug', `Failed to load mark-as-read reactions: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setIsLoadingMarkAsRead(false)
+    }
+  }
+
+  const handleClearMarkAsRead = () => {
+    setMarkAsReadReactions([])
+    setTLoadMarkAsRead(null)
+    setTFirstMarkAsRead(null)
+    DebugBus.info('debug', 'Cleared mark-as-read reactions data')
   }
 
   const handleLoadFriendsList = async () => {
@@ -1340,6 +1479,130 @@ const Debug: React.FC<DebugProps> = ({
                         </div>
                       )}
                       <div className="opacity-50 mt-1 text-[10px] break-all">ID: {post.event.id}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Reading Progress Loading Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Reading Progress Loading</h3>
+          <div className="text-sm opacity-70 mb-3">Test reading progress loading (kind: 39802) for the logged-in user</div>
+          <div className="flex gap-2 mb-3 items-center">
+            <button 
+              className="btn btn-primary" 
+              onClick={handleLoadReadingProgress}
+              disabled={isLoadingReadingProgress || !relayPool || !activeAccount}
+            >
+              {isLoadingReadingProgress ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                  Loading...
+                </>
+              ) : (
+                'Load Reading Progress'
+              )}
+            </button>
+            <button 
+              className="btn btn-secondary ml-auto" 
+              onClick={handleClearReadingProgress}
+              disabled={readingProgressEvents.length === 0}
+            >
+              Clear
+            </button>
+          </div>
+          <div className="mb-3 flex gap-2 flex-wrap">
+            <Stat label="total" value={tLoadReadingProgress} />
+            <Stat label="first event" value={tFirstReadingProgress} />
+          </div>
+          {readingProgressEvents.length > 0 && (
+            <div className="mb-3">
+              <div className="text-sm opacity-70 mb-2">Loaded Reading Progress ({readingProgressEvents.length}):</div>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {readingProgressEvents.map((evt, idx) => {
+                  const dTag = evt.tags?.find((t: string[]) => t[0] === 'd')?.[1]
+                  const aTag = evt.tags?.find((t: string[]) => t[0] === 'a')?.[1]
+                  const content = evt.content || ''
+                  
+                  return (
+                    <div key={idx} className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                      <div className="font-semibold mb-1">Reading Progress #{idx + 1}</div>
+                      <div className="opacity-70 mb-1">
+                        <div>Author: {evt.pubkey.slice(0, 16)}...</div>
+                        <div>Created: {new Date(evt.created_at * 1000).toLocaleString()}</div>
+                      </div>
+                      <div className="mt-1">
+                        {dTag && <div>d-tag: {dTag}</div>}
+                        {aTag && <div className="text-[11px] opacity-70">#a: {aTag}</div>}
+                        {content && <div>Progress: {content}</div>}
+                      </div>
+                      <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Mark-as-read Reactions Loading Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Mark-as-read Reactions Loading</h3>
+          <div className="text-sm opacity-70 mb-3">Test loading mark-as-read reactions (kind: 7 and 17) with the MARK_AS_READ_EMOJI for the logged-in user</div>
+          <div className="flex gap-2 mb-3 items-center">
+            <button 
+              className="btn btn-primary" 
+              onClick={handleLoadMarkAsReadReactions}
+              disabled={isLoadingMarkAsRead || !relayPool || !activeAccount}
+            >
+              {isLoadingMarkAsRead ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                  Loading...
+                </>
+              ) : (
+                'Load Mark-as-read Reactions'
+              )}
+            </button>
+            <button 
+              className="btn btn-secondary ml-auto" 
+              onClick={handleClearMarkAsRead}
+              disabled={markAsReadReactions.length === 0}
+            >
+              Clear
+            </button>
+          </div>
+          <div className="mb-3 flex gap-2 flex-wrap">
+            <Stat label="total" value={tLoadMarkAsRead} />
+            <Stat label="first event" value={tFirstMarkAsRead} />
+          </div>
+          {markAsReadReactions.length > 0 && (
+            <div className="mb-3">
+              <div className="text-sm opacity-70 mb-2">Loaded Mark-as-read Reactions ({markAsReadReactions.length}):</div>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {markAsReadReactions.map((evt, idx) => {
+                  const eTag = evt.tags?.find((t: string[]) => t[0] === 'e')?.[1]
+                  const rTag = evt.tags?.find((t: string[]) => t[0] === 'r')?.[1]
+                  const pTag = evt.tags?.find((t: string[]) => t[0] === 'p')?.[1]
+                  
+                  return (
+                    <div key={idx} className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                      <div className="font-semibold mb-1">Mark-as-read Reaction #{idx + 1}</div>
+                      <div className="opacity-70 mb-1">
+                        <div>Kind: {evt.kind}</div>
+                        <div>Author: {evt.pubkey.slice(0, 16)}...</div>
+                        <div>Created: {new Date(evt.created_at * 1000).toLocaleString()}</div>
+                      </div>
+                      <div className="mt-1">
+                        <div>Emoji: {evt.content}</div>
+                        {eTag && <div className="text-[11px] opacity-70">#e: {eTag.slice(0, 16)}...</div>}
+                        {rTag && <div className="text-[11px] opacity-70">#r: {rTag.length > 60 ? rTag.substring(0, 60) + '...' : rTag}</div>}
+                        {pTag && <div className="text-[11px] opacity-70">#p: {pTag.slice(0, 16)}...</div>}
+                      </div>
+                      <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
                     </div>
                   )
                 })}
