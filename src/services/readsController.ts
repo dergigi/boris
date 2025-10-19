@@ -109,10 +109,9 @@ class ReadsController {
     relayPool: RelayPool
     eventStore: IEventStore
     pubkey: string
-    bookmarks: Bookmark[]
     force?: boolean
   }): Promise<void> {
-    const { relayPool, eventStore, pubkey, bookmarks, force = false } = params
+    const { relayPool, eventStore, pubkey, force = false } = params
     const startGeneration = this.generation
 
     // Skip if already loaded for this pubkey (unless forced)
@@ -129,7 +128,7 @@ class ReadsController {
 
       // Stream items as they're fetched
       // This updates the UI progressively as reading progress, marks as read, bookmarks arrive
-      await fetchAllReads(relayPool, pubkey, bookmarks, (item) => {
+      await fetchAllReads(relayPool, pubkey, [], (item) => {
         // Check if this generation is still active (user didn't log out)
         if (startGeneration !== this.generation) return
 

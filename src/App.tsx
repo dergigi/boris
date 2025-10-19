@@ -117,7 +117,7 @@ function AppRoutes({
 
       // Load reads (controller manages its own state)
       if (pubkey && eventStore && !readsController.isLoadedFor(pubkey)) {
-        readsController.start({ relayPool, eventStore, pubkey, bookmarks })
+        readsController.start({ relayPool, eventStore, pubkey })
       }
 
       // Start centralized nostrverse highlights controller (non-blocking)
