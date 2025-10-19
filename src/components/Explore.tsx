@@ -30,6 +30,10 @@ import { useStoreTimeline } from '../hooks/useStoreTimeline'
 import { dedupeHighlightsById, dedupeWritingsByReplaceable } from '../utils/dedupe'
 import { writingsController } from '../services/writingsController'
 import { nostrverseWritingsController } from '../services/nostrverseWritingsController'
+import { queryEvents } from '../services/dataFetch'
+import { processReadingProgress } from '../services/readingDataProcessor'
+import { ReadItem } from '../services/readsService'
+import { RELAYS } from '../config/relays'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -58,6 +62,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   // Get myHighlights directly from controller
   const [myHighlights, setMyHighlights] = useState<Highlight[]>([])
   // Remove unused loading state to avoid warnings
+  
+  // Reading progress state (naddr -> progress 0-1)
+  const [readingProgressMap, setReadingProgressMap] = useState<Map<string, number>>(new Map())
   
   // Load cached content from event store (instant display)
   const cachedHighlights = useStoreTimeline(eventStore, { kinds: [KINDS.Highlights] }, eventToHighlight, [])
@@ -169,6 +176,41 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
 
     return () => unsub()
   }, [])
+  
+  // Load reading progress data
+  useEffect(() => {
+    if (!activeAccount?.pubkey) {
+      setReadingProgressMap(new Map())
+      return
+    }
+    
+    const loadReadingProgress = async () => {
+      try {
+        const progressEvents = await queryEvents(
+          relayPool, 
+          { kinds: [KINDS.ReadingProgress], authors: [activeAccount.pubkey] },
+          { relayUrls: RELAYS }
+        )
+        
+        const readsMap = new Map<string, ReadItem>()
+        processReadingProgress(progressEvents, readsMap)
+        
+        // Convert to naddr -> progress map
+        const progressMap = new Map<string, number>()
+        for (const [id, item] of readsMap.entries()) {
+          if (item.readingProgress !== undefined && item.type === 'article') {
+            progressMap.set(id, item.readingProgress)
+          }
+        }
+        
+        setReadingProgressMap(progressMap)
+      } catch (err) {
+        console.error('Failed to load reading progress:', err)
+      }
+    }
+    
+    loadReadingProgress()
+  }, [activeAccount?.pubkey, relayPool, refreshTrigger])
 
   // Update visibility when settings/login state changes
   useEffect(() => {
@@ -571,6 +613,23 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         return { ...post, level }
       })
   }, [uniqueSortedPosts, activeAccount, followedPubkeys, visibility])
+  
+  // Helper to get reading progress for a post
+  const getReadingProgress = useCallback((post: BlogPostPreview): number | undefined => {
+    const dTag = post.event.tags.find(t => t[0] === 'd')?.[1]
+    if (!dTag) return undefined
+    
+    try {
+      const naddr = nip19.naddrEncode({
+        kind: 30023,
+        pubkey: post.author,
+        identifier: dTag
+      })
+      return readingProgressMap.get(naddr)
+    } catch (err) {
+      return undefined
+    }
+  }, [readingProgressMap])
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -596,6 +655,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                 post={post}
                 href={getPostUrl(post)}
                 level={post.level}
+                readingProgress={getReadingProgress(post)}
               />
             ))}
           </div>

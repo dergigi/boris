@@ -31,6 +31,10 @@ import { filterByReadingProgress } from '../utils/readingProgressUtils'
 import { deriveReadsFromBookmarks } from '../utils/readsFromBookmarks'
 import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
 import { mergeReadItem } from '../utils/readItemMerge'
+import { queryEvents } from '../services/dataFetch'
+import { processReadingProgress } from '../services/readingDataProcessor'
+import { RELAYS } from '../config/relays'
+import { KINDS } from '../config/kinds'
 
 interface MeProps {
   relayPool: RelayPool
@@ -93,6 +97,9 @@ const Me: React.FC<MeProps> = ({
     ? (urlFilter as ReadingProgressFilterType) 
     : 'all'
   const [readingProgressFilter, setReadingProgressFilter] = useState<ReadingProgressFilterType>(initialFilter)
+  
+  // Reading progress state for writings tab (naddr -> progress 0-1)
+  const [readingProgressMap, setReadingProgressMap] = useState<Map<string, number>>(new Map())
 
   // Subscribe to highlights controller
   useEffect(() => {
@@ -148,6 +155,41 @@ const Me: React.FC<MeProps> = ({
       }
     }
   }
+  
+  // Load reading progress data for writings tab
+  useEffect(() => {
+    if (!viewingPubkey) {
+      setReadingProgressMap(new Map())
+      return
+    }
+    
+    const loadReadingProgress = async () => {
+      try {
+        const progressEvents = await queryEvents(
+          relayPool, 
+          { kinds: [KINDS.ReadingProgress], authors: [viewingPubkey] },
+          { relayUrls: RELAYS }
+        )
+        
+        const readsMap = new Map<string, ReadItem>()
+        processReadingProgress(progressEvents, readsMap)
+        
+        // Convert to naddr -> progress map
+        const progressMap = new Map<string, number>()
+        for (const [id, item] of readsMap.entries()) {
+          if (item.readingProgress !== undefined && item.type === 'article') {
+            progressMap.set(id, item.readingProgress)
+          }
+        }
+        
+        setReadingProgressMap(progressMap)
+      } catch (err) {
+        console.error('Failed to load reading progress:', err)
+      }
+    }
+    
+    loadReadingProgress()
+  }, [viewingPubkey, relayPool, refreshTrigger])
 
   // Tab-specific loading functions
   const loadHighlightsTab = async () => {
@@ -422,6 +464,23 @@ const Me: React.FC<MeProps> = ({
       navigate(`/r/${encodeURIComponent(url)}`)
     }
   }
+  
+  // Helper to get reading progress for a post
+  const getWritingReadingProgress = (post: BlogPostPreview): number | undefined => {
+    const dTag = post.event.tags.find(t => t[0] === 'd')?.[1]
+    if (!dTag) return undefined
+    
+    try {
+      const naddr = nip19.naddrEncode({
+        kind: 30023,
+        pubkey: post.author,
+        identifier: dTag
+      })
+      return readingProgressMap.get(naddr)
+    } catch (err) {
+      return undefined
+    }
+  }
 
   // Merge and flatten all individual bookmarks
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
@@ -658,6 +717,7 @@ const Me: React.FC<MeProps> = ({
                 key={post.event.id}
                 post={post}
                 href={getPostUrl(post)}
+                readingProgress={getWritingReadingProgress(post)}
               />
             ))}
           </div>

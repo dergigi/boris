@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { IEventStore } from 'applesauce-core'
@@ -18,6 +18,10 @@ import { eventToHighlight } from '../services/highlightEventProcessor'
 import { toBlogPostPreview } from '../utils/toBlogPostPreview'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
+import { Hooks } from 'applesauce-react'
+import { queryEvents } from '../services/dataFetch'
+import { processReadingProgress } from '../services/readingDataProcessor'
+import { ReadItem } from '../services/readsService'
 
 interface ProfileProps {
   relayPool: RelayPool
@@ -33,8 +37,12 @@ const Profile: React.FC<ProfileProps> = ({
   activeTab: propActiveTab
 }) => {
   const navigate = useNavigate()
+  const activeAccount = Hooks.useActiveAccount()
   const [activeTab, setActiveTab] = useState<'highlights' | 'writings'>(propActiveTab || 'highlights')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  
+  // Reading progress state (naddr -> progress 0-1)
+  const [readingProgressMap, setReadingProgressMap] = useState<Map<string, number>>(new Map())
   
   // Load cached data from event store instantly
   const cachedHighlights = useStoreTimeline(
@@ -57,6 +65,41 @@ const Profile: React.FC<ProfileProps> = ({
       setActiveTab(propActiveTab)
     }
   }, [propActiveTab])
+  
+  // Load reading progress data for logged-in user
+  useEffect(() => {
+    if (!activeAccount?.pubkey) {
+      setReadingProgressMap(new Map())
+      return
+    }
+    
+    const loadReadingProgress = async () => {
+      try {
+        const progressEvents = await queryEvents(
+          relayPool, 
+          { kinds: [KINDS.ReadingProgress], authors: [activeAccount.pubkey] },
+          { relayUrls: RELAYS }
+        )
+        
+        const readsMap = new Map<string, ReadItem>()
+        processReadingProgress(progressEvents, readsMap)
+        
+        // Convert to naddr -> progress map
+        const progressMap = new Map<string, number>()
+        for (const [id, item] of readsMap.entries()) {
+          if (item.readingProgress !== undefined && item.type === 'article') {
+            progressMap.set(id, item.readingProgress)
+          }
+        }
+        
+        setReadingProgressMap(progressMap)
+      } catch (err) {
+        console.error('Failed to load reading progress:', err)
+      }
+    }
+    
+    loadReadingProgress()
+  }, [activeAccount?.pubkey, relayPool, refreshTrigger])
 
   // Background fetch to populate event store (non-blocking)
   useEffect(() => {
@@ -103,6 +146,23 @@ const Profile: React.FC<ProfileProps> = ({
     })
     return `/a/${naddr}`
   }
+  
+  // Helper to get reading progress for a post
+  const getReadingProgress = useCallback((post: BlogPostPreview): number | undefined => {
+    const dTag = post.event.tags.find(t => t[0] === 'd')?.[1]
+    if (!dTag) return undefined
+    
+    try {
+      const naddr = nip19.naddrEncode({
+        kind: 30023,
+        pubkey: post.author,
+        identifier: dTag
+      })
+      return readingProgressMap.get(naddr)
+    } catch (err) {
+      return undefined
+    }
+  }, [readingProgressMap])
 
   const handleHighlightDelete = () => {
     // Not allowed to delete other users' highlights
@@ -162,6 +222,7 @@ const Profile: React.FC<ProfileProps> = ({
                 key={post.event.id}
                 post={post}
                 href={getPostUrl(post)}
+                readingProgress={getReadingProgress(post)}
               />
             ))}
           </div>
