@@ -499,9 +499,30 @@ const Me: React.FC<MeProps> = ({
   
   const groups = groupIndividualBookmarks(filteredBookmarks)
 
+  // Enrich reads and links with reading progress from controller
+  const readsWithProgress = reads.map(item => {
+    if (item.type === 'article' && item.author) {
+      const progress = readingProgressMap.get(item.id)
+      if (progress !== undefined) {
+        return { ...item, readingProgress: progress }
+      }
+    }
+    return item
+  })
+  
+  const linksWithProgress = links.map(item => {
+    if (item.url) {
+      const progress = readingProgressMap.get(item.url)
+      if (progress !== undefined) {
+        return { ...item, readingProgress: progress }
+      }
+    }
+    return item
+  })
+
   // Apply reading progress filter
-  const filteredReads = filterByReadingProgress(reads, readingProgressFilter, highlights)
-  const filteredLinks = filterByReadingProgress(links, readingProgressFilter, highlights)
+  const filteredReads = filterByReadingProgress(readsWithProgress, readingProgressFilter, highlights)
+  const filteredLinks = filterByReadingProgress(linksWithProgress, readingProgressFilter, highlights)
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
     groupingMode === 'flat'
       ? [{ key: 'all', title: `All Bookmarks (${filteredBookmarks.length})`, items: filteredBookmarks }]
