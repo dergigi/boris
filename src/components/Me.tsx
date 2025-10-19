@@ -30,7 +30,6 @@ import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProg
 import { filterByReadingProgress } from '../utils/readingProgressUtils'
 import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
 import { readingProgressController } from '../services/readingProgressController'
-import { readsController } from '../services/readsController'
 
 interface MeProps {
   relayPool: RelayPool
@@ -231,7 +230,23 @@ const Me: React.FC<MeProps> = ({
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Reads come from centralized loading in App.tsx
+      // Reads come from centralized readingProgressController (already loaded in App.tsx)
+      // It provides deduped reading progress per article
+      const progressMap = readingProgressController.getProgressMap()
+      
+      // Convert progress map to ReadItems
+      const readItems: ReadItem[] = Array.from(progressMap.entries()).map(([id, progress]) => ({
+        id,
+        source: 'reading-progress',
+        type: 'article',
+        readingProgress: progress,
+        readingTimestamp: Math.floor(Date.now() / 1000)
+      }))
+      
+      const readsMap = new Map(readItems.map(item => [item.id, item]))
+      setReadsMap(readsMap)
+      setReads(readItems)
+      
       setLoadedTabs(prev => new Set(prev).add('reads'))
       if (!hasBeenLoaded) setLoading(false)
       
@@ -241,23 +256,24 @@ const Me: React.FC<MeProps> = ({
     }
   }
   
-  // Subscribe to reads controller updates
+  // Subscribe to reading progress updates
   useEffect(() => {
-    const unsubReads = readsController.onReads((reads) => {
-      const readsMap = new Map(reads.map(item => [item.id, item]))
+    const unsubProgress = readingProgressController.onProgress((progressMap) => {
+      const readItems: ReadItem[] = Array.from(progressMap.entries()).map(([id, progress]) => ({
+        id,
+        source: 'reading-progress',
+        type: 'article',
+        readingProgress: progress,
+        readingTimestamp: Math.floor(Date.now() / 1000)
+      }))
+      
+      const readsMap = new Map(readItems.map(item => [item.id, item]))
       setReadsMap(readsMap)
-      setReads(reads)
-    })
-    
-    const unsubLoading = readsController.onLoading((loading) => {
-      if (loading === false) {
-        setLoading(false)
-      }
+      setReads(readItems)
     })
     
     return () => {
-      unsubReads()
-      unsubLoading()
+      unsubProgress()
     }
   }, [])
 
