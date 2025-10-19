@@ -9,6 +9,8 @@ import { ReadItem } from './readsService'
 import { MARK_AS_READ_EMOJI } from './reactionService'
 import { nip19 } from 'nostr-tools'
 
+console.log('[readingProgress] Module loaded')
+
 type ProgressMapCallback = (progressMap: Map<string, number>) => void
 type LoadingCallback = (loading: boolean) => void
 
