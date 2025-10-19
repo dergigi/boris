@@ -27,17 +27,30 @@ export const useReadingPosition = ({
 
   // Debounced save function
   const scheduleSave = useCallback((currentPosition: number) => {
-    if (!syncEnabled || !onSave) return
+    if (!syncEnabled || !onSave) {
+      console.log('[progress] ⏭️ scheduleSave skipped:', { syncEnabled, hasOnSave: !!onSave, position: Math.round(currentPosition * 100) + '%' })
+      return
+    }
     
     // Don't save if position is too low (< 5%)
-    if (currentPosition < 0.05) return
+    if (currentPosition < 0.05) {
+      console.log('[progress] ⏭️ Position too low to save:', Math.round(currentPosition * 100) + '%')
+      return
+    }
     
     // Don't save if position hasn't changed significantly (less than 1%)
     // But always save if we've reached 100% (completion)
     const hasSignificantChange = Math.abs(currentPosition - lastSavedPosition.current) >= 0.01
     const hasReachedCompletion = currentPosition === 1 && lastSavedPosition.current < 1
     
-    if (!hasSignificantChange && !hasReachedCompletion) return
+    if (!hasSignificantChange && !hasReachedCompletion) {
+      console.log('[progress] ⏭️ No significant change:', {
+        current: Math.round(currentPosition * 100) + '%',
+        last: Math.round(lastSavedPosition.current * 100) + '%',
+        diff: Math.abs(currentPosition - lastSavedPosition.current)
+      })
+      return
+    }
 
     // Clear existing timer
     if (saveTimerRef.current) {

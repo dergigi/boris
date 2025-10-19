@@ -199,11 +199,24 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     onReadingComplete: () => {
       // Auto-mark as read when reading is complete (if enabled in settings)
       if (activeAccount && !isMarkedAsRead && settings?.autoMarkAsReadOnCompletion) {
-        console.log('📖 [ContentPanel] Auto-marking as read on completion')
+        console.log('[progress] 📖 Auto-marking as read on completion')
         handleMarkAsRead()
       }
     }
   })
+  
+  // Log sync status when it changes
+  useEffect(() => {
+    console.log('[progress] 📊 ContentPanel reading position sync status:', {
+      enabled: isTextContent,
+      syncEnabled: settings?.syncReadingPosition,
+      hasAccount: !!activeAccount,
+      hasRelayPool: !!relayPool,
+      hasEventStore: !!eventStore,
+      hasArticleIdentifier: !!articleIdentifier,
+      currentProgress: progressPercentage + '%'
+    })
+  }, [isTextContent, settings?.syncReadingPosition, activeAccount, relayPool, eventStore, articleIdentifier, progressPercentage])
 
   // Load saved reading position when article loads
   useEffect(() => {
