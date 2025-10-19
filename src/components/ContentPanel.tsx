@@ -182,7 +182,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }
   }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, html, markdown])
 
-  const { isReadingComplete, progressPercentage, saveNow } = useReadingPosition({
+  const { progressPercentage, saveNow } = useReadingPosition({
     enabled: isTextContent,
     syncEnabled: settings?.syncReadingPosition !== false,
     onSave: handleSavePosition,

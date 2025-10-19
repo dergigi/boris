@@ -364,7 +364,9 @@ class ReadingProgressController {
           try {
             const naddr = nip19.naddrEncode({ kind: KINDS.BlogPost, pubkey: article.pubkey, identifier: dTag })
             eventIdToNaddr.set(article.id, naddr)
-          } catch {}
+          } catch (e) {
+            console.warn('[readingProgress] Failed to encode naddr for article:', article.id)
+          }
         }
 
         // Map pending event IDs to naddrs and emit
