@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-10-19
+
+### Added
+
+- Centralized reading progress controller for non-blocking reading position sync
+  - Progressive loading with caching from event store
+  - Streaming updates from relays with proper merging
+  - 2-second completion hold at 100% reading position to prevent UI jitter
+  - Configurable auto-mark-as-read at 100% reading progress
+- Reading progress indicators on blog post cards
+  - Visual progress bars on article cards in Explore and bookmarks sidebar
+  - Persistent reading position synced across devices via NIP-85
+
+### Changed
+
+- Reading position sync now enabled by default in runtime paths
+- Improved auto-mark-as-read behavior with reliable completion detection
+- Reading progress events use proper NIP-85 specification (kind 39802)
+
+### Fixed
+
+- Reading position saves with proper validation and event store integration
+- Profile page writings loading now fetches all writings without limits
+- Consistent reading progress calculation and event publishing
+
+### Performance
+
+- Non-blocking reading progress controller with streaming updates
+- Cache-first loading strategy with local event store before relay queries
+- Efficient progress merging and deduplication
+
 ## [0.7.4] - 2025-10-18
 
 ### Added
@@ -2013,7 +2044,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.7.4...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/dergigi/boris/compare/v0.7.4...v0.8.0
 [0.7.4]: https://github.com/dergigi/boris/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/dergigi/boris/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/dergigi/boris/compare/v0.7.0...v0.7.2
