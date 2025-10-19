@@ -319,10 +319,12 @@ class ReadingProgressController {
     try {
       // Query kind:17 (URL reactions) in parallel with kind:7 (event reactions)
       console.log('[readingProgress] Querying kind:17 and kind:7 reactions...')
+      console.log('[readingProgress] About to call queryEvents for kind:17 and kind:7...')
       const [kind17Events, kind7Events] = await Promise.all([
         queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { relayUrls: RELAYS }),
         queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { relayUrls: RELAYS })
       ])
+      console.log('[readingProgress] queryEvents returned!')
 
       console.log('[readingProgress] Got kind:17 events:', kind17Events.length)
       console.log('[readingProgress] Got kind:7 events:', kind7Events.length)
