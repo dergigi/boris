@@ -128,21 +128,6 @@ class ReadingProgressController {
     this.lastLoadedPubkey = pubkey
 
     try {
-      // Load from event store first for instant display
-      const cachedEvents = await eventStore.list([
-        { kinds: [KINDS.ReadingProgress], authors: [pubkey] }
-      ])
-      
-      if (startGeneration !== this.generation) {
-        console.log('📊 [ReadingProgress] Cancelled (generation changed)')
-        return
-      }
-
-      if (cachedEvents.length > 0) {
-        this.processEvents(cachedEvents)
-        console.log('📊 [ReadingProgress] Loaded', cachedEvents.length, 'from cache')
-      }
-
       // Fetch from relays (incremental or full)
       const lastSynced = force ? null : this.getLastSyncedAt(pubkey)
       const filter: any = {
@@ -168,13 +153,13 @@ class ReadingProgressController {
         
         // Process and emit
         this.processEvents(events)
-        console.log('📊 [ReadingProgress] Loaded', events.length, 'from relays')
+        console.log('📊 [ReadingProgress] Loaded', events.length, 'events')
         
         // Update last synced
         const now = Math.floor(Date.now() / 1000)
         this.updateLastSyncedAt(pubkey, now)
       } else {
-        console.log('📊 [ReadingProgress] No new progress events')
+        console.log('📊 [ReadingProgress] No progress events found')
       }
     } catch (err) {
       console.error('📊 [ReadingProgress] Failed to load:', err)
