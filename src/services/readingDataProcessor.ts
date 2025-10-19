@@ -36,6 +36,13 @@ export function processReadingProgress(
     try {
       const content = JSON.parse(event.content)
       const position = content.progress || 0
+      
+      // Validate progress is between 0 and 1 (NIP-39802 requirement)
+      if (position < 0 || position > 1) {
+        console.warn('Invalid progress value (must be 0-1):', position, 'event:', event.id.slice(0, 8))
+        continue
+      }
+      
       // Use event.created_at as authoritative timestamp (NIP-39802 spec)
       const timestamp = event.created_at
 

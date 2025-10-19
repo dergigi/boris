@@ -4,7 +4,7 @@ interface UseReadingPositionOptions {
   enabled?: boolean
   onPositionChange?: (position: number) => void
   onReadingComplete?: () => void
-  readingCompleteThreshold?: number // Default 0.9 (90%)
+  readingCompleteThreshold?: number // Default 0.95 (95%) - matches filter threshold
   syncEnabled?: boolean // Whether to sync positions to Nostr
   onSave?: (position: number) => void // Callback for saving position
   autoSaveInterval?: number // Auto-save interval in ms (default 5000)
@@ -14,7 +14,7 @@ export const useReadingPosition = ({
   enabled = true,
   onPositionChange,
   onReadingComplete,
-  readingCompleteThreshold = 0.9,
+  readingCompleteThreshold = 0.95, // Match filter threshold for consistency
   syncEnabled = false,
   onSave,
   autoSaveInterval = 5000

@@ -189,9 +189,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     syncEnabled: settings?.syncReadingPosition,
     onSave: handleSavePosition,
     onReadingComplete: () => {
-      // Optional: Auto-mark as read when reading is complete
-      if (activeAccount && !isMarkedAsRead) {
-        // Could trigger auto-mark as read here if desired
+      // Auto-mark as read when reading is complete (if enabled in settings)
+      if (activeAccount && !isMarkedAsRead && settings?.autoMarkAsReadOnCompletion) {
+        console.log('📖 [ContentPanel] Auto-marking as read on completion')
+        handleMarkAsRead()
       }
     }
   })
