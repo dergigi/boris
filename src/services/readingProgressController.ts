@@ -253,14 +253,17 @@ class ReadingProgressController {
         if (evt.content === MARK_AS_READ_EMOJI) {
           // For kind:17, the URL is in the #r tag
           const rTag = evt.tags.find(t => t[0] === 'r')?.[1]
+          console.log('[readingProgress] kind:17 mark-as-read:', { eventId: evt.id, rTag, emoji: evt.content })
           if (rTag) {
             this.markedAsReadIds.add(rTag)
+            console.log('[readingProgress] Added kind:17 URL to markedAsReadIds:', rTag)
           }
         }
       })
 
       // Also fetch kind:7 reactions (for Nostr articles)
       const kind7Events = await queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { relayUrls: RELAYS })
+      console.log('[readingProgress] Fetched kind:7 events:', kind7Events.length)
 
       if (startGeneration !== this.generation) {
         return
@@ -268,6 +271,8 @@ class ReadingProgressController {
 
       // Process kind:7 reactions - need to map event IDs to nadrs
       const kind7WithMarkAsRead = kind7Events.filter(evt => evt.content === MARK_AS_READ_EMOJI)
+      console.log('[readingProgress] kind:7 with MARK_AS_READ_EMOJI:', kind7WithMarkAsRead.length)
+      
       if (kind7WithMarkAsRead.length > 0) {
         // Extract event IDs from #e tags
         const eventIds = Array.from(new Set(
@@ -275,15 +280,18 @@ class ReadingProgressController {
             .flatMap(evt => evt.tags.filter(t => t[0] === 'e'))
             .map(t => t[1])
         ))
+        console.log('[readingProgress] Event IDs to look up:', eventIds)
 
         // Fetch the articles to get their coordinates
         if (eventIds.length > 0) {
           const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids: eventIds }, { relayUrls: RELAYS })
+          console.log('[readingProgress] Fetched articles:', articleEvents.length)
           
           // Build a mapping of event IDs to nadrs
           const eventIdToNaddr = new Map<string, string>()
           for (const article of articleEvents) {
             const dTag = article.tags.find(t => t[0] === 'd')?.[1]
+            console.log('[readingProgress] Article:', { id: article.id, dTag, pubkey: article.pubkey })
             if (dTag) {
               try {
                 const naddr = nip19.naddrEncode({
@@ -292,8 +300,9 @@ class ReadingProgressController {
                   identifier: dTag
                 })
                 eventIdToNaddr.set(article.id, naddr)
+                console.log('[readingProgress] Mapped event ID to naddr:', { eventId: article.id, naddr })
               } catch (e) {
-                // Skip if naddr encoding fails
+                console.error('[readingProgress] Failed to encode naddr:', e)
               }
             }
           }
@@ -301,10 +310,14 @@ class ReadingProgressController {
           // Add marked articles to our set using their nadrs
           kind7WithMarkAsRead.forEach(evt => {
             const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
+            console.log('[readingProgress] Processing kind:7 reaction:', { reactionId: evt.id, eTag, hasMappedNaddr: eventIdToNaddr.has(eTag || '') })
             if (eTag && eventIdToNaddr.has(eTag)) {
-              this.markedAsReadIds.add(eventIdToNaddr.get(eTag)!)
+              const naddr = eventIdToNaddr.get(eTag)!
+              this.markedAsReadIds.add(naddr)
+              console.log('[readingProgress] Added kind:7 article to markedAsReadIds:', naddr)
             }
           })
+          console.log('[readingProgress] Final markedAsReadIds:', Array.from(this.markedAsReadIds))
         }
       }
     } catch (err) {
