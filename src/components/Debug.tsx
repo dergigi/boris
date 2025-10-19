@@ -754,23 +754,38 @@ const Debug: React.FC<DebugProps> = ({
       setTLoadReadingProgress(null)
       setTFirstReadingProgress(null)
       setDeduplicatedProgressMap(new Map())
-      DebugBus.info('debug', 'Loading reading progress events via controller...')
+      DebugBus.info('debug', 'Loading reading progress events...')
 
       const start = performance.now()
       let firstEventTime: number | null = null
       setLiveTiming(prev => ({ ...prev, loadReadingProgress: { startTime: start } }))
 
-      // Subscribe to controller to get streamed events
-      const unsubProgress = readingProgressController.onProgress((progressMap) => {
-        if (firstEventTime === null) {
-          firstEventTime = performance.now() - start
-          setTFirstReadingProgress(Math.round(firstEventTime))
+      const { queryEvents } = await import('../services/dataFetch')
+      const { KINDS } = await import('../config/kinds')
+
+      // Load raw events for display
+      const rawEvents: NostrEvent[] = []
+      const rawQueryPromise = queryEvents(relayPool, { kinds: [KINDS.ReadingProgress], authors: [activeAccount.pubkey] }, {
+        onEvent: (evt) => {
+          if (firstEventTime === null) {
+            firstEventTime = performance.now() - start
+            setTFirstReadingProgress(Math.round(firstEventTime))
+          }
+          rawEvents.push(evt)
+          setReadingProgressEvents([...rawEvents])
         }
+      })
+
+      // Load deduplicated results via controller
+      const unsubProgress = readingProgressController.onProgress((progressMap) => {
         setDeduplicatedProgressMap(new Map(progressMap))
       })
 
-      // Start the controller (triggers loading and deduplication)
-      await readingProgressController.start({ relayPool, eventStore, pubkey: activeAccount.pubkey, force: true })
+      // Run both in parallel
+      await Promise.all([
+        rawQueryPromise,
+        readingProgressController.start({ relayPool, eventStore, pubkey: activeAccount.pubkey, force: true })
+      ])
       
       unsubProgress()
 
@@ -783,7 +798,7 @@ const Debug: React.FC<DebugProps> = ({
       })
 
       const finalMap = readingProgressController.getProgressMap()
-      DebugBus.info('debug', `Loaded reading progress: ${finalMap.size} unique articles in ${elapsed}ms`)
+      DebugBus.info('debug', `Loaded ${rawEvents.length} raw events, deduplicated to ${finalMap.size} articles in ${elapsed}ms`)
     } catch (err) {
       console.error('Failed to load reading progress:', err)
       DebugBus.error('debug', `Failed to load reading progress: ${err instanceof Error ? err.message : String(err)}`)
