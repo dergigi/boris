@@ -24,6 +24,7 @@ import { bookmarkController } from './services/bookmarkController'
 import { contactsController } from './services/contactsController'
 import { highlightsController } from './services/highlightsController'
 import { writingsController } from './services/writingsController'
+import { readingProgressController } from './services/readingProgressController'
 // import { fetchNostrverseHighlights } from './services/nostrverseService'
 import { nostrverseHighlightsController } from './services/nostrverseHighlightsController'
 import { nostrverseWritingsController } from './services/nostrverseWritingsController'
@@ -145,6 +146,7 @@ function AppRoutes({
     bookmarkController.reset() // Clear bookmarks via controller
     contactsController.reset() // Clear contacts via controller
     highlightsController.reset() // Clear highlights via controller
+    readingProgressController.reset() // Clear reading progress via controller
     showToast('Logged out successfully')
   }
 
