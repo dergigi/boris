@@ -22,6 +22,10 @@ import { Hooks } from 'applesauce-react'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
 import LoginOptions from './LoginOptions'
+import { useEffect } from 'react'
+import { readingProgressController } from '../services/readingProgressController'
+import { nip19 } from 'nostr-tools'
+import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 
 interface BookmarkListProps {
   bookmarks: Bookmark[]
@@ -70,6 +74,45 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
     return saved === 'flat' ? 'flat' : 'grouped'
   })
   const activeAccount = Hooks.useActiveAccount()
+  const [readingProgressMap, setReadingProgressMap] = useState<Map<string, number>>(new Map())
+
+  // Subscribe to reading progress updates
+  useEffect(() => {
+    // Get initial progress map
+    setReadingProgressMap(readingProgressController.getProgressMap())
+    
+    // Subscribe to updates
+    const unsubProgress = readingProgressController.onProgress(setReadingProgressMap)
+    
+    return () => {
+      unsubProgress()
+    }
+  }, [])
+
+  // Helper to get reading progress for a bookmark
+  const getBookmarkReadingProgress = (bookmark: IndividualBookmark): number | undefined => {
+    if (bookmark.kind === 30023) {
+      // For articles, use naddr as key
+      const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1]
+      if (!dTag) return undefined
+      try {
+        const naddr = nip19.naddrEncode({
+          kind: 30023,
+          pubkey: bookmark.pubkey,
+          identifier: dTag
+        })
+        return readingProgressMap.get(naddr)
+      } catch (err) {
+        return undefined
+      }
+    }
+    // For web bookmarks and other types, try to use URL if available
+    const urls = extractUrlsFromContent(bookmark.content)
+    if (urls.length > 0) {
+      return readingProgressMap.get(urls[0])
+    }
+    return undefined
+  }
 
   const toggleGroupingMode = () => {
     const newMode = groupingMode === 'grouped' ? 'flat' : 'grouped'
@@ -221,6 +264,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
                     index={index} 
                     onSelectUrl={onSelectUrl}
                     viewMode={viewMode}
+                    readingProgress={getBookmarkReadingProgress(individualBookmark)}
                   />
                 ))}
               </div>

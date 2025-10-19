@@ -73,8 +73,8 @@ export const CompactView: React.FC<CompactViewProps> = ({
         {/* CTA removed */}
       </div>
       
-      {/* Reading progress indicator for articles */}
-      {isArticle && readingProgress !== undefined && readingProgress > 0 && (
+      {/* Reading progress indicator for all bookmark types with reading data */}
+      {readingProgress !== undefined && readingProgress > 0 && (
         <div 
           style={{
             height: '2px',
