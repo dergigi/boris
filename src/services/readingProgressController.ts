@@ -239,6 +239,12 @@ class ReadingProgressController {
       // Load mark-as-read reactions in background (non-blocking, fire-and-forget)
       console.log('[readingProgress] Starting background relay query for mark-as-read reactions...')
       this.loadMarkAsReadReactions(relayPool, eventStore, pubkey, startGeneration)
+        .then(() => {
+          console.log('[readingProgress] Mark-as-read reactions loading complete')
+        })
+        .catch((err) => {
+          console.warn('[readingProgress] Mark-as-read reactions loading failed:', err)
+        })
 
     } catch (err) {
       console.error('📊 [ReadingProgress] Failed to setup:', err)
@@ -300,15 +306,20 @@ class ReadingProgressController {
   ): Promise<void> {
     try {
       // Query kind:17 (URL reactions) in parallel with kind:7 (event reactions)
+      console.log('[readingProgress] Querying kind:17 and kind:7 reactions...')
       const [kind17Events, kind7Events] = await Promise.all([
         queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { relayUrls: RELAYS }),
         queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { relayUrls: RELAYS })
       ])
 
+      console.log('[readingProgress] Got kind:17 events:', kind17Events.length)
+      console.log('[readingProgress] Got kind:7 events:', kind7Events.length)
+
       if (generation !== this.generation) return
 
       // Process kind:17 reactions (URLs)
       kind17Events.forEach((evt) => {
+        console.log('[readingProgress] kind:17 event content:', evt.content, '=== MARK_AS_READ_EMOJI:', MARK_AS_READ_EMOJI)
         if (evt.content === MARK_AS_READ_EMOJI) {
           const rTag = evt.tags.find(t => t[0] === 'r')?.[1]
           if (rTag) {
@@ -320,6 +331,7 @@ class ReadingProgressController {
 
       // Process kind:7 reactions (Nostr articles)
       const kind7WithMarkAsRead = kind7Events.filter(evt => evt.content === MARK_AS_READ_EMOJI)
+      console.log('[readingProgress] kind:7 with MARK_AS_READ_EMOJI:', kind7WithMarkAsRead.length)
       if (kind7WithMarkAsRead.length > 0) {
         const eventIds = Array.from(new Set(
           kind7WithMarkAsRead
@@ -327,8 +339,11 @@ class ReadingProgressController {
             .map(t => t[1])
         ))
 
+        console.log('[readingProgress] Event IDs from kind:7 reactions:', eventIds.length)
+
         if (eventIds.length > 0) {
           const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids: eventIds }, { relayUrls: RELAYS })
+          console.log('[readingProgress] Fetched articles for event IDs:', articleEvents.length)
           
           if (generation !== this.generation) return
 
@@ -344,10 +359,12 @@ class ReadingProgressController {
                 })
                 eventIdToNaddr.set(article.id, naddr)
               } catch (e) {
-                // Skip if encoding fails
+                console.warn('[readingProgress] Failed to encode naddr:', e)
               }
             }
           }
+
+          console.log('[readingProgress] Mapped event IDs to nadrs:', eventIdToNaddr.size)
 
           kind7WithMarkAsRead.forEach(evt => {
             const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
@@ -360,7 +377,7 @@ class ReadingProgressController {
         }
       }
 
-      console.log('[readingProgress] Mark-as-read reactions loaded:', Array.from(this.markedAsReadIds))
+      console.log('[readingProgress] Mark-as-read reactions complete. Total:', Array.from(this.markedAsReadIds).length)
     } catch (err) {
       console.warn('[readingProgress] Failed to load mark-as-read reactions:', err)
     }
