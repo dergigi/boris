@@ -28,6 +28,7 @@ import { readingProgressController } from './services/readingProgressController'
 // import { fetchNostrverseHighlights } from './services/nostrverseService'
 import { nostrverseHighlightsController } from './services/nostrverseHighlightsController'
 import { nostrverseWritingsController } from './services/nostrverseWritingsController'
+import { readsController } from './services/readsController'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -112,6 +113,11 @@ function AppRoutes({
       // Load reading progress (controller manages its own state)
       if (pubkey && eventStore && !readingProgressController.isLoadedFor(pubkey)) {
         readingProgressController.start({ relayPool, eventStore, pubkey })
+      }
+
+      // Load reads (controller manages its own state)
+      if (pubkey && eventStore && !readsController.isLoadedFor(pubkey)) {
+        readsController.start({ relayPool, eventStore, pubkey, bookmarks })
       }
 
       // Start centralized nostrverse highlights controller (non-blocking)

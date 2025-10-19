@@ -231,15 +231,7 @@ const Me: React.FC<MeProps> = ({
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Start loading via controller
-      await readsController.start({
-        relayPool,
-        eventStore,
-        pubkey: viewingPubkey,
-        bookmarks,
-        force: false
-      })
-      
+      // Reads come from centralized loading in App.tsx
       setLoadedTabs(prev => new Set(prev).add('reads'))
       if (!hasBeenLoaded) setLoading(false)
       
