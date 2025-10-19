@@ -32,7 +32,7 @@ import {
 import AuthorCard from './AuthorCard'
 import { faBooks } from '../icons/customIcons'
 import { extractYouTubeId, getYouTubeMeta } from '../services/youtubeMetaService'
-import { classifyUrl } from '../utils/helpers'
+import { classifyUrl, shouldTrackReadingProgress } from '../utils/helpers'
 import { buildNativeVideoUrl } from '../utils/videoHelpers'
 import { useReadingPosition } from '../hooks/useReadingPosition'
 import { ReadingProgressIndicator } from './ReadingProgressIndicator'
@@ -163,6 +163,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       console.log('[progress] ⏭️ ContentPanel: Sync disabled in settings')
       return
     }
+    
+    // Check if content is long enough to track reading progress
+    if (!shouldTrackReadingProgress(html, markdown)) {
+      console.log('[progress] ⏭️ ContentPanel: Content too short to track reading progress')
+      return
+    }
 
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop
     console.log('[progress] 💾 ContentPanel: Saving position:', {
@@ -190,7 +196,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     } catch (error) {
       console.error('[progress] ❌ ContentPanel: Failed to save reading position:', error)
     }
-  }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl])
+  }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl, html, markdown])
 
   const { isReadingComplete, progressPercentage, saveNow } = useReadingPosition({
     enabled: isTextContent,

@@ -123,3 +123,15 @@ export function createParallelReqStreams(
   return { local$, remote$ }
 }
 
+/**
+ * Checks if content is long enough to track reading progress
+ * Minimum 1000 characters (roughly 150 words)
+ */
+export const shouldTrackReadingProgress = (html: string | undefined, markdown: string | undefined): boolean => {
+  const { READING_PROGRESS } = require('../config/kinds')
+  const content = (html || markdown || '').trim()
+  // Strip HTML tags to get character count
+  const plainText = content.replace(/<[^>]*>/g, '').trim()
+  return plainText.length >= READING_PROGRESS.MIN_CONTENT_LENGTH
+}
+

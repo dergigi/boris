@@ -14,3 +14,9 @@ export const KINDS = {
 
 export type KindValue = typeof KINDS[keyof typeof KINDS]
 
+// Reading progress tracking configuration
+export const READING_PROGRESS = {
+  // Minimum character count to track reading progress (roughly 150 words)
+  MIN_CONTENT_LENGTH: 1000
+} as const
+
