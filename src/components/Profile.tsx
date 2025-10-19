@@ -19,9 +19,7 @@ import { toBlogPostPreview } from '../utils/toBlogPostPreview'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { Hooks } from 'applesauce-react'
-import { queryEvents } from '../services/dataFetch'
-import { processReadingProgress } from '../services/readingDataProcessor'
-import { ReadItem } from '../services/readsService'
+import { readingProgressController } from '../services/readingProgressController'
 
 interface ProfileProps {
   relayPool: RelayPool
@@ -66,40 +64,32 @@ const Profile: React.FC<ProfileProps> = ({
     }
   }, [propActiveTab])
   
-  // Load reading progress data for logged-in user
+  // Subscribe to reading progress controller
+  useEffect(() => {
+    // Get initial state immediately
+    setReadingProgressMap(readingProgressController.getProgressMap())
+    
+    // Subscribe to updates
+    const unsubProgress = readingProgressController.onProgress(setReadingProgressMap)
+    
+    return () => {
+      unsubProgress()
+    }
+  }, [])
+  
+  // Load reading progress data when logged in
   useEffect(() => {
     if (!activeAccount?.pubkey) {
-      setReadingProgressMap(new Map())
       return
     }
     
-    const loadReadingProgress = async () => {
-      try {
-        const progressEvents = await queryEvents(
-          relayPool, 
-          { kinds: [KINDS.ReadingProgress], authors: [activeAccount.pubkey] },
-          { relayUrls: RELAYS }
-        )
-        
-        const readsMap = new Map<string, ReadItem>()
-        processReadingProgress(progressEvents, readsMap)
-        
-        // Convert to naddr -> progress map
-        const progressMap = new Map<string, number>()
-        for (const [id, item] of readsMap.entries()) {
-          if (item.readingProgress !== undefined && item.type === 'article') {
-            progressMap.set(id, item.readingProgress)
-          }
-        }
-        
-        setReadingProgressMap(progressMap)
-      } catch (err) {
-        console.error('Failed to load reading progress:', err)
-      }
-    }
-    
-    loadReadingProgress()
-  }, [activeAccount?.pubkey, relayPool, refreshTrigger])
+    readingProgressController.start({
+      relayPool,
+      eventStore,
+      pubkey: activeAccount.pubkey,
+      force: refreshTrigger > 0
+    })
+  }, [activeAccount?.pubkey, relayPool, eventStore, refreshTrigger])
 
   // Background fetch to populate event store (non-blocking)
   useEffect(() => {

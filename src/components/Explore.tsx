@@ -30,10 +30,7 @@ import { useStoreTimeline } from '../hooks/useStoreTimeline'
 import { dedupeHighlightsById, dedupeWritingsByReplaceable } from '../utils/dedupe'
 import { writingsController } from '../services/writingsController'
 import { nostrverseWritingsController } from '../services/nostrverseWritingsController'
-import { queryEvents } from '../services/dataFetch'
-import { processReadingProgress } from '../services/readingDataProcessor'
-import { ReadItem } from '../services/readsService'
-import { RELAYS } from '../config/relays'
+import { readingProgressController } from '../services/readingProgressController'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -177,40 +174,32 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     return () => unsub()
   }, [])
   
-  // Load reading progress data
+  // Subscribe to reading progress controller
+  useEffect(() => {
+    // Get initial state immediately
+    setReadingProgressMap(readingProgressController.getProgressMap())
+    
+    // Subscribe to updates
+    const unsubProgress = readingProgressController.onProgress(setReadingProgressMap)
+    
+    return () => {
+      unsubProgress()
+    }
+  }, [])
+  
+  // Load reading progress data when logged in
   useEffect(() => {
     if (!activeAccount?.pubkey) {
-      setReadingProgressMap(new Map())
       return
     }
     
-    const loadReadingProgress = async () => {
-      try {
-        const progressEvents = await queryEvents(
-          relayPool, 
-          { kinds: [KINDS.ReadingProgress], authors: [activeAccount.pubkey] },
-          { relayUrls: RELAYS }
-        )
-        
-        const readsMap = new Map<string, ReadItem>()
-        processReadingProgress(progressEvents, readsMap)
-        
-        // Convert to naddr -> progress map
-        const progressMap = new Map<string, number>()
-        for (const [id, item] of readsMap.entries()) {
-          if (item.readingProgress !== undefined && item.type === 'article') {
-            progressMap.set(id, item.readingProgress)
-          }
-        }
-        
-        setReadingProgressMap(progressMap)
-      } catch (err) {
-        console.error('Failed to load reading progress:', err)
-      }
-    }
-    
-    loadReadingProgress()
-  }, [activeAccount?.pubkey, relayPool, refreshTrigger])
+    readingProgressController.start({
+      relayPool,
+      eventStore,
+      pubkey: activeAccount.pubkey,
+      force: refreshTrigger > 0
+    })
+  }, [activeAccount?.pubkey, relayPool, eventStore, refreshTrigger])
 
   // Update visibility when settings/login state changes
   useEffect(() => {

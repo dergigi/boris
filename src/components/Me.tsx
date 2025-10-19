@@ -31,10 +31,7 @@ import { filterByReadingProgress } from '../utils/readingProgressUtils'
 import { deriveReadsFromBookmarks } from '../utils/readsFromBookmarks'
 import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
 import { mergeReadItem } from '../utils/readItemMerge'
-import { queryEvents } from '../services/dataFetch'
-import { processReadingProgress } from '../services/readingDataProcessor'
-import { RELAYS } from '../config/relays'
-import { KINDS } from '../config/kinds'
+import { readingProgressController } from '../services/readingProgressController'
 
 interface MeProps {
   relayPool: RelayPool
@@ -156,40 +153,32 @@ const Me: React.FC<MeProps> = ({
     }
   }
   
+  // Subscribe to reading progress controller
+  useEffect(() => {
+    // Get initial state immediately
+    setReadingProgressMap(readingProgressController.getProgressMap())
+    
+    // Subscribe to updates
+    const unsubProgress = readingProgressController.onProgress(setReadingProgressMap)
+    
+    return () => {
+      unsubProgress()
+    }
+  }, [])
+  
   // Load reading progress data for writings tab
   useEffect(() => {
     if (!viewingPubkey) {
-      setReadingProgressMap(new Map())
       return
     }
     
-    const loadReadingProgress = async () => {
-      try {
-        const progressEvents = await queryEvents(
-          relayPool, 
-          { kinds: [KINDS.ReadingProgress], authors: [viewingPubkey] },
-          { relayUrls: RELAYS }
-        )
-        
-        const readsMap = new Map<string, ReadItem>()
-        processReadingProgress(progressEvents, readsMap)
-        
-        // Convert to naddr -> progress map
-        const progressMap = new Map<string, number>()
-        for (const [id, item] of readsMap.entries()) {
-          if (item.readingProgress !== undefined && item.type === 'article') {
-            progressMap.set(id, item.readingProgress)
-          }
-        }
-        
-        setReadingProgressMap(progressMap)
-      } catch (err) {
-        console.error('Failed to load reading progress:', err)
-      }
-    }
-    
-    loadReadingProgress()
-  }, [viewingPubkey, relayPool, refreshTrigger])
+    readingProgressController.start({
+      relayPool,
+      eventStore,
+      pubkey: viewingPubkey,
+      force: refreshTrigger > 0
+    })
+  }, [viewingPubkey, relayPool, eventStore, refreshTrigger])
 
   // Tab-specific loading functions
   const loadHighlightsTab = async () => {
