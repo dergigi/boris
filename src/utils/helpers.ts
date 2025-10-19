@@ -1,4 +1,6 @@
 // Extract pubkeys from nprofile strings in content
+import { READING_PROGRESS } from '../config/kinds'
+
 export const extractNprofilePubkeys = (content: string): string[] => {
   const nprofileRegex = /nprofile1[a-z0-9]+/gi
   const matches = content.match(nprofileRegex) || []
@@ -128,7 +130,6 @@ export function createParallelReqStreams(
  * Minimum 1000 characters (roughly 150 words)
  */
 export const shouldTrackReadingProgress = (html: string | undefined, markdown: string | undefined): boolean => {
-  const { READING_PROGRESS } = require('../config/kinds')
   const content = (html || markdown || '').trim()
   // Strip HTML tags to get character count
   const plainText = content.replace(/<[^>]*>/g, '').trim()
