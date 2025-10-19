@@ -122,6 +122,7 @@ class ReadingProgressController {
       this.timelineSubscription = null
     }
     this.currentProgressMap = new Map()
+    this.markedAsReadIds = new Set()
     this.lastLoadedPubkey = null
     this.emitProgress(this.currentProgressMap)
   }
@@ -238,8 +239,7 @@ class ReadingProgressController {
       }
 
       // Also fetch mark-as-read reactions in parallel
-      const [kind7Events, kind17Events] = await Promise.all([
-        queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { relayUrls: RELAYS }),
+      const [kind17Events] = await Promise.all([
         queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { relayUrls: RELAYS })
       ])
 
@@ -248,18 +248,11 @@ class ReadingProgressController {
       }
 
       // Process mark-as-read reactions
-      ;[...kind7Events, ...kind17Events].forEach((evt) => {
+      ;[...kind17Events].forEach((evt) => {
         if (evt.content === MARK_AS_READ_EMOJI) {
-          // Extract article ID from tags
-          const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
+          // For kind:17, the URL is in the #r tag
           const rTag = evt.tags.find(t => t[0] === 'r')?.[1]
-          
-          if (eTag) {
-            // For kind:7, look up the article from progress map by event ID
-            const articleId = Array.from(this.currentProgressMap.keys()).find(id => id.includes(eTag))
-            if (articleId) this.markedAsReadIds.add(articleId)
-          } else if (rTag) {
-            // For kind:17, the URL is the article ID
+          if (rTag) {
             this.markedAsReadIds.add(rTag)
           }
         }
