@@ -67,10 +67,15 @@ const Profile: React.FC<ProfileProps> = ({
   // Subscribe to reading progress controller
   useEffect(() => {
     // Get initial state immediately
-    setReadingProgressMap(readingProgressController.getProgressMap())
+    const initialMap = readingProgressController.getProgressMap()
+    console.log('[progress] 🎯 Profile: Initial progress map size:', initialMap.size)
+    setReadingProgressMap(initialMap)
     
     // Subscribe to updates
-    const unsubProgress = readingProgressController.onProgress(setReadingProgressMap)
+    const unsubProgress = readingProgressController.onProgress((newMap) => {
+      console.log('[progress] 🎯 Profile: Received progress update, size:', newMap.size)
+      setReadingProgressMap(newMap)
+    })
     
     return () => {
       unsubProgress()
@@ -148,7 +153,19 @@ const Profile: React.FC<ProfileProps> = ({
         pubkey: post.author,
         identifier: dTag
       })
-      return readingProgressMap.get(naddr)
+      const progress = readingProgressMap.get(naddr)
+      
+      // Only log when found or map is empty
+      if (progress || readingProgressMap.size === 0) {
+        console.log('[progress] 🔍 Profile lookup:', {
+          title: post.title?.slice(0, 30),
+          naddr: naddr.slice(0, 80),
+          mapSize: readingProgressMap.size,
+          mapKeys: readingProgressMap.size > 0 ? Array.from(readingProgressMap.keys()).slice(0, 3).map(k => k.slice(0, 80)) : [],
+          progress: progress ? Math.round(progress * 100) + '%' : 'not found'
+        })
+      }
+      return progress
     } catch (err) {
       return undefined
     }
