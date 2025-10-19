@@ -8,6 +8,7 @@ interface UseReadingPositionOptions {
   syncEnabled?: boolean // Whether to sync positions to Nostr
   onSave?: (position: number) => void // Callback for saving position
   autoSaveInterval?: number // Auto-save interval in ms (default 5000)
+  completionHoldMs?: number // How long to hold at 100% before firing complete (default 2000)
 }
 
 export const useReadingPosition = ({
@@ -17,7 +18,8 @@ export const useReadingPosition = ({
   readingCompleteThreshold = 0.95, // Match filter threshold for consistency
   syncEnabled = false,
   onSave,
-  autoSaveInterval = 5000
+  autoSaveInterval = 5000,
+  completionHoldMs = 2000
 }: UseReadingPositionOptions = {}) => {
   const [position, setPosition] = useState(0)
   const [isReadingComplete, setIsReadingComplete] = useState(false)
@@ -25,6 +27,7 @@ export const useReadingPosition = ({
   const lastSavedPosition = useRef(0)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasSavedOnce = useRef(false)
+  const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Debounced save function
   const scheduleSave = useCallback((currentPosition: number) => {
@@ -119,11 +122,36 @@ export const useReadingPosition = ({
       // Schedule auto-save if sync is enabled
       scheduleSave(clampedProgress)
 
-      // Check if reading is complete
-      if (clampedProgress >= readingCompleteThreshold && !hasTriggeredComplete.current) {
-        setIsReadingComplete(true)
-        hasTriggeredComplete.current = true
-        onReadingComplete?.()
+      // Completion detection with 2s hold at 100%
+      if (!hasTriggeredComplete.current) {
+        // If at exact 100%, start a hold timer; cancel if we scroll up
+        if (clampedProgress === 1) {
+          if (!completionTimerRef.current) {
+            completionTimerRef.current = setTimeout(() => {
+              if (!hasTriggeredComplete.current && position === 1) {
+                setIsReadingComplete(true)
+                hasTriggeredComplete.current = true
+                console.log('[progress] ✅ Completion hold satisfied (100% for', completionHoldMs, 'ms)')
+                onReadingComplete?.()
+              }
+              completionTimerRef.current = null
+            }, completionHoldMs)
+            console.log('[progress] ⏳ Completion hold started (waiting', completionHoldMs, 'ms)')
+          }
+        } else {
+          // If we moved off 100%, cancel any pending completion hold
+          if (completionTimerRef.current) {
+            clearTimeout(completionTimerRef.current)
+            completionTimerRef.current = null
+            // still allow threshold-based completion for near-bottom if configured
+            if (clampedProgress >= readingCompleteThreshold) {
+              setIsReadingComplete(true)
+              hasTriggeredComplete.current = true
+              console.log('[progress] ✅ Completion via threshold:', readingCompleteThreshold)
+              onReadingComplete?.()
+            }
+          }
+        }
       }
     }
 
@@ -142,6 +170,9 @@ export const useReadingPosition = ({
       if (saveTimerRef.current) {
         clearTimeout(saveTimerRef.current)
       }
+      if (completionTimerRef.current) {
+        clearTimeout(completionTimerRef.current)
+      }
     }
     // position is intentionally not in deps - it's computed from scroll and would cause infinite re-renders
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -154,6 +185,10 @@ export const useReadingPosition = ({
       hasTriggeredComplete.current = false
       hasSavedOnce.current = false
       lastSavedPosition.current = 0
+      if (completionTimerRef.current) {
+        clearTimeout(completionTimerRef.current)
+        completionTimerRef.current = null
+      }
     }
   }, [enabled])
 
