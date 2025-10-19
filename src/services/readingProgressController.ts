@@ -11,6 +11,7 @@ type ProgressMapCallback = (progressMap: Map<string, number>) => void
 type LoadingCallback = (loading: boolean) => void
 
 const LAST_SYNCED_KEY = 'reading_progress_last_synced'
+const PROGRESS_CACHE_KEY = 'reading_progress_cache_v1'
 
 /**
  * Shared reading progress controller
@@ -53,6 +54,35 @@ class ReadingProgressController {
    */
   getProgressMap(): Map<string, number> {
     return new Map(this.currentProgressMap)
+  }
+
+  /**
+   * Load cached progress from localStorage for a pubkey
+   */
+  private loadCachedProgress(pubkey: string): Map<string, number> {
+    try {
+      const raw = localStorage.getItem(PROGRESS_CACHE_KEY)
+      if (!raw) return new Map()
+      const parsed = JSON.parse(raw) as Record<string, Record<string, number>>
+      const forUser = parsed[pubkey] || {}
+      return new Map(Object.entries(forUser))
+    } catch {
+      return new Map()
+    }
+  }
+
+  /**
+   * Save current progress map to localStorage for the active pubkey
+   */
+  private persistProgress(pubkey: string, progressMap: Map<string, number>): void {
+    try {
+      const raw = localStorage.getItem(PROGRESS_CACHE_KEY)
+      const parsed: Record<string, Record<string, number>> = raw ? JSON.parse(raw) : {}
+      parsed[pubkey] = Object.fromEntries(progressMap.entries())
+      localStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify(parsed))
+    } catch (err) {
+      console.warn('[progress] ⚠️ Failed to persist reading progress cache:', err)
+    }
   }
 
   /**
@@ -136,6 +166,14 @@ class ReadingProgressController {
     this.lastLoadedPubkey = pubkey
 
     try {
+      // Seed from local cache immediately (survives refresh/flight mode)
+      const cached = this.loadCachedProgress(pubkey)
+      if (cached.size > 0) {
+        console.log('📊 [ReadingProgress] Seeded from cache:', cached.size, 'items')
+        this.currentProgressMap = cached
+        this.emitProgress(this.currentProgressMap)
+      }
+
       // Subscribe to local timeline for immediate and reactive updates
       // Clean up any previous subscription first
       if (this.timelineSubscription) {
@@ -241,6 +279,11 @@ class ReadingProgressController {
     
     this.currentProgressMap = newProgressMap
     this.emitProgress(this.currentProgressMap)
+
+    // Persist for current user so it survives refresh/flight mode
+    if (this.lastLoadedPubkey) {
+      this.persistProgress(this.lastLoadedPubkey, this.currentProgressMap)
+    }
   }
 }
 
