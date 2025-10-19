@@ -16,8 +16,8 @@ const ReadingProgressFilters: React.FC<ReadingProgressFiltersProps> = ({ selecte
     { type: 'unopened' as const, icon: faEnvelope, label: 'Unopened' },
     { type: 'started' as const, icon: faEnvelopeOpen, label: 'Started' },
     { type: 'reading' as const, icon: faBookOpen, label: 'Reading' },
-    { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' },
-    { type: 'highlighted' as const, icon: faHighlighter, label: 'Highlighted' }
+    { type: 'highlighted' as const, icon: faHighlighter, label: 'Highlighted' },
+    { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' }
   ]
 
   return (
