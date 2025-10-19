@@ -135,16 +135,21 @@ class ReadingProgressController {
         authors: [pubkey]
       })
       
-      // Subscribe to get initial events synchronously
-      const subscription = timeline.subscribe((localEvents) => {
-        console.log('📊 [ReadingProgress] Found', localEvents.length, 'events in local store')
-        if (localEvents.length > 0) {
-          this.processEvents(localEvents)
-        }
+      // Get the latest value from timeline - it should emit immediately
+      let localEvents: any[] = []
+      const subscription = timeline.subscribe((events) => {
+        localEvents = events
+        console.log('📊 [ReadingProgress] Timeline emitted', events.length, 'events')
       })
       
-      // Unsubscribe immediately after getting initial value
+      // Unsubscribe after getting value
       subscription.unsubscribe()
+      
+      console.log('📊 [ReadingProgress] Processing', localEvents.length, 'events from local store')
+      
+      if (localEvents.length > 0) {
+        this.processEvents(localEvents)
+      }
       
       // 2. Then fetch from relays (incremental or full) to augment local data
       const lastSynced = force ? null : this.getLastSyncedAt(pubkey)
