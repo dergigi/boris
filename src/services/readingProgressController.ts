@@ -129,17 +129,22 @@ class ReadingProgressController {
     this.lastLoadedPubkey = pubkey
 
     try {
-      // 1. First, load from local event store (instant, non-blocking)
-      const localEvents = eventStore.getEvents({
+      // 1. First, get events from local event store timeline (instant, non-blocking)
+      const timeline = eventStore.timeline({
         kinds: [KINDS.ReadingProgress],
         authors: [pubkey]
       })
       
-      console.log('📊 [ReadingProgress] Found', localEvents.length, 'events in local store')
+      // Subscribe to get initial events synchronously
+      const subscription = timeline.subscribe((localEvents) => {
+        console.log('📊 [ReadingProgress] Found', localEvents.length, 'events in local store')
+        if (localEvents.length > 0) {
+          this.processEvents(localEvents)
+        }
+      })
       
-      if (localEvents.length > 0) {
-        this.processEvents(localEvents)
-      }
+      // Unsubscribe immediately after getting initial value
+      subscription.unsubscribe()
       
       // 2. Then fetch from relays (incremental or full) to augment local data
       const lastSynced = force ? null : this.getLastSyncedAt(pubkey)
