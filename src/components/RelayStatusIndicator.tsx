@@ -156,7 +156,7 @@ export const RelayStatusIndicator: React.FC<RelayStatusIndicatorProps> = ({
                     fontWeight: 400
                   }}
                 >
-                  {connectedUrls.length} local relay{connectedUrls.length !== 1 ? 's' : ''}
+                  Local relays only
                 </span>
               </>
             )}
