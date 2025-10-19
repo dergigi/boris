@@ -186,7 +186,6 @@ class ReadingProgressController {
     }
 
     this.setLoading(true)
-    this.lastLoadedPubkey = pubkey
 
     try {
       // Seed from local cache immediately (survives refresh/flight mode)
@@ -333,6 +332,9 @@ class ReadingProgressController {
           console.log('[readingProgress] Final markedAsReadIds:', Array.from(this.markedAsReadIds))
         }
       }
+
+      // Mark as loaded AFTER everything is fetched
+      this.lastLoadedPubkey = pubkey
     } catch (err) {
       console.error('📊 [ReadingProgress] Failed to load:', err)
     } finally {
