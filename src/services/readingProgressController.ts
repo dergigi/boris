@@ -7,6 +7,7 @@ import { RELAYS } from '../config/relays'
 import { processReadingProgress } from './readingDataProcessor'
 import { ReadItem } from './readsService'
 import { MARK_AS_READ_EMOJI } from './reactionService'
+import { nip19 } from 'nostr-tools'
 
 type ProgressMapCallback = (progressMap: Map<string, number>) => void
 type LoadingCallback = (loading: boolean) => void
@@ -257,6 +258,55 @@ class ReadingProgressController {
           }
         }
       })
+
+      // Also fetch kind:7 reactions (for Nostr articles)
+      const kind7Events = await queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { relayUrls: RELAYS })
+
+      if (startGeneration !== this.generation) {
+        return
+      }
+
+      // Process kind:7 reactions - need to map event IDs to nadrs
+      const kind7WithMarkAsRead = kind7Events.filter(evt => evt.content === MARK_AS_READ_EMOJI)
+      if (kind7WithMarkAsRead.length > 0) {
+        // Extract event IDs from #e tags
+        const eventIds = Array.from(new Set(
+          kind7WithMarkAsRead
+            .flatMap(evt => evt.tags.filter(t => t[0] === 'e'))
+            .map(t => t[1])
+        ))
+
+        // Fetch the articles to get their coordinates
+        if (eventIds.length > 0) {
+          const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids: eventIds }, { relayUrls: RELAYS })
+          
+          // Build a mapping of event IDs to nadrs
+          const eventIdToNaddr = new Map<string, string>()
+          for (const article of articleEvents) {
+            const dTag = article.tags.find(t => t[0] === 'd')?.[1]
+            if (dTag) {
+              try {
+                const naddr = nip19.naddrEncode({
+                  kind: KINDS.BlogPost,
+                  pubkey: article.pubkey,
+                  identifier: dTag
+                })
+                eventIdToNaddr.set(article.id, naddr)
+              } catch (e) {
+                // Skip if naddr encoding fails
+              }
+            }
+          }
+
+          // Add marked articles to our set using their nadrs
+          kind7WithMarkAsRead.forEach(evt => {
+            const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
+            if (eTag && eventIdToNaddr.has(eTag)) {
+              this.markedAsReadIds.add(eventIdToNaddr.get(eTag)!)
+            }
+          })
+        }
+      }
     } catch (err) {
       console.error('📊 [ReadingProgress] Failed to load:', err)
     } finally {
