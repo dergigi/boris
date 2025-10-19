@@ -81,8 +81,7 @@ export const CompactView: React.FC<CompactViewProps> = ({
             width: '100%',
             background: 'var(--color-border)',
             overflow: 'hidden',
-            margin: '0',
-            paddingLeft: '1.85rem'
+            margin: '0'
           }}
         >
           <div
@@ -90,7 +89,8 @@ export const CompactView: React.FC<CompactViewProps> = ({
               height: '100%',
               width: `${Math.round(readingProgress * 100)}%`,
               background: progressColor,
-              transition: 'width 0.3s ease, background 0.3s ease'
+              transition: 'width 0.3s ease, background 0.3s ease',
+              marginLeft: '1.85rem'
             }}
           />
         </div>
