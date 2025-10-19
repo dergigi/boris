@@ -623,11 +623,17 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         identifier: dTag
       })
       const progress = readingProgressMap.get(naddr)
-      console.log('[progress] 🔍 Looking up:', {
-        naddr: naddr.slice(0, 80),
-        mapKeys: Array.from(readingProgressMap.keys()).map(k => k.slice(0, 80)),
-        progress: progress ? Math.round(progress * 100) + '%' : 'not found'
-      })
+      
+      // Only log first lookup to avoid spam, or when found
+      if (progress || readingProgressMap.size === 0) {
+        console.log('[progress] 🔍 Looking up:', {
+          title: post.title.slice(0, 30),
+          naddr: naddr.slice(0, 80),
+          mapSize: readingProgressMap.size,
+          mapKeys: readingProgressMap.size > 0 ? Array.from(readingProgressMap.keys()).slice(0, 3).map(k => k.slice(0, 80)) : [],
+          progress: progress ? Math.round(progress * 100) + '%' : 'not found'
+        })
+      }
       return progress
     } catch (err) {
       console.error('[progress] ❌ Error encoding naddr:', err)
