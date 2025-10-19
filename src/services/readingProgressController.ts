@@ -30,6 +30,7 @@ class ReadingProgressController {
   private lastLoadedPubkey: string | null = null
   private generation = 0
   private timelineSubscription: { unsubscribe: () => void } | null = null
+  private isLoading = false
 
   onProgress(cb: ProgressMapCallback): () => void {
     this.progressListeners.push(cb)
@@ -185,7 +186,14 @@ class ReadingProgressController {
       return
     }
 
+    // Prevent concurrent starts
+    if (this.isLoading) {
+      console.log('[readingProgress] Already loading, skipping concurrent start')
+      return
+    }
+
     this.setLoading(true)
+    this.isLoading = true
 
     try {
       // Seed from local cache immediately (survives refresh/flight mode)
@@ -261,7 +269,7 @@ class ReadingProgressController {
       }
 
       // Process mark-as-read reactions
-      ;[...kind17Events].forEach((evt) => {
+      [...kind17Events].forEach((evt) => {
         if (evt.content === MARK_AS_READ_EMOJI) {
           // For kind:17, the URL is in the #r tag
           const rTag = evt.tags.find(t => t[0] === 'r')?.[1]
@@ -340,6 +348,7 @@ class ReadingProgressController {
     } finally {
       if (startGeneration === this.generation) {
         this.setLoading(false)
+        this.isLoading = false
       }
       // Debug: Show what we have
       console.log('[readingProgress] === FINAL STATE ===')

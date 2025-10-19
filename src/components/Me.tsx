@@ -30,16 +30,13 @@ import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProg
 import { filterByReadingProgress } from '../utils/readingProgressUtils'
 import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
 import { readingProgressController } from '../services/readingProgressController'
-import { queryEvents } from '../services/dataFetch'
-import { KINDS } from '../config/kinds'
-import { MARK_AS_READ_EMOJI } from '../services/reactionService'
-import { RELAYS } from '../config/relays'
 
 interface MeProps {
   relayPool: RelayPool
   eventStore: IEventStore
   activeTab?: TabType
-  bookmarks: Bookmark[] // From centralized App.tsx state (reserved for future use)
+  bookmarks: Bookmark[] // From centralized App.tsx state
+  bookmarksLoading?: boolean // From centralized App.tsx state (reserved for future use)
 }
 
 type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
@@ -276,43 +273,22 @@ const Me: React.FC<MeProps> = ({
         readingTimestamp: Math.floor(Date.now() / 1000)
       }))
 
-      // Also load MARK_AS_READ for Nostr-native articles (kind:7)
-      try {
-        const reactions7 = await queryEvents(relayPool, { kinds: [7], authors: [viewingPubkey] }, { relayUrls: RELAYS })
-        const markReactions = reactions7.filter(r => r.content === MARK_AS_READ_EMOJI)
-        const eIdToTs = new Map<string, number>()
-        const eIds: string[] = []
-        markReactions.forEach(r => {
-          const eId = r.tags.find(t => t[0] === 'e')?.[1]
-          if (eId) {
-            eIdToTs.set(eId, Math.max(eIdToTs.get(eId) || 0, r.created_at))
-            eIds.push(eId)
-          }
-        })
-        const uniqueEIds = Array.from(new Set(eIds))
-        if (uniqueEIds.length > 0) {
-          const articles = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids: uniqueEIds }, { relayUrls: RELAYS })
-          for (const article of articles) {
-            const dTag = article.tags.find(t => t[0] === 'd')?.[1]
-            if (!dTag) continue
-            try {
-              const naddr = nip19.naddrEncode({ kind: KINDS.BlogPost, pubkey: article.pubkey, identifier: dTag })
-              if (!readItems.find(i => i.id === naddr)) {
-                readItems.push({
-                  id: naddr,
-                  source: 'marked-as-read',
-                  type: 'article',
-                  markedAsRead: true,
-                  readingTimestamp: eIdToTs.get(article.id) || Math.floor(Date.now() / 1000)
-                })
-              }
-            } catch {}
-          }
+      // Include items that are only marked-as-read (no progress event yet)
+      const markedIds = readingProgressController.getMarkedAsReadIds()
+      for (const id of markedIds) {
+        if (!readItems.find(i => i.id === id)) {
+          const isArticle = id.startsWith('naddr1')
+          readItems.push({
+            id,
+            source: 'marked-as-read',
+            type: isArticle ? 'article' : 'external',
+            url: isArticle ? undefined : id,
+            markedAsRead: true,
+            readingTimestamp: Math.floor(Date.now() / 1000)
+          })
         }
-      } catch (err) {
-        console.warn('Failed loading mark-as-read articles:', err)
       }
-      
+
       const readsMap = new Map(readItems.map(item => [item.id, item]))
       setReadsMap(readsMap)
       setReads(readItems)
@@ -361,45 +337,16 @@ const Me: React.FC<MeProps> = ({
       const initialMap = new Map(initialLinks.map(item => [item.id, item]))
       setLinksMap(initialMap)
       setLinks(initialLinks)
-
-      // Also load MARK_AS_READ for URLs (kind:17)
-      try {
-        const reactions17 = await queryEvents(relayPool, { kinds: [17], authors: [viewingPubkey] }, { relayUrls: RELAYS })
-        const urlToTs = new Map<string, number>()
-        reactions17.forEach(r => {
-          if (r.content === MARK_AS_READ_EMOJI) {
-            const rTag = r.tags.find(t => t[0] === 'r')?.[1]
-            if (rTag) {
-              urlToTs.set(rTag, Math.max(urlToTs.get(rTag) || 0, r.created_at))
-            }
-          }
-        })
-        const markedLinks: ReadItem[] = Array.from(urlToTs.entries()).map(([url, ts]) => ({
-          id: url,
-          source: 'marked-as-read',
-          type: 'external',
-          url,
-          markedAsRead: true,
-          readingTimestamp: ts
-        }))
-        // Merge these into links, even if not present from bookmarks
-        const merged = new Map(initialMap)
-        markedLinks.forEach(item => {
-          merged.set(item.id, { ...(merged.get(item.id) || {} as ReadItem), ...item })
-        })
-        setLinksMap(merged)
-        setLinks(Array.from(merged.values()))
-      } catch (err) {
-        console.warn('Failed loading mark-as-read links:', err)
-      }
-
       setLoadedTabs(prev => new Set(prev).add('links'))
       if (!hasBeenLoaded) setLoading(false)
       
-      // Background enrichment: merge reading progress and mark-as-read for items we already have
+      // Background enrichment: merge reading progress and mark-as-read
+      // Only update items that are already in our map
       fetchLinks(relayPool, viewingPubkey, (item) => {
         setLinksMap(prevMap => {
+          // Only update if item exists in our current map
           if (!prevMap.has(item.id)) return prevMap
+          
           const newMap = new Map(prevMap)
           if (item.type === 'article' && item.author) {
             const progress = readingProgressMap.get(item.id)
