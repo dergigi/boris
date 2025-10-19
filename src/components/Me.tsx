@@ -167,6 +167,22 @@ const Me: React.FC<MeProps> = ({
         readingTimestamp: Math.floor(Date.now() / 1000)
       }))
       
+      // Include items that are only marked-as-read (no progress event yet)
+      const markedIds = readingProgressController.getMarkedAsReadIds()
+      for (const id of markedIds) {
+        if (!readItems.find(i => i.id === id)) {
+          const isArticle = id.startsWith('naddr1')
+          readItems.push({
+            id,
+            source: 'marked-as-read',
+            type: isArticle ? 'article' : 'external',
+            url: isArticle ? undefined : id,
+            markedAsRead: true,
+            readingTimestamp: Math.floor(Date.now() / 1000)
+          })
+        }
+      }
+
       const readsMap = new Map(readItems.map(item => [item.id, item]))
       setReadsMap(readsMap)
       setReads(readItems)
@@ -256,7 +272,23 @@ const Me: React.FC<MeProps> = ({
         markedAsRead: readingProgressController.isMarkedAsRead(id),
         readingTimestamp: Math.floor(Date.now() / 1000)
       }))
-      
+
+      // Include items that are only marked-as-read (no progress event yet)
+      const markedIds = readingProgressController.getMarkedAsReadIds()
+      for (const id of markedIds) {
+        if (!readItems.find(i => i.id === id)) {
+          const isArticle = id.startsWith('naddr1')
+          readItems.push({
+            id,
+            source: 'marked-as-read',
+            type: isArticle ? 'article' : 'external',
+            url: isArticle ? undefined : id,
+            markedAsRead: true,
+            readingTimestamp: Math.floor(Date.now() / 1000)
+          })
+        }
+      }
+
       const readsMap = new Map(readItems.map(item => [item.id, item]))
       setReadsMap(readsMap)
       setReads(readItems)
