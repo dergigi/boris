@@ -248,17 +248,15 @@ class ReadingProgressController {
           console.warn('[readingProgress] Background reading progress query failed:', err)
         })
 
-      // Load mark-as-read reactions in background (non-blocking, fire-and-forget)
+      // Load mark-as-read reactions in background (non-blocking, streaming)
       console.log('[readingProgress] Starting background relay query for mark-as-read reactions...')
-      // TODO: Fix queryEvents hanging for reaction queries
-      // this.loadMarkAsReadReactions(relayPool, eventStore, pubkey, startGeneration)
-      //   .then(() => {
-      //     console.log('[readingProgress] Mark-as-read reactions loading complete')
-      //   })
-      //   .catch((err) => {
-      //     console.warn('[readingProgress] Mark-as-read reactions loading failed:', err)
-      //   })
-      console.log('[readingProgress] [SKIPPED] Mark-as-read reactions loading disabled for now')
+      this.loadMarkAsReadReactions(relayPool, eventStore, pubkey, startGeneration)
+        .then(() => {
+          console.log('[readingProgress] Mark-as-read reactions loading complete')
+        })
+        .catch((err) => {
+          console.warn('[readingProgress] Mark-as-read reactions loading failed:', err)
+        })
 
     } catch (err) {
       console.error('📊 [ReadingProgress] Failed to setup:', err)
@@ -319,82 +317,67 @@ class ReadingProgressController {
     generation: number
   ): Promise<void> {
     try {
-      // Query kind:17 (URL reactions) in parallel with kind:7 (event reactions)
-      console.log('[readingProgress] Querying kind:17 and kind:7 reactions...')
-      console.log('[readingProgress] About to call queryEvents for kind:17 and kind:7...')
-      const [kind17Events, kind7Events] = await Promise.all([
-        queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { relayUrls: RELAYS }),
-        queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { relayUrls: RELAYS })
-      ])
-      console.log('[readingProgress] queryEvents returned!')
+      // Stream kind:17 (URL reactions) and kind:7 (event reactions) in parallel
+      console.log('[readingProgress] Querying kind:17 and kind:7 reactions (streaming)...')
+      const seenReactionIds = new Set<string>()
 
-      console.log('[readingProgress] Got kind:17 events:', kind17Events.length)
-      console.log('[readingProgress] Got kind:7 events:', kind7Events.length)
+      const handleUrlReaction = (evt: NostrEvent) => {
+        if (seenReactionIds.has(evt.id)) return
+        seenReactionIds.add(evt.id)
+        if (evt.content !== MARK_AS_READ_EMOJI) return
+        const rTag = evt.tags.find(t => t[0] === 'r')?.[1]
+        if (!rTag) return
+        this.markedAsReadIds.add(rTag)
+        this.emitMarkedAsReadChanged()
+      }
+
+      const pendingEventIds = new Set<string>()
+      const handleEventReaction = (evt: NostrEvent) => {
+        if (seenReactionIds.has(evt.id)) return
+        seenReactionIds.add(evt.id)
+        if (evt.content !== MARK_AS_READ_EMOJI) return
+        const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
+        if (!eTag) return
+        pendingEventIds.add(eTag)
+      }
+
+      // Fire queries with onEvent callbacks for streaming behavior
+      const [kind17Events, kind7Events] = await Promise.all([
+        queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { relayUrls: RELAYS, onEvent: handleUrlReaction }),
+        queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { relayUrls: RELAYS, onEvent: handleEventReaction })
+      ])
 
       if (generation !== this.generation) return
 
-      // Process kind:17 reactions (URLs)
-      kind17Events.forEach((evt) => {
-        console.log('[readingProgress] kind:17 event content:', evt.content, '=== MARK_AS_READ_EMOJI:', MARK_AS_READ_EMOJI)
-        if (evt.content === MARK_AS_READ_EMOJI) {
-          const rTag = evt.tags.find(t => t[0] === 'r')?.[1]
-          if (rTag) {
-            this.markedAsReadIds.add(rTag)
-            console.log('[readingProgress] Added kind:17 URL to markedAsReadIds:', rTag)
+      // Include any reactions that arrived only at EOSE
+      kind17Events.forEach(handleUrlReaction)
+      kind7Events.forEach(handleEventReaction)
+
+      if (pendingEventIds.size > 0) {
+        // Fetch referenced 30023 events, streaming not required here
+        const ids = Array.from(pendingEventIds)
+        const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids }, { relayUrls: RELAYS })
+        const eventIdToNaddr = new Map<string, string>()
+        for (const article of articleEvents) {
+          const dTag = article.tags.find(t => t[0] === 'd')?.[1]
+          if (!dTag) continue
+          try {
+            const naddr = nip19.naddrEncode({ kind: KINDS.BlogPost, pubkey: article.pubkey, identifier: dTag })
+            eventIdToNaddr.set(article.id, naddr)
+          } catch {}
+        }
+
+        // Map pending event IDs to naddrs and emit
+        for (const eId of pendingEventIds) {
+          const naddr = eventIdToNaddr.get(eId)
+          if (naddr) {
+            this.markedAsReadIds.add(naddr)
           }
         }
-      })
-
-      // Process kind:7 reactions (Nostr articles)
-      const kind7WithMarkAsRead = kind7Events.filter(evt => evt.content === MARK_AS_READ_EMOJI)
-      console.log('[readingProgress] kind:7 with MARK_AS_READ_EMOJI:', kind7WithMarkAsRead.length)
-      if (kind7WithMarkAsRead.length > 0) {
-        const eventIds = Array.from(new Set(
-          kind7WithMarkAsRead
-            .flatMap(evt => evt.tags.filter(t => t[0] === 'e'))
-            .map(t => t[1])
-        ))
-
-        console.log('[readingProgress] Event IDs from kind:7 reactions:', eventIds.length)
-
-        if (eventIds.length > 0) {
-          const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids: eventIds }, { relayUrls: RELAYS })
-          console.log('[readingProgress] Fetched articles for event IDs:', articleEvents.length)
-          
-          if (generation !== this.generation) return
-
-          const eventIdToNaddr = new Map<string, string>()
-          for (const article of articleEvents) {
-            const dTag = article.tags.find(t => t[0] === 'd')?.[1]
-            if (dTag) {
-              try {
-                const naddr = nip19.naddrEncode({
-                  kind: KINDS.BlogPost,
-                  pubkey: article.pubkey,
-                  identifier: dTag
-                })
-                eventIdToNaddr.set(article.id, naddr)
-              } catch (e) {
-                console.warn('[readingProgress] Failed to encode naddr:', e)
-              }
-            }
-          }
-
-          console.log('[readingProgress] Mapped event IDs to nadrs:', eventIdToNaddr.size)
-
-          kind7WithMarkAsRead.forEach(evt => {
-            const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
-            if (eTag && eventIdToNaddr.has(eTag)) {
-              const naddr = eventIdToNaddr.get(eTag)!
-              this.markedAsReadIds.add(naddr)
-              console.log('[readingProgress] Added kind:7 article to markedAsReadIds:', naddr)
-            }
-          })
-        }
+        this.emitMarkedAsReadChanged()
       }
 
       console.log('[readingProgress] Mark-as-read reactions complete. Total:', Array.from(this.markedAsReadIds).length)
-      this.emitMarkedAsReadChanged()
     } catch (err) {
       console.warn('[readingProgress] Failed to load mark-as-read reactions:', err)
     }
