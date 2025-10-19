@@ -60,9 +60,6 @@ export interface UserSettings {
   paragraphAlignment?: 'left' | 'justify' // default: justify
   // Reading position sync
   syncReadingPosition?: boolean // default: false (opt-in)
-  // Reading progress migration (internal flag)
-  useReadingProgressKind?: boolean // default: true (use kind 39802)
-  writeLegacyReadingPosition?: boolean // default: true (dual-write during migration)
 }
 
 export async function loadSettings(

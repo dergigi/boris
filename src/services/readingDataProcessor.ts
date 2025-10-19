@@ -3,7 +3,6 @@ import { ReadItem } from './readsService'
 import { fallbackTitleFromUrl } from '../utils/readItemMerge'
 import { KINDS } from '../config/kinds'
 
-const READING_POSITION_PREFIX = 'boris:reading-position:'
 const READING_PROGRESS_KIND = KINDS.ReadingProgress // 39802
 
 interface ReadArticle {
@@ -36,7 +35,7 @@ export function processReadingProgress(
     
     try {
       const content = JSON.parse(event.content)
-      const position = content.progress || content.position || 0
+      const position = content.progress || 0
       // Use event.created_at as authoritative timestamp (NIP-39802 spec)
       const timestamp = event.created_at
 
@@ -96,64 +95,6 @@ export function processReadingProgress(
       }
     } catch (error) {
       console.warn('Failed to parse reading progress event:', error)
-    }
-  }
-}
-
-/**
- * Processes legacy reading position events (kind 30078) into ReadItems
- */
-export function processReadingPositions(
-  events: NostrEvent[],
-  readsMap: Map<string, ReadItem>
-): void {
-  for (const event of events) {
-    const dTag = event.tags.find(t => t[0] === 'd')?.[1]
-    if (!dTag || !dTag.startsWith(READING_POSITION_PREFIX)) continue
-
-    const identifier = dTag.replace(READING_POSITION_PREFIX, '')
-    
-    try {
-      const positionData = JSON.parse(event.content)
-      const position = positionData.position
-      // For legacy events, use content timestamp if available, otherwise created_at
-      const timestamp = positionData.timestamp || event.created_at
-
-      let itemId: string
-      let itemUrl: string | undefined
-      let itemType: 'article' | 'external' = 'external'
-
-      // Check if it's a nostr article (naddr format)
-      if (identifier.startsWith('naddr1')) {
-        itemId = identifier
-        itemType = 'article'
-      } else {
-        // It's a base64url-encoded URL
-        try {
-          itemUrl = atob(identifier.replace(/-/g, '+').replace(/_/g, '/'))
-          itemId = itemUrl
-          itemType = 'external'
-        } catch (e) {
-          console.warn('Failed to decode URL identifier:', identifier)
-          continue
-        }
-      }
-
-      // Add or update the item
-      const existing = readsMap.get(itemId)
-      if (!existing || !existing.readingTimestamp || timestamp > existing.readingTimestamp) {
-        readsMap.set(itemId, {
-          ...existing,
-          id: itemId,
-          source: 'reading-progress',
-          type: itemType,
-          url: itemUrl,
-          readingProgress: position,
-          readingTimestamp: timestamp
-        })
-      }
-    } catch (error) {
-      console.warn('Failed to parse reading position:', error)
     }
   }
 }

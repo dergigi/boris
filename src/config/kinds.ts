@@ -2,7 +2,7 @@
 export const KINDS = {
   Highlights: 9802,              // NIP-?? user highlights
   BlogPost: 30023,               // NIP-23 long-form article
-  AppData: 30078,                // NIP-78 application data (legacy reading positions)
+  AppData: 30078,                // NIP-78 application data
   ReadingProgress: 39802,        // NIP-39802 reading progress
   List: 30001,                   // NIP-51 list (addressable)
   ListReplaceable: 30003,        // NIP-51 replaceable list

@@ -7,9 +7,7 @@ import { publishEvent } from './writeService'
 import { RELAYS } from '../config/relays'
 import { KINDS } from '../config/kinds'
 
-const APP_DATA_KIND = KINDS.AppData // 30078 - Legacy NIP-78 Application Data
 const READING_PROGRESS_KIND = KINDS.ReadingProgress // 39802 - NIP-39802 Reading Progress
-const READING_POSITION_PREFIX = 'boris:reading-position:' // Legacy prefix
 
 export interface ReadingPosition {
   position: number // 0-1 scroll progress
@@ -24,17 +22,7 @@ export interface ReadingProgressContent {
   ver?: string // Schema version
 }
 
-// Helper to extract and parse reading position from legacy event (kind 30078)
-function getReadingPositionContent(event: NostrEvent): ReadingPosition | undefined {
-  if (!event.content || event.content.length === 0) return undefined
-  try {
-    return JSON.parse(event.content) as ReadingPosition
-  } catch {
-    return undefined
-  }
-}
-
-// Helper to extract and parse reading progress from new event (kind 39802)
+// Helper to extract and parse reading progress from event (kind 39802)
 function getReadingProgressContent(event: NostrEvent): ReadingPosition | undefined {
   if (!event.content || event.content.length === 0) return undefined
   try {
@@ -117,174 +105,84 @@ export function generateArticleIdentifier(naddrOrUrl: string): string {
 }
 
 /**
- * Save reading position to Nostr
- * Supports both new kind 39802 and legacy kind 30078 (dual-write during migration)
+ * Save reading position to Nostr (kind 39802)
  */
 export async function saveReadingPosition(
   relayPool: RelayPool,
   eventStore: IEventStore,
   factory: EventFactory,
   articleIdentifier: string,
-  position: ReadingPosition,
-  options?: {
-    useProgressKind?: boolean // Default: true
-    writeLegacy?: boolean // Default: true (dual-write)
-  }
+  position: ReadingPosition
 ): Promise<void> {
-  const useProgressKind = options?.useProgressKind !== false
-  const writeLegacy = options?.writeLegacy !== false
-  
-  console.log('💾 [ReadingPosition] Saving position:', {
+  console.log('💾 [ReadingProgress] Saving position:', {
     identifier: articleIdentifier.slice(0, 32) + '...',
     position: position.position,
     positionPercent: Math.round(position.position * 100) + '%',
     timestamp: position.timestamp,
-    scrollTop: position.scrollTop,
-    useProgressKind,
-    writeLegacy
+    scrollTop: position.scrollTop
   })
 
   const now = Math.floor(Date.now() / 1000)
 
-  // Write new kind 39802 (preferred)
-  if (useProgressKind) {
-    const progressContent: ReadingProgressContent = {
-      progress: position.position,
-      ts: position.timestamp,
-      loc: position.scrollTop,
-      ver: '1'
-    }
-    
-    const tags = generateProgressTags(articleIdentifier)
-    
-    const draft = await factory.create(async () => ({
-      kind: READING_PROGRESS_KIND,
-      content: JSON.stringify(progressContent),
-      tags,
-      created_at: now
-    }))
-
-    const signed = await factory.sign(draft)
-    await publishEvent(relayPool, eventStore, signed)
-    
-    console.log('✅ [ReadingProgress] Saved kind 39802, event ID:', signed.id.slice(0, 8))
+  const progressContent: ReadingProgressContent = {
+    progress: position.position,
+    ts: position.timestamp,
+    loc: position.scrollTop,
+    ver: '1'
   }
+  
+  const tags = generateProgressTags(articleIdentifier)
+  
+  const draft = await factory.create(async () => ({
+    kind: READING_PROGRESS_KIND,
+    content: JSON.stringify(progressContent),
+    tags,
+    created_at: now
+  }))
 
-  // Write legacy kind 30078 (for backward compatibility)
-  if (writeLegacy) {
-    const legacyDTag = `${READING_POSITION_PREFIX}${articleIdentifier}`
-    
-    const legacyDraft = await factory.create(async () => ({
-      kind: APP_DATA_KIND,
-      content: JSON.stringify(position),
-      tags: [
-        ['d', legacyDTag],
-        ['client', 'boris']
-      ],
-      created_at: now
-    }))
-
-    const legacySigned = await factory.sign(legacyDraft)
-    await publishEvent(relayPool, eventStore, legacySigned)
-    
-    console.log('✅ [ReadingPosition] Saved legacy kind 30078, event ID:', legacySigned.id.slice(0, 8))
-  }
+  const signed = await factory.sign(draft)
+  await publishEvent(relayPool, eventStore, signed)
+  
+  console.log('✅ [ReadingProgress] Saved, event ID:', signed.id.slice(0, 8))
 }
 
 /**
- * Load reading position from Nostr
- * Tries new kind 39802 first, falls back to legacy kind 30078
+ * Load reading position from Nostr (kind 39802)
  */
 export async function loadReadingPosition(
   relayPool: RelayPool,
   eventStore: IEventStore,
   pubkey: string,
-  articleIdentifier: string,
-  options?: {
-    useProgressKind?: boolean // Default: true
-  }
+  articleIdentifier: string
 ): Promise<ReadingPosition | null> {
-  const useProgressKind = options?.useProgressKind !== false
-  const progressDTag = generateDTag(articleIdentifier)
-  const legacyDTag = `${READING_POSITION_PREFIX}${articleIdentifier}`
+  const dTag = generateDTag(articleIdentifier)
 
-  console.log('📖 [ReadingPosition] Loading position:', {
+  console.log('📖 [ReadingProgress] Loading position:', {
     pubkey: pubkey.slice(0, 8) + '...',
     identifier: articleIdentifier.slice(0, 32) + '...',
-    progressDTag: progressDTag.slice(0, 50) + '...',
-    legacyDTag: legacyDTag.slice(0, 50) + '...'
+    dTag: dTag.slice(0, 50) + '...'
   })
 
-  // Try new kind 39802 first (if enabled)
-  if (useProgressKind) {
-    try {
-      const localEvent = await firstValueFrom(
-        eventStore.replaceable(READING_PROGRESS_KIND, pubkey, progressDTag)
-      )
-      if (localEvent) {
-        const content = getReadingProgressContent(localEvent)
-        if (content) {
-          console.log('✅ [ReadingProgress] Loaded kind 39802 from local store:', {
-            position: content.position,
-            positionPercent: Math.round(content.position * 100) + '%',
-            timestamp: content.timestamp
-          })
-          
-          // Fetch from relays in background
-          relayPool
-            .subscription(RELAYS, {
-              kinds: [READING_PROGRESS_KIND],
-              authors: [pubkey],
-              '#d': [progressDTag]
-            })
-            .pipe(onlyEvents(), mapEventsToStore(eventStore))
-            .subscribe()
-          
-          return content
-        }
-      }
-    } catch (err) {
-      console.log('📭 No cached kind 39802 found, trying relays...')
-    }
-
-    // Try fetching kind 39802 from relays
-    const progressResult = await fetchFromRelays(
-      relayPool,
-      eventStore,
-      pubkey,
-      READING_PROGRESS_KIND,
-      progressDTag,
-      getReadingProgressContent
-    )
-    
-    if (progressResult) {
-      console.log('✅ [ReadingProgress] Loaded kind 39802 from relays')
-      return progressResult
-    }
-  }
-
-  // Fall back to legacy kind 30078
-  console.log('📭 No kind 39802 found, trying legacy kind 30078...')
-  
+  // Check local event store first
   try {
     const localEvent = await firstValueFrom(
-      eventStore.replaceable(APP_DATA_KIND, pubkey, legacyDTag)
+      eventStore.replaceable(READING_PROGRESS_KIND, pubkey, dTag)
     )
     if (localEvent) {
-      const content = getReadingPositionContent(localEvent)
+      const content = getReadingProgressContent(localEvent)
       if (content) {
-        console.log('✅ [ReadingPosition] Loaded legacy kind 30078 from local store:', {
+        console.log('✅ [ReadingProgress] Loaded from local store:', {
           position: content.position,
           positionPercent: Math.round(content.position * 100) + '%',
           timestamp: content.timestamp
         })
         
-        // Fetch from relays in background
+        // Fetch from relays in background to get any updates
         relayPool
           .subscription(RELAYS, {
-            kinds: [APP_DATA_KIND],
+            kinds: [READING_PROGRESS_KIND],
             authors: [pubkey],
-            '#d': [legacyDTag]
+            '#d': [dTag]
           })
           .pipe(onlyEvents(), mapEventsToStore(eventStore))
           .subscribe()
@@ -293,25 +191,25 @@ export async function loadReadingPosition(
       }
     }
   } catch (err) {
-    console.log('📭 No cached legacy position found, trying relays...')
+    console.log('📭 No cached reading progress found, fetching from relays...')
   }
 
-  // Try fetching legacy from relays
-  const legacyResult = await fetchFromRelays(
+  // Fetch from relays
+  const result = await fetchFromRelays(
     relayPool,
     eventStore,
     pubkey,
-    APP_DATA_KIND,
-    legacyDTag,
-    getReadingPositionContent
+    READING_PROGRESS_KIND,
+    dTag,
+    getReadingProgressContent
   )
   
-  if (legacyResult) {
-    console.log('✅ [ReadingPosition] Loaded legacy kind 30078 from relays')
-    return legacyResult
+  if (result) {
+    console.log('✅ [ReadingProgress] Loaded from relays')
+    return result
   }
 
-  console.log('📭 No reading position found')
+  console.log('📭 No reading progress found')
   return null
 }
 

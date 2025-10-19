@@ -4,12 +4,12 @@ import { queryEvents } from './dataFetch'
 import { RELAYS } from '../config/relays'
 import { KINDS } from '../config/kinds'
 import { ReadItem } from './readsService'
-import { processReadingProgress, processReadingPositions, processMarkedAsRead, filterValidItems, sortByReadingActivity } from './readingDataProcessor'
+import { processReadingProgress, processMarkedAsRead, filterValidItems, sortByReadingActivity } from './readingDataProcessor'
 import { mergeReadItem } from '../utils/readItemMerge'
 
 /**
  * Fetches external URL links with reading progress from:
- * - URLs with reading progress (kind:39802 and legacy kind:30078)
+ * - URLs with reading progress (kind:39802)
  * - Manually marked as read URLs (kind:7, kind:17)
  */
 export async function fetchLinks(
@@ -32,32 +32,18 @@ export async function fetchLinks(
   
   try {
     // Fetch all data sources in parallel
-    // Query both new kind 39802 and legacy kind 30078
-    const [progressEvents, legacyPositionEvents, markedAsReadArticles] = await Promise.all([
+    const [progressEvents, markedAsReadArticles] = await Promise.all([
       queryEvents(relayPool, { kinds: [KINDS.ReadingProgress], authors: [userPubkey] }, { relayUrls: RELAYS }),
-      queryEvents(relayPool, { kinds: [KINDS.AppData], authors: [userPubkey] }, { relayUrls: RELAYS }),
       fetchReadArticles(relayPool, userPubkey)
     ])
 
     console.log('📊 [Links] Data fetched:', {
       readingProgress: progressEvents.length,
-      legacyPositions: legacyPositionEvents.length,
       markedAsRead: markedAsReadArticles.length
     })
 
-    // Process new reading progress events (kind 39802) first
+    // Process reading progress events (kind 39802)
     processReadingProgress(progressEvents, linksMap)
-    if (onItem) {
-      linksMap.forEach(item => {
-        if (item.type === 'external') {
-          const hasProgress = (item.readingProgress && item.readingProgress > 0) || item.markedAsRead
-          if (hasProgress) emitItem(item)
-        }
-      })
-    }
-    
-    // Process legacy reading positions (kind 30078) - won't override newer 39802 data
-    processReadingPositions(legacyPositionEvents, linksMap)
     if (onItem) {
       linksMap.forEach(item => {
         if (item.type === 'external') {

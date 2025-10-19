@@ -8,7 +8,7 @@ import { RELAYS } from '../config/relays'
 import { KINDS } from '../config/kinds'
 import { classifyBookmarkType } from '../utils/bookmarkTypeClassifier'
 import { nip19 } from 'nostr-tools'
-import { processReadingProgress, processReadingPositions, processMarkedAsRead, filterValidItems, sortByReadingActivity } from './readingDataProcessor'
+import { processReadingProgress, processMarkedAsRead, filterValidItems, sortByReadingActivity } from './readingDataProcessor'
 import { mergeReadItem } from '../utils/readItemMerge'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
@@ -37,7 +37,7 @@ export interface ReadItem {
 /**
  * Fetches all reads from multiple sources:
  * - Bookmarked articles (kind:30023) and article/website URLs
- * - Articles/URLs with reading progress (kind:30078)
+ * - Articles/URLs with reading progress (kind:39802)
  * - Manually marked as read articles/URLs (kind:7, kind:17)
  */
 export async function fetchAllReads(
@@ -61,30 +61,19 @@ export async function fetchAllReads(
   
   try {
     // Fetch all data sources in parallel
-    // Query both new kind 39802 and legacy kind 30078
-    const [progressEvents, legacyPositionEvents, markedAsReadArticles] = await Promise.all([
+    const [progressEvents, markedAsReadArticles] = await Promise.all([
       queryEvents(relayPool, { kinds: [KINDS.ReadingProgress], authors: [userPubkey] }, { relayUrls: RELAYS }),
-      queryEvents(relayPool, { kinds: [KINDS.AppData], authors: [userPubkey] }, { relayUrls: RELAYS }),
       fetchReadArticles(relayPool, userPubkey)
     ])
 
     console.log('📊 [Reads] Data fetched:', {
       readingProgress: progressEvents.length,
-      legacyPositions: legacyPositionEvents.length,
       markedAsRead: markedAsReadArticles.length,
       bookmarks: bookmarks.length
     })
 
-    // Process new reading progress events (kind 39802) first
+    // Process reading progress events (kind 39802)
     processReadingProgress(progressEvents, readsMap)
-    if (onItem) {
-      readsMap.forEach(item => {
-        if (item.type === 'article') onItem(item)
-      })
-    }
-    
-    // Process legacy reading positions (kind 30078) - won't override newer 39802 data
-    processReadingPositions(legacyPositionEvents, readsMap)
     if (onItem) {
       readsMap.forEach(item => {
         if (item.type === 'article') onItem(item)
