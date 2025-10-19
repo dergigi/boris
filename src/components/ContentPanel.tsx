@@ -194,7 +194,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   const { isReadingComplete, progressPercentage, saveNow } = useReadingPosition({
     enabled: isTextContent,
-    syncEnabled: settings?.syncReadingPosition,
+    syncEnabled: settings?.syncReadingPosition !== false,
     onSave: handleSavePosition,
     onReadingComplete: () => {
       // Auto-mark as read when reading is complete (if enabled in settings)
@@ -209,7 +209,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   useEffect(() => {
     console.log('[progress] 📊 ContentPanel reading position sync status:', {
       enabled: isTextContent,
-      syncEnabled: settings?.syncReadingPosition,
+      syncEnabled: settings?.syncReadingPosition !== false,
       hasAccount: !!activeAccount,
       hasRelayPool: !!relayPool,
       hasEventStore: !!eventStore,
@@ -230,8 +230,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       })
       return
     }
-    if (!settings?.syncReadingPosition) {
-      console.log('⏭️ [ContentPanel] Sync disabled - not restoring position')
+    if (settings?.syncReadingPosition === false) {
+      console.log('⏭️ [ContentPanel] Sync disabled in settings - not restoring position')
       return
     }
 
