@@ -77,7 +77,7 @@ export const CompactView: React.FC<CompactViewProps> = ({
       {readingProgress !== undefined && readingProgress > 0 && (
         <div 
           style={{
-            height: '2px',
+            height: '1px',
             width: '100%',
             background: 'var(--color-border)',
             overflow: 'hidden',
