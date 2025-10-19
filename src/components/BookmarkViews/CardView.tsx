@@ -24,6 +24,7 @@ interface CardViewProps {
   articleImage?: string
   articleSummary?: string
   contentTypeIcon: IconDefinition
+  readingProgress?: number
 }
 
 export const CardView: React.FC<CardViewProps> = ({
@@ -38,7 +39,8 @@ export const CardView: React.FC<CardViewProps> = ({
   handleReadNow,
   articleImage,
   articleSummary,
-  contentTypeIcon
+  contentTypeIcon,
+  readingProgress
 }) => {
   const firstUrl = hasUrls ? extractedUrls[0] : null
   const firstUrlClassificationType = firstUrl ? classifyUrl(firstUrl)?.type : null
@@ -51,6 +53,14 @@ export const CardView: React.FC<CardViewProps> = ({
   const contentLength = (bookmark.content || '').length
   const shouldTruncate = !expanded && contentLength > 210
   const isArticle = bookmark.kind === 30023
+  
+  // Calculate progress color (matching BlogPostCard logic)
+  let progressColor = '#6366f1' // Default blue (reading)
+  if (readingProgress && readingProgress >= 0.95) {
+    progressColor = '#10b981' // Green (completed)
+  } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
+    progressColor = 'var(--color-text)' // Neutral text color (started)
+  }
   
   // Determine which image to use (article image, instant preview, or OG image)
   const previewImage = articleImage || instantPreview || ogImage
@@ -161,6 +171,28 @@ export const CardView: React.FC<CardViewProps> = ({
         >
           <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} />
         </button>
+      )}
+      
+      {/* Reading progress indicator for articles */}
+      {isArticle && readingProgress !== undefined && readingProgress > 0 && (
+        <div 
+          style={{
+            height: '3px',
+            width: '100%',
+            background: 'var(--color-border)',
+            overflow: 'hidden',
+            marginTop: '0.75rem'
+          }}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${Math.round(readingProgress * 100)}%`,
+              background: progressColor,
+              transition: 'width 0.3s ease, background 0.3s ease'
+            }}
+          />
+        </div>
       )}
       
       <div className="bookmark-footer">

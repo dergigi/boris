@@ -471,6 +471,25 @@ const Me: React.FC<MeProps> = ({
     }
   }
 
+  // Helper to get reading progress for a bookmark
+  const getBookmarkReadingProgress = (bookmark: IndividualBookmark): number | undefined => {
+    if (bookmark.kind === 30023) {
+      const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1]
+      if (!dTag) return undefined
+      try {
+        const naddr = nip19.naddrEncode({
+          kind: 30023,
+          pubkey: bookmark.pubkey,
+          identifier: dTag
+        })
+        return readingProgressMap.get(naddr)
+      } catch (err) {
+        return undefined
+      }
+    }
+    return undefined
+  }
+
   // Merge and flatten all individual bookmarks
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(hasContent)
@@ -567,6 +586,7 @@ const Me: React.FC<MeProps> = ({
                       index={index}
                       viewMode="cards"
                       onSelectUrl={handleSelectUrl}
+                      readingProgress={getBookmarkReadingProgress(individualBookmark)}
                     />
                   ))}
                 </div>

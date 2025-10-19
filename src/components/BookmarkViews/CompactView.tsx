@@ -13,6 +13,7 @@ interface CompactViewProps {
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   articleSummary?: string
   contentTypeIcon: IconDefinition
+  readingProgress?: number
 }
 
 export const CompactView: React.FC<CompactViewProps> = ({
@@ -22,12 +23,21 @@ export const CompactView: React.FC<CompactViewProps> = ({
   extractedUrls,
   onSelectUrl,
   articleSummary,
-  contentTypeIcon
+  contentTypeIcon,
+  readingProgress
 }) => {
   const isArticle = bookmark.kind === 30023
   const isWebBookmark = bookmark.kind === 39701
   const isClickable = hasUrls || isArticle || isWebBookmark
   
+  // Calculate progress color (matching BlogPostCard logic)
+  let progressColor = '#6366f1' // Default blue (reading)
+  if (readingProgress && readingProgress >= 0.95) {
+    progressColor = '#10b981' // Green (completed)
+  } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
+    progressColor = 'var(--color-text)' // Neutral text color (started)
+  }
+
   const handleCompactClick = () => {
     if (!onSelectUrl) return
     
@@ -62,6 +72,28 @@ export const CompactView: React.FC<CompactViewProps> = ({
         <span className="bookmark-date-compact">{formatDateCompact(bookmark.created_at)}</span>
         {/* CTA removed */}
       </div>
+      
+      {/* Reading progress indicator for articles */}
+      {isArticle && readingProgress !== undefined && readingProgress > 0 && (
+        <div 
+          style={{
+            height: '2px',
+            width: '100%',
+            background: 'var(--color-border)',
+            overflow: 'hidden',
+            margin: '0'
+          }}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${Math.round(readingProgress * 100)}%`,
+              background: progressColor,
+              transition: 'width 0.3s ease, background 0.3s ease'
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }
