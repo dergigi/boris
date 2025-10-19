@@ -129,19 +129,21 @@ class ReadingProgressController {
     this.lastLoadedPubkey = pubkey
 
     try {
-      // Query events - this checks both local store AND relays
-      // The queryEvents function is smart enough to check local first
-      const lastSynced = force ? null : this.getLastSyncedAt(pubkey)
+      // Query events from relays
+      // Force full sync if map is empty (first load) or if explicitly forced
+      const needsFullSync = force || this.currentProgressMap.size === 0
+      const lastSynced = needsFullSync ? null : this.getLastSyncedAt(pubkey)
+      
       const filter: any = {
         kinds: [KINDS.ReadingProgress],
         authors: [pubkey]
       }
       
-      if (lastSynced && !force) {
+      if (lastSynced && !needsFullSync) {
         filter.since = lastSynced
-        console.log('📊 [ReadingProgress] Incremental sync from relays since', new Date(lastSynced * 1000).toISOString())
+        console.log('📊 [ReadingProgress] Incremental sync since', new Date(lastSynced * 1000).toISOString())
       } else {
-        console.log('📊 [ReadingProgress] Full sync from relays')
+        console.log('📊 [ReadingProgress] Full sync (map size:', this.currentProgressMap.size + ')')
       }
 
       const relayEvents = await queryEvents(relayPool, filter, { relayUrls: RELAYS })
