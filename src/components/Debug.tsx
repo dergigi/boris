@@ -19,6 +19,7 @@ import { useSettings } from '../hooks/useSettings'
 import { fetchHighlights, fetchHighlightsFromAuthors } from '../services/highlightService'
 import { contactsController } from '../services/contactsController'
 import { writingsController } from '../services/writingsController'
+import { readingProgressController } from '../services/readingProgressController'
 import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
 
 const defaultPayload = 'The quick brown fox jumps over the lazy dog.'
@@ -113,6 +114,9 @@ const Debug: React.FC<DebugProps> = ({
   const [markAsReadReactions, setMarkAsReadReactions] = useState<NostrEvent[]>([])
   const [tLoadMarkAsRead, setTLoadMarkAsRead] = useState<number | null>(null)
   const [tFirstMarkAsRead, setTFirstMarkAsRead] = useState<number | null>(null)
+  
+  // Deduplicated reading progress from controller
+  const [deduplicatedProgressMap, setDeduplicatedProgressMap] = useState<Map<string, number>>(new Map())
   
   // Live timing state
   const [liveTiming, setLiveTiming] = useState<{
@@ -739,7 +743,7 @@ const Debug: React.FC<DebugProps> = ({
   }
 
   const handleLoadReadingProgress = async () => {
-    if (!relayPool || !activeAccount?.pubkey) {
+    if (!relayPool || !eventStore || !activeAccount?.pubkey) {
       DebugBus.warn('debug', 'Please log in to load reading progress')
       return
     }
@@ -749,24 +753,26 @@ const Debug: React.FC<DebugProps> = ({
       setReadingProgressEvents([])
       setTLoadReadingProgress(null)
       setTFirstReadingProgress(null)
-      DebugBus.info('debug', 'Loading reading progress events...')
+      setDeduplicatedProgressMap(new Map())
+      DebugBus.info('debug', 'Loading reading progress events via controller...')
 
       const start = performance.now()
       let firstEventTime: number | null = null
       setLiveTiming(prev => ({ ...prev, loadReadingProgress: { startTime: start } }))
 
-      const { queryEvents } = await import('../services/dataFetch')
-      const { KINDS } = await import('../config/kinds')
-
-      const events = await queryEvents(relayPool, { kinds: [KINDS.ReadingProgress], authors: [activeAccount.pubkey] }, {
-        onEvent: (evt) => {
-          if (firstEventTime === null) {
-            firstEventTime = performance.now() - start
-            setTFirstReadingProgress(Math.round(firstEventTime))
-          }
-          setReadingProgressEvents(prev => [...prev, evt])
+      // Subscribe to controller to get streamed events
+      const unsubProgress = readingProgressController.onProgress((progressMap) => {
+        if (firstEventTime === null) {
+          firstEventTime = performance.now() - start
+          setTFirstReadingProgress(Math.round(firstEventTime))
         }
+        setDeduplicatedProgressMap(new Map(progressMap))
       })
+
+      // Start the controller (triggers loading and deduplication)
+      await readingProgressController.start({ relayPool, eventStore, pubkey: activeAccount.pubkey, force: true })
+      
+      unsubProgress()
 
       const elapsed = Math.round(performance.now() - start)
       setTLoadReadingProgress(elapsed)
@@ -776,7 +782,8 @@ const Debug: React.FC<DebugProps> = ({
         return rest
       })
 
-      DebugBus.info('debug', `Loaded ${events.length} reading progress events in ${elapsed}ms`)
+      const finalMap = readingProgressController.getProgressMap()
+      DebugBus.info('debug', `Loaded reading progress: ${finalMap.size} unique articles in ${elapsed}ms`)
     } catch (err) {
       console.error('Failed to load reading progress:', err)
       DebugBus.error('debug', `Failed to load reading progress: ${err instanceof Error ? err.message : String(err)}`)
@@ -789,6 +796,7 @@ const Debug: React.FC<DebugProps> = ({
     setReadingProgressEvents([])
     setTLoadReadingProgress(null)
     setTFirstReadingProgress(null)
+    setDeduplicatedProgressMap(new Map())
     DebugBus.info('debug', 'Cleared reading progress data')
   }
 
@@ -1540,6 +1548,33 @@ const Debug: React.FC<DebugProps> = ({
                         {content && <div>Progress: {content}</div>}
                       </div>
                       <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {deduplicatedProgressMap.size > 0 && (
+            <div className="mb-3">
+              <div className="text-sm opacity-70 mb-2">Deduplicated Reading Progress ({deduplicatedProgressMap.size} articles):</div>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {Array.from(deduplicatedProgressMap.entries()).map(([articleId, progress], idx) => {
+                  return (
+                    <div key={idx} className="font-mono text-xs p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700">
+                      <div className="font-semibold mb-1">Article #{idx + 1}</div>
+                      <div className="mt-1">
+                        <div className="break-all">ID: {articleId}</div>
+                        <div className="mt-1">
+                          <div className="text-[11px] opacity-70">Progress: {(progress * 100).toFixed(1)}%</div>
+                          <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5 mt-1 overflow-hidden">
+                            <div 
+                              className="bg-blue-600 h-full" 
+                              style={{ width: `${progress * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )
                 })}
