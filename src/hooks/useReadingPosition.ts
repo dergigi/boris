@@ -24,6 +24,7 @@ export const useReadingPosition = ({
   const hasTriggeredComplete = useRef(false)
   const lastSavedPosition = useRef(0)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hasSavedOnce = useRef(false)
 
   // Debounced save function
   const scheduleSave = useCallback((currentPosition: number) => {
@@ -31,23 +32,19 @@ export const useReadingPosition = ({
       console.log('[progress] ⏭️ scheduleSave skipped:', { syncEnabled, hasOnSave: !!onSave, position: Math.round(currentPosition * 100) + '%' })
       return
     }
-    
-    // Don't save if position is too low (< 5%)
-    if (currentPosition < 0.05) {
-      console.log('[progress] ⏭️ Position too low to save:', Math.round(currentPosition * 100) + '%')
-      return
-    }
-    
+
     // Don't save if position hasn't changed significantly (less than 1%)
     // But always save if we've reached 100% (completion)
     const hasSignificantChange = Math.abs(currentPosition - lastSavedPosition.current) >= 0.01
     const hasReachedCompletion = currentPosition === 1 && lastSavedPosition.current < 1
+    const isInitialSave = !hasSavedOnce.current
     
-    if (!hasSignificantChange && !hasReachedCompletion) {
+    if (!hasSignificantChange && !hasReachedCompletion && !isInitialSave) {
       console.log('[progress] ⏭️ No significant change:', {
         current: Math.round(currentPosition * 100) + '%',
         last: Math.round(lastSavedPosition.current * 100) + '%',
-        diff: Math.abs(currentPosition - lastSavedPosition.current)
+        diff: Math.abs(currentPosition - lastSavedPosition.current),
+        isInitialSave
       })
       return
     }
@@ -62,6 +59,7 @@ export const useReadingPosition = ({
     saveTimerRef.current = setTimeout(() => {
       console.log('[progress] 💾 Auto-saving position:', Math.round(currentPosition * 100) + '%')
       lastSavedPosition.current = currentPosition
+      hasSavedOnce.current = true
       onSave(currentPosition)
     }, autoSaveInterval)
   }, [syncEnabled, onSave, autoSaveInterval])
@@ -76,14 +74,11 @@ export const useReadingPosition = ({
       saveTimerRef.current = null
     }
 
-    // Save if position is meaningful (>= 5%)
-    if (position >= 0.05) {
-      console.log('[progress] 💾 Immediate save triggered for position:', Math.round(position * 100) + '%')
-      lastSavedPosition.current = position
-      onSave(position)
-    } else {
-      console.log('[progress] ⏭️ Skipping save - position too low:', Math.round(position * 100) + '%')
-    }
+    // Always allow immediate save (including 0%)
+    console.log('[progress] 💾 Immediate save triggered for position:', Math.round(position * 100) + '%')
+    lastSavedPosition.current = position
+    hasSavedOnce.current = true
+    onSave(position)
   }, [syncEnabled, onSave, position])
 
   useEffect(() => {
@@ -157,6 +152,8 @@ export const useReadingPosition = ({
     if (!enabled) {
       setIsReadingComplete(false)
       hasTriggeredComplete.current = false
+      hasSavedOnce.current = false
+      lastSavedPosition.current = 0
     }
   }, [enabled])
 

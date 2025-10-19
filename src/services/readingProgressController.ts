@@ -106,7 +106,11 @@ class ReadingProgressController {
     this.generation++
     // Unsubscribe from any active timeline subscription
     if (this.timelineSubscription) {
-      try { this.timelineSubscription.unsubscribe() } catch {}
+      try {
+        this.timelineSubscription.unsubscribe()
+      } catch (err) {
+        console.warn('[progress] ⚠️ Failed to unsubscribe timeline on reset:', err)
+      }
       this.timelineSubscription = null
     }
     this.currentProgressMap = new Map()
@@ -177,7 +181,11 @@ class ReadingProgressController {
       // Subscribe to local timeline for immediate and reactive updates
       // Clean up any previous subscription first
       if (this.timelineSubscription) {
-        try { this.timelineSubscription.unsubscribe() } catch {}
+        try {
+          this.timelineSubscription.unsubscribe()
+        } catch (err) {
+          console.warn('[progress] ⚠️ Failed to unsubscribe previous timeline:', err)
+        }
         this.timelineSubscription = null
       }
 
