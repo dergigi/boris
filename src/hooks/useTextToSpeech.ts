@@ -79,7 +79,7 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     }
   }, [supported, defaultLang, voice, synth])
 
-  const createUtterance = (text: string): SpeechSynthesisUtterance => {
+  const createUtterance = useCallback((text: string): SpeechSynthesisUtterance => {
     const SpeechSynthesisUtteranceConstructor = (window as Window & typeof globalThis).SpeechSynthesisUtterance
     const u = new SpeechSynthesisUtteranceConstructor(text) as SpeechSynthesisUtterance
     u.lang = voice?.lang || defaultLang
@@ -131,7 +131,7 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     }
 
     return u
-  }
+  }, [voice, defaultLang, rate, pitch, volume])
 
   const stop = useCallback(() => {
     if (!supported) return
@@ -156,7 +156,7 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
 
     utteranceRef.current = u
     synth!.speak(u)
-  }, [supported, synth, voice, rate, pitch, volume, defaultLang])
+  }, [supported, synth, createUtterance, rate])
 
   const pause = useCallback(() => {
     if (!supported) return
@@ -199,7 +199,7 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     if (utteranceRef.current) {
       utteranceRef.current.rate = rate
     }
-  }, [rate, supported, synth])
+  }, [rate, supported, synth, createUtterance])
 
   const updateRate = useCallback((newRate: number) => {
     setRate(newRate)
