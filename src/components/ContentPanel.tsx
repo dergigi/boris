@@ -581,6 +581,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               const naddr = nip19.naddrEncode({ kind: 30023, pubkey: currentArticle.pubkey, identifier: dTag })
               hasRead = hasRead || archiveController.isMarked(naddr)
             } catch (e) {
+              // Silently ignore encoding errors
             }
           }
         } else {

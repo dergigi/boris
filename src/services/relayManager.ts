@@ -45,7 +45,6 @@ export function applyRelaySetToPool(
   // Normalize all URLs to match pool's internal format
   const currentUrls = new Set(Array.from(relayPool.relays.keys()))
   const normalizedTargetUrls = new Set(finalUrls.map(normalizeRelayUrl))
-  const targetUrlsMap = new Map(finalUrls.map(url => [normalizeRelayUrl(url), url]))
 
   console.log('[relayManager] applyRelaySetToPool called')
   console.log('[relayManager] Current pool has:', currentUrls.size, 'relays')

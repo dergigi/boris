@@ -1,5 +1,4 @@
 import { RelayPool } from 'applesauce-relay'
-import { NostrEvent } from 'nostr-tools'
 import { queryEvents } from './dataFetch'
 
 export interface UserRelayInfo {
