@@ -26,14 +26,31 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
       return html
     }
 
-    // Find all video URLs in the HTML content
+    // Find all video URLs in img tags and replace the entire tag
+    let result = html
+    
+    // Pattern to match img tags with video URLs in src attribute
+    const imgVideoPattern = /<img[^>]+src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?[^>]*>/gi
+    const imgMatches = result.match(imgVideoPattern) || []
+    
+    const imgVideoUrls: string[] = []
+    imgMatches.forEach((imgTag, index) => {
+      const srcMatch = imgTag.match(/src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?/i)
+      if (srcMatch && srcMatch[1]) {
+        imgVideoUrls.push(srcMatch[1])
+        const placeholder = `__VIDEO_EMBED_${index}__`
+        result = result.replace(imgTag, placeholder)
+      }
+    })
+
+    // Find remaining video URLs (not in img tags)
     const videoUrlPattern = /https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)(?:\?[^\s<>"']*)?/gi
-    const videoUrls: string[] = html.match(videoUrlPattern) || []
+    const videoUrls: string[] = result.match(videoUrlPattern) || []
     
     // Also check for video URLs that might not have extensions but are classified as video
     // Use a more precise pattern that stops at whitespace, quotes, and HTML tag boundaries
     const allUrlPattern = /https?:\/\/[^\s<>"']+(?=\s|>|"|'|$)/gi
-    const allUrls: string[] = html.match(allUrlPattern) || []
+    const allUrls: string[] = result.match(allUrlPattern) || []
     const videoUrlsWithoutExt = allUrls.filter(url => {
       const classification = classifyUrl(url)
       return classification.type === 'video' && !videoUrls.includes(url)
@@ -41,15 +58,17 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
     
     const allVideoUrls = [...videoUrls, ...videoUrlsWithoutExt]
     
-    if (allVideoUrls.length === 0) {
+    if ((imgVideoUrls.length + allVideoUrls.length) === 0) {
       return html
     }
 
-    // Replace video URLs with placeholder divs that we'll replace with ReactPlayer
-    let processedHtml = html
-    allVideoUrls.forEach((url, index) => {
-      const placeholder = `__VIDEO_EMBED_${index}__`
+    // Replace remaining video URLs with placeholder divs
+    let processedHtml = result
+    let placeholderIndex = imgVideoUrls.length
+    allVideoUrls.forEach((url) => {
+      const placeholder = `__VIDEO_EMBED_${placeholderIndex}__`
       processedHtml = processedHtml.replace(new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), placeholder)
+      placeholderIndex++
     })
 
     return processedHtml
@@ -60,18 +79,32 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
       return []
     }
 
+    const result: string[] = []
+    
+    // Extract video URLs from img tags
+    const imgVideoPattern = /<img[^>]+src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?[^>]*>/gi
+    const imgMatches = html.match(imgVideoPattern) || []
+    imgMatches.forEach((imgTag) => {
+      const srcMatch = imgTag.match(/src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?/i)
+      if (srcMatch && srcMatch[1]) {
+        result.push(srcMatch[1])
+      }
+    })
+    
+    // Extract remaining video URLs
     const videoUrlPattern = /https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)(?:\?[^\s<>"']*)?/gi
     const videoUrls: string[] = html.match(videoUrlPattern) || []
+    result.push(...videoUrls.filter(url => !result.includes(url)))
     
     // Use a more precise pattern that stops at whitespace, quotes, and HTML tag boundaries
     const allUrlPattern = /https?:\/\/[^\s<>"']+(?=\s|>|"|'|$)/gi
     const allUrls: string[] = html.match(allUrlPattern) || []
     const videoUrlsWithoutExt = allUrls.filter(url => {
       const classification = classifyUrl(url)
-      return classification.type === 'video' && !videoUrls.includes(url)
+      return classification.type === 'video' && !result.includes(url)
     })
     
-    return [...videoUrls, ...videoUrlsWithoutExt]
+    return [...result, ...videoUrlsWithoutExt]
   }, [html, renderVideoLinksAsEmbeds])
 
   // If no video embedding is enabled, just render the HTML normally
