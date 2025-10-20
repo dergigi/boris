@@ -41,9 +41,10 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className }) => {
         onClick={handlePlayPause}
         title={playLabel}
         disabled={!canPlay}
+        style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
       >
         <FontAwesomeIcon icon={!speaking ? faPlay : (paused ? faPlay : faPause)} />
-        <span style={{ marginLeft: 6 }}>{playLabel}</span>
+        <span style={{ marginLeft: 4, fontSize: '0.8rem' }}>{playLabel}</span>
       </button>
       <button
         type="button"
@@ -51,16 +52,17 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className }) => {
         onClick={stop}
         title="Stop"
         disabled={!speaking && !paused}
+        style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
       >
         <FontAwesomeIcon icon={faStop} />
-        <span style={{ marginLeft: 6 }}>Stop</span>
+        <span style={{ marginLeft: 4, fontSize: '0.8rem' }}>Stop</span>
       </button>
-      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#aaa', fontSize: 12 }}>
+      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#aaa', fontSize: '0.8rem' }}>
         Speed
         <select
           value={rate}
           onChange={e => setRate(Number(e.target.value))}
-          style={{ background: 'transparent', color: 'inherit', border: '1px solid #444', borderRadius: 4, padding: '2px 6px' }}
+          style={{ background: 'transparent', color: 'inherit', border: '1px solid #444', borderRadius: 3, padding: '2px 4px', fontSize: '0.75rem' }}
         >
           <option value={0.8}>0.8x</option>
           <option value={1}>1x</option>
