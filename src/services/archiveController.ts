@@ -14,6 +14,8 @@ class ArchiveController {
   private lastLoadedPubkey: string | null = null
   private listeners: MarkedChangeCallback[] = []
   private generation = 0
+  private timelineSubscription: { unsubscribe: () => void } | null = null
+  private pendingEventIds: Set<string> = new Set()
 
   onMarked(cb: MarkedChangeCallback): () => void {
     this.listeners.push(cb)
@@ -43,7 +45,12 @@ class ArchiveController {
 
   reset(): void {
     this.generation++
+    if (this.timelineSubscription) {
+      try { this.timelineSubscription.unsubscribe() } catch {}
+      this.timelineSubscription = null
+    }
     this.markedIds = new Set()
+    this.pendingEventIds = new Set()
     this.lastLoadedPubkey = null
     this.emit()
   }
@@ -66,8 +73,6 @@ class ArchiveController {
     this.lastLoadedPubkey = pubkey
     console.log('[archive] start() begin for pubkey:', pubkey.slice(0, 12), '...')
 
-    const seenIds = new Set<string>()
-
     // Handlers for streaming queries
     const handleUrlReaction = (evt: NostrEvent) => {
       if (evt.content !== MARK_AS_READ_EMOJI) return
@@ -78,12 +83,11 @@ class ArchiveController {
       console.log('[archive] mark url:', rTag)
     }
 
-    const pendingEventIds = new Set<string>()
     const handleEventReaction = (evt: NostrEvent) => {
       if (evt.content !== MARK_AS_READ_EMOJI) return
       const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
       if (!eTag) return
-      pendingEventIds.add(eTag)
+      this.pendingEventIds.add(eTag)
       console.log('[archive] pending event id:', eTag)
     }
 
@@ -99,11 +103,11 @@ class ArchiveController {
       // Include EOSE events
       kind17.forEach(handleUrlReaction)
       kind7.forEach(handleEventReaction)
-      console.log('[archive] EOSE sizes kind17:', kind17.length, 'kind7:', kind7.length, 'pendingEventIds:', pendingEventIds.size)
+      console.log('[archive] EOSE sizes kind17:', kind17.length, 'kind7:', kind7.length, 'pendingEventIds:', this.pendingEventIds.size)
 
-      if (pendingEventIds.size > 0) {
+      if (this.pendingEventIds.size > 0) {
         // Fetch referenced articles (kind:30023) and map event IDs to naddr
-        const ids = Array.from(pendingEventIds)
+        const ids = Array.from(this.pendingEventIds)
         const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids }, { relayUrls: RELAYS })
         console.log('[archive] fetched articles for mapping:', articleEvents.length)
         for (const article of articleEvents) {
@@ -120,6 +124,52 @@ class ArchiveController {
         this.emit()
       }
       console.log('[archive] total marked ids:', this.markedIds.size)
+
+      // Try immediate mapping via eventStore for any still-pending e-ids
+      if (this.pendingEventIds.size > 0) {
+        const stillPending = new Set<string>()
+        for (const eId of this.pendingEventIds) {
+          try {
+            // @ts-expect-error eventStore may have getEvent
+            const evt: NostrEvent | undefined = (eventStore as unknown as { getEvent?: (id: string) => NostrEvent | undefined }).getEvent?.(eId)
+            if (evt && evt.kind === KINDS.BlogPost) {
+              const dTag = evt.tags.find(t => t[0] === 'd')?.[1]
+              if (dTag) {
+                const naddr = nip19.naddrEncode({ kind: KINDS.BlogPost, pubkey: evt.pubkey, identifier: dTag })
+                this.markedIds.add(naddr)
+                console.log('[archive] map via eventStore naddr:', naddr.slice(0, 24), '...')
+              }
+            } else {
+              stillPending.add(eId)
+            }
+          } catch { stillPending.add(eId) }
+        }
+        this.pendingEventIds = stillPending
+        if (stillPending.size > 0) {
+          // Subscribe to future 30023 arrivals to finalize mapping
+          if (this.timelineSubscription) {
+            try { this.timelineSubscription.unsubscribe() } catch {}
+            this.timelineSubscription = null
+          }
+          const sub$ = eventStore.timeline({ kinds: [KINDS.BlogPost] })
+          const genAtSub = this.generation
+          this.timelineSubscription = sub$.subscribe((events: NostrEvent[]) => {
+            if (genAtSub !== this.generation) return
+            for (const evt of events) {
+              if (!this.pendingEventIds.has(evt.id)) continue
+              const dTag = evt.tags.find(t => t[0] === 'd')?.[1]
+              if (!dTag) continue
+              try {
+                const naddr = nip19.naddrEncode({ kind: KINDS.BlogPost, pubkey: evt.pubkey, identifier: dTag })
+                this.markedIds.add(naddr)
+                this.pendingEventIds.delete(evt.id)
+                console.log('[archive] map via timeline naddr:', naddr.slice(0, 24), '...')
+                this.emit()
+              } catch {}
+            }
+          })
+        }
+      }
     } catch (err) {
       // Non-blocking fetch; ignore errors here
       console.warn('[archive] start() error:', err)

@@ -642,7 +642,8 @@ const Me: React.FC<MeProps> = ({
       links: links.length,
       linksWithProgress: linksWithProgress.length,
       filteredLinks: filteredLinks.length,
-      markedIds: archiveController.getMarkedIds().length
+      markedIds: archiveController.getMarkedIds().length,
+      sampleMarked: archiveController.getMarkedIds().slice(0, 3)
     })
   }
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
