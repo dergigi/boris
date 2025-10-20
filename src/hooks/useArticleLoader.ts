@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, Dispatch, SetStateAction } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { fetchArticleByNaddr } from '../services/articleService'
 import { fetchHighlightsForArticle } from '../services/highlightService'
@@ -14,7 +14,7 @@ interface UseArticleLoaderProps {
   setReaderContent: (content: ReadableContent | undefined) => void
   setReaderLoading: (loading: boolean) => void
   setIsCollapsed: (collapsed: boolean) => void
-  setHighlights: React.Dispatch<React.SetStateAction<Highlight[]>>
+  setHighlights: Dispatch<SetStateAction<Highlight[]>>
   setHighlightsLoading: (loading: boolean) => void
   setCurrentArticleCoordinate: (coord: string | undefined) => void
   setCurrentArticleEventId: (id: string | undefined) => void
