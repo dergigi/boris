@@ -24,13 +24,18 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className, settings }
   const canPlay = supported && text?.trim().length > 0
 
   const resolvedSystemLang = useMemo(() => {
-    if (settings?.ttsUseSystemLanguage) {
+    const mode = settings?.ttsLanguageMode
+    if ((mode ? mode === 'system' : settings?.ttsUseSystemLanguage) === true) {
       return navigator?.language?.split('-')[0]
     }
     return undefined
-  }, [settings?.ttsUseSystemLanguage])
+  }, [settings?.ttsLanguageMode, settings?.ttsUseSystemLanguage])
 
-  const detectContentLang = useMemo(() => settings?.ttsDetectContentLanguage !== false, [settings?.ttsDetectContentLanguage])
+  const detectContentLang = useMemo(() => {
+    const mode = settings?.ttsLanguageMode
+    if (mode) return mode === 'content'
+    return settings?.ttsDetectContentLanguage !== false
+  }, [settings?.ttsLanguageMode, settings?.ttsDetectContentLanguage])
 
   const handlePlayPause = () => {
     if (!canPlay) return
