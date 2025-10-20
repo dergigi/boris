@@ -62,7 +62,8 @@ export { dedupeNip51Events } from './bookmarkEvents'
 export const processApplesauceBookmarks = (
   bookmarks: unknown,
   activeAccount: ActiveAccount,
-  isPrivate: boolean
+  isPrivate: boolean,
+  parentCreatedAt?: number
 ): IndividualBookmark[] => {
   if (!bookmarks) return []
 
@@ -76,14 +77,14 @@ export const processApplesauceBookmarks = (
         allItems.push({
           id: note.id,
           content: '',
-          created_at: Math.floor(Date.now() / 1000),
+          created_at: parentCreatedAt || 0,
           pubkey: note.author || activeAccount.pubkey,
           kind: 1, // Short note kind
           tags: [],
           parsedContent: undefined,
           type: 'event' as const,
           isPrivate,
-          added_at: Math.floor(Date.now() / 1000)
+          added_at: parentCreatedAt || 0
         })
       })
     }
@@ -96,14 +97,14 @@ export const processApplesauceBookmarks = (
         allItems.push({
           id: coordinate,
           content: '',
-          created_at: Math.floor(Date.now() / 1000),
+          created_at: parentCreatedAt || 0,
           pubkey: article.pubkey,
           kind: article.kind, // Usually 30023 for long-form articles
           tags: [],
           parsedContent: undefined,
           type: 'event' as const,
           isPrivate,
-          added_at: Math.floor(Date.now() / 1000)
+          added_at: parentCreatedAt || 0
         })
       })
     }
@@ -114,14 +115,14 @@ export const processApplesauceBookmarks = (
         allItems.push({
           id: `hashtag-${hashtag}`,
           content: `#${hashtag}`,
-          created_at: Math.floor(Date.now() / 1000),
+          created_at: parentCreatedAt || 0,
           pubkey: activeAccount.pubkey,
           kind: 1,
           tags: [['t', hashtag]],
           parsedContent: undefined,
           type: 'event' as const,
           isPrivate,
-          added_at: Math.floor(Date.now() / 1000)
+          added_at: parentCreatedAt || 0
         })
       })
     }
@@ -132,14 +133,14 @@ export const processApplesauceBookmarks = (
         allItems.push({
           id: `url-${url}`,
           content: url,
-          created_at: Math.floor(Date.now() / 1000),
+          created_at: parentCreatedAt || 0,
           pubkey: activeAccount.pubkey,
           kind: 1,
           tags: [['r', url]],
           parsedContent: undefined,
           type: 'event' as const,
           isPrivate,
-          added_at: Math.floor(Date.now() / 1000)
+          added_at: parentCreatedAt || 0
         })
       })
     }
@@ -153,14 +154,14 @@ export const processApplesauceBookmarks = (
     .map((bookmark: BookmarkData) => ({
       id: bookmark.id!,
       content: bookmark.content || '',
-      created_at: bookmark.created_at || Math.floor(Date.now() / 1000),
+      created_at: bookmark.created_at || parentCreatedAt || 0,
       pubkey: activeAccount.pubkey,
       kind: bookmark.kind || 30001,
       tags: bookmark.tags || [],
       parsedContent: bookmark.content ? (getParsedContent(bookmark.content) as ParsedContent) : undefined,
       type: 'event' as const,
       isPrivate,
-      added_at: bookmark.created_at || Math.floor(Date.now() / 1000)
+      added_at: bookmark.created_at || parentCreatedAt || 0
     }))
 }
 

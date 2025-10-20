@@ -64,7 +64,7 @@ async function decryptEvent(
           const hiddenTags = JSON.parse(decryptedContent) as string[][]
           const manualPrivate = Helpers.parseBookmarkTags(hiddenTags)
           privateItems.push(
-            ...processApplesauceBookmarks(manualPrivate, activeAccount, true).map(i => ({
+            ...processApplesauceBookmarks(manualPrivate, activeAccount, true, evt.created_at).map(i => ({
               ...i,
               sourceKind: evt.kind,
               setName: dTag,
@@ -84,7 +84,7 @@ async function decryptEvent(
     const priv = Helpers.getHiddenBookmarks(evt)
     if (priv) {
       privateItems.push(
-        ...processApplesauceBookmarks(priv, activeAccount, true).map(i => ({
+        ...processApplesauceBookmarks(priv, activeAccount, true, evt.created_at).map(i => ({
           ...i,
           sourceKind: evt.kind,
           setName: dTag,
@@ -155,7 +155,7 @@ export async function collectBookmarksFromEvents(
 
     const pub = Helpers.getPublicBookmarks(evt)
     publicItemsAll.push(
-      ...processApplesauceBookmarks(pub, activeAccount, false).map(i => ({
+      ...processApplesauceBookmarks(pub, activeAccount, false, evt.created_at).map(i => ({
         ...i,
         sourceKind: evt.kind,
         setName: dTag,
@@ -181,7 +181,7 @@ export async function collectBookmarksFromEvents(
       const priv = Helpers.getHiddenBookmarks(evt)
       if (priv) {
         publicItemsAll.push(
-          ...processApplesauceBookmarks(priv, activeAccount, true).map(i => ({
+          ...processApplesauceBookmarks(priv, activeAccount, true, evt.created_at).map(i => ({
             ...i,
             sourceKind: evt.kind,
             setName: dTag,
