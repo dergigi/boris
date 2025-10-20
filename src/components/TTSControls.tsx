@@ -1,13 +1,15 @@
 import React from 'react'
 import { useTextToSpeech } from '../hooks/useTextToSpeech'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlay, faPause, faStop } from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faPause, faStop, faGauge } from '@fortawesome/free-solid-svg-icons'
 
 interface Props {
   text: string
   defaultLang?: string
   className?: string
 }
+
+const SPEED_OPTIONS = [0.8, 1, 1.2, 1.4, 1.6]
 
 const TTSControls: React.FC<Props> = ({ text, defaultLang, className }) => {
   const {
@@ -27,6 +29,12 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className }) => {
     } else {
       pause()
     }
+  }
+
+  const handleCycleSpeed = () => {
+    const currentIndex = SPEED_OPTIONS.indexOf(rate)
+    const nextIndex = (currentIndex + 1) % SPEED_OPTIONS.length
+    setRate(SPEED_OPTIONS[nextIndex])
   }
 
   const playLabel = !speaking ? 'Listen' : (paused ? 'Resume' : 'Pause')
@@ -55,20 +63,15 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className }) => {
         <FontAwesomeIcon icon={faStop} />
         <span>Stop</span>
       </button>
-      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
-        Speed
-        <select
-          value={rate}
-          onChange={e => setRate(Number(e.target.value))}
-          style={{ background: 'var(--color-bg-elevated)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: '6px', padding: '0.25rem 0.5rem', fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s ease' }}
-        >
-          <option value={0.8}>0.8x</option>
-          <option value={1}>1x</option>
-          <option value={1.2}>1.2x</option>
-          <option value={1.4}>1.4x</option>
-          <option value={1.6}>1.6x</option>
-        </select>
-      </label>
+      <button
+        type="button"
+        className="article-menu-btn"
+        onClick={handleCycleSpeed}
+        title="Cycle speed"
+      >
+        <FontAwesomeIcon icon={faGauge} />
+        <span>{rate}x</span>
+      </button>
     </div>
   )
 }
