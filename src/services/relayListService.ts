@@ -11,7 +11,10 @@ export interface UserRelayInfo {
  */
 export async function loadUserRelayList(
   relayPool: RelayPool,
-  pubkey: string
+  pubkey: string,
+  options?: {
+    onUpdate?: (relays: UserRelayInfo[]) => void
+  }
 ): Promise<UserRelayInfo[]> {
   try {
     console.log('[relayListService] Loading user relay list for pubkey:', pubkey.slice(0, 16) + '...')
@@ -37,6 +40,22 @@ export async function loadUserRelayList(
           // Update events array with deduplicated events
           events.length = 0
           events.push(...Array.from(eventsMap.values()))
+
+          // Stream immediate updates to caller using the newest event
+          if (options?.onUpdate) {
+            const tags = evt.tags || []
+            const relays: UserRelayInfo[] = []
+            for (const tag of tags) {
+              if (tag[0] === 'r' && tag[1]) {
+                const url = tag[1]
+                const mode = (tag[2] as 'read' | 'write' | undefined) || 'both'
+                relays.push({ url, mode })
+              }
+            }
+            if (relays.length > 0) {
+              options.onUpdate(relays)
+            }
+          }
         }
       }
     })

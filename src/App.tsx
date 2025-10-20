@@ -572,81 +572,93 @@ function App() {
         console.log('[relay-init] userRelaysSub fired, account:', account ? 'logged in' : 'logged out')
         console.log('[relay-init] Pool has', Array.from(pool.relays.keys()).length, 'relays before applying changes')
         if (account) {
-          // User logged in - start with hardcoded relays immediately, then load user relay list in background
+          // User logged in - start with hardcoded relays immediately, then stream user relay list updates
           const pubkey = account.pubkey
-            
-            // Start with hardcoded + bunker relays immediately (non-blocking)
-            const initialRelays = computeRelaySet({
-              hardcoded: RELAYS,
-              bunker: [],
-              userList: [],
-              blocked: [],
-              alwaysIncludeLocal: ALWAYS_LOCAL_RELAYS
+
+          // Bunker relays (if any)
+          let bunkerRelays: string[] = []
+          if (account.type === 'nostr-connect') {
+            const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
+            const signerData = nostrConnectAccount.toJSON().signer
+            bunkerRelays = signerData.relays || []
+          }
+          console.log('[relay-init] Bunker relays:', bunkerRelays.length, 'relays', bunkerRelays)
+
+          // Start with hardcoded + bunker relays immediately (non-blocking)
+          const initialRelays = computeRelaySet({
+            hardcoded: RELAYS,
+            bunker: bunkerRelays,
+            userList: [],
+            blocked: [],
+            alwaysIncludeLocal: ALWAYS_LOCAL_RELAYS
+          })
+          console.log('[relay-init] Initial relay set (hardcoded):', initialRelays.length, 'relays', initialRelays)
+
+          // Apply initial set immediately
+          applyRelaySetToPool(pool, initialRelays)
+          console.log('[relay-init] After initial applyRelaySetToPool, pool has:', Array.from(pool.relays.keys()).length, 'relays')
+
+          // Prepare keep-alive helper
+          const updateKeepAlive = () => {
+            const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
+            if (poolWithSub._keepAliveSubscription) {
+              poolWithSub._keepAliveSubscription.unsubscribe()
+            }
+            const activeRelays = getActiveRelayUrls(pool)
+            const newKeepAliveSub = pool.subscription(activeRelays, { kinds: [0], limit: 0 }).subscribe({
+              next: () => {},
+              error: () => {}
             })
-            console.log('[relay-init] Initial relay set (hardcoded):', initialRelays.length, 'relays', initialRelays)
-            
-            // Apply initial set immediately
-            applyRelaySetToPool(pool, initialRelays)
-            console.log('[relay-init] After initial applyRelaySetToPool, pool has:', Array.from(pool.relays.keys()).length, 'relays')
-            
-            // Load user's relay list and blocked relays in background (non-blocking)
-            Promise.all([
-              loadUserRelayList(pool, pubkey),
-              loadBlockedRelays(pool, pubkey)
-            ]).then(([userRelayList, blockedRelays]) => {
-            
-              console.log('[relay-init] User relay list (10002):', userRelayList.length, 'relays', userRelayList.map(r => r.url))
-              console.log('[relay-init] Blocked relays (10006):', blockedRelays.length, 'relays', blockedRelays)
-              
-              // Get bunker relays if this is a nostr-connect account
-              let bunkerRelays: string[] = []
-              if (account.type === 'nostr-connect') {
-                const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
-                const signerData = nostrConnectAccount.toJSON().signer
-                bunkerRelays = signerData.relays || []
-              }
-              console.log('[relay-init] Bunker relays:', bunkerRelays.length, 'relays', bunkerRelays)
-              
-              // When logged in: use user's relays ONLY (not hardcoded)
-              // If user has no relay list, fall back to hardcoded relays
-              const finalRelays = computeRelaySet({
-                hardcoded: userRelayList.length > 0 ? [] : RELAYS,
+            poolWithSub._keepAliveSubscription = newKeepAliveSub
+          }
+
+          // Begin loading blocked relays in background
+          const blockedPromise = loadBlockedRelays(pool, pubkey)
+
+          // Stream user relay list; apply immediately on first/updated event
+          loadUserRelayList(pool, pubkey, {
+            onUpdate: (userRelays) => {
+              const interimRelays = computeRelaySet({
+                hardcoded: [],
                 bunker: bunkerRelays,
-                userList: userRelayList,
-                blocked: blockedRelays,
+                userList: userRelays,
+                blocked: [],
                 alwaysIncludeLocal: ALWAYS_LOCAL_RELAYS
               })
-              console.log('[relay-init] Final relay set (with user preferences):', finalRelays.length, 'relays', finalRelays)
-              
-              // Apply user's relay preferences
-              applyRelaySetToPool(pool, finalRelays)
-              console.log('[relay-init] After user relay list apply, pool has:', Array.from(pool.relays.keys()).length, 'relays')
-              console.log('[relay-init] Final relay URLs:', Array.from(pool.relays.keys()))
-              
-              // Update keep-alive subscription with final relay set
-              const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
-              if (poolWithSub._keepAliveSubscription) {
-                poolWithSub._keepAliveSubscription.unsubscribe()
-              }
-              const activeRelays = getActiveRelayUrls(pool)
-              const newKeepAliveSub = pool.subscription(activeRelays, { kinds: [0], limit: 0 }).subscribe({
-                next: () => {},
-                error: () => {}
-              })
-              poolWithSub._keepAliveSubscription = newKeepAliveSub
-              
-              // Update address loader with new relays
-              const addressLoader = createAddressLoader(pool, {
-                eventStore: store,
-                lookupRelays: activeRelays
-              })
-              store.addressableLoader = addressLoader
-              store.replaceableLoader = addressLoader
-              
-            }).catch((error) => {
-              console.error('[relay-init] Failed to load user relay list (continuing with initial set):', error)
-              // Continue with initial relay set on error - no need to change anything
+              console.log('[relay-init] Interim relay set from first user list:', interimRelays.length, 'relays', interimRelays)
+              applyRelaySetToPool(pool, interimRelays)
+              updateKeepAlive()
+            }
+          }).then(async (userRelayList) => {
+            const blockedRelays = await blockedPromise.catch(() => [])
+            console.log('[relay-init] User relay list (10002):', userRelayList.length, 'relays', userRelayList.map(r => r.url))
+            console.log('[relay-init] Blocked relays (10006):', blockedRelays.length, 'relays', blockedRelays)
+
+            const finalRelays = computeRelaySet({
+              hardcoded: userRelayList.length > 0 ? [] : RELAYS,
+              bunker: bunkerRelays,
+              userList: userRelayList,
+              blocked: blockedRelays,
+              alwaysIncludeLocal: ALWAYS_LOCAL_RELAYS
             })
+            console.log('[relay-init] Final relay set (with user preferences):', finalRelays.length, 'relays', finalRelays)
+            applyRelaySetToPool(pool, finalRelays)
+            console.log('[relay-init] After user relay list apply, pool has:', Array.from(pool.relays.keys()).length, 'relays')
+            console.log('[relay-init] Final relay URLs:', Array.from(pool.relays.keys()))
+            updateKeepAlive()
+            
+            // Update address loader with new relays
+            const activeRelays = getActiveRelayUrls(pool)
+            const addressLoader = createAddressLoader(pool, {
+              eventStore: store,
+              lookupRelays: activeRelays
+            })
+            store.addressableLoader = addressLoader
+            store.replaceableLoader = addressLoader
+          }).catch((error) => {
+            console.error('[relay-init] Failed to load user relay list (continuing with initial set):', error)
+            // Continue with initial relay set on error - no need to change anything
+          })
         } else {
           // User logged out - reset to hardcoded relays
           console.log('[relay-init] Applying RELAYS for logged out user, RELAYS.length:', RELAYS.length)
