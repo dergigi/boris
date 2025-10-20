@@ -402,6 +402,8 @@ function App() {
       
       // Create a relay group for better event deduplication and management
       pool.group(RELAYS)
+      console.log('[relay-init] Initial pool setup - added RELAYS:', RELAYS.length, 'relays')
+      console.log('[relay-init] Pool now has:', Array.from(pool.relays.keys()).length, 'relays')
       
       // Load persisted accounts from localStorage
       try {
@@ -606,6 +608,8 @@ function App() {
       
       // Handle user relay list and blocked relays when account changes
       const userRelaysSub = accounts.active$.subscribe(async (account) => {
+        console.log('[relay-init] userRelaysSub fired, account:', account ? 'logged in' : 'logged out')
+        console.log('[relay-init] Pool has', Array.from(pool.relays.keys()).length, 'relays before applying changes')
         if (account) {
           // User logged in - load their relay list and apply it
           try {
@@ -636,6 +640,8 @@ function App() {
             
             // Apply to pool
             applyRelaySetToPool(pool, finalRelays)
+            console.log('[relay-init] After applyRelaySetToPool (logged in), pool has:', Array.from(pool.relays.keys()).length, 'relays')
+            console.log('[relay-init] Relay URLs:', Array.from(pool.relays.keys()))
             
             // Update keep-alive subscription with new relay set
             const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
@@ -661,7 +667,10 @@ function App() {
           }
         } else {
           // User logged out - reset to hardcoded relays
+          console.log('[relay-init] Applying RELAYS for logged out user, RELAYS.length:', RELAYS.length)
           applyRelaySetToPool(pool, RELAYS)
+          console.log('[relay-init] After applyRelaySetToPool (logged out), pool has:', Array.from(pool.relays.keys()).length, 'relays')
+          console.log('[relay-init] Relay URLs:', Array.from(pool.relays.keys()))
           
           // Update keep-alive subscription
           const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
