@@ -58,11 +58,13 @@ class ArchiveController {
     const startGen = this.generation
 
     if (!force && this.isLoadedFor(pubkey)) {
+      console.log('[archive] start() skipped - already loaded for pubkey')
       return
     }
 
     // Mark as loaded immediately (fetch runs non-blocking)
     this.lastLoadedPubkey = pubkey
+    console.log('[archive] start() begin for pubkey:', pubkey.slice(0, 12), '...')
 
     const seenIds = new Set<string>()
 
@@ -73,6 +75,7 @@ class ArchiveController {
       if (!rTag) return
       this.markedIds.add(rTag)
       this.emit()
+      console.log('[archive] mark url:', rTag)
     }
 
     const pendingEventIds = new Set<string>()
@@ -81,6 +84,7 @@ class ArchiveController {
       const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
       if (!eTag) return
       pendingEventIds.add(eTag)
+      console.log('[archive] pending event id:', eTag)
     }
 
     try {
@@ -95,25 +99,30 @@ class ArchiveController {
       // Include EOSE events
       kind17.forEach(handleUrlReaction)
       kind7.forEach(handleEventReaction)
+      console.log('[archive] EOSE sizes kind17:', kind17.length, 'kind7:', kind7.length, 'pendingEventIds:', pendingEventIds.size)
 
       if (pendingEventIds.size > 0) {
         // Fetch referenced articles (kind:30023) and map event IDs to naddr
         const ids = Array.from(pendingEventIds)
         const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids }, { relayUrls: RELAYS })
+        console.log('[archive] fetched articles for mapping:', articleEvents.length)
         for (const article of articleEvents) {
           const dTag = article.tags.find(t => t[0] === 'd')?.[1]
           if (!dTag) continue
           try {
             const naddr = nip19.naddrEncode({ kind: KINDS.BlogPost, pubkey: article.pubkey, identifier: dTag })
             this.markedIds.add(naddr)
+            console.log('[archive] mark naddr:', naddr.slice(0, 24), '...')
           } catch {
             // skip invalid
           }
         }
         this.emit()
       }
+      console.log('[archive] total marked ids:', this.markedIds.size)
     } catch (err) {
       // Non-blocking fetch; ignore errors here
+      console.warn('[archive] start() error:', err)
     }
   }
 }

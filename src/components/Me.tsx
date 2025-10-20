@@ -632,6 +632,19 @@ const Me: React.FC<MeProps> = ({
     readingProgressFilter,
     highlights
   )
+
+  // Debug logs for archive filter issues
+  if (readingProgressFilter === 'archive') {
+    console.log('[archive][me] counts', {
+      reads: reads.length,
+      readsWithProgress: readsWithProgress.length,
+      filteredReads: filteredReads.length,
+      links: links.length,
+      linksWithProgress: linksWithProgress.length,
+      filteredLinks: filteredLinks.length,
+      markedIds: archiveController.getMarkedIds().length
+    })
+  }
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
     groupingMode === 'flat'
       ? [{ key: 'all', title: `All Bookmarks (${filteredBookmarks.length})`, items: filteredBookmarks }]
