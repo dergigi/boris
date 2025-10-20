@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHeart, faSpinner, faUserCircle } from '@fortawesome/free-solid-svg-icons'
+import { faHeart, faUserCircle } from '@fortawesome/free-solid-svg-icons'
 import { fetchBorisZappers, ZapSender } from '../services/zapReceiptService'
 import { fetchProfiles } from '../services/profileService'
 import { UserSettings } from '../services/settingsService'
@@ -21,7 +21,7 @@ type SupporterProfile = ZapSender
 
 const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) => {
   const [supporters, setSupporters] = useState<SupporterProfile[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const loadSupporters = async () => {
@@ -31,7 +31,8 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
         
         if (zappers.length > 0) {
           const pubkeys = zappers.map(z => z.pubkey)
-          await fetchProfiles(relayPool, eventStore, pubkeys, settings)
+          // Fetch profiles in background without blocking
+          fetchProfiles(relayPool, eventStore, pubkeys, settings).catch(() => {})
         }
         
         setSupporters(zappers)
@@ -44,14 +45,6 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
 
     loadSupporters()
   }, [relayPool, eventStore, settings])
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <FontAwesomeIcon icon={faSpinner} spin size="2x" className="text-zinc-400" />
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
@@ -82,7 +75,32 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
           </p>
         </div>
 
-        {supporters.length === 0 ? (
+        {loading ? (
+          <>
+            {/* Loading Skeletons */}
+            <div className="mb-16 md:mb-20">
+              <h2 className="text-2xl md:text-3xl font-semibold mb-8 md:mb-10 text-center" style={{ color: 'var(--color-text)' }}>
+                Legends
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-10">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <SupporterSkeleton key={`whale-${i}`} isWhale={true} />
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-12">
+              <h2 className="text-xl md:text-2xl font-semibold mb-8 text-center" style={{ color: 'var(--color-text)' }}>
+                Supporters
+              </h2>
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4 md:gap-5">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <SupporterSkeleton key={`supporter-${i}`} isWhale={false} />
+                ))}
+              </div>
+            </div>
+          </>
+        ) : supporters.length === 0 ? (
           <div className="text-center py-12" style={{ color: 'var(--color-text-muted)' }}>
             <p>No supporters yet. Be the first to zap Boris!</p>
           </div>
@@ -226,6 +244,56 @@ const SupporterCard: React.FC<SupporterCardProps> = ({ supporter, isWhale }) => 
         >
           {supporter.totalSats.toLocaleString()} sats
         </p>
+      </div>
+    </div>
+  )
+}
+
+interface SupporterSkeletonProps {
+  isWhale: boolean
+}
+
+const SupporterSkeleton: React.FC<SupporterSkeletonProps> = ({ isWhale }) => {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative">
+        {/* Avatar Skeleton */}
+        <div
+          className={`rounded-full overflow-hidden flex items-center justify-center animate-pulse
+            ${isWhale ? 'w-24 h-24 md:w-28 md:h-28' : 'w-10 h-10 md:w-12 md:h-12'}
+          `}
+          style={{ 
+            backgroundColor: 'var(--color-bg-elevated)'
+          }}
+        >
+          <div 
+            className={`rounded-full ${isWhale ? 'w-20 h-20 md:w-24 md:h-24' : 'w-8 h-8 md:w-10 md:h-10'}`}
+            style={{ backgroundColor: 'var(--color-border)' }}
+          />
+        </div>
+
+        {/* Whale Badge Skeleton */}
+        {isWhale && (
+          <div 
+            className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full animate-pulse border-2"
+            style={{ 
+              backgroundColor: 'var(--color-border)',
+              borderColor: 'var(--color-bg)' 
+            }}
+          />
+        )}
+      </div>
+
+      {/* Name and Total Skeleton */}
+      <div className="mt-2 text-center space-y-1">
+        <div 
+          className={`rounded animate-pulse ${isWhale ? 'h-4 w-16' : 'h-3 w-12'}`}
+          style={{ backgroundColor: 'var(--color-border)' }}
+        />
+        <div 
+          className={`rounded animate-pulse ${isWhale ? 'h-3 w-12' : 'h-2 w-10'}`}
+          style={{ backgroundColor: 'var(--color-border)' }}
+        />
       </div>
     </div>
   )
