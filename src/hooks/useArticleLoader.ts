@@ -39,7 +39,12 @@ export function useArticleLoader({
   useEffect(() => {
     if (!relayPool || !naddr) return
     
+    // Track if this effect is still mounted to prevent state updates after unmount
+    let isMounted = true
+    
     const loadArticle = async () => {
+      if (!isMounted) return
+      
       setReaderLoading(true)
       setReaderContent(undefined)
       setSelectedUrl(`nostr:${naddr}`)
@@ -48,6 +53,10 @@ export function useArticleLoader({
       
       try {
         const article = await fetchArticleByNaddr(relayPool, naddr, false, settings)
+        
+        // Check if still mounted before updating state
+        if (!isMounted) return
+        
         setReaderContent({
           title: article.title,
           markdown: article.markdown,
@@ -72,6 +81,8 @@ export function useArticleLoader({
         // Fetch highlights asynchronously without blocking article display
         // Stream them as they arrive for instant rendering
         try {
+          if (!isMounted) return
+          
           setHighlightsLoading(true)
           setHighlights([]) // Clear old highlights
           
@@ -80,6 +91,9 @@ export function useArticleLoader({
             articleCoordinate, 
             article.event.id,
             (highlight) => {
+              // Only update if still mounted
+              if (!isMounted) return
+              
               // Merge streaming results with existing UI state to preserve locally created highlights
               setHighlights((prev: Highlight[]) => {
                 if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
@@ -92,19 +106,31 @@ export function useArticleLoader({
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {
-          setHighlightsLoading(false)
+          if (isMounted) {
+            setHighlightsLoading(false)
+          }
         }
       } catch (err) {
         console.error('Failed to load article:', err)
-        setReaderContent({
-          title: 'Error Loading Article',
-          html: `<p>Failed to load article: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
-          url: `nostr:${naddr}`
-        })
-        setReaderLoading(false)
+        if (isMounted) {
+          setReaderContent({
+            title: 'Error Loading Article',
+            html: `<p>Failed to load article: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
+            url: `nostr:${naddr}`
+          })
+          setReaderLoading(false)
+        }
       }
     }
     
     loadArticle()
-  }, [naddr, relayPool, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId, setCurrentArticle, settings])
+    
+    // Cleanup function to prevent state updates if component unmounts or effect re-runs
+    return () => {
+      isMounted = false
+    }
+    // Intentionally excluding setter functions from dependencies to prevent race conditions
+    // The setters are called inside the async function with isMounted checks
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [naddr, relayPool, settings])
 }

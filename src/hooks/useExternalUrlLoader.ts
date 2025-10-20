@@ -65,7 +65,12 @@ export function useExternalUrlLoader({
   useEffect(() => {
     if (!relayPool || !url) return
     
+    // Track if this effect is still mounted to prevent state updates after unmount
+    let isMounted = true
+    
     const loadExternalUrl = async () => {
+      if (!isMounted) return
+      
       setReaderLoading(true)
       setReaderContent(undefined)
       setSelectedUrl(url)
@@ -76,6 +81,10 @@ export function useExternalUrlLoader({
       
       try {
         const content = await fetchReadableContent(url)
+        
+        // Check if still mounted before updating state
+        if (!isMounted) return
+        
         setReaderContent(content)
         
         
@@ -84,6 +93,8 @@ export function useExternalUrlLoader({
         
         // Fetch highlights for this URL asynchronously
         try {
+          if (!isMounted) return
+          
           setHighlightsLoading(true)
           
           // Seed with cached highlights first
@@ -109,6 +120,9 @@ export function useExternalUrlLoader({
               relayPool,
               url,
               (highlight) => {
+                // Only update if still mounted
+                if (!isMounted) return
+                
                 if (seen.has(highlight.id)) return
                 seen.add(highlight.id)
                 setHighlights((prev) => {
@@ -125,24 +139,35 @@ export function useExternalUrlLoader({
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {
-          setHighlightsLoading(false)
+          if (isMounted) {
+            setHighlightsLoading(false)
+          }
         }
       } catch (err) {
         console.error('Failed to load external URL:', err)
-        // For videos and other media files, use the filename as the title
-        const filename = getFilenameFromUrl(url)
-        setReaderContent({
-          title: filename,
-          html: `<p>Failed to load content: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
-          url
-        })
-        setReaderLoading(false)
+        if (isMounted) {
+          // For videos and other media files, use the filename as the title
+          const filename = getFilenameFromUrl(url)
+          setReaderContent({
+            title: filename,
+            html: `<p>Failed to load content: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
+            url
+          })
+          setReaderLoading(false)
+        }
       }
     }
     
     loadExternalUrl()
+    
+    // Cleanup function to prevent state updates if component unmounts or effect re-runs
+    return () => {
+      isMounted = false
+    }
+    // Intentionally excluding setter functions from dependencies to prevent race conditions
+    // The setters are called inside the async function with isMounted checks
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, relayPool, eventStore, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId])
+  }, [url, relayPool, eventStore, cachedUrlHighlights])
 
   // Keep UI highlights synced with cached store updates without reloading content
   useEffect(() => {
@@ -155,6 +180,8 @@ export function useExternalUrlLoader({
       const next = [...additions, ...prev]
       return next.sort((a, b) => b.created_at - a.created_at)
     })
-  }, [cachedUrlHighlights, url, setHighlights])
+    // setHighlights is intentionally excluded from dependencies - it's stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cachedUrlHighlights, url])
 }
 
