@@ -68,7 +68,7 @@ export interface UserSettings {
   // TTS language selection
   ttsUseSystemLanguage?: boolean // default: false
   ttsDetectContentLanguage?: boolean // default: true
-  ttsLanguageMode?: 'system' | 'content' // default: 'content'
+  ttsLanguageMode?: 'system' | 'content' | string // default: 'content', can also be language code like 'en', 'es', etc.
   // Text-to-Speech settings
   ttsDefaultSpeed?: number // default: 2.1
 }

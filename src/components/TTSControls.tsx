@@ -37,12 +37,25 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className, settings }
     return settings?.ttsDetectContentLanguage !== false
   }, [settings?.ttsLanguageMode, settings?.ttsDetectContentLanguage])
 
+  const specificLang = useMemo(() => {
+    const mode = settings?.ttsLanguageMode
+    // If mode is not 'system' or 'content', it's a specific language code
+    if (mode && mode !== 'system' && mode !== 'content') {
+      return mode
+    }
+    return undefined
+  }, [settings?.ttsLanguageMode])
+
   const handlePlayPause = () => {
     if (!canPlay) return
 
     if (!speaking) {
       let langOverride: string | undefined
-      if (detectContentLang && text) {
+      
+      // Priority: specific language > content detection > system language
+      if (specificLang) {
+        langOverride = specificLang
+      } else if (detectContentLang && text) {
         try {
           const lang = detect(text)
           if (typeof lang === 'string' && lang.length >= 2) langOverride = lang.slice(0, 2)

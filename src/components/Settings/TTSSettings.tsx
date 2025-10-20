@@ -45,11 +45,29 @@ const TTSSettings: React.FC<TTSSettingsProps> = ({ settings, onUpdate }) => {
         <div className="setting-control">
           <select
             value={settings.ttsLanguageMode || 'content'}
-            onChange={e => onUpdate({ ttsLanguageMode: (e.target.value as 'system' | 'content'), ttsUseSystemLanguage: e.target.value === 'system', ttsDetectContentLanguage: e.target.value !== 'system' })}
+            onChange={e => {
+              const value = e.target.value
+              onUpdate({ 
+                ttsLanguageMode: value,
+                ttsUseSystemLanguage: value === 'system',
+                ttsDetectContentLanguage: value === 'content'
+              })
+            }}
             className="setting-select"
           >
             <option value="system">System Language</option>
             <option value="content">Content (auto-detect)</option>
+            <option disabled>────────────</option>
+            <option value="en">English</option>
+            <option value="zh">Mandarin Chinese</option>
+            <option value="es">Spanish</option>
+            <option value="hi">Hindi</option>
+            <option value="ar">Arabic</option>
+            <option value="fr">French</option>
+            <option value="pt">Portuguese</option>
+            <option value="de">German</option>
+            <option value="ja">Japanese</option>
+            <option value="ru">Russian</option>
           </select>
         </div>
       </div>
