@@ -781,7 +781,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       />
       {isTextContent && articleText && (
         <div style={{ padding: '0 0.75rem 0.5rem 0.75rem' }}>
-          <TTSControls text={articleText} defaultLang={navigator?.language} />
+          <TTSControls text={articleText} defaultLang={navigator?.language} settings={settings} />
         </div>
       )}
       {isExternalVideo ? (
