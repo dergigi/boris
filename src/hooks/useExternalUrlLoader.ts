@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { fetchReadableContent, ReadableContent } from '../services/readerService'
@@ -7,7 +7,6 @@ import { Highlight } from '../types/highlights'
 import { useStoreTimeline } from './useStoreTimeline'
 import { eventToHighlight } from '../services/highlightEventProcessor'
 import { KINDS } from '../config/kinds'
-import { useMountedState } from './useMountedState'
 
 // Helper to extract filename from URL
 function getFilenameFromUrl(url: string): string {
@@ -49,7 +48,7 @@ export function useExternalUrlLoader({
   setCurrentArticleCoordinate,
   setCurrentArticleEventId
 }: UseExternalUrlLoaderProps) {
-  const isMounted = useMountedState()
+  const mountedRef = useRef(true)
   
   // Load cached URL-specific highlights from event store
   const urlFilter = useMemo(() => {
@@ -66,10 +65,12 @@ export function useExternalUrlLoader({
   
   // Load content and start streaming highlights when URL changes
   useEffect(() => {
+    mountedRef.current = true
+    
     if (!relayPool || !url) return
     
     const loadExternalUrl = async () => {
-      if (!isMounted()) return
+      if (!mountedRef.current) return
       
       setReaderLoading(true)
       setReaderContent(undefined)
@@ -81,14 +82,14 @@ export function useExternalUrlLoader({
       try {
         const content = await fetchReadableContent(url)
         
-        if (!isMounted()) return
+        if (!mountedRef.current) return
         
         setReaderContent(content)
         setReaderLoading(false)
         
         // Fetch highlights for this URL asynchronously
         try {
-          if (!isMounted()) return
+          if (!mountedRef.current) return
           
           setHighlightsLoading(true)
           
@@ -112,7 +113,7 @@ export function useExternalUrlLoader({
               relayPool,
               url,
               (highlight) => {
-                if (!isMounted()) return
+                if (!mountedRef.current) return
                 
                 if (seen.has(highlight.id)) return
                 seen.add(highlight.id)
@@ -130,13 +131,13 @@ export function useExternalUrlLoader({
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {
-          if (isMounted()) {
+          if (mountedRef.current) {
             setHighlightsLoading(false)
           }
         }
       } catch (err) {
         console.error('Failed to load external URL:', err)
-        if (isMounted()) {
+        if (mountedRef.current) {
           const filename = getFilenameFromUrl(url)
           setReaderContent({
             title: filename,
@@ -149,8 +150,11 @@ export function useExternalUrlLoader({
     }
     
     loadExternalUrl()
+    
+    return () => {
+      mountedRef.current = false
+    }
     // Intentionally excluding setter functions from dependencies to prevent race conditions
-    // isMounted is a stable function and doesn't need to be in dependencies
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, relayPool, eventStore, cachedUrlHighlights])
 

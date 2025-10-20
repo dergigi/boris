@@ -1,4 +1,4 @@
-import { useEffect, Dispatch, SetStateAction } from 'react'
+import { useEffect, useRef, Dispatch, SetStateAction } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { fetchArticleByNaddr } from '../services/articleService'
 import { fetchHighlightsForArticle } from '../services/highlightService'
@@ -6,7 +6,6 @@ import { ReadableContent } from '../services/readerService'
 import { Highlight } from '../types/highlights'
 import { NostrEvent } from 'nostr-tools'
 import { UserSettings } from '../services/settingsService'
-import { useMountedState } from './useMountedState'
 
 interface UseArticleLoaderProps {
   naddr: string | undefined
@@ -37,13 +36,15 @@ export function useArticleLoader({
   setCurrentArticle,
   settings
 }: UseArticleLoaderProps) {
-  const isMounted = useMountedState()
+  const mountedRef = useRef(true)
   
   useEffect(() => {
+    mountedRef.current = true
+    
     if (!relayPool || !naddr) return
     
     const loadArticle = async () => {
-      if (!isMounted()) return
+      if (!mountedRef.current) return
       
       setReaderLoading(true)
       setReaderContent(undefined)
@@ -53,7 +54,7 @@ export function useArticleLoader({
       try {
         const article = await fetchArticleByNaddr(relayPool, naddr, false, settings)
         
-        if (!isMounted()) return
+        if (!mountedRef.current) return
         
         setReaderContent({
           title: article.title,
@@ -74,7 +75,7 @@ export function useArticleLoader({
         
         // Fetch highlights asynchronously without blocking article display
         try {
-          if (!isMounted()) return
+          if (!mountedRef.current) return
           
           setHighlightsLoading(true)
           setHighlights([])
@@ -84,7 +85,7 @@ export function useArticleLoader({
             articleCoordinate, 
             article.event.id,
             (highlight) => {
-              if (!isMounted()) return
+              if (!mountedRef.current) return
               
               setHighlights((prev: Highlight[]) => {
                 if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
@@ -97,13 +98,13 @@ export function useArticleLoader({
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {
-          if (isMounted()) {
+          if (mountedRef.current) {
             setHighlightsLoading(false)
           }
         }
       } catch (err) {
         console.error('Failed to load article:', err)
-        if (isMounted()) {
+        if (mountedRef.current) {
           setReaderContent({
             title: 'Error Loading Article',
             html: `<p>Failed to load article: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
@@ -115,8 +116,11 @@ export function useArticleLoader({
     }
     
     loadArticle()
+    
+    return () => {
+      mountedRef.current = false
+    }
     // Intentionally excluding setter functions from dependencies to prevent race conditions
-    // isMounted is a stable function and doesn't need to be in dependencies
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [naddr, relayPool, settings])
 }
