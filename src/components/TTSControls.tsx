@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useTextToSpeech } from '../hooks/useTextToSpeech'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlay, faPause, faGauge } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../services/settingsService'
+import { detect } from 'tinyld'
 
 interface Props {
   text: string
@@ -22,10 +23,30 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className, settings }
 
   const canPlay = supported && text?.trim().length > 0
 
+  const resolvedSystemLang = useMemo(() => {
+    if (settings?.ttsUseSystemLanguage) {
+      return navigator?.language?.split('-')[0]
+    }
+    return undefined
+  }, [settings?.ttsUseSystemLanguage])
+
+  const detectContentLang = useMemo(() => settings?.ttsDetectContentLanguage !== false, [settings?.ttsDetectContentLanguage])
+
   const handlePlayPause = () => {
     if (!canPlay) return
+
     if (!speaking) {
-      speak(text, defaultLang)
+      let langOverride: string | undefined
+      if (detectContentLang && text) {
+        try {
+          const lang = detect(text)
+          if (typeof lang === 'string' && lang.length >= 2) langOverride = lang.slice(0, 2)
+        } catch {}
+      }
+      if (!langOverride && resolvedSystemLang) {
+        langOverride = resolvedSystemLang
+      }
+      speak(text, langOverride)
     } else if (paused) {
       resume()
     } else {
