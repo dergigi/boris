@@ -24,8 +24,8 @@ const TTSSettings: React.FC<TTSSettingsProps> = ({ settings, onUpdate }) => {
       <h3 className="section-title">Text-to-Speech</h3>
       
       <div className="setting-group setting-inline">
-        <label className="setting-label">Default Playback Speed</label>
-        <div className="setting-control">
+        <label>Default Playback Speed</label>
+        <div className="setting-buttons">
           <button
             type="button"
             className="article-menu-btn"
