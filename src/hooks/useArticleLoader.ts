@@ -14,7 +14,7 @@ interface UseArticleLoaderProps {
   setReaderContent: (content: ReadableContent | undefined) => void
   setReaderLoading: (loading: boolean) => void
   setIsCollapsed: (collapsed: boolean) => void
-  setHighlights: (highlights: Highlight[]) => void
+  setHighlights: React.Dispatch<React.SetStateAction<Highlight[]>>
   setHighlightsLoading: (loading: boolean) => void
   setCurrentArticleCoordinate: (coord: string | undefined) => void
   setCurrentArticleEventId: (id: string | undefined) => void
@@ -81,8 +81,8 @@ export function useArticleLoader({
             article.event.id,
             (highlight) => {
               // Merge streaming results with existing UI state to preserve locally created highlights
-              setHighlights((prev) => {
-                if (prev.some(h => h.id === highlight.id)) return prev
+              setHighlights((prev: Highlight[]) => {
+                if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
                 const next = [highlight, ...prev]
                 return next.sort((a, b) => b.created_at - a.created_at)
               })
