@@ -36,7 +36,9 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className, settings }
   const handleCycleSpeed = () => {
     const currentIndex = SPEED_OPTIONS.indexOf(rate)
     const nextIndex = (currentIndex + 1) % SPEED_OPTIONS.length
-    setRate(SPEED_OPTIONS[nextIndex])
+    const next = SPEED_OPTIONS[nextIndex]
+    console.debug('[tts][ui] cycle speed', { from: rate, to: next, speaking, paused })
+    setRate(next)
   }
 
   const playLabel = !speaking ? 'Listen' : (paused ? 'Resume' : 'Pause')

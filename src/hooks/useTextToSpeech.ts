@@ -54,6 +54,7 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
   // Update rate when defaultRate option changes
   useEffect(() => {
     if (options.defaultRate !== undefined) {
+      console.debug('[tts] defaultRate changed ->', options.defaultRate)
       setRate(options.defaultRate)
     }
   }, [options.defaultRate])
@@ -65,13 +66,12 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
       const v = synth!.getVoices()
       setVoices(v)
       if (!voice && v.length) {
-        // pick best match by language first, then default
         const byLang = v.find(x => x.lang?.toLowerCase().startsWith(defaultLang.toLowerCase()))
         setVoice(byLang || v[0] || null)
+        console.debug('[tts] voices loaded', { total: v.length, picked: (byLang || v[0] || null)?.lang })
       }
     }
     load()
-    // Safari/Chrome fire 'voiceschanged'
     const handleVoicesChanged = () => load()
     synth!.addEventListener('voiceschanged', handleVoicesChanged)
     return () => {
@@ -88,14 +88,13 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     u.pitch = pitch
     u.volume = volume
 
-    u.onstart = () => { setSpeaking(true); setPaused(false) }
-    u.onpause = () => setPaused(true)
-    u.onresume = () => setPaused(false)
-    u.onend = () => { setSpeaking(false); setPaused(false); utteranceRef.current = null }
-    u.onerror = () => { setSpeaking(false); setPaused(false); utteranceRef.current = null }
+    u.onstart = () => { console.debug('[tts] onstart'); setSpeaking(true); setPaused(false) }
+    u.onpause = () => { console.debug('[tts] onpause'); setPaused(true) }
+    u.onresume = () => { console.debug('[tts] onresume'); setPaused(false) }
+    u.onend = () => { console.debug('[tts] onend'); setSpeaking(false); setPaused(false); utteranceRef.current = null }
+    u.onerror = () => { console.debug('[tts] onerror'); setSpeaking(false); setPaused(false); utteranceRef.current = null }
     u.onboundary = (ev: SpeechSynthesisEvent) => {
       if (typeof ev.charIndex === 'number') {
-        // Keep track of where we are in the original text
         const newIndex = ev.charIndex
         if (newIndex > charIndexRef.current) {
           charIndexRef.current = newIndex
@@ -108,6 +107,7 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
 
   const stop = useCallback(() => {
     if (!supported) return
+    console.debug('[tts] stop')
     synth!.cancel()
     setSpeaking(false)
     setPaused(false)
@@ -118,7 +118,7 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
 
   const speak = useCallback((text: string, langOverride?: string) => {
     if (!supported || !text?.trim()) return
-    // stopping any current speech first is safer for iOS
+    console.debug('[tts] speak', { len: text.length, rate })
     synth!.cancel()
     spokenTextRef.current = text
     charIndexRef.current = 0
@@ -133,6 +133,7 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
   const pause = useCallback(() => {
     if (!supported) return
     if (synth!.speaking && !synth!.paused) {
+      console.debug('[tts] pause')
       synth!.pause()
       setPaused(true)
     }
@@ -141,6 +142,7 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
   const resume = useCallback(() => {
     if (!supported) return
     if (synth!.speaking && synth!.paused) {
+      console.debug('[tts] resume')
       synth!.resume()
       setPaused(false)
     }
@@ -151,13 +153,14 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     if (!supported) return
     if (!utteranceRef.current) return
 
-    // If currently speaking (not paused), restart from last boundary to apply new rate immediately.
+    console.debug('[tts] rate change', { rate, speaking: synth!.speaking, paused: synth!.paused, charIndex: charIndexRef.current })
+
     if (synth!.speaking && !synth!.paused) {
       const fullText = spokenTextRef.current
       const startIndex = Math.max(0, Math.min(charIndexRef.current, fullText.length - 1))
       const remainingText = fullText.slice(startIndex)
 
-      // Cancel current utterance and start a new one with updated rate
+      console.debug('[tts] restart at new rate', { startIndex, remainingLen: remainingText.length })
       synth!.cancel()
       const u = createUtterance(remainingText)
       utteranceRef.current = u
@@ -165,7 +168,6 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
       return
     }
 
-    // If paused or not speaking, set rate; it will take effect on resume/start
     if (utteranceRef.current) {
       utteranceRef.current.rate = rate
     }
