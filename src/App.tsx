@@ -287,6 +287,18 @@ function AppRoutes({
         } 
       />
       <Route 
+        path="/me/links/:filter" 
+        element={
+          <Bookmarks 
+            relayPool={relayPool}
+            onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
+          />
+        } 
+      />
+      <Route 
         path="/me/writings" 
         element={
           <Bookmarks 

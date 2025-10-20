@@ -151,6 +151,12 @@ const Me: React.FC<MeProps> = ({
       } else {
         navigate(`/me/reads/${filter}`, { replace: true })
       }
+    } else if (activeTab === 'links') {
+      if (filter === 'all') {
+        navigate('/me/links', { replace: true })
+      } else {
+        navigate(`/me/links/${filter}`, { replace: true })
+      }
     }
   }
   
