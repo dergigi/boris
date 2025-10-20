@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.6] - 2025-10-20
+
+### Fixed
+
+- React Hooks violations in NostrMentionLink component
+  - Fixed useEffect dependency warnings by removing isMounted from dependencies
+  - Reverted to inline mount tracking with useRef for safer lifecycle handling
+
 ## [0.8.4] - 2024-10-20
 
 ### Added
