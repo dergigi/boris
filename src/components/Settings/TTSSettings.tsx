@@ -58,7 +58,8 @@ const TTSSettings: React.FC<TTSSettingsProps> = ({ settings, onUpdate }) => {
             <option value="system">System Language</option>
             <option value="content">Content (auto-detect)</option>
             <option disabled>────────────</option>
-            <option value="en">English</option>
+            <option value="en-US">English (American)</option>
+            <option value="en-GB">English (British)</option>
             <option value="zh">Mandarin Chinese</option>
             <option value="es">Spanish</option>
             <option value="hi">Hindi</option>
