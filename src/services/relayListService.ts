@@ -22,6 +22,9 @@ export async function loadUserRelayList(
       kinds: [10002],
       authors: [pubkey]
     })
+    
+    // Add a small delay to ensure queries have time to complete
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
     console.log('[relayListService] Found', events.length, 'kind 10002 events')
     if (events.length > 0) {
