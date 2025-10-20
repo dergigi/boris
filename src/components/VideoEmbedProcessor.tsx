@@ -31,7 +31,8 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
     const videoUrls: string[] = html.match(videoUrlPattern) || []
     
     // Also check for video URLs that might not have extensions but are classified as video
-    const allUrlPattern = /https?:\/\/[^\s<>"']+/gi
+    // Use a more precise pattern that stops at whitespace, quotes, and HTML tag boundaries
+    const allUrlPattern = /https?:\/\/[^\s<>"']+(?=\s|>|"|'|$)/gi
     const allUrls: string[] = html.match(allUrlPattern) || []
     const videoUrlsWithoutExt = allUrls.filter(url => {
       const classification = classifyUrl(url)
@@ -62,7 +63,8 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
     const videoUrlPattern = /https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)(?:\?[^\s<>"']*)?/gi
     const videoUrls: string[] = html.match(videoUrlPattern) || []
     
-    const allUrlPattern = /https?:\/\/[^\s<>"']+/gi
+    // Use a more precise pattern that stops at whitespace, quotes, and HTML tag boundaries
+    const allUrlPattern = /https?:\/\/[^\s<>"']+(?=\s|>|"|'|$)/gi
     const allUrls: string[] = html.match(allUrlPattern) || []
     const videoUrlsWithoutExt = allUrls.filter(url => {
       const classification = classifyUrl(url)
