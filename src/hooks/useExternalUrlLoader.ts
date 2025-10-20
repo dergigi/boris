@@ -61,6 +61,7 @@ export function useExternalUrlLoader({
     [url]
   )
   
+  // Load content and start streaming highlights when URL changes
   useEffect(() => {
     if (!relayPool || !url) return
     
@@ -140,6 +141,19 @@ export function useExternalUrlLoader({
     }
     
     loadExternalUrl()
-  }, [url, relayPool, eventStore, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId, cachedUrlHighlights])
+  }, [url, relayPool, eventStore, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId])
+
+  // Keep UI highlights synced with cached store updates without reloading content
+  useEffect(() => {
+    if (!url) return
+    if (cachedUrlHighlights.length === 0) return
+    setHighlights((prev) => {
+      const seen = new Set<string>(prev.map(h => h.id))
+      const additions = cachedUrlHighlights.filter(h => !seen.has(h.id))
+      if (additions.length === 0) return prev
+      const next = [...additions, ...prev]
+      return next.sort((a, b) => b.created_at - a.created_at)
+    })
+  }, [cachedUrlHighlights, url, setHighlights])
 }
 
