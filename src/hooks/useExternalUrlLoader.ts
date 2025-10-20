@@ -150,8 +150,9 @@ export function useExternalUrlLoader({
     
     loadExternalUrl()
     // Intentionally excluding setter functions from dependencies to prevent race conditions
+    // isMounted is a stable function and doesn't need to be in dependencies
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, relayPool, eventStore, cachedUrlHighlights, isMounted])
+  }, [url, relayPool, eventStore, cachedUrlHighlights])
 
   // Keep UI highlights synced with cached store updates without reloading content
   useEffect(() => {

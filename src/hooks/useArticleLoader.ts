@@ -116,6 +116,7 @@ export function useArticleLoader({
     
     loadArticle()
     // Intentionally excluding setter functions from dependencies to prevent race conditions
+    // isMounted is a stable function and doesn't need to be in dependencies
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [naddr, relayPool, settings, isMounted])
+  }, [naddr, relayPool, settings])
 }
