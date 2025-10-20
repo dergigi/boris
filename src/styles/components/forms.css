@@ -43,7 +43,7 @@
   word-wrap: break-word;
   text-align: var(--paragraph-alignment, justify);
 }
-.setting-select { width: 100%; padding: 0.5rem; background: var(--color-bg-elevated); border: 1px solid var(--color-border-subtle); border-radius: 4px; color: var(--color-text); font-size: 1rem; }
+.setting-select { width: 100%; padding: 0.5rem 1rem 0.5rem 0.5rem; background: var(--color-bg-elevated); border: 1px solid var(--color-border-subtle); border-radius: 4px; color: var(--color-text); font-size: 1rem; }
 .setting-inline .setting-select { width: auto; min-width: 200px; flex: 1; }
 .setting-select:focus { outline: none; border-color: var(--color-primary); }
 .font-select option { padding: 0.5rem; font-size: 1rem; }
