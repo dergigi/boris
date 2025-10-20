@@ -17,13 +17,5 @@ export const RELAYS = [
   'wss://purplepag.es',
   'wss://relay.primal.net',
   'wss://proxy.nostr-relay.app/5d0d38afc49c4b84ca0da951a336affa18438efed302aeedfa92eb8b0d3fcb87',
-  // Temporary: Add some relays from user's relay list to test
-  'wss://filter.nostr.wine',
-  'wss://nostr.wine',
-  'wss://nostr.oxtr.dev',
-  'wss://atlas.nostr.land',
-  'wss://eden.nostr.land',
-  'wss://puravida.nostr.land',
-  'wss://premium.primal.net'
 ]
 
