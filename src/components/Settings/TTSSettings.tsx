@@ -55,7 +55,6 @@ const TTSSettings: React.FC<TTSSettingsProps> = ({ settings, onUpdate }) => {
       </div>
 
       <div className="setting-group">
-        <label>Test Example</label>
         <div style={{ padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '4px', marginBottom: '0.75rem', fontSize: '0.95rem', lineHeight: '1.5' }}>
           {EXAMPLE_TEXT}
         </div>
