@@ -82,8 +82,9 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     if (!supported || !text?.trim()) return
     // stopping any current speech first is safer for iOS
     synth!.cancel()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const u = new (window as any).SpeechSynthesisUtterance(text) as SpeechSynthesisUtterance
+    // Create utterance using the global SpeechSynthesisUtterance constructor
+    const SpeechSynthesisUtteranceConstructor = (window as Window & typeof globalThis).SpeechSynthesisUtterance
+    const u = new SpeechSynthesisUtteranceConstructor(text) as SpeechSynthesisUtterance
     u.lang = langOverride || voice?.lang || defaultLang
     if (voice) u.voice = voice
     u.rate = rate
