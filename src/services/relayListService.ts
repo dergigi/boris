@@ -15,10 +15,18 @@ export async function loadUserRelayList(
   pubkey: string
 ): Promise<UserRelayInfo[]> {
   try {
+    console.log('[relayListService] Loading user relay list for pubkey:', pubkey.slice(0, 16) + '...')
+    console.log('[relayListService] Available relays:', Array.from(relayPool.relays.keys()))
+    
     const events = await queryEvents(relayPool, {
       kinds: [10002],
       authors: [pubkey]
     })
+
+    console.log('[relayListService] Found', events.length, 'kind 10002 events')
+    if (events.length > 0) {
+      console.log('[relayListService] Event details:', events.map(e => ({ id: e.id, created_at: e.created_at, tags: e.tags.length })))
+    }
 
     if (events.length === 0) return []
 
@@ -38,6 +46,7 @@ export async function loadUserRelayList(
       }
     }
 
+    console.log('[relayListService] Parsed', relays.length, 'relays from event')
     return relays
   } catch (error) {
     console.error('Failed to load user relay list:', error)
