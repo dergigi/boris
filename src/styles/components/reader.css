@@ -14,12 +14,12 @@
 /* Video container - responsive wrapper following react-player docs */
 .reader-video { 
   position: relative;
-  width: 80vw;  /* 80% of viewport width */
-  min-width: 400px;  /* Minimum width */
-  max-width: 1000px;   /* Maximum width */
+  width: 100%;
+  max-width: 100%;
   aspect-ratio: 16/9;
-  margin: 0 -0.75rem 1rem -0.75rem; /* Negative margins to counteract reader padding */
+  margin: 0 0 1rem 0; /* align with reader padding, no bleed */
   background: rgb(0 0 0); /* black */
+  overflow: hidden;
 }
 .reader.empty { color: var(--color-text-secondary); }
 .loading-spinner { display: flex; align-items: center; gap: 0.5rem; color: var(--color-text-secondary); }
