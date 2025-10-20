@@ -12,6 +12,7 @@ import LayoutBehaviorSettings from './Settings/LayoutBehaviorSettings'
 import ZapSettings from './Settings/ZapSettings'
 import RelaySettings from './Settings/RelaySettings'
 import PWASettings from './Settings/PWASettings'
+import TTSSettings from './Settings/TTSSettings'
 import { useRelayStatus } from '../hooks/useRelayStatus'
 import VersionFooter from './VersionFooter'
 
@@ -45,6 +46,10 @@ const DEFAULT_SETTINGS: UserSettings = {
   syncReadingPosition: true,
   autoMarkAsReadOnCompletion: false,
   hideBookmarksWithoutCreationDate: true,
+  ttsUseSystemLanguage: false,
+  ttsDetectContentLanguage: true,
+  ttsLanguageMode: 'content',
+  ttsDefaultSpeed: 2.1,
 }
 
 interface SettingsProps {
@@ -175,6 +180,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onClose, relayPoo
         <MediaDisplaySettings settings={localSettings} onUpdate={handleUpdate} />
         <ExploreSettings settings={localSettings} onUpdate={handleUpdate} />
         <ZapSettings settings={localSettings} onUpdate={handleUpdate} />
+        <TTSSettings settings={localSettings} onUpdate={handleUpdate} />
         <LayoutBehaviorSettings settings={localSettings} onUpdate={handleUpdate} />
         <PWASettings settings={localSettings} onUpdate={handleUpdate} onClose={onClose} />
         <RelaySettings relayStatuses={relayStatuses} onClose={onClose} />
