@@ -10,7 +10,7 @@ interface TTSSettingsProps {
 }
 
 const SPEED_OPTIONS = [0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.1, 2.4, 2.8, 3]
-const EXAMPLE_TEXT = "Welcome to Boris. Text-to-speech brings your highlights and articles to life. Adjust the playback speed and language settings to your preference."
+const EXAMPLE_TEXT = "Boris aims to be a calm reader app with clean typography, beautiful design, and a focus on readability. Boris does not and will never have ads, trackers, paywalls, subscriptions, or any other distractions."
 
 const TTSSettings: React.FC<TTSSettingsProps> = ({ settings, onUpdate }) => {
   const currentSpeed = settings.ttsDefaultSpeed || 2.1
