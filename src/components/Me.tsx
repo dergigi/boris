@@ -626,72 +626,47 @@ const Me: React.FC<MeProps> = ({
     highlights
   )
 
-  // Archive-only list: independent of reading progress
-  const archiveOnlyReads: ReadItem[] = (() => {
-    if (readingProgressFilter !== 'archive') return []
-    const markedIds = new Set<string>([
-      ...archiveController.getMarkedIds(),
-      // We intentionally ignore readingProgress marks here per requirement
-    ])
+  // Helper: build archive-only list from marked IDs and a base list
+  const buildArchiveOnly = (
+    baseItems: ReadItem[],
+    options: { kind: 'article' | 'external' }
+  ): ReadItem[] => {
+    const allMarked = archiveController.getMarkedIds()
+    const relevantMarked = options.kind === 'article'
+      ? allMarked.filter(id => id.startsWith('naddr1'))
+      : allMarked.filter(id => !id.startsWith('naddr1'))
+    const markedSet = new Set(relevantMarked)
+
     const items: ReadItem[] = []
-    // Add items from existing reads/links that are marked
-    for (const item of [...readsWithProgress, ...linksWithProgress]) {
-      const id = item.type === 'article' ? item.id : (item.url || item.id)
-      if (id && markedIds.has(id)) {
+    for (const item of baseItems) {
+      const key = options.kind === 'article' ? item.id : (item.url || item.id)
+      if (key && markedSet.has(key)) {
         items.push({ ...item, markedAsRead: true })
       }
     }
-    // Add any marked IDs not present in reads/links yet
-    for (const id of markedIds) {
-      const exists = items.find(i => (i.type === 'article' ? i.id : (i.url || i.id)) === id)
+    for (const id of markedSet) {
+      const exists = items.find(i => (options.kind === 'article' ? i.id : (i.url || i.id)) === id)
       if (!exists) {
-        const isArticle = id.startsWith('naddr1')
         items.push({
           id,
           source: 'marked-as-read',
-          type: isArticle ? 'article' : 'external',
-          url: isArticle ? undefined : id,
+          type: options.kind,
+          url: options.kind === 'article' ? undefined : id,
           markedAsRead: true,
           readingTimestamp: Math.floor(Date.now() / 1000)
         })
       }
     }
     return items
-  })()
+  }
 
-  // Archive-only list for links (URLs only), independent of reading progress
-  const archiveOnlyLinks: ReadItem[] = (() => {
-    if (readingProgressFilter !== 'archive') return []
-    const markedIds = new Set<string>([
-      ...archiveController.getMarkedIds()
-    ])
-    const items: ReadItem[] = []
-    // Only consider URL marks (exclude naddr)
-    const markedUrls = Array.from(markedIds).filter(id => !id.startsWith('naddr1'))
-    const markedUrlSet = new Set(markedUrls)
-    // Add existing link items that are marked
-    for (const item of linksWithProgress) {
-      const id = item.url || item.id
-      if (id && markedUrlSet.has(id)) {
-        items.push({ ...item, markedAsRead: true })
-      }
-    }
-    // Add any marked URLs not present yet
-    for (const url of markedUrlSet) {
-      const exists = items.find(i => (i.url || i.id) === url)
-      if (!exists) {
-        items.push({
-          id: url,
-          source: 'marked-as-read',
-          type: 'external',
-          url,
-          markedAsRead: true,
-          readingTimestamp: Math.floor(Date.now() / 1000)
-        })
-      }
-    }
-    return items
-  })()
+  // Archive-only lists: independent of reading progress
+  const archiveOnlyReads: ReadItem[] = readingProgressFilter === 'archive'
+    ? buildArchiveOnly(readsWithProgress, { kind: 'article' })
+    : []
+  const archiveOnlyLinks: ReadItem[] = readingProgressFilter === 'archive'
+    ? buildArchiveOnly(linksWithProgress, { kind: 'external' })
+    : []
 
   // Debug logs for archive filter issues
   if (readingProgressFilter === 'archive') {
