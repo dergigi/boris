@@ -659,6 +659,40 @@ const Me: React.FC<MeProps> = ({
     return items
   })()
 
+  // Archive-only list for links (URLs only), independent of reading progress
+  const archiveOnlyLinks: ReadItem[] = (() => {
+    if (readingProgressFilter !== 'archive') return []
+    const markedIds = new Set<string>([
+      ...archiveController.getMarkedIds()
+    ])
+    const items: ReadItem[] = []
+    // Only consider URL marks (exclude naddr)
+    const markedUrls = Array.from(markedIds).filter(id => !id.startsWith('naddr1'))
+    const markedUrlSet = new Set(markedUrls)
+    // Add existing link items that are marked
+    for (const item of linksWithProgress) {
+      const id = item.url || item.id
+      if (id && markedUrlSet.has(id)) {
+        items.push({ ...item, markedAsRead: true })
+      }
+    }
+    // Add any marked URLs not present yet
+    for (const url of markedUrlSet) {
+      const exists = items.find(i => (i.url || i.id) === url)
+      if (!exists) {
+        items.push({
+          id: url,
+          source: 'marked-as-read',
+          type: 'external',
+          url,
+          markedAsRead: true,
+          readingTimestamp: Math.floor(Date.now() / 1000)
+        })
+      }
+    }
+    return items
+  })()
+
   // Debug logs for archive filter issues
   if (readingProgressFilter === 'archive') {
     const ids = Array.from(new Set([
@@ -886,21 +920,40 @@ const Me: React.FC<MeProps> = ({
               selectedFilter={readingProgressFilter}
               onFilterChange={handleReadingProgressFilterChange}
             />
-            {filteredLinks.length === 0 ? (
-              <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-                No links match this filter.
-              </div>
+            {readingProgressFilter === 'archive' ? (
+              archiveOnlyLinks.length === 0 ? (
+                <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                  No links in archive.
+                </div>
+              ) : (
+                <div className="explore-grid">
+                  {archiveOnlyLinks.map((item) => (
+                    <BlogPostCard
+                      key={item.id}
+                      post={convertReadItemToBlogPostPreview(item)}
+                      href={getReadItemUrl(item)}
+                      readingProgress={item.readingProgress}
+                    />
+                  ))}
+                </div>
+              )
             ) : (
-              <div className="explore-grid">
-              {filteredLinks.map((item) => (
-                <BlogPostCard
-                  key={item.id}
-                  post={convertReadItemToBlogPostPreview(item)}
-                  href={getReadItemUrl(item)}
-                  readingProgress={item.readingProgress}
-                />
-              ))}
-              </div>
+              filteredLinks.length === 0 ? (
+                <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                  No links match this filter.
+                </div>
+              ) : (
+                <div className="explore-grid">
+                {filteredLinks.map((item) => (
+                  <BlogPostCard
+                    key={item.id}
+                    post={convertReadItemToBlogPostPreview(item)}
+                    href={getReadItemUrl(item)}
+                    readingProgress={item.readingProgress}
+                  />
+                ))}
+                </div>
+              )
             )}
           </>
         )
