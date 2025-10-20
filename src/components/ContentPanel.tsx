@@ -847,7 +847,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               <VideoEmbedProcessor
                 ref={contentRef}
                 html={finalHtml}
-                renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true}
+                renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true && !isExternalVideo}
                 className="reader-markdown"
                 onMouseUp={handleSelectionEnd}
                 onTouchEnd={handleSelectionEnd}
@@ -863,7 +863,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             <VideoEmbedProcessor
               ref={contentRef}
               html={finalHtml || html || ''}
-              renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true}
+              renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true && !isExternalVideo}
               className="reader-html"
               onMouseUp={handleSelectionEnd}
               onTouchEnd={handleSelectionEnd}
