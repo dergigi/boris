@@ -49,6 +49,13 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
+  // Update rate when defaultRate option changes
+  useEffect(() => {
+    if (options.defaultRate !== undefined) {
+      setRate(options.defaultRate)
+    }
+  }, [options.defaultRate])
+
   // Load voices (async in many browsers)
   useEffect(() => {
     if (!supported) return
