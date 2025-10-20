@@ -26,57 +26,78 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
       return html
     }
 
-    // Find all video URLs in img tags and replace the entire tag
+    // Process HTML in stages: <video> blocks, <img> tags with video src, and bare video URLs
     let result = html
-    
-    // Find all src attributes with video URLs inside img tags
-    const imgTagPattern = /<img[^>]*>/gi
-    const allImgTags = result.match(imgTagPattern) || []
-    
-    const imgVideoUrls: string[] = []
+
+    const collectedUrls: string[] = []
     let placeholderIndex = 0
-    
-    allImgTags.forEach((imgTag) => {
-      // Extract src attribute value
-      const srcMatch = imgTag.match(/src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?/i)
-      if (srcMatch && srcMatch[1]) {
-        const videoUrl = srcMatch[1]
-        imgVideoUrls.push(videoUrl)
+
+    // 1) Replace entire <video>...</video> blocks when they reference a video URL
+    const videoBlockPattern = /<video[^>]*>[\s\S]*?<\/video>/gi
+    const videoBlocks = result.match(videoBlockPattern) || []
+    videoBlocks.forEach((block) => {
+      // Try src on <video>
+      let url: string | null = null
+      const videoSrcMatch = block.match(/<video[^>]*\s+src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?[^>]*>/i)
+      if (videoSrcMatch && videoSrcMatch[1]) {
+        url = videoSrcMatch[1]
+      } else {
+        // Try nested <source>
+        const sourceSrcMatch = block.match(/<source[^>]*\s+src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?[^>]*>/i)
+        if (sourceSrcMatch && sourceSrcMatch[1]) {
+          url = sourceSrcMatch[1]
+        }
+      }
+      if (url) {
+        collectedUrls.push(url)
         const placeholder = `__VIDEO_EMBED_${placeholderIndex}__`
-        // Escape special regex characters in the img tag to ensure proper replacement
-        const escapedTag = imgTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        result = result.replace(new RegExp(escapedTag, ''), placeholder)
+        const escaped = block.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        result = result.replace(new RegExp(escaped, 'g'), placeholder)
         placeholderIndex++
       }
     })
 
-    // Find remaining video URLs (not in img tags)
-    const videoUrlPattern = /https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)(?:\?[^\s<>"']*)?/gi
-    const videoUrls: string[] = result.match(videoUrlPattern) || []
-    
-    // Also check for video URLs that might not have extensions but are classified as video
-    // Use a more precise pattern that stops at whitespace, quotes, and HTML tag boundaries
+    // 2) Replace entire <img ...> tags if their src points to a video
+    const imgTagPattern = /<img[^>]*>/gi
+    const allImgTags = result.match(imgTagPattern) || []
+    allImgTags.forEach((imgTag) => {
+      const srcMatch = imgTag.match(/src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?/i)
+      if (srcMatch && srcMatch[1]) {
+        const videoUrl = srcMatch[1]
+        collectedUrls.push(videoUrl)
+        const placeholder = `__VIDEO_EMBED_${placeholderIndex}__`
+        const escapedTag = imgTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        result = result.replace(new RegExp(escapedTag, 'g'), placeholder)
+        placeholderIndex++
+      }
+    })
+
+    // 3) Replace remaining bare video URLs (direct files or recognized video platforms)
+    const fileVideoPattern = /https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)(?:\?[^\s<>"']*)?/gi
+    const fileVideoUrls: string[] = result.match(fileVideoPattern) || []
+
     const allUrlPattern = /https?:\/\/[^\s<>"']+(?=\s|>|"|'|$)/gi
     const allUrls: string[] = result.match(allUrlPattern) || []
-    const videoUrlsWithoutExt = allUrls.filter(url => {
+    const platformVideoUrls = allUrls.filter(url => {
+      // include URLs classified as video and not already collected
       const classification = classifyUrl(url)
-      return classification.type === 'video' && !videoUrls.includes(url)
+      return classification.type === 'video' && !collectedUrls.includes(url)
     })
-    
-    const allVideoUrls = [...videoUrls, ...videoUrlsWithoutExt]
-    
-    if ((imgVideoUrls.length + allVideoUrls.length) === 0) {
-      return html
-    }
 
-    // Replace remaining video URLs with placeholder divs
+    const remainingUrls = [...fileVideoUrls, ...platformVideoUrls].filter(url => !collectedUrls.includes(url))
+
     let processedHtml = result
-    let placeholderIndex = imgVideoUrls.length
-    allVideoUrls.forEach((url) => {
+    remainingUrls.forEach((url) => {
       const placeholder = `__VIDEO_EMBED_${placeholderIndex}__`
       processedHtml = processedHtml.replace(new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), placeholder)
+      collectedUrls.push(url)
       placeholderIndex++
     })
+
+    // If nothing collected, return original html
+    if (collectedUrls.length === 0) {
+      return html
+    }
 
     return processedHtml
   }, [html, renderVideoLinksAsEmbeds])
@@ -86,32 +107,50 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
       return []
     }
 
-    const result: string[] = []
-    
-    // Extract video URLs from img tags
+    const urls: string[] = []
+
+    // 1) Extract from <video> blocks first (video src or nested source src)
+    const videoBlockPattern = /<video[^>]*>[\s\S]*?<\/video>/gi
+    const videoBlocks = html.match(videoBlockPattern) || []
+    videoBlocks.forEach((block) => {
+      let url: string | null = null
+      const videoSrcMatch = block.match(/<video[^>]*\s+src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?[^>]*>/i)
+      if (videoSrcMatch && videoSrcMatch[1]) {
+        url = videoSrcMatch[1]
+      } else {
+        const sourceSrcMatch = block.match(/<source[^>]*\s+src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?[^>]*>/i)
+        if (sourceSrcMatch && sourceSrcMatch[1]) {
+          url = sourceSrcMatch[1]
+        }
+      }
+      if (url && !urls.includes(url)) urls.push(url)
+    })
+
+    // 2) Extract from <img> tags with video src
     const imgTagPattern = /<img[^>]*>/gi
     const allImgTags = html.match(imgTagPattern) || []
     allImgTags.forEach((imgTag) => {
       const srcMatch = imgTag.match(/src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?/i)
-      if (srcMatch && srcMatch[1]) {
-        result.push(srcMatch[1])
+      if (srcMatch && srcMatch[1] && !urls.includes(srcMatch[1])) {
+        urls.push(srcMatch[1])
       }
     })
-    
-    // Extract remaining video URLs
-    const videoUrlPattern = /https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)(?:\?[^\s<>"']*)?/gi
-    const videoUrls: string[] = html.match(videoUrlPattern) || []
-    result.push(...videoUrls.filter(url => !result.includes(url)))
-    
-    // Use a more precise pattern that stops at whitespace, quotes, and HTML tag boundaries
+
+    // 3) Extract remaining direct file URLs and platform-classified video URLs
+    const fileVideoPattern = /https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)(?:\?[^\s<>"']*)?/gi
+    const fileVideoUrls: string[] = html.match(fileVideoPattern) || []
+    fileVideoUrls.forEach(u => { if (!urls.includes(u)) urls.push(u) })
+
     const allUrlPattern = /https?:\/\/[^\s<>"']+(?=\s|>|"|'|$)/gi
     const allUrls: string[] = html.match(allUrlPattern) || []
-    const videoUrlsWithoutExt = allUrls.filter(url => {
-      const classification = classifyUrl(url)
-      return classification.type === 'video' && !result.includes(url)
+    allUrls.forEach(u => {
+      const classification = classifyUrl(u)
+      if (classification.type === 'video' && !urls.includes(u)) {
+        urls.push(u)
+      }
     })
-    
-    return [...result, ...videoUrlsWithoutExt]
+
+    return urls
   }, [html, renderVideoLinksAsEmbeds])
 
   // If no video embedding is enabled, just render the HTML normally
