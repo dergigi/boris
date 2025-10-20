@@ -662,9 +662,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             const dTag = currentArticle.tags.find(t => t[0] === 'd')?.[1]
             if (dTag) {
               const naddr = nip19.naddrEncode({ kind: 30023, pubkey: currentArticle.pubkey, identifier: dTag })
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore private update for instant UI; controller will confirm via stream
-              archiveController['markedIds'].add(naddr)
               archiveController.mark(naddr)
               console.log('[archive][content] optimistic mark article', naddr.slice(0, 24) + '...')
             }
@@ -675,9 +672,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             activeAccount,
             relayPool
           )
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore private update for instant UI; controller will confirm via stream
-          archiveController['markedIds'].add(selectedUrl)
           archiveController.mark(selectedUrl)
           console.log('[archive][content] optimistic mark url', selectedUrl)
         }
