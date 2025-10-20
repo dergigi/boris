@@ -626,6 +626,39 @@ const Me: React.FC<MeProps> = ({
     highlights
   )
 
+  // Archive-only list: independent of reading progress
+  const archiveOnlyReads: ReadItem[] = (() => {
+    if (readingProgressFilter !== 'archive') return []
+    const markedIds = new Set<string>([
+      ...archiveController.getMarkedIds(),
+      // We intentionally ignore readingProgress marks here per requirement
+    ])
+    const items: ReadItem[] = []
+    // Add items from existing reads/links that are marked
+    for (const item of [...readsWithProgress, ...linksWithProgress]) {
+      const id = item.type === 'article' ? item.id : (item.url || item.id)
+      if (id && markedIds.has(id)) {
+        items.push({ ...item, markedAsRead: true })
+      }
+    }
+    // Add any marked IDs not present in reads/links yet
+    for (const id of markedIds) {
+      const exists = items.find(i => (i.type === 'article' ? i.id : (i.url || i.id)) === id)
+      if (!exists) {
+        const isArticle = id.startsWith('naddr1')
+        items.push({
+          id,
+          source: 'marked-as-read',
+          type: isArticle ? 'article' : 'external',
+          url: isArticle ? undefined : id,
+          markedAsRead: true,
+          readingTimestamp: Math.floor(Date.now() / 1000)
+        })
+      }
+    }
+    return items
+  })()
+
   // Debug logs for archive filter issues
   if (readingProgressFilter === 'archive') {
     const ids = Array.from(new Set([
@@ -785,21 +818,42 @@ const Me: React.FC<MeProps> = ({
               selectedFilter={readingProgressFilter}
               onFilterChange={handleReadingProgressFilterChange}
             />
-            {filteredReads.length === 0 ? (
-              <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-                No articles match this filter.
-              </div>
+            {readingProgressFilter === 'archive' ? (
+              archiveOnlyReads.length === 0 ? (
+                <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                  No articles in archive.
+                </div>
+              ) : (
+                <div className="explore-grid">
+                  {archiveOnlyReads
+                    .filter(item => item.type === 'article')
+                    .map((item) => (
+                      <BlogPostCard
+                        key={item.id}
+                        post={convertReadItemToBlogPostPreview(item)}
+                        href={getReadItemUrl(item)}
+                        readingProgress={item.readingProgress}
+                      />
+                    ))}
+                </div>
+              )
             ) : (
-              <div className="explore-grid">
-              {filteredReads.map((item) => (
-                <BlogPostCard
-                  key={item.id}
-                  post={convertReadItemToBlogPostPreview(item)}
-                  href={getReadItemUrl(item)}
-                  readingProgress={item.readingProgress}
-                />
-              ))}
-              </div>
+              filteredReads.length === 0 ? (
+                <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                  No articles match this filter.
+                </div>
+              ) : (
+                <div className="explore-grid">
+                  {filteredReads.map((item) => (
+                    <BlogPostCard
+                      key={item.id}
+                      post={convertReadItemToBlogPostPreview(item)}
+                      href={getReadItemUrl(item)}
+                      readingProgress={item.readingProgress}
+                    />
+                  ))}
+                </div>
+              )
             )}
           </>
         )

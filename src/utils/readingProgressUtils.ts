@@ -50,23 +50,23 @@ export function filterByReadingProgress(
 
   return items.filter((item) => {
     const progress = item.readingProgress || 0
-    const isMarked = item.markedAsRead || false
+    // Reading progress filters MUST ignore emoji/archive reactions
     const hasHighlights = (articleHighlightCount.get(item.id) || 0) > 0 || 
                          (item.url && (articleHighlightCount.get(item.url) || 0) > 0)
     
     switch (filter) {
       case 'unopened':
-        return progress === 0 && !isMarked
+        return progress === 0
       case 'started':
-        return progress > 0 && progress <= 0.10 && !isMarked
+        return progress > 0 && progress <= 0.10
       case 'reading':
-        return progress > 0.10 && progress <= 0.94 && !isMarked
+        return progress > 0.10 && progress <= 0.94
       case 'completed':
         // Completed is 95%+ progress only (no emoji fallback)
         return progress >= 0.95
       case 'archive':
-        // Archive-marked items (previously emoji-marked) regardless of progress
-        return isMarked
+        // Archive filter handled upstream; keep fallback as false to avoid mixing
+        return false
       case 'highlighted':
         return hasHighlights
       case 'all':
