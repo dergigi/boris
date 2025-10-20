@@ -105,6 +105,12 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     }
   }, [supported, synth])
 
+  // Update rate in real-time if utterance is playing
+  useEffect(() => {
+    if (!supported || !utteranceRef.current || !synth!.speaking) return
+    utteranceRef.current.rate = rate
+  }, [rate, supported, synth])
+
   // stop TTS when unmounting
   useEffect(() => stop, [stop])
 
