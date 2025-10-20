@@ -621,6 +621,9 @@ function App() {
               loadBlockedRelays(pool, pubkey)
             ])
             
+            console.log('[relay-init] User relay list (10002):', userRelayList.length, 'relays', userRelayList.map(r => r.url))
+            console.log('[relay-init] Blocked relays (10006):', blockedRelays.length, 'relays', blockedRelays)
+            
             // Get bunker relays if this is a nostr-connect account
             let bunkerRelays: string[] = []
             if (account.type === 'nostr-connect') {
@@ -628,15 +631,18 @@ function App() {
               const signerData = nostrConnectAccount.toJSON().signer
               bunkerRelays = signerData.relays || []
             }
+            console.log('[relay-init] Bunker relays:', bunkerRelays.length, 'relays', bunkerRelays)
             
-            // Compute final relay set
+            // When logged in: use user's relays ONLY (not hardcoded)
+            // If user has no relay list, fall back to hardcoded relays
             const finalRelays = computeRelaySet({
-              hardcoded: RELAYS,
+              hardcoded: userRelayList.length > 0 ? [] : RELAYS,
               bunker: bunkerRelays,
               userList: userRelayList,
               blocked: blockedRelays,
               alwaysIncludeLocal: ALWAYS_LOCAL_RELAYS
             })
+            console.log('[relay-init] Final relay set:', finalRelays.length, 'relays', finalRelays)
             
             // Apply to pool
             applyRelaySetToPool(pool, finalRelays)
