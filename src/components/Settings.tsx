@@ -46,6 +46,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   syncReadingPosition: true,
   autoMarkAsReadOnCompletion: false,
   hideBookmarksWithoutCreationDate: true,
+  ttsUseSystemLanguage: false,
+  ttsDetectContentLanguage: true,
   ttsDefaultSpeed: 2.1,
 }
 
