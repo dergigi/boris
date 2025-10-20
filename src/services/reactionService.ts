@@ -4,6 +4,7 @@ import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
 import { RELAYS } from '../config/relays'
+import { EventFactory } from 'applesauce-factory'
 
 const MARK_AS_READ_EMOJI = '📚'
 
@@ -102,6 +103,27 @@ export async function createWebsiteReaction(
   await relayPool.publish(RELAYS, signed)
 
 
+  return signed
+}
+
+/**
+ * Sends a deletion request (NIP-09) for a reaction event to effectively un-archive.
+ * The caller must know the reaction event id to delete.
+ */
+export async function deleteReaction(
+  reactionEventId: string,
+  account: IAccount,
+  relayPool: RelayPool
+): Promise<NostrEvent> {
+  const factory = new EventFactory({ signer: account })
+  const draft = await factory.create(async () => ({
+    kind: 5, // Deletion per NIP-09
+    content: 'unarchive',
+    tags: [['e', reactionEventId]],
+    created_at: Math.floor(Date.now() / 1000)
+  }))
+  const signed = await factory.sign(draft)
+  await relayPool.publish(RELAYS, signed)
   return signed
 }
 

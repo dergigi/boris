@@ -599,7 +599,32 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   }, [selectedUrl, currentArticle, activeAccount, relayPool, isNostrArticle])
   
   const handleMarkAsRead = () => {
-    if (!activeAccount || !relayPool || isMarkedAsRead) {
+    if (!activeAccount || !relayPool) return
+
+    // Toggle archive state: if already archived, request deletion; else archive
+    if (isMarkedAsRead) {
+      // Optimistically unarchive in UI; background deletion request (NIP-09)
+      setIsMarkedAsRead(false)
+      ;(async () => {
+        try {
+          // Best-effort: we don't store reaction IDs yet; leaving placeholder for future improvement
+          // When we track reaction IDs, call deleteReaction(id,...)
+          // For now, clear controller mark so lists update
+          if (isNostrArticle && currentArticle) {
+            try {
+              const dTag = currentArticle.tags.find(t => t[0] === 'd')?.[1]
+              if (dTag) {
+                const naddr = nip19.naddrEncode({ kind: 30023, pubkey: currentArticle.pubkey, identifier: dTag })
+                archiveController.unmark(naddr)
+              }
+            } catch {}
+          } else if (selectedUrl) {
+            archiveController.unmark(selectedUrl)
+          }
+        } catch (err) {
+          console.warn('[archive][content] unarchive failed', err)
+        }
+      })()
       return
     }
 
@@ -640,6 +665,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               // eslint-disable-next-line @typescript-eslint/ban-ts-comment
               // @ts-ignore private update for instant UI; controller will confirm via stream
               archiveController['markedIds'].add(naddr)
+              archiveController.mark(naddr)
               console.log('[archive][content] optimistic mark article', naddr.slice(0, 24) + '...')
             }
           } catch {}
@@ -652,6 +678,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore private update for instant UI; controller will confirm via stream
           archiveController['markedIds'].add(selectedUrl)
+          archiveController.mark(selectedUrl)
           console.log('[archive][content] optimistic mark url', selectedUrl)
         }
       } catch (error) {

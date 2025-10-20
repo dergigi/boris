@@ -31,6 +31,21 @@ class ArchiveController {
     this.listeners.forEach(cb => cb(snapshot))
   }
 
+  mark(id: string): void {
+    if (!this.markedIds.has(id)) {
+      this.markedIds.add(id)
+      this.emit()
+      console.log('[archive] mark() added', id.slice(0, 48))
+    }
+  }
+
+  unmark(id: string): void {
+    if (this.markedIds.delete(id)) {
+      this.emit()
+      console.log('[archive] unmark() removed', id.slice(0, 48))
+    }
+  }
+
   isMarked(id: string): boolean {
     return this.markedIds.has(id)
   }
