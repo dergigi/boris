@@ -29,6 +29,7 @@ import {
   hasMarkedEventAsRead,
   hasMarkedWebsiteAsRead
 } from '../services/reactionService'
+import { unarchiveEvent, unarchiveWebsite } from '../services/unarchiveService'
 import { archiveController } from '../services/archiveController'
 import AuthorCard from './AuthorCard'
 import { faBooks } from '../icons/customIcons'
@@ -820,15 +821,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               <button
                 className={`mark-as-read-btn ${isMarkedAsRead ? 'marked' : ''} ${showCheckAnimation ? 'animating' : ''}`}
                 onClick={handleMarkAsRead}
-                disabled={isMarkedAsRead || isCheckingReadStatus}
-                title={isMarkedAsRead ? 'Already Marked as Watched' : 'Mark as Watched'}
+                disabled={isCheckingReadStatus}
+                title={isMarkedAsRead ? 'Unarchive' : 'Mark as Watched'}
               >
                 <FontAwesomeIcon 
                   icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheckCircle : faBooks} 
                   spin={isCheckingReadStatus} 
                 />
                 <span>
-                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Marked as Watched' : 'Mark as Watched'}
+                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Unarchive' : 'Mark as Watched'}
                 </span>
               </button>
             </div>
@@ -989,15 +990,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               <button
                 className={`mark-as-read-btn ${isMarkedAsRead ? 'marked' : ''} ${showCheckAnimation ? 'animating' : ''}`}
                 onClick={handleMarkAsRead}
-                disabled={isMarkedAsRead || isCheckingReadStatus}
-                title={isMarkedAsRead ? 'Already Archived' : 'Move to Archive'}
+                disabled={isCheckingReadStatus}
+                title={isMarkedAsRead ? 'Unarchive' : 'Move to Archive'}
               >
                 <FontAwesomeIcon 
                   icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheckCircle : faBooks} 
                   spin={isCheckingReadStatus} 
                 />
                 <span>
-                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Archived' : 'Move to Archive'}
+                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Unarchive' : 'Move to Archive'}
                 </span>
               </button>
             </div>
