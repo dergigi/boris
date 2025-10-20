@@ -1,7 +1,7 @@
 import React from 'react'
 import { useTextToSpeech } from '../hooks/useTextToSpeech'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlay, faPause, faStop, faGauge } from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faPause, faGauge } from '@fortawesome/free-solid-svg-icons'
 
 interface Props {
   text: string
@@ -52,16 +52,6 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className }) => {
       >
         <FontAwesomeIcon icon={!speaking ? faPlay : (paused ? faPlay : faPause)} />
         <span>{playLabel}</span>
-      </button>
-      <button
-        type="button"
-        className="article-menu-btn"
-        onClick={stop}
-        title="Stop"
-        disabled={!speaking && !paused}
-      >
-        <FontAwesomeIcon icon={faStop} />
-        <span>Stop</span>
       </button>
       <button
         type="button"
