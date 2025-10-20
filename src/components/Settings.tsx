@@ -40,6 +40,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   rebroadcastToAllRelays: false,
   paragraphAlignment: 'justify',
   fullWidthImages: false,
+  renderVideoLinksAsEmbeds: false,
   syncReadingPosition: true,
   autoMarkAsReadOnCompletion: false,
   hideBookmarksWithoutCreationDate: true,

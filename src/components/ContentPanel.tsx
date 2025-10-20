@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import rehypePrism from 'rehype-prism-plus'
+import VideoEmbedProcessor from './VideoEmbedProcessor'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import 'prismjs/themes/prism-tomorrow.css'
 import { faSpinner, faCheckCircle, faEllipsisH, faExternalLinkAlt, faMobileAlt, faCopy, faShare, faSearch } from '@fortawesome/free-solid-svg-icons'
@@ -843,10 +844,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         <>
           {markdown ? (
             renderedMarkdownHtml && finalHtml ? (
-              <div 
-                ref={contentRef} 
-                className="reader-markdown" 
-                dangerouslySetInnerHTML={{ __html: finalHtml }}
+              <VideoEmbedProcessor
+                ref={contentRef}
+                html={finalHtml}
+                renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true}
+                className="reader-markdown"
                 onMouseUp={handleSelectionEnd}
                 onTouchEnd={handleSelectionEnd}
               />
@@ -858,10 +860,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               </div>
             )
           ) : (
-            <div 
-              ref={contentRef} 
-              className="reader-html" 
-              dangerouslySetInnerHTML={{ __html: finalHtml || html || '' }}
+            <VideoEmbedProcessor
+              ref={contentRef}
+              html={finalHtml || html || ''}
+              renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true}
+              className="reader-html"
               onMouseUp={handleSelectionEnd}
               onTouchEnd={handleSelectionEnd}
             />

@@ -59,6 +59,7 @@ export interface UserSettings {
   // Reading settings
   paragraphAlignment?: 'left' | 'justify' // default: justify
   fullWidthImages?: boolean // default: false
+  renderVideoLinksAsEmbeds?: boolean // default: false
   // Reading position sync
   syncReadingPosition?: boolean // default: false (opt-in)
   autoMarkAsReadOnCompletion?: boolean // default: false (opt-in)

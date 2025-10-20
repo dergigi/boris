@@ -72,6 +72,19 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
         </label>
       </div>
 
+      <div className="setting-group">
+        <label htmlFor="renderVideoLinksAsEmbeds" className="checkbox-label">
+          <input
+            id="renderVideoLinksAsEmbeds"
+            type="checkbox"
+            checked={settings.renderVideoLinksAsEmbeds === true}
+            onChange={(e) => onUpdate({ renderVideoLinksAsEmbeds: e.target.checked })}
+            className="setting-checkbox"
+          />
+          <span>Render video links as embeds</span>
+        </label>
+      </div>
+
       <div className="setting-group setting-inline">
         <label>Default Highlight Visibility</label>
         <div className="highlight-level-toggles">
