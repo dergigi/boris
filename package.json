@@ -38,6 +38,7 @@
     "rehype-prism-plus": "^2.0.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
+    "tinyld": "^1.3.4",
     "use-pull-to-refresh": "^2.4.1"
   },
   "devDependencies": {
