@@ -65,6 +65,8 @@ export interface UserSettings {
   autoMarkAsReadOnCompletion?: boolean // default: false (opt-in)
   // Bookmark filtering
   hideBookmarksWithoutCreationDate?: boolean // default: false
+  // Text-to-Speech settings
+  ttsDefaultSpeed?: number // default: 2.1
 }
 
 export async function loadSettings(
