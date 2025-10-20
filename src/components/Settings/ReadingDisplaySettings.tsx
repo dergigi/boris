@@ -1,5 +1,5 @@
 import React from 'react'
-import { faHighlighter, faUnderline, faNetworkWired, faUserGroup, faUser, faAlignLeft, faAlignJustify, faExpand } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faUnderline, faNetworkWired, faUserGroup, faUser, faAlignLeft, faAlignJustify } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../../services/settingsService'
 import IconButton from '../IconButton'
 import ColorPicker from '../ColorPicker'
