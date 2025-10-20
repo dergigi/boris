@@ -29,17 +29,24 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
     // Find all video URLs in img tags and replace the entire tag
     let result = html
     
-    // Pattern to match img tags with video URLs in src attribute
-    const imgVideoPattern = /<img[^>]+src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?[^>]*>/gi
-    const imgMatches = result.match(imgVideoPattern) || []
+    // Find all src attributes with video URLs inside img tags
+    const imgTagPattern = /<img[^>]*>/gi
+    const allImgTags = result.match(imgTagPattern) || []
     
     const imgVideoUrls: string[] = []
-    imgMatches.forEach((imgTag, index) => {
+    let placeholderIndex = 0
+    
+    allImgTags.forEach((imgTag) => {
+      // Extract src attribute value
       const srcMatch = imgTag.match(/src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?/i)
       if (srcMatch && srcMatch[1]) {
-        imgVideoUrls.push(srcMatch[1])
-        const placeholder = `__VIDEO_EMBED_${index}__`
-        result = result.replace(imgTag, placeholder)
+        const videoUrl = srcMatch[1]
+        imgVideoUrls.push(videoUrl)
+        const placeholder = `__VIDEO_EMBED_${placeholderIndex}__`
+        // Escape special regex characters in the img tag to ensure proper replacement
+        const escapedTag = imgTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        result = result.replace(new RegExp(escapedTag, ''), placeholder)
+        placeholderIndex++
       }
     })
 
@@ -82,9 +89,9 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
     const result: string[] = []
     
     // Extract video URLs from img tags
-    const imgVideoPattern = /<img[^>]+src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?[^>]*>/gi
-    const imgMatches = html.match(imgVideoPattern) || []
-    imgMatches.forEach((imgTag) => {
+    const imgTagPattern = /<img[^>]*>/gi
+    const allImgTags = html.match(imgTagPattern) || []
+    allImgTags.forEach((imgTag) => {
       const srcMatch = imgTag.match(/src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?/i)
       if (srcMatch && srcMatch[1]) {
         result.push(srcMatch[1])
