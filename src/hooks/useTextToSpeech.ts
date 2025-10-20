@@ -33,7 +33,7 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
   const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null)
   const [speaking, setSpeaking] = useState(false)
   const [paused, setPaused] = useState(false)
-  const [rate, setRate] = useState(options.defaultRate ?? 1)
+  const [rate, setRate] = useState(options.defaultRate ?? 2.1)
   const [pitch, setPitch] = useState(options.defaultPitch ?? 1)
   const [volume, setVolume] = useState(options.defaultVolume ?? 1)
   const defaultLang = options.defaultLang || (typeof navigator !== 'undefined' ? navigator.language : 'en')
