@@ -42,7 +42,7 @@ interface MeProps {
 type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
 
 // Valid reading progress filters
-const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed', 'highlighted', 'emoji']
+const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed', 'highlighted', 'archive']
 
 const Me: React.FC<MeProps> = ({ 
   relayPool, 
@@ -88,8 +88,10 @@ const Me: React.FC<MeProps> = ({
   }
   
   // Initialize reading progress filter from URL param
-  const initialFilter = urlFilter && VALID_FILTERS.includes(urlFilter as ReadingProgressFilterType) 
-    ? (urlFilter as ReadingProgressFilterType) 
+  // Backward compat: map legacy 'emoji' route to 'archive'
+  const normalizedUrlFilter = urlFilter === 'emoji' ? 'archive' : urlFilter
+  const initialFilter = normalizedUrlFilter && VALID_FILTERS.includes(normalizedUrlFilter as ReadingProgressFilterType) 
+    ? (normalizedUrlFilter as ReadingProgressFilterType) 
     : 'all'
   const [readingProgressFilter, setReadingProgressFilter] = useState<ReadingProgressFilterType>(initialFilter)
   
@@ -133,8 +135,9 @@ const Me: React.FC<MeProps> = ({
 
   // Sync filter state with URL changes
   useEffect(() => {
-    const filterFromUrl = urlFilter && VALID_FILTERS.includes(urlFilter as ReadingProgressFilterType) 
-      ? (urlFilter as ReadingProgressFilterType) 
+    const normalized = urlFilter === 'emoji' ? 'archive' : urlFilter
+    const filterFromUrl = normalized && VALID_FILTERS.includes(normalized as ReadingProgressFilterType) 
+      ? (normalized as ReadingProgressFilterType) 
       : 'all'
     setReadingProgressFilter(filterFromUrl)
   }, [urlFilter])
