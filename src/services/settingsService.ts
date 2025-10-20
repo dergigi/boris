@@ -65,6 +65,9 @@ export interface UserSettings {
   autoMarkAsReadOnCompletion?: boolean // default: false (opt-in)
   // Bookmark filtering
   hideBookmarksWithoutCreationDate?: boolean // default: false
+  // TTS language selection
+  ttsUseSystemLanguage?: boolean // default: false
+  ttsDetectContentLanguage?: boolean // default: true
   // Text-to-Speech settings
   ttsDefaultSpeed?: number // default: 2.1
 }
