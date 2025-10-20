@@ -6,6 +6,7 @@ import { ReadableContent } from '../services/readerService'
 import { Highlight } from '../types/highlights'
 import { NostrEvent } from 'nostr-tools'
 import { UserSettings } from '../services/settingsService'
+import { useMountedState } from './useMountedState'
 
 interface UseArticleLoaderProps {
   naddr: string | undefined
@@ -36,26 +37,23 @@ export function useArticleLoader({
   setCurrentArticle,
   settings
 }: UseArticleLoaderProps) {
+  const isMounted = useMountedState()
+  
   useEffect(() => {
     if (!relayPool || !naddr) return
     
-    // Track if this effect is still mounted to prevent state updates after unmount
-    let isMounted = true
-    
     const loadArticle = async () => {
-      if (!isMounted) return
+      if (!isMounted()) return
       
       setReaderLoading(true)
       setReaderContent(undefined)
       setSelectedUrl(`nostr:${naddr}`)
       setIsCollapsed(true)
-      // Keep highlights panel collapsed by default - only open on user interaction
       
       try {
         const article = await fetchArticleByNaddr(relayPool, naddr, false, settings)
         
-        // Check if still mounted before updating state
-        if (!isMounted) return
+        if (!isMounted()) return
         
         setReaderContent({
           title: article.title,
@@ -72,29 +70,22 @@ export function useArticleLoader({
         setCurrentArticleCoordinate(articleCoordinate)
         setCurrentArticleEventId(article.event.id)
         setCurrentArticle?.(article.event)
-        
-        
-        // Set reader loading to false immediately after article content is ready
-        // Don't wait for highlights to finish loading
         setReaderLoading(false)
         
         // Fetch highlights asynchronously without blocking article display
-        // Stream them as they arrive for instant rendering
         try {
-          if (!isMounted) return
+          if (!isMounted()) return
           
           setHighlightsLoading(true)
-          setHighlights([]) // Clear old highlights
+          setHighlights([])
           
           await fetchHighlightsForArticle(
             relayPool, 
             articleCoordinate, 
             article.event.id,
             (highlight) => {
-              // Only update if still mounted
-              if (!isMounted) return
+              if (!isMounted()) return
               
-              // Merge streaming results with existing UI state to preserve locally created highlights
               setHighlights((prev: Highlight[]) => {
                 if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
                 const next = [highlight, ...prev]
@@ -106,13 +97,13 @@ export function useArticleLoader({
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {
-          if (isMounted) {
+          if (isMounted()) {
             setHighlightsLoading(false)
           }
         }
       } catch (err) {
         console.error('Failed to load article:', err)
-        if (isMounted) {
+        if (isMounted()) {
           setReaderContent({
             title: 'Error Loading Article',
             html: `<p>Failed to load article: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
@@ -124,13 +115,7 @@ export function useArticleLoader({
     }
     
     loadArticle()
-    
-    // Cleanup function to prevent state updates if component unmounts or effect re-runs
-    return () => {
-      isMounted = false
-    }
     // Intentionally excluding setter functions from dependencies to prevent race conditions
-    // The setters are called inside the async function with isMounted checks
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [naddr, relayPool, settings])
+  }, [naddr, relayPool, settings, isMounted])
 }

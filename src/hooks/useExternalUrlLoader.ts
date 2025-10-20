@@ -7,6 +7,7 @@ import { Highlight } from '../types/highlights'
 import { useStoreTimeline } from './useStoreTimeline'
 import { eventToHighlight } from '../services/highlightEventProcessor'
 import { KINDS } from '../config/kinds'
+import { useMountedState } from './useMountedState'
 
 // Helper to extract filename from URL
 function getFilenameFromUrl(url: string): string {
@@ -48,6 +49,8 @@ export function useExternalUrlLoader({
   setCurrentArticleCoordinate,
   setCurrentArticleEventId
 }: UseExternalUrlLoaderProps) {
+  const isMounted = useMountedState()
+  
   // Load cached URL-specific highlights from event store
   const urlFilter = useMemo(() => {
     if (!url) return null
@@ -65,42 +68,33 @@ export function useExternalUrlLoader({
   useEffect(() => {
     if (!relayPool || !url) return
     
-    // Track if this effect is still mounted to prevent state updates after unmount
-    let isMounted = true
-    
     const loadExternalUrl = async () => {
-      if (!isMounted) return
+      if (!isMounted()) return
       
       setReaderLoading(true)
       setReaderContent(undefined)
       setSelectedUrl(url)
       setIsCollapsed(true)
-      // Clear article-specific state
       setCurrentArticleCoordinate(undefined)
       setCurrentArticleEventId(undefined)
       
       try {
         const content = await fetchReadableContent(url)
         
-        // Check if still mounted before updating state
-        if (!isMounted) return
+        if (!isMounted()) return
         
         setReaderContent(content)
-        
-        
-        // Set reader loading to false immediately after content is ready
         setReaderLoading(false)
         
         // Fetch highlights for this URL asynchronously
         try {
-          if (!isMounted) return
+          if (!isMounted()) return
           
           setHighlightsLoading(true)
           
           // Seed with cached highlights first
           if (cachedUrlHighlights.length > 0) {
             setHighlights((prev) => {
-              // Seed with cache but keep any locally created highlights already in state
               const seen = new Set<string>(cachedUrlHighlights.map(h => h.id))
               const localOnly = prev.filter(h => !seen.has(h.id))
               const next = [...cachedUrlHighlights, ...localOnly]
@@ -110,18 +104,15 @@ export function useExternalUrlLoader({
             setHighlights([])
           }
           
-          // Check if fetchHighlightsForUrl exists, otherwise skip
           if (typeof fetchHighlightsForUrl === 'function') {
             const seen = new Set<string>()
-            // Seed with cached IDs
             cachedUrlHighlights.forEach(h => seen.add(h.id))
             
             await fetchHighlightsForUrl(
               relayPool,
               url,
               (highlight) => {
-                // Only update if still mounted
-                if (!isMounted) return
+                if (!isMounted()) return
                 
                 if (seen.has(highlight.id)) return
                 seen.add(highlight.id)
@@ -131,22 +122,21 @@ export function useExternalUrlLoader({
                   return next.sort((a, b) => b.created_at - a.created_at)
                 })
               },
-              undefined, // settings
-              false, // force
+              undefined,
+              false,
               eventStore || undefined
             )
           }
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {
-          if (isMounted) {
+          if (isMounted()) {
             setHighlightsLoading(false)
           }
         }
       } catch (err) {
         console.error('Failed to load external URL:', err)
-        if (isMounted) {
-          // For videos and other media files, use the filename as the title
+        if (isMounted()) {
           const filename = getFilenameFromUrl(url)
           setReaderContent({
             title: filename,
@@ -159,15 +149,9 @@ export function useExternalUrlLoader({
     }
     
     loadExternalUrl()
-    
-    // Cleanup function to prevent state updates if component unmounts or effect re-runs
-    return () => {
-      isMounted = false
-    }
     // Intentionally excluding setter functions from dependencies to prevent race conditions
-    // The setters are called inside the async function with isMounted checks
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, relayPool, eventStore, cachedUrlHighlights])
+  }, [url, relayPool, eventStore, cachedUrlHighlights, isMounted])
 
   // Keep UI highlights synced with cached store updates without reloading content
   useEffect(() => {
