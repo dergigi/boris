@@ -621,7 +621,16 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             currentArticle.pubkey,
             currentArticle.kind,
             activeAccount,
-            relayPool
+            relayPool,
+            {
+              aCoord: (() => {
+                try {
+                  const dTag = currentArticle.tags.find(t => t[0] === 'd')?.[1]
+                  if (!dTag) return undefined
+                  return `${30023}:${currentArticle.pubkey}:${dTag}`
+                } catch { return undefined }
+              })()
+            }
           )
           // Update archiveController immediately
           try {

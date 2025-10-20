@@ -635,6 +635,10 @@ const Me: React.FC<MeProps> = ({
 
   // Debug logs for archive filter issues
   if (readingProgressFilter === 'archive') {
+    const ids = archiveController.getMarkedIds()
+    const readIds = new Set(readsWithProgress.map(i => i.id))
+    const matches = ids.filter(id => readIds.has(id))
+    const nonMatches = ids.filter(id => !readIds.has(id)).slice(0, 5)
     console.log('[archive][me] counts', {
       reads: reads.length,
       readsWithProgress: readsWithProgress.length,
@@ -642,8 +646,10 @@ const Me: React.FC<MeProps> = ({
       links: links.length,
       linksWithProgress: linksWithProgress.length,
       filteredLinks: filteredLinks.length,
-      markedIds: archiveController.getMarkedIds().length,
-      sampleMarked: archiveController.getMarkedIds().slice(0, 3)
+      markedIds: ids.length,
+      sampleMarked: ids.slice(0, 3),
+      matches: matches.length,
+      nonMatches
     })
   }
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 

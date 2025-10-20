@@ -23,7 +23,8 @@ export async function createEventReaction(
   eventAuthor: string,
   eventKind: number,
   account: IAccount,
-  relayPool: RelayPool
+  relayPool: RelayPool,
+  options?: { aCoord?: string }
 ): Promise<NostrEvent> {
   const factory = new EventFactory({ signer: account })
 
@@ -32,6 +33,10 @@ export async function createEventReaction(
     ['p', eventAuthor],
     ['k', eventKind.toString()]
   ]
+  if (options?.aCoord) {
+    tags.push(['a', options.aCoord])
+    console.log('[archive] createEventReaction add a-tag:', options.aCoord)
+  }
 
   const draft = await factory.create(async () => ({
     kind: 7, // Reaction

@@ -85,6 +85,21 @@ class ArchiveController {
 
     const handleEventReaction = (evt: NostrEvent) => {
       if (evt.content !== MARK_AS_READ_EMOJI) return
+      // Direct coordinate tag ('a') - can be mapped immediately
+      const aTag = evt.tags.find(t => t[0] === 'a')?.[1]
+      if (aTag) {
+        try {
+          const [kindStr, pubkey, identifier] = aTag.split(':')
+          const kind = Number(kindStr)
+          if (kind === KINDS.BlogPost && pubkey && identifier) {
+            const naddr = nip19.naddrEncode({ kind, pubkey, identifier })
+            this.markedIds.add(naddr)
+            this.emit()
+            console.log('[archive] mark naddr via a-tag:', naddr.slice(0, 24), '...')
+            return
+          }
+        } catch { /* ignore malformed a-tag */ }
+      }
       const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
       if (!eTag) return
       this.pendingEventIds.add(eTag)
@@ -130,8 +145,8 @@ class ArchiveController {
         const stillPending = new Set<string>()
         for (const eId of this.pendingEventIds) {
           try {
-            // @ts-expect-error eventStore may have getEvent
-            const evt: NostrEvent | undefined = (eventStore as unknown as { getEvent?: (id: string) => NostrEvent | undefined }).getEvent?.(eId)
+            const store = eventStore as unknown as { getEvent?: (id: string) => NostrEvent | undefined }
+            const evt: NostrEvent | undefined = typeof store.getEvent === 'function' ? store.getEvent(eId) : undefined
             if (evt && evt.kind === KINDS.BlogPost) {
               const dTag = evt.tags.find(t => t[0] === 'd')?.[1]
               if (dTag) {
