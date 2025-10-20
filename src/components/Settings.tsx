@@ -39,6 +39,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   useLocalRelayAsCache: true,
   rebroadcastToAllRelays: false,
   paragraphAlignment: 'justify',
+  fullWidthImages: false,
   syncReadingPosition: true,
   autoMarkAsReadOnCompletion: false,
   hideBookmarksWithoutCreationDate: true,

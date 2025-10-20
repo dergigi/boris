@@ -58,6 +58,7 @@ export interface UserSettings {
   lightColorTheme?: 'paper-white' | 'sepia' | 'ivory' // default: sepia
   // Reading settings
   paragraphAlignment?: 'left' | 'justify' // default: justify
+  fullWidthImages?: boolean // default: false
   // Reading position sync
   syncReadingPosition?: boolean // default: false (opt-in)
   autoMarkAsReadOnCompletion?: boolean // default: false (opt-in)

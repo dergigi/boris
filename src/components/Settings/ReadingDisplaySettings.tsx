@@ -1,5 +1,5 @@
 import React from 'react'
-import { faHighlighter, faUnderline, faNetworkWired, faUserGroup, faUser, faAlignLeft, faAlignJustify } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faUnderline, faNetworkWired, faUserGroup, faUser, faAlignLeft, faAlignJustify, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { UserSettings } from '../../services/settingsService'
 import IconButton from '../IconButton'
 import ColorPicker from '../ColorPicker'
@@ -57,6 +57,19 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
             variant={(settings.paragraphAlignment || 'justify') === 'justify' ? 'primary' : 'ghost'} 
           />
         </div>
+      </div>
+
+      <div className="setting-group">
+        <label htmlFor="fullWidthImages" className="checkbox-label">
+          <input
+            id="fullWidthImages"
+            type="checkbox"
+            checked={settings.fullWidthImages === true}
+            onChange={(e) => onUpdate({ fullWidthImages: e.target.checked })}
+            className="setting-checkbox"
+          />
+          <span>Full-width images in articles</span>
+        </label>
       </div>
 
       <div className="setting-group setting-inline">
