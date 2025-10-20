@@ -734,11 +734,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw, rehypePrism]}
             components={{
-              img: ({ src, alt, ...props }) => (
+              img: ({ src, alt }) => (
                 <img 
                   src={src} 
                   alt={alt} 
-                  {...props}
                 />
               )
             }}
