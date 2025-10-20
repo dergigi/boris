@@ -87,7 +87,13 @@ export function useExternalUrlLoader({
           
           // Seed with cached highlights first
           if (cachedUrlHighlights.length > 0) {
-            setHighlights(cachedUrlHighlights.sort((a, b) => b.created_at - a.created_at))
+            setHighlights((prev) => {
+              // Seed with cache but keep any locally created highlights already in state
+              const seen = new Set<string>(cachedUrlHighlights.map(h => h.id))
+              const localOnly = prev.filter(h => !seen.has(h.id))
+              const next = [...cachedUrlHighlights, ...localOnly]
+              return next.sort((a, b) => b.created_at - a.created_at)
+            })
           } else {
             setHighlights([])
           }
@@ -106,7 +112,7 @@ export function useExternalUrlLoader({
                 seen.add(highlight.id)
                 setHighlights((prev) => {
                   if (prev.some(h => h.id === highlight.id)) return prev
-                  const next = [...prev, highlight]
+                  const next = [highlight, ...prev]
                   return next.sort((a, b) => b.created_at - a.created_at)
                 })
               },

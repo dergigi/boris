@@ -74,19 +74,18 @@ export function useArticleLoader({
         try {
           setHighlightsLoading(true)
           setHighlights([]) // Clear old highlights
-          const highlightsMap = new Map<string, Highlight>()
           
           await fetchHighlightsForArticle(
             relayPool, 
             articleCoordinate, 
             article.event.id,
             (highlight) => {
-              // Deduplicate highlights by ID as they arrive
-              if (!highlightsMap.has(highlight.id)) {
-                highlightsMap.set(highlight.id, highlight)
-                const highlightsList = Array.from(highlightsMap.values())
-                setHighlights(highlightsList.sort((a, b) => b.created_at - a.created_at))
-              }
+              // Merge streaming results with existing UI state to preserve locally created highlights
+              setHighlights((prev) => {
+                if (prev.some(h => h.id === highlight.id)) return prev
+                const next = [highlight, ...prev]
+                return next.sort((a, b) => b.created_at - a.created_at)
+              })
             },
             settings
           )

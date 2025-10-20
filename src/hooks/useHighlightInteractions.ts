@@ -113,32 +113,6 @@ export const useHighlightInteractions = ({
     }, 10)
   }, [onTextSelection, onClearSelection])
 
-  // Listen to document-level selection changes to catch keyboard/touch/ios cases
-  useEffect(() => {
-    const handler = () => {
-      // Defer to allow DOM selection to settle
-      setTimeout(() => {
-        const selection = window.getSelection()
-        if (!selection || selection.rangeCount === 0) {
-          onClearSelection?.()
-          return
-        }
-
-        const range = selection.getRangeAt(0)
-        const text = selection.toString().trim()
-
-        if (text.length > 0 && contentRef.current?.contains(range.commonAncestorContainer)) {
-          onTextSelection?.(text)
-        } else {
-          onClearSelection?.()
-        }
-      }, 10)
-    }
-
-    document.addEventListener('selectionchange', handler)
-    return () => document.removeEventListener('selectionchange', handler)
-  }, [onTextSelection, onClearSelection])
-
   return { contentRef, handleSelectionEnd }
 }
 
