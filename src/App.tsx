@@ -28,6 +28,7 @@ import { readingProgressController } from './services/readingProgressController'
 // import { fetchNostrverseHighlights } from './services/nostrverseService'
 import { nostrverseHighlightsController } from './services/nostrverseHighlightsController'
 import { nostrverseWritingsController } from './services/nostrverseWritingsController'
+import { archiveController } from './services/archiveController'
 
 const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
   'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
@@ -114,6 +115,11 @@ function AppRoutes({
         readingProgressController.start({ relayPool, eventStore, pubkey })
       }
 
+      // Load archive (marked-as-read) controller
+      if (pubkey && eventStore && !archiveController.isLoadedFor(pubkey)) {
+        archiveController.start({ relayPool, eventStore, pubkey })
+      }
+
       // Start centralized nostrverse highlights controller (non-blocking)
       if (eventStore) {
         nostrverseHighlightsController.start({ relayPool, eventStore })
@@ -145,6 +151,7 @@ function AppRoutes({
     contactsController.reset() // Clear contacts via controller
     highlightsController.reset() // Clear highlights via controller
     readingProgressController.reset() // Clear reading progress via controller
+    archiveController.reset() // Clear archive state
     showToast('Logged out successfully')
   }
 

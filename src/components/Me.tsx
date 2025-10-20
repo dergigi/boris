@@ -30,6 +30,7 @@ import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProg
 import { filterByReadingProgress } from '../utils/readingProgressUtils'
 import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
 import { readingProgressController } from '../services/readingProgressController'
+import { archiveController } from '../services/archiveController'
 
 interface MeProps {
   relayPool: RelayPool
@@ -202,9 +203,9 @@ const Me: React.FC<MeProps> = ({
     }
   }, [])
 
-  // Subscribe to marked-as-read changes and rebuild reads list
+  // Subscribe to archiveController for marked-only items and rebuild read lists
   useEffect(() => {
-    const unsubMarkedAsRead = readingProgressController.onMarkedAsReadChanged(() => {
+    const unsubMarked = archiveController.onMarked((_marked) => {
       // Rebuild reads list including marked-as-read-only items
       const progressMap = readingProgressController.getProgressMap()
       const readItems: ReadItem[] = Array.from(progressMap.entries()).map(([id, progress]) => ({
@@ -212,12 +213,12 @@ const Me: React.FC<MeProps> = ({
         source: 'reading-progress',
         type: 'article',
         readingProgress: progress,
-        markedAsRead: readingProgressController.isMarkedAsRead(id),
+        markedAsRead: archiveController.isMarked(id),
         readingTimestamp: Math.floor(Date.now() / 1000)
       }))
 
       // Include items that are only marked-as-read (no progress event yet)
-      const markedIds = readingProgressController.getMarkedAsReadIds()
+      const markedIds = archiveController.getMarkedIds()
       for (const id of markedIds) {
         if (!readItems.find(i => i.id === id)) {
           const isArticle = id.startsWith('naddr1')
@@ -238,7 +239,7 @@ const Me: React.FC<MeProps> = ({
     })
     
     return () => {
-      unsubMarkedAsRead()
+      unsubMarked()
     }
   }, [])
   

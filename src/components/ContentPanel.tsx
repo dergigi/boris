@@ -29,6 +29,7 @@ import {
   hasMarkedEventAsRead,
   hasMarkedWebsiteAsRead
 } from '../services/reactionService'
+import { archiveController } from '../services/archiveController'
 import AuthorCard from './AuthorCard'
 import { faBooks } from '../icons/customIcons'
 import { extractYouTubeId, getYouTubeMeta } from '../services/youtubeMetaService'
@@ -566,12 +567,22 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             activeAccount.pubkey,
             relayPool
           )
+          // Also check archiveController
+          const dTag = currentArticle.tags.find(t => t[0] === 'd')?.[1]
+          if (dTag) {
+            try {
+              const naddr = nip19.naddrEncode({ kind: 30023, pubkey: currentArticle.pubkey, identifier: dTag })
+              hasRead = hasRead || archiveController.isMarked(naddr)
+            } catch {}
+          }
         } else {
           hasRead = await hasMarkedWebsiteAsRead(
             selectedUrl,
             activeAccount.pubkey,
             relayPool
           )
+          // Also check archiveController
+          hasRead = hasRead || archiveController.isMarked(selectedUrl)
         }
         setIsMarkedAsRead(hasRead)
       } catch (error) {
@@ -609,12 +620,25 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             activeAccount,
             relayPool
           )
+          // Update archiveController immediately
+          try {
+            const dTag = currentArticle.tags.find(t => t[0] === 'd')?.[1]
+            if (dTag) {
+              const naddr = nip19.naddrEncode({ kind: 30023, pubkey: currentArticle.pubkey, identifier: dTag })
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore private update for instant UI; controller will confirm via stream
+              archiveController['markedIds'].add(naddr)
+            }
+          } catch {}
         } else if (selectedUrl) {
           await createWebsiteReaction(
             selectedUrl,
             activeAccount,
             relayPool
           )
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore private update for instant UI; controller will confirm via stream
+          archiveController['markedIds'].add(selectedUrl)
         }
       } catch (error) {
         console.error('Failed to mark as read:', error)
