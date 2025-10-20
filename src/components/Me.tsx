@@ -12,7 +12,7 @@ import { HighlightItem } from './HighlightItem'
 import { highlightsController } from '../services/highlightsController'
 import { writingsController } from '../services/writingsController'
 import { fetchLinks } from '../services/linksService'
-import { ReadItem } from '../services/readsService'
+import { ReadItem, readsController } from '../services/readsController'
 import { BlogPostPreview } from '../services/exploreService'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import AuthorCard from './AuthorCard'
@@ -60,7 +60,6 @@ const Me: React.FC<MeProps> = ({
   const viewingPubkey = activeAccount?.pubkey
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [reads, setReads] = useState<ReadItem[]>([])
-  const [, setReadsMap] = useState<Map<string, ReadItem>>(new Map())
   const [links, setLinks] = useState<ReadItem[]>([])
   const [, setLinksMap] = useState<Map<string, ReadItem>>(new Map())
   const [writings, setWritings] = useState<BlogPostPreview[]>([])
@@ -161,95 +160,32 @@ const Me: React.FC<MeProps> = ({
     }
   }
   
-  // Subscribe to reading progress controller
+  // Subscribe to reads controller
+  useEffect(() => {
+    // Get initial state immediately
+    setReads(readsController.getReads())
+    
+    // Subscribe to updates
+    const unsubReads = readsController.onReads(setReads)
+    
+    return () => {
+      unsubReads()
+    }
+  }, [])
+
+  // Subscribe to reading progress map for writings and links enrichment
   useEffect(() => {
     // Get initial state immediately
     setReadingProgressMap(readingProgressController.getProgressMap())
     
     // Subscribe to updates
-    const unsubProgress = readingProgressController.onProgress((progressMap) => {
-      const readItems: ReadItem[] = Array.from(progressMap.entries()).map(([id, progress]) => ({
-        id,
-        source: 'reading-progress',
-        type: 'article',
-        readingProgress: progress,
-        // Union of both controllers to avoid flicker when only one has loaded
-        markedAsRead: readingProgressController.isMarkedAsRead(id) || archiveController.isMarked(id),
-        readingTimestamp: Math.floor(Date.now() / 1000)
-      }))
-      
-      // Include items that are only marked-as-read (no progress event yet)
-      const markedIds = Array.from(new Set([
-        ...readingProgressController.getMarkedAsReadIds(),
-        ...archiveController.getMarkedIds()
-      ]))
-      for (const id of markedIds) {
-        if (!readItems.find(i => i.id === id)) {
-          const isArticle = id.startsWith('naddr1')
-          readItems.push({
-            id,
-            source: 'marked-as-read',
-            type: isArticle ? 'article' : 'external',
-            url: isArticle ? undefined : id,
-            markedAsRead: true,
-            readingTimestamp: Math.floor(Date.now() / 1000)
-          })
-        }
-      }
-
-      const readsMap = new Map(readItems.map(item => [item.id, item]))
-      setReadsMap(readsMap)
-      setReads(readItems)
-    })
+    const unsubProgress = readingProgressController.onProgress(setReadingProgressMap)
     
     return () => {
       unsubProgress()
     }
   }, [])
 
-  // Subscribe to archiveController for marked-only items and rebuild read lists
-  useEffect(() => {
-    const unsubMarked = archiveController.onMarked(() => {
-      // Rebuild reads list including marked-as-read-only items
-      const progressMap = readingProgressController.getProgressMap()
-      const readItems: ReadItem[] = Array.from(progressMap.entries()).map(([id, progress]) => ({
-        id,
-        source: 'reading-progress',
-        type: 'article',
-        readingProgress: progress,
-        // Union of both controllers to avoid flicker
-        markedAsRead: archiveController.isMarked(id) || readingProgressController.isMarkedAsRead(id),
-        readingTimestamp: Math.floor(Date.now() / 1000)
-      }))
-
-      // Include items that are only marked-as-read (no progress event yet)
-      const markedIds = Array.from(new Set([
-        ...archiveController.getMarkedIds(),
-        ...readingProgressController.getMarkedAsReadIds()
-      ]))
-      for (const id of markedIds) {
-        if (!readItems.find(i => i.id === id)) {
-          const isArticle = id.startsWith('naddr1')
-          readItems.push({
-            id,
-            source: 'marked-as-read',
-            type: isArticle ? 'article' : 'external',
-            url: isArticle ? undefined : id,
-            markedAsRead: true,
-            readingTimestamp: Math.floor(Date.now() / 1000)
-          })
-        }
-      }
-
-      const readsMap = new Map(readItems.map(item => [item.id, item]))
-      setReadsMap(readsMap)
-      setReads(readItems)
-    })
-    
-    return () => {
-      unsubMarked()
-    }
-  }, [])
   
   // Load reading progress data for writings tab
   useEffect(() => {
@@ -317,43 +253,12 @@ const Me: React.FC<MeProps> = ({
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Reads come from centralized readingProgressController (already loaded in App.tsx)
-      // It provides deduped reading progress per article
-      const progressMap = readingProgressController.getProgressMap()
-      
-      // Convert progress map to ReadItems
-      const readItems: ReadItem[] = Array.from(progressMap.entries()).map(([id, progress]) => ({
-        id,
-        source: 'reading-progress',
-        type: 'article',
-        readingProgress: progress,
-        // Use union of controllers to avoid losing marks
-        markedAsRead: readingProgressController.isMarkedAsRead(id) || archiveController.isMarked(id),
-        readingTimestamp: Math.floor(Date.now() / 1000)
-      }))
-
-      // Include items that are only marked-as-read (no progress event yet)
-      const markedIds = Array.from(new Set([
-        ...readingProgressController.getMarkedAsReadIds(),
-        ...archiveController.getMarkedIds()
-      ]))
-      for (const id of markedIds) {
-        if (!readItems.find(i => i.id === id)) {
-          const isArticle = id.startsWith('naddr1')
-          readItems.push({
-            id,
-            source: 'marked-as-read',
-            type: isArticle ? 'article' : 'external',
-            url: isArticle ? undefined : id,
-            markedAsRead: true,
-            readingTimestamp: Math.floor(Date.now() / 1000)
-          })
-        }
-      }
-
-      const readsMap = new Map(readItems.map(item => [item.id, item]))
-      setReadsMap(readsMap)
-      setReads(readItems)
+      // Use readsController to get reads with progressive hydration
+      await readsController.start({ 
+        relayPool, 
+        eventStore, 
+        pubkey: viewingPubkey 
+      })
       
       setLoadedTabs(prev => new Set(prev).add('reads'))
       if (!hasBeenLoaded) setLoading(false)
@@ -363,9 +268,6 @@ const Me: React.FC<MeProps> = ({
       if (!hasBeenLoaded) setLoading(false)
     }
   }
-  
-  // NOTE: readingProgress updates are already handled by the earlier subscription
-  // that merges archive marks; avoid a second subscription that would overwrite union state.
 
   const loadLinksTab = async () => {
     if (!viewingPubkey || !activeAccount) return
@@ -593,17 +495,7 @@ const Me: React.FC<MeProps> = ({
   
   const groups = groupIndividualBookmarks(filteredBookmarks)
 
-  // Enrich reads and links with reading progress from controller
-  const readsWithProgress = reads.map(item => {
-    if (item.type === 'article' && item.author) {
-      const progress = readingProgressMap.get(item.id)
-      if (progress !== undefined) {
-        return { ...item, readingProgress: progress }
-      }
-    }
-    return item
-  })
-  
+  // Enrich links with reading progress (reads already have progress from controller)
   const linksWithProgress = links.map(item => {
     if (item.url) {
       const progress = readingProgressMap.get(item.url)
@@ -616,7 +508,7 @@ const Me: React.FC<MeProps> = ({
 
   // Apply reading progress filter with simple type separation to keep Views distinct and DRY
   const filteredReads = filterByReadingProgress(
-    readsWithProgress.filter(item => item.type === 'article'),
+    reads.filter(item => item.type === 'article'),
     readingProgressFilter,
     highlights
   )
@@ -662,7 +554,7 @@ const Me: React.FC<MeProps> = ({
 
   // Archive-only lists: independent of reading progress
   const archiveOnlyReads: ReadItem[] = readingProgressFilter === 'archive'
-    ? buildArchiveOnly(readsWithProgress, { kind: 'article' })
+    ? buildArchiveOnly(reads, { kind: 'article' })
     : []
   const archiveOnlyLinks: ReadItem[] = readingProgressFilter === 'archive'
     ? buildArchiveOnly(linksWithProgress, { kind: 'external' })
@@ -674,12 +566,11 @@ const Me: React.FC<MeProps> = ({
       ...archiveController.getMarkedIds(),
       ...readingProgressController.getMarkedAsReadIds()
     ]))
-    const readIds = new Set(readsWithProgress.map(i => i.id))
+    const readIds = new Set(reads.map(i => i.id))
     const matches = ids.filter(id => readIds.has(id))
     const nonMatches = ids.filter(id => !readIds.has(id)).slice(0, 5)
     console.log('[archive][me] counts', {
       reads: reads.length,
-      readsWithProgress: readsWithProgress.length,
       filteredReads: filteredReads.length,
       links: links.length,
       linksWithProgress: linksWithProgress.length,

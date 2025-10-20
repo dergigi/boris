@@ -1,5 +1,4 @@
 import { RelayPool } from 'applesauce-relay'
-import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 import { Bookmark } from '../types/bookmarks'
 import { fetchReadArticles } from './libraryService'
@@ -8,31 +7,15 @@ import { RELAYS } from '../config/relays'
 import { KINDS } from '../config/kinds'
 import { classifyBookmarkType } from '../utils/bookmarkTypeClassifier'
 import { nip19 } from 'nostr-tools'
+import { AddressPointer } from 'nostr-tools/nip19'
 import { processReadingProgress, processMarkedAsRead, filterValidItems, sortByReadingActivity } from './readingDataProcessor'
 import { mergeReadItem } from '../utils/readItemMerge'
+import type { ReadItem } from './readsController'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
-export interface ReadItem {
-  id: string // event ID or URL or coordinate
-  source: 'bookmark' | 'reading-progress' | 'marked-as-read'
-  type: 'article' | 'external' // article=kind:30023, external=URL
-  
-  // Article data
-  event?: NostrEvent
-  url?: string
-  title?: string
-  summary?: string
-  image?: string
-  published?: number
-  author?: string
-  
-  // Reading metadata
-  readingProgress?: number // 0-1
-  readingTimestamp?: number // Unix timestamp of last reading activity
-  markedAsRead?: boolean
-  markedAt?: number
-}
+// Re-export ReadItem from readsController for consistency
+export type { ReadItem } from './readsController'
 
 /**
  * Fetches all reads from multiple sources:
@@ -117,11 +100,14 @@ export async function fetchAllReads(
           // Try to decode as naddr
           if (coord.startsWith('naddr1')) {
             const decoded = nip19.decode(coord)
-            if (decoded.type === 'naddr' && decoded.data.kind === KINDS.BlogPost) {
-              articlesToFetch.push({
-                pubkey: decoded.data.pubkey,
-                identifier: decoded.data.identifier || ''
-              })
+            if (decoded.type === 'naddr') {
+              const data = decoded.data as AddressPointer
+              if (data.kind === KINDS.BlogPost) {
+                articlesToFetch.push({
+                  pubkey: data.pubkey,
+                  identifier: data.identifier || ''
+                })
+              }
             }
           } else {
             // Try coordinate format (kind:pubkey:identifier)
