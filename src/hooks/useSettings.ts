@@ -16,7 +16,7 @@ interface UseSettingsParams {
 }
 
 export function useSettings({ relayPool, eventStore, pubkey, accountManager }: UseSettingsParams) {
-  const [settings, setSettings] = useState<UserSettings>({})
+  const [settings, setSettings] = useState<UserSettings>({ renderVideoLinksAsEmbeds: true })
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
@@ -27,7 +27,7 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
     const loadAndWatch = async () => {
       try {
         const loadedSettings = await loadSettings(relayPool, eventStore, pubkey, RELAYS)
-        if (loadedSettings) setSettings(loadedSettings)
+        if (loadedSettings) setSettings({ renderVideoLinksAsEmbeds: true, ...loadedSettings })
       } catch (err) {
         console.error('Failed to load settings:', err)
       }
@@ -36,7 +36,7 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
     loadAndWatch()
 
     const subscription = watchSettings(eventStore, pubkey, (loadedSettings) => {
-      if (loadedSettings) setSettings(loadedSettings)
+      if (loadedSettings) setSettings({ renderVideoLinksAsEmbeds: true, ...loadedSettings })
     })
 
     return () => subscription.unsubscribe()
