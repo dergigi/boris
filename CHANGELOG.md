@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2025-10-20
+
+### Added
+
+- Video embedding for nostr-native content
+  - Detect and embed `<video>...</video>` blocks (including nested `<source>`)
+  - Detect and embed `<img src="…(mp4|webm|ogg|mov|avi|mkv|m4v)">` tags
+  - Detect and embed bare video file URLs and platform-classified video links
+- Media display settings
+  - New "Render video links as embeds" setting (defaults to enabled)
+  - New "Full-width images" display option
+  - Dedicated "Media Display" settings section
+- Article view improvements
+  - Center images by default in reader
+  - Writings list sorted by publication date (newest first)
+
+### Changed
+
+- Enable media display options by default for a better out‑of‑the‑box experience
+- Constrain video player to reader width to prevent horizontal overflow
+
+### Fixed
+
+- Prevent double video player rendering when both processor and panel attempted to embed
+- Remove text artifacts and broken tags when converting markdown image/video URLs
+  - Improved URL regex and robust tag replacement
+  - Avoid injecting unknown img props from markdown renderer
+- Resolved remaining ESLint and TypeScript issues
+
+### Performance
+
+- Optimized Support page loading with instant display and skeletons
+
 ## [0.9.0] - 2025-01-20
 
 ### Added
@@ -2149,7 +2182,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.8.3...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/dergigi/boris/compare/v0.9.0...v0.9.1
 [0.8.3]: https://github.com/dergigi/boris/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/dergigi/boris/compare/v0.8.0...v0.8.2
 [0.8.0]: https://github.com/dergigi/boris/compare/v0.7.4...v0.8.0
