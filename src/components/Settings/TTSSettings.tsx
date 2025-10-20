@@ -44,7 +44,7 @@ const TTSSettings: React.FC<TTSSettingsProps> = ({ settings, onUpdate }) => {
           <select
             value={settings.ttsLanguageMode || 'content'}
             onChange={e => onUpdate({ ttsLanguageMode: (e.target.value as 'system' | 'content'), ttsUseSystemLanguage: e.target.value === 'system', ttsDetectContentLanguage: e.target.value !== 'system' })}
-            style={{ background: 'var(--color-bg-elevated)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: 6, padding: '0.25rem 0.5rem' }}
+            className="setting-select"
           >
             <option value="system">System Language</option>
             <option value="content">Content (auto-detect)</option>
