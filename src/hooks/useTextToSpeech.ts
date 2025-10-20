@@ -129,7 +129,13 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     if (!supported || !utteranceRef.current) return
     // Update rate whether speaking or paused
     utteranceRef.current.rate = rate
-  }, [rate, supported])
+    
+    // Some browsers require resuming to apply rate changes while paused
+    if (synth!.speaking && synth!.paused) {
+      synth!.resume()
+      synth!.pause()
+    }
+  }, [rate, supported, synth])
 
   // stop TTS when unmounting
   useEffect(() => stop, [stop])
