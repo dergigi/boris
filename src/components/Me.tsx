@@ -327,12 +327,16 @@ const Me: React.FC<MeProps> = ({
         source: 'reading-progress',
         type: 'article',
         readingProgress: progress,
-        markedAsRead: readingProgressController.isMarkedAsRead(id),
+        // Use union of controllers to avoid losing marks
+        markedAsRead: readingProgressController.isMarkedAsRead(id) || archiveController.isMarked(id),
         readingTimestamp: Math.floor(Date.now() / 1000)
       }))
 
       // Include items that are only marked-as-read (no progress event yet)
-      const markedIds = readingProgressController.getMarkedAsReadIds()
+      const markedIds = Array.from(new Set([
+        ...readingProgressController.getMarkedAsReadIds(),
+        ...archiveController.getMarkedIds()
+      ]))
       for (const id of markedIds) {
         if (!readItems.find(i => i.id === id)) {
           const isArticle = id.startsWith('naddr1')
@@ -360,27 +364,8 @@ const Me: React.FC<MeProps> = ({
     }
   }
   
-  // Subscribe to reading progress updates
-  useEffect(() => {
-    const unsubProgress = readingProgressController.onProgress((progressMap) => {
-      const readItems: ReadItem[] = Array.from(progressMap.entries()).map(([id, progress]) => ({
-        id,
-        source: 'reading-progress',
-        type: 'article',
-        readingProgress: progress,
-        markedAsRead: readingProgressController.isMarkedAsRead(id),
-        readingTimestamp: Math.floor(Date.now() / 1000)
-      }))
-      
-      const readsMap = new Map(readItems.map(item => [item.id, item]))
-      setReadsMap(readsMap)
-      setReads(readItems)
-    })
-    
-    return () => {
-      unsubProgress()
-    }
-  }, [])
+  // NOTE: readingProgress updates are already handled by the earlier subscription
+  // that merges archive marks; avoid a second subscription that would overwrite union state.
 
   const loadLinksTab = async () => {
     if (!viewingPubkey || !activeAccount) return
