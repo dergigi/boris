@@ -152,11 +152,17 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     charIndexRef.current = 0
 
     const u = createUtterance(text)
-    if (langOverride) u.lang = langOverride
+    if (langOverride) {
+      u.lang = langOverride
+      // try to pick a voice that matches the override
+      const available = voices
+      const match = available.find(v => v.lang?.toLowerCase().startsWith(langOverride.toLowerCase()))
+      if (match) u.voice = match
+    }
 
     utteranceRef.current = u
     synth!.speak(u)
-  }, [supported, synth, createUtterance, rate])
+  }, [supported, synth, createUtterance, rate, voices])
 
   const pause = useCallback(() => {
     if (!supported) return
