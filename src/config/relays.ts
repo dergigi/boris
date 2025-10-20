@@ -11,7 +11,6 @@ export const RELAYS = [
   'wss://relay.damus.io',
   'wss://nos.lol',
   'wss://relay.nostr.band',
-  'wss://relay.dergigi.com',
   'wss://wot.dergigi.com',
   'wss://relay.snort.social',
   'wss://nostr-pub.wellorder.net',
