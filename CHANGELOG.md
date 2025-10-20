@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2025-01-20
+
+### Added
+
+- User relay list integration (NIP-65) and blocked relays (NIP-51)
+  - Automatically loads user's relay list from kind 10002 events
+  - Supports blocked relay filtering from kind 10006 mute lists
+  - Integrates with existing relay pool for seamless user experience
+- Relay list debug section in Debug component
+  - Enhanced debugging capabilities for relay list loading
+  - Detailed logging for relay query diagnostics
+
+### Changed
+
+- Improved relay list loading performance
+  - Added streaming callback to relay list service for faster results
+  - User relay list now streams into pool immediately and finalizes after blocked relays
+  - Made relay list loading non-blocking in App.tsx
+- Enhanced relay URL handling
+  - Normalized relay URLs to match applesauce-relay internal format
+  - Removed relay.dergigi.com from default relays
+  - Use user's relay list exclusively when logged in
+
+### Fixed
+
+- Resolved all linting issues across the codebase
+- Fixed TypeScript type issues in relayListService
+  - Replaced any types with proper NostrEvent types
+  - Improved type safety and code quality
+- Cleaned up temporary test relays from hardcoded list
+- Removed non-relay console.log statements and debug output
+
+### Technical
+
+- Enhanced relay initialization logging for better diagnostics
+- Improved error handling and timeout management for relay queries
+- Better separation of concerns between relay loading and application startup
+
 ## [0.8.6] - 2025-10-20
 
 ### Fixed
