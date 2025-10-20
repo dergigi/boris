@@ -53,7 +53,6 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className, settings }
         disabled={!canPlay}
       >
         <FontAwesomeIcon icon={!speaking ? faPlay : (paused ? faPlay : faPause)} />
-        <span>{playLabel}</span>
       </button>
       <button
         type="button"
