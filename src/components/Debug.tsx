@@ -114,6 +114,12 @@ const Debug: React.FC<DebugProps> = ({
   const [markAsReadReactions, setMarkAsReadReactions] = useState<NostrEvent[]>([])
   const [tLoadMarkAsRead, setTLoadMarkAsRead] = useState<number | null>(null)
   const [tFirstMarkAsRead, setTFirstMarkAsRead] = useState<number | null>(null)
+
+  // Relay list loading state
+  const [isLoadingRelayList, setIsLoadingRelayList] = useState(false)
+  const [relayListEvents, setRelayListEvents] = useState<NostrEvent[]>([])
+  const [tLoadRelayList, setTLoadRelayList] = useState<number | null>(null)
+  const [tFirstRelayList, setTFirstRelayList] = useState<number | null>(null)
   
   // Deduplicated reading progress from controller
   const [deduplicatedProgressMap, setDeduplicatedProgressMap] = useState<Map<string, number>>(new Map())
@@ -127,6 +133,7 @@ const Debug: React.FC<DebugProps> = ({
     loadHighlights?: { startTime: number }
     loadReadingProgress?: { startTime: number }
     loadMarkAsRead?: { startTime: number }
+    loadRelayList?: { startTime: number }
   }>({})
   
   // Web of Trust state
@@ -884,6 +891,70 @@ const Debug: React.FC<DebugProps> = ({
     setTLoadMarkAsRead(null)
     setTFirstMarkAsRead(null)
     DebugBus.info('debug', 'Cleared mark-as-read reactions data')
+  }
+
+  const handleLoadRelayList = async () => {
+    if (!relayPool || !activeAccount?.pubkey) {
+      DebugBus.warn('debug', 'Please log in to load relay list')
+      return
+    }
+
+    try {
+      setIsLoadingRelayList(true)
+      setRelayListEvents([])
+      setTLoadRelayList(null)
+      setTFirstRelayList(null)
+      DebugBus.info('debug', 'Loading relay list (kind 10002)...')
+
+      const start = performance.now()
+      let firstEventTime: number | null = null
+      setLiveTiming(prev => ({ ...prev, loadRelayList: { startTime: start } }))
+
+      const { queryEvents } = await import('../services/dataFetch')
+
+      // Query for kind:10002 (relay list)
+      const events = await queryEvents(relayPool, { 
+        kinds: [10002], 
+        authors: [activeAccount.pubkey],
+        limit: 10
+      }, {
+        onEvent: (evt) => {
+          if (firstEventTime === null) {
+            firstEventTime = performance.now() - start
+            setTFirstRelayList(Math.round(firstEventTime))
+          }
+          setRelayListEvents(prev => [...prev, evt])
+        }
+      })
+      
+      const elapsed = Math.round(performance.now() - start)
+      setTLoadRelayList(elapsed)
+      setLiveTiming(prev => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+        const { loadRelayList, ...rest } = prev
+        return rest
+      })
+
+      DebugBus.info('debug', `Loaded ${events.length} relay list events in ${elapsed}ms`)
+      
+      // Log details about the events
+      events.forEach((event, index) => {
+        const relayCount = event.tags.filter(tag => tag[0] === 'r').length
+        DebugBus.info('debug', `Event ${index + 1}: ${relayCount} relays, created ${new Date(event.created_at * 1000).toISOString()}`)
+      })
+    } catch (err) {
+      console.error('Failed to load relay list:', err)
+      DebugBus.error('debug', `Failed to load relay list: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setIsLoadingRelayList(false)
+    }
+  }
+
+  const handleClearRelayList = () => {
+    setRelayListEvents([])
+    setTLoadRelayList(null)
+    setTFirstRelayList(null)
+    DebugBus.info('debug', 'Cleared relay list data')
   }
 
   const handleLoadFriendsList = async () => {
@@ -1688,6 +1759,72 @@ const Debug: React.FC<DebugProps> = ({
                         {eTag && <div className="text-[11px] opacity-70">#e: {eTag.slice(0, 16)}...</div>}
                         {rTag && <div className="text-[11px] opacity-70">#r: {rTag.length > 60 ? rTag.substring(0, 60) + '...' : rTag}</div>}
                         {pTag && <div className="text-[11px] opacity-70">#p: {pTag.slice(0, 16)}...</div>}
+                      </div>
+                      <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Relay List Loading Section */}
+        <div className="settings-section">
+          <h3 className="section-title">Relay List Loading (kind 10002)</h3>
+          <div className="text-sm opacity-70 mb-3">Load your relay list to debug dynamic relay integration:</div>
+          
+          <div className="flex gap-2 mb-3 items-center">
+            <button 
+              className="btn btn-primary" 
+              onClick={handleLoadRelayList}
+              disabled={isLoadingRelayList || !relayPool || !activeAccount}
+            >
+              {isLoadingRelayList ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                  Loading...
+                </>
+              ) : (
+                'Load Relay List'
+              )}
+            </button>
+            <button 
+              className="btn btn-secondary ml-auto" 
+              onClick={handleClearRelayList}
+              disabled={relayListEvents.length === 0}
+            >
+              Clear
+            </button>
+          </div>
+          
+          <div className="flex gap-4 mb-3 text-sm">
+            <Stat label="total" value={tLoadRelayList} />
+            <Stat label="first event" value={tFirstRelayList} />
+          </div>
+          {relayListEvents.length > 0 && (
+            <div className="mb-3">
+              <div className="text-sm opacity-70 mb-2">Loaded Relay List Events ({relayListEvents.length}):</div>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {relayListEvents.map((evt, idx) => {
+                  const relayTags = evt.tags?.filter((t: string[]) => t[0] === 'r') || []
+                  
+                  return (
+                    <div key={idx} className="font-mono text-xs p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                      <div className="font-semibold mb-1">Relay List Event #{idx + 1}</div>
+                      <div className="opacity-70 mb-1">
+                        <div>Kind: {evt.kind}</div>
+                        <div>Author: {evt.pubkey.slice(0, 16)}...</div>
+                        <div>Created: {new Date(evt.created_at * 1000).toLocaleString()}</div>
+                        <div>Relays: {relayTags.length}</div>
+                      </div>
+                      <div className="mt-1">
+                        <div className="text-[11px] opacity-70 mb-1">Relay URLs:</div>
+                        {relayTags.map((tag, tagIdx) => (
+                          <div key={tagIdx} className="text-[10px] opacity-60 break-all">
+                            {tag[1]} {tag[2] ? `(${tag[2]})` : ''}
+                          </div>
+                        ))}
                       </div>
                       <div className="opacity-50 mt-1 text-[10px] break-all">ID: {evt.id}</div>
                     </div>
