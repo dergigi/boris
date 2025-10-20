@@ -823,14 +823,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 className={`mark-as-read-btn ${isMarkedAsRead ? 'marked' : ''} ${showCheckAnimation ? 'animating' : ''}`}
                 onClick={handleMarkAsRead}
                 disabled={isCheckingReadStatus}
-                title={isMarkedAsRead ? 'Unarchive' : 'Mark as Watched'}
+                title={isMarkedAsRead ? 'Already Marked as Watched' : 'Mark as Watched'}
+                style={isMarkedAsRead ? { opacity: 0.85 } : undefined}
               >
                 <FontAwesomeIcon 
                   icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheckCircle : faBooks} 
                   spin={isCheckingReadStatus} 
                 />
                 <span>
-                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Unarchive' : 'Mark as Watched'}
+                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Marked as Watched' : 'Mark as Watched'}
                 </span>
               </button>
             </div>
@@ -992,14 +993,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 className={`mark-as-read-btn ${isMarkedAsRead ? 'marked' : ''} ${showCheckAnimation ? 'animating' : ''}`}
                 onClick={handleMarkAsRead}
                 disabled={isCheckingReadStatus}
-                title={isMarkedAsRead ? 'Unarchive' : 'Move to Archive'}
+                title={isMarkedAsRead ? 'Already Archived' : 'Move to Archive'}
+                style={isMarkedAsRead ? { opacity: 0.85 } : undefined}
               >
                 <FontAwesomeIcon 
                   icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheckCircle : faBooks} 
                   spin={isCheckingReadStatus} 
                 />
                 <span>
-                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Unarchive' : 'Move to Archive'}
+                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Archived' : 'Move to Archive'}
                 </span>
               </button>
             </div>
