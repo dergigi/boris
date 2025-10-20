@@ -46,6 +46,7 @@ import {
   loadReadingPosition, 
   saveReadingPosition 
 } from '../services/readingPositionService'
+import TTSControls from './TTSControls'
 
 interface ContentPanelProps {
   loading: boolean
@@ -320,6 +321,25 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   }, [html, markdown])
 
   const hasHighlights = relevantHighlights.length > 0
+
+  // Extract plain text for TTS
+  const baseHtml = useMemo(() => {
+    if (markdown) return renderedMarkdownHtml && finalHtml ? finalHtml : ''
+    return finalHtml || html || ''
+  }, [markdown, renderedMarkdownHtml, finalHtml, html])
+
+  const articleText = useMemo(() => {
+    const parts: string[] = []
+    if (title) parts.push(title)
+    if (summary) parts.push(summary)
+    if (baseHtml) {
+      const div = document.createElement('div')
+      div.innerHTML = baseHtml
+      const txt = (div.textContent || '').replace(/\s+/g, ' ').trim()
+      if (txt) parts.push(txt)
+    }
+    return parts.join('. ')
+  }, [title, summary, baseHtml])
 
   // Determine if we're on a nostr-native article (/a/) or external URL (/r/)
   const isNostrArticle = selectedUrl && selectedUrl.startsWith('nostr:')
@@ -759,6 +779,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         highlights={relevantHighlights}
         highlightVisibility={highlightVisibility}
       />
+      {isTextContent && articleText && (
+        <div style={{ padding: '0 0.75rem 0.5rem 0.75rem' }}>
+          <TTSControls text={articleText} defaultLang={navigator?.language} />
+        </div>
+      )}
       {isExternalVideo ? (
         <>
           <div className="reader-video">
