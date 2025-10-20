@@ -41,7 +41,9 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className, settings }
         try {
           const lang = detect(text)
           if (typeof lang === 'string' && lang.length >= 2) langOverride = lang.slice(0, 2)
-        } catch {}
+        } catch (err) {
+          console.debug('[tts][detect] failed', err)
+        }
       }
       if (!langOverride && resolvedSystemLang) {
         langOverride = resolvedSystemLang
