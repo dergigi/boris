@@ -610,20 +610,21 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       setIsMarkedAsRead(false)
       ;(async () => {
         try {
-          // Best-effort: we don't store reaction IDs yet; leaving placeholder for future improvement
-          // When we track reaction IDs, call deleteReaction(id,...)
-          // For now, clear controller mark so lists update
           if (isNostrArticle && currentArticle) {
+            // Send deletion for all matching reactions
+            await unarchiveEvent(currentArticle.id, activeAccount, relayPool)
+            // Also clear controller mark so lists update
             try {
               const dTag = currentArticle.tags.find(t => t[0] === 'd')?.[1]
               if (dTag) {
                 const naddr = nip19.naddrEncode({ kind: 30023, pubkey: currentArticle.pubkey, identifier: dTag })
                 archiveController.unmark(naddr)
               }
-          } catch (e) {
-            console.warn('[archive][content] encode naddr failed', e)
-          }
+            } catch (e) {
+              console.warn('[archive][content] encode naddr failed', e)
+            }
           } else if (selectedUrl) {
+            await unarchiveWebsite(selectedUrl, activeAccount, relayPool)
             archiveController.unmark(selectedUrl)
           }
         } catch (err) {
