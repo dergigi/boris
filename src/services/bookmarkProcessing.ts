@@ -121,6 +121,7 @@ export async function collectBookmarksFromEvents(
   const decryptJobs: Array<{ evt: NostrEvent; metadata: { dTag?: string; setTitle?: string; setDescription?: string; setImage?: string } }> = []
 
   for (const evt of bookmarkListEvents) {
+    console.log('[BOOKMARK_TS] Processing bookmark event', evt.id, 'kind:', evt.kind, 'created_at:', evt.created_at)
     newestCreatedAt = Math.max(newestCreatedAt, evt.created_at || 0)
     if (!latestContent && evt.content && !Helpers.hasHiddenContent(evt)) latestContent = evt.content
     if (Array.isArray(evt.tags)) allTags = allTags.concat(evt.tags)
