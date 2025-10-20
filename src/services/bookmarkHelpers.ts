@@ -175,29 +175,36 @@ export function hydrateItems(
   items: IndividualBookmark[],
   idToEvent: Map<string, NostrEvent>
 ): IndividualBookmark[] {
-  return items.map(item => {
-    const ev = idToEvent.get(item.id)
-    if (!ev) return item
-    
-    // For long-form articles (kind:30023), use the article title as content
-    let content = ev.content || item.content || ''
-    if (ev.kind === 30023) {
-      const articleTitle = getArticleTitle(ev)
-      if (articleTitle) {
-        content = articleTitle
+  return items
+    .map(item => {
+      const ev = idToEvent.get(item.id)
+      if (!ev) return item
+      
+      // For long-form articles (kind:30023), use the article title as content
+      let content = ev.content || item.content || ''
+      if (ev.kind === 30023) {
+        const articleTitle = getArticleTitle(ev)
+        if (articleTitle) {
+          content = articleTitle
+        }
       }
-    }
-    
-    return {
-      ...item,
-      pubkey: ev.pubkey || item.pubkey,
-      content,
-      created_at: ev.created_at || item.created_at,
-      kind: ev.kind || item.kind,
-      tags: ev.tags || item.tags,
-      parsedContent: ev.content ? (getParsedContent(content) as ParsedContent) : item.parsedContent
-    }
-  })
+      
+      return {
+        ...item,
+        pubkey: ev.pubkey || item.pubkey,
+        content,
+        created_at: ev.created_at || item.created_at,
+        kind: ev.kind || item.kind,
+        tags: ev.tags || item.tags,
+        parsedContent: ev.content ? (getParsedContent(content) as ParsedContent) : item.parsedContent
+      }
+    })
+    .filter(item => {
+      // Filter out bookmark list events (they're containers, not content)
+      const isBookmarkListEvent = item.kind === 10003 || item.kind === 30003 || item.kind === 30001
+      console.log('[BOOKMARK_TS] After hydration - id:', item.id, 'kind:', item.kind, 'isBookmarkListEvent:', isBookmarkListEvent, 'content:', item.content?.substring(0, 50))
+      return !isBookmarkListEvent
+    })
 }
 
 // Note: event decryption/collection lives in `bookmarkProcessing.ts`
