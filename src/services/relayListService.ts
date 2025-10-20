@@ -20,12 +20,29 @@ export async function loadUserRelayList(
     console.log('[relayListService] Starting query for kind 10002...')
     const startTime = Date.now()
     
-    // Try querying with a longer timeout and more specific filter
-    const events = await queryEvents(relayPool, {
+    // Try querying with streaming callback for faster results
+    const events: any[] = []
+    const eventsMap = new Map<string, any>()
+    
+    const result = await queryEvents(relayPool, {
       kinds: [10002],
       authors: [pubkey],
       limit: 10
+    }, {
+      onEvent: (evt) => {
+        // Deduplicate by id and keep most recent
+        const existing = eventsMap.get(evt.id)
+        if (!existing || evt.created_at > existing.created_at) {
+          eventsMap.set(evt.id, evt)
+          // Update events array with deduplicated events
+          events.length = 0
+          events.push(...Array.from(eventsMap.values()))
+        }
+      }
     })
+    
+    // Use the streaming results if we got any, otherwise fall back to the full result
+    const finalEvents = events.length > 0 ? events : result
     
     const queryTime = Date.now() - startTime
     console.log('[relayListService] Query completed in', queryTime, 'ms')
@@ -38,18 +55,16 @@ export async function loadUserRelayList(
     })
     console.log('[relayListService] Found', allEvents.length, 'total kind 10002 events from any author')
     
-    // Add a small delay to ensure queries have time to complete
-    await new Promise(resolve => setTimeout(resolve, 2000))
 
-    console.log('[relayListService] Found', events.length, 'kind 10002 events')
-    if (events.length > 0) {
-      console.log('[relayListService] Event details:', events.map(e => ({ id: e.id, created_at: e.created_at, tags: e.tags.length })))
+    console.log('[relayListService] Found', finalEvents.length, 'kind 10002 events')
+    if (finalEvents.length > 0) {
+      console.log('[relayListService] Event details:', finalEvents.map(e => ({ id: e.id, created_at: e.created_at, tags: e.tags.length })))
     }
 
-    if (events.length === 0) return []
+    if (finalEvents.length === 0) return []
 
     // Get most recent event
-    const sortedEvents = events.sort((a, b) => b.created_at - a.created_at)
+    const sortedEvents = finalEvents.sort((a, b) => b.created_at - a.created_at)
     const relayListEvent = sortedEvents[0]
 
     const relays: UserRelayInfo[] = []
