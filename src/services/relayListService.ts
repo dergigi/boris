@@ -18,13 +18,29 @@ export async function loadUserRelayList(
     console.log('[relayListService] Loading user relay list for pubkey:', pubkey.slice(0, 16) + '...')
     console.log('[relayListService] Available relays:', Array.from(relayPool.relays.keys()))
     
+    console.log('[relayListService] Starting query for kind 10002...')
+    const startTime = Date.now()
+    
+    // Try querying with a longer timeout and more specific filter
     const events = await queryEvents(relayPool, {
       kinds: [10002],
-      authors: [pubkey]
+      authors: [pubkey],
+      limit: 10
     })
     
+    const queryTime = Date.now() - startTime
+    console.log('[relayListService] Query completed in', queryTime, 'ms')
+    
+    // Also try a broader query to see if we get any events at all
+    console.log('[relayListService] Trying broader query for any kind 10002 events...')
+    const allEvents = await queryEvents(relayPool, {
+      kinds: [10002],
+      limit: 5
+    })
+    console.log('[relayListService] Found', allEvents.length, 'total kind 10002 events from any author')
+    
     // Add a small delay to ensure queries have time to complete
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 2000))
 
     console.log('[relayListService] Found', events.length, 'kind 10002 events')
     if (events.length > 0) {
