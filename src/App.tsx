@@ -421,14 +421,10 @@ function App() {
           
           if (account) {
             accounts.setActive(activeId)
-          } else {
-            console.warn('[bunker] ⚠️  Active ID found but account not in list')
           }
-        } else {
-          // No active account ID in localStorage
         }
       } catch (err) {
-        console.error('[bunker] ❌ Failed to load accounts from storage:', err)
+        console.error('Failed to load accounts from storage:', err)
       }
       
       // Subscribe to accounts changes and persist to localStorage
@@ -497,52 +493,20 @@ function App() {
                   try {
                     const mergedRelays = Array.from(new Set([...(signerData.relays || []), ...RELAYS]))
                     recreatedSigner.relays = mergedRelays
-                  } catch (err) { console.warn('[bunker] failed to merge signer relays', err) }
+                  } catch (err) { /* ignore */ }
                   
                   // Replace the signer on the account
                   nostrConnectAccount.signer = recreatedSigner
                   
-                  // Debug: log publish/subscription calls made by signer (decrypt/sign requests)
+                  // Fire-and-forget publish for bunker: trigger but don't wait for completion
                   // IMPORTANT: bind originals to preserve `this` context used internally by the signer
                   const originalPublish = (recreatedSigner as unknown as { publishMethod: (relays: string[], event: unknown) => unknown }).publishMethod.bind(recreatedSigner)
                   ;(recreatedSigner as unknown as { publishMethod: (relays: string[], event: unknown) => unknown }).publishMethod = (relays: string[], event: unknown) => {
-                    try {
-                      let method: string | undefined
-                      const content = (event as { content?: unknown })?.content
-                      if (typeof content === 'string') {
-                        try {
-                          const parsed = JSON.parse(content) as { method?: string; id?: unknown }
-                          method = parsed?.method
-                        } catch (err) { console.warn('[bunker] failed to parse event content', err) }
-                      }
-                      const summary = {
-                        relays,
-                        kind: (event as { kind?: number })?.kind,
-                        method,
-                        // include tags array for debugging (NIP-46 expects method tag)
-                        tags: (event as { tags?: unknown })?.tags,
-                        contentLength: typeof content === 'string' ? content.length : undefined
-                      }
-                      try { DebugBus.info('bunker', 'publish', summary) } catch (err) { console.warn('[bunker] failed to log to DebugBus', err) }
-                    } catch (err) { console.warn('[bunker] failed to log publish summary', err) }
-                    // Fire-and-forget publish: trigger the publish but do not return the
-                    // Observable/Promise to upstream to avoid their awaiting of completion.
                     const result = originalPublish(relays, event)
                     if (result && typeof (result as { subscribe?: unknown }).subscribe === 'function') {
-                      // Subscribe to the observable but ignore completion/errors (fire-and-forget)
                       try { (result as { subscribe: (h: { complete?: () => void; error?: (e: unknown) => void }) => unknown }).subscribe({ complete: () => { /* noop */ }, error: () => { /* noop */ } }) } catch { /* ignore */ }
                     }
-                    // If it's a Promise, simply ignore it (no await) so it resolves in the background.
-                    // Return a benign object so callers that probe for a "subscribe" property
-                    // (e.g., applesauce makeRequest) won't throw on `"subscribe" in result`.
                     return {} as unknown as never
-                  }
-                  const originalSubscribe = (recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod.bind(recreatedSigner)
-                  ;(recreatedSigner as unknown as { subscriptionMethod: (relays: string[], filters: unknown[]) => unknown }).subscriptionMethod = (relays: string[], filters: unknown[]) => {
-                    try {
-                      try { DebugBus.info('bunker', 'subscribe', { relays, filters }) } catch (err) { console.warn('[bunker] failed to log subscribe to DebugBus', err) }
-                    } catch (err) { console.warn('[bunker] failed to log subscribe summary', err) }
-                    return originalSubscribe(relays, filters)
                   }
 
                   
@@ -550,8 +514,6 @@ function App() {
                   // The fromBunkerURI already connected with permissions during login
                   if (!nostrConnectAccount.signer.listening) {
                     await nostrConnectAccount.signer.open()
-                  } else {
-                    // Signer already listening
                   }
                   
                   // Attempt a guarded reconnect to ensure Amber authorizes decrypt operations
@@ -561,7 +523,7 @@ function App() {
                       await nostrConnectAccount.signer.connect(undefined, permissions)
                     }
                   } catch (e) {
-                    console.warn('[bunker] ⚠️ Guarded connect() failed:', e)
+                    // Ignore reconnect errors
                   }
                   
                   // Give the subscription a moment to fully establish before allowing decrypt operations
@@ -601,7 +563,7 @@ function App() {
                   // Mark this account as reconnected
                   reconnectedAccounts.add(account.id)
                 } catch (error) {
-                  console.error('[bunker] ❌ Failed to open signer:', error)
+                  console.error('Failed to open signer:', error)
                 }
               }
             })
@@ -657,7 +619,7 @@ function App() {
             const activeRelays = getActiveRelayUrls(pool)
             const newKeepAliveSub = pool.subscription(activeRelays, { kinds: [0], limit: 0 }).subscribe({
               next: () => {},
-              error: (err) => console.warn('Keep-alive subscription error:', err)
+              error: () => {}
             })
             poolWithSub._keepAliveSubscription = newKeepAliveSub
             
@@ -685,7 +647,7 @@ function App() {
           }
           const newKeepAliveSub = pool.subscription(RELAYS, { kinds: [0], limit: 0 }).subscribe({
             next: () => {},
-            error: (err) => console.warn('Keep-alive subscription error:', err)
+            error: () => {}
           })
           poolWithSub._keepAliveSubscription = newKeepAliveSub
           
@@ -703,8 +665,8 @@ function App() {
       // This prevents disconnection when no other subscriptions are active
       // Create a minimal subscription that never completes to keep connections alive
       const keepAliveSub = pool.subscription(RELAYS, { kinds: [0], limit: 0 }).subscribe({
-        next: () => {}, // No-op, we don't care about events
-        error: (err) => console.warn('Keep-alive subscription error:', err)
+        next: () => {},
+        error: () => {}
       })
       
       // Store subscription for cleanup
