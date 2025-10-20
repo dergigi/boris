@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+// Web Speech API types
+type SpeechSynthesisVoice = {
+  name: string
+  voiceURI: string
+  lang: string
+  localService: boolean
+  default: boolean
+}
+
 export interface UseTTSOptions {
   defaultLang?: string
   defaultRate?: number
@@ -54,9 +63,10 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     }
     load()
     // Safari/Chrome fire 'voiceschanged'
-    synth!.addEventListener?.('voiceschanged', load as EventListener)
+    const handleVoicesChanged = () => load()
+    synth!.addEventListener('voiceschanged', handleVoicesChanged)
     return () => {
-      synth!.removeEventListener?.('voiceschanged', load as EventListener)
+      synth!.removeEventListener('voiceschanged', handleVoicesChanged)
     }
   }, [supported, defaultLang, voice, synth])
 
@@ -72,7 +82,8 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     if (!supported || !text?.trim()) return
     // stopping any current speech first is safer for iOS
     synth!.cancel()
-    const u = new SpeechSynthesisUtterance(text)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const u = new (window as any).SpeechSynthesisUtterance(text) as SpeechSynthesisUtterance
     u.lang = langOverride || voice?.lang || defaultLang
     if (voice) u.voice = voice
     u.rate = rate

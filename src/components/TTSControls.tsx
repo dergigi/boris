@@ -16,7 +16,7 @@ const SPEED_OPTIONS = [0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.1, 2.4, 2.8, 3]
 const TTSControls: React.FC<Props> = ({ text, defaultLang, className, settings }) => {
   const {
     supported, speaking, paused,
-    speak, pause, resume, stop,
+    speak, pause, resume,
     rate, setRate
   } = useTextToSpeech({ defaultLang, defaultRate: settings?.ttsDefaultSpeed })
 
