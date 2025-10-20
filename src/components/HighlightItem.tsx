@@ -17,6 +17,7 @@ import { getNostrUrl } from '../config/nostrGateways'
 import CompactButton from './CompactButton'
 import { HighlightCitation } from './HighlightCitation'
 import { useNavigate } from 'react-router-dom'
+import NostrMentionLink from './NostrMentionLink'
 
 // Helper to detect if a URL is an image
 const isImageUrl = (url: string): boolean => {
@@ -29,99 +30,6 @@ const isImageUrl = (url: string): boolean => {
   }
 }
 
-// Helper to render a nostr identifier
-const renderNostrId = (nostrUri: string, index: number): React.ReactElement => {
-  try {
-    // Remove nostr: prefix
-    const identifier = nostrUri.replace(/^nostr:/, '')
-    const decoded = nip19.decode(identifier)
-    
-    switch (decoded.type) {
-      case 'npub': {
-        const pubkey = decoded.data
-        return (
-          <a
-            key={index}
-            href={`/p/${nip19.npubEncode(pubkey)}`}
-            className="highlight-comment-link"
-            onClick={(e) => e.stopPropagation()}
-          >
-            @{pubkey.slice(0, 8)}...
-          </a>
-        )
-      }
-      case 'nprofile': {
-        const { pubkey } = decoded.data
-        const npub = nip19.npubEncode(pubkey)
-        return (
-          <a
-            key={index}
-            href={`/p/${npub}`}
-            className="highlight-comment-link"
-            onClick={(e) => e.stopPropagation()}
-          >
-            @{pubkey.slice(0, 8)}...
-          </a>
-        )
-      }
-      case 'naddr': {
-        const { kind, pubkey, identifier } = decoded.data
-        // Check if it's a blog post (kind:30023)
-        if (kind === 30023) {
-          const naddr = nip19.naddrEncode({ kind, pubkey, identifier })
-          return (
-            <a
-              key={index}
-              href={`/a/${naddr}`}
-              className="highlight-comment-link"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {identifier || 'Article'}
-            </a>
-          )
-        }
-        // For other kinds, show shortened identifier
-        return (
-          <span key={index} className="highlight-comment-nostr-id">
-            nostr:{identifier.slice(0, 12)}...
-          </span>
-        )
-      }
-      case 'note': {
-        const eventId = decoded.data
-        return (
-          <span key={index} className="highlight-comment-nostr-id">
-            note:{eventId.slice(0, 12)}...
-          </span>
-        )
-      }
-      case 'nevent': {
-        const { id } = decoded.data
-        return (
-          <span key={index} className="highlight-comment-nostr-id">
-            event:{id.slice(0, 12)}...
-          </span>
-        )
-      }
-      default:
-        // Fallback for unrecognized types
-        return (
-          <span key={index} className="highlight-comment-nostr-id">
-            {identifier.slice(0, 20)}...
-          </span>
-        )
-    }
-  } catch (error) {
-    // If decoding fails, show shortened identifier
-    const identifier = nostrUri.replace(/^nostr:/, '')
-    return (
-      <span key={index} className="highlight-comment-nostr-id">
-        {identifier.slice(0, 20)}...
-      </span>
-    )
-  }
-}
-
 // Component to render comment with links, inline images, and nostr identifiers
 const CommentContent: React.FC<{ text: string }> = ({ text }) => {
   // Pattern to match both http(s) URLs and nostr: URIs
@@ -131,9 +39,15 @@ const CommentContent: React.FC<{ text: string }> = ({ text }) => {
   return (
     <>
       {parts.map((part, index) => {
-        // Handle nostr: URIs
+        // Handle nostr: URIs - now with profile resolution
         if (part.startsWith('nostr:')) {
-          return renderNostrId(part, index)
+          return (
+            <NostrMentionLink
+              key={index}
+              nostrUri={part}
+              onClick={(e) => e.stopPropagation()}
+            />
+          )
         }
         
         // Handle http(s) URLs
