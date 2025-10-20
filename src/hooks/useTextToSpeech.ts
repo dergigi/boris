@@ -48,6 +48,8 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
   const defaultLang = options.defaultLang || (typeof navigator !== 'undefined' ? navigator.language : 'en')
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const spokenTextRef = useRef<string>('')
+  const charIndexRef = useRef<number>(0)
 
   // Update rate when defaultRate option changes
   useEffect(() => {
@@ -77,22 +79,10 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     }
   }, [supported, defaultLang, voice, synth])
 
-  const stop = useCallback(() => {
-    if (!supported) return
-    synth!.cancel()
-    setSpeaking(false)
-    setPaused(false)
-    utteranceRef.current = null
-  }, [supported, synth])
-
-  const speak = useCallback((text: string, langOverride?: string) => {
-    if (!supported || !text?.trim()) return
-    // stopping any current speech first is safer for iOS
-    synth!.cancel()
-    // Create utterance using the global SpeechSynthesisUtterance constructor
+  const createUtterance = (text: string): SpeechSynthesisUtterance => {
     const SpeechSynthesisUtteranceConstructor = (window as Window & typeof globalThis).SpeechSynthesisUtterance
     const u = new SpeechSynthesisUtteranceConstructor(text) as SpeechSynthesisUtterance
-    u.lang = langOverride || voice?.lang || defaultLang
+    u.lang = voice?.lang || defaultLang
     if (voice) u.voice = voice
     u.rate = rate
     u.pitch = pitch
@@ -103,6 +93,38 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     u.onresume = () => setPaused(false)
     u.onend = () => { setSpeaking(false); setPaused(false); utteranceRef.current = null }
     u.onerror = () => { setSpeaking(false); setPaused(false); utteranceRef.current = null }
+    u.onboundary = (ev: SpeechSynthesisEvent) => {
+      if (typeof ev.charIndex === 'number') {
+        // Keep track of where we are in the original text
+        const newIndex = ev.charIndex
+        if (newIndex > charIndexRef.current) {
+          charIndexRef.current = newIndex
+        }
+      }
+    }
+
+    return u
+  }
+
+  const stop = useCallback(() => {
+    if (!supported) return
+    synth!.cancel()
+    setSpeaking(false)
+    setPaused(false)
+    utteranceRef.current = null
+    charIndexRef.current = 0
+    spokenTextRef.current = ''
+  }, [supported, synth])
+
+  const speak = useCallback((text: string, langOverride?: string) => {
+    if (!supported || !text?.trim()) return
+    // stopping any current speech first is safer for iOS
+    synth!.cancel()
+    spokenTextRef.current = text
+    charIndexRef.current = 0
+
+    const u = createUtterance(text)
+    if (langOverride) u.lang = langOverride
 
     utteranceRef.current = u
     synth!.speak(u)
@@ -124,16 +146,28 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     }
   }, [supported, synth])
 
-  // Update rate in real-time if utterance is playing or paused
+  // Update rate in real-time: while speaking, restart from last boundary with new rate.
   useEffect(() => {
-    if (!supported || !utteranceRef.current) return
-    // Update rate whether speaking or paused
-    utteranceRef.current.rate = rate
-    
-    // Some browsers require resuming to apply rate changes while paused
-    if (synth!.speaking && synth!.paused) {
-      synth!.resume()
-      synth!.pause()
+    if (!supported) return
+    if (!utteranceRef.current) return
+
+    // If currently speaking (not paused), restart from last boundary to apply new rate immediately.
+    if (synth!.speaking && !synth!.paused) {
+      const fullText = spokenTextRef.current
+      const startIndex = Math.max(0, Math.min(charIndexRef.current, fullText.length - 1))
+      const remainingText = fullText.slice(startIndex)
+
+      // Cancel current utterance and start a new one with updated rate
+      synth!.cancel()
+      const u = createUtterance(remainingText)
+      utteranceRef.current = u
+      synth!.speak(u)
+      return
+    }
+
+    // If paused or not speaking, set rate; it will take effect on resume/start
+    if (utteranceRef.current) {
+      utteranceRef.current.rate = rate
     }
   }, [rate, supported, synth])
 
