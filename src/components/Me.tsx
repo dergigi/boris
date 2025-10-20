@@ -620,9 +620,17 @@ const Me: React.FC<MeProps> = ({
     return item
   })
 
-  // Apply reading progress filter
-  const filteredReads = filterByReadingProgress(readsWithProgress, readingProgressFilter, highlights)
-  const filteredLinks = filterByReadingProgress(linksWithProgress, readingProgressFilter, highlights)
+  // Apply reading progress filter with simple type separation to keep Views distinct and DRY
+  const filteredReads = filterByReadingProgress(
+    readsWithProgress.filter(item => item.type === 'article'),
+    readingProgressFilter,
+    highlights
+  )
+  const filteredLinks = filterByReadingProgress(
+    linksWithProgress.filter(item => item.type === 'external'),
+    readingProgressFilter,
+    highlights
+  )
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
     groupingMode === 'flat'
       ? [{ key: 'all', title: `All Bookmarks (${filteredBookmarks.length})`, items: filteredBookmarks }]
