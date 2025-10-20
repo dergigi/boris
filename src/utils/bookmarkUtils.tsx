@@ -2,7 +2,7 @@ import React from 'react'
 import { formatDistanceToNow, differenceInSeconds, differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths, differenceInYears } from 'date-fns'
 import { ParsedContent, ParsedNode, IndividualBookmark } from '../types/bookmarks'
 import ResolvedMention from '../components/ResolvedMention'
-// Note: ContentWithResolvedProfiles is imported by components directly to keep this file component-only for fast refresh
+// Note: RichContent is imported by components directly to keep this file component-only for fast refresh
 
 export const formatDate = (timestamp: number) => {
   const date = new Date(timestamp * 1000)

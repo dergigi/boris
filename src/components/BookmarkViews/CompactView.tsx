@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDateCompact } from '../../utils/bookmarkUtils'
-import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
+import RichContent from '../RichContent'
 
 interface CompactViewProps {
   bookmark: IndividualBookmark
@@ -66,7 +66,7 @@ export const CompactView: React.FC<CompactViewProps> = ({
         </span>
         {displayText && (
           <div className="compact-text">
-            <ContentWithResolvedProfiles content={displayText.slice(0, 60) + (displayText.length > 60 ? '…' : '')} />
+            <RichContent content={displayText.slice(0, 60) + (displayText.length > 60 ? '…' : '')} className="" />
           </div>
         )}
         <span className="bookmark-date-compact">{formatDateCompact(bookmark.created_at)}</span>

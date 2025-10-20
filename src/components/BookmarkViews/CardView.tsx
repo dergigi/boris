@@ -5,7 +5,7 @@ import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate, renderParsedContent } from '../../utils/bookmarkUtils'
-import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
+import RichContent from '../RichContent'
 import { classifyUrl } from '../../utils/helpers'
 import { useImageCache } from '../../hooks/useImageCache'
 import { getPreviewImage, fetchOgImage } from '../../utils/imagePreview'
@@ -147,19 +147,15 @@ export const CardView: React.FC<CardViewProps> = ({
       )}
       
       {isArticle && articleSummary ? (
-        <div className="bookmark-content article-summary">
-          <ContentWithResolvedProfiles content={articleSummary} />
-        </div>
+        <RichContent content={articleSummary} className="bookmark-content article-summary" />
       ) : bookmark.parsedContent ? (
         <div className="bookmark-content">
           {shouldTruncate && bookmark.content
-            ? <ContentWithResolvedProfiles content={`${bookmark.content.slice(0, 210).trimEnd()}…`} />
+            ? <RichContent content={`${bookmark.content.slice(0, 210).trimEnd()}…`} className="" />
             : renderParsedContent(bookmark.parsedContent)}
         </div>
       ) : bookmark.content && (
-        <div className="bookmark-content">
-          <ContentWithResolvedProfiles content={shouldTruncate ? `${bookmark.content.slice(0, 210).trimEnd()}…` : bookmark.content} />
-        </div>
+        <RichContent content={shouldTruncate ? `${bookmark.content.slice(0, 210).trimEnd()}…` : bookmark.content} />
       )}
 
       {contentLength > 210 && (

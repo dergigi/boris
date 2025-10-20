@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate } from '../../utils/bookmarkUtils'
-import ContentWithResolvedProfiles from '../ContentWithResolvedProfiles'
+import RichContent from '../RichContent'
 import { IconGetter } from './shared'
 import { useImageCache } from '../../hooks/useImageCache'
 import { getEventUrl } from '../../config/nostrGateways'
@@ -95,13 +95,9 @@ export const LargeView: React.FC<LargeViewProps> = ({
       
       <div className="large-content">
         {isArticle && articleSummary ? (
-          <div className="large-text article-summary">
-            <ContentWithResolvedProfiles content={articleSummary} />
-          </div>
+          <RichContent content={articleSummary} className="large-text article-summary" />
         ) : bookmark.content && (
-          <div className="large-text">
-            <ContentWithResolvedProfiles content={bookmark.content} />
-          </div>
+          <RichContent content={bookmark.content} className="large-text" />
         )}
         
         {/* Reading progress indicator for articles - shown only if there's progress */}
