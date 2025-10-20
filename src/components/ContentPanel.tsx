@@ -190,8 +190,13 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     onSave: handleSavePosition,
     onReadingComplete: () => {
       // Auto-mark as read when reading is complete (if enabled in settings)
-      if (activeAccount && !isMarkedAsRead && settings?.autoMarkAsReadOnCompletion) {
+      if (!settings?.autoMarkAsReadOnCompletion || !activeAccount) return
+      if (!isMarkedAsRead) {
         handleMarkAsRead()
+      } else {
+        // Already archived: still show the success animation for feedback
+        setShowCheckAnimation(true)
+        setTimeout(() => setShowCheckAnimation(false), 600)
       }
     }
   })
