@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { IEventStore } from 'applesauce-core'
@@ -56,6 +56,15 @@ const Profile: React.FC<ProfileProps> = ({
     toBlogPostPreview,
     [pubkey]
   )
+
+  // Sort writings by publication date, newest first
+  const sortedWritings = useMemo(() => {
+    return cachedWritings.slice().sort((a, b) => {
+      const timeA = a.published || a.event.created_at
+      const timeB = b.published || b.event.created_at
+      return timeB - timeA
+    })
+  }, [cachedWritings])
 
   // Update local state when prop changes
   useEffect(() => {
@@ -168,7 +177,7 @@ const Profile: React.FC<ProfileProps> = ({
   }
 
   const npub = nip19.npubEncode(pubkey)
-  const showSkeletons = cachedHighlights.length === 0 && cachedWritings.length === 0
+  const showSkeletons = cachedHighlights.length === 0 && sortedWritings.length === 0
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -209,13 +218,13 @@ const Profile: React.FC<ProfileProps> = ({
             </div>
           )
         }
-        return cachedWritings.length === 0 ? (
+        return sortedWritings.length === 0 ? (
           <div className="explore-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
             No articles written yet.
           </div>
         ) : (
           <div className="explore-grid">
-            {cachedWritings.map((post) => (
+            {sortedWritings.map((post) => (
               <BlogPostCard
                 key={post.event.id}
                 post={post}
