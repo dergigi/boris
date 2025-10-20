@@ -328,7 +328,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
         relayPool ? <Explore relayPool={relayPool} eventStore={eventStore} settings={settings} activeTab={exploreTab} /> : null
       ) : undefined}
       me={showMe ? (
-        relayPool ? <Me relayPool={relayPool} eventStore={eventStore} activeTab={meTab} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} /> : null
+        relayPool ? <Me relayPool={relayPool} eventStore={eventStore} activeTab={meTab} bookmarks={bookmarks} bookmarksLoading={bookmarksLoading} settings={settings} /> : null
       ) : undefined}
       profile={showProfile && profilePubkey ? (
         relayPool ? <Profile relayPool={relayPool} eventStore={eventStore} pubkey={profilePubkey} activeTab={profileTab} /> : null

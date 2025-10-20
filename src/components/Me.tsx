@@ -23,7 +23,7 @@ import { getCachedMeData, updateCachedHighlights } from '../services/meCache'
 import { faBooks } from '../icons/customIcons'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
-import { groupIndividualBookmarks, hasContent } from '../utils/bookmarkUtils'
+import { groupIndividualBookmarks, hasContent, hasCreationDate } from '../utils/bookmarkUtils'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
 import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProgressFilters'
@@ -31,6 +31,7 @@ import { filterByReadingProgress } from '../utils/readingProgressUtils'
 import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
 import { readingProgressController } from '../services/readingProgressController'
 import { archiveController } from '../services/archiveController'
+import { UserSettings } from '../services/settingsService'
 
 interface MeProps {
   relayPool: RelayPool
@@ -38,6 +39,7 @@ interface MeProps {
   activeTab?: TabType
   bookmarks: Bookmark[] // From centralized App.tsx state
   bookmarksLoading?: boolean // From centralized App.tsx state (reserved for future use)
+  settings: UserSettings
 }
 
 type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
@@ -49,7 +51,8 @@ const Me: React.FC<MeProps> = ({
   relayPool, 
   eventStore,
   activeTab: propActiveTab,
-  bookmarks
+  bookmarks,
+  settings
 }) => {
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
@@ -489,6 +492,7 @@ const Me: React.FC<MeProps> = ({
   // Merge and flatten all individual bookmarks
   const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
     .filter(hasContent)
+    .filter(b => !settings?.hideBookmarksWithoutCreationDate || hasCreationDate(b))
   
   // Apply bookmark filter
   const filteredBookmarks = filterBookmarksByType(allIndividualBookmarks, bookmarkFilter)
