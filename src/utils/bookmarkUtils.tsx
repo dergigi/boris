@@ -121,11 +121,36 @@ export function hasContent(bookmark: IndividualBookmark): boolean {
 // Check if bookmark has a real creation date (not "Now" / current time)
 export function hasCreationDate(bookmark: IndividualBookmark): boolean {
   if (!bookmark.created_at) return false
-  // If timestamp is missing or equals current time (within 1 second), consider it invalid
-  const now = Math.floor(Date.now() / 1000)
-  const createdAt = Math.floor(bookmark.created_at)
-  // If created_at is within 1 second of now, it's likely missing/placeholder
-  return Math.abs(createdAt - now) > 1
+  
+  // For web bookmarks (kind 39701), they always have real timestamps from events
+  if (bookmark.kind === 39701 || bookmark.sourceKind === 39701) {
+    return true
+  }
+  
+  // If bookmark has no content, it likely failed to hydrate and its timestamp is a placeholder
+  const hasContent = bookmark.content && bookmark.content.trim().length > 0
+  if (!hasContent) {
+    return false
+  }
+  
+  // Check for URL-only bookmarks (synthetic bookmarks from NIP-51 processing)
+  // These get placeholder timestamps and should be filtered if they haven't been properly hydrated
+  const contentIsUrl = /^https?:\/\//i.test(bookmark.content.trim())
+  const hasMinimalTags = !bookmark.tags || bookmark.tags.length <= 1
+  
+  // If content is just a URL and there are minimal tags, this is likely an unhydrated reference
+  // These bookmarks are created with placeholder timestamps during NIP-51 processing
+  if (contentIsUrl && hasMinimalTags) {
+    // Additionally check if the ID suggests it's a synthetic bookmark
+    const isSyntheticId = bookmark.id.startsWith('url-') || 
+                          bookmark.id.startsWith('hashtag-') ||
+                          /^[0-9a-f]{64}$/i.test(bookmark.id) === false && !bookmark.id.includes(':')
+    if (isSyntheticId) {
+      return false
+    }
+  }
+  
+  return true
 }
 
 // Bookmark sets helpers (kind 30003)
