@@ -38,30 +38,18 @@ const TTSSettings: React.FC<TTSSettingsProps> = ({ settings, onUpdate }) => {
         </div>
       </div>
 
-      <div className="setting-group">
-        <label htmlFor="ttsUseSystemLanguage" className="checkbox-label">
-          <input
-            id="ttsUseSystemLanguage"
-            type="checkbox"
-            checked={settings.ttsUseSystemLanguage ?? false}
-            onChange={e => onUpdate({ ttsUseSystemLanguage: e.target.checked })}
-            className="setting-checkbox"
-          />
-          <span>Use system language for TTS</span>
-        </label>
-      </div>
-
-      <div className="setting-group">
-        <label htmlFor="ttsDetectContentLanguage" className="checkbox-label">
-          <input
-            id="ttsDetectContentLanguage"
-            type="checkbox"
-            checked={settings.ttsDetectContentLanguage !== false}
-            onChange={e => onUpdate({ ttsDetectContentLanguage: e.target.checked })}
-            className="setting-checkbox"
-          />
-          <span>Detect content language automatically</span>
-        </label>
+      <div className="setting-group setting-inline">
+        <label>Speaker language</label>
+        <div className="setting-control">
+          <select
+            value={settings.ttsLanguageMode || 'content'}
+            onChange={e => onUpdate({ ttsLanguageMode: (e.target.value as 'system' | 'content'), ttsUseSystemLanguage: e.target.value === 'system', ttsDetectContentLanguage: e.target.value !== 'system' })}
+            style={{ background: 'var(--color-bg-elevated)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: 6, padding: '0.25rem 0.5rem' }}
+          >
+            <option value="system">System Language</option>
+            <option value="content">Content (auto-detect)</option>
+          </select>
+        </div>
       </div>
     </div>
   )

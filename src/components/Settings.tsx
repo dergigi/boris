@@ -48,6 +48,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   hideBookmarksWithoutCreationDate: true,
   ttsUseSystemLanguage: false,
   ttsDetectContentLanguage: true,
+  ttsLanguageMode: 'content',
   ttsDefaultSpeed: 2.1,
 }
 
