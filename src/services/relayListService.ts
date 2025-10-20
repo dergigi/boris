@@ -1,4 +1,5 @@
 import { RelayPool } from 'applesauce-relay'
+import { NostrEvent } from 'nostr-tools'
 import { queryEvents } from './dataFetch'
 
 export interface UserRelayInfo {
@@ -24,8 +25,8 @@ export async function loadUserRelayList(
     const startTime = Date.now()
     
     // Try querying with streaming callback for faster results
-    const events: any[] = []
-    const eventsMap = new Map<string, any>()
+    const events: NostrEvent[] = []
+    const eventsMap = new Map<string, NostrEvent>()
     
     const result = await queryEvents(relayPool, {
       kinds: [10002],
