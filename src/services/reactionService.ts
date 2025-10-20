@@ -2,8 +2,8 @@ import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
-import { RELAYS } from '../config/relays'
 import { EventFactory } from 'applesauce-factory'
+import { getActiveRelayUrls } from './relayManager'
 
 const ARCHIVE_EMOJI = '📚'
 
@@ -49,7 +49,7 @@ export async function createEventReaction(
 
 
   // Publish to relays
-  await relayPool.publish(RELAYS, signed)
+  await relayPool.publish(getActiveRelayUrls(relayPool), signed)
 
 
   return signed
@@ -99,7 +99,7 @@ export async function createWebsiteReaction(
 
 
   // Publish to relays
-  await relayPool.publish(RELAYS, signed)
+  await relayPool.publish(getActiveRelayUrls(relayPool), signed)
 
 
   return signed
@@ -122,7 +122,7 @@ export async function deleteReaction(
     created_at: Math.floor(Date.now() / 1000)
   }))
   const signed = await factory.sign(draft)
-  await relayPool.publish(RELAYS, signed)
+  await relayPool.publish(getActiveRelayUrls(relayPool), signed)
   return signed
 }
 
@@ -146,7 +146,7 @@ export async function hasMarkedEventAsRead(
     }
 
     const events$ = relayPool
-      .req(RELAYS, filter)
+      .req(getActiveRelayUrls(relayPool), filter)
       .pipe(
         onlyEvents(),
         completeOnEose(),
@@ -199,7 +199,7 @@ export async function hasMarkedWebsiteAsRead(
     }
 
     const events$ = relayPool
-      .req(RELAYS, filter)
+      .req(getActiveRelayUrls(relayPool), filter)
       .pipe(
         onlyEvents(),
         completeOnEose(),

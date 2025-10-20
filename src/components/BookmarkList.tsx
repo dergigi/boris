@@ -17,8 +17,8 @@ import { groupIndividualBookmarks, hasContent, getBookmarkSets, getBookmarksWith
 import { UserSettings } from '../services/settingsService'
 import AddBookmarkModal from './AddBookmarkModal'
 import { createWebBookmark } from '../services/webBookmarkService'
-import { RELAYS } from '../config/relays'
 import { Hooks } from 'applesauce-react'
+import { getActiveRelayUrls } from '../services/relayManager'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
 import LoginOptions from './LoginOptions'
@@ -125,7 +125,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
       throw new Error('Please login to create bookmarks')
     }
 
-    await createWebBookmark(url, title, description, tags, activeAccount, relayPool, RELAYS)
+    await createWebBookmark(url, title, description, tags, activeAccount, relayPool, getActiveRelayUrls(relayPool))
   }
 
   // Pull-to-refresh for bookmarks

@@ -3,7 +3,6 @@ import { IEventStore } from 'applesauce-core'
 import { NostrEvent } from 'nostr-tools'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
-import { RELAYS } from '../config/relays'
 import { processReadingProgress } from './readingDataProcessor'
 import { ReadItem } from './readsService'
 import { ARCHIVE_EMOJI } from './reactionService'
@@ -233,7 +232,7 @@ class ReadingProgressController {
       queryEvents(relayPool, {
         kinds: [KINDS.ReadingProgress],
         authors: [pubkey]
-      }, { relayUrls: RELAYS })
+      })
         .then((relayEvents) => {
           if (startGeneration !== this.generation) return
           console.log('[readingProgress] Got reading progress from relays:', relayEvents.length)
@@ -343,8 +342,8 @@ class ReadingProgressController {
 
       // Fire queries with onEvent callbacks for streaming behavior
       const [kind17Events, kind7Events] = await Promise.all([
-        queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { relayUrls: RELAYS, onEvent: handleUrlReaction }),
-        queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { relayUrls: RELAYS, onEvent: handleEventReaction })
+        queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { onEvent: handleUrlReaction }),
+        queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { onEvent: handleEventReaction })
       ])
 
       if (generation !== this.generation) return
@@ -356,7 +355,7 @@ class ReadingProgressController {
       if (pendingEventIds.size > 0) {
         // Fetch referenced 30023 events, streaming not required here
         const ids = Array.from(pendingEventIds)
-        const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids }, { relayUrls: RELAYS })
+        const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids })
         const eventIdToNaddr = new Map<string, string>()
         for (const article of articleEvents) {
           const dTag = article.tags.find(t => t[0] === 'd')?.[1]

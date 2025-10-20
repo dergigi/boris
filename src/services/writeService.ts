@@ -1,9 +1,9 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { IEventStore } from 'applesauce-core'
-import { RELAYS } from '../config/relays'
 import { isLocalRelay, areAllRelaysLocal } from '../utils/helpers'
 import { markEventAsOfflineCreated } from './offlineSyncService'
+import { getActiveRelayUrls } from './relayManager'
 
 /**
  * Unified write helper: add event to EventStore, detect connectivity, 
@@ -27,10 +27,13 @@ export async function publishEvent(
 
   const hasRemoteConnection = connectedRelays.some(url => !isLocalRelay(url))
 
+  // Get active relay URLs from the pool
+  const activeRelays = getActiveRelayUrls(relayPool)
+
   // Determine which relays we expect to succeed
   const expectedSuccessRelays = hasRemoteConnection
-    ? RELAYS
-    : RELAYS.filter(isLocalRelay)
+    ? activeRelays
+    : activeRelays.filter(isLocalRelay)
 
   const isLocalOnly = areAllRelaysLocal(expectedSuccessRelays)
 
@@ -42,7 +45,7 @@ export async function publishEvent(
   }
 
   // Publish to all configured relays in the background (non-blocking)
-  relayPool.publish(RELAYS, event)
+  relayPool.publish(activeRelays, event)
     .then(() => {
     })
     .catch((error) => {

@@ -10,8 +10,8 @@ import { faSpinner, faCheckCircle, faEllipsisH, faExternalLinkAlt, faMobileAlt, 
 import { ContentSkeleton } from './Skeletons'
 import { nip19 } from 'nostr-tools'
 import { getNostrUrl, getSearchUrl } from '../config/nostrGateways'
-import { RELAYS } from '../config/relays'
 import { RelayPool } from 'applesauce-relay'
+import { getActiveRelayUrls } from '../services/relayManager'
 import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'
 import { Highlight } from '../types/highlights'
@@ -357,7 +357,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     if (!currentArticle) return null
 
     const dTag = currentArticle.tags.find(t => t[0] === 'd')?.[1] || ''
-    const relayHints = RELAYS.filter(r => 
+    const activeRelays = relayPool ? getActiveRelayUrls(relayPool) : []
+    const relayHints = activeRelays.filter(r => 
       !r.includes('localhost') && !r.includes('127.0.0.1')
     ).slice(0, 3)
 

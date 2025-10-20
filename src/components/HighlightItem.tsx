@@ -8,8 +8,8 @@ import { Models, IEventStore } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
 import { Hooks } from 'applesauce-react'
 import { onSyncStateChange, isEventSyncing } from '../services/offlineSyncService'
-import { RELAYS } from '../config/relays'
 import { areAllRelaysLocal } from '../utils/helpers'
+import { getActiveRelayUrls } from '../services/relayManager'
 import { nip19 } from 'nostr-tools'
 import { formatDateCompact } from '../utils/bookmarkUtils'
 import { createDeletionRequest } from '../services/deletionService'
@@ -150,10 +150,10 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
           setShowOfflineIndicator(false)
           
           // Update the highlight with all relays after successful sync
-          if (onHighlightUpdate && highlight.isLocalOnly) {
+          if (onHighlightUpdate && highlight.isLocalOnly && relayPool) {
             const updatedHighlight = {
               ...highlight,
-              publishedRelays: RELAYS,
+              publishedRelays: getActiveRelayUrls(relayPool),
               isLocalOnly: false,
               isOfflineCreated: false
             }
@@ -164,7 +164,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     })
     
     return unsubscribe
-  }, [highlight, onHighlightUpdate])
+  }, [highlight, onHighlightUpdate, relayPool])
   
   useEffect(() => {
     if (isSelected && itemRef.current) {
@@ -224,7 +224,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   const getHighlightLinks = () => {
     // Encode the highlight event itself (kind 9802) as a nevent
     // Get non-local relays for the hint
-    const relayHints = RELAYS.filter(r => 
+    const activeRelays = relayPool ? getActiveRelayUrls(relayPool) : []
+    const relayHints = activeRelays.filter(r => 
       !r.includes('localhost') && !r.includes('127.0.0.1')
     ).slice(0, 3) // Include up to 3 relay hints
     
@@ -260,7 +261,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       }
       
       // Publish to all configured relays - let the relay pool handle connection state
-      const targetRelays = RELAYS
+      const targetRelays = getActiveRelayUrls(relayPool)
       
       
       await relayPool.publish(targetRelays, event)
@@ -328,7 +329,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     }
     
     // Fallback: show all relays we queried (where this was likely fetched from)
-    const relayNames = RELAYS.map(url => 
+    const activeRelays = relayPool ? getActiveRelayUrls(relayPool) : []
+    const relayNames = activeRelays.map(url => 
       url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
     )
     return {

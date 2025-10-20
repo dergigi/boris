@@ -1,7 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
-import { RELAYS } from '../config/relays'
 import { KINDS } from '../config/kinds'
 import { ARCHIVE_EMOJI } from './reactionService'
 import { BlogPostPreview } from './exploreService'
@@ -30,8 +29,8 @@ export async function fetchReadArticles(
   try {
     // Fetch kind:7 and kind:17 reactions in parallel
     const [kind7Events, kind17Events] = await Promise.all([
-      queryEvents(relayPool, { kinds: [KINDS.ReactionToEvent], authors: [userPubkey] }, { relayUrls: RELAYS }),
-      queryEvents(relayPool, { kinds: [KINDS.ReactionToUrl], authors: [userPubkey] }, { relayUrls: RELAYS })
+      queryEvents(relayPool, { kinds: [KINDS.ReactionToEvent], authors: [userPubkey] }),
+      queryEvents(relayPool, { kinds: [KINDS.ReactionToUrl], authors: [userPubkey] })
     ])
 
     const readArticles: ReadArticle[] = []
@@ -115,8 +114,7 @@ export async function fetchReadArticlesWithData(
     
     const articleEvents = await queryEvents(
       relayPool,
-      { kinds: [KINDS.BlogPost], ids: eventIds },
-      { relayUrls: RELAYS }
+      { kinds: [KINDS.BlogPost], ids: eventIds }
     )
 
     // Deduplicate article events by ID

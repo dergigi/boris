@@ -19,6 +19,8 @@ import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { RELAYS } from './config/relays'
 import { SkeletonThemeProvider } from './components/Skeletons'
 import { DebugBus } from './utils/debugBus'
+import { loadUserRelayList, loadBlockedRelays, computeRelaySet } from './services/relayListService'
+import { applyRelaySetToPool, getActiveRelayUrls, ALWAYS_LOCAL_RELAYS } from './services/relayManager'
 import { Bookmark } from './types/bookmarks'
 import { bookmarkController } from './services/bookmarkController'
 import { contactsController } from './services/contactsController'
@@ -602,6 +604,86 @@ function App() {
               }
             })
       
+      // Handle user relay list and blocked relays when account changes
+      const userRelaysSub = accounts.active$.subscribe(async (account) => {
+        if (account) {
+          // User logged in - load their relay list and apply it
+          try {
+            const pubkey = account.pubkey
+            
+            // Load user's relay list (10002) and blocked relays (10006) in parallel
+            const [userRelayList, blockedRelays] = await Promise.all([
+              loadUserRelayList(pool, pubkey),
+              loadBlockedRelays(pool, pubkey)
+            ])
+            
+            // Get bunker relays if this is a nostr-connect account
+            let bunkerRelays: string[] = []
+            if (account.type === 'nostr-connect') {
+              const nostrConnectAccount = account as Accounts.NostrConnectAccount<unknown>
+              const signerData = nostrConnectAccount.toJSON().signer
+              bunkerRelays = signerData.relays || []
+            }
+            
+            // Compute final relay set
+            const finalRelays = computeRelaySet({
+              hardcoded: RELAYS,
+              bunker: bunkerRelays,
+              userList: userRelayList,
+              blocked: blockedRelays,
+              alwaysIncludeLocal: ALWAYS_LOCAL_RELAYS
+            })
+            
+            // Apply to pool
+            applyRelaySetToPool(pool, finalRelays)
+            
+            // Update keep-alive subscription with new relay set
+            const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
+            if (poolWithSub._keepAliveSubscription) {
+              poolWithSub._keepAliveSubscription.unsubscribe()
+            }
+            const activeRelays = getActiveRelayUrls(pool)
+            const newKeepAliveSub = pool.subscription(activeRelays, { kinds: [0], limit: 0 }).subscribe({
+              next: () => {},
+              error: (err) => console.warn('Keep-alive subscription error:', err)
+            })
+            poolWithSub._keepAliveSubscription = newKeepAliveSub
+            
+            // Update address loader with new relays
+            const addressLoader = createAddressLoader(pool, {
+              eventStore: store,
+              lookupRelays: activeRelays
+            })
+            store.addressableLoader = addressLoader
+            store.replaceableLoader = addressLoader
+          } catch (error) {
+            console.error('Failed to load user relays:', error)
+          }
+        } else {
+          // User logged out - reset to hardcoded relays
+          applyRelaySetToPool(pool, RELAYS)
+          
+          // Update keep-alive subscription
+          const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
+          if (poolWithSub._keepAliveSubscription) {
+            poolWithSub._keepAliveSubscription.unsubscribe()
+          }
+          const newKeepAliveSub = pool.subscription(RELAYS, { kinds: [0], limit: 0 }).subscribe({
+            next: () => {},
+            error: (err) => console.warn('Keep-alive subscription error:', err)
+          })
+          poolWithSub._keepAliveSubscription = newKeepAliveSub
+          
+          // Reset address loader
+          const addressLoader = createAddressLoader(pool, {
+            eventStore: store,
+            lookupRelays: RELAYS
+          })
+          store.addressableLoader = addressLoader
+          store.replaceableLoader = addressLoader
+        }
+      })
+      
       // Keep all relay connections alive indefinitely by creating a persistent subscription
       // This prevents disconnection when no other subscriptions are active
       // Create a minimal subscription that never completes to keep connections alive
@@ -630,6 +712,7 @@ function App() {
         accountsSub.unsubscribe()
         activeSub.unsubscribe()
         bunkerReconnectSub.unsubscribe()
+        userRelaysSub.unsubscribe()
         // Clean up keep-alive subscription if it exists
         const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
         if (poolWithSub._keepAliveSubscription) {

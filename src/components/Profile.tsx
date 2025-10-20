@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom'
 import { HighlightItem } from './HighlightItem'
 import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
 import { fetchHighlights } from '../services/highlightService'
-import { RELAYS } from '../config/relays'
 import { KINDS } from '../config/kinds'
+import { getActiveRelayUrls } from '../services/relayManager'
 import AuthorCard from './AuthorCard'
 import BlogPostCard from './BlogPostCard'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
@@ -109,7 +109,7 @@ const Profile: React.FC<ProfileProps> = ({
       })
     
     // Fetch writings in background (no limit for single user profile)
-    fetchBlogPostsFromAuthors(relayPool, [pubkey], RELAYS, undefined, null)
+    fetchBlogPostsFromAuthors(relayPool, [pubkey], getActiveRelayUrls(relayPool), undefined, null)
       .then(writings => {
         writings.forEach(w => eventStore.add(w.event))
       })

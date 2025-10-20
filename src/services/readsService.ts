@@ -3,7 +3,6 @@ import { Helpers } from 'applesauce-core'
 import { Bookmark } from '../types/bookmarks'
 import { fetchReadArticles } from './libraryService'
 import { queryEvents } from './dataFetch'
-import { RELAYS } from '../config/relays'
 import { KINDS } from '../config/kinds'
 import { classifyBookmarkType } from '../utils/bookmarkTypeClassifier'
 import { nip19 } from 'nostr-tools'
@@ -44,7 +43,7 @@ export async function fetchAllReads(
   try {
     // Fetch all data sources in parallel
     const [progressEvents, markedAsReadArticles] = await Promise.all([
-      queryEvents(relayPool, { kinds: [KINDS.ReadingProgress], authors: [userPubkey] }, { relayUrls: RELAYS }),
+      queryEvents(relayPool, { kinds: [KINDS.ReadingProgress], authors: [userPubkey] }),
       fetchReadArticles(relayPool, userPubkey)
     ])
 
@@ -130,8 +129,7 @@ export async function fetchAllReads(
         
         const events = await queryEvents(
           relayPool,
-          { kinds: [KINDS.BlogPost], authors, '#d': identifiers },
-          { relayUrls: RELAYS }
+          { kinds: [KINDS.BlogPost], authors, '#d': identifiers }
         )
 
         // Merge event data into ReadItems and emit

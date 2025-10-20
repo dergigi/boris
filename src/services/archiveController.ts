@@ -3,7 +3,6 @@ import { IEventStore } from 'applesauce-core'
 import { NostrEvent } from 'nostr-tools'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
-import { RELAYS } from '../config/relays'
 import { ARCHIVE_EMOJI } from './reactionService'
 import { nip19 } from 'nostr-tools'
 
@@ -124,8 +123,8 @@ class ArchiveController {
     try {
       // Stream kind:17 and kind:7 in parallel
       const [kind17, kind7] = await Promise.all([
-        queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { relayUrls: RELAYS, onEvent: handleUrlReaction }),
-        queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { relayUrls: RELAYS, onEvent: handleEventReaction })
+        queryEvents(relayPool, { kinds: [17], authors: [pubkey] }, { onEvent: handleUrlReaction }),
+        queryEvents(relayPool, { kinds: [7], authors: [pubkey] }, { onEvent: handleEventReaction })
       ])
 
       if (startGen !== this.generation) return
@@ -138,7 +137,7 @@ class ArchiveController {
       if (this.pendingEventIds.size > 0) {
         // Fetch referenced articles (kind:30023) and map event IDs to naddr
         const ids = Array.from(this.pendingEventIds)
-        const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids }, { relayUrls: RELAYS })
+        const articleEvents = await queryEvents(relayPool, { kinds: [KINDS.BlogPost], ids })
         console.log('[archive] fetched articles for mapping:', articleEvents.length)
         for (const article of articleEvents) {
           const dTag = article.tags.find(t => t[0] === 'd')?.[1]
