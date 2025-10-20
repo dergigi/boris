@@ -18,21 +18,41 @@ export function getActiveRelayUrls(relayPool: RelayPool): string[] {
 }
 
 /**
+ * Normalizes a relay URL to match what applesauce-relay stores internally
+ * Adds trailing slash for URLs without a path
+ */
+function normalizeRelayUrl(url: string): string {
+  try {
+    const parsed = new URL(url)
+    // If the pathname is empty or just "/", ensure it ends with "/"
+    if (parsed.pathname === '' || parsed.pathname === '/') {
+      return url.endsWith('/') ? url : url + '/'
+    }
+    return url
+  } catch {
+    // If URL parsing fails, return as-is
+    return url
+  }
+}
+
+/**
  * Applies a new relay set to the pool: adds missing relays, removes extras
  */
 export function applyRelaySetToPool(
   relayPool: RelayPool,
   finalUrls: string[]
 ): void {
+  // Normalize all URLs to match pool's internal format
   const currentUrls = new Set(Array.from(relayPool.relays.keys()))
-  const targetUrls = new Set(finalUrls)
+  const normalizedTargetUrls = new Set(finalUrls.map(normalizeRelayUrl))
+  const targetUrlsMap = new Map(finalUrls.map(url => [normalizeRelayUrl(url), url]))
 
   console.log('[relayManager] applyRelaySetToPool called')
   console.log('[relayManager] Current pool has:', currentUrls.size, 'relays')
   console.log('[relayManager] Target has:', finalUrls.length, 'relays')
 
-  // Add new relays
-  const toAdd = finalUrls.filter(url => !currentUrls.has(url))
+  // Add new relays (use original URLs for adding, not normalized)
+  const toAdd = finalUrls.filter(url => !currentUrls.has(normalizeRelayUrl(url)))
   console.log('[relayManager] Will add:', toAdd.length, 'relays', toAdd)
   if (toAdd.length > 0) {
     relayPool.group(toAdd)
@@ -41,8 +61,15 @@ export function applyRelaySetToPool(
   // Remove relays not in target (but always keep local relays)
   const toRemove: string[] = []
   for (const url of currentUrls) {
-    if (!targetUrls.has(url) && !ALWAYS_LOCAL_RELAYS.includes(url)) {
-      toRemove.push(url)
+    // Check if this normalized URL is in the target set
+    if (!normalizedTargetUrls.has(url)) {
+      // Also check if it's a local relay (check both normalized and original forms)
+      const isLocal = ALWAYS_LOCAL_RELAYS.some(localUrl => 
+        normalizeRelayUrl(localUrl) === url || localUrl === url
+      )
+      if (!isLocal) {
+        toRemove.push(url)
+      }
     }
   }
   console.log('[relayManager] Will remove:', toRemove.length, 'relays', toRemove)
