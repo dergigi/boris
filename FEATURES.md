@@ -11,6 +11,7 @@
 - **Distraction‑free view**: Clean typography, optional hero image, summary, and published date.
 - **Reading time**: Displays estimated reading time for text or duration for supported videos.
 - **Progress**: Reading progress indicator with completion state.
+- **Text‑to‑Speech**: Listen to articles with browser‑native TTS; play/pause/stop controls with adjustable speed (0.8–1.6x).
 - **Menus**: Quick actions to open, share, or copy links (for both Nostr and web content).
 - **Performance**: Lightweight fetching and caching for speed; skeleton loaders to avoid empty flashes.
 
