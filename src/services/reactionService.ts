@@ -35,7 +35,6 @@ export async function createEventReaction(
   ]
   if (options?.aCoord) {
     tags.push(['a', options.aCoord])
-    console.log('[archive] createEventReaction add a-tag:', options.aCoord)
   }
 
   const draft = await factory.create(async () => ({

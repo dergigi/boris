@@ -564,27 +564,6 @@ const Me: React.FC<MeProps> = ({
     ? buildArchiveOnly(linksWithProgress, { kind: 'external' })
     : []
 
-  // Debug logs for archive filter issues
-  if (readingProgressFilter === 'archive') {
-    const ids = Array.from(new Set([
-      ...archiveController.getMarkedIds(),
-      ...readingProgressController.getMarkedAsReadIds()
-    ]))
-    const readIds = new Set(reads.map(i => i.id))
-    const matches = ids.filter(id => readIds.has(id))
-    const nonMatches = ids.filter(id => !readIds.has(id)).slice(0, 5)
-    console.log('[archive][me] counts', {
-      reads: reads.length,
-      filteredReads: filteredReads.length,
-      links: links.length,
-      linksWithProgress: linksWithProgress.length,
-      filteredLinks: filteredLinks.length,
-      markedIds: ids.length,
-      sampleMarked: ids.slice(0, 3),
-      matches: matches.length,
-      nonMatches
-    })
-  }
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
     groupingMode === 'flat'
       ? [{ key: 'all', title: `All Bookmarks (${filteredBookmarks.length})`, items: filteredBookmarks }]

@@ -67,15 +67,12 @@ export const processApplesauceBookmarks = (
 ): IndividualBookmark[] => {
   if (!bookmarks) return []
 
-  console.log('[BOOKMARK_TS] processApplesauceBookmarks called with parentCreatedAt:', parentCreatedAt, 'isPrivate:', isPrivate)
-
   if (typeof bookmarks === 'object' && bookmarks !== null && !Array.isArray(bookmarks)) {
     const applesauceBookmarks = bookmarks as ApplesauceBookmarks
     const allItems: IndividualBookmark[] = []
     
     // Process notes (EventPointer[])
     if (applesauceBookmarks.notes) {
-      console.log('[BOOKMARK_TS] Processing', applesauceBookmarks.notes.length, 'notes with timestamp:', parentCreatedAt || 0)
       applesauceBookmarks.notes.forEach((note: EventPointer) => {
         allItems.push({
           id: note.id,
@@ -94,7 +91,6 @@ export const processApplesauceBookmarks = (
     
     // Process articles (AddressPointer[])
     if (applesauceBookmarks.articles) {
-      console.log('[BOOKMARK_TS] Processing', applesauceBookmarks.articles.length, 'articles with timestamp:', parentCreatedAt || 0)
       applesauceBookmarks.articles.forEach((article: AddressPointer) => {
         // Convert AddressPointer to coordinate format: kind:pubkey:identifier
         const coordinate = `${article.kind}:${article.pubkey}:${article.identifier || ''}`
@@ -133,7 +129,6 @@ export const processApplesauceBookmarks = (
     
     // Process URLs (string[])
     if (applesauceBookmarks.urls) {
-      console.log('[BOOKMARK_TS] Processing', applesauceBookmarks.urls.length, 'URLs with timestamp:', parentCreatedAt || 0)
       applesauceBookmarks.urls.forEach((url: string) => {
         allItems.push({
           id: `url-${url}`,
@@ -202,7 +197,6 @@ export function hydrateItems(
     .filter(item => {
       // Filter out bookmark list events (they're containers, not content)
       const isBookmarkListEvent = item.kind === 10003 || item.kind === 30003 || item.kind === 30001
-      console.log('[BOOKMARK_TS] After hydration - id:', item.id, 'kind:', item.kind, 'isBookmarkListEvent:', isBookmarkListEvent, 'content:', item.content?.substring(0, 50))
       return !isBookmarkListEvent
     })
 }

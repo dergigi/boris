@@ -8,7 +8,6 @@ import { ReadItem } from './readsService'
 import { ARCHIVE_EMOJI } from './reactionService'
 import { nip19 } from 'nostr-tools'
 
-console.log('[readingProgress] Module loaded')
 
 type ProgressMapCallback = (progressMap: Map<string, number>) => void
 type LoadingCallback = (loading: boolean) => void
@@ -175,17 +174,14 @@ class ReadingProgressController {
     const { relayPool, eventStore, pubkey, force = false } = params
     const startGeneration = this.generation
 
-    console.log('[readingProgress] start() called for pubkey:', pubkey.slice(0, 16), '...', 'force:', force)
 
     // Skip if already loaded for this pubkey and not forcing
     if (!force && this.isLoadedFor(pubkey)) {
-      console.log('[readingProgress] Already loaded for pubkey, skipping')
       return
     }
 
     // Prevent concurrent starts
     if (this.isLoading) {
-      console.log('[readingProgress] Already loading, skipping concurrent start')
       return
     }
 
@@ -211,7 +207,6 @@ class ReadingProgressController {
         this.timelineSubscription = null
       }
 
-      console.log('[readingProgress] Setting up eventStore subscription...')
       const timeline$ = eventStore.timeline({
         kinds: [KINDS.ReadingProgress],
         authors: [pubkey]
@@ -222,20 +217,17 @@ class ReadingProgressController {
         if (!Array.isArray(localEvents) || localEvents.length === 0) return
         this.processEvents(localEvents)
       })
-      console.log('[readingProgress] EventStore subscription ready - updates streaming')
 
       // Mark as loaded immediately - queries run in background non-blocking
       this.lastLoadedPubkey = pubkey
 
       // Query reading progress from relays in background (non-blocking, fire-and-forget)
-      console.log('[readingProgress] Starting background relay query for reading progress...')
       queryEvents(relayPool, {
         kinds: [KINDS.ReadingProgress],
         authors: [pubkey]
       })
         .then((relayEvents) => {
           if (startGeneration !== this.generation) return
-          console.log('[readingProgress] Got reading progress from relays:', relayEvents.length)
           if (relayEvents.length > 0) {
             relayEvents.forEach(e => eventStore.add(e))
             this.processEvents(relayEvents)
@@ -248,10 +240,8 @@ class ReadingProgressController {
         })
 
       // Load mark-as-read reactions in background (non-blocking, streaming)
-      console.log('[readingProgress] Starting background relay query for mark-as-read reactions...')
       this.loadMarkAsReadReactions(relayPool, eventStore, pubkey, startGeneration)
         .then(() => {
-          console.log('[readingProgress] Mark-as-read reactions loading complete')
         })
         .catch((err) => {
           console.warn('[readingProgress] Mark-as-read reactions loading failed:', err)
@@ -264,9 +254,6 @@ class ReadingProgressController {
         this.setLoading(false)
       }
       this.isLoading = false
-      console.log('[readingProgress] === LOADED ===')
-      console.log('[readingProgress] progressMap keys:', Array.from(this.currentProgressMap.keys()))
-      console.log('[readingProgress] markedAsReadIds:', Array.from(this.markedAsReadIds))
     }
   }
 
@@ -317,7 +304,6 @@ class ReadingProgressController {
   ): Promise<void> {
     try {
       // Stream kind:17 (URL reactions) and kind:7 (event reactions) in parallel
-      console.log('[readingProgress] Querying kind:17 and kind:7 reactions (streaming)...')
       const seenReactionIds = new Set<string>()
 
       const handleUrlReaction = (evt: NostrEvent) => {
@@ -378,7 +364,6 @@ class ReadingProgressController {
         this.emitMarkedAsReadChanged()
       }
 
-      console.log('[readingProgress] Mark-as-read reactions complete. Total:', Array.from(this.markedAsReadIds).length)
     } catch (err) {
       console.warn('[readingProgress] Failed to load mark-as-read reactions:', err)
     }

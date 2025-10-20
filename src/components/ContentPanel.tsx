@@ -580,9 +580,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             try {
               const naddr = nip19.naddrEncode({ kind: 30023, pubkey: currentArticle.pubkey, identifier: dTag })
               hasRead = hasRead || archiveController.isMarked(naddr)
-              console.log('[archive][content] check article', { naddr: naddr.slice(0, 24) + '...', hasRead })
             } catch (e) {
-              console.warn('[archive][content] encode naddr failed', e)
             }
           }
         } else {
@@ -594,7 +592,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           // Also check archiveController
           const ctrl = archiveController.isMarked(selectedUrl)
           hasRead = hasRead || ctrl
-          console.log('[archive][content] check url', { url: selectedUrl, hasRead, ctrl })
         }
         setIsMarkedAsRead(hasRead)
       } catch (error) {
@@ -675,7 +672,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             if (dTag) {
               const naddr = nip19.naddrEncode({ kind: 30023, pubkey: currentArticle.pubkey, identifier: dTag })
               archiveController.mark(naddr)
-              console.log('[archive][content] optimistic mark article', naddr.slice(0, 24) + '...')
             }
           } catch (err) {
             console.warn('[archive][content] optimistic article mark failed', err)
@@ -687,7 +683,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             relayPool
           )
           archiveController.mark(selectedUrl)
-          console.log('[archive][content] optimistic mark url', selectedUrl)
         }
       } catch (error) {
         console.error('Failed to mark as read:', error)
