@@ -34,7 +34,7 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className }) => {
   if (!supported) return null
 
   return (
-    <div className={className || 'tts-controls'} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+    <div className={className || 'tts-controls'} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
       <button
         type="button"
         className="article-menu-btn"
