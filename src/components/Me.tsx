@@ -173,12 +173,16 @@ const Me: React.FC<MeProps> = ({
         source: 'reading-progress',
         type: 'article',
         readingProgress: progress,
-        markedAsRead: readingProgressController.isMarkedAsRead(id),
+        // Union of both controllers to avoid flicker when only one has loaded
+        markedAsRead: readingProgressController.isMarkedAsRead(id) || archiveController.isMarked(id),
         readingTimestamp: Math.floor(Date.now() / 1000)
       }))
       
       // Include items that are only marked-as-read (no progress event yet)
-      const markedIds = readingProgressController.getMarkedAsReadIds()
+      const markedIds = Array.from(new Set([
+        ...readingProgressController.getMarkedAsReadIds(),
+        ...archiveController.getMarkedIds()
+      ]))
       for (const id of markedIds) {
         if (!readItems.find(i => i.id === id)) {
           const isArticle = id.startsWith('naddr1')
@@ -213,12 +217,16 @@ const Me: React.FC<MeProps> = ({
         source: 'reading-progress',
         type: 'article',
         readingProgress: progress,
-        markedAsRead: archiveController.isMarked(id),
+        // Union of both controllers to avoid flicker
+        markedAsRead: archiveController.isMarked(id) || readingProgressController.isMarkedAsRead(id),
         readingTimestamp: Math.floor(Date.now() / 1000)
       }))
 
       // Include items that are only marked-as-read (no progress event yet)
-      const markedIds = archiveController.getMarkedIds()
+      const markedIds = Array.from(new Set([
+        ...archiveController.getMarkedIds(),
+        ...readingProgressController.getMarkedAsReadIds()
+      ]))
       for (const id of markedIds) {
         if (!readItems.find(i => i.id === id)) {
           const isArticle = id.startsWith('naddr1')
@@ -635,7 +643,10 @@ const Me: React.FC<MeProps> = ({
 
   // Debug logs for archive filter issues
   if (readingProgressFilter === 'archive') {
-    const ids = archiveController.getMarkedIds()
+    const ids = Array.from(new Set([
+      ...archiveController.getMarkedIds(),
+      ...readingProgressController.getMarkedAsReadIds()
+    ]))
     const readIds = new Set(readsWithProgress.map(i => i.id))
     const matches = ids.filter(id => readIds.has(id))
     const nonMatches = ids.filter(id => !readIds.has(id)).slice(0, 5)
