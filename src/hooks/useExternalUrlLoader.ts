@@ -141,6 +141,7 @@ export function useExternalUrlLoader({
     }
     
     loadExternalUrl()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, relayPool, eventStore, setSelectedUrl, setReaderContent, setReaderLoading, setIsCollapsed, setHighlights, setHighlightsLoading, setCurrentArticleCoordinate, setCurrentArticleEventId])
 
   // Keep UI highlights synced with cached store updates without reloading content

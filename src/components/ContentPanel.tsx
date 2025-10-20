@@ -574,7 +574,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               const naddr = nip19.naddrEncode({ kind: 30023, pubkey: currentArticle.pubkey, identifier: dTag })
               hasRead = hasRead || archiveController.isMarked(naddr)
               console.log('[archive][content] check article', { naddr: naddr.slice(0, 24) + '...', hasRead })
-            } catch {}
+            } catch (e) {
+              console.warn('[archive][content] encode naddr failed', e)
+            }
           }
         } else {
           hasRead = await hasMarkedWebsiteAsRead(
@@ -617,7 +619,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 const naddr = nip19.naddrEncode({ kind: 30023, pubkey: currentArticle.pubkey, identifier: dTag })
                 archiveController.unmark(naddr)
               }
-            } catch {}
+          } catch (e) {
+            console.warn('[archive][content] encode naddr failed', e)
+          }
           } else if (selectedUrl) {
             archiveController.unmark(selectedUrl)
           }
@@ -665,7 +669,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               archiveController.mark(naddr)
               console.log('[archive][content] optimistic mark article', naddr.slice(0, 24) + '...')
             }
-          } catch {}
+          } catch (err) {
+            console.warn('[archive][content] optimistic article mark failed', err)
+          }
         } else if (selectedUrl) {
           await createWebsiteReaction(
             selectedUrl,

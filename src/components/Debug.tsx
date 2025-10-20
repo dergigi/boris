@@ -833,13 +833,13 @@ const Debug: React.FC<DebugProps> = ({
       setLiveTiming(prev => ({ ...prev, loadMarkAsRead: { startTime: start } }))
 
       const { queryEvents } = await import('../services/dataFetch')
-      const { MARK_AS_READ_EMOJI } = await import('../services/reactionService')
+      const { ARCHIVE_EMOJI } = await import('../services/reactionService')
 
       // Load both kind:7 (reactions to events) and kind:17 (reactions to URLs)
       const [kind7Events, kind17Events] = await Promise.all([
         queryEvents(relayPool, { kinds: [7], authors: [activeAccount.pubkey] }, {
           onEvent: (evt) => {
-            if (evt.content === MARK_AS_READ_EMOJI) {
+            if (evt.content === ARCHIVE_EMOJI) {
               if (firstEventTime === null) {
                 firstEventTime = performance.now() - start
                 setTFirstMarkAsRead(Math.round(firstEventTime))
@@ -850,7 +850,7 @@ const Debug: React.FC<DebugProps> = ({
         }),
         queryEvents(relayPool, { kinds: [17], authors: [activeAccount.pubkey] }, {
           onEvent: (evt) => {
-            if (evt.content === MARK_AS_READ_EMOJI) {
+            if (evt.content === ARCHIVE_EMOJI) {
               if (firstEventTime === null) {
                 firstEventTime = performance.now() - start
                 setTFirstMarkAsRead(Math.round(firstEventTime))
@@ -1638,7 +1638,7 @@ const Debug: React.FC<DebugProps> = ({
         {/* Mark-as-read Reactions Loading Section */}
         <div className="settings-section">
           <h3 className="section-title">Mark-as-read Reactions Loading</h3>
-          <div className="text-sm opacity-70 mb-3">Test loading mark-as-read reactions (kind: 7 and 17) with the MARK_AS_READ_EMOJI for the logged-in user</div>
+          <div className="text-sm opacity-70 mb-3">Test loading mark-as-read reactions (kind: 7 and 17) with the ARCHIVE_EMOJI for the logged-in user</div>
           <div className="flex gap-2 mb-3 items-center">
             <button 
               className="btn btn-primary" 

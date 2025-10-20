@@ -205,7 +205,7 @@ const Me: React.FC<MeProps> = ({
 
   // Subscribe to archiveController for marked-only items and rebuild read lists
   useEffect(() => {
-    const unsubMarked = archiveController.onMarked((_marked) => {
+    const unsubMarked = archiveController.onMarked(() => {
       // Rebuild reads list including marked-as-read-only items
       const progressMap = readingProgressController.getProgressMap()
       const readItems: ReadItem[] = Array.from(progressMap.entries()).map(([id, progress]) => ({

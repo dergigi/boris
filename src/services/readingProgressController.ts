@@ -6,7 +6,7 @@ import { KINDS } from '../config/kinds'
 import { RELAYS } from '../config/relays'
 import { processReadingProgress } from './readingDataProcessor'
 import { ReadItem } from './readsService'
-import { MARK_AS_READ_EMOJI } from './reactionService'
+import { ARCHIVE_EMOJI } from './reactionService'
 import { nip19 } from 'nostr-tools'
 
 console.log('[readingProgress] Module loaded')
@@ -324,7 +324,7 @@ class ReadingProgressController {
       const handleUrlReaction = (evt: NostrEvent) => {
         if (seenReactionIds.has(evt.id)) return
         seenReactionIds.add(evt.id)
-        if (evt.content !== MARK_AS_READ_EMOJI) return
+        if (evt.content !== ARCHIVE_EMOJI) return
         const rTag = evt.tags.find(t => t[0] === 'r')?.[1]
         if (!rTag) return
         this.markedAsReadIds.add(rTag)
@@ -335,7 +335,7 @@ class ReadingProgressController {
       const handleEventReaction = (evt: NostrEvent) => {
         if (seenReactionIds.has(evt.id)) return
         seenReactionIds.add(evt.id)
-        if (evt.content !== MARK_AS_READ_EMOJI) return
+        if (evt.content !== ARCHIVE_EMOJI) return
         const eTag = evt.tags.find(t => t[0] === 'e')?.[1]
         if (!eTag) return
         pendingEventIds.add(eTag)

@@ -3,7 +3,7 @@ import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
 import { KINDS } from '../config/kinds'
-import { MARK_AS_READ_EMOJI } from './reactionService'
+import { ARCHIVE_EMOJI } from './reactionService'
 import { BlogPostPreview } from './exploreService'
 import { queryEvents } from './dataFetch'
 
@@ -38,7 +38,7 @@ export async function fetchReadArticles(
 
     // Process kind:7 reactions (nostr-native articles)
     for (const event of kind7Events) {
-      if (event.content === MARK_AS_READ_EMOJI) {
+      if (event.content === ARCHIVE_EMOJI) {
         const eTag = event.tags.find((t) => t[0] === 'e')
         const pTag = event.tags.find((t) => t[0] === 'p')
         const kTag = event.tags.find((t) => t[0] === 'k')
@@ -58,7 +58,7 @@ export async function fetchReadArticles(
 
     // Process kind:17 reactions (external URLs)
     for (const event of kind17Events) {
-      if (event.content === MARK_AS_READ_EMOJI) {
+      if (event.content === ARCHIVE_EMOJI) {
         const rTag = event.tags.find((t) => t[0] === 'r')
 
         if (rTag && rTag[1]) {

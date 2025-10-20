@@ -4,7 +4,7 @@ import { NostrEvent } from 'nostr-tools'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
 import { RELAYS } from '../config/relays'
-import { MARK_AS_READ_EMOJI } from './reactionService'
+import { ARCHIVE_EMOJI } from './reactionService'
 import { nip19 } from 'nostr-tools'
 
 type MarkedChangeCallback = (markedIds: Set<string>) => void
@@ -60,10 +60,10 @@ class ArchiveController {
 
   reset(): void {
     this.generation++
-    if (this.timelineSubscription) {
-      try { this.timelineSubscription.unsubscribe() } catch {}
-      this.timelineSubscription = null
-    }
+      if (this.timelineSubscription) {
+        try { this.timelineSubscription.unsubscribe() } catch (e) { console.warn('[archive] timeline unsub error', e) }
+        this.timelineSubscription = null
+      }
     this.markedIds = new Set()
     this.pendingEventIds = new Set()
     this.lastLoadedPubkey = null
@@ -90,7 +90,7 @@ class ArchiveController {
 
     // Handlers for streaming queries
     const handleUrlReaction = (evt: NostrEvent) => {
-      if (evt.content !== MARK_AS_READ_EMOJI) return
+      if (evt.content !== ARCHIVE_EMOJI) return
       const rTag = evt.tags.find(t => t[0] === 'r')?.[1]
       if (!rTag) return
       this.markedIds.add(rTag)
@@ -99,7 +99,7 @@ class ArchiveController {
     }
 
     const handleEventReaction = (evt: NostrEvent) => {
-      if (evt.content !== MARK_AS_READ_EMOJI) return
+      if (evt.content !== ARCHIVE_EMOJI) return
       // Direct coordinate tag ('a') - can be mapped immediately
       const aTag = evt.tags.find(t => t[0] === 'a')?.[1]
       if (aTag) {
@@ -172,13 +172,13 @@ class ArchiveController {
             } else {
               stillPending.add(eId)
             }
-          } catch { stillPending.add(eId) }
+          } catch (e) { stillPending.add(eId) }
         }
         this.pendingEventIds = stillPending
         if (stillPending.size > 0) {
           // Subscribe to future 30023 arrivals to finalize mapping
           if (this.timelineSubscription) {
-            try { this.timelineSubscription.unsubscribe() } catch {}
+            try { this.timelineSubscription.unsubscribe() } catch (e) { console.warn('[archive] timeline unsub error', e) }
             this.timelineSubscription = null
           }
           const sub$ = eventStore.timeline({ kinds: [KINDS.BlogPost] })
@@ -195,7 +195,7 @@ class ArchiveController {
                 this.pendingEventIds.delete(evt.id)
                 console.log('[archive] map via timeline naddr:', naddr.slice(0, 24), '...')
                 this.emit()
-              } catch {}
+              } catch (e) { console.warn('[archive] map via timeline encode error', e) }
             }
           })
         }

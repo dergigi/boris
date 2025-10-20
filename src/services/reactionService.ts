@@ -1,4 +1,3 @@
-import { EventFactory } from 'applesauce-factory'
 import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'
@@ -6,9 +5,9 @@ import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
 import { RELAYS } from '../config/relays'
 import { EventFactory } from 'applesauce-factory'
 
-const MARK_AS_READ_EMOJI = '📚'
+const ARCHIVE_EMOJI = '📚'
 
-export { MARK_AS_READ_EMOJI }
+export { ARCHIVE_EMOJI }
 
 /**
  * Creates a kind:7 reaction to a nostr event (for nostr-native articles)
@@ -41,7 +40,7 @@ export async function createEventReaction(
 
   const draft = await factory.create(async () => ({
     kind: 7, // Reaction
-    content: MARK_AS_READ_EMOJI,
+    content: ARCHIVE_EMOJI,
     tags,
     created_at: Math.floor(Date.now() / 1000)
   }))
@@ -91,7 +90,7 @@ export async function createWebsiteReaction(
 
   const draft = await factory.create(async () => ({
     kind: 17, // Reaction to a website
-    content: MARK_AS_READ_EMOJI,
+    content: ARCHIVE_EMOJI,
     tags,
     created_at: Math.floor(Date.now() / 1000)
   }))
@@ -157,8 +156,8 @@ export async function hasMarkedEventAsRead(
 
     const events: NostrEvent[] = await lastValueFrom(events$)
     
-    // Check if any reaction has our mark-as-read emoji
-    const hasReadReaction = events.some((event: NostrEvent) => event.content === MARK_AS_READ_EMOJI)
+    // Check if any reaction has our archive emoji
+    const hasReadReaction = events.some((event: NostrEvent) => event.content === ARCHIVE_EMOJI)
     
     return hasReadReaction
   } catch (error) {
@@ -210,8 +209,8 @@ export async function hasMarkedWebsiteAsRead(
 
     const events: NostrEvent[] = await lastValueFrom(events$)
     
-    // Check if any reaction has our mark-as-read emoji
-    const hasReadReaction = events.some((event: NostrEvent) => event.content === MARK_AS_READ_EMOJI)
+    // Check if any reaction has our archive emoji
+    const hasReadReaction = events.some((event: NostrEvent) => event.content === ARCHIVE_EMOJI)
     
     return hasReadReaction
   } catch (error) {
