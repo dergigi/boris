@@ -16,7 +16,7 @@ const ArchiveFilters: React.FC<ArchiveFiltersProps> = ({ selectedFilter, onFilte
     { type: 'to-read' as const, icon: faBookmark, label: 'To Read' },
     { type: 'reading' as const, icon: faBookOpen, label: 'Reading' },
     { type: 'completed' as const, icon: faCheckCircle, label: 'Completed' },
-    { type: 'marked' as const, icon: faBooks, label: 'Marked as Read' }
+    { type: 'marked' as const, icon: faBooks, label: 'Archived' }
   ]
 
   return (

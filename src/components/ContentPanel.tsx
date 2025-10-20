@@ -918,21 +918,21 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             </div>
           )}
           
-          {/* Mark as Read button */}
+          {/* Archive button */}
           {activeAccount && (
             <div className="mark-as-read-container">
               <button
                 className={`mark-as-read-btn ${isMarkedAsRead ? 'marked' : ''} ${showCheckAnimation ? 'animating' : ''}`}
                 onClick={handleMarkAsRead}
                 disabled={isMarkedAsRead || isCheckingReadStatus}
-                title={isMarkedAsRead ? 'Already Marked as Read' : 'Mark as Read'}
+                title={isMarkedAsRead ? 'Already Archived' : 'Move to Archive'}
               >
                 <FontAwesomeIcon 
                   icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheckCircle : faBooks} 
                   spin={isCheckingReadStatus} 
                 />
                 <span>
-                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Marked as Read' : 'Mark as Read'}
+                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Archived' : 'Move to Archive'}
                 </span>
               </button>
             </div>

@@ -127,7 +127,7 @@ const LayoutBehaviorSettings: React.FC<LayoutBehaviorSettingsProps> = ({ setting
             onChange={(e) => onUpdate({ autoMarkAsReadOnCompletion: e.target.checked })}
             className="setting-checkbox"
           />
-          <span>Automatically mark as read at 100%</span>
+          <span>Automatically move to archive at 100%</span>
         </label>
       </div>
 
