@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3] - 2025-01-19
+
+### Fixed
+
+- Highlight creation now shows immediate UI feedback without page refresh
+  - Fixed streaming highlight merge logic to preserve newly created highlights
+  - Decoupled cached highlight sync from content loading to prevent unintended reloads
+  - Newly created highlights appear instantly in both reader and highlights panel
+  - Highlights remain visible while remote results stream in and merge properly
+
+### Changed
+
+- Improved highlight creation user experience
+  - Selection clearing and synchronous rendering for immediate highlight display
+  - Better error handling for bunker permission issues with user-friendly messages
+
 ## [0.8.2] - 2025-10-19
 
 ### Added
@@ -2069,7 +2085,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.8.3...HEAD
+[0.8.3]: https://github.com/dergigi/boris/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/dergigi/boris/compare/v0.8.0...v0.8.2
 [0.8.0]: https://github.com/dergigi/boris/compare/v0.7.4...v0.8.0
 [0.7.4]: https://github.com/dergigi/boris/compare/v0.7.3...v0.7.4
