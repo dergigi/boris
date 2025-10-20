@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2025-10-20
+
+### Added
+
+- Text-to-speech (TTS) speaker language selection mode
+  - New "Speaker language" dropdown in TTS settings (system or content)
+  - Detects content language using tinyld for accurate voice matching
+  - Falls back to system language when content detection unavailable
+  - Top 10 languages featured in dropdown for quick access
+- TTS example text section in settings
+  - Test TTS voices directly in the settings panel
+  - Uses Boris mission statement as example text
+  - Real-time speaker selection testing
+
+### Changed
+
+- TTS language selection now uses "Speaker language" terminology
+  - Distinguishes between American English (en-US) and British English (en-GB)
+  - Improved language detection with content-aware voice selection
+  - Streamlined dropdown for better UX
+
+### Fixed
+
+- TTS voice detection and selection logic
+  - Proper empty catch block handling instead of silently failing
+  - Consistent use of `setting-select` class for dropdown styling
+  - Improved dropdown spacing with adequate padding-right
+
 ## [0.10.0] - 2025-01-27
 
 ### Added
@@ -2284,7 +2312,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/dergigi/boris/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/dergigi/boris/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/dergigi/boris/compare/v0.9.0...v0.9.1
 [0.8.3]: https://github.com/dergigi/boris/compare/v0.8.2...v0.8.3
