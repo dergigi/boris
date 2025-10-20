@@ -37,6 +37,32 @@ const TTSSettings: React.FC<TTSSettingsProps> = ({ settings, onUpdate }) => {
           </button>
         </div>
       </div>
+
+      <div className="setting-group">
+        <label htmlFor="ttsUseSystemLanguage" className="checkbox-label">
+          <input
+            id="ttsUseSystemLanguage"
+            type="checkbox"
+            checked={settings.ttsUseSystemLanguage ?? false}
+            onChange={e => onUpdate({ ttsUseSystemLanguage: e.target.checked })}
+            className="setting-checkbox"
+          />
+          <span>Use system language for TTS</span>
+        </label>
+      </div>
+
+      <div className="setting-group">
+        <label htmlFor="ttsDetectContentLanguage" className="checkbox-label">
+          <input
+            id="ttsDetectContentLanguage"
+            type="checkbox"
+            checked={settings.ttsDetectContentLanguage !== false}
+            onChange={e => onUpdate({ ttsDetectContentLanguage: e.target.checked })}
+            className="setting-checkbox"
+          />
+          <span>Detect content language automatically</span>
+        </label>
+      </div>
     </div>
   )
 }
