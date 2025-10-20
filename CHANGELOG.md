@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.4] - 2024-10-20
+
+### Added
+
+- Progressive article hydration for reads tab
+  - Articles now load titles, summaries, images, and author information progressively
+  - Implemented readsController following the same pattern as bookmarkController
+  - Uses AddressLoader for efficient batched article event retrieval
+  - Articles rehydrate as data arrives from relays without blocking initial display
+  - Event store integration for caching article events
+  - Centralized reads data fetching following DRY principles
+
+### Fixed
+
+- Fixed React type imports in useArticleLoader
+  - Import `Dispatch` and `SetStateAction` directly from 'react' instead of using `React.` prefix
+  - Resolves ESLint no-undef errors
+
 ## [0.8.3] - 2025-01-19
 
 ### Fixed
