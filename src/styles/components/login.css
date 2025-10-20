@@ -29,7 +29,7 @@
 
 .login-highlight {
   background-color: var(--highlight-color-mine, #fde047);
-  color: var(--color-text);
+  color: #000000;
   padding: 0.125rem 0.25rem;
   border-radius: 3px;
   font-weight: 500;
