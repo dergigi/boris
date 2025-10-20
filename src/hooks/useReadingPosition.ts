@@ -22,6 +22,7 @@ export const useReadingPosition = ({
   completionHoldMs = 2000
 }: UseReadingPositionOptions = {}) => {
   const [position, setPosition] = useState(0)
+  const positionRef = useRef(0)
   const [isReadingComplete, setIsReadingComplete] = useState(false)
   const hasTriggeredComplete = useRef(false)
   const lastSavedPosition = useRef(0)
@@ -104,6 +105,7 @@ export const useReadingPosition = ({
       }
       
       setPosition(clampedProgress)
+      positionRef.current = clampedProgress
       onPositionChange?.(clampedProgress)
 
       // Schedule auto-save if sync is enabled
@@ -115,7 +117,7 @@ export const useReadingPosition = ({
         if (clampedProgress === 1) {
           if (!completionTimerRef.current) {
             completionTimerRef.current = setTimeout(() => {
-              if (!hasTriggeredComplete.current && position === 1) {
+              if (!hasTriggeredComplete.current && positionRef.current === 1) {
                 setIsReadingComplete(true)
                 hasTriggeredComplete.current = true
                 onReadingComplete?.()
