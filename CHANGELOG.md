@@ -7,6 +7,108 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2025-01-27
+
+### Added
+
+- Centralized bookmark loading with streaming and auto-decrypt
+  - Bookmarks now load progressively with streaming updates
+  - Auto-decrypt bookmarks as they arrive from relays
+  - Individual decrypt buttons for encrypted bookmark events
+  - Centralized bookmark controller for consistent loading across the app
+- Enhanced debug page with comprehensive diagnostics
+  - Interactive NIP-04 and NIP-44 encryption/decryption testing
+  - Live performance timing with stopwatch display
+  - Bookmark loading and decryption diagnostics
+  - Real-time bunker logs with filtering and clearing
+  - Version and git commit footer
+- Bunker (NIP-46) authentication support
+  - Support for remote signing via Nostr Connect protocol
+  - Bunker URI input with validation and error handling
+  - Automatic reconnection on app restore with proper permissions
+  - Signer suggestions in error messages (Amber, nsec.app, Nostrum)
+
+### Changed
+
+- Improved bookmark loading performance
+  - Non-blocking, progressive bookmark updates via callback pattern
+  - Batched background hydration using EventLoader and AddressLoader
+  - Shorter timeouts for debug page bookmark loading
+  - Sequential decryption instead of concurrent to avoid queue issues
+- Enhanced bunker error messages
+  - Formatted error messages with signer suggestions
+  - Links to nos2x, Amber, nsec.app, and Nostrum signers
+  - Better error handling for missing signer extensions
+- Centralized bookmark loading architecture
+  - Single shared bookmark controller for consistent loading
+  - Unified bookmark loading with streaming and auto-decrypt
+  - Consolidated bookmark loading into single centralized function
+
+### Fixed
+
+- NIP-46 bunker signing and decryption
+  - NostrConnectSigner properly reconnects with permissions on app restore
+  - Bunker relays added to relay pool for signing requests
+  - Proper setup of pool and relays before bunker reconnection
+  - Expose nip04/nip44 on NostrConnectAccount for bookmark decryption
+  - Cache wrapped nip04/nip44 objects instead of using getters
+  - Wait for bunker relay connections before marking signer ready
+  - Validate bunker URI (remote must differ from user pubkey)
+  - Accept remote===pubkey for Amber compatibility
+- Bookmark loading and decryption
+  - Bookmarks load and complete properly with streaming
+  - Auto-decrypt private bookmarks with NIP-04 detection
+  - Include decrypted private bookmarks in sidebar
+  - Skip background event fetching when there are too many IDs
+  - Only build bookmarks from ready events (unencrypted or decrypted)
+  - Restore Debug page decrypt display via onDecryptComplete callback
+  - Make controller onEvent non-blocking for queryEvents completion
+  - Proper timeout handling for bookmark decryption (no hanging)
+  - Smart encryption detection with consistent padlock display
+  - Sequential decryption instead of concurrent to avoid queue issues
+  - Add extraRelays to EventLoader and AddressLoader
+- TypeScript and linting errors throughout
+  - Replace empty catch blocks with warnings
+  - Fix explicit any types
+  - Add missing useEffect dependencies
+  - Resolve all linting issues in App.tsx, Debug.tsx, and async utilities
+
+### Performance
+
+- Non-blocking NIP-46 operations
+  - Fire-and-forget NIP-46 publish for better UI responsiveness
+  - Non-blocking bookmark decryption with sequential processing
+  - Make controller onEvent non-blocking for queryEvents completion
+- Optimized bookmark loading
+  - Batched background hydration using EventLoader and AddressLoader
+  - Progressive, non-blocking bookmark loading with streaming
+  - Shorter timeouts for debug page bookmark loading
+  - Remove artificial delays from bookmark decryption
+
+### Refactored
+
+- Centralized bookmark controller architecture
+  - Extract bookmark streaming helpers and centralize loading
+  - Consolidated bookmark loading into single function
+  - Remove deprecated bookmark service files
+  - Share bookmark controller between components
+- Debug page organization
+  - Extract VersionFooter component to eliminate duplication
+  - Structured sections with proper layout and styling
+  - Apply settings page styling structure
+- Simplified bunker implementation following applesauce patterns
+  - Clean up bunker implementation for better maintainability
+  - Import RELAYS from central config (DRY principle)
+  - Update RELAYS list with relay.nsec.app
+
+### Documentation
+
+- Comprehensive Amber.md documentation
+  - Amethyst-style bookmarks section
+  - Bunker decrypt investigation summary
+  - Critical queue disabling requirement
+  - NIP-46 setup and troubleshooting
+
 ## [0.9.1] - 2025-10-20
 
 ### Added
@@ -2182,7 +2284,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.9.1...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/dergigi/boris/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/dergigi/boris/compare/v0.9.0...v0.9.1
 [0.8.3]: https://github.com/dergigi/boris/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/dergigi/boris/compare/v0.8.0...v0.8.2
