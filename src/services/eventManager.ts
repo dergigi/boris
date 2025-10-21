@@ -20,6 +20,9 @@ class EventManager {
   // Track pending requests to deduplicate and resolve all at once
   private pendingRequests = new Map<string, PendingRequest[]>()
   
+  // Safety timeout for event fetches (ms)
+  private fetchTimeoutMs = 12000
+  
   /**
    * Initialize the event manager with event store and relay pool
    */
@@ -71,6 +74,18 @@ class EventManager {
     })
   }
   
+  private resolvePending(eventId: string, event: NostrEvent): void {
+    const requests = this.pendingRequests.get(eventId) || []
+    this.pendingRequests.delete(eventId)
+    requests.forEach(req => req.resolve(event))
+  }
+  
+  private rejectPending(eventId: string, error: Error): void {
+    const requests = this.pendingRequests.get(eventId) || []
+    this.pendingRequests.delete(eventId)
+    requests.forEach(req => req.reject(error))
+  }
+  
   /**
    * Actually fetch the event from relay
    */
@@ -85,25 +100,37 @@ class EventManager {
       return
     }
     
+    let delivered = false
     const subscription = this.eventLoader({ id: eventId }).subscribe({
       next: (event: NostrEvent) => {
-        // Resolve all pending requests
-        const requests = this.pendingRequests.get(eventId) || []
-        this.pendingRequests.delete(eventId)
-        
-        requests.forEach(req => req.resolve(event))
+        delivered = true
+        clearTimeout(timeoutId)
+        this.resolvePending(eventId, event)
         subscription.unsubscribe()
       },
       error: (err: unknown) => {
-        // Reject all pending requests
-        const requests = this.pendingRequests.get(eventId) || []
-        this.pendingRequests.delete(eventId)
-        
+        clearTimeout(timeoutId)
         const error = err instanceof Error ? err : new Error(String(err))
-        requests.forEach(req => req.reject(error))
+        this.rejectPending(eventId, error)
+        subscription.unsubscribe()
+      },
+      complete: () => {
+        // Completed without next - consider not found
+        if (!delivered) {
+          clearTimeout(timeoutId)
+          this.rejectPending(eventId, new Error('Event not found'))
+        }
         subscription.unsubscribe()
       }
     })
+    
+    // Safety timeout
+    const timeoutId = setTimeout(() => {
+      if (!delivered) {
+        this.rejectPending(eventId, new Error('Timed out fetching event'))
+        subscription.unsubscribe()
+      }
+    }, this.fetchTimeoutMs)
   }
   
   /**
