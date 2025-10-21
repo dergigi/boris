@@ -146,16 +146,6 @@ class BookmarkController {
         
         idToEvent.set(event.id, event)
         
-        // Debug logging for kind:1 events
-        if (event.kind === 1) {
-          console.log('📝 Fetched kind:1 event:', {
-            id: event.id.slice(0, 8),
-            content: event.content?.slice(0, 50),
-            contentLength: event.content?.length,
-            created_at: event.created_at
-          })
-        }
-        
         // Also index by coordinate for addressable events
         if (event.kind && event.kind >= 30000 && event.kind < 40000) {
           const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''

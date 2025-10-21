@@ -30,18 +30,9 @@ export const CompactView: React.FC<CompactViewProps> = ({
   const isWebBookmark = bookmark.kind === 39701
   const isClickable = hasUrls || isArticle || isWebBookmark
   
-  // Debug logging for kind:1 without URLs
-  if (bookmark.kind === 1 && !hasUrls) {
-    console.log('🎨 CompactView rendering kind:1 without URLs:', {
-      id: bookmark.id.slice(0, 8),
-      content: bookmark.content?.slice(0, 50),
-      contentLength: bookmark.content?.length,
-      hasUrls,
-      displayText: (isArticle && articleSummary ? articleSummary : bookmark.content)?.slice(0, 50)
-    })
-  }
-  
-  // Calculate progress color (matching BlogPostCard logic)
+  const displayText = isArticle && articleSummary ? articleSummary : bookmark.content
+
+  // Calculate progress color
   let progressColor = '#6366f1' // Default blue (reading)
   if (readingProgress && readingProgress >= 0.95) {
     progressColor = '#10b981' // Green (completed)
@@ -58,11 +49,6 @@ export const CompactView: React.FC<CompactViewProps> = ({
       onSelectUrl(extractedUrls[0])
     }
   }
-
-  // For articles, prefer summary; for others, use content
-  const displayText = isArticle && articleSummary 
-    ? articleSummary 
-    : bookmark.content
 
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark compact ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
