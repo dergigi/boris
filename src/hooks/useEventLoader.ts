@@ -51,21 +51,25 @@ export function useEventLoader({
     if (!eventId) return
 
     console.log('🔍 useEventLoader: Loading event:', eventId)
+    
+    // Try to get from event store first - do this synchronously before setting loading state
+    if (eventStore) {
+      const cachedEvent = eventStore.getEvent(eventId)
+      if (cachedEvent) {
+        console.log('✅ useEventLoader: Found cached event (instant load):', cachedEvent)
+        displayEvent(cachedEvent)
+        setReaderLoading(false)
+        setIsCollapsed(false)
+        setSelectedUrl(`nostr:${eventId}`)
+        return
+      }
+    }
+
+    // Event not in cache, now set loading state and fetch from relays
     setReaderLoading(true)
     setReaderContent(undefined)
     setSelectedUrl(`nostr:${eventId}`)
     setIsCollapsed(false)
-
-    // Try to get from event store first
-    if (eventStore) {
-      const cachedEvent = eventStore.getEvent(eventId)
-      if (cachedEvent) {
-        console.log('✅ useEventLoader: Found cached event:', cachedEvent)
-        displayEvent(cachedEvent)
-        setReaderLoading(false)
-        return
-      }
-    }
 
     // Otherwise fetch from relays
     if (!relayPool) {
