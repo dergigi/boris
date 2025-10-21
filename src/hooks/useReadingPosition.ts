@@ -97,13 +97,6 @@ export const useReadingPosition = ({
       const isAtBottom = scrollTop + windowHeight >= documentHeight - 5
       const clampedProgress = isAtBottom ? 1 : Math.max(0, Math.min(1, scrollProgress))
       
-      // Only log on significant changes (every 5%) to avoid flooding console
-      const prevPercent = Math.floor(position * 20) // Groups by 5%
-      const newPercent = Math.floor(clampedProgress * 20)
-      if (prevPercent !== newPercent) {
-        // Position threshold crossed
-      }
-      
       setPosition(clampedProgress)
       positionRef.current = clampedProgress
       onPositionChange?.(clampedProgress)
@@ -160,8 +153,6 @@ export const useReadingPosition = ({
         clearTimeout(completionTimerRef.current)
       }
     }
-    // position is intentionally not in deps - it's computed from scroll and would cause infinite re-renders
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, onPositionChange, onReadingComplete, readingCompleteThreshold, scheduleSave])
 
   // Reset reading complete state when enabled changes

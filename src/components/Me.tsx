@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHighlighter, faBookmark, faPenToSquare, faLink, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
@@ -313,7 +313,7 @@ const Me: React.FC<MeProps> = ({
   }
 
   // Load active tab data
-  useEffect(() => {
+  const loadActiveTab = useCallback(() => {
     if (!viewingPubkey || !activeTab) {
       setLoading(false)
       return
@@ -346,8 +346,11 @@ const Me: React.FC<MeProps> = ({
         loadLinksTab()
         break
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, viewingPubkey, refreshTrigger, bookmarks])
+  }, [viewingPubkey, activeTab, bookmarks, refreshTrigger])
+
+  useEffect(() => {
+    loadActiveTab()
+  }, [loadActiveTab])
 
   // Sync myHighlights from controller
   useEffect(() => {
