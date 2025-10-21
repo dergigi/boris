@@ -7,7 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.10.1] - 2025-10-20
+## [0.10.3] - 2025-10-21
+
+### Added
+
+- Content filtering setting to hide articles posted by bots
+  - New "Hide content posted by bots" checkbox in Explore settings (enabled by default)
+  - Filters articles where author's profile name or display_name contains "bot" (case-insensitive)
+  - Applies to both Explore page and Me section writings
+
+### Fixed
+
+- Resolved all linting and type checking issues
+  - Added missing React Hook dependencies to `useMemo` and `useEffect`
+  - Wrapped loader functions in `useCallback` to prevent unnecessary re-renders
+  - Removed unused variables (`queryTime`, `startTime`, `allEvents`)
+  - All ESLint warnings and TypeScript errors now resolved
+
+## [0.10.2] - 2025-10-20
 
 ### Added
 
@@ -2312,7 +2329,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.10.1...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.10.3...HEAD
+[0.10.3]: https://github.com/dergigi/boris/compare/v0.10.2...v0.10.3
+[0.10.2]: https://github.com/dergigi/boris/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/dergigi/boris/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/dergigi/boris/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/dergigi/boris/compare/v0.9.0...v0.9.1
