@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.9] - 2025-10-21
+
+### Fixed
+
+- Event fetching reliability with exponential backoff in eventManager
+  - Improved retry logic with incremental backoff delays
+  - Better handling of concurrent event requests
+  - More robust event retrieval from relay pool
+- Bookmark timestamp handling
+  - Use per-item `added_at`/`created_at` timestamps when available
+  - Improves accuracy of bookmark date tracking
+
+### Changed
+
+- Removed all debug console logs
+  - Cleaner console output in development and production
+  - Improved performance by eliminating debugging statements
+
 ## [0.10.8] - 2025-10-21
 
 ### Added
