@@ -63,7 +63,6 @@ const ExploreSettings: React.FC<ExploreSettingsProps> = ({ settings, onUpdate })
           />
           <span>Hide articles from accounts whose name contains "bot"</span>
         </label>
-        <div className="setting-hint">Examples: Unlocks Bot, Step Counter Bot, Bitcoin Magazine News Bot</div>
       </div>
     </div>
   )
