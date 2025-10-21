@@ -4,6 +4,7 @@ import { IEventStore } from 'applesauce-core'
 import { NostrEvent } from 'nostr-tools'
 import { ReadableContent } from '../services/readerService'
 import { eventManager } from '../services/eventManager'
+import { fetchProfiles } from '../services/profileService'
 
 interface UseEventLoaderProps {
   eventId?: string
@@ -39,13 +40,43 @@ export function useEventLoader({
       .replace(/>/g, '&gt;')
       .replace(/\n/g, '<br />')
 
-    const content: ReadableContent = {
-      url: '', // Empty URL to prevent highlight display
-      html: metaHtml + `<div style="white-space: pre-wrap; word-break: break-word;">${escapedContent}</div>`,
-      title: `Note (${event.kind})`
+    // Initial title
+    let title = `Note (${event.kind})`
+    if (event.kind === 1) {
+      title = `Note by @${event.pubkey.slice(0, 8)}...`
     }
-    setReaderContent(content)
-  }, [setReaderContent])
+
+    // Emit immediately
+    const baseContent: ReadableContent = {
+      url: '',
+      html: metaHtml + `<div style="white-space: pre-wrap; word-break: break-word;">${escapedContent}</div>`,
+      title
+    }
+    setReaderContent(baseContent)
+
+    // Background: resolve author profile for kind:1 and update title
+    if (event.kind === 1 && relayPool && eventStore) {
+      (async () => {
+        try {
+          const profiles = await fetchProfiles(relayPool, eventStore as unknown as IEventStore, [event.pubkey])
+          if (!profiles || profiles.length === 0) return
+          const latest = profiles.sort((a, b) => (b.created_at || 0) - (a.created_at || 0))[0]
+          let resolved = ''
+          try {
+            const obj = JSON.parse(latest.content || '{}') as { name?: string; display_name?: string; nip05?: string }
+            resolved = obj.display_name || obj.name || obj.nip05 || ''
+          } catch {
+            // ignore
+          }
+          if (resolved) {
+            setReaderContent({ ...baseContent, title: `Note by @${resolved}` })
+          }
+        } catch {
+          // ignore profile failures; keep fallback title
+        }
+      })()
+    }
+  }, [setReaderContent, relayPool, eventStore])
 
   // Initialize event manager with services
   useEffect(() => {
@@ -57,7 +88,7 @@ export function useEventLoader({
 
     setReaderLoading(true)
     setReaderContent(undefined)
-    setSelectedUrl('') // Don't set nostr: URL to avoid showing highlights
+    setSelectedUrl(`nostr-event:${eventId}`) // sentinel: truthy selection, not treated as article
     setIsCollapsed(false)
 
     // Fetch using event manager (handles cache, deduplication, and retry)
