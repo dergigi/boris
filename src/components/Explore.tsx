@@ -291,7 +291,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       } finally {
         // loading is already turned off after seeding
       }
-  }, [relayPool, activeAccount, eventStore, settings, visibility.nostrverse, followedPubkeys])
+  }, [relayPool, activeAccount, eventStore, visibility.nostrverse])
 
   useEffect(() => {
     loadData()

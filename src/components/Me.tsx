@@ -57,7 +57,7 @@ const Me: React.FC<MeProps> = ({
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
   const { filter: urlFilter } = useParams<{ filter?: string }>()
-  const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
+  const activeTab: TabType = propActiveTab || 'highlights'
   
   // Only for own profile
   const viewingPubkey = activeAccount?.pubkey
@@ -129,12 +129,7 @@ const Me: React.FC<MeProps> = ({
     }
   }, [])
 
-  // Update local state when prop changes
-  useEffect(() => {
-    if (propActiveTab) {
-      setActiveTab(propActiveTab)
-    }
-  }, [propActiveTab])
+  // activeTab is derived from route prop; no local sync needed
 
   // Sync filter state with URL changes
   useEffect(() => {
