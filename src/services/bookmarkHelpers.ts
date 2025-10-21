@@ -170,6 +170,20 @@ export function hydrateItems(
   items: IndividualBookmark[],
   idToEvent: Map<string, NostrEvent>
 ): IndividualBookmark[] {
+  // Debug: log what we're trying to hydrate
+  const kind1Items = items.filter(b => b.kind === 1)
+  if (kind1Items.length > 0 && idToEvent.size > 0) {
+    const found = kind1Items.filter(b => idToEvent.has(b.id))
+    console.log('💧 hydrateItems processing:', {
+      totalKind1Items: kind1Items.length,
+      mapSize: idToEvent.size,
+      found: found.length,
+      notFound: kind1Items.length - found.length,
+      sampleItemIds: kind1Items.slice(0, 2).map(b => b.id.slice(0, 12)),
+      sampleMapKeys: Array.from(idToEvent.keys()).slice(0, 2).map(id => id.slice(0, 12))
+    })
+  }
+  
   return items
     .map(item => {
       const ev = idToEvent.get(item.id)
