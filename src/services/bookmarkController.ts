@@ -3,7 +3,8 @@ import { Helpers, EventStore } from 'applesauce-core'
 import { createEventLoader, createAddressLoader } from 'applesauce-loaders/loaders'
 import { NostrEvent } from 'nostr-tools'
 import { EventPointer } from 'nostr-tools/nip19'
-import { merge } from 'rxjs'
+import { merge, from } from 'rxjs'
+import { mergeMap } from 'rxjs/operators'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
 import { RELAYS } from '../config/relays'
@@ -140,8 +141,11 @@ class BookmarkController {
     // Convert IDs to EventPointers
     const pointers: EventPointer[] = unique.map(id => ({ id }))
     
-    // Use EventLoader - it auto-batches and streams results
-    merge(...pointers.map(this.eventLoader)).subscribe({
+    // Use mergeMap with concurrency limit instead of merge to properly batch requests
+    // This prevents overwhelming relays with 96+ simultaneous requests
+    from(pointers).pipe(
+      mergeMap(pointer => this.eventLoader!(pointer), { concurrency: 5 })
+    ).subscribe({
       next: (event) => {
         // Check if hydration was cancelled
         if (this.hydrationGeneration !== generation) return
@@ -193,8 +197,10 @@ class BookmarkController {
       identifier: c.identifier
     }))
 
-    // Use AddressLoader - it auto-batches and streams results
-    merge(...pointers.map(this.addressLoader)).subscribe({
+    // Use mergeMap with concurrency limit instead of merge to properly batch requests
+    from(pointers).pipe(
+      mergeMap(pointer => this.addressLoader!(pointer), { concurrency: 5 })
+    ).subscribe({
       next: (event) => {
         // Check if hydration was cancelled
         if (this.hydrationGeneration !== generation) return
