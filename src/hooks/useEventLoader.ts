@@ -39,6 +39,7 @@ export function useEventLoader({
   useEffect(() => {
     if (!eventId) return
 
+    console.log('🔍 useEventLoader: Loading event:', eventId)
     setReaderLoading(true)
     setSelectedUrl('')
     setIsCollapsed(false)
@@ -47,6 +48,7 @@ export function useEventLoader({
     if (eventStore) {
       const cachedEvent = eventStore.getEvent(eventId)
       if (cachedEvent) {
+        console.log('✅ useEventLoader: Found cached event:', cachedEvent)
         displayEvent(cachedEvent)
         setReaderLoading(false)
         return
@@ -55,21 +57,24 @@ export function useEventLoader({
 
     // Otherwise fetch from relays
     if (!relayPool) {
+      console.log('❌ useEventLoader: No relay pool available')
       setReaderLoading(false)
       return
     }
 
+    console.log('📡 useEventLoader: Fetching from relays...')
     const eventLoader = createEventLoader(relayPool, {
       eventStore: eventStore ?? undefined
     })
 
     const subscription = eventLoader({ id: eventId }).subscribe({
       next: (event) => {
+        console.log('✅ useEventLoader: Fetched event from relays:', event)
         displayEvent(event)
         setReaderLoading(false)
       },
       error: (err) => {
-        console.error('Error fetching event:', err)
+        console.error('❌ useEventLoader: Error fetching event:', err)
         const errorContent: ReadableContent = {
           url: '',
           markdown: `Error loading event: ${err instanceof Error ? err.message : 'Unknown error'}`,

@@ -39,7 +39,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   bookmarksLoading, 
   onRefreshBookmarks
 }) => {
-  const { naddr, npub } = useParams<{ naddr?: string; npub?: string }>()
+  const { naddr, npub, eventId: eventIdParam } = useParams<{ naddr?: string; npub?: string; eventId?: string }>()
   const location = useLocation()
   const navigate = useNavigate()
   const previousLocationRef = useRef<string>()
@@ -56,8 +56,12 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   const showMe = location.pathname.startsWith('/me')
   const showProfile = location.pathname.startsWith('/p/')
   const showSupport = location.pathname === '/support'
-  const showEvent = location.pathname.startsWith('/e/')
-  const eventId = showEvent ? location.pathname.slice(3) : undefined
+  const eventId = eventIdParam
+  
+  // Debug event loading
+  if (eventId) {
+    console.log('📍 Bookmarks: Event route detected. eventId:', eventId)
+  }
   
   // Extract tab from explore routes
   const exploreTab = location.pathname === '/explore/writings' ? 'writings' : 'highlights'
