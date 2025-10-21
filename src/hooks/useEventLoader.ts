@@ -1,9 +1,9 @@
 import { useEffect, useCallback } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
-import { createEventLoader } from 'applesauce-loaders/loaders'
 import { NostrEvent } from 'nostr-tools'
 import { ReadableContent } from '../services/readerService'
+import { eventManager } from '../services/eventManager'
 
 interface UseEventLoaderProps {
   eventId?: string
@@ -47,44 +47,26 @@ export function useEventLoader({
     setReaderContent(content)
   }, [setReaderContent])
 
+  // Initialize event manager with services
+  useEffect(() => {
+    eventManager.setServices(eventStore || null, relayPool || null)
+  }, [eventStore, relayPool])
+
   useEffect(() => {
     if (!eventId) return
 
-    // Try to get from event store first - do this synchronously before setting loading state
-    if (eventStore) {
-      const cachedEvent = eventStore.getEvent(eventId)
-      if (cachedEvent) {
-        displayEvent(cachedEvent)
-        setReaderLoading(false)
-        setIsCollapsed(false)
-        setSelectedUrl('') // Don't set nostr: URL to avoid showing highlights
-        return
-      }
-    }
-
-    // Event not in cache, now set loading state and fetch from relays
     setReaderLoading(true)
     setReaderContent(undefined)
     setSelectedUrl('') // Don't set nostr: URL to avoid showing highlights
     setIsCollapsed(false)
 
-    // If no relay pool yet, wait for it or show a placeholder
-    if (!relayPool) {
-      // Show loading state until relayPool becomes available
-      // The effect will re-run once relayPool is set
-      return
-    }
-
-    const eventLoader = createEventLoader(relayPool, {
-      eventStore: eventStore ?? undefined
-    })
-
-    const subscription = eventLoader({ id: eventId }).subscribe({
-      next: (event) => {
+    // Fetch event using the event manager
+    eventManager.fetchEvent(eventId).then(
+      (event) => {
         displayEvent(event)
         setReaderLoading(false)
       },
-      error: (err) => {
+      (err) => {
         const errorContent: ReadableContent = {
           url: '',
           html: `<div style="padding: 1rem; color: var(--color-error, red);">Failed to load event: ${err instanceof Error ? err.message : 'Unknown error'}</div>`,
@@ -93,8 +75,6 @@ export function useEventLoader({
         setReaderContent(errorContent)
         setReaderLoading(false)
       }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [eventId, relayPool, eventStore, displayEvent, setReaderLoading, setSelectedUrl, setIsCollapsed, setReaderContent])
+    )
+  }, [eventId, displayEvent, setReaderLoading, setSelectedUrl, setIsCollapsed, setReaderContent])
 }
