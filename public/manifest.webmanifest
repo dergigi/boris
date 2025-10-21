@@ -9,6 +9,16 @@
   "background_color": "#0b1220",
   "orientation": "any",
   "categories": ["productivity", "social", "utilities"],
+  "share_target": {
+    "action": "/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "link"
+    }
+  },
   "icons": [
     {
       "src": "/icon-192.png",

@@ -15,6 +15,7 @@ import Debug from './components/Debug'
 import Bookmarks from './components/Bookmarks'
 import RouteDebug from './components/RouteDebug'
 import Toast from './components/Toast'
+import ShareTargetHandler from './components/ShareTargetHandler'
 import { useToast } from './hooks/useToast'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { RELAYS } from './config/relays'
@@ -159,6 +160,10 @@ function AppRoutes({
 
   return (
     <Routes>
+      <Route 
+        path="/share-target" 
+        element={<ShareTargetHandler relayPool={relayPool} />} 
+      />
       <Route 
         path="/a/:naddr" 
         element={

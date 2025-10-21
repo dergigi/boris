@@ -98,9 +98,35 @@ sw.addEventListener('message', (event: ExtendableMessageEvent) => {
   }
 })
 
-// Log fetch errors for debugging (doesn't affect functionality)
+// Handle Web Share Target POST requests
 sw.addEventListener('fetch', (event: FetchEvent) => {
   const url = new URL(event.request.url)
+  
+  // Handle POST to /share-target (Web Share Target API)
+  if (event.request.method === 'POST' && url.pathname === '/share-target') {
+    event.respondWith((async () => {
+      const formData = await event.request.formData()
+      const title = (formData.get('title') || '').toString()
+      const text = (formData.get('text') || '').toString()
+      let link = (formData.get('link') || '').toString()
+      
+      // Android often omits url param, extract from text
+      if (!link && text) {
+        const urlMatch = text.match(/https?:\/\/[^\s]+/)
+        if (urlMatch) {
+          link = urlMatch[0]
+        }
+      }
+      
+      const queryParams = new URLSearchParams()
+      if (link) queryParams.set('link', link)
+      if (title) queryParams.set('title', title)
+      if (text) queryParams.set('text', text)
+      
+      return Response.redirect(`/share-target?${queryParams.toString()}`, 303)
+    })())
+    return
+  }
   
   // Don't interfere with WebSocket connections (relay traffic)
   if (url.protocol === 'ws:' || url.protocol === 'wss:') {
