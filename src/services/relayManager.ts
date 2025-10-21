@@ -10,6 +10,13 @@ export const ALWAYS_LOCAL_RELAYS = [
 ]
 
 /**
+ * Hardcoded relays that are always included
+ */
+export const HARDCODED_RELAYS = [
+  'wss://relay.nostr.band'
+]
+
+/**
  * Gets active relay URLs from the relay pool
  */
 export function getActiveRelayUrls(relayPool: RelayPool): string[] {

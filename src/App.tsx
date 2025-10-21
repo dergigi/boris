@@ -21,7 +21,7 @@ import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { RELAYS } from './config/relays'
 import { SkeletonThemeProvider } from './components/Skeletons'
 import { loadUserRelayList, loadBlockedRelays, computeRelaySet } from './services/relayListService'
-import { applyRelaySetToPool, getActiveRelayUrls, ALWAYS_LOCAL_RELAYS } from './services/relayManager'
+import { applyRelaySetToPool, getActiveRelayUrls, ALWAYS_LOCAL_RELAYS, HARDCODED_RELAYS } from './services/relayManager'
 import { Bookmark } from './types/bookmarks'
 import { bookmarkController } from './services/bookmarkController'
 import { contactsController } from './services/contactsController'
@@ -95,7 +95,7 @@ function AppRoutes({
       
       // Load bookmarks
       if (bookmarks.length === 0 && !bookmarksLoading) {
-        bookmarkController.start({ relayPool, activeAccount, accountManager })
+        bookmarkController.start({ relayPool, activeAccount, accountManager, eventStore: eventStore || undefined })
       }
       
       // Load contacts
@@ -338,6 +338,18 @@ function AppRoutes({
       />
       <Route 
         path="/p/:npub/writings" 
+        element={
+          <Bookmarks 
+            relayPool={relayPool}
+            onLogout={handleLogout}
+            bookmarks={bookmarks}
+            bookmarksLoading={bookmarksLoading}
+            onRefreshBookmarks={handleRefreshBookmarks}
+          />
+        } 
+      />
+      <Route 
+        path="/e/:eventId" 
         element={
           <Bookmarks 
             relayPool={relayPool}
@@ -615,7 +627,7 @@ function App() {
           loadUserRelayList(pool, pubkey, {
             onUpdate: (userRelays) => {
               const interimRelays = computeRelaySet({
-                hardcoded: [],
+                hardcoded: HARDCODED_RELAYS,
                 bunker: bunkerRelays,
                 userList: userRelays,
                 blocked: [],
@@ -629,7 +641,7 @@ function App() {
             const blockedRelays = await blockedPromise.catch(() => [])
 
             const finalRelays = computeRelaySet({
-              hardcoded: userRelayList.length > 0 ? [] : RELAYS,
+              hardcoded: userRelayList.length > 0 ? HARDCODED_RELAYS : RELAYS,
               bunker: bunkerRelays,
               userList: userRelayList,
               blocked: blockedRelays,

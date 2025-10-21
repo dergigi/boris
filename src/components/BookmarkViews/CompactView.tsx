@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
@@ -26,11 +27,15 @@ export const CompactView: React.FC<CompactViewProps> = ({
   contentTypeIcon,
   readingProgress
 }) => {
+  const navigate = useNavigate()
   const isArticle = bookmark.kind === 30023
   const isWebBookmark = bookmark.kind === 39701
-  const isClickable = hasUrls || isArticle || isWebBookmark
+  const isNote = bookmark.kind === 1
+  const isClickable = hasUrls || isArticle || isWebBookmark || isNote
   
-  // Calculate progress color (matching BlogPostCard logic)
+  const displayText = isArticle && articleSummary ? articleSummary : bookmark.content
+
+  // Calculate progress color
   let progressColor = '#6366f1' // Default blue (reading)
   if (readingProgress && readingProgress >= 0.95) {
     progressColor = '#10b981' // Green (completed)
@@ -39,19 +44,14 @@ export const CompactView: React.FC<CompactViewProps> = ({
   }
 
   const handleCompactClick = () => {
-    if (!onSelectUrl) return
-    
     if (isArticle) {
-      onSelectUrl('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags, pubkey: bookmark.pubkey })
+      onSelectUrl?.('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags, pubkey: bookmark.pubkey })
     } else if (hasUrls) {
-      onSelectUrl(extractedUrls[0])
+      onSelectUrl?.(extractedUrls[0])
+    } else if (isNote) {
+      navigate(`/e/${bookmark.id}`)
     }
   }
-
-  // For articles, prefer summary; for others, use content
-  const displayText = isArticle && articleSummary 
-    ? articleSummary 
-    : bookmark.content
 
   return (
     <div key={`${bookmark.id}-${index}`} className={`individual-bookmark compact ${bookmark.isPrivate ? 'private-bookmark' : ''}`}>
@@ -64,9 +64,13 @@ export const CompactView: React.FC<CompactViewProps> = ({
         <span className="bookmark-type-compact">
           <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
         </span>
-        {displayText && (
+        {displayText ? (
           <div className="compact-text">
             <RichContent content={displayText.slice(0, 60) + (displayText.length > 60 ? '…' : '')} className="" />
+          </div>
+        ) : (
+          <div className="compact-text" style={{ opacity: 0.5, fontSize: '0.85em' }}>
+            <code>{bookmark.id.slice(0, 12)}...</code>
           </div>
         )}
         <span className="bookmark-date-compact">{formatDateCompact(bookmark.created_at)}</span>

@@ -13,6 +13,7 @@ import { useHighlightCreation } from '../hooks/useHighlightCreation'
 import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import { useRelayStatus } from '../hooks/useRelayStatus'
 import { useOfflineSync } from '../hooks/useOfflineSync'
+import { useEventLoader } from '../hooks/useEventLoader'
 import { Bookmark } from '../types/bookmarks'
 import ThreePaneLayout from './ThreePaneLayout'
 import Explore from './Explore'
@@ -38,7 +39,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   bookmarksLoading, 
   onRefreshBookmarks
 }) => {
-  const { naddr, npub } = useParams<{ naddr?: string; npub?: string }>()
+  const { naddr, npub, eventId: eventIdParam } = useParams<{ naddr?: string; npub?: string; eventId?: string }>()
   const location = useLocation()
   const navigate = useNavigate()
   const previousLocationRef = useRef<string>()
@@ -55,6 +56,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   const showMe = location.pathname.startsWith('/me')
   const showProfile = location.pathname.startsWith('/p/')
   const showSupport = location.pathname === '/support'
+  const eventId = eventIdParam
   
   // Extract tab from explore routes
   const exploreTab = location.pathname === '/explore/writings' ? 'writings' : 'highlights'
@@ -253,6 +255,17 @@ const Bookmarks: React.FC<BookmarksProps> = ({
     setHighlightsLoading,
     setCurrentArticleCoordinate,
     setCurrentArticleEventId
+  })
+
+  // Load event if /e/:eventId route is used
+  useEventLoader({
+    eventId,
+    relayPool,
+    eventStore,
+    setSelectedUrl,
+    setReaderContent,
+    setReaderLoading,
+    setIsCollapsed
   })
 
   // Classify highlights with levels based on user context

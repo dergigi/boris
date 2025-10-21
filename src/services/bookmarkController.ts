@@ -3,7 +3,8 @@ import { Helpers, EventStore } from 'applesauce-core'
 import { createEventLoader, createAddressLoader } from 'applesauce-loaders/loaders'
 import { NostrEvent } from 'nostr-tools'
 import { EventPointer } from 'nostr-tools/nip19'
-import { merge } from 'rxjs'
+import { from } from 'rxjs'
+import { mergeMap } from 'rxjs/operators'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
 import { RELAYS } from '../config/relays'
@@ -69,6 +70,7 @@ class BookmarkController {
   private eventStore = new EventStore()
   private eventLoader: ReturnType<typeof createEventLoader> | null = null
   private addressLoader: ReturnType<typeof createAddressLoader> | null = null
+  private externalEventStore: EventStore | null = null
 
   onRawEvent(cb: RawEventCallback): () => void {
     this.rawEventListeners.push(cb)
@@ -138,8 +140,11 @@ class BookmarkController {
     // Convert IDs to EventPointers
     const pointers: EventPointer[] = unique.map(id => ({ id }))
     
-    // Use EventLoader - it auto-batches and streams results
-    merge(...pointers.map(this.eventLoader)).subscribe({
+    // Use mergeMap with concurrency limit instead of merge to properly batch requests
+    // This prevents overwhelming relays with 96+ simultaneous requests
+    from(pointers).pipe(
+      mergeMap(pointer => this.eventLoader!(pointer), 5)
+    ).subscribe({
       next: (event) => {
         // Check if hydration was cancelled
         if (this.hydrationGeneration !== generation) return
@@ -151,6 +156,11 @@ class BookmarkController {
           const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
           const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
           idToEvent.set(coordinate, event)
+        }
+        
+        // Add to external event store if available
+        if (this.externalEventStore) {
+          this.externalEventStore.add(event)
         }
         
         onProgress()
@@ -183,8 +193,10 @@ class BookmarkController {
       identifier: c.identifier
     }))
 
-    // Use AddressLoader - it auto-batches and streams results
-    merge(...pointers.map(this.addressLoader)).subscribe({
+    // Use mergeMap with concurrency limit instead of merge to properly batch requests
+    from(pointers).pipe(
+      mergeMap(pointer => this.addressLoader!(pointer), 5)
+    ).subscribe({
       next: (event) => {
         // Check if hydration was cancelled
         if (this.hydrationGeneration !== generation) return
@@ -193,6 +205,11 @@ class BookmarkController {
         const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
         idToEvent.set(coordinate, event)
         idToEvent.set(event.id, event)
+        
+        // Add to external event store if available
+        if (this.externalEventStore) {
+          this.externalEventStore.add(event)
+        }
         
         onProgress()
       },
@@ -244,30 +261,42 @@ class BookmarkController {
       })
 
       const allItems = [...publicItemsAll, ...privateItemsAll]
+      const deduped = dedupeBookmarksById(allItems)
       
-      // Separate hex IDs from coordinates
+      // Separate hex IDs from coordinates for fetching
       const noteIds: string[] = []
       const coordinates: string[] = []
       
-      allItems.forEach(i => {
-        if (/^[0-9a-f]{64}$/i.test(i.id)) {
-          noteIds.push(i.id)
-        } else if (i.id.includes(':')) {
-          coordinates.push(i.id)
+      // Request hydration for all items that don't have content yet
+      deduped.forEach(i => {
+        // If item has no content, we need to fetch it
+        if (!i.content || i.content.length === 0) {
+          if (/^[0-9a-f]{64}$/i.test(i.id)) {
+            noteIds.push(i.id)
+          } else if (i.id.includes(':')) {
+            coordinates.push(i.id)
+          }
         }
       })
       
+      console.log(`📋 Requesting hydration for: ${noteIds.length} note IDs, ${coordinates.length} coordinates`)
+      
       // Helper to build and emit bookmarks
       const emitBookmarks = (idToEvent: Map<string, NostrEvent>) => {
-        const allBookmarks = dedupeBookmarksById([
+        // Now hydrate the ORIGINAL items (which may have duplicates), using the deduplicated results
+        // This preserves the original public/private split while still getting all the content
+        const allBookmarks = [
           ...hydrateItems(publicItemsAll, idToEvent),
           ...hydrateItems(privateItemsAll, idToEvent)
-        ])
-
+        ]
+        
         const enriched = allBookmarks.map(b => ({
           ...b,
           tags: b.tags || [],
-          content: b.content || ''
+          // Prefer hydrated content; fallback to any cached event content in external store
+          content: b.content && b.content.length > 0
+            ? b.content
+            : (this.externalEventStore?.getEvent(b.id)?.content || '')
         }))
         
         const sortedBookmarks = enriched
@@ -324,8 +353,12 @@ class BookmarkController {
     relayPool: RelayPool
     activeAccount: unknown
     accountManager: { getActive: () => unknown }
+    eventStore?: EventStore
   }): Promise<void> {
-    const { relayPool, activeAccount, accountManager } = options
+    const { relayPool, activeAccount, accountManager, eventStore } = options
+    
+    // Store the external event store reference for adding hydrated events
+    this.externalEventStore = eventStore || null
 
     if (!activeAccount || typeof (activeAccount as { pubkey?: string }).pubkey !== 'string') {
       return
