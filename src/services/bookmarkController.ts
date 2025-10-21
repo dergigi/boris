@@ -146,6 +146,14 @@ class BookmarkController {
         
         idToEvent.set(event.id, event)
         
+        if (event.kind === 1 && event.content) {
+          console.log('✅ Fetched kind:1 with content:', {
+            id: event.id.slice(0, 12),
+            content: event.content.slice(0, 30),
+            totalInMap: idToEvent.size
+          })
+        }
+        
         // Also index by coordinate for addressable events
         if (event.kind && event.kind >= 30000 && event.kind < 40000) {
           const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
@@ -263,6 +271,21 @@ class BookmarkController {
           ...hydrateItems(publicItemsAll, idToEvent),
           ...hydrateItems(privateItemsAll, idToEvent)
         ])
+        
+        // Debug: log what we have
+        const kind1Items = allBookmarks.filter(b => b.kind === 1)
+        if (kind1Items.length > 0) {
+          console.log('🔄 Emitting bookmarks with hydration:', {
+            totalKind1: kind1Items.length,
+            withContent: kind1Items.filter(b => b.content).length,
+            mapSize: idToEvent.size,
+            sample: kind1Items.slice(0, 2).map(b => ({
+              id: b.id.slice(0, 12),
+              content: b.content?.slice(0, 30),
+              inMap: idToEvent.has(b.id)
+            }))
+          })
+        }
 
         const enriched = allBookmarks.map(b => ({
           ...b,
