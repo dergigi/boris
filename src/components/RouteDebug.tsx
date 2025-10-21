@@ -20,7 +20,7 @@ export default function RouteDebug() {
       // Unexpected during deep-link refresh tests
       console.warn('[RouteDebug] unexpected root redirect', info)
     } else {
-      console.debug('[RouteDebug]', info)
+      // silent
     }
   }, [location, matchArticle])
 

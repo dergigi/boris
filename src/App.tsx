@@ -578,8 +578,6 @@ function App() {
       
       // Handle user relay list and blocked relays when account changes
       const userRelaysSub = accounts.active$.subscribe((account) => {
-        console.log('[relay-init] userRelaysSub fired, account:', account ? 'logged in' : 'logged out')
-        console.log('[relay-init] Pool has', Array.from(pool.relays.keys()).length, 'relays before applying changes')
         if (account) {
           // User logged in - start with hardcoded relays immediately, then stream user relay list updates
           const pubkey = account.pubkey

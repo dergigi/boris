@@ -60,7 +60,7 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className, settings }
           const lang = detect(text)
           if (typeof lang === 'string' && lang.length >= 2) langOverride = lang.slice(0, 2)
         } catch (err) {
-          console.debug('[tts][detect] failed', err)
+          // ignore detection errors
         }
       }
       if (!langOverride && resolvedSystemLang) {
@@ -78,7 +78,6 @@ const TTSControls: React.FC<Props> = ({ text, defaultLang, className, settings }
     const currentIndex = SPEED_OPTIONS.indexOf(rate)
     const nextIndex = (currentIndex + 1) % SPEED_OPTIONS.length
     const next = SPEED_OPTIONS[nextIndex]
-    console.debug('[tts][ui] cycle speed', { from: rate, to: next, speaking, paused })
     setRate(next)
   }
 

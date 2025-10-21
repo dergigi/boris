@@ -279,8 +279,6 @@ class BookmarkController {
         }
       })
       
-      console.log(`📋 Requesting hydration for: ${noteIds.length} note IDs, ${coordinates.length} coordinates`)
-      
       // Helper to build and emit bookmarks
       const emitBookmarks = (idToEvent: Map<string, NostrEvent>) => {
         // Now hydrate the ORIGINAL items (which may have duplicates), using the deduplicated results

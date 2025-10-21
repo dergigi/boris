@@ -59,7 +59,6 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
   // Update rate when defaultRate option changes
   useEffect(() => {
     if (options.defaultRate !== undefined) {
-      console.debug('[tts] defaultRate changed ->', options.defaultRate)
       setRate(options.defaultRate)
     }
   }, [options.defaultRate])
@@ -73,7 +72,6 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
       if (!voice && v.length) {
         const byLang = v.find(x => x.lang?.toLowerCase().startsWith(defaultLang.toLowerCase()))
         setVoice(byLang || v[0] || null)
-        console.debug('[tts] voices loaded', { total: v.length, picked: (byLang || v[0] || null)?.lang })
       }
     }
     load()
@@ -107,44 +105,37 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
 
     u.onstart = () => {
       if (utteranceRef.current !== self) return
-      console.debug('[tts] onstart')
       setSpeaking(true)
       setPaused(false)
     }
     u.onpause = () => {
       if (utteranceRef.current !== self) return
-      console.debug('[tts] onpause')
       setPaused(true)
     }
     u.onresume = () => {
       if (utteranceRef.current !== self) return
-      console.debug('[tts] onresume')
       setPaused(false)
     }
     u.onend = () => {
       if (utteranceRef.current !== self) return
-      console.debug('[tts] onend')
       // Continue with next chunk if available
       const hasMore = chunkIndexRef.current < (chunksRef.current.length - 1)
       if (hasMore) {
-        chunkIndexRef.current += 1
-        globalOffsetRef.current += self.text.length
-        const next = chunksRef.current[chunkIndexRef.current] || ''
-        const nextUtterance = createUtterance(next, langRef.current)
+        chunkIndexRef.current++
+        charIndexRef.current += self.text.length
+        const nextChunk = chunksRef.current[chunkIndexRef.current]
+        const nextUtterance = createUtterance(nextChunk, langRef.current)
         utteranceRef.current = nextUtterance
         synth!.speak(nextUtterance)
-        return
+      } else {
+        setSpeaking(false)
+        setPaused(false)
       }
-      setSpeaking(false)
-      setPaused(false)
-      utteranceRef.current = null
     }
     u.onerror = () => {
       if (utteranceRef.current !== self) return
-      console.debug('[tts] onerror')
       setSpeaking(false)
       setPaused(false)
-      utteranceRef.current = null
     }
     u.onboundary = (ev: SpeechSynthesisEvent) => {
       if (utteranceRef.current !== self) return
@@ -197,7 +188,6 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
 
   const stop = useCallback(() => {
     if (!supported) return
-    console.debug('[tts] stop')
     synth!.cancel()
     setSpeaking(false)
     setPaused(false)
@@ -211,18 +201,16 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
 
   const speak = useCallback((text: string, langOverride?: string) => {
     if (!supported || !text?.trim()) return
-    console.debug('[tts] speak', { len: text.length, rate })
     synth!.cancel()
     spokenTextRef.current = text
     charIndexRef.current = 0
     langRef.current = langOverride
     startSpeakingChunks(text)
-  }, [supported, synth, startSpeakingChunks, rate])
+  }, [supported, synth, startSpeakingChunks])
 
   const pause = useCallback(() => {
     if (!supported) return
     if (synth!.speaking && !synth!.paused) {
-      console.debug('[tts] pause')
       synth!.pause()
       setPaused(true)
     }
@@ -231,7 +219,6 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
   const resume = useCallback(() => {
     if (!supported) return
     if (synth!.speaking && synth!.paused) {
-      console.debug('[tts] resume')
       synth!.resume()
       setPaused(false)
     }
@@ -242,14 +229,11 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     if (!supported) return
     if (!utteranceRef.current) return
 
-    console.debug('[tts] rate change', { rate, speaking: synth!.speaking, paused: synth!.paused, charIndex: charIndexRef.current })
-
     if (synth!.speaking && !synth!.paused) {
       const fullText = spokenTextRef.current
       const startIndex = Math.max(0, Math.min(charIndexRef.current, fullText.length))
       const remainingText = fullText.slice(startIndex)
 
-      console.debug('[tts] restart at new rate', { startIndex, remainingLen: remainingText.length })
       synth!.cancel()
       // restart chunked from current global index
       spokenTextRef.current = remainingText
@@ -273,7 +257,6 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
       const fullText = spokenTextRef.current
       const startIndex = Math.max(0, Math.min(charIndexRef.current, fullText.length - 1))
       const remainingText = fullText.slice(startIndex)
-      console.debug('[tts] updateRate -> restart', { newRate, startIndex, remainingLen: remainingText.length })
       synth!.cancel()
       const u = createUtterance(remainingText)
       // ensure the new rate is applied immediately on the new utterance
@@ -281,7 +264,6 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
       utteranceRef.current = u
       synth!.speak(u)
     } else if (utteranceRef.current) {
-      console.debug('[tts] updateRate -> set on utterance', { newRate })
       utteranceRef.current.rate = newRate
     }
   }, [supported, synth, createUtterance])
