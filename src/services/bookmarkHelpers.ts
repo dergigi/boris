@@ -184,6 +184,15 @@ export function hydrateItems(
         }
       }
       
+      // Debug logging for kind:1 events
+      if (ev.kind === 1 && content) {
+        console.log('💧 Hydrated kind:1 with content:', {
+          id: item.id.slice(0, 8),
+          content: content.slice(0, 50),
+          contentLength: content.length
+        })
+      }
+      
       // Ensure all events with content get parsed content for proper rendering
       const parsedContent = content ? (getParsedContent(content) as ParsedContent) : undefined
       
