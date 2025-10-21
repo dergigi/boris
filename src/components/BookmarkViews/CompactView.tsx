@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
@@ -26,9 +27,11 @@ export const CompactView: React.FC<CompactViewProps> = ({
   contentTypeIcon,
   readingProgress
 }) => {
+  const navigate = useNavigate()
   const isArticle = bookmark.kind === 30023
   const isWebBookmark = bookmark.kind === 39701
-  const isClickable = hasUrls || isArticle || isWebBookmark
+  const isNote = bookmark.kind === 1
+  const isClickable = hasUrls || isArticle || isWebBookmark || isNote
   
   const displayText = isArticle && articleSummary ? articleSummary : bookmark.content
 
@@ -54,12 +57,12 @@ export const CompactView: React.FC<CompactViewProps> = ({
   }
 
   const handleCompactClick = () => {
-    if (!onSelectUrl) return
-    
     if (isArticle) {
-      onSelectUrl('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags, pubkey: bookmark.pubkey })
+      onSelectUrl?.('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags, pubkey: bookmark.pubkey })
     } else if (hasUrls) {
-      onSelectUrl(extractedUrls[0])
+      onSelectUrl?.(extractedUrls[0])
+    } else if (isNote) {
+      navigate(`/e/${bookmark.id}`)
     }
   }
 
