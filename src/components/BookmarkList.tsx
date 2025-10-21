@@ -285,6 +285,13 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         </div>
         {activeAccount && (
           <div className="view-mode-right">
+            <IconButton
+              icon={groupingMode === 'grouped' ? faLayerGroup : faBars}
+              onClick={toggleGroupingMode}
+              title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
+              ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
+              variant="ghost"
+            />
             {onRefresh && (
               <IconButton
                 icon={faRotate}
@@ -296,13 +303,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
                 spin={isRefreshing}
               />
             )}
-            <IconButton
-              icon={groupingMode === 'grouped' ? faLayerGroup : faBars}
-              onClick={toggleGroupingMode}
-              title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
-              ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
-              variant="ghost"
-            />
             <IconButton
               icon={faList}
               onClick={() => onViewModeChange('compact')}
