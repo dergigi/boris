@@ -40,7 +40,7 @@ export function useEventLoader({
       .replace(/\n/g, '<br />')
 
     const content: ReadableContent = {
-      url: `nostr:${event.id}`,
+      url: '', // Empty URL to prevent highlight display
       html: metaHtml + `<div style="white-space: pre-wrap; word-break: break-word;">${escapedContent}</div>`,
       title: `Note (${event.kind})`
     }
@@ -57,7 +57,7 @@ export function useEventLoader({
         displayEvent(cachedEvent)
         setReaderLoading(false)
         setIsCollapsed(false)
-        setSelectedUrl(`nostr:${eventId}`)
+        setSelectedUrl('') // Don't set nostr: URL to avoid showing highlights
         return
       }
     }
@@ -65,7 +65,7 @@ export function useEventLoader({
     // Event not in cache, now set loading state and fetch from relays
     setReaderLoading(true)
     setReaderContent(undefined)
-    setSelectedUrl(`nostr:${eventId}`)
+    setSelectedUrl('') // Don't set nostr: URL to avoid showing highlights
     setIsCollapsed(false)
 
     // Otherwise fetch from relays
