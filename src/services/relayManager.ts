@@ -46,13 +46,11 @@ export function applyRelaySetToPool(
   const currentUrls = new Set(Array.from(relayPool.relays.keys()))
   const normalizedTargetUrls = new Set(finalUrls.map(normalizeRelayUrl))
 
-  console.log('[relayManager] applyRelaySetToPool called')
-  console.log('[relayManager] Current pool has:', currentUrls.size, 'relays')
-  console.log('[relayManager] Target has:', finalUrls.length, 'relays')
+  
 
   // Add new relays (use original URLs for adding, not normalized)
   const toAdd = finalUrls.filter(url => !currentUrls.has(normalizeRelayUrl(url)))
-  console.log('[relayManager] Will add:', toAdd.length, 'relays', toAdd)
+  
   if (toAdd.length > 0) {
     relayPool.group(toAdd)
   }
@@ -71,7 +69,7 @@ export function applyRelaySetToPool(
       }
     }
   }
-  console.log('[relayManager] Will remove:', toRemove.length, 'relays', toRemove)
+  
 
   for (const url of toRemove) {
     const relay = relayPool.relays.get(url)
@@ -81,6 +79,6 @@ export function applyRelaySetToPool(
     }
   }
   
-  console.log('[relayManager] After apply, pool has:', relayPool.relays.size, 'relays')
+  
 }
 

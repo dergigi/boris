@@ -18,10 +18,7 @@ export async function loadUserRelayList(
   }
 ): Promise<UserRelayInfo[]> {
   try {
-    console.log('[relayListService] Loading user relay list for pubkey:', pubkey.slice(0, 16) + '...')
-    console.log('[relayListService] Available relays:', Array.from(relayPool.relays.keys()))
     
-    console.log('[relayListService] Starting query for kind 10002...')
     const startTime = Date.now()
     
     // Try querying with streaming callback for faster results
@@ -65,21 +62,14 @@ export async function loadUserRelayList(
     const finalEvents = events.length > 0 ? events : result
     
     const queryTime = Date.now() - startTime
-    console.log('[relayListService] Query completed in', queryTime, 'ms')
     
     // Also try a broader query to see if we get any events at all
-    console.log('[relayListService] Trying broader query for any kind 10002 events...')
     const allEvents = await queryEvents(relayPool, {
       kinds: [10002],
       limit: 5
     })
-    console.log('[relayListService] Found', allEvents.length, 'total kind 10002 events from any author')
     
-
-    console.log('[relayListService] Found', finalEvents.length, 'kind 10002 events')
-    if (finalEvents.length > 0) {
-      console.log('[relayListService] Event details:', finalEvents.map(e => ({ id: e.id, created_at: e.created_at, tags: e.tags.length })))
-    }
+    
 
     if (finalEvents.length === 0) return []
 
@@ -99,7 +89,6 @@ export async function loadUserRelayList(
       }
     }
 
-    console.log('[relayListService] Parsed', relays.length, 'relays from event')
     return relays
   } catch (error) {
     console.error('Failed to load user relay list:', error)

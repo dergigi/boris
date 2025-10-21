@@ -395,8 +395,6 @@ function App() {
       
       // Create a relay group for better event deduplication and management
       pool.group(RELAYS)
-      console.log('[relay-init] Initial pool setup - added RELAYS:', RELAYS.length, 'relays')
-      console.log('[relay-init] Pool now has:', Array.from(pool.relays.keys()).length, 'relays')
       
       // Load persisted accounts from localStorage
       try {
@@ -576,7 +574,7 @@ function App() {
             const signerData = nostrConnectAccount.toJSON().signer
             bunkerRelays = signerData.relays || []
           }
-          console.log('[relay-init] Bunker relays:', bunkerRelays.length, 'relays', bunkerRelays)
+          
 
           // Start with hardcoded + bunker relays immediately (non-blocking)
           const initialRelays = computeRelaySet({
@@ -586,11 +584,10 @@ function App() {
             blocked: [],
             alwaysIncludeLocal: ALWAYS_LOCAL_RELAYS
           })
-          console.log('[relay-init] Initial relay set (hardcoded):', initialRelays.length, 'relays', initialRelays)
+          
 
           // Apply initial set immediately
           applyRelaySetToPool(pool, initialRelays)
-          console.log('[relay-init] After initial applyRelaySetToPool, pool has:', Array.from(pool.relays.keys()).length, 'relays')
 
           // Prepare keep-alive helper
           const updateKeepAlive = () => {
@@ -619,14 +616,12 @@ function App() {
                 blocked: [],
                 alwaysIncludeLocal: ALWAYS_LOCAL_RELAYS
               })
-              console.log('[relay-init] Interim relay set from first user list:', interimRelays.length, 'relays', interimRelays)
+              
               applyRelaySetToPool(pool, interimRelays)
               updateKeepAlive()
             }
           }).then(async (userRelayList) => {
             const blockedRelays = await blockedPromise.catch(() => [])
-            console.log('[relay-init] User relay list (10002):', userRelayList.length, 'relays', userRelayList.map(r => r.url))
-            console.log('[relay-init] Blocked relays (10006):', blockedRelays.length, 'relays', blockedRelays)
 
             const finalRelays = computeRelaySet({
               hardcoded: userRelayList.length > 0 ? [] : RELAYS,
@@ -635,10 +630,9 @@ function App() {
               blocked: blockedRelays,
               alwaysIncludeLocal: ALWAYS_LOCAL_RELAYS
             })
-            console.log('[relay-init] Final relay set (with user preferences):', finalRelays.length, 'relays', finalRelays)
+            
             applyRelaySetToPool(pool, finalRelays)
-            console.log('[relay-init] After user relay list apply, pool has:', Array.from(pool.relays.keys()).length, 'relays')
-            console.log('[relay-init] Final relay URLs:', Array.from(pool.relays.keys()))
+            
             updateKeepAlive()
             
             // Update address loader with new relays
@@ -655,10 +649,9 @@ function App() {
           })
         } else {
           // User logged out - reset to hardcoded relays
-          console.log('[relay-init] Applying RELAYS for logged out user, RELAYS.length:', RELAYS.length)
+          
           applyRelaySetToPool(pool, RELAYS)
-          console.log('[relay-init] After applyRelaySetToPool (logged out), pool has:', Array.from(pool.relays.keys()).length, 'relays')
-          console.log('[relay-init] Relay URLs:', Array.from(pool.relays.keys()))
+          
           
           // Update keep-alive subscription
           const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
