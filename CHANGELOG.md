@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.7] - 2025-10-21
+
+### Fixed
+
+- Profile pages now display all writings correctly
+  - Events are now stored in eventStore as they stream in from relays
+  - `fetchBlogPostsFromAuthors` now accepts `eventStore` parameter like other fetch functions
+  - Ensures all writings appear on `/p/` routes, not just the first few
+  - Background fetching of highlights and writings uses consistent patterns
+
+### Changed
+
+- Simplified profile background fetching logic for better maintainability
+  - Extracted relay URLs to variable for clarity
+  - Consistent error handling patterns across fetch functions
+  - Clearer comments about no-limit fetching behavior
+
 ## [0.10.6] - 2025-10-21
 
 ### Added
