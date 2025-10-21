@@ -261,19 +261,21 @@ class BookmarkController {
       })
 
       const allItems = [...publicItemsAll, ...privateItemsAll]
-      
-      // Dedupe BEFORE hydration to avoid requesting duplicate events
       const deduped = dedupeBookmarksById(allItems)
       
-      // Separate hex IDs from coordinates
+      // Separate hex IDs from coordinates for fetching
       const noteIds: string[] = []
       const coordinates: string[] = []
       
+      // Request hydration for all items that don't have content yet
       deduped.forEach(i => {
-        if (/^[0-9a-f]{64}$/i.test(i.id)) {
-          noteIds.push(i.id)
-        } else if (i.id.includes(':')) {
-          coordinates.push(i.id)
+        // If item has no content, we need to fetch it
+        if (!i.content || i.content.length === 0) {
+          if (/^[0-9a-f]{64}$/i.test(i.id)) {
+            noteIds.push(i.id)
+          } else if (i.id.includes(':')) {
+            coordinates.push(i.id)
+          }
         }
       })
       
