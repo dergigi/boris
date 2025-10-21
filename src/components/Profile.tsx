@@ -107,21 +107,14 @@ const Profile: React.FC<ProfileProps> = ({
   useEffect(() => {
     if (!pubkey || !relayPool || !eventStore) return
     
+    // Fetch all highlights and writings in background (no limits)
+    const relayUrls = getActiveRelayUrls(relayPool)
     
-    // Fetch highlights in background
     fetchHighlights(relayPool, pubkey, undefined, undefined, false, eventStore)
-      .then(() => {
-        // Highlights fetched
-      })
-      .catch(err => {
-        console.warn('⚠️ [Profile] Failed to fetch highlights:', err)
-      })
+      .catch(err => console.warn('⚠️ [Profile] Failed to fetch highlights:', err))
     
-    // Fetch writings in background (no limit for single user profile)
-    fetchBlogPostsFromAuthors(relayPool, [pubkey], getActiveRelayUrls(relayPool), undefined, null, eventStore)
-      .catch(err => {
-        console.warn('⚠️ [Profile] Failed to fetch writings:', err)
-      })
+    fetchBlogPostsFromAuthors(relayPool, [pubkey], relayUrls, undefined, null, eventStore)
+      .catch(err => console.warn('⚠️ [Profile] Failed to fetch writings:', err))
   }, [pubkey, relayPool, eventStore, refreshTrigger])
 
   // Pull-to-refresh
