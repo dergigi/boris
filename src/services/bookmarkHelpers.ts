@@ -184,6 +184,9 @@ export function hydrateItems(
         }
       }
       
+      // Ensure all events with content get parsed content for proper rendering
+      const parsedContent = content ? (getParsedContent(content) as ParsedContent) : undefined
+      
       return {
         ...item,
         pubkey: ev.pubkey || item.pubkey,
@@ -191,7 +194,7 @@ export function hydrateItems(
         created_at: ev.created_at || item.created_at,
         kind: ev.kind || item.kind,
         tags: ev.tags || item.tags,
-        parsedContent: ev.content ? (getParsedContent(content) as ParsedContent) : item.parsedContent
+        parsedContent: parsedContent || item.parsedContent
       }
     })
     .filter(item => {
