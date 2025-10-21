@@ -485,7 +485,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   }
 
   const handleOpenSearch = () => {
-    if (articleLinks) {
+    // For regular notes (kind:1), open via /e/ path
+    if (currentArticle?.kind === 1) {
+      const borisUrl = `${window.location.origin}/e/${currentArticle.id}`
+      window.open(borisUrl, '_blank', 'noopener,noreferrer')
+    } else if (articleLinks) {
+      // For articles, use search portal
       window.open(getSearchUrl(articleLinks.naddr), '_blank', 'noopener,noreferrer')
     }
     setShowArticleMenu(false)
