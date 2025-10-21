@@ -135,6 +135,8 @@ class BookmarkController {
       return
     }
     
+    console.log(`📡 hydrateByIds: requesting ${unique.length} events from EventLoader`)
+    
     // Convert IDs to EventPointers
     const pointers: EventPointer[] = unique.map(id => ({ id }))
     
@@ -264,6 +266,8 @@ class BookmarkController {
           coordinates.push(i.id)
         }
       })
+      
+      console.log(`📋 Requesting hydration for: ${noteIds.length} note IDs, ${coordinates.length} coordinates`)
       
       // Helper to build and emit bookmarks
       const emitBookmarks = (idToEvent: Map<string, NostrEvent>) => {
