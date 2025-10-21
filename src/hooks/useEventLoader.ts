@@ -41,7 +41,8 @@ export function useEventLoader({
 
     console.log('🔍 useEventLoader: Loading event:', eventId)
     setReaderLoading(true)
-    setSelectedUrl('')
+    setReaderContent(undefined)
+    setSelectedUrl(`nostr:${eventId}`)
     setIsCollapsed(false)
 
     // Try to get from event store first
