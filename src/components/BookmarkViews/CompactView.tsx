@@ -32,6 +32,19 @@ export const CompactView: React.FC<CompactViewProps> = ({
   
   const displayText = isArticle && articleSummary ? articleSummary : bookmark.content
 
+  // Debug empty bookmarks
+  if (!displayText && bookmark.kind === 1) {
+    console.log('📌 Empty kind:1 bookmark:', {
+      id: bookmark.id.slice(0, 12),
+      content: bookmark.content,
+      contentLength: bookmark.content?.length,
+      contentType: typeof bookmark.content,
+      parsedContent: !!bookmark.parsedContent,
+      created_at: bookmark.created_at,
+      sourceKind: (bookmark as any).sourceKind
+    })
+  }
+
   // Calculate progress color
   let progressColor = '#6366f1' // Default blue (reading)
   if (readingProgress && readingProgress >= 0.95) {
@@ -61,9 +74,13 @@ export const CompactView: React.FC<CompactViewProps> = ({
         <span className="bookmark-type-compact">
           <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
         </span>
-        {displayText && (
+        {displayText ? (
           <div className="compact-text">
             <RichContent content={displayText.slice(0, 60) + (displayText.length > 60 ? '…' : '')} className="" />
+          </div>
+        ) : (
+          <div className="compact-text" style={{ opacity: 0.5, fontSize: '0.85em' }}>
+            <code>{bookmark.id.slice(0, 12)}...</code>
           </div>
         )}
         <span className="bookmark-date-compact">{formatDateCompact(bookmark.created_at)}</span>
