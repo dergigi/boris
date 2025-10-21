@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.8] - 2025-10-21
+
+### Added
+
+- Individual event rendering via `/e/:eventId` path
+  - Display `kind:1` notes and other events with article-like presentation
+  - Publication date displayed in top-right corner like articles
+  - Author attribution with "Note by @author" titles
+  - Direct event loading with intelligent caching from eventStore
+- Centralized event fetching via new `eventManager` singleton
+  - Request deduplication for concurrent fetches
+  - Automatic retry logic when relay pool becomes available
+  - Non-blocking background fetching with 12-second timeout
+  - Seamless integration with eventStore for instant cached event display
+
+### Fixed
+
+- Bookmark hydration efficiency
+  - Only request content for bookmarks missing data (not all bookmarks)
+  - Use eventStore fallback for instant display of cached profiles
+  - Prevents over-fetching and improves initial load performance
+- Search button behavior for notes
+  - Opens `kind:1` notes directly via `/e/{eventId}` instead of search portal
+  - Articles continue to use search portal with proper naddr encoding
+  - Removes unwanted `nostr-event:` prefix from URLs
+- Author profile resolution
+  - Fetch author profiles from eventStore cache first before relay requests
+  - Instant title updates if profile already loaded
+  - Graceful fallback to short pubkey display if profile unavailable
+
 ## [0.10.7] - 2025-10-21
 
 ### Fixed
