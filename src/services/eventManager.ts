@@ -22,6 +22,9 @@ class EventManager {
   
   // Safety timeout for event fetches (ms)
   private fetchTimeoutMs = 12000
+  // Retry policy
+  private maxAttempts = 4
+  private baseBackoffMs = 700
   
   /**
    * Initialize the event manager with event store and relay pool
@@ -70,7 +73,7 @@ class EventManager {
       
       // Start a new fetch request
       this.pendingRequests.set(eventId, [{ resolve, reject }])
-      this.fetchFromRelay(eventId)
+      this.fetchFromRelayWithRetry(eventId, 1)
     })
   }
   
@@ -86,17 +89,14 @@ class EventManager {
     requests.forEach(req => req.reject(error))
   }
   
-  /**
-   * Actually fetch the event from relay
-   */
-  private fetchFromRelay(eventId: string): void {
+  private fetchFromRelayWithRetry(eventId: string, attempt: number): void {
     // If no loader yet, schedule retry
     if (!this.relayPool || !this.eventLoader) {
       setTimeout(() => {
-        if (this.eventLoader && this.pendingRequests.has(eventId)) {
-          this.fetchFromRelay(eventId)
+        if (this.pendingRequests.has(eventId)) {
+          this.fetchFromRelayWithRetry(eventId, attempt)
         }
-      }, 500)
+      }, this.baseBackoffMs)
       return
     }
     
@@ -111,14 +111,23 @@ class EventManager {
       error: (err: unknown) => {
         clearTimeout(timeoutId)
         const error = err instanceof Error ? err : new Error(String(err))
-        this.rejectPending(eventId, error)
+        // Retry on error until attempts exhausted
+        if (attempt < this.maxAttempts && this.pendingRequests.has(eventId)) {
+          setTimeout(() => this.fetchFromRelayWithRetry(eventId, attempt + 1), this.baseBackoffMs * attempt)
+        } else {
+          this.rejectPending(eventId, error)
+        }
         subscription.unsubscribe()
       },
       complete: () => {
-        // Completed without next - consider not found
+        // Completed without next - consider not found, but retry a few times
         if (!delivered) {
           clearTimeout(timeoutId)
-          this.rejectPending(eventId, new Error('Event not found'))
+          if (attempt < this.maxAttempts && this.pendingRequests.has(eventId)) {
+            setTimeout(() => this.fetchFromRelayWithRetry(eventId, attempt + 1), this.baseBackoffMs * attempt)
+          } else {
+            this.rejectPending(eventId, new Error('Event not found'))
+          }
         }
         subscription.unsubscribe()
       }
@@ -127,8 +136,13 @@ class EventManager {
     // Safety timeout
     const timeoutId = setTimeout(() => {
       if (!delivered) {
-        this.rejectPending(eventId, new Error('Timed out fetching event'))
-        subscription.unsubscribe()
+        if (attempt < this.maxAttempts && this.pendingRequests.has(eventId)) {
+          subscription.unsubscribe()
+          this.fetchFromRelayWithRetry(eventId, attempt + 1)
+        } else {
+          subscription.unsubscribe()
+          this.rejectPending(eventId, new Error('Timed out fetching event'))
+        }
       }
     }, this.fetchTimeoutMs)
   }
@@ -139,7 +153,7 @@ class EventManager {
   private retryAllPending(): void {
     const pendingIds = Array.from(this.pendingRequests.keys())
     pendingIds.forEach(eventId => {
-      this.fetchFromRelay(eventId)
+      this.fetchFromRelayWithRetry(eventId, 1)
     })
   }
 }
