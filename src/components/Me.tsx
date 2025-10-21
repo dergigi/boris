@@ -59,6 +59,8 @@ const Me: React.FC<MeProps> = ({
   const { filter: urlFilter } = useParams<{ filter?: string }>()
   const activeTab = propActiveTab || 'highlights'
   
+  console.log('[Me] Rendered with activeTab:', activeTab, 'propActiveTab:', propActiveTab)
+  
   // Only for own profile
   const viewingPubkey = activeAccount?.pubkey
   const [highlights, setHighlights] = useState<Highlight[]>([])
@@ -228,23 +230,28 @@ const Me: React.FC<MeProps> = ({
   const loadReadingListTab = useCallback(async () => {
     if (!viewingPubkey || !activeAccount) return
     
-    const hasBeenLoaded = loadedTabs.has('reading-list')
+    console.log('[Me] loadReadingListTab called')
     
-    try {
+    setLoadedTabs(prev => {
+      const hasBeenLoaded = prev.has('reading-list')
       if (!hasBeenLoaded) setLoading(true)
-      // Bookmarks come from centralized loading in App.tsx
-      setLoadedTabs(prev => new Set(prev).add('reading-list'))
-    } catch (err) {
-      console.error('Failed to load reading list:', err)
-    } finally {
-      if (!hasBeenLoaded) setLoading(false)
-    }
-  }, [viewingPubkey, activeAccount, loadedTabs])
+      return new Set(prev).add('reading-list')
+    })
+    
+    // Always turn off loading after a tick
+    setTimeout(() => setLoading(false), 0)
+  }, [viewingPubkey, activeAccount])
 
   const loadReadsTab = useCallback(async () => {
     if (!viewingPubkey || !activeAccount) return
     
-    const hasBeenLoaded = loadedTabs.has('reads')
+    console.log('[Me] loadReadsTab called')
+    
+    let hasBeenLoaded = false
+    setLoadedTabs(prev => {
+      hasBeenLoaded = prev.has('reads')
+      return prev
+    })
     
     try {
       if (!hasBeenLoaded) setLoading(true)
@@ -263,12 +270,18 @@ const Me: React.FC<MeProps> = ({
       console.error('Failed to load reads:', err)
       if (!hasBeenLoaded) setLoading(false)
     }
-  }, [viewingPubkey, activeAccount, loadedTabs, relayPool, eventStore])
+  }, [viewingPubkey, activeAccount, relayPool, eventStore])
 
   const loadLinksTab = useCallback(async () => {
     if (!viewingPubkey || !activeAccount) return
     
-    const hasBeenLoaded = loadedTabs.has('links')
+    console.log('[Me] loadLinksTab called')
+    
+    let hasBeenLoaded = false
+    setLoadedTabs(prev => {
+      hasBeenLoaded = prev.has('links')
+      return prev
+    })
     
     try {
       if (!hasBeenLoaded) setLoading(true)
@@ -303,10 +316,12 @@ const Me: React.FC<MeProps> = ({
       console.error('Failed to load links:', err)
       if (!hasBeenLoaded) setLoading(false)
     }
-  }, [viewingPubkey, activeAccount, loadedTabs, bookmarks, relayPool, readingProgressMap])
+  }, [viewingPubkey, activeAccount, bookmarks, relayPool, readingProgressMap])
 
   // Load active tab data
   const loadActiveTab = useCallback(() => {
+    console.log('[Me] loadActiveTab called with activeTab:', activeTab)
+    
     if (!viewingPubkey || !activeTab) {
       setLoading(false)
       return
