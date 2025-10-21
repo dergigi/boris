@@ -25,16 +25,12 @@ export function useEventLoader({
   setIsCollapsed
 }: UseEventLoaderProps) {
   const displayEvent = useCallback((event: NostrEvent) => {
-    // Format event HTML for display with metadata
-    const metaHtml = `<div style="opacity: 0.6; font-size: 0.9em; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">
-      <div>Event ID: <code>${event.id.slice(0, 16)}...</code></div>
-      <div>Posted: ${new Date(event.created_at * 1000).toLocaleString()}</div>
-      <div>Kind: ${event.kind}</div>
-    </div>`
+    // Format event metadata as markdown comments for display
+    const metaMarkdown = `<!-- Event ID: ${event.id.slice(0, 16)}... Posted: ${new Date(event.created_at * 1000).toLocaleString()} Kind: ${event.kind} -->`
 
     const content: ReadableContent = {
-      url: '',
-      html: metaHtml + event.content,
+      url: `nostr:${event.id}`,
+      markdown: metaMarkdown + '\n\n' + event.content,
       title: `Note (${event.kind})`
     }
     setReaderContent(content)
@@ -76,7 +72,7 @@ export function useEventLoader({
         console.error('Error fetching event:', err)
         const errorContent: ReadableContent = {
           url: '',
-          html: `Error loading event: ${err instanceof Error ? err.message : 'Unknown error'}`,
+          markdown: `Error loading event: ${err instanceof Error ? err.message : 'Unknown error'}`,
           title: 'Error'
         }
         setReaderContent(errorContent)
