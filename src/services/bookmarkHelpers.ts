@@ -170,7 +170,7 @@ export function hydrateItems(
   items: IndividualBookmark[],
   idToEvent: Map<string, NostrEvent>
 ): IndividualBookmark[] {
-  return items
+  const hydrated = items
     .map(item => {
       const ev = idToEvent.get(item.id)
       if (!ev) return item
@@ -202,6 +202,14 @@ export function hydrateItems(
       const isBookmarkListEvent = item.kind === 10003 || item.kind === 30003 || item.kind === 30001
       return !isBookmarkListEvent
     })
+  
+  // Debug: log how many items have content
+  const withContent = hydrated.filter(i => i.content && i.content.length > 0)
+  if (withContent.length > 0 || hydrated.length > 0) {
+    console.log(`📝 Hydrated ${withContent.length}/${hydrated.length} items have content`)
+  }
+  
+  return hydrated
 }
 
 // Note: event decryption/collection lives in `bookmarkProcessing.ts`
