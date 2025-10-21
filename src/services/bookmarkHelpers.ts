@@ -174,14 +174,11 @@ export function hydrateItems(
   const kind1Items = items.filter(b => b.kind === 1)
   if (kind1Items.length > 0 && idToEvent.size > 0) {
     const found = kind1Items.filter(b => idToEvent.has(b.id))
-    console.log('💧 hydrateItems processing:', {
-      totalKind1Items: kind1Items.length,
-      mapSize: idToEvent.size,
-      found: found.length,
-      notFound: kind1Items.length - found.length,
-      sampleItemIds: kind1Items.slice(0, 2).map(b => b.id.slice(0, 12)),
-      sampleMapKeys: Array.from(idToEvent.keys()).slice(0, 2).map(id => id.slice(0, 12))
-    })
+    console.log(`💧 hydrateItems: ${found.length}/${kind1Items.length} kind:1 items found in map (map has ${idToEvent.size} total events)`)
+    if (found.length === 0 && kind1Items.length > 0) {
+      console.log('❌ NO MATCHES! Sample item IDs:', kind1Items.slice(0, 3).map(b => b.id))
+      console.log('❌ Map keys:', Array.from(idToEvent.keys()).slice(0, 3))
+    }
   }
   
   return items
