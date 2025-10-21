@@ -25,6 +25,7 @@ export function useEventLoader({
   setIsCollapsed
 }: UseEventLoaderProps) {
   const displayEvent = useCallback((event: NostrEvent) => {
+    console.log('🎨 displayEvent: Creating ReadableContent from event')
     // Format event metadata as HTML header
     const metaHtml = `<div style="opacity: 0.6; font-size: 0.9em; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">
       <div>Event ID: <code>${event.id.slice(0, 16)}...</code></div>
@@ -44,6 +45,7 @@ export function useEventLoader({
       html: metaHtml + `<div style="white-space: pre-wrap; word-break: break-word;">${escapedContent}</div>`,
       title: `Note (${event.kind})`
     }
+    console.log('🎨 displayEvent: Setting readerContent with html:', { title: content.title, htmlLength: content.html?.length })
     setReaderContent(content)
   }, [setReaderContent])
 

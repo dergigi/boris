@@ -95,7 +95,7 @@ function AppRoutes({
       
       // Load bookmarks
       if (bookmarks.length === 0 && !bookmarksLoading) {
-        bookmarkController.start({ relayPool, activeAccount, accountManager })
+        bookmarkController.start({ relayPool, activeAccount, accountManager, eventStore: eventStore || undefined })
       }
       
       // Load contacts

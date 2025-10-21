@@ -70,6 +70,7 @@ class BookmarkController {
   private eventStore = new EventStore()
   private eventLoader: ReturnType<typeof createEventLoader> | null = null
   private addressLoader: ReturnType<typeof createAddressLoader> | null = null
+  private externalEventStore: EventStore | null = null
 
   onRawEvent(cb: RawEventCallback): () => void {
     this.rawEventListeners.push(cb)
@@ -157,6 +158,11 @@ class BookmarkController {
           idToEvent.set(coordinate, event)
         }
         
+        // Add to external event store if available
+        if (this.externalEventStore) {
+          this.externalEventStore.add(event)
+        }
+        
         onProgress()
       },
       error: () => {
@@ -199,6 +205,11 @@ class BookmarkController {
         const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
         idToEvent.set(coordinate, event)
         idToEvent.set(event.id, event)
+        
+        // Add to external event store if available
+        if (this.externalEventStore) {
+          this.externalEventStore.add(event)
+        }
         
         onProgress()
       },
@@ -337,8 +348,12 @@ class BookmarkController {
     relayPool: RelayPool
     activeAccount: unknown
     accountManager: { getActive: () => unknown }
+    eventStore?: EventStore
   }): Promise<void> {
-    const { relayPool, activeAccount, accountManager } = options
+    const { relayPool, activeAccount, accountManager, eventStore } = options
+    
+    // Store the external event store reference for adding hydrated events
+    this.externalEventStore = eventStore || null
 
     if (!activeAccount || typeof (activeAccount as { pubkey?: string }).pubkey !== 'string') {
       return
