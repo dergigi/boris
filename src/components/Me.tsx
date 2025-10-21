@@ -59,8 +59,6 @@ const Me: React.FC<MeProps> = ({
   const { filter: urlFilter } = useParams<{ filter?: string }>()
   const activeTab = propActiveTab || 'highlights'
   
-  console.log('[Me] Rendered with activeTab:', activeTab, 'propActiveTab:', propActiveTab)
-  
   // Only for own profile
   const viewingPubkey = activeAccount?.pubkey
   const [highlights, setHighlights] = useState<Highlight[]>([])
@@ -230,8 +228,6 @@ const Me: React.FC<MeProps> = ({
   const loadReadingListTab = useCallback(async () => {
     if (!viewingPubkey || !activeAccount) return
     
-    console.log('[Me] loadReadingListTab called')
-    
     setLoadedTabs(prev => {
       const hasBeenLoaded = prev.has('reading-list')
       if (!hasBeenLoaded) setLoading(true)
@@ -244,8 +240,6 @@ const Me: React.FC<MeProps> = ({
 
   const loadReadsTab = useCallback(async () => {
     if (!viewingPubkey || !activeAccount) return
-    
-    console.log('[Me] loadReadsTab called')
     
     let hasBeenLoaded = false
     setLoadedTabs(prev => {
@@ -274,8 +268,6 @@ const Me: React.FC<MeProps> = ({
 
   const loadLinksTab = useCallback(async () => {
     if (!viewingPubkey || !activeAccount) return
-    
-    console.log('[Me] loadLinksTab called')
     
     let hasBeenLoaded = false
     setLoadedTabs(prev => {
@@ -320,8 +312,6 @@ const Me: React.FC<MeProps> = ({
 
   // Load active tab data
   const loadActiveTab = useCallback(() => {
-    console.log('[Me] loadActiveTab called with activeTab:', activeTab)
-    
     if (!viewingPubkey || !activeTab) {
       setLoading(false)
       return
