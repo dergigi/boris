@@ -19,7 +19,6 @@ export async function loadUserRelayList(
 ): Promise<UserRelayInfo[]> {
   try {
     
-    const startTime = Date.now()
     
     // Try querying with streaming callback for faster results
     const events: NostrEvent[] = []
@@ -61,10 +60,8 @@ export async function loadUserRelayList(
     // Use the streaming results if we got any, otherwise fall back to the full result
     const finalEvents = events.length > 0 ? events : result
     
-    const queryTime = Date.now() - startTime
-    
     // Also try a broader query to see if we get any events at all
-    const allEvents = await queryEvents(relayPool, {
+    await queryEvents(relayPool, {
       kinds: [10002],
       limit: 5
     })

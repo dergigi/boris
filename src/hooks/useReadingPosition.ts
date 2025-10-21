@@ -153,7 +153,7 @@ export const useReadingPosition = ({
         clearTimeout(completionTimerRef.current)
       }
     }
-  }, [enabled, onPositionChange, onReadingComplete, readingCompleteThreshold, scheduleSave])
+  }, [enabled, onPositionChange, onReadingComplete, readingCompleteThreshold, scheduleSave, completionHoldMs])
 
   // Reset reading complete state when enabled changes
   useEffect(() => {

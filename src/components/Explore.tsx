@@ -455,7 +455,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         const level: 'mine' | 'friends' | 'nostrverse' = isMine ? 'mine' : isFriend ? 'friends' : 'nostrverse'
         return { ...post, level }
       })
-  }, [uniqueSortedPosts, activeAccount, followedPubkeys, visibility])
+  }, [uniqueSortedPosts, activeAccount, followedPubkeys, visibility, settings?.hideBotArticlesByName])
   
   // Helper to get reading progress for a post
   const getReadingProgress = useCallback((post: BlogPostPreview): number | undefined => {

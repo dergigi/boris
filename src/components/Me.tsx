@@ -205,15 +205,15 @@ const Me: React.FC<MeProps> = ({
   }, [viewingPubkey, relayPool, eventStore, refreshTrigger])
 
   // Tab-specific loading functions
-  const loadHighlightsTab = async () => {
+  const loadHighlightsTab = useCallback(async () => {
     if (!viewingPubkey) return
     
     // Highlights come from controller subscription (sync effect handles it)
     setLoadedTabs(prev => new Set(prev).add('highlights'))
     setLoading(false)
-  }
+  }, [viewingPubkey])
 
-  const loadWritingsTab = async () => {
+  const loadWritingsTab = useCallback(async () => {
     if (!viewingPubkey) return
     
     try {
@@ -230,9 +230,9 @@ const Me: React.FC<MeProps> = ({
       console.error('Failed to load writings:', err)
       setLoading(false)
     }
-  }
+  }, [viewingPubkey, relayPool, eventStore, refreshTrigger])
 
-  const loadReadingListTab = async () => {
+  const loadReadingListTab = useCallback(async () => {
     if (!viewingPubkey || !activeAccount) return
     
     const hasBeenLoaded = loadedTabs.has('reading-list')
@@ -246,9 +246,9 @@ const Me: React.FC<MeProps> = ({
     } finally {
       if (!hasBeenLoaded) setLoading(false)
     }
-  }
+  }, [viewingPubkey, activeAccount, loadedTabs])
 
-  const loadReadsTab = async () => {
+  const loadReadsTab = useCallback(async () => {
     if (!viewingPubkey || !activeAccount) return
     
     const hasBeenLoaded = loadedTabs.has('reads')
@@ -270,9 +270,9 @@ const Me: React.FC<MeProps> = ({
       console.error('Failed to load reads:', err)
       if (!hasBeenLoaded) setLoading(false)
     }
-  }
+  }, [viewingPubkey, activeAccount, loadedTabs, relayPool, eventStore])
 
-  const loadLinksTab = async () => {
+  const loadLinksTab = useCallback(async () => {
     if (!viewingPubkey || !activeAccount) return
     
     const hasBeenLoaded = loadedTabs.has('links')
@@ -310,7 +310,7 @@ const Me: React.FC<MeProps> = ({
       console.error('Failed to load links:', err)
       if (!hasBeenLoaded) setLoading(false)
     }
-  }
+  }, [viewingPubkey, activeAccount, loadedTabs, bookmarks, relayPool, readingProgressMap])
 
   // Load active tab data
   const loadActiveTab = useCallback(() => {
@@ -346,7 +346,7 @@ const Me: React.FC<MeProps> = ({
         loadLinksTab()
         break
     }
-  }, [viewingPubkey, activeTab, bookmarks, refreshTrigger])
+  }, [viewingPubkey, activeTab, loadHighlightsTab, loadWritingsTab, loadReadingListTab, loadReadsTab, loadLinksTab])
 
   useEffect(() => {
     loadActiveTab()
