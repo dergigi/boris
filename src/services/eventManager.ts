@@ -2,25 +2,16 @@ import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { createEventLoader } from 'applesauce-loaders/loaders'
 import { NostrEvent } from 'nostr-tools'
-import { BehaviorSubject, Observable } from 'rxjs'
-
-type EventCallback = (event: NostrEvent) => void
-type ErrorCallback = (error: Error) => void
+import { Observable } from 'rxjs'
 
 /**
- * Centralized event manager for fetching and caching events
- * Handles deduplication of requests and provides a single source of truth
+ * Centralized event manager for event fetching coordination
+ * Manages initialization and provides utilities for event loading
  */
 class EventManager {
   private eventStore: IEventStore | null = null
   private relayPool: RelayPool | null = null
   private eventLoader: ReturnType<typeof createEventLoader> | null = null
-  
-  // Track pending requests to avoid duplicates
-  private pendingRequests = new Map<string, Array<{ onSuccess: EventCallback; onError: ErrorCallback }>>()
-  
-  // Event stream for real-time updates
-  private eventSubject = new BehaviorSubject<NostrEvent | null>(null)
   
   /**
    * Initialize the event manager with event store and relay pool
@@ -29,7 +20,8 @@ class EventManager {
     this.eventStore = eventStore
     this.relayPool = relayPool
     
-    if (relayPool && this.eventLoader === null) {
+    // Recreate loader when services change
+    if (relayPool) {
       this.eventLoader = createEventLoader(relayPool, {
         eventStore: eventStore || undefined
       })
@@ -37,98 +29,40 @@ class EventManager {
   }
   
   /**
-   * Fetch an event by ID, with automatic deduplication and caching
+   * Get the event loader for fetching events
    */
-  async fetchEvent(eventId: string): Promise<NostrEvent> {
-    // Check cache first
-    if (this.eventStore) {
-      const cached = this.eventStore.getEvent(eventId)
-      if (cached) {
-        return cached
-      }
-    }
-    
-    // Return a promise that will be resolved when the event is fetched
-    return new Promise((resolve, reject) => {
-      this.fetchEventAsync(eventId, resolve, reject)
-    })
+  getEventLoader(): ReturnType<typeof createEventLoader> | null {
+    return this.eventLoader
   }
   
   /**
-   * Subscribe to event fetching with callbacks
+   * Get the event store
    */
-  private fetchEventAsync(
-    eventId: string,
-    onSuccess: EventCallback,
-    onError: ErrorCallback
-  ): void {
-    // Check if we're already fetching this event
-    if (this.pendingRequests.has(eventId)) {
-      // Add to existing request queue
-      this.pendingRequests.get(eventId)!.push({ onSuccess, onError })
-      return
-    }
-    
-    // Start a new fetch request
-    this.pendingRequests.set(eventId, [{ onSuccess, onError }])
-    
-    // If no relay pool yet, wait for it
-    if (!this.relayPool || !this.eventLoader) {
-      // Will retry when services are set
-      setTimeout(() => {
-        // Retry if still no pool
-        if (!this.relayPool) {
-          this.retryPendingRequest(eventId)
-        }
-      }, 1000)
-      return
-    }
-    
-    const subscription = this.eventLoader({ id: eventId }).subscribe({
-      next: (event: NostrEvent) => {
-        // Call all pending callbacks
-        const callbacks = this.pendingRequests.get(eventId) || []
-        this.pendingRequests.delete(eventId)
-        
-        callbacks.forEach(cb => cb.onSuccess(event))
-        
-        // Emit to stream
-        this.eventSubject.next(event)
-        
-        subscription.unsubscribe()
-      },
-      error: (err: unknown) => {
-        // Call all pending callbacks with error
-        const callbacks = this.pendingRequests.get(eventId) || []
-        this.pendingRequests.delete(eventId)
-        
-        const error = err instanceof Error ? err : new Error(String(err))
-        callbacks.forEach(cb => cb.onError(error))
-        
-        subscription.unsubscribe()
-      }
-    })
+  getEventStore(): IEventStore | null {
+    return this.eventStore
   }
   
   /**
-   * Retry pending requests after delay (useful when relay pool becomes available)
+   * Get the relay pool
    */
-  private retryPendingRequest(eventId: string): void {
-    const callbacks = this.pendingRequests.get(eventId)
-    if (!callbacks) return
-    
-    // Re-trigger the fetch
-    this.pendingRequests.delete(eventId)
-    if (callbacks.length > 0) {
-      this.fetchEventAsync(eventId, callbacks[0].onSuccess, callbacks[0].onError)
-    }
+  getRelayPool(): RelayPool | null {
+    return this.relayPool
   }
   
   /**
-   * Get the event stream for reactive updates
+   * Check if event exists in store and return it if available
    */
-  getEventStream(): Observable<NostrEvent | null> {
-    return this.eventSubject.asObservable()
+  getCachedEvent(eventId: string): NostrEvent | null {
+    if (!this.eventStore) return null
+    return this.eventStore.getEvent(eventId) || null
+  }
+  
+  /**
+   * Fetch event by ID, returning an observable
+   */
+  fetchEvent(eventId: string): Observable<NostrEvent> | null {
+    if (!this.eventLoader) return null
+    return this.eventLoader({ id: eventId })
   }
 }
 
