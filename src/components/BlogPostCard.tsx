@@ -6,6 +6,7 @@ import { formatDistance } from 'date-fns'
 import { BlogPostPreview } from '../services/exploreService'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
+import { isKnownBot } from '../config/bots'
 
 interface BlogPostCardProps {
   post: BlogPostPreview
@@ -22,7 +23,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
   const rawName = (profile?.name || profile?.display_name || '').toLowerCase()
 
   // Hide bot authors by name/display_name
-  if (hideBotByName && rawName.includes('bot')) {
+  if (hideBotByName && (rawName.includes('bot') || isKnownBot(post.author))) {
     return null
   }
   
