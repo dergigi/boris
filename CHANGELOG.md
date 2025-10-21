@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.4] - 2025-10-21
+
+### Added
+
+- Web Share Target support for PWA (system-level share integration)
+  - Boris can now receive shared URLs from other apps on mobile and desktop
+  - Implements POST-based Web Share Target API per Chrome standards
+  - Service worker intercepts share requests and redirects to handler route
+  - ShareTargetHandler component auto-saves shared URLs as web bookmarks
+  - Android compatibility with URL extraction from text field when url param is missing
+  - Automatic navigation to bookmarks list after successful save
+  - Login prompt when sharing while logged out
+
+### Changed
+
+- Manifest now includes `share_target` configuration for system share menu integration
+- Service worker handles POST requests to `/share-target` endpoint
+- Added `/share-target` route for processing incoming shared content
+
 ## [0.10.3] - 2025-10-21
 
 ### Added
@@ -2329,7 +2348,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.10.3...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.10.4...HEAD
+[0.10.4]: https://github.com/dergigi/boris/compare/v0.10.3...v0.10.4
 [0.10.3]: https://github.com/dergigi/boris/compare/v0.10.2...v0.10.3
 [0.10.2]: https://github.com/dergigi/boris/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/dergigi/boris/compare/v0.10.0...v0.10.1
