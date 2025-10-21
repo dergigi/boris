@@ -120,7 +120,18 @@ export function useArticleLoader({
     return () => {
       mountedRef.current = false
     }
-    // Intentionally excluding setter functions from dependencies to prevent race conditions
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [naddr, relayPool, settings])
+  }, [
+    naddr,
+    relayPool,
+    settings,
+    setSelectedUrl,
+    setReaderContent,
+    setReaderLoading,
+    setIsCollapsed,
+    setHighlights,
+    setHighlightsLoading,
+    setCurrentArticleCoordinate,
+    setCurrentArticleEventId,
+    setCurrentArticle
+  ])
 }

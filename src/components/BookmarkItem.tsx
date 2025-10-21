@@ -145,8 +145,20 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   }
 
   if (viewMode === 'compact') {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-    const { articleImage, ...compactProps } = sharedProps
+    const compactProps = {
+      bookmark,
+      index,
+      hasUrls,
+      extractedUrls,
+      onSelectUrl,
+      authorNpub,
+      eventNevent,
+      getAuthorDisplayName,
+      handleReadNow,
+      articleSummary,
+      contentTypeIcon: getContentTypeIcon(),
+      readingProgress
+    }
     return <CompactView {...compactProps} />
   }
 

@@ -154,9 +154,17 @@ export function useExternalUrlLoader({
     return () => {
       mountedRef.current = false
     }
-    // Intentionally excluding setter functions from dependencies to prevent race conditions
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, relayPool, eventStore, cachedUrlHighlights])
+  }, [
+    url,
+    relayPool,
+    eventStore,
+    cachedUrlHighlights,
+    setReaderContent,
+    setReaderLoading,
+    setIsCollapsed,
+    setSelectedUrl,
+    setHighlights
+  ])
 
   // Keep UI highlights synced with cached store updates without reloading content
   useEffect(() => {
@@ -169,8 +177,6 @@ export function useExternalUrlLoader({
       const next = [...additions, ...prev]
       return next.sort((a, b) => b.created_at - a.created_at)
     })
-    // setHighlights is intentionally excluded from dependencies - it's stable
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cachedUrlHighlights, url])
+  }, [cachedUrlHighlights, url, setHighlights])
 }
 

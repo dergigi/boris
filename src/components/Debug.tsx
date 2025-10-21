@@ -434,11 +434,7 @@ const Debug: React.FC<DebugProps> = ({
 
       const elapsed = Math.round(performance.now() - start)
       setTLoadHighlights(elapsed)
-      setLiveTiming(prev => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-        const { loadHighlights, ...rest } = prev
-        return rest
-      })
+      setLiveTiming(prev => ({ ...prev, loadHighlights: undefined }))
 
       DebugBus.info('debug', `Loaded ${events.length} highlight events in ${elapsed}ms`)
     } catch (err) {
@@ -798,11 +794,7 @@ const Debug: React.FC<DebugProps> = ({
 
       const elapsed = Math.round(performance.now() - start)
       setTLoadReadingProgress(elapsed)
-      setLiveTiming(prev => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-        const { loadReadingProgress, ...rest } = prev
-        return rest
-      })
+      setLiveTiming(prev => ({ ...prev, loadReadingProgress: undefined }))
 
       const finalMap = readingProgressController.getProgressMap()
       DebugBus.info('debug', `Loaded ${rawEvents.length} raw events, deduplicated to ${finalMap.size} articles in ${elapsed}ms`)
@@ -871,11 +863,7 @@ const Debug: React.FC<DebugProps> = ({
       const totalEvents = kind7Events.length + kind17Events.length
       const elapsed = Math.round(performance.now() - start)
       setTLoadMarkAsRead(elapsed)
-      setLiveTiming(prev => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-        const { loadMarkAsRead, ...rest } = prev
-        return rest
-      })
+      setLiveTiming(prev => ({ ...prev, loadMarkAsRead: undefined }))
 
       DebugBus.info('debug', `Loaded ${totalEvents} mark-as-read reactions in ${elapsed}ms`)
     } catch (err) {
@@ -929,11 +917,7 @@ const Debug: React.FC<DebugProps> = ({
       
       const elapsed = Math.round(performance.now() - start)
       setTLoadRelayList(elapsed)
-      setLiveTiming(prev => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-        const { loadRelayList, ...rest } = prev
-        return rest
-      })
+      setLiveTiming(prev => ({ ...prev, loadRelayList: undefined }))
 
       DebugBus.info('debug', `Loaded ${events.length} relay list events in ${elapsed}ms`)
       

@@ -8,6 +8,7 @@ import { AccountManager, Accounts } from 'applesauce-accounts'
 import { registerCommonAccountTypes } from 'applesauce-accounts/accounts'
 import { RelayPool } from 'applesauce-relay'
 import { NostrConnectSigner } from 'applesauce-signers'
+import type { NostrEvent } from 'nostr-tools'
 import { getDefaultBunkerPermissions } from './services/nostrConnect'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import Debug from './components/Debug'
@@ -386,16 +387,9 @@ function App() {
       // Wire the signer to use this pool; make publish non-blocking so callers don't
       // wait for every relay send to finish. Responses still resolve the pending request.
       NostrConnectSigner.subscriptionMethod = pool.subscription.bind(pool)
-      NostrConnectSigner.publishMethod = (relays: string[], event: unknown) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result: any = pool.publish(relays, event as any)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (result && typeof (result as any).subscribe === 'function') {
-          // Subscribe to the observable but ignore completion/errors (fire-and-forget)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          try { (result as any).subscribe({ complete: () => { /* noop */ }, error: () => { /* noop */ } }) } catch { /* ignore */ }
-        }
-        // Return an already-resolved promise so upstream await finishes immediately
+      NostrConnectSigner.publishMethod = (relays: string[], event: NostrEvent) => {
+        // Fire-and-forget publish; do not block callers
+        pool.publish(relays, event).catch(() => { /* ignore errors */ })
         return Promise.resolve()
       }
       
