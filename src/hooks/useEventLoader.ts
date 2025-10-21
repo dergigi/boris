@@ -25,12 +25,23 @@ export function useEventLoader({
   setIsCollapsed
 }: UseEventLoaderProps) {
   const displayEvent = useCallback((event: NostrEvent) => {
-    // Format event metadata as markdown comments for display
-    const metaMarkdown = `<!-- Event ID: ${event.id.slice(0, 16)}... Posted: ${new Date(event.created_at * 1000).toLocaleString()} Kind: ${event.kind} -->`
+    // Format event metadata as HTML header
+    const metaHtml = `<div style="opacity: 0.6; font-size: 0.9em; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">
+      <div>Event ID: <code>${event.id.slice(0, 16)}...</code></div>
+      <div>Posted: ${new Date(event.created_at * 1000).toLocaleString()}</div>
+      <div>Kind: ${event.kind}</div>
+    </div>`
+
+    // Escape HTML in content and convert newlines to breaks for plain text display
+    const escapedContent = event.content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br />')
 
     const content: ReadableContent = {
       url: `nostr:${event.id}`,
-      markdown: metaMarkdown + '\n\n' + event.content,
+      html: metaHtml + `<div style="white-space: pre-wrap; word-break: break-word;">${escapedContent}</div>`,
       title: `Note (${event.kind})`
     }
     setReaderContent(content)
@@ -78,7 +89,7 @@ export function useEventLoader({
         console.error('❌ useEventLoader: Error fetching event:', err)
         const errorContent: ReadableContent = {
           url: '',
-          markdown: `Error loading event: ${err instanceof Error ? err.message : 'Unknown error'}`,
+          html: `<div style="padding: 1rem; color: var(--color-error, red);">Error loading event: ${err instanceof Error ? err.message : 'Unknown error'}</div>`,
           title: 'Error'
         }
         setReaderContent(errorContent)
