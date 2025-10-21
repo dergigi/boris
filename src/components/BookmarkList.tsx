@@ -145,6 +145,19 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
     .filter(hasContent)
     .filter(b => !settings?.hideBookmarksWithoutCreationDate || hasCreationDate(b))
   
+  // Debug: log kind:1 events in allIndividualBookmarks
+  const kind1Bookmarks = allIndividualBookmarks.filter(b => b.kind === 1)
+  if (kind1Bookmarks.length > 0) {
+    console.log('📊 BookmarkList kind:1 events after filtering:', {
+      total: kind1Bookmarks.length,
+      samples: kind1Bookmarks.slice(0, 3).map(b => ({
+        id: b.id.slice(0, 8),
+        content: b.content?.slice(0, 30),
+        hasUrls: extractUrlsFromContent(b.content).length > 0
+      }))
+    })
+  }
+  
   // Apply filter
   const filteredBookmarks = filterBookmarksByType(allIndividualBookmarks, selectedFilter)
   
