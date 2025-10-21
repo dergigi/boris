@@ -50,6 +50,11 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
   const spokenTextRef = useRef<string>('')
   const charIndexRef = useRef<number>(0)
+  // Chunking state to reliably speak long texts from web URLs
+  const chunksRef = useRef<string[]>([])
+  const chunkIndexRef = useRef<number>(0)
+  const globalOffsetRef = useRef<number>(0)
+  const langRef = useRef<string | undefined>(undefined)
 
   // Update rate when defaultRate option changes
   useEffect(() => {
@@ -79,11 +84,21 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     }
   }, [supported, defaultLang, voice, synth])
 
-  const createUtterance = useCallback((text: string): SpeechSynthesisUtterance => {
+  const createUtterance = useCallback((text: string, langOverride?: string): SpeechSynthesisUtterance => {
     const SpeechSynthesisUtteranceConstructor = (window as Window & typeof globalThis).SpeechSynthesisUtterance
     const u = new SpeechSynthesisUtteranceConstructor(text) as SpeechSynthesisUtterance
-    u.lang = voice?.lang || defaultLang
-    if (voice) u.voice = voice
+    const resolvedLang = langOverride || voice?.lang || defaultLang
+    u.lang = resolvedLang
+    if (langOverride) {
+      const match = voices.find(v => v.lang?.toLowerCase().startsWith(langOverride.toLowerCase()))
+      if (match) {
+        u.voice = match
+      } else if (voice) {
+        u.voice = voice
+      }
+    } else if (voice) {
+      u.voice = voice
+    }
     u.rate = rate
     u.pitch = pitch
     u.volume = volume
@@ -109,6 +124,17 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     u.onend = () => {
       if (utteranceRef.current !== self) return
       console.debug('[tts] onend')
+      // Continue with next chunk if available
+      const hasMore = chunkIndexRef.current < (chunksRef.current.length - 1)
+      if (hasMore) {
+        chunkIndexRef.current += 1
+        globalOffsetRef.current += self.text.length
+        const next = chunksRef.current[chunkIndexRef.current] || ''
+        const nextUtterance = createUtterance(next, langRef.current)
+        utteranceRef.current = nextUtterance
+        synth!.speak(nextUtterance)
+        return
+      }
       setSpeaking(false)
       setPaused(false)
       utteranceRef.current = null
@@ -123,7 +149,7 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     u.onboundary = (ev: SpeechSynthesisEvent) => {
       if (utteranceRef.current !== self) return
       if (typeof ev.charIndex === 'number') {
-        const newIndex = ev.charIndex
+        const newIndex = globalOffsetRef.current + ev.charIndex
         if (newIndex > charIndexRef.current) {
           charIndexRef.current = newIndex
         }
@@ -131,7 +157,43 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     }
 
     return u
-  }, [voice, defaultLang, rate, pitch, volume])
+  }, [voice, defaultLang, rate, pitch, volume, voices, synth])
+
+  const splitIntoChunks = useCallback((text: string, maxLen = 2400): string[] => {
+    const normalized = text.replace(/\s+/g, ' ').trim()
+    if (normalized.length <= maxLen) return [normalized]
+    const sentences = normalized.split(/(?<=[.!?])\s+/)
+    const chunks: string[] = []
+    let current = ''
+    for (const s of sentences) {
+      if ((current + (current ? ' ' : '') + s).length > maxLen) {
+        if (current) chunks.push(current)
+        if (s.length > maxLen) {
+          // Hard split very long sentence
+          for (let i = 0; i < s.length; i += maxLen) {
+            chunks.push(s.slice(i, i + maxLen))
+          }
+          current = ''
+        } else {
+          current = s
+        }
+      } else {
+        current = current ? `${current} ${s}` : s
+      }
+    }
+    if (current) chunks.push(current)
+    return chunks
+  }, [])
+
+  const startSpeakingChunks = useCallback((text: string) => {
+    chunksRef.current = splitIntoChunks(text)
+    chunkIndexRef.current = 0
+    globalOffsetRef.current = 0
+    const first = chunksRef.current[0] || ''
+    const u = createUtterance(first, langRef.current)
+    utteranceRef.current = u
+    synth!.speak(u)
+  }, [createUtterance, splitIntoChunks, synth])
 
   const stop = useCallback(() => {
     if (!supported) return
@@ -142,6 +204,9 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     utteranceRef.current = null
     charIndexRef.current = 0
     spokenTextRef.current = ''
+    chunksRef.current = []
+    chunkIndexRef.current = 0
+    globalOffsetRef.current = 0
   }, [supported, synth])
 
   const speak = useCallback((text: string, langOverride?: string) => {
@@ -150,19 +215,9 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
     synth!.cancel()
     spokenTextRef.current = text
     charIndexRef.current = 0
-
-    const u = createUtterance(text)
-    if (langOverride) {
-      u.lang = langOverride
-      // try to pick a voice that matches the override
-      const available = voices
-      const match = available.find(v => v.lang?.toLowerCase().startsWith(langOverride.toLowerCase()))
-      if (match) u.voice = match
-    }
-
-    utteranceRef.current = u
-    synth!.speak(u)
-  }, [supported, synth, createUtterance, rate, voices])
+    langRef.current = langOverride
+    startSpeakingChunks(text)
+  }, [supported, synth, startSpeakingChunks, rate])
 
   const pause = useCallback(() => {
     if (!supported) return
@@ -191,21 +246,23 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
 
     if (synth!.speaking && !synth!.paused) {
       const fullText = spokenTextRef.current
-      const startIndex = Math.max(0, Math.min(charIndexRef.current, fullText.length - 1))
+      const startIndex = Math.max(0, Math.min(charIndexRef.current, fullText.length))
       const remainingText = fullText.slice(startIndex)
 
       console.debug('[tts] restart at new rate', { startIndex, remainingLen: remainingText.length })
       synth!.cancel()
-      const u = createUtterance(remainingText)
-      utteranceRef.current = u
-      synth!.speak(u)
+      // restart chunked from current global index
+      spokenTextRef.current = remainingText
+      charIndexRef.current = 0
+      langRef.current = langRef.current // keep lang
+      startSpeakingChunks(remainingText)
       return
     }
 
     if (utteranceRef.current) {
       utteranceRef.current.rate = rate
     }
-  }, [rate, supported, synth, createUtterance])
+  }, [rate, supported, synth, startSpeakingChunks])
 
   const updateRate = useCallback((newRate: number) => {
     setRate(newRate)
