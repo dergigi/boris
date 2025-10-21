@@ -314,7 +314,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
       })
       if (!hasHydratedRef.current) { hasHydratedRef.current = true; setLoading(false) }
-    }).then((friendsPosts) => {
+    }, 100, eventStore).then((friendsPosts) => {
       setBlogPosts(prev => {
         const merged = dedupeWritingsByReplaceable([...prev, ...friendsPosts])
         if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)

@@ -1,6 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
-import { Helpers } from 'applesauce-core'
+import { Helpers, IEventStore } from 'applesauce-core'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
 
@@ -22,6 +22,7 @@ export interface BlogPostPreview {
  * @param relayUrls - Array of relay URLs to query
  * @param onPost - Optional callback for streaming posts
  * @param limit - Limit for number of events to fetch (default: 100, pass null for no limit)
+ * @param eventStore - Optional event store to persist fetched events
  * @returns Array of blog post previews
  */
 export const fetchBlogPostsFromAuthors = async (
@@ -29,7 +30,8 @@ export const fetchBlogPostsFromAuthors = async (
   pubkeys: string[],
   relayUrls: string[],
   onPost?: (post: BlogPostPreview) => void,
-  limit: number | null = 100
+  limit: number | null = 100,
+  eventStore?: IEventStore
 ): Promise<BlogPostPreview[]> => {
   try {
     if (pubkeys.length === 0) {
@@ -45,12 +47,17 @@ export const fetchBlogPostsFromAuthors = async (
       ? { kinds: [KINDS.BlogPost], authors: pubkeys, limit }
       : { kinds: [KINDS.BlogPost], authors: pubkeys }
 
-    await queryEvents(
+    const events = await queryEvents(
       relayPool,
       filter,
       {
         relayUrls,
         onEvent: (event: NostrEvent) => {
+          // Store in event store immediately if provided
+          if (eventStore) {
+            eventStore.add(event)
+          }
+
           const dTag = event.tags.find(t => t[0] === 'd')?.[1] || ''
           const key = `${event.pubkey}:${dTag}`
           const existing = uniqueEvents.get(key)
@@ -73,6 +80,10 @@ export const fetchBlogPostsFromAuthors = async (
       }
     )
 
+    // Store all events in event store if provided (safety net for any missed during streaming)
+    if (eventStore) {
+      events.forEach(evt => eventStore.add(evt))
+    }
     
     // Convert to blog post previews and sort by published date (most recent first)
     const blogPosts: BlogPostPreview[] = Array.from(uniqueEvents.values())

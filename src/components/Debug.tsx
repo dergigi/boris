@@ -651,7 +651,9 @@ const Debug: React.FC<DebugProps> = ({
               return timeB - timeA
             })
           })
-        }
+        },
+        100,
+        eventStore || undefined
       )
       
       setWritingPosts(posts)
