@@ -254,7 +254,7 @@ export function useTextToSpeech(options: UseTTSOptions = {}): UseTTS {
       // restart chunked from current global index
       spokenTextRef.current = remainingText
       charIndexRef.current = 0
-      langRef.current = langRef.current // keep lang
+      // keep current language selection; no change needed here
       startSpeakingChunks(remainingText)
       return
     }
