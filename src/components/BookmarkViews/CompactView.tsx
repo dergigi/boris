@@ -30,6 +30,17 @@ export const CompactView: React.FC<CompactViewProps> = ({
   const isWebBookmark = bookmark.kind === 39701
   const isClickable = hasUrls || isArticle || isWebBookmark
   
+  // Debug logging for kind:1 without URLs
+  if (bookmark.kind === 1 && !hasUrls) {
+    console.log('🎨 CompactView rendering kind:1 without URLs:', {
+      id: bookmark.id.slice(0, 8),
+      content: bookmark.content?.slice(0, 50),
+      contentLength: bookmark.content?.length,
+      hasUrls,
+      displayText: (isArticle && articleSummary ? articleSummary : bookmark.content)?.slice(0, 50)
+    })
+  }
+  
   // Calculate progress color (matching BlogPostCard logic)
   let progressColor = '#6366f1' // Default blue (reading)
   if (readingProgress && readingProgress >= 0.95) {
