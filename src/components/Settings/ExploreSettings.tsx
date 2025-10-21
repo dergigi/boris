@@ -61,7 +61,7 @@ const ExploreSettings: React.FC<ExploreSettingsProps> = ({ settings, onUpdate })
             onChange={(e) => onUpdate({ hideBotArticlesByName: e.target.checked })}
             className="setting-checkbox"
           />
-          <span>Hide articles posted by bots</span>
+          <span>Hide content posted by bots</span>
         </label>
       </div>
     </div>
