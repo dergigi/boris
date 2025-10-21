@@ -1,15 +1,16 @@
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { RelayPool } from 'applesauce-relay'
-import { EventStore } from 'applesauce-core'
+import { IEventStore } from 'applesauce-core'
 import { createEventLoader } from 'applesauce-loaders/loaders'
 import { NostrEvent } from 'nostr-tools'
+import { ReadableContent } from '../services/readerService'
 
 interface UseEventLoaderProps {
   eventId?: string
   relayPool?: RelayPool | null
-  eventStore?: EventStore | null
+  eventStore?: IEventStore | null
   setSelectedUrl: (url: string) => void
-  setReaderContent: (content: string) => void
+  setReaderContent: (content: ReadableContent | undefined) => void
   setReaderLoading: (loading: boolean) => void
   setIsCollapsed: (collapsed: boolean) => void
 }
@@ -23,6 +24,22 @@ export function useEventLoader({
   setReaderLoading,
   setIsCollapsed
 }: UseEventLoaderProps) {
+  const displayEvent = useCallback((event: NostrEvent) => {
+    // Format event HTML for display with metadata
+    const metaHtml = `<div style="opacity: 0.6; font-size: 0.9em; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">
+      <div>Event ID: <code>${event.id.slice(0, 16)}...</code></div>
+      <div>Posted: ${new Date(event.created_at * 1000).toLocaleString()}</div>
+      <div>Kind: ${event.kind}</div>
+    </div>`
+
+    const content: ReadableContent = {
+      url: '',
+      html: metaHtml + event.content,
+      title: `Note (${event.kind})`
+    }
+    setReaderContent(content)
+  }, [setReaderContent])
+
   useEffect(() => {
     if (!eventId) return
 
@@ -47,8 +64,7 @@ export function useEventLoader({
     }
 
     const eventLoader = createEventLoader(relayPool, {
-      eventStore,
-      cacheRequest: true
+      eventStore: eventStore ?? undefined
     })
 
     const subscription = eventLoader({ id: eventId }).subscribe({
@@ -58,22 +74,16 @@ export function useEventLoader({
       },
       error: (err) => {
         console.error('Error fetching event:', err)
-        setReaderContent(`Error loading event: ${err instanceof Error ? err.message : 'Unknown error'}`)
+        const errorContent: ReadableContent = {
+          url: '',
+          html: `Error loading event: ${err instanceof Error ? err.message : 'Unknown error'}`,
+          title: 'Error'
+        }
+        setReaderContent(errorContent)
         setReaderLoading(false)
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [eventId, relayPool, eventStore])
-
-  function displayEvent(event: NostrEvent) {
-    // Format event for display with metadata
-    const meta = `<div style="opacity: 0.6; font-size: 0.9em; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">
-      <div>Event ID: <code>${event.id.slice(0, 16)}...</code></div>
-      <div>Posted: ${new Date(event.created_at * 1000).toLocaleString()}</div>
-      <div>Kind: ${event.kind}</div>
-    </div>`
-
-    setReaderContent(meta + event.content)
-  }
+  }, [eventId, relayPool, eventStore, displayEvent, setReaderLoading, setSelectedUrl, setIsCollapsed, setReaderContent])
 }

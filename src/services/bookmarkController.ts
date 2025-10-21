@@ -3,7 +3,7 @@ import { Helpers, EventStore } from 'applesauce-core'
 import { createEventLoader, createAddressLoader } from 'applesauce-loaders/loaders'
 import { NostrEvent } from 'nostr-tools'
 import { EventPointer } from 'nostr-tools/nip19'
-import { merge, from } from 'rxjs'
+import { from } from 'rxjs'
 import { mergeMap } from 'rxjs/operators'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
@@ -142,7 +142,7 @@ class BookmarkController {
     // Use mergeMap with concurrency limit instead of merge to properly batch requests
     // This prevents overwhelming relays with 96+ simultaneous requests
     from(pointers).pipe(
-      mergeMap(pointer => this.eventLoader!(pointer), { concurrency: 5 })
+      mergeMap(pointer => this.eventLoader!(pointer), 5)
     ).subscribe({
       next: (event) => {
         // Check if hydration was cancelled
@@ -189,7 +189,7 @@ class BookmarkController {
 
     // Use mergeMap with concurrency limit instead of merge to properly batch requests
     from(pointers).pipe(
-      mergeMap(pointer => this.addressLoader!(pointer), { concurrency: 5 })
+      mergeMap(pointer => this.addressLoader!(pointer), 5)
     ).subscribe({
       next: (event) => {
         // Check if hydration was cancelled
