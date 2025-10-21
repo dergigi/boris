@@ -170,11 +170,9 @@ export function hydrateItems(
   items: IndividualBookmark[],
   idToEvent: Map<string, NostrEvent>
 ): IndividualBookmark[] {
-  // Debug: log what we're trying to hydrate
   const kind1Items = items.filter(b => b.kind === 1)
   if (kind1Items.length > 0 && idToEvent.size > 0) {
     const found = kind1Items.filter(b => idToEvent.has(b.id))
-    console.log(`💧 hydrateItems: ${found.length}/${kind1Items.length} kind:1 items found in map (map has ${idToEvent.size} total events)`)
     if (found.length === 0 && kind1Items.length > 0) {
       console.log('❌ NO MATCHES! Sample item IDs:', kind1Items.slice(0, 3).map(b => b.id))
       console.log('❌ Map keys:', Array.from(idToEvent.keys()).slice(0, 3))
