@@ -891,7 +891,7 @@ const Me: React.FC<MeProps> = ({
         </div>
       </div>
 
-      <div className="me-tab-content">
+      <div className="me-tab-content" key={activeTab}>
         {renderTabContent()}
       </div>
     </div>
