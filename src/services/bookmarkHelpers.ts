@@ -205,8 +205,9 @@ export function hydrateItems(
   
   // Debug: log how many items have content
   const withContent = hydrated.filter(i => i.content && i.content.length > 0)
-  if (withContent.length > 0 || hydrated.length > 0) {
-    console.log(`📝 Hydrated ${withContent.length}/${hydrated.length} items have content`)
+  const notFound = items.filter(i => !idToEvent.has(i.id))
+  if (hydrated.length > 0) {
+    console.log(`📝 Hydrated ${withContent.length}/${hydrated.length} have content, ${notFound.length}/${items.length} not found in map`)
   }
   
   return hydrated
