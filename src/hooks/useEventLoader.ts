@@ -70,6 +70,12 @@ export function useEventLoader({
 
     // Otherwise fetch from relays
     if (!relayPool) {
+      const errorContent: ReadableContent = {
+        url: '',
+        html: `<div style="padding: 1rem; color: var(--color-error, red);">No relay pool available to fetch event</div>`,
+        title: 'Error'
+      }
+      setReaderContent(errorContent)
       setReaderLoading(false)
       return
     }
@@ -86,7 +92,7 @@ export function useEventLoader({
       error: (err) => {
         const errorContent: ReadableContent = {
           url: '',
-          html: `<div style="padding: 1rem; color: var(--color-error, red);">Error loading event: ${err instanceof Error ? err.message : 'Unknown error'}</div>`,
+          html: `<div style="padding: 1rem; color: var(--color-error, red);">Failed to load event: ${err instanceof Error ? err.message : 'Unknown error'}</div>`,
           title: 'Error'
         }
         setReaderContent(errorContent)
