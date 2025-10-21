@@ -311,6 +311,20 @@ class BookmarkController {
           encryptedContent: undefined
         }
         
+        // Debug: log the actual content being emitted
+        const kind1InEmit = sortedBookmarks.filter(b => b.kind === 1)
+        if (kind1InEmit.length > 0) {
+          console.log('📤 Emitting Bookmark object with individualBookmarks:', {
+            totalKind1: kind1InEmit.length,
+            withContent: kind1InEmit.filter(b => b.content && b.content.length > 0).length,
+            samples: kind1InEmit.slice(0, 2).map(b => ({
+              id: b.id.slice(0, 12),
+              content: b.content?.slice(0, 20),
+              contentLength: b.content?.length
+            }))
+          })
+        }
+        
         this.bookmarksListeners.forEach(cb => cb([bookmark]))
       }
 
