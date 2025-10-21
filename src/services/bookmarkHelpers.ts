@@ -21,12 +21,16 @@ export interface AddressPointer {
   pubkey: string
   identifier: string
   relays?: string[]
+  added_at?: number
+  created_at?: number
 }
 
 export interface EventPointer {
   id: string
   relays?: string[]
   author?: string
+  added_at?: number
+  created_at?: number
 }
 
 export interface ApplesauceBookmarks {
@@ -77,14 +81,14 @@ export const processApplesauceBookmarks = (
         allItems.push({
           id: note.id,
           content: '',
-          created_at: parentCreatedAt || 0,
+          created_at: note.created_at || parentCreatedAt || 0,
           pubkey: note.author || activeAccount.pubkey,
           kind: 1, // Short note kind
           tags: [],
           parsedContent: undefined,
           type: 'event' as const,
           isPrivate,
-          added_at: parentCreatedAt || 0
+          added_at: note.added_at || parentCreatedAt || 0
         })
       })
     }
@@ -97,14 +101,14 @@ export const processApplesauceBookmarks = (
         allItems.push({
           id: coordinate,
           content: '',
-          created_at: parentCreatedAt || 0,
+          created_at: article.created_at || parentCreatedAt || 0,
           pubkey: article.pubkey,
           kind: article.kind, // Usually 30023 for long-form articles
           tags: [],
           parsedContent: undefined,
           type: 'event' as const,
           isPrivate,
-          added_at: parentCreatedAt || 0
+          added_at: article.added_at || parentCreatedAt || 0
         })
       })
     }
