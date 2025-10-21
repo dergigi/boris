@@ -55,50 +55,36 @@ export function useEventLoader({
   useEffect(() => {
     if (!eventId) return
 
-    // Try to get from event store first (check cache synchronously)
-    const cachedEvent = eventManager.getCachedEvent(eventId)
-    if (cachedEvent) {
-      displayEvent(cachedEvent)
-      setReaderLoading(false)
-      setIsCollapsed(false)
-      setSelectedUrl('')
-      return
-    }
-
-    // Event not in cache, set loading state and fetch from relays
     setReaderLoading(true)
     setReaderContent(undefined)
     setSelectedUrl('') // Don't set nostr: URL to avoid showing highlights
     setIsCollapsed(false)
 
-    // If no relay pool yet, wait for it (will re-run when relayPool changes)
-    if (!relayPool) {
-      return
-    }
+    // Fetch using event manager (handles cache, deduplication, and retry)
+    let cancelled = false
 
-    // Fetch from relays using event manager's loader
-    const eventLoader = eventManager.getEventLoader()
-    if (!eventLoader) {
-      setReaderLoading(false)
-      return
-    }
-
-    const subscription = eventLoader({ id: eventId }).subscribe({
-      next: (event) => {
-        displayEvent(event)
-        setReaderLoading(false)
-      },
-      error: (err) => {
-        const errorContent: ReadableContent = {
-          url: '',
-          html: `<div style="padding: 1rem; color: var(--color-error, red);">Failed to load event: ${err instanceof Error ? err.message : 'Unknown error'}</div>`,
-          title: 'Error'
+    eventManager.fetchEvent(eventId).then(
+      (event) => {
+        if (!cancelled) {
+          displayEvent(event)
+          setReaderLoading(false)
         }
-        setReaderContent(errorContent)
-        setReaderLoading(false)
+      },
+      (err) => {
+        if (!cancelled) {
+          const errorContent: ReadableContent = {
+            url: '',
+            html: `<div style="padding: 1rem; color: var(--color-error, red);">Failed to load event: ${err instanceof Error ? err.message : 'Unknown error'}</div>`,
+            title: 'Error'
+          }
+          setReaderContent(errorContent)
+          setReaderLoading(false)
+        }
       }
-    })
+    )
 
-    return () => subscription.unsubscribe()
-  }, [eventId, relayPool, displayEvent, setReaderLoading, setSelectedUrl, setIsCollapsed, setReaderContent])
+    return () => {
+      cancelled = true
+    }
+  }, [eventId, displayEvent, setReaderLoading, setSelectedUrl, setIsCollapsed, setReaderContent])
 }
