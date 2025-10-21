@@ -49,19 +49,36 @@ export function useEventLoader({
     setReaderContent(baseContent)
 
     // Background: resolve author profile for kind:1 and update title
-    if (event.kind === 1 && relayPool && eventStore) {
+    if (event.kind === 1 && eventStore) {
       (async () => {
         try {
-          const profiles = await fetchProfiles(relayPool, eventStore as unknown as IEventStore, [event.pubkey])
-          if (!profiles || profiles.length === 0) return
-          const latest = profiles.sort((a, b) => (b.created_at || 0) - (a.created_at || 0))[0]
           let resolved = ''
-          try {
-            const obj = JSON.parse(latest.content || '{}') as { name?: string; display_name?: string; nip05?: string }
-            resolved = obj.display_name || obj.name || obj.nip05 || ''
-          } catch {
-            // ignore
+
+          // First, try to get from event store cache
+          const storedProfile = eventStore.getEvent(event.pubkey + ':0')
+          if (storedProfile) {
+            try {
+              const obj = JSON.parse(storedProfile.content || '{}') as { name?: string; display_name?: string; nip05?: string }
+              resolved = obj.display_name || obj.name || obj.nip05 || ''
+            } catch {
+              // ignore parse errors
+            }
           }
+
+          // If not found in event store, fetch from relays
+          if (!resolved && relayPool) {
+            const profiles = await fetchProfiles(relayPool, eventStore as unknown as IEventStore, [event.pubkey])
+            if (profiles && profiles.length > 0) {
+              const latest = profiles.sort((a, b) => (b.created_at || 0) - (a.created_at || 0))[0]
+              try {
+                const obj = JSON.parse(latest.content || '{}') as { name?: string; display_name?: string; nip05?: string }
+                resolved = obj.display_name || obj.name || obj.nip05 || ''
+              } catch {
+                // ignore parse errors
+              }
+            }
+          }
+
           if (resolved) {
             setReaderContent({ ...baseContent, title: `Note by @${resolved}` })
           }
