@@ -152,6 +152,14 @@ class BookmarkController {
         
         idToEvent.set(event.id, event)
         
+        // Log all fetched events to see what we're getting
+        console.log('📥 Fetched event:', {
+          id: event.id.slice(0, 12),
+          kind: event.kind,
+          contentLen: event.content?.length || 0,
+          totalInMap: idToEvent.size
+        })
+        
         if (event.kind === 1 && event.content) {
           console.log('✅ Fetched kind:1 with content:', {
             id: event.id.slice(0, 12),
@@ -274,6 +282,10 @@ class BookmarkController {
       })
       
       console.log(`📋 Requesting hydration for: ${noteIds.length} note IDs, ${coordinates.length} coordinates`)
+      
+      // Show sample of what we're requesting
+      const sampleIds = noteIds.slice(0, 3)
+      console.log(`📋 Sample note IDs to request:`, sampleIds)
       
       // Helper to build and emit bookmarks
       const emitBookmarks = (idToEvent: Map<string, NostrEvent>) => {
