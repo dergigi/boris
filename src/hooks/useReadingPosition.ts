@@ -29,6 +29,7 @@ export const useReadingPosition = ({
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasSavedOnce = useRef(false)
   const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastSavedAtRef = useRef<number>(0)
 
   // Debounced save function
   const scheduleSave = useCallback((currentPosition: number) => {
@@ -36,14 +37,49 @@ export const useReadingPosition = ({
       return
     }
 
-    // Don't save if position hasn't changed significantly (less than 1%)
-    // But always save if we've reached 100% (completion)
-    const hasSignificantChange = Math.abs(currentPosition - lastSavedPosition.current) >= 0.01
-    const hasReachedCompletion = currentPosition === 1 && lastSavedPosition.current < 1
-    const isInitialSave = !hasSavedOnce.current
-    
-    if (!hasSignificantChange && !hasReachedCompletion && !isInitialSave) {
-      // Not significant enough to save
+    // Always save instantly when we reach completion (1.0)
+    if (currentPosition === 1 && lastSavedPosition.current < 1) {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = null
+      }
+      lastSavedPosition.current = 1
+      hasSavedOnce.current = true
+      lastSavedAtRef.current = Date.now()
+      onSave(1)
+      return
+    }
+
+    // Require at least 5% progress change to consider saving
+    const MIN_DELTA = 0.05
+    const hasSignificantChange = Math.abs(currentPosition - lastSavedPosition.current) >= MIN_DELTA
+
+    // Enforce a minimum interval between saves (15s) to avoid spamming
+    const MIN_INTERVAL_MS = 15000
+    const nowMs = Date.now()
+    const enoughTimeElapsed = nowMs - lastSavedAtRef.current >= MIN_INTERVAL_MS
+
+    // Allow the very first meaningful save (when crossing 5%) regardless of interval
+    const isFirstMeaningful = !hasSavedOnce.current && currentPosition >= MIN_DELTA
+
+    if (!hasSignificantChange && !isFirstMeaningful) {
+      return
+    }
+
+    // If interval hasn't elapsed yet, delay until autoSaveInterval but still cap frequency
+    if (!enoughTimeElapsed && !isFirstMeaningful) {
+      // Clear and reschedule within the remaining window, but not sooner than MIN_INTERVAL_MS
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
+      }
+      const remaining = Math.max(0, MIN_INTERVAL_MS - (nowMs - lastSavedAtRef.current))
+      const delay = Math.max(autoSaveInterval, remaining)
+      saveTimerRef.current = setTimeout(() => {
+        lastSavedPosition.current = currentPosition
+        hasSavedOnce.current = true
+        lastSavedAtRef.current = Date.now()
+        onSave(currentPosition)
+      }, delay)
       return
     }
 
@@ -52,27 +88,26 @@ export const useReadingPosition = ({
       clearTimeout(saveTimerRef.current)
     }
 
-    // Schedule new save
+    // Schedule new save using the larger of autoSaveInterval and MIN_INTERVAL_MS
+    const delay = Math.max(autoSaveInterval, MIN_INTERVAL_MS)
     saveTimerRef.current = setTimeout(() => {
       lastSavedPosition.current = currentPosition
       hasSavedOnce.current = true
+      lastSavedAtRef.current = Date.now()
       onSave(currentPosition)
-    }, autoSaveInterval)
+    }, delay)
   }, [syncEnabled, onSave, autoSaveInterval])
 
   // Immediate save function
   const saveNow = useCallback(() => {
     if (!syncEnabled || !onSave) return
-    
-    // Cancel any pending saves
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current)
       saveTimerRef.current = null
     }
-
-    // Always allow immediate save (including 0%)
     lastSavedPosition.current = position
     hasSavedOnce.current = true
+    lastSavedAtRef.current = Date.now()
     onSave(position)
   }, [syncEnabled, onSave, position])
 
