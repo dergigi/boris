@@ -108,7 +108,13 @@ sw.addEventListener('fetch', (event: FetchEvent) => {
       const formData = await event.request.formData()
       const title = (formData.get('title') || '').toString()
       const text = (formData.get('text') || '').toString()
-      let link = (formData.get('link') || '').toString()
+      // Accept multiple possible field names just in case different casings are used
+      let link = (
+        formData.get('link') ||
+        formData.get('Link') ||
+        formData.get('url') ||
+        ''
+      ).toString()
       
       // Android often omits url param, extract from text
       if (!link && text) {
