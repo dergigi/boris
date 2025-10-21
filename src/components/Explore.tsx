@@ -263,44 +263,44 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         ? fetchNostrverseBlogPosts(relayPool, relayUrls, 50, eventStore || undefined).catch(() => [])
         : Promise.resolve([])
 
-      // Fire non-blocking fetches and merge as they resolve
-      fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls)
-        .then((friendsPosts) => {
-          setBlogPosts(prev => {
-            const merged = dedupeWritingsByReplaceable([...prev, ...friendsPosts])
-            const sorted = merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-            if (activeAccount) setCachedPosts(activeAccount.pubkey, sorted)
-            // Pre-cache profiles in background
-            const authorPubkeys = Array.from(new Set(sorted.map(p => p.author)))
-            fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch(() => {})
-            return sorted
-          })
+        // Fire non-blocking fetches and merge as they resolve
+        fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls)
+          .then((friendsPosts) => {
+            setBlogPosts(prev => {
+              const merged = dedupeWritingsByReplaceable([...prev, ...friendsPosts])
+              const sorted = merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+              if (activeAccount) setCachedPosts(activeAccount.pubkey, sorted)
+              // Pre-cache profiles in background
+              const authorPubkeys = Array.from(new Set(sorted.map(p => p.author)))
+              fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch(() => {})
+              return sorted
+            })
+          }).catch(() => {})
+
+        fetchHighlightsFromAuthors(relayPool, contactsArray)
+          .then((friendsHighlights) => {
+            setHighlights(prev => {
+              const merged = dedupeHighlightsById([...prev, ...friendsHighlights])
+              const sorted = merged.sort((a, b) => b.created_at - a.created_at)
+              if (activeAccount) setCachedHighlights(activeAccount.pubkey, sorted)
+              return sorted
+            })
+          }).catch(() => {})
+
+        nostrversePostsPromise.then((nostrversePosts) => {
+          setBlogPosts(prev => dedupeWritingsByReplaceable([...prev, ...nostrversePosts]).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at)))
         }).catch(() => {})
 
-      fetchHighlightsFromAuthors(relayPool, contactsArray)
-        .then((friendsHighlights) => {
-          setHighlights(prev => {
-            const merged = dedupeHighlightsById([...prev, ...friendsHighlights])
-            const sorted = merged.sort((a, b) => b.created_at - a.created_at)
-            if (activeAccount) setCachedHighlights(activeAccount.pubkey, sorted)
-            return sorted
-          })
-        }).catch(() => {})
-
-      nostrversePostsPromise.then((nostrversePosts) => {
-        setBlogPosts(prev => dedupeWritingsByReplaceable([...prev, ...nostrversePosts]).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at)))
-      }).catch(() => {})
-
-      fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
-        .then((nostriverseHighlights) => {
-          setHighlights(prev => dedupeHighlightsById([...prev, ...nostriverseHighlights]).sort((a, b) => b.created_at - a.created_at))
-        }).catch(() => {})
-    } catch (err) {
-      console.error('Failed to load data:', err)
-      // No blocking error - user can pull-to-refresh
-    } finally {
-      // loading is already turned off after seeding
-    }
+        fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
+          .then((nostriverseHighlights) => {
+            setHighlights(prev => dedupeHighlightsById([...prev, ...nostriverseHighlights]).sort((a, b) => b.created_at - a.created_at))
+          }).catch(() => {})
+      } catch (err) {
+        console.error('Failed to load data:', err)
+        // No blocking error - user can pull-to-refresh
+      } finally {
+        // loading is already turned off after seeding
+      }
   }, [relayPool, activeAccount, eventStore, settings, visibility.nostrverse, followedPubkeys])
 
   useEffect(() => {
@@ -431,6 +431,12 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         const publishedTime = post.published || post.event.created_at
         if (publishedTime > maxFutureTime) return false
         
+        // Hide bot authors by profile display name if setting enabled
+        if (settings?.hideBotArticlesByName !== false) {
+          // Profile resolution and filtering is handled in BlogPostCard via ProfileModel
+          // Keep list intact here; individual cards will render null if author is a bot
+        }
+        
         // Apply visibility filters
         const isMine = activeAccount && post.author === activeAccount.pubkey
         const isFriend = followedPubkeys.has(post.author)
@@ -498,6 +504,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
                 href={getPostUrl(post)}
                 level={post.level}
                 readingProgress={getReadingProgress(post)}
+                hideBotByName={settings?.hideBotArticlesByName !== false}
               />
             ))}
           </div>

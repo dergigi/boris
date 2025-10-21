@@ -832,6 +832,7 @@ const Me: React.FC<MeProps> = ({
                 post={post}
                 href={getPostUrl(post)}
                 readingProgress={getWritingReadingProgress(post)}
+                hideBotByName={settings.hideBotArticlesByName !== false}
               />
             ))}
           </div>

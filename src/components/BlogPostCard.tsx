@@ -12,12 +12,19 @@ interface BlogPostCardProps {
   href: string
   level?: 'mine' | 'friends' | 'nostrverse'
   readingProgress?: number // 0-1 reading progress (optional)
+  hideBotByName?: boolean // default true
 }
 
-const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingProgress }) => {
+const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingProgress, hideBotByName = true }) => {
   const profile = useEventModel(Models.ProfileModel, [post.author])
   const displayName = profile?.name || profile?.display_name || 
     `${post.author.slice(0, 8)}...${post.author.slice(-4)}`
+  const rawName = (profile?.name || profile?.display_name || '').toLowerCase()
+
+  // Hide bot authors by name/display_name
+  if (hideBotByName && rawName.includes('bot')) {
+    return null
+  }
   
   const publishedDate = post.published || post.event.created_at
   const formattedDate = formatDistance(new Date(publishedDate * 1000), new Date(), { 

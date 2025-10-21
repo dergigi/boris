@@ -65,6 +65,8 @@ export interface UserSettings {
   autoMarkAsReadOnCompletion?: boolean // default: false (opt-in)
   // Bookmark filtering
   hideBookmarksWithoutCreationDate?: boolean // default: false
+  // Content filtering
+  hideBotArticlesByName?: boolean // default: true - hide authors whose profile name includes "bot"
   // TTS language selection
   ttsUseSystemLanguage?: boolean // default: false
   ttsDetectContentLanguage?: boolean // default: true

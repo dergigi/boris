@@ -51,6 +51,20 @@ const ExploreSettings: React.FC<ExploreSettingsProps> = ({ settings, onUpdate })
           />
         </div>
       </div>
+
+      <div className="setting-group">
+        <label htmlFor="hideBotArticlesByName" className="checkbox-label">
+          <input
+            id="hideBotArticlesByName"
+            type="checkbox"
+            checked={settings.hideBotArticlesByName !== false}
+            onChange={(e) => onUpdate({ hideBotArticlesByName: e.target.checked })}
+            className="setting-checkbox"
+          />
+          <span>Hide articles from accounts whose name contains "bot"</span>
+        </label>
+        <div className="setting-hint">Examples: Unlocks Bot, Step Counter Bot, Bitcoin Magazine News Bot</div>
+      </div>
     </div>
   )
 }
