@@ -68,15 +68,10 @@ export function useEventLoader({
     setSelectedUrl('') // Don't set nostr: URL to avoid showing highlights
     setIsCollapsed(false)
 
-    // Otherwise fetch from relays
+    // If no relay pool yet, wait for it or show a placeholder
     if (!relayPool) {
-      const errorContent: ReadableContent = {
-        url: '',
-        html: `<div style="padding: 1rem; color: var(--color-error, red);">No relay pool available to fetch event</div>`,
-        title: 'Error'
-      }
-      setReaderContent(errorContent)
-      setReaderLoading(false)
+      // Show loading state until relayPool becomes available
+      // The effect will re-run once relayPool is set
       return
     }
 
