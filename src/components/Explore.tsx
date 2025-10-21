@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired, faArrowsRotate, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
@@ -8,7 +8,7 @@ import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { nip19 } from 'nostr-tools'
 import { useNavigate } from 'react-router-dom'
-import { fetchContacts } from '../services/contactService'
+// Contacts are managed via controller subscription
 import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
 import { fetchHighlightsFromAuthors } from '../services/highlightService'
 import { fetchProfiles } from '../services/profileService'
@@ -31,6 +31,7 @@ import { dedupeHighlightsById, dedupeWritingsByReplaceable } from '../utils/dedu
 import { writingsController } from '../services/writingsController'
 import { nostrverseWritingsController } from '../services/nostrverseWritingsController'
 import { readingProgressController } from '../services/readingProgressController'
+import { contactsController } from '../services/contactsController'
 
 // Accessors from Helpers (currently unused here)
 // const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
@@ -56,6 +57,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [hasLoadedNostrverse, setHasLoadedNostrverse] = useState(false)
   const [hasLoadedMine, setHasLoadedMine] = useState(false)
   const [hasLoadedNostrverseHighlights, setHasLoadedNostrverseHighlights] = useState(false)
+  const hasHydratedRef = useRef(false)
   
   // Get myHighlights directly from controller
   const [/* myHighlights */, setMyHighlights] = useState<Highlight[]>([])
@@ -105,6 +107,21 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       unsubHighlights()
     }
   }, [])
+
+  // Subscribe to contacts stream and mirror into local state
+  useEffect(() => {
+    const unsubscribe = contactsController.onContacts((contacts) => {
+      setFollowedPubkeys(new Set(contacts))
+    })
+    return () => unsubscribe()
+  }, [])
+
+  // Ensure contacts controller is started for the active account (non-blocking)
+  useEffect(() => {
+    if (relayPool && activeAccount?.pubkey) {
+      contactsController.start({ relayPool, pubkey: activeAccount.pubkey }).catch(() => {})
+    }
+  }, [relayPool, activeAccount?.pubkey])
 
   // Subscribe to nostrverse highlights controller for global stream
   useEffect(() => {
@@ -246,55 +263,28 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     setLoading(true)
 
     try {
-      // Followed pubkeys
-      if (activeAccount?.pubkey) {
-        fetchContacts(relayPool, activeAccount.pubkey)
-        .then((contacts) => {
-          setFollowedPubkeys(new Set(contacts))
-        })
-        .catch(() => {})
-      }
-
       // Prepare parallel fetches
       const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-      const contactsArray = Array.from(followedPubkeys)
 
-      const nostrversePostsPromise: Promise<BlogPostPreview[]> = (!activeAccount || (activeAccount && visibility.nostrverse))
-        ? fetchNostrverseBlogPosts(relayPool, relayUrls, 50, eventStore || undefined).catch(() => [])
-        : Promise.resolve([])
-
-        // Fire non-blocking fetches and merge as they resolve
-        fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls)
-          .then((friendsPosts) => {
+      // Nostrverse writings: subscribe-style via onPost; hydrate on first post
+      if (!activeAccount || (activeAccount && visibility.nostrverse)) {
+        fetchNostrverseBlogPosts(
+          relayPool,
+          relayUrls,
+          50,
+          eventStore || undefined,
+          (post) => {
             setBlogPosts(prev => {
-              const merged = dedupeWritingsByReplaceable([...prev, ...friendsPosts])
-              const sorted = merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-              if (activeAccount) setCachedPosts(activeAccount.pubkey, sorted)
-              // Pre-cache profiles in background
-              const authorPubkeys = Array.from(new Set(sorted.map(p => p.author)))
-              fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch(() => {})
-              return sorted
+              const merged = dedupeWritingsByReplaceable([...prev, post])
+              if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
+              return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
             })
-          }).catch(() => {})
-
-        fetchHighlightsFromAuthors(relayPool, contactsArray)
-          .then((friendsHighlights) => {
-            setHighlights(prev => {
-              const merged = dedupeHighlightsById([...prev, ...friendsHighlights])
-              const sorted = merged.sort((a, b) => b.created_at - a.created_at)
-              if (activeAccount) setCachedHighlights(activeAccount.pubkey, sorted)
-              return sorted
-            })
-          }).catch(() => {})
-
-        nostrversePostsPromise.then((nostrversePosts) => {
+            if (!hasHydratedRef.current) { hasHydratedRef.current = true; setLoading(false) }
+          }
+        ).then((nostrversePosts) => {
           setBlogPosts(prev => dedupeWritingsByReplaceable([...prev, ...nostrversePosts]).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at)))
         }).catch(() => {})
-
-        fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
-          .then((nostriverseHighlights) => {
-            setHighlights(prev => dedupeHighlightsById([...prev, ...nostriverseHighlights]).sort((a, b) => b.created_at - a.created_at))
-          }).catch(() => {})
+      }
       } catch (err) {
         console.error('Failed to load data:', err)
         // No blocking error - user can pull-to-refresh
@@ -306,6 +296,47 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   useEffect(() => {
     loadData()
   }, [loadData, refreshTrigger])
+
+  // Kick off friends fetches reactively when contacts arrive
+  useEffect(() => {
+    if (!relayPool) return
+    if (followedPubkeys.size === 0) return
+    const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+    const contactsArray = Array.from(followedPubkeys)
+
+    fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls, (post) => {
+      setBlogPosts(prev => {
+        const merged = dedupeWritingsByReplaceable([...prev, post])
+        if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
+        // Pre-cache profiles in background
+        const authorPubkeys = Array.from(new Set(merged.map(p => p.author)))
+        fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch(() => {})
+        return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+      })
+      if (!hasHydratedRef.current) { hasHydratedRef.current = true; setLoading(false) }
+    }).then((friendsPosts) => {
+      setBlogPosts(prev => {
+        const merged = dedupeWritingsByReplaceable([...prev, ...friendsPosts])
+        if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
+        return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+      })
+    }).catch(() => {})
+
+    fetchHighlightsFromAuthors(relayPool, contactsArray, (highlight) => {
+      setHighlights(prev => {
+        const merged = dedupeHighlightsById([...prev, highlight])
+        if (activeAccount) setCachedHighlights(activeAccount.pubkey, merged)
+        return merged.sort((a, b) => b.created_at - a.created_at)
+      })
+      if (!hasHydratedRef.current) { hasHydratedRef.current = true; setLoading(false) }
+    }, eventStore || undefined).then((friendsHighlights) => {
+      setHighlights(prev => {
+        const merged = dedupeHighlightsById([...prev, ...friendsHighlights])
+        if (activeAccount) setCachedHighlights(activeAccount.pubkey, merged)
+        return merged.sort((a, b) => b.created_at - a.created_at)
+      })
+    }).catch(() => {})
+  }, [relayPool, followedPubkeys, eventStore, settings, activeAccount])
 
   // Lazy-load nostrverse writings when user toggles it on (logged in)
   useEffect(() => {
