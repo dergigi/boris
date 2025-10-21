@@ -269,11 +269,14 @@ class BookmarkController {
 
       const allItems = [...publicItemsAll, ...privateItemsAll]
       
+      // Dedupe BEFORE hydration to avoid requesting duplicate events
+      const deduped = dedupeBookmarksById(allItems)
+      
       // Separate hex IDs from coordinates
       const noteIds: string[] = []
       const coordinates: string[] = []
       
-      allItems.forEach(i => {
+      deduped.forEach(i => {
         if (/^[0-9a-f]{64}$/i.test(i.id)) {
           noteIds.push(i.id)
         } else if (i.id.includes(':')) {
@@ -289,10 +292,12 @@ class BookmarkController {
       
       // Helper to build and emit bookmarks
       const emitBookmarks = (idToEvent: Map<string, NostrEvent>) => {
-        const allBookmarks = dedupeBookmarksById([
+        // Now hydrate the ORIGINAL items (which may have duplicates), using the deduplicated results
+        // This preserves the original public/private split while still getting all the content
+        const allBookmarks = [
           ...hydrateItems(publicItemsAll, idToEvent),
           ...hydrateItems(privateItemsAll, idToEvent)
-        ])
+        ]
         
         // Debug: log what we have
         const kind1Items = allBookmarks.filter(b => b.kind === 1)
