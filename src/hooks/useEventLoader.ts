@@ -25,7 +25,6 @@ export function useEventLoader({
   setIsCollapsed
 }: UseEventLoaderProps) {
   const displayEvent = useCallback((event: NostrEvent) => {
-    console.log('🎨 displayEvent: Creating ReadableContent from event')
     // Format event metadata as HTML header
     const metaHtml = `<div style="opacity: 0.6; font-size: 0.9em; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">
       <div>Event ID: <code>${event.id.slice(0, 16)}...</code></div>
@@ -45,20 +44,16 @@ export function useEventLoader({
       html: metaHtml + `<div style="white-space: pre-wrap; word-break: break-word;">${escapedContent}</div>`,
       title: `Note (${event.kind})`
     }
-    console.log('🎨 displayEvent: Setting readerContent with html:', { title: content.title, htmlLength: content.html?.length })
     setReaderContent(content)
   }, [setReaderContent])
 
   useEffect(() => {
     if (!eventId) return
 
-    console.log('🔍 useEventLoader: Loading event:', eventId)
-    
     // Try to get from event store first - do this synchronously before setting loading state
     if (eventStore) {
       const cachedEvent = eventStore.getEvent(eventId)
       if (cachedEvent) {
-        console.log('✅ useEventLoader: Found cached event (instant load):', cachedEvent)
         displayEvent(cachedEvent)
         setReaderLoading(false)
         setIsCollapsed(false)
@@ -75,24 +70,20 @@ export function useEventLoader({
 
     // Otherwise fetch from relays
     if (!relayPool) {
-      console.log('❌ useEventLoader: No relay pool available')
       setReaderLoading(false)
       return
     }
 
-    console.log('📡 useEventLoader: Fetching from relays...')
     const eventLoader = createEventLoader(relayPool, {
       eventStore: eventStore ?? undefined
     })
 
     const subscription = eventLoader({ id: eventId }).subscribe({
       next: (event) => {
-        console.log('✅ useEventLoader: Fetched event from relays:', event)
         displayEvent(event)
         setReaderLoading(false)
       },
       error: (err) => {
-        console.error('❌ useEventLoader: Error fetching event:', err)
         const errorContent: ReadableContent = {
           url: '',
           html: `<div style="padding: 1rem; color: var(--color-error, red);">Error loading event: ${err instanceof Error ? err.message : 'Unknown error'}</div>`,

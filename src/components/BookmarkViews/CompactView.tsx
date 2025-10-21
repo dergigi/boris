@@ -35,20 +35,6 @@ export const CompactView: React.FC<CompactViewProps> = ({
   
   const displayText = isArticle && articleSummary ? articleSummary : bookmark.content
 
-  // Debug empty bookmarks
-  if (!displayText && bookmark.kind === 1) {
-    const debugInfo: Record<string, unknown> = {
-      id: bookmark.id.slice(0, 12),
-      content: bookmark.content,
-      contentLength: bookmark.content?.length,
-      contentType: typeof bookmark.content,
-      parsedContent: !!bookmark.parsedContent,
-      created_at: bookmark.created_at,
-      sourceKind: (bookmark as unknown as Record<string, unknown>).sourceKind
-    }
-    console.log('📌 Empty kind:1 bookmark:', debugInfo)
-  }
-
   // Calculate progress color
   let progressColor = '#6366f1' // Default blue (reading)
   if (readingProgress && readingProgress >= 0.95) {

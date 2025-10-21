@@ -58,11 +58,6 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   const showSupport = location.pathname === '/support'
   const eventId = eventIdParam
   
-  // Debug event loading
-  if (eventId) {
-    console.log('📍 Bookmarks: Event route detected. eventId:', eventId)
-  }
-  
   // Extract tab from explore routes
   const exploreTab = location.pathname === '/explore/writings' ? 'writings' : 'highlights'
   
