@@ -114,6 +114,17 @@ export default defineConfig({
         background_color: '#0b1220',
         orientation: 'any',
         categories: ['productivity', 'social', 'utilities'],
+        // Web Share Target configuration so the installed PWA shows up in the system share sheet
+        share_target: {
+          action: '/share-target',
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'link'
+          }
+        },
         icons: [
           { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
