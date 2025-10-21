@@ -293,7 +293,10 @@ class BookmarkController {
         const enriched = allBookmarks.map(b => ({
           ...b,
           tags: b.tags || [],
-          content: b.content || ''
+          // Prefer hydrated content; fallback to any cached event content in external store
+          content: b.content && b.content.length > 0
+            ? b.content
+            : (this.externalEventStore?.getEvent(b.id)?.content || '')
         }))
         
         const sortedBookmarks = enriched
