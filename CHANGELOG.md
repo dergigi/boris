@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.6] - 2025-10-21
+
+### Added
+
+- Text-to-speech reliability improvements
+  - Chunking support for long-form content to prevent WebSpeech API cutoffs
+  - Automatic chunk-based resumption for interrupted playback
+  - Better handling of content exceeding browser TTS limits
+
+### Fixed
+
+- Tab switching regression on `/me` page
+  - Resolved infinite update loop caused by circular dependency in `useCallback` hooks
+  - Tab navigation now properly updates UI when URL changes
+  - Removed `loadedTabs` from dependency arrays to prevent re-render cycles
+- Explore page data loading patterns
+  - Implemented subscribe-first, non-blocking loading model
+  - Removed all timeouts in favor of immediate subscription and progressive hydration
+  - Contacts, writings, and highlights now stream results as they arrive
+  - Nostrverse content loads in background without blocking UI
+- Text-to-speech handler cleanup
+  - Removed no-op self-assignment in rate change handler
+
 ## [0.10.4] - 2025-10-21
 
 ### Added
