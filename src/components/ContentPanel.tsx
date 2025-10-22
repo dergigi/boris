@@ -331,7 +331,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Note: We intentionally do NOT save on unmount because:
   // 1. Browser may scroll to top during back navigation, causing 0% saves
-  // 2. The auto-save with 3s debounce already captures position during reading
+  // 2. The auto-save with 1s throttle already captures position during reading
   // 3. Position state may not reflect actual reading position during navigation
 
   // Close menu when clicking outside

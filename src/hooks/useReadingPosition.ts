@@ -35,7 +35,7 @@ export const useReadingPosition = ({
     suppressUntilRef.current = until
   }, [])
 
-  // Throttled save function - saves at 3s intervals during scrolling
+  // Throttled save function - saves at 1s intervals during scrolling
   const scheduleSave = useCallback((currentPosition: number) => {
     if (!syncEnabled || !onSave) {
       return
@@ -56,12 +56,12 @@ export const useReadingPosition = ({
     pendingPositionRef.current = currentPosition
 
     // Throttle: only schedule a save if one isn't already pending
-    // This ensures saves happen at regular 3s intervals during continuous scrolling
+    // This ensures saves happen at regular 1s intervals during continuous scrolling
     if (saveTimerRef.current) {
       return // Already have a save scheduled, don't reset the timer
     }
 
-    const THROTTLE_MS = 3000
+    const THROTTLE_MS = 1000
     saveTimerRef.current = setTimeout(() => {
       // Save the latest position, not the one from when timer was scheduled
       const positionToSave = pendingPositionRef.current
