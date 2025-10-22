@@ -229,13 +229,15 @@ export function useArticleLoader({
         // Fetch highlights after content is shown
         try {
           if (!mountedRef.current) return
-          setHighlightsLoading(true)
-          setHighlights([])
+          
           const le = latestEvent as NostrEvent | null
           const dTag = le ? (le.tags.find((t: string[]) => t[0] === 'd')?.[1] || '') : ''
           const coord = le && dTag ? `${le.kind}:${le.pubkey}:${dTag}` : undefined
           const eventId = le ? le.id : undefined
+          
           if (coord && eventId) {
+            setHighlightsLoading(true)
+            setHighlights([])
             await fetchHighlightsForArticle(
               relayPool,
               coord,
@@ -251,6 +253,10 @@ export function useArticleLoader({
               },
               settingsRef.current
             )
+          } else {
+            // No article event to fetch highlights for - clear and don't show loading
+            setHighlights([])
+            setHighlightsLoading(false)
           }
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
