@@ -244,13 +244,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     suppressSavesForRef.current = suppressSavesFor
   }, [suppressSavesFor])
 
-  // Track if we've successfully started restore for this article
+  // Track if we've successfully started restore for this article + tracking state
+  // Use a composite key to ensure we only restore once per article when tracking is enabled
+  const restoreKey = `${articleIdentifier}-${isTrackingEnabled}`
   const hasAttemptedRestoreRef = useRef<string | null>(null)
-  
-  // Reset attempt tracker when article changes
-  useEffect(() => {
-    hasAttemptedRestoreRef.current = null
-  }, [articleIdentifier])
 
   useEffect(() => {
     if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) {
@@ -261,16 +258,20 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       console.log('[reading-position] ⏭️ Restore skipped: sync disabled in settings')
       return
     }
+    if (!isTrackingEnabled) {
+      console.log('[reading-position] ⏭️ Restore skipped: tracking not yet enabled (waiting for content stability)')
+      return
+    }
 
-    // Only attempt restore once per article (after dependencies are ready)
-    if (hasAttemptedRestoreRef.current === articleIdentifier) {
+    // Only attempt restore once per article (after tracking is enabled)
+    if (hasAttemptedRestoreRef.current === restoreKey) {
       console.log('[reading-position] ⏭️ Restore skipped: already attempted for this article')
       return
     }
 
     console.log('[reading-position] 🔄 Initiating restore for article:', articleIdentifier)
-    // Mark as attempted ONLY after all checks pass
-    hasAttemptedRestoreRef.current = articleIdentifier
+    // Mark as attempted using composite key
+    hasAttemptedRestoreRef.current = restoreKey
     
     // Suppress saves during restore window (700ms collection + 500ms render + 500ms buffer = 1700ms)
     if (suppressSavesForRef.current) {
