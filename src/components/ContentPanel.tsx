@@ -44,7 +44,7 @@ import { Hooks } from 'applesauce-react'
 import { 
   generateArticleIdentifier, 
   saveReadingPosition,
-  startReadingPositionStream
+  collectReadingPositionsOnce
 } from '../services/readingPositionService'
 import TTSControls from './TTSControls'
 
@@ -193,7 +193,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }
   }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, html, markdown])
 
-  const { progressPercentage, saveNow } = useReadingPosition({
+  const { progressPercentage, saveNow, suppressSavesFor } = useReadingPosition({
     enabled: isTextContent,
     syncEnabled: settings?.syncReadingPosition !== false,
     onSave: handleSavePosition,
@@ -214,7 +214,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   useEffect(() => {
   }, [isTextContent, settings?.syncReadingPosition, activeAccount, relayPool, eventStore, articleIdentifier, progressPercentage])
 
-  // Load saved reading position when article loads (non-blocking, EOSE-driven)
+  // Load saved reading position when article loads (stabilized one-shot restore)
   useEffect(() => {
     if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) {
       return
@@ -223,30 +223,47 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       return
     }
 
-    const stop = startReadingPositionStream(
+    const collector = collectReadingPositionsOnce({
       relayPool,
       eventStore,
-      activeAccount.pubkey,
+      pubkey: activeAccount.pubkey,
       articleIdentifier,
-      (savedPosition) => {
-        if (savedPosition && savedPosition.position > 0.05 && savedPosition.position < 1) {
-          // Wait for content to be fully rendered before scrolling
-          setTimeout(() => {
-            const documentHeight = document.documentElement.scrollHeight
-            const windowHeight = window.innerHeight
-            const scrollTop = savedPosition.position * (documentHeight - windowHeight)
-            
-            window.scrollTo({
-              top: scrollTop,
-              behavior: 'smooth'
-            })
-          }, 500) // Give content time to render
-        }
-      }
-    )
+      windowMs: 700
+    })
 
-    return () => stop()
-  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl])
+    collector.onStable((bestPosition) => {
+      if (!bestPosition) return
+
+      // Wait for content to be fully rendered
+      setTimeout(() => {
+        const docH = document.documentElement.scrollHeight
+        const winH = window.innerHeight
+        const maxScroll = Math.max(0, docH - winH)
+        const currentTop = window.pageYOffset || document.documentElement.scrollTop
+        const targetTop = bestPosition.position * maxScroll
+
+        // Skip if delta is too small (< 48px or < 5%)
+        const deltaPx = Math.abs(targetTop - currentTop)
+        const deltaPct = maxScroll > 0 ? Math.abs((targetTop - currentTop) / maxScroll) : 0
+        if (deltaPx < 48 || deltaPct < 0.05) {
+          return
+        }
+
+        // Suppress saves briefly to avoid feedback loop
+        if (suppressSavesFor) {
+          suppressSavesFor(1500)
+        }
+
+        // Perform instant restore (avoid smooth animation oscillation)
+        window.scrollTo({
+          top: targetTop,
+          behavior: 'auto'
+        })
+      }, 500) // Give content time to render
+    })
+
+    return () => collector.stop()
+  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl, suppressSavesFor])
 
   // Save position before unmounting or changing article
   useEffect(() => {
