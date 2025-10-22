@@ -1,4 +1,5 @@
 import { useEffect, useRef, Dispatch, SetStateAction } from 'react'
+import { useLocation } from 'react-router-dom'
 import { RelayPool } from 'applesauce-relay'
 import type { IEventStore } from 'applesauce-core'
 import { nip19 } from 'nostr-tools'
@@ -11,6 +12,13 @@ import { ReadableContent } from '../services/readerService'
 import { Highlight } from '../types/highlights'
 import { NostrEvent } from 'nostr-tools'
 import { UserSettings } from '../services/settingsService'
+
+interface PreviewData {
+  title: string
+  image?: string
+  summary?: string
+  published?: number
+}
 
 interface UseArticleLoaderProps {
   naddr: string | undefined
@@ -43,6 +51,7 @@ export function useArticleLoader({
   setCurrentArticle,
   settings
 }: UseArticleLoaderProps) {
+  const location = useLocation()
   const mountedRef = useRef(true)
   // Hold latest settings without retriggering effect
   const settingsRef = useRef<UserSettings | undefined>(settings)
@@ -51,6 +60,9 @@ export function useArticleLoader({
   }, [settings])
   // Track in-flight request to prevent stale updates from previous naddr
   const currentRequestIdRef = useRef(0)
+  
+  // Extract preview data from navigation state (from blog post cards)
+  const previewData = (location.state as { previewData?: PreviewData })?.previewData
   
   useEffect(() => {
     mountedRef.current = true
@@ -61,10 +73,24 @@ export function useArticleLoader({
       const requestId = ++currentRequestIdRef.current
       if (!mountedRef.current) return
       
-      setReaderLoading(true)
-      setReaderContent(undefined)
       setSelectedUrl(`nostr:${naddr}`)
       setIsCollapsed(true)
+      
+      // If we have preview data from navigation, show it immediately (no skeleton!)
+      if (previewData) {
+        setReaderContent({
+          title: previewData.title,
+          markdown: '', // Will be loaded from store or relay
+          image: previewData.image,
+          summary: previewData.summary,
+          published: previewData.published,
+          url: `nostr:${naddr}`
+        })
+        setReaderLoading(false) // Turn off loading immediately - we have the preview!
+      } else {
+        setReaderLoading(true)
+        setReaderContent(undefined)
+      }
       
       try {
         // Decode naddr to filter

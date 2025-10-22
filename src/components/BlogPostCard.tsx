@@ -50,6 +50,14 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
   return (
     <Link 
       to={href}
+      state={{ 
+        previewData: {
+          title: post.title,
+          image: post.image,
+          summary: post.summary,
+          published: post.published
+        }
+      }}
       className={`blog-post-card ${level ? `level-${level}` : ''}`}
       style={{ textDecoration: 'none', color: 'inherit' }}
     >
