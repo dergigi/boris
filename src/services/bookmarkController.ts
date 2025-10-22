@@ -197,30 +197,69 @@ class BookmarkController {
     // Fetch each group
     for (const [kind, byPubkey] of filtersByKind) {
       for (const [pubkey, identifiers] of byPubkey) {
-        console.log('[BookmarkController] Fetching kind', kind, 'from pubkey', pubkey.slice(0, 8), 'with', identifiers.length, 'identifiers:', identifiers)
-        await queryEvents(
-          this.relayPool,
-          { kinds: [kind], authors: [pubkey], '#d': identifiers },
-          {
-            onEvent: (event) => {
-              // Check if hydration was cancelled
-              if (this.hydrationGeneration !== generation) return
+        // Separate empty and non-empty identifiers
+        const nonEmptyIdentifiers = identifiers.filter(id => id && id.length > 0)
+        const hasEmptyIdentifier = identifiers.some(id => !id || id.length === 0)
+        
+        console.log('[BookmarkController] Fetching kind', kind, 'from pubkey', pubkey.slice(0, 8), 'with', identifiers.length, 'identifiers:', identifiers, '(non-empty:', nonEmptyIdentifiers.length, 'empty:', hasEmptyIdentifier, ')')
+        
+        // Fetch events with non-empty d-tags
+        if (nonEmptyIdentifiers.length > 0) {
+          await queryEvents(
+            this.relayPool,
+            { kinds: [kind], authors: [pubkey], '#d': nonEmptyIdentifiers },
+            {
+              onEvent: (event) => {
+                // Check if hydration was cancelled
+                if (this.hydrationGeneration !== generation) return
 
-              const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-              const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
-              console.log('[BookmarkController] Hydrated article:', coordinate, getArticleTitle(event) || 'No title')
-              idToEvent.set(coordinate, event)
-              idToEvent.set(event.id, event)
-              
-              // Add to external event store if available
-              if (this.externalEventStore) {
-                this.externalEventStore.add(event)
+                const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+                const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
+                console.log('[BookmarkController] Hydrated article (non-empty d):', coordinate, getArticleTitle(event) || 'No title')
+                idToEvent.set(coordinate, event)
+                idToEvent.set(event.id, event)
+                
+                // Add to external event store if available
+                if (this.externalEventStore) {
+                  this.externalEventStore.add(event)
+                }
+                
+                onProgress()
               }
-              
-              onProgress()
             }
-          }
-        )
+          )
+        }
+        
+        // Fetch events with empty d-tag separately (without '#d' filter)
+        if (hasEmptyIdentifier) {
+          console.log('[BookmarkController] Fetching events with empty d-tag for kind', kind, 'pubkey', pubkey.slice(0, 8))
+          await queryEvents(
+            this.relayPool,
+            { kinds: [kind], authors: [pubkey] },
+            {
+              onEvent: (event) => {
+                // Check if hydration was cancelled
+                if (this.hydrationGeneration !== generation) return
+                
+                // Only process events with empty d-tag
+                const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+                if (dTag !== '') return
+
+                const coordinate = `${event.kind}:${event.pubkey}:`
+                console.log('[BookmarkController] Hydrated article (empty d):', coordinate, getArticleTitle(event) || 'No title')
+                idToEvent.set(coordinate, event)
+                idToEvent.set(event.id, event)
+                
+                // Add to external event store if available
+                if (this.externalEventStore) {
+                  this.externalEventStore.add(event)
+                }
+                
+                onProgress()
+              }
+            }
+          )
+        }
       }
     }
     console.log('[BookmarkController] Coordinate hydration complete')
