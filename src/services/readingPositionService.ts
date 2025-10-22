@@ -179,6 +179,85 @@ export function startReadingPositionStream(
 }
 
 /**
+ * Stabilized reading position collector
+ * Collects position updates for a brief window, then emits the best one (newest, then highest progress)
+ * @returns Object with stop() to cancel and onStable(cb) to register callback
+ */
+export function collectReadingPositionsOnce(params: {
+  relayPool: RelayPool
+  eventStore: IEventStore
+  pubkey: string
+  articleIdentifier: string
+  windowMs?: number
+}): { stop: () => void; onStable: (cb: (pos: ReadingPosition | null) => void) => void } {
+  const { relayPool, eventStore, pubkey, articleIdentifier, windowMs = 700 } = params
+  
+  const candidates: ReadingPosition[] = []
+  let stableCallback: ((pos: ReadingPosition | null) => void) | null = null
+  let timer: ReturnType<typeof setTimeout> | null = null
+  let streamStop: (() => void) | null = null
+  let hasEmitted = false
+
+  const emitStable = () => {
+    if (hasEmitted || !stableCallback) return
+    hasEmitted = true
+
+    if (candidates.length === 0) {
+      stableCallback(null)
+      return
+    }
+
+    // Sort: newest first, then highest progress
+    candidates.sort((a, b) => {
+      const timeDiff = b.timestamp - a.timestamp
+      if (timeDiff !== 0) return timeDiff
+      return b.position - a.position
+    })
+
+    stableCallback(candidates[0])
+  }
+
+  // Start streaming and collecting
+  streamStop = startReadingPositionStream(
+    relayPool,
+    eventStore,
+    pubkey,
+    articleIdentifier,
+    (pos) => {
+      if (hasEmitted) return
+      if (!pos) return
+      if (pos.position <= 0.05 || pos.position >= 1) return
+      
+      candidates.push(pos)
+
+      // Schedule one-shot emission if not already scheduled
+      if (!timer) {
+        timer = setTimeout(() => {
+          emitStable()
+          if (streamStop) streamStop()
+        }, windowMs)
+      }
+    }
+  )
+
+  return {
+    stop: () => {
+      if (timer) {
+        clearTimeout(timer)
+        timer = null
+      }
+      if (streamStop) {
+        streamStop()
+        streamStop = null
+      }
+    },
+    onStable: (cb) => {
+      stableCallback = cb
+    }
+  }
+}
+
+/**
  * Load reading position from Nostr (kind 39802)
  * @deprecated Use startReadingPositionStream for non-blocking behavior
  * Returns current local position immediately (or null) and starts background sync
