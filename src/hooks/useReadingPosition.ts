@@ -38,7 +38,10 @@ export const useReadingPosition = ({
 
   // Throttled save function - saves at 3s intervals during scrolling
   const scheduleSave = useCallback((currentPosition: number) => {
+    console.log(`[reading-position] [${new Date().toISOString()}] 📞 scheduleSave called at ${Math.round(currentPosition * 100)}%, syncEnabled=${syncEnabled}, hasOnSave=${!!onSave}`)
+    
     if (!syncEnabled || !onSave) {
+      console.log(`[reading-position] [${new Date().toISOString()}] ⏭️ Save skipped: syncEnabled=${syncEnabled}, hasOnSave=${!!onSave}`)
       return
     }
 
@@ -60,10 +63,12 @@ export const useReadingPosition = ({
     // Throttle: only schedule a save if one isn't already pending
     // This ensures saves happen at regular 3s intervals during continuous scrolling
     if (saveTimerRef.current) {
+      console.log(`[reading-position] [${new Date().toISOString()}] ⏳ Timer already pending, updated pending position to ${Math.round(currentPosition * 100)}%`)
       return // Already have a save scheduled, don't reset the timer
     }
 
     const THROTTLE_MS = 3000
+    console.log(`[reading-position] [${new Date().toISOString()}] ⏰ Scheduling save in ${THROTTLE_MS}ms`)
     saveTimerRef.current = setTimeout(() => {
       // Save the latest position, not the one from when timer was scheduled
       const positionToSave = pendingPositionRef.current
