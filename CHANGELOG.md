@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.13] - 2025-01-27
+
+### Added
+
+- Instant article preview when navigating from blog post cards
+  - Title, image, summary, and date display immediately via navigation state
+  - No skeleton loading for metadata already visible on cards
+  - Article content loads seamlessly in background from eventStore or relays
+- Reliable relay fallback for article fetching
+  - Queries nostr.band, primal, damus, and nos.lol if initial fetch returns no events
+  - Reduces "Article not found" errors
+
+### Changed
+
+- Article loading now follows local-first controller pattern
+  - Uses eventStore and queryEvents for streaming results
+  - Emits content immediately on first event from store or local relays
+  - Finalizes with newest version after EOSE (no artificial timeouts)
+  - Background relay query continues to check for updates
+- Service Worker now only registers in production builds
+  - Disabled in development to avoid stale cache issues
+  - Preserves PWA functionality in production
+- Article fetching queries union of naddr relay hints and configured relays
+  - Prevents failures when naddr contains stale or unreachable relay hints
+  - Maintains fast local/hinted paths with reliable fallback
+
+### Fixed
+
+- Article loading race conditions eliminated
+  - Request ID guards prevent stale fetches from overwriting current content
+  - Stale highlights from previous articles no longer appear
+- Content/title mismatch when switching articles resolved
+  - Markdown preview clears immediately on content change
+  - Forced re-mount of rendered HTML per article via stable content keys
+  - Request guards in external URL loader prevent cross-article bleed
+- Article re-fetching on settings changes prevented
+  - Settings memoized via ref to avoid triggering effect dependencies
+- Explore writings tab now shows skeletons instead of spinner when loading
+  - Consistent loading UI across all views
+
 ## [0.10.12] - 2025-01-27
 
 ### Added
