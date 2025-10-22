@@ -85,6 +85,14 @@ export const useReadingPosition = ({
   // Immediate save function
   const saveNow = useCallback(() => {
     if (!syncEnabled || !onSave) return
+    
+    // Check suppression even for saveNow (e.g., during restore)
+    if (Date.now() < suppressUntilRef.current) {
+      const remainingMs = suppressUntilRef.current - Date.now()
+      console.log(`[reading-position] [${new Date().toISOString()}] ⏭️ saveNow() suppressed (${remainingMs}ms remaining) at ${Math.round(position * 100)}%`)
+      return
+    }
+    
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current)
       saveTimerRef.current = null
