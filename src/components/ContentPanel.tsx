@@ -250,6 +250,17 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const hasAttemptedRestoreRef = useRef<string | null>(null)
 
   useEffect(() => {
+    console.log('[reading-position] 🔍 Restore effect running:', {
+      isTextContent,
+      isTrackingEnabled,
+      hasAccount: !!activeAccount,
+      hasRelayPool: !!relayPool,
+      hasEventStore: !!eventStore,
+      articleIdentifier,
+      restoreKey,
+      hasAttempted: hasAttemptedRestoreRef.current
+    })
+    
     if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) {
       console.log('[reading-position] ⏭️ Restore skipped: missing dependencies or not text content')
       return
