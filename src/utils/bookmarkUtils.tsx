@@ -87,7 +87,7 @@ export const renderParsedContent = (parsedContent: ParsedContent) => {
 export const sortIndividualBookmarks = (items: IndividualBookmark[]) => {
   return items
     .slice()
-    .sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
+    .sort((a, b) => (b.listUpdatedAt || 0) - (a.listUpdatedAt || 0))
 }
 
 export function groupIndividualBookmarks(items: IndividualBookmark[]) {

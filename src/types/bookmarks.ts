@@ -31,7 +31,7 @@ export interface Bookmark {
 export interface IndividualBookmark {
   id: string
   content: string
-  // Timestamp from the bookmark list event (when this was bookmarked)
+  // Timestamp when the content was created (from the content event itself)
   created_at: number
   pubkey: string
   kind: number
@@ -49,6 +49,9 @@ export interface IndividualBookmark {
   setTitle?: string
   setDescription?: string
   setImage?: string
+  // Timestamp of the bookmark list event (best proxy for "when bookmarked")
+  // Note: This is imperfect - it's when the list was last updated, not necessarily when this item was added
+  listUpdatedAt?: number
 }
 
 export interface ActiveAccount {

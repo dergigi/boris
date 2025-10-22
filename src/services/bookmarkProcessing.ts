@@ -150,7 +150,8 @@ export async function collectBookmarksFromEvents(
         setName: dTag,
         setTitle,
         setDescription,
-        setImage
+        setImage,
+        listUpdatedAt: evt.created_at || Math.floor(Date.now() / 1000)
       })
       continue
     }
