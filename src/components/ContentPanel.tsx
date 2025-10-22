@@ -170,6 +170,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       return
     }
     
+    // Don't save positions at 0% (start) - only meaningful progress
+    if (position <= 0.01) {
+      console.log('[reading-position] ⚠️ Save skipped: position at 0%')
+      return
+    }
+    
     // Check if content is long enough to track reading progress
     if (!shouldTrackReadingProgress(html, markdown)) {
       console.log('[reading-position] ⚠️ Save skipped: content too short')
@@ -220,6 +226,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   }, [isTextContent, settings?.syncReadingPosition, activeAccount, relayPool, eventStore, articleIdentifier, progressPercentage])
 
   // Load saved reading position when article loads (stabilized one-shot restore)
+  const suppressSavesForRef = useRef(suppressSavesFor)
+  useEffect(() => {
+    suppressSavesForRef.current = suppressSavesFor
+  }, [suppressSavesFor])
+
   useEffect(() => {
     if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) {
       console.log('[reading-position] ⏭️ Restore skipped: missing dependencies or not text content')
@@ -275,8 +286,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         console.log('[reading-position] 📜 Restoring scroll position (delta:', deltaPx, 'px,', Math.round(deltaPct * 100) + '%)')
 
         // Suppress saves briefly to avoid feedback loop
-        if (suppressSavesFor) {
-          suppressSavesFor(1500)
+        if (suppressSavesForRef.current) {
+          suppressSavesForRef.current(1500)
         }
 
         // Perform instant restore (avoid smooth animation oscillation)
@@ -292,7 +303,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       console.log('[reading-position] 🛑 Stopping restore collector')
       collector.stop()
     }
-  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl, suppressSavesFor])
+  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl])
 
   // Save position before unmounting or changing article
   const saveNowRef = useRef(saveNow)
