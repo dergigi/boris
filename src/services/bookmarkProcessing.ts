@@ -154,8 +154,18 @@ export async function collectBookmarksFromEvents(
     }
 
     const pub = Helpers.getPublicBookmarks(evt)
+    const processedPub = processApplesauceBookmarks(pub, activeAccount, false, evt.created_at)
+    
+    // DEBUG: Check timestamps
+    if (processedPub.length > 0) {
+      const first = processedPub[0]
+      console.log(`📋 Bookmark list event kind:${evt.kind}`)
+      console.log(`   evt.created_at: ${evt.created_at} (${evt.created_at ? new Date(evt.created_at * 1000).toISOString() : 'MISSING'})`)
+      console.log(`   first bookmark listUpdatedAt: ${first.listUpdatedAt} (${first.listUpdatedAt ? new Date(first.listUpdatedAt * 1000).toISOString() : 'MISSING'})`)
+    }
+    
     publicItemsAll.push(
-      ...processApplesauceBookmarks(pub, activeAccount, false, evt.created_at).map(i => ({
+      ...processedPub.map(i => ({
         ...i,
         sourceKind: evt.kind,
         setName: dTag,
