@@ -1,7 +1,8 @@
 import React, { useRef, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate, faHeart, faPlus, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate, faHeart, faPlus, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
+import { faClock } from '@fortawesome/free-regular-svg-icons'
 import { formatDistanceToNow } from 'date-fns'
 import { RelayPool } from 'applesauce-relay'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
@@ -317,7 +318,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         {activeAccount && (
           <div className="view-mode-right">
             <IconButton
-              icon={groupingMode === 'grouped' ? faLayerGroup : faBars}
+              icon={groupingMode === 'grouped' ? faLayerGroup : faClock}
               onClick={toggleGroupingMode}
               title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
               ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
