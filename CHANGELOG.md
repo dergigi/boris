@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.16] - 2025-10-22
+
+### Fixed
+
+- Reading position auto-save now works correctly during continuous scrolling
+  - Fixed critical bug where save timer was cleared when tracking toggled
+  - Timer now persists across tracking state changes
+  - Saves fire reliably every 3 seconds during active reading
+  - Throttle mechanism now works as intended
+- Reading position tracking stability improved
+  - Tracking state no longer toggles erratically
+  - Content stability checks refined to prevent false negatives
+  - Infinite loop fixed in position save handler
+
+### Changed
+
+- Reading position save mechanism changed from debounce to throttle
+  - Ensures saves happen at regular 3-second intervals during continuous scrolling
+  - Previous debounce approach could skip saves during slow continuous scrolling
+  - More predictable save behavior for users
+- Simplified reading position logic by removing unused complexity
+  - Removed 5% delta requirement for scheduling saves
+  - Removed unnecessary state tracking (lastSavedPosition, hasSavedOnce, lastSavedAtRef)
+  - Cleaner, more maintainable code
+
+### Fixed
+
+- Highlights now scroll into view when clicked from `/me/highlights` page
+  - Navigation state properly passes highlight ID and openHighlights flag
+  - Works for both article links and external URL links
+
 ## [0.10.15] - 2025-01-22
 
 ### Changed
