@@ -353,10 +353,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           suppressSavesForRef.current(1500)
         }
 
-        // Perform instant restore (avoid smooth animation oscillation)
+        // Perform smooth animated restore
         window.scrollTo({
           top: targetTop,
-          behavior: 'auto'
+          behavior: 'smooth'
         })
         console.log('[reading-position] ✅ Scroll restored to', Math.round(bestPosition.position * 100) + '%')
       }, 500) // Give content time to render
