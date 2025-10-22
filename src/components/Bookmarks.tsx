@@ -230,6 +230,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   useArticleLoader({
     naddr,
     relayPool,
+    eventStore,
     setSelectedUrl,
     setReaderContent,
     setReaderLoading,
