@@ -58,15 +58,7 @@ export const useReadingPosition = ({
       return
     }
 
-    // Require at least 5% progress change to consider saving
-    const MIN_DELTA = 0.05
-    const hasSignificantChange = Math.abs(currentPosition - lastSavedPosition.current) >= MIN_DELTA
-
-    if (!hasSignificantChange) {
-      return
-    }
-
-    // Update the pending position (latest position to save)
+    // Always update the pending position (latest position to save)
     pendingPositionRef.current = currentPosition
 
     // Throttle: only schedule a save if one isn't already pending
@@ -75,15 +67,30 @@ export const useReadingPosition = ({
       return // Already have a save scheduled, don't reset the timer
     }
 
-    const THROTTLE_MS = 3000 // Save every 3 seconds during scrolling
+    // Check if enough time has passed since last save OR if there's a significant change
+    const MIN_DELTA = 0.05
+    const hasSignificantChange = Math.abs(currentPosition - lastSavedPosition.current) >= MIN_DELTA
+    const THROTTLE_MS = 3000
+    const timeSinceLastSave = Date.now() - lastSavedAtRef.current
+    const enoughTimePassed = timeSinceLastSave >= THROTTLE_MS
+
+    // Only schedule a save if there's a significant change or enough time has passed
+    if (!hasSignificantChange && !enoughTimePassed) {
+      return
+    }
+
     saveTimerRef.current = setTimeout(() => {
       // Save the latest position, not the one from when timer was scheduled
       const positionToSave = pendingPositionRef.current
-      console.log(`[reading-position] [${new Date().toISOString()}] 💾 Auto-save at ${Math.round(positionToSave * 100)}%`)
-      lastSavedPosition.current = positionToSave
-      hasSavedOnce.current = true
-      lastSavedAtRef.current = Date.now()
-      onSave(positionToSave)
+      // Only save if there's been a significant change from last saved position
+      const finalDelta = Math.abs(positionToSave - lastSavedPosition.current)
+      if (finalDelta >= MIN_DELTA) {
+        console.log(`[reading-position] [${new Date().toISOString()}] 💾 Auto-save at ${Math.round(positionToSave * 100)}%`)
+        lastSavedPosition.current = positionToSave
+        hasSavedOnce.current = true
+        lastSavedAtRef.current = Date.now()
+        onSave(positionToSave)
+      }
       saveTimerRef.current = null
     }, THROTTLE_MS)
   }, [syncEnabled, onSave])
