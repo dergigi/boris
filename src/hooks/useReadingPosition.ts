@@ -29,6 +29,7 @@ export const useReadingPosition = ({
   const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSavedAtRef = useRef<number>(0)
   const suppressUntilRef = useRef<number>(0)
+  const pendingPositionRef = useRef<number>(0) // Track latest position for throttled save
 
   // Suppress auto-saves for a given duration (used after programmatic restore)
   const suppressSavesFor = useCallback((ms: number) => {
@@ -37,7 +38,7 @@ export const useReadingPosition = ({
     console.log(`[reading-position] [${new Date().toISOString()}] 🛡️ Suppressing saves for ${ms}ms until ${new Date(until).toISOString()}`)
   }, [])
 
-  // Debounced save function - simple 2s debounce
+  // Throttled save function - saves at 3s intervals, not debounced
   const scheduleSave = useCallback((currentPosition: number) => {
     if (!syncEnabled || !onSave) {
       return
@@ -65,20 +66,26 @@ export const useReadingPosition = ({
       return
     }
 
-    // Clear any existing timer and schedule new save
+    // Update the pending position (latest position to save)
+    pendingPositionRef.current = currentPosition
+
+    // Throttle: only schedule a save if one isn't already pending
+    // This ensures saves happen at regular 3s intervals during continuous scrolling
     if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current)
+      return // Already have a save scheduled, don't reset the timer
     }
 
-    const DEBOUNCE_MS = 3000 // Save max every 3 seconds
+    const THROTTLE_MS = 3000 // Save every 3 seconds during scrolling
     saveTimerRef.current = setTimeout(() => {
-      console.log(`[reading-position] [${new Date().toISOString()}] 💾 Auto-save at ${Math.round(currentPosition * 100)}%`)
-      lastSavedPosition.current = currentPosition
+      // Save the latest position, not the one from when timer was scheduled
+      const positionToSave = pendingPositionRef.current
+      console.log(`[reading-position] [${new Date().toISOString()}] 💾 Auto-save at ${Math.round(positionToSave * 100)}%`)
+      lastSavedPosition.current = positionToSave
       hasSavedOnce.current = true
       lastSavedAtRef.current = Date.now()
-      onSave(currentPosition)
+      onSave(positionToSave)
       saveTimerRef.current = null
-    }, DEBOUNCE_MS)
+    }, THROTTLE_MS)
   }, [syncEnabled, onSave])
 
   // Immediate save function
