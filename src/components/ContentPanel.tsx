@@ -300,9 +300,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
     console.log('[reading-position] 🎯 Found saved position:', Math.round(savedProgress * 100) + '%')
 
-    // Suppress saves during restore (500ms render + 1000ms animation + 500ms buffer = 2000ms)
+    // Suppress saves during restore (500ms render + 1000ms smooth scroll = 1500ms)
     if (suppressSavesForRef.current) {
-      suppressSavesForRef.current(2000)
+      suppressSavesForRef.current(1500)
     }
 
     // Wait for content to be fully rendered

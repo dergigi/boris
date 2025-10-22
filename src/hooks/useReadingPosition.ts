@@ -104,10 +104,8 @@ export const useReadingPosition = ({
       // Schedule auto-save if sync is enabled (unless suppressed)
       if (Date.now() >= suppressUntilRef.current) {
         scheduleSave(clampedProgress)
-      } else {
-        const remainingMs = suppressUntilRef.current - Date.now()
-        console.log(`[reading-position] [${new Date().toISOString()}] 🛡️ Save suppressed (${remainingMs}ms remaining) at ${Math.round(clampedProgress * 100)}%`)
       }
+      // Note: Suppression is silent to avoid log spam during scrolling
 
       // Completion detection with 2s hold at 100%
       if (!hasTriggeredComplete.current) {
