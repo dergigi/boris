@@ -1,13 +1,8 @@
 import { RelayPool } from 'applesauce-relay'
 import { Helpers, EventStore } from 'applesauce-core'
-import { createEventLoader, createAddressLoader } from 'applesauce-loaders/loaders'
 import { NostrEvent } from 'nostr-tools'
-import { EventPointer } from 'nostr-tools/nip19'
-import { from } from 'rxjs'
-import { mergeMap } from 'rxjs/operators'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
-import { RELAYS } from '../config/relays'
 import { collectBookmarksFromEvents } from './bookmarkProcessing'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import {
@@ -65,12 +60,8 @@ class BookmarkController {
   }> = new Map()
   private isLoading = false
   private hydrationGeneration = 0
-  
-  // Event loaders for efficient batching
-  private eventStore = new EventStore()
-  private eventLoader: ReturnType<typeof createEventLoader> | null = null
-  private addressLoader: ReturnType<typeof createAddressLoader> | null = null
   private externalEventStore: EventStore | null = null
+  private relayPool: RelayPool | null = null
 
   onRawEvent(cb: RawEventCallback): () => void {
     this.rawEventListeners.push(cb)
@@ -119,15 +110,15 @@ class BookmarkController {
   }
 
   /**
-   * Hydrate events by IDs using EventLoader (auto-batching, streaming)
+   * Hydrate events by IDs using queryEvents (local-first, streaming)
    */
-  private hydrateByIds(
+  private async hydrateByIds(
     ids: string[],
     idToEvent: Map<string, NostrEvent>,
     onProgress: () => void,
     generation: number
-  ): void {
-    if (!this.eventLoader) {
+  ): Promise<void> {
+    if (!this.relayPool) {
       return
     }
 
@@ -137,86 +128,146 @@ class BookmarkController {
       return
     }
     
-    // Convert IDs to EventPointers
-    const pointers: EventPointer[] = unique.map(id => ({ id }))
-    
-    // Use mergeMap with concurrency limit instead of merge to properly batch requests
-    // This prevents overwhelming relays with 96+ simultaneous requests
-    from(pointers).pipe(
-      mergeMap(pointer => this.eventLoader!(pointer), 5)
-    ).subscribe({
-      next: (event) => {
-        // Check if hydration was cancelled
-        if (this.hydrationGeneration !== generation) return
-        
-        idToEvent.set(event.id, event)
-        
-        // Also index by coordinate for addressable events
-        if (event.kind && event.kind >= 30000 && event.kind < 40000) {
-          const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-          const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
-          idToEvent.set(coordinate, event)
+    // Fetch events using local-first queryEvents
+    await queryEvents(
+      this.relayPool,
+      { ids: unique },
+      {
+        onEvent: (event) => {
+          // Check if hydration was cancelled
+          if (this.hydrationGeneration !== generation) return
+          
+          idToEvent.set(event.id, event)
+          
+          // Also index by coordinate for addressable events
+          if (event.kind && event.kind >= 30000 && event.kind < 40000) {
+            const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+            const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
+            idToEvent.set(coordinate, event)
+          }
+          
+          // Add to external event store if available
+          if (this.externalEventStore) {
+            this.externalEventStore.add(event)
+          }
+          
+          onProgress()
         }
-        
-        // Add to external event store if available
-        if (this.externalEventStore) {
-          this.externalEventStore.add(event)
-        }
-        
-        onProgress()
-      },
-      error: () => {
-        // Silent error - EventLoader handles retries
       }
-    })
+    )
   }
 
   /**
-   * Hydrate addressable events by coordinates using AddressLoader (auto-batching, streaming)
+   * Hydrate addressable events by coordinates using queryEvents (local-first, streaming)
    */
-  private hydrateByCoordinates(
+  private async hydrateByCoordinates(
     coords: Array<{ kind: number; pubkey: string; identifier: string }>,
     idToEvent: Map<string, NostrEvent>,
     onProgress: () => void,
     generation: number
-  ): void {
-    if (!this.addressLoader) {
+  ): Promise<void> {
+    if (!this.relayPool) {
       return
     }
 
-    if (coords.length === 0) return
+    if (coords.length === 0) {
+      return
+    }
 
-    // Convert coordinates to AddressPointers
-    const pointers = coords.map(c => ({
-      kind: c.kind,
-      pubkey: c.pubkey,
-      identifier: c.identifier
-    }))
+    // Group by kind and pubkey for efficient batching
+    const filtersByKind = new Map<number, Map<string, string[]>>()
+    
+    for (const coord of coords) {
+      if (!filtersByKind.has(coord.kind)) {
+        filtersByKind.set(coord.kind, new Map())
+      }
+      const byPubkey = filtersByKind.get(coord.kind)!
+      if (!byPubkey.has(coord.pubkey)) {
+        byPubkey.set(coord.pubkey, [])
+      }
+      byPubkey.get(coord.pubkey)!.push(coord.identifier || '')
+    }
 
-    // Use mergeMap with concurrency limit instead of merge to properly batch requests
-    from(pointers).pipe(
-      mergeMap(pointer => this.addressLoader!(pointer), 5)
-    ).subscribe({
-      next: (event) => {
-        // Check if hydration was cancelled
-        if (this.hydrationGeneration !== generation) return
-
-        const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-        const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
-        idToEvent.set(coordinate, event)
-        idToEvent.set(event.id, event)
+    // Kick off all queries in parallel (fire-and-forget)
+    const promises: Promise<void>[] = []
+    
+    for (const [kind, byPubkey] of filtersByKind) {
+      for (const [pubkey, identifiers] of byPubkey) {
+        // Separate empty and non-empty identifiers
+        const nonEmptyIdentifiers = identifiers.filter(id => id && id.length > 0)
+        const hasEmptyIdentifier = identifiers.some(id => !id || id.length === 0)
         
-        // Add to external event store if available
-        if (this.externalEventStore) {
-          this.externalEventStore.add(event)
+        // Fetch events with non-empty d-tags
+        if (nonEmptyIdentifiers.length > 0) {
+          promises.push(
+            queryEvents(
+              this.relayPool,
+              { kinds: [kind], authors: [pubkey], '#d': nonEmptyIdentifiers },
+              {
+                onEvent: (event) => {
+                  // Check if hydration was cancelled
+                  if (this.hydrationGeneration !== generation) return
+
+                  const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+                  const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
+                  idToEvent.set(coordinate, event)
+                  idToEvent.set(event.id, event)
+                  
+                  // Add to external event store if available
+                  if (this.externalEventStore) {
+                    this.externalEventStore.add(event)
+                  }
+                  
+                  onProgress()
+                }
+              }
+            ).then(() => {
+              // Query completed successfully
+            }).catch(() => {
+              // Silent error - individual query failed
+            })
+          )
         }
         
-        onProgress()
-      },
-      error: () => {
-        // Silent error - AddressLoader handles retries
+        // Fetch events with empty d-tag separately (without '#d' filter)
+        if (hasEmptyIdentifier) {
+          promises.push(
+            queryEvents(
+              this.relayPool,
+              { kinds: [kind], authors: [pubkey] },
+              {
+                onEvent: (event) => {
+                  // Check if hydration was cancelled
+                  if (this.hydrationGeneration !== generation) return
+                  
+                  // Only process events with empty d-tag
+                  const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+                  if (dTag !== '') return
+
+                  const coordinate = `${event.kind}:${event.pubkey}:`
+                  idToEvent.set(coordinate, event)
+                  idToEvent.set(event.id, event)
+                  
+                  // Add to external event store if available
+                  if (this.externalEventStore) {
+                    this.externalEventStore.add(event)
+                  }
+                  
+                  onProgress()
+                }
+              }
+            ).then(() => {
+              // Query completed successfully
+            }).catch(() => {
+              // Silent error - individual query failed
+            })
+          )
+        }
       }
-    })
+    }
+    
+    // Wait for all queries to complete
+    await Promise.all(promises)
   }
 
   private async buildAndEmitBookmarks(
@@ -320,7 +371,7 @@ class BookmarkController {
       const idToEvent: Map<string, NostrEvent> = new Map()
       emitBookmarks(idToEvent)
 
-      // Now fetch events progressively in background using batched hydrators
+      // Now fetch events progressively in background using local-first queries
       
       const generation = this.hydrationGeneration
       const onProgress = () => emitBookmarks(idToEvent)
@@ -335,10 +386,14 @@ class BookmarkController {
         }
       })
       
-      // Kick off batched hydration (streaming, non-blocking)
-      // EventLoader and AddressLoader handle batching and streaming automatically
-      this.hydrateByIds(noteIds, idToEvent, onProgress, generation)
-      this.hydrateByCoordinates(coordObjs, idToEvent, onProgress, generation)
+      // Kick off hydration (streaming, non-blocking, local-first)
+      // Fire-and-forget - don't await, let it run in background
+      this.hydrateByIds(noteIds, idToEvent, onProgress, generation).catch(() => {
+        // Silent error - hydration will retry or show partial results
+      })
+      this.hydrateByCoordinates(coordObjs, idToEvent, onProgress, generation).catch(() => {
+        // Silent error - hydration will retry or show partial results
+      })
     } catch (error) {
       console.error('Failed to build bookmarks:', error)
       this.bookmarksListeners.forEach(cb => cb([]))
@@ -353,7 +408,8 @@ class BookmarkController {
   }): Promise<void> {
     const { relayPool, activeAccount, accountManager, eventStore } = options
     
-    // Store the external event store reference for adding hydrated events
+    // Store references for hydration
+    this.relayPool = relayPool
     this.externalEventStore = eventStore || null
 
     if (!activeAccount || typeof (activeAccount as { pubkey?: string }).pubkey !== 'string') {
@@ -364,16 +420,6 @@ class BookmarkController {
 
     // Increment generation to cancel any in-flight hydration
     this.hydrationGeneration++
-    
-    // Initialize loaders for this session
-    this.eventLoader = createEventLoader(relayPool, { 
-      eventStore: this.eventStore,
-      extraRelays: RELAYS 
-    })
-    this.addressLoader = createAddressLoader(relayPool, { 
-      eventStore: this.eventStore,
-      extraRelays: RELAYS
-    })
     
     this.setLoading(true)
 

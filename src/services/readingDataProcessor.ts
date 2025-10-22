@@ -75,10 +75,17 @@ export function processReadingProgress(
           continue
         }
       } else if (dTag.startsWith('url:')) {
-        // It's a URL with base64url encoding
-        const encoded = dTag.replace('url:', '')
+        // It's a URL. We support both raw URLs and base64url-encoded URLs.
+        const value = dTag.slice(4)
+        const looksBase64Url = /^[A-Za-z0-9_-]+$/.test(value) && (value.includes('-') || value.includes('_'))
         try {
-          itemUrl = atob(encoded.replace(/-/g, '+').replace(/_/g, '/'))
+          if (looksBase64Url) {
+            // Decode base64url to raw URL
+            itemUrl = atob(value.replace(/-/g, '+').replace(/_/g, '/'))
+          } else {
+            // Treat as raw URL (already decoded)
+            itemUrl = value
+          }
           itemId = itemUrl
           itemType = 'external'
         } catch (e) {

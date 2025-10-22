@@ -276,10 +276,10 @@ class ReadingProgressController {
     // Process new events
     processReadingProgress(events, readsMap)
     
-    // Convert back to progress map (naddr -> progress)
+    // Convert back to progress map (id -> progress). Include both articles and external URLs.
     const newProgressMap = new Map<string, number>()
     for (const [id, item] of readsMap.entries()) {
-      if (item.readingProgress !== undefined && item.type === 'article') {
+      if (item.readingProgress !== undefined) {
         newProgressMap.set(id, item.readingProgress)
       }
     }

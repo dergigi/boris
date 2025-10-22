@@ -75,90 +75,82 @@ export interface UserSettings {
   ttsDefaultSpeed?: number // default: 2.1
 }
 
+/**
+ * Streaming settings loader (non-blocking, EOSE-driven)
+ * Seeds from local eventStore, streams relay updates to store in background
+ * @returns Unsubscribe function to cancel both store watch and network stream
+ */
+export function startSettingsStream(
+  relayPool: RelayPool,
+  eventStore: IEventStore,
+  pubkey: string,
+  relays: string[],
+  onSettings: (settings: UserSettings | null) => void
+): () => void {
+  // 1) Seed from local replaceable immediately and watch for updates
+  const storeSub = eventStore
+    .replaceable(APP_DATA_KIND, pubkey, SETTINGS_IDENTIFIER)
+    .subscribe((event: NostrEvent | undefined) => {
+      if (!event) {
+        onSettings(null)
+        return
+      }
+      const content = getAppDataContent<UserSettings>(event)
+      onSettings(content || null)
+    })
+
+  // 2) Stream from relays in background; pipe into store; no timeout/unsubscribe timer
+  const networkSub = relayPool
+    .subscription(relays, {
+      kinds: [APP_DATA_KIND],
+      authors: [pubkey],
+      '#d': [SETTINGS_IDENTIFIER]
+    })
+    .pipe(onlyEvents(), mapEventsToStore(eventStore))
+    .subscribe()
+
+  // Caller manages lifecycle
+  return () => {
+    try { storeSub.unsubscribe() } catch { /* ignore */ }
+    try { networkSub.unsubscribe() } catch { /* ignore */ }
+  }
+}
+
+/**
+ * @deprecated Use startSettingsStream + watchSettings for non-blocking behavior.
+ * Returns current local settings immediately (or null if not present) and starts background sync.
+ */
 export async function loadSettings(
   relayPool: RelayPool,
   eventStore: IEventStore,
   pubkey: string,
   relays: string[]
 ): Promise<UserSettings | null> {
-  
-  // First, check if we already have settings in the local event store
+  let initial: UserSettings | null = null
+
   try {
     const localEvent = await firstValueFrom(
       eventStore.replaceable(APP_DATA_KIND, pubkey, SETTINGS_IDENTIFIER)
     )
     if (localEvent) {
       const content = getAppDataContent<UserSettings>(localEvent)
-      
-      // Still fetch from relays in the background to get any updates
-      relayPool
-        .subscription(relays, {
-          kinds: [APP_DATA_KIND],
-          authors: [pubkey],
-          '#d': [SETTINGS_IDENTIFIER]
-        })
-        .pipe(onlyEvents(), mapEventsToStore(eventStore))
-        .subscribe()
-      
-      return content || null
+      initial = content || null
     }
-  } catch (_err) {
-    // Ignore local store errors
+  } catch {
+    // ignore
   }
-  
-  // If not in local store, fetch from relays
-  return new Promise((resolve) => {
-    let hasResolved = false
-    const timeout = setTimeout(() => {
-      if (!hasResolved) {
-        console.warn('⚠️ Settings load timeout - no settings event found')
-        hasResolved = true
-        resolve(null)
-      }
-    }, 5000)
 
-    const sub = relayPool
-      .subscription(relays, {
-        kinds: [APP_DATA_KIND],
-        authors: [pubkey],
-        '#d': [SETTINGS_IDENTIFIER]
-      })
-      .pipe(onlyEvents(), mapEventsToStore(eventStore))
-      .subscribe({
-        complete: async () => {
-          clearTimeout(timeout)
-          if (!hasResolved) {
-            hasResolved = true
-            try {
-              const event = await firstValueFrom(
-                eventStore.replaceable(APP_DATA_KIND, pubkey, SETTINGS_IDENTIFIER)
-              )
-              if (event) {
-                const content = getAppDataContent<UserSettings>(event)
-                resolve(content || null)
-              } else {
-                resolve(null)
-              }
-            } catch (err) {
-              console.error('❌ Error loading settings:', err)
-              resolve(null)
-            }
-          }
-        },
-        error: (err) => {
-          console.error('❌ Settings subscription error:', err)
-          clearTimeout(timeout)
-          if (!hasResolved) {
-            hasResolved = true
-            resolve(null)
-          }
-        }
-      })
+  // Start background sync (fire-and-forget; no timeout)
+  relayPool
+    .subscription(relays, {
+      kinds: [APP_DATA_KIND],
+      authors: [pubkey],
+      '#d': [SETTINGS_IDENTIFIER]
+    })
+    .pipe(onlyEvents(), mapEventsToStore(eventStore))
+    .subscribe()
 
-    setTimeout(() => {
-      sub.unsubscribe()
-    }, 5000)
-  })
+  return initial
 }
 
 export async function saveSettings(
