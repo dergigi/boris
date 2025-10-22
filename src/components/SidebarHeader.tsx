@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faUserCircle, faGear, faHome, faNewspaper, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faUserCircle, faGear, faHome, faNewspaper } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
