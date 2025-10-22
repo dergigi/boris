@@ -71,7 +71,6 @@ export const useReadingPosition = ({
     }
 
     const DEBOUNCE_MS = 3000 // Save max every 3 seconds
-    console.log(`[reading-position] [${new Date().toISOString()}] ⏱️ Debouncing save for ${DEBOUNCE_MS}ms (pos: ${Math.round(currentPosition * 100)}%)`)
     saveTimerRef.current = setTimeout(() => {
       console.log(`[reading-position] [${new Date().toISOString()}] 💾 Auto-save at ${Math.round(currentPosition * 100)}%`)
       lastSavedPosition.current = currentPosition
