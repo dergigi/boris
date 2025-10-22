@@ -207,15 +207,23 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Delay enabling position tracking to ensure content is stable
   const [isTrackingEnabled, setIsTrackingEnabled] = useState(false)
+  
+  // Reset tracking when article changes
   useEffect(() => {
-    if (isTextContent) {
+    setIsTrackingEnabled(false)
+  }, [selectedUrl])
+  
+  // Enable tracking after content is stable
+  useEffect(() => {
+    if (isTextContent && !isTrackingEnabled) {
       // Wait 500ms after content loads before enabling tracking
-      const timer = setTimeout(() => setIsTrackingEnabled(true), 500)
+      const timer = setTimeout(() => {
+        console.log('[reading-position] ✅ Enabling tracking after stability delay')
+        setIsTrackingEnabled(true)
+      }, 500)
       return () => clearTimeout(timer)
-    } else {
-      setIsTrackingEnabled(false)
     }
-  }, [isTextContent, selectedUrl])
+  }, [isTextContent, isTrackingEnabled])
 
   const { progressPercentage, saveNow, suppressSavesFor } = useReadingPosition({
     enabled: isTrackingEnabled,
