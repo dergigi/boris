@@ -361,6 +361,17 @@ class BookmarkController {
             if (addedDiff !== 0) return addedDiff
             return (b.created_at || 0) - (a.created_at || 0)
           })
+        
+        // DEBUG: Log sorting details for top 10 bookmarks
+        console.log('🔍 Bookmark Sorting Debug:')
+        sortedBookmarks.slice(0, 10).forEach((b, i) => {
+          const addedDate = b.added_at ? new Date(b.added_at * 1000).toISOString() : 'none'
+          const createdDate = b.created_at ? new Date(b.created_at * 1000).toISOString() : 'none'
+          const contentPreview = (b.content || '').substring(0, 50)
+          console.log(`  ${i + 1}. [${b.type}] added_at: ${addedDate}, created_at: ${createdDate}`)
+          console.log(`     content: "${contentPreview}"`)
+        })
+        console.log(`Total bookmarks: ${sortedBookmarks.length}\n`)
 
         const bookmark: Bookmark = {
           id: `${activeAccount.pubkey}-bookmarks`,

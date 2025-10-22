@@ -153,22 +153,37 @@ export const processApplesauceBookmarks = (
   }
 
   const bookmarkArray = Array.isArray(bookmarks) ? bookmarks : [bookmarks]
-  return bookmarkArray
+  const processed = bookmarkArray
     .filter((bookmark: BookmarkData) => bookmark.id) // Skip bookmarks without valid IDs
-    .map((bookmark: BookmarkData) => ({
-      id: bookmark.id!,
-      content: bookmark.content || '',
-      created_at: bookmark.created_at || parentCreatedAt || 0,
-      pubkey: activeAccount.pubkey,
-      kind: bookmark.kind || 30001,
-      tags: bookmark.tags || [],
-      parsedContent: bookmark.content ? (getParsedContent(bookmark.content) as ParsedContent) : undefined,
-      type: 'event' as const,
-      isPrivate,
-      // added_at should be when the bookmark was added (parentCreatedAt = bookmark list event timestamp)
-      // NOT when the content itself was created
-      added_at: parentCreatedAt || bookmark.created_at || 0
-    }))
+    .map((bookmark: BookmarkData) => {
+      const result = {
+        id: bookmark.id!,
+        content: bookmark.content || '',
+        created_at: bookmark.created_at || parentCreatedAt || 0,
+        pubkey: activeAccount.pubkey,
+        kind: bookmark.kind || 30001,
+        tags: bookmark.tags || [],
+        parsedContent: bookmark.content ? (getParsedContent(bookmark.content) as ParsedContent) : undefined,
+        type: 'event' as const,
+        isPrivate,
+        // added_at should be when the bookmark was added (parentCreatedAt = bookmark list event timestamp)
+        // NOT when the content itself was created
+        added_at: parentCreatedAt || bookmark.created_at || 0
+      }
+      
+      // DEBUG: Log timestamp assignment
+      if (Math.random() < 0.05) { // Log ~5% of bookmarks to avoid spam
+        console.log('📌 Processing bookmark:')
+        console.log(`  parentCreatedAt: ${parentCreatedAt ? new Date(parentCreatedAt * 1000).toISOString() : 'none'}`)
+        console.log(`  bookmark.created_at: ${bookmark.created_at ? new Date(bookmark.created_at * 1000).toISOString() : 'none'}`)
+        console.log(`  result.added_at: ${result.added_at ? new Date(result.added_at * 1000).toISOString() : 'none'}`)
+        console.log(`  content preview: "${(bookmark.content || '').substring(0, 40)}"`)
+      }
+      
+      return result
+    })
+  
+  return processed
 }
 
 // Types and guards around signer/decryption APIs
