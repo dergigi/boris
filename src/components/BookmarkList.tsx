@@ -71,7 +71,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const [selectedFilter, setSelectedFilter] = useState<BookmarkFilterType>('all')
   const [groupingMode, setGroupingMode] = useState<'grouped' | 'flat'>(() => {
     const saved = localStorage.getItem('bookmarkGroupingMode')
-    return saved === 'flat' ? 'flat' : 'grouped'
+    return saved === 'grouped' ? 'grouped' : 'flat'
   })
   const activeAccount = Hooks.useActiveAccount()
   const [readingProgressMap, setReadingProgressMap] = useState<Map<string, number>>(new Map())
