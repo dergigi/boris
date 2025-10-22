@@ -30,6 +30,12 @@ export const useReadingPosition = ({
   const hasSavedOnce = useRef(false)
   const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSavedAtRef = useRef<number>(0)
+  const suppressUntilRef = useRef<number>(0)
+
+  // Suppress auto-saves for a given duration (used after programmatic restore)
+  const suppressSavesFor = useCallback((ms: number) => {
+    suppressUntilRef.current = Date.now() + ms
+  }, [])
 
   // Debounced save function
   const scheduleSave = useCallback((currentPosition: number) => {
@@ -136,8 +142,10 @@ export const useReadingPosition = ({
       positionRef.current = clampedProgress
       onPositionChange?.(clampedProgress)
 
-      // Schedule auto-save if sync is enabled
-      scheduleSave(clampedProgress)
+      // Schedule auto-save if sync is enabled (unless suppressed)
+      if (Date.now() >= suppressUntilRef.current) {
+        scheduleSave(clampedProgress)
+      }
 
       // Completion detection with 2s hold at 100%
       if (!hasTriggeredComplete.current) {
@@ -208,6 +216,7 @@ export const useReadingPosition = ({
     position,
     isReadingComplete,
     progressPercentage: Math.round(position * 100),
-    saveNow
+    saveNow,
+    suppressSavesFor
   }
 }
