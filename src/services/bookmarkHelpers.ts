@@ -165,7 +165,9 @@ export const processApplesauceBookmarks = (
       parsedContent: bookmark.content ? (getParsedContent(bookmark.content) as ParsedContent) : undefined,
       type: 'event' as const,
       isPrivate,
-      added_at: bookmark.created_at || parentCreatedAt || 0
+      // added_at should be when the bookmark was added (parentCreatedAt = bookmark list event timestamp)
+      // NOT when the content itself was created
+      added_at: parentCreatedAt || bookmark.created_at || 0
     }))
 }
 
