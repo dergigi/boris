@@ -43,9 +43,9 @@ import { EventFactory } from 'applesauce-factory'
 import { Hooks } from 'applesauce-react'
 import { 
   generateArticleIdentifier, 
-  saveReadingPosition,
-  collectReadingPositionsOnce
+  saveReadingPosition
 } from '../services/readingPositionService'
+import { readingProgressController } from '../services/readingProgressController'
 import TTSControls from './TTSControls'
 
 interface ContentPanelProps {
@@ -246,7 +246,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   useEffect(() => {
   }, [isTextContent, settings?.syncReadingPosition, activeAccount, relayPool, eventStore, articleIdentifier, progressPercentage])
 
-  // Load saved reading position when article loads (stabilized one-shot restore)
+  // Load saved reading position when article loads (using pre-loaded data from controller)
   const suppressSavesForRef = useRef(suppressSavesFor)
   useEffect(() => {
     suppressSavesForRef.current = suppressSavesFor
@@ -262,14 +262,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       isTextContent,
       isTrackingEnabled,
       hasAccount: !!activeAccount,
-      hasRelayPool: !!relayPool,
-      hasEventStore: !!eventStore,
       articleIdentifier,
       restoreKey,
       hasAttempted: hasAttemptedRestoreRef.current
     })
     
-    if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) {
+    if (!isTextContent || !activeAccount || !articleIdentifier) {
       console.log('[reading-position] ⏭️ Restore skipped: missing dependencies or not text content')
       return
     }
@@ -292,81 +290,60 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     // Mark as attempted using composite key
     hasAttemptedRestoreRef.current = restoreKey
     
-    // Suppress saves during restore window (700ms collection + 500ms render + 500ms buffer = 1700ms)
-    if (suppressSavesForRef.current) {
-      suppressSavesForRef.current(1700)
+    // Get the saved position from the controller (already loaded and displayed on card)
+    const savedProgress = readingProgressController.getProgress(articleIdentifier)
+    
+    if (!savedProgress || savedProgress <= 0.05 || savedProgress >= 1) {
+      console.log('[reading-position] ℹ️ No position to restore (progress:', savedProgress, ')')
+      return
     }
 
-    const collector = collectReadingPositionsOnce({
-      relayPool,
-      eventStore,
-      pubkey: activeAccount.pubkey,
-      articleIdentifier,
-      windowMs: 700
-    })
+    console.log('[reading-position] 🎯 Found saved position:', Math.round(savedProgress * 100) + '%')
 
-    collector.onStable((bestPosition) => {
-      if (!bestPosition) {
-        console.log('[reading-position] ℹ️ No position to restore')
-        // No saved position, allow saves immediately
+    // Suppress saves during restore (500ms render + 1000ms animation + 500ms buffer = 2000ms)
+    if (suppressSavesForRef.current) {
+      suppressSavesForRef.current(2000)
+    }
+
+    // Wait for content to be fully rendered
+    setTimeout(() => {
+      const docH = document.documentElement.scrollHeight
+      const winH = window.innerHeight
+      const maxScroll = Math.max(0, docH - winH)
+      const currentTop = window.pageYOffset || document.documentElement.scrollTop
+      const targetTop = savedProgress * maxScroll
+
+      console.log('[reading-position] 📐 Restore calculation:', {
+        docHeight: docH,
+        winHeight: winH,
+        maxScroll,
+        currentTop,
+        targetTop,
+        targetPercent: Math.round(savedProgress * 100) + '%'
+      })
+
+      // Skip if delta is too small (< 48px or < 5%)
+      const deltaPx = Math.abs(targetTop - currentTop)
+      const deltaPct = maxScroll > 0 ? Math.abs((targetTop - currentTop) / maxScroll) : 0
+      if (deltaPx < 48 || deltaPct < 0.05) {
+        console.log('[reading-position] ⏭️ Restore skipped: delta too small (', deltaPx, 'px,', Math.round(deltaPct * 100) + '%)')
+        // Allow saves immediately since no scroll happened
         if (suppressSavesForRef.current) {
           suppressSavesForRef.current(0)
         }
         return
       }
 
-      console.log('[reading-position] 🎯 Stable position received:', Math.round(bestPosition.position * 100) + '%')
+      console.log('[reading-position] 📜 Restoring scroll position (delta:', deltaPx, 'px,', Math.round(deltaPct * 100) + '%)')
 
-      // Wait for content to be fully rendered
-      setTimeout(() => {
-        const docH = document.documentElement.scrollHeight
-        const winH = window.innerHeight
-        const maxScroll = Math.max(0, docH - winH)
-        const currentTop = window.pageYOffset || document.documentElement.scrollTop
-        const targetTop = bestPosition.position * maxScroll
-
-        console.log('[reading-position] 📐 Restore calculation:', {
-          docHeight: docH,
-          winHeight: winH,
-          maxScroll,
-          currentTop,
-          targetTop,
-          targetPercent: Math.round(bestPosition.position * 100) + '%'
-        })
-
-        // Skip if delta is too small (< 48px or < 5%)
-        const deltaPx = Math.abs(targetTop - currentTop)
-        const deltaPct = maxScroll > 0 ? Math.abs((targetTop - currentTop) / maxScroll) : 0
-        if (deltaPx < 48 || deltaPct < 0.05) {
-          console.log('[reading-position] ⏭️ Restore skipped: delta too small (', deltaPx, 'px,', Math.round(deltaPct * 100) + '%)')
-          // Allow saves immediately since no scroll happened
-          if (suppressSavesForRef.current) {
-            suppressSavesForRef.current(0)
-          }
-          return
-        }
-
-        console.log('[reading-position] 📜 Restoring scroll position (delta:', deltaPx, 'px,', Math.round(deltaPct * 100) + '%)')
-
-        // Suppress saves for another 1.5s after scroll to avoid saving the restored position
-        if (suppressSavesForRef.current) {
-          suppressSavesForRef.current(1500)
-        }
-
-        // Perform smooth animated restore
-        window.scrollTo({
-          top: targetTop,
-          behavior: 'smooth'
-        })
-        console.log('[reading-position] ✅ Scroll restored to', Math.round(bestPosition.position * 100) + '%')
-      }, 500) // Give content time to render
-    })
-
-    return () => {
-      console.log('[reading-position] 🛑 Stopping restore collector')
-      collector.stop()
-    }
-  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl, isTrackingEnabled, restoreKey])
+      // Perform smooth animated restore
+      window.scrollTo({
+        top: targetTop,
+        behavior: 'smooth'
+      })
+      console.log('[reading-position] ✅ Scroll restored to', Math.round(savedProgress * 100) + '%')
+    }, 500) // Give content time to render
+  }, [isTextContent, activeAccount, articleIdentifier, settings?.syncReadingPosition, selectedUrl, isTrackingEnabled, restoreKey])
 
   // Save position before unmounting or changing article
   const saveNowRef = useRef(saveNow)
