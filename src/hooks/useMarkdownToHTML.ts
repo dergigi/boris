@@ -20,9 +20,11 @@ export const useMarkdownToHTML = (
   const [processedMarkdown, setProcessedMarkdown] = useState<string>('')
 
   useEffect(() => {
+    // Always clear previous render immediately to avoid showing stale content while processing
+    setRenderedHtml('')
+    setProcessedMarkdown('')
+    
     if (!markdown) {
-      setRenderedHtml('')
-      setProcessedMarkdown('')
       return
     }
 

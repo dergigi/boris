@@ -49,6 +49,8 @@ export function useExternalUrlLoader({
   setCurrentArticleEventId
 }: UseExternalUrlLoaderProps) {
   const mountedRef = useRef(true)
+  // Track in-flight request to prevent stale updates when switching quickly
+  const currentRequestIdRef = useRef(0)
   
   // Load cached URL-specific highlights from event store
   const urlFilter = useMemo(() => {
@@ -70,6 +72,7 @@ export function useExternalUrlLoader({
     if (!relayPool || !url) return
     
     const loadExternalUrl = async () => {
+      const requestId = ++currentRequestIdRef.current
       if (!mountedRef.current) return
       
       setReaderLoading(true)
@@ -83,6 +86,7 @@ export function useExternalUrlLoader({
         const content = await fetchReadableContent(url)
         
         if (!mountedRef.current) return
+        if (currentRequestIdRef.current !== requestId) return
         
         setReaderContent(content)
         setReaderLoading(false)
@@ -114,6 +118,7 @@ export function useExternalUrlLoader({
               url,
               (highlight) => {
                 if (!mountedRef.current) return
+                if (currentRequestIdRef.current !== requestId) return
                 
                 if (seen.has(highlight.id)) return
                 seen.add(highlight.id)
@@ -131,13 +136,13 @@ export function useExternalUrlLoader({
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {
-          if (mountedRef.current) {
+          if (mountedRef.current && currentRequestIdRef.current === requestId) {
             setHighlightsLoading(false)
           }
         }
       } catch (err) {
         console.error('Failed to load external URL:', err)
-        if (mountedRef.current) {
+        if (mountedRef.current && currentRequestIdRef.current === requestId) {
           const filename = getFilenameFromUrl(url)
           setReaderContent({
             title: filename,
