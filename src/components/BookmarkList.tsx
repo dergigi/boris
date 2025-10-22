@@ -13,7 +13,7 @@ import { ViewMode } from './Bookmarks'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { BookmarkSkeleton } from './Skeletons'
-import { groupIndividualBookmarks, hasContent, getBookmarkSets, getBookmarksWithoutSet, hasCreationDate } from '../utils/bookmarkUtils'
+import { groupIndividualBookmarks, hasContent, getBookmarkSets, getBookmarksWithoutSet, hasCreationDate, sortIndividualBookmarks } from '../utils/bookmarkUtils'
 import { UserSettings } from '../services/settingsService'
 import AddBookmarkModal from './AddBookmarkModal'
 import { createWebBookmark } from '../services/webBookmarkService'
@@ -156,7 +156,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const groups = groupIndividualBookmarks(bookmarksWithoutSet)
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
     groupingMode === 'flat'
-      ? [{ key: 'all', title: `All Bookmarks (${bookmarksWithoutSet.length})`, items: bookmarksWithoutSet }]
+      ? [{ key: 'all', title: `All Bookmarks (${filteredBookmarks.length})`, items: sortIndividualBookmarks(filteredBookmarks) }]
       : [
           { key: 'nip51-private', title: 'Private Bookmarks', items: groups.nip51Private },
           { key: 'nip51-public', title: 'My Bookmarks', items: groups.nip51Public },
@@ -165,14 +165,16 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
           { key: 'web', title: 'Web Bookmarks', items: groups.standaloneWeb }
         ]
   
-  // Add bookmark sets as additional sections
-  bookmarkSets.forEach(set => {
-    sections.push({
-      key: `set-${set.name}`,
-      title: set.title || set.name,
-      items: set.bookmarks
+  // Add bookmark sets as additional sections (only in grouped mode)
+  if (groupingMode === 'grouped') {
+    bookmarkSets.forEach(set => {
+      sections.push({
+        key: `set-${set.name}`,
+        title: set.title || set.name,
+        items: set.bookmarks
+      })
     })
-  })
+  }
   
   if (isCollapsed) {
     // Check if the selected URL is in bookmarks
