@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate, faHeart, faPlus, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
@@ -152,41 +152,58 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
     isDisabled: !onRefresh
   })
 
-  // Merge and flatten all individual bookmarks from all lists
-  const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
-    .filter(hasContent)
-    .filter(b => !settings?.hideBookmarksWithoutCreationDate || hasCreationDate(b))
-  
-  // Apply filter
-  const filteredBookmarks = filterBookmarksByType(allIndividualBookmarks, selectedFilter)
-  
-  // Separate bookmarks with setName (kind 30003) from regular bookmarks
-  const bookmarksWithoutSet = getBookmarksWithoutSet(filteredBookmarks)
-  const bookmarkSets = getBookmarkSets(filteredBookmarks)
-  
-  // Group non-set bookmarks by source or flatten based on mode
-  const groups = groupIndividualBookmarks(bookmarksWithoutSet)
-  const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
-    groupingMode === 'flat'
-      ? [{ key: 'all', title: getFilterTitle(selectedFilter), items: sortIndividualBookmarks(filteredBookmarks) }]
-      : [
-          { key: 'nip51-private', title: 'Private Bookmarks', items: groups.nip51Private },
-          { key: 'nip51-public', title: 'My Bookmarks', items: groups.nip51Public },
-          { key: 'amethyst-private', title: 'Private Lists', items: groups.amethystPrivate },
-          { key: 'amethyst-public', title: 'My Lists', items: groups.amethystPublic },
-          { key: 'web', title: 'Web Bookmarks', items: groups.standaloneWeb }
-        ]
-  
-  // Add bookmark sets as additional sections (only in grouped mode)
-  if (groupingMode === 'grouped') {
-    bookmarkSets.forEach(set => {
-      sections.push({
-        key: `set-${set.name}`,
-        title: set.title || set.name,
-        items: set.bookmarks
+  // Merge and flatten all individual bookmarks from all lists - memoized to ensure consistent sorting
+  const sections = useMemo(() => {
+    const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
+      .filter(hasContent)
+      .filter(b => !settings?.hideBookmarksWithoutCreationDate || hasCreationDate(b))
+    
+    // Apply filter
+    const filteredBookmarks = filterBookmarksByType(allIndividualBookmarks, selectedFilter)
+    
+    // Separate bookmarks with setName (kind 30003) from regular bookmarks
+    const bookmarksWithoutSet = getBookmarksWithoutSet(filteredBookmarks)
+    const bookmarkSets = getBookmarkSets(filteredBookmarks)
+    
+    // Group non-set bookmarks by source or flatten based on mode
+    const groups = groupIndividualBookmarks(bookmarksWithoutSet)
+    const sectionsArray: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
+      groupingMode === 'flat'
+        ? [{ key: 'all', title: getFilterTitle(selectedFilter), items: sortIndividualBookmarks(filteredBookmarks) }]
+        : [
+            { key: 'nip51-private', title: 'Private Bookmarks', items: groups.nip51Private },
+            { key: 'nip51-public', title: 'My Bookmarks', items: groups.nip51Public },
+            { key: 'amethyst-private', title: 'Private Lists', items: groups.amethystPrivate },
+            { key: 'amethyst-public', title: 'My Lists', items: groups.amethystPublic },
+            { key: 'web', title: 'Web Bookmarks', items: groups.standaloneWeb }
+          ]
+    
+    // Add bookmark sets as additional sections (only in grouped mode)
+    if (groupingMode === 'grouped') {
+      bookmarkSets.forEach(set => {
+        sectionsArray.push({
+          key: `set-${set.name}`,
+          title: set.title || set.name,
+          items: set.bookmarks
+        })
       })
-    })
-  }
+    }
+    
+    return sectionsArray
+  }, [bookmarks, selectedFilter, groupingMode, settings?.hideBookmarksWithoutCreationDate])
+  
+  // Get all filtered bookmarks for empty state checks
+  const allIndividualBookmarks = useMemo(() => 
+    bookmarks.flatMap(b => b.individualBookmarks || [])
+      .filter(hasContent)
+      .filter(b => !settings?.hideBookmarksWithoutCreationDate || hasCreationDate(b)),
+    [bookmarks, settings?.hideBookmarksWithoutCreationDate]
+  )
+  
+  const filteredBookmarks = useMemo(() => 
+    filterBookmarksByType(allIndividualBookmarks, selectedFilter),
+    [allIndividualBookmarks, selectedFilter]
+  )
   
   if (isCollapsed) {
     // Check if the selected URL is in bookmarks
