@@ -566,7 +566,13 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   const handleSearchExternalUrl = () => {
     if (selectedUrl) {
-      window.open(getSearchUrl(selectedUrl), '_blank', 'noopener,noreferrer')
+      // If it's a nostr event sentinel, open the event directly on ants.sh
+      if (selectedUrl.startsWith('nostr-event:')) {
+        const eventId = selectedUrl.replace('nostr-event:', '')
+        window.open(`https://ants.sh/e/${eventId}`, '_blank', 'noopener,noreferrer')
+      } else {
+        window.open(getSearchUrl(selectedUrl), '_blank', 'noopener,noreferrer')
+      }
     }
     setShowExternalMenu(false)
   }
