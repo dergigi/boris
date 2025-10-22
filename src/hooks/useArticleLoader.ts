@@ -42,6 +42,8 @@ export function useArticleLoader({
   useEffect(() => {
     settingsRef.current = settings
   }, [settings])
+  // Track in-flight request to prevent stale updates from previous naddr
+  const currentRequestIdRef = useRef(0)
   
   useEffect(() => {
     mountedRef.current = true
@@ -49,6 +51,7 @@ export function useArticleLoader({
     if (!relayPool || !naddr) return
     
     const loadArticle = async () => {
+      const requestId = ++currentRequestIdRef.current
       if (!mountedRef.current) return
       
       setReaderLoading(true)
@@ -60,6 +63,8 @@ export function useArticleLoader({
         const article = await fetchArticleByNaddr(relayPool, naddr, false, settingsRef.current)
         
         if (!mountedRef.current) return
+        // Ignore if a newer request has started
+        if (currentRequestIdRef.current !== requestId) return
         
         setReaderContent({
           title: article.title,
@@ -91,7 +96,8 @@ export function useArticleLoader({
             article.event.id,
             (highlight) => {
               if (!mountedRef.current) return
-              
+              // Ignore highlights from stale request
+              if (currentRequestIdRef.current !== requestId) return
               setHighlights((prev: Highlight[]) => {
                 if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
                 const next = [highlight, ...prev]
@@ -103,13 +109,13 @@ export function useArticleLoader({
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {
-          if (mountedRef.current) {
+          if (mountedRef.current && currentRequestIdRef.current === requestId) {
             setHighlightsLoading(false)
           }
         }
       } catch (err) {
         console.error('Failed to load article:', err)
-        if (mountedRef.current) {
+        if (mountedRef.current && currentRequestIdRef.current === requestId) {
           setReaderContent({
             title: 'Error Loading Article',
             html: `<p>Failed to load article: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
