@@ -16,8 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Reading position auto-save now uses simple 2-second debounce
-  - Saves only after 2s of no scrolling (was 15s minimum interval)
+- Reading position auto-save now uses simple 3-second debounce
+  - Saves only after 3s of no scrolling (was 15s minimum interval)
   - Much less aggressive, reduces relay traffic
   - Still saves instantly at 100% completion
 
