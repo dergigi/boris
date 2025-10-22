@@ -3,7 +3,7 @@ import { IEventStore } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
 import { EventFactory } from 'applesauce-factory'
 import { AccountManager } from 'applesauce-accounts'
-import { UserSettings, loadSettings, saveSettings, watchSettings } from '../services/settingsService'
+import { UserSettings, saveSettings, watchSettings, startSettingsStream } from '../services/settingsService'
 import { loadFont, getFontFamily } from '../utils/fontLoader'
 import { applyTheme } from '../utils/theme'
 import { RELAYS } from '../config/relays'
@@ -20,26 +20,24 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
-  // Load settings and set up subscription
+  // Load settings and set up streaming subscription (non-blocking, EOSE-driven)
   useEffect(() => {
     if (!relayPool || !pubkey || !eventStore) return
 
-    const loadAndWatch = async () => {
-      try {
-        const loadedSettings = await loadSettings(relayPool, eventStore, pubkey, RELAYS)
-        if (loadedSettings) setSettings({ renderVideoLinksAsEmbeds: true, hideBotArticlesByName: true, ...loadedSettings })
-      } catch (err) {
-        console.error('Failed to load settings:', err)
-      }
-    }
+    // Start settings stream: seed from store, stream updates to store in background
+    const stopNetwork = startSettingsStream(relayPool, eventStore, pubkey, RELAYS, (loadedSettings) => {
+      if (loadedSettings) setSettings({ renderVideoLinksAsEmbeds: true, hideBotArticlesByName: true, ...loadedSettings })
+    })
 
-    loadAndWatch()
-
+    // Also watch store reactively for any further updates
     const subscription = watchSettings(eventStore, pubkey, (loadedSettings) => {
       if (loadedSettings) setSettings({ renderVideoLinksAsEmbeds: true, hideBotArticlesByName: true, ...loadedSettings })
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      stopNetwork()
+    }
   }, [relayPool, pubkey, eventStore])
 
   // Apply settings to document
