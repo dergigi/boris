@@ -156,7 +156,7 @@ export const processApplesauceBookmarks = (
   const processed = bookmarkArray
     .filter((bookmark: BookmarkData) => bookmark.id) // Skip bookmarks without valid IDs
     .map((bookmark: BookmarkData) => {
-      const result = {
+      return {
         id: bookmark.id!,
         content: bookmark.content || '',
         created_at: bookmark.created_at || 0,
@@ -168,16 +168,6 @@ export const processApplesauceBookmarks = (
         isPrivate,
         listUpdatedAt: parentCreatedAt || 0
       }
-      
-      // DEBUG: Log timestamp assignment
-      if (Math.random() < 0.05) { // Log ~5% of bookmarks to avoid spam
-        console.log('📌 Processing bookmark:')
-        console.log(`  content created_at: ${result.created_at ? new Date(result.created_at * 1000).toISOString() : 'none'}`)
-        console.log(`  list updated at: ${result.listUpdatedAt ? new Date(result.listUpdatedAt * 1000).toISOString() : 'none'}`)
-        console.log(`  content preview: "${(bookmark.content || '').substring(0, 40)}"`)
-      }
-      
-      return result
     })
   
   return processed

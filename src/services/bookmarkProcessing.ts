@@ -130,9 +130,6 @@ export async function collectBookmarksFromEvents(
     const setDescription = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'description')?.[1] : undefined
     const setImage = evt.kind === 30003 ? evt.tags?.find((t: string[]) => t[0] === 'image')?.[1] : undefined
     const metadata = { dTag, setTitle, setDescription, setImage }
-    
-    // DEBUG: Log bookmark list event processing
-    console.log(`📋 Processing bookmark list event kind:${evt.kind}, created_at: ${evt.created_at ? new Date(evt.created_at * 1000).toISOString() : 'none'}`)
 
     // Handle web bookmarks (kind:39701) as individual bookmarks
     if (evt.kind === 39701) {

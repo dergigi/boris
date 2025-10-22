@@ -356,19 +356,6 @@ class BookmarkController {
             // Newest first (descending)
             return (b.listUpdatedAt || 0) - (a.listUpdatedAt || 0)
           })
-        
-        // DEBUG: Log sorting details for top 10 bookmarks
-        console.log('🔍 Bookmark Sorting Debug:')
-        sortedBookmarks.slice(0, 10).forEach((b, i) => {
-          const listUpdated = b.listUpdatedAt ? new Date(b.listUpdatedAt * 1000).toISOString() : 'none'
-          const contentCreated = b.created_at ? new Date(b.created_at * 1000).toISOString() : 'none'
-          const contentPreview = (b.content || '').substring(0, 50)
-          console.log(`  ${i + 1}. [${b.type}]`)
-          console.log(`     list updated: ${listUpdated}`)
-          console.log(`     content created: ${contentCreated}`)
-          console.log(`     content: "${contentPreview}"`)
-        })
-        console.log(`Total bookmarks: ${sortedBookmarks.length}\n`)
 
         const bookmark: Bookmark = {
           id: `${activeAccount.pubkey}-bookmarks`,
