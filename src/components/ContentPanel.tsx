@@ -153,10 +153,20 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Reading position tracking - only for text content that's loaded and long enough
   // Wait for content to load, check it's not a video, and verify it's long enough to track
   const isTextContent = useMemo(() => {
+    const result = {
+      loading,
+      hasMarkdown: !!markdown,
+      hasHtml: !!html,
+      isVideo: selectedUrl?.includes('youtube') || selectedUrl?.includes('vimeo'),
+      longEnough: shouldTrackReadingProgress(html, markdown)
+    }
+    
     if (loading) return false
     if (!markdown && !html) return false
     if (selectedUrl?.includes('youtube') || selectedUrl?.includes('vimeo')) return false
     if (!shouldTrackReadingProgress(html, markdown)) return false
+    
+    console.log('[reading-position] 📊 isTextContent check:', result, '→', true)
     return true
   }, [loading, markdown, html, selectedUrl])
   
