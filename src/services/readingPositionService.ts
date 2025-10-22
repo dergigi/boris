@@ -98,11 +98,8 @@ export function generateArticleIdentifier(naddrOrUrl: string): string {
   if (naddrOrUrl.startsWith('nostr:')) {
     return naddrOrUrl.replace('nostr:', '')
   }
-  // For URLs, use base64url encoding (URL-safe)
-  return btoa(naddrOrUrl)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '')
+  // For URLs, return the raw URL. Downstream tag generation will encode as needed.
+  return naddrOrUrl
 }
 
 /**

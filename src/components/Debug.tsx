@@ -781,9 +781,16 @@ const Debug: React.FC<DebugProps> = ({
         }
       })
 
-      // Load deduplicated results via controller
+      // Load deduplicated results via controller (includes articles and external URLs)
       const unsubProgress = readingProgressController.onProgress((progressMap) => {
         setDeduplicatedProgressMap(new Map(progressMap))
+
+        // Regression guard: ensure keys include both naddr and raw URL forms when present
+        try {
+          const keys = Array.from(progressMap.keys())
+          const sample = keys.slice(0, 5).join(', ')
+          DebugBus.info('debug', `Progress keys sample: ${sample}`)
+        } catch {}
       })
 
       // Run both in parallel
