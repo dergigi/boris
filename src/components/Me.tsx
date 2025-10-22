@@ -24,7 +24,7 @@ import { getCachedMeData, updateCachedHighlights } from '../services/meCache'
 import { faBooks } from '../icons/customIcons'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
-import { groupIndividualBookmarks, hasContent, hasCreationDate } from '../utils/bookmarkUtils'
+import { groupIndividualBookmarks, hasContent, hasCreationDate, sortIndividualBookmarks } from '../utils/bookmarkUtils'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
 import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProgressFilters'
@@ -566,9 +566,21 @@ const Me: React.FC<MeProps> = ({
     ? buildArchiveOnly(linksWithProgress, { kind: 'external' })
     : []
 
+  const getFilterTitle = (filter: BookmarkFilterType): string => {
+    const titles: Record<BookmarkFilterType, string> = {
+      'all': 'All Bookmarks',
+      'article': 'Bookmarked Reads',
+      'external': 'Bookmarked Links',
+      'video': 'Bookmarked Videos',
+      'note': 'Bookmarked Notes',
+      'web': 'Web Bookmarks'
+    }
+    return titles[filter]
+  }
+
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
     groupingMode === 'flat'
-      ? [{ key: 'all', title: `All Bookmarks (${filteredBookmarks.length})`, items: filteredBookmarks }]
+      ? [{ key: 'all', title: getFilterTitle(bookmarkFilter), items: sortIndividualBookmarks(filteredBookmarks) }]
       : [
           { key: 'nip51-private', title: 'Private Bookmarks', items: groups.nip51Private },
           { key: 'nip51-public', title: 'My Bookmarks', items: groups.nip51Public },
