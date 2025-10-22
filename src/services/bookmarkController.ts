@@ -349,26 +349,20 @@ class BookmarkController {
         const sortedBookmarks = enriched
           .map(b => ({ 
             ...b, 
-            urlReferences: extractUrlsFromContent(b.content),
-            // Ensure we have valid timestamps for sorting
-            added_at: b.added_at || b.created_at || 0,
-            created_at: b.created_at || 0
+            urlReferences: extractUrlsFromContent(b.content)
           }))
           .sort((a, b) => {
-            // Sort by added_at (when item was added to bookmark list), then by created_at
-            // Both should be newest first (descending)
-            const addedDiff = (b.added_at || 0) - (a.added_at || 0)
-            if (addedDiff !== 0) return addedDiff
+            // Sort by created_at (timestamp of bookmark list event = when bookmarked)
+            // Newest first (descending)
             return (b.created_at || 0) - (a.created_at || 0)
           })
         
         // DEBUG: Log sorting details for top 10 bookmarks
         console.log('🔍 Bookmark Sorting Debug:')
         sortedBookmarks.slice(0, 10).forEach((b, i) => {
-          const addedDate = b.added_at ? new Date(b.added_at * 1000).toISOString() : 'none'
-          const createdDate = b.created_at ? new Date(b.created_at * 1000).toISOString() : 'none'
+          const bookmarkedDate = b.created_at ? new Date(b.created_at * 1000).toISOString() : 'none'
           const contentPreview = (b.content || '').substring(0, 50)
-          console.log(`  ${i + 1}. [${b.type}] added_at: ${addedDate}, created_at: ${createdDate}`)
+          console.log(`  ${i + 1}. [${b.type}] bookmarked at: ${bookmarkedDate}`)
           console.log(`     content: "${contentPreview}"`)
         })
         console.log(`Total bookmarks: ${sortedBookmarks.length}\n`)

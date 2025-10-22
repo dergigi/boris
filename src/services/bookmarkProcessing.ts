@@ -146,7 +146,6 @@ export async function collectBookmarksFromEvents(
         parsedContent: undefined,
         type: 'web' as const,
         isPrivate: false,
-        added_at: evt.created_at || Math.floor(Date.now() / 1000),
         sourceKind: 39701,
         setName: dTag,
         setTitle,

@@ -81,14 +81,14 @@ export const processApplesauceBookmarks = (
         allItems.push({
           id: note.id,
           content: '',
-          created_at: note.created_at || parentCreatedAt || 0,
+          // Use parent event timestamp (when bookmarked), not note creation time
+          created_at: parentCreatedAt || 0,
           pubkey: note.author || activeAccount.pubkey,
           kind: 1, // Short note kind
           tags: [],
           parsedContent: undefined,
           type: 'event' as const,
-          isPrivate,
-          added_at: note.added_at || parentCreatedAt || 0
+          isPrivate
         })
       })
     }
@@ -101,14 +101,14 @@ export const processApplesauceBookmarks = (
         allItems.push({
           id: coordinate,
           content: '',
-          created_at: article.created_at || parentCreatedAt || 0,
+          // Use parent event timestamp (when bookmarked), not article creation time
+          created_at: parentCreatedAt || 0,
           pubkey: article.pubkey,
           kind: article.kind, // Usually 30023 for long-form articles
           tags: [],
           parsedContent: undefined,
           type: 'event' as const,
-          isPrivate,
-          added_at: article.added_at || parentCreatedAt || 0
+          isPrivate
         })
       })
     }
@@ -125,8 +125,7 @@ export const processApplesauceBookmarks = (
           tags: [['t', hashtag]],
           parsedContent: undefined,
           type: 'event' as const,
-          isPrivate,
-          added_at: parentCreatedAt || 0
+          isPrivate
         })
       })
     }
@@ -143,8 +142,7 @@ export const processApplesauceBookmarks = (
           tags: [['r', url]],
           parsedContent: undefined,
           type: 'event' as const,
-          isPrivate,
-          added_at: parentCreatedAt || 0
+          isPrivate
         })
       })
     }
@@ -159,24 +157,21 @@ export const processApplesauceBookmarks = (
       const result = {
         id: bookmark.id!,
         content: bookmark.content || '',
-        created_at: bookmark.created_at || parentCreatedAt || 0,
+        // Use parent event timestamp (when bookmarked), not content creation time
+        created_at: parentCreatedAt || 0,
         pubkey: activeAccount.pubkey,
         kind: bookmark.kind || 30001,
         tags: bookmark.tags || [],
         parsedContent: bookmark.content ? (getParsedContent(bookmark.content) as ParsedContent) : undefined,
         type: 'event' as const,
-        isPrivate,
-        // added_at should be when the bookmark was added (parentCreatedAt = bookmark list event timestamp)
-        // NOT when the content itself was created
-        added_at: parentCreatedAt || bookmark.created_at || 0
+        isPrivate
       }
       
       // DEBUG: Log timestamp assignment
       if (Math.random() < 0.05) { // Log ~5% of bookmarks to avoid spam
         console.log('📌 Processing bookmark:')
-        console.log(`  parentCreatedAt: ${parentCreatedAt ? new Date(parentCreatedAt * 1000).toISOString() : 'none'}`)
-        console.log(`  bookmark.created_at: ${bookmark.created_at ? new Date(bookmark.created_at * 1000).toISOString() : 'none'}`)
-        console.log(`  result.added_at: ${result.added_at ? new Date(result.added_at * 1000).toISOString() : 'none'}`)
+        console.log(`  parentCreatedAt (list event): ${parentCreatedAt ? new Date(parentCreatedAt * 1000).toISOString() : 'none'}`)
+        console.log(`  result.created_at (when bookmarked): ${result.created_at ? new Date(result.created_at * 1000).toISOString() : 'none'}`)
         console.log(`  content preview: "${(bookmark.content || '').substring(0, 40)}"`)
       }
       

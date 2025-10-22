@@ -76,7 +76,7 @@ export async function fetchAllReads(
             source: 'bookmark',
             type: 'article',
             readingProgress: 0,
-            readingTimestamp: bookmark.added_at || bookmark.created_at
+            readingTimestamp: bookmark.created_at
           }
           readsMap.set(coordinate, item)
           if (onItem) emitItem(item)

@@ -51,7 +51,7 @@ export function deriveLinksFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
           summary,
           image,
           readingProgress: 0,
-          readingTimestamp: bookmark.added_at || bookmark.created_at
+          readingTimestamp: bookmark.created_at
         }
         
         linksMap.set(url, item)
