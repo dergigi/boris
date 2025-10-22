@@ -221,9 +221,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     setIsTrackingEnabled(false)
   }, [selectedUrl])
   
-  // Enable tracking after content is stable
+  // Enable/disable tracking based on content state
   useEffect(() => {
-    if (isTextContent && !isTrackingEnabled) {
+    if (!isTextContent) {
+      // Disable tracking if content is not suitable
+      if (isTrackingEnabled) {
+        console.log('[reading-position] ⏸️ Disabling tracking (not text content)')
+        setIsTrackingEnabled(false)
+      }
+      return
+    }
+    
+    if (!isTrackingEnabled) {
       // Wait 500ms after content loads before enabling tracking
       const timer = setTimeout(() => {
         console.log('[reading-position] ✅ Enabling tracking after stability delay')
