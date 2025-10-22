@@ -347,8 +347,20 @@ class BookmarkController {
         }))
         
         const sortedBookmarks = enriched
-          .map(b => ({ ...b, urlReferences: extractUrlsFromContent(b.content) }))
-          .sort((a, b) => ((b.added_at || 0) - (a.added_at || 0)) || ((b.created_at || 0) - (a.created_at || 0)))
+          .map(b => ({ 
+            ...b, 
+            urlReferences: extractUrlsFromContent(b.content),
+            // Ensure we have valid timestamps for sorting
+            added_at: b.added_at || b.created_at || 0,
+            created_at: b.created_at || 0
+          }))
+          .sort((a, b) => {
+            // Sort by added_at (when item was added to bookmark list), then by created_at
+            // Both should be newest first (descending)
+            const addedDiff = (b.added_at || 0) - (a.added_at || 0)
+            if (addedDiff !== 0) return addedDiff
+            return (b.created_at || 0) - (a.created_at || 0)
+          })
 
         const bookmark: Bookmark = {
           id: `${activeAccount.pubkey}-bookmarks`,
