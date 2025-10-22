@@ -64,7 +64,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   // Extract tab from me routes
   const meTab = location.pathname === '/me' ? 'highlights' : 
                 location.pathname === '/me/highlights' ? 'highlights' :
-                location.pathname === '/me/reading-list' ? 'reading-list' :
+                location.pathname === '/me/bookmarks' ? 'bookmarks' :
                 location.pathname.startsWith('/me/reads') ? 'reads' :
                 location.pathname.startsWith('/me/links') ? 'links' :
                 location.pathname === '/me/writings' ? 'writings' : 'highlights'

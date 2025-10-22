@@ -42,7 +42,7 @@ interface MeProps {
   settings: UserSettings
 }
 
-type TabType = 'highlights' | 'reading-list' | 'reads' | 'links' | 'writings'
+type TabType = 'highlights' | 'bookmarks' | 'reads' | 'links' | 'writings'
 
 // Valid reading progress filters
 const VALID_FILTERS: ReadingProgressFilterType[] = ['all', 'unopened', 'started', 'reading', 'completed', 'highlighted', 'archive']
@@ -229,9 +229,9 @@ const Me: React.FC<MeProps> = ({
     if (!viewingPubkey || !activeAccount) return
     
     setLoadedTabs(prev => {
-      const hasBeenLoaded = prev.has('reading-list')
+      const hasBeenLoaded = prev.has('bookmarks')
       if (!hasBeenLoaded) setLoading(true)
-      return new Set(prev).add('reading-list')
+      return new Set(prev).add('bookmarks')
     })
     
     // Always turn off loading after a tick
@@ -334,7 +334,7 @@ const Me: React.FC<MeProps> = ({
       case 'writings':
         loadWritingsTab()
         break
-      case 'reading-list':
+      case 'bookmarks':
         loadReadingListTab()
         break
       case 'reads':
@@ -609,7 +609,7 @@ const Me: React.FC<MeProps> = ({
           </div>
         )
 
-      case 'reading-list':
+      case 'bookmarks':
         if (showSkeletons) {
           return (
             <div className="bookmarks-list">
@@ -860,9 +860,9 @@ const Me: React.FC<MeProps> = ({
             <span className="tab-label">Highlights</span>
           </button>
           <button
-            className={`me-tab ${activeTab === 'reading-list' ? 'active' : ''}`}
-            data-tab="reading-list"
-            onClick={() => navigate('/me/reading-list')}
+            className={`me-tab ${activeTab === 'bookmarks' ? 'active' : ''}`}
+            data-tab="bookmarks"
+            onClick={() => navigate('/me/bookmarks')}
           >
             <FontAwesomeIcon icon={faBookmark} />
             <span className="tab-label">Bookmarks</span>
