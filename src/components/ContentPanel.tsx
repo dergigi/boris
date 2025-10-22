@@ -170,12 +170,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       return
     }
     
-    // Don't save positions at 0% (start) - only meaningful progress
-    if (position <= 0.01) {
-      console.log('[reading-position] ⚠️ Save skipped: position at 0%')
-      return
-    }
-    
     // Check if content is long enough to track reading progress
     if (!shouldTrackReadingProgress(html, markdown)) {
       console.log('[reading-position] ⚠️ Save skipped: content too short')
