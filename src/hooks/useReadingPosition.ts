@@ -23,13 +23,11 @@ export const useReadingPosition = ({
   const positionRef = useRef(0)
   const [isReadingComplete, setIsReadingComplete] = useState(false)
   const hasTriggeredComplete = useRef(false)
-  const lastSavedPosition = useRef(0)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const hasSavedOnce = useRef(false)
   const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const lastSavedAtRef = useRef<number>(0)
   const suppressUntilRef = useRef<number>(0)
   const pendingPositionRef = useRef<number>(0) // Track latest position for throttled save
+  const lastSaved100Ref = useRef(false) // Track if we've saved 100% to avoid duplicate saves
 
   // Suppress auto-saves for a given duration (used after programmatic restore)
   const suppressSavesFor = useCallback((ms: number) => {
@@ -45,15 +43,13 @@ export const useReadingPosition = ({
     }
 
     // Always save instantly when we reach completion (1.0)
-    if (currentPosition === 1 && lastSavedPosition.current < 1) {
+    if (currentPosition === 1 && !lastSaved100Ref.current) {
       if (saveTimerRef.current) {
         clearTimeout(saveTimerRef.current)
         saveTimerRef.current = null
       }
       console.log(`[reading-position] [${new Date().toISOString()}] 💾 Instant save at 100% completion`)
-      lastSavedPosition.current = 1
-      hasSavedOnce.current = true
-      lastSavedAtRef.current = Date.now()
+      lastSaved100Ref.current = true
       onSave(1)
       return
     }
@@ -72,35 +68,10 @@ export const useReadingPosition = ({
       // Save the latest position, not the one from when timer was scheduled
       const positionToSave = pendingPositionRef.current
       console.log(`[reading-position] [${new Date().toISOString()}] 💾 Auto-save at ${Math.round(positionToSave * 100)}%`)
-      lastSavedPosition.current = positionToSave
-      hasSavedOnce.current = true
-      lastSavedAtRef.current = Date.now()
       onSave(positionToSave)
       saveTimerRef.current = null
     }, THROTTLE_MS)
   }, [syncEnabled, onSave])
-
-  // Immediate save function
-  const saveNow = useCallback(() => {
-    if (!syncEnabled || !onSave) return
-    
-    // Check suppression even for saveNow (e.g., during restore)
-    if (Date.now() < suppressUntilRef.current) {
-      const remainingMs = suppressUntilRef.current - Date.now()
-      console.log(`[reading-position] [${new Date().toISOString()}] ⏭️ saveNow() suppressed (${remainingMs}ms remaining) at ${Math.round(position * 100)}%`)
-      return
-    }
-    
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = null
-    }
-    console.log(`[reading-position] [${new Date().toISOString()}] 💾 saveNow() called at ${Math.round(position * 100)}%`)
-    lastSavedPosition.current = position
-    hasSavedOnce.current = true
-    lastSavedAtRef.current = Date.now()
-    onSave(position)
-  }, [syncEnabled, onSave, position])
 
   useEffect(() => {
     if (!enabled) return
@@ -194,8 +165,7 @@ export const useReadingPosition = ({
     if (!enabled) {
       setIsReadingComplete(false)
       hasTriggeredComplete.current = false
-      hasSavedOnce.current = false
-      lastSavedPosition.current = 0
+      lastSaved100Ref.current = false
       if (completionTimerRef.current) {
         clearTimeout(completionTimerRef.current)
         completionTimerRef.current = null
@@ -207,7 +177,6 @@ export const useReadingPosition = ({
     position,
     isReadingComplete,
     progressPercentage: Math.round(position * 100),
-    saveNow,
     suppressSavesFor
   }
 }
