@@ -153,10 +153,8 @@ export const useReadingPosition = ({
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', handleScroll)
       
-      // Clear save timer on unmount
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current)
-      }
+      // DON'T clear save timer - let it complete even if tracking is temporarily disabled
+      // Only clear completion timer since that's tied to the current scroll session
       if (completionTimerRef.current) {
         clearTimeout(completionTimerRef.current)
       }
