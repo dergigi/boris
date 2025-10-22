@@ -12,6 +12,8 @@ import {
   extractUrlsFromContent
 } from './bookmarkHelpers'
 
+const { getArticleTitle } = Helpers
+
 /**
  * Get unique key for event deduplication (from Debug)
  */
@@ -167,10 +169,16 @@ class BookmarkController {
     generation: number
   ): Promise<void> {
     if (!this.relayPool) {
+      console.log('[BookmarkController] No relay pool for coordinate hydration')
       return
     }
 
-    if (coords.length === 0) return
+    if (coords.length === 0) {
+      console.log('[BookmarkController] No coordinates to hydrate')
+      return
+    }
+    
+    console.log('[BookmarkController] Starting coordinate hydration for', coords.length, 'coords')
 
     // Group by kind and pubkey for efficient batching
     const filtersByKind = new Map<number, Map<string, string[]>>()
@@ -189,6 +197,7 @@ class BookmarkController {
     // Fetch each group
     for (const [kind, byPubkey] of filtersByKind) {
       for (const [pubkey, identifiers] of byPubkey) {
+        console.log('[BookmarkController] Fetching kind', kind, 'from pubkey', pubkey.slice(0, 8), 'with', identifiers.length, 'identifiers:', identifiers)
         await queryEvents(
           this.relayPool,
           { kinds: [kind], authors: [pubkey], '#d': identifiers },
@@ -199,6 +208,7 @@ class BookmarkController {
 
               const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
               const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
+              console.log('[BookmarkController] Hydrated article:', coordinate, getArticleTitle(event) || 'No title')
               idToEvent.set(coordinate, event)
               idToEvent.set(event.id, event)
               
@@ -213,6 +223,7 @@ class BookmarkController {
         )
       }
     }
+    console.log('[BookmarkController] Coordinate hydration complete')
   }
 
   private async buildAndEmitBookmarks(
@@ -271,9 +282,12 @@ class BookmarkController {
             noteIds.push(i.id)
           } else if (i.id.includes(':')) {
             coordinates.push(i.id)
+            console.log('[BookmarkController] Adding coordinate for hydration:', i.id, 'kind:', i.kind)
           }
         }
       })
+      
+      console.log('[BookmarkController] Hydration needed - noteIds:', noteIds.length, 'coordinates:', coordinates.length)
       
       // Helper to build and emit bookmarks
       const emitBookmarks = (idToEvent: Map<string, NostrEvent>) => {
