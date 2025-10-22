@@ -5,13 +5,15 @@ import ResolvedMention from '../components/ResolvedMention'
 // Note: RichContent is imported by components directly to keep this file component-only for fast refresh
 
 export const formatDate = (timestamp: number) => {
-  const date = new Date(timestamp * 1000)
+  const safe = typeof timestamp === 'number' && isFinite(timestamp) && timestamp > 0 ? timestamp : Math.floor(Date.now() / 1000)
+  const date = new Date(safe * 1000)
   return formatDistanceToNow(date, { addSuffix: true })
 }
 
 // Ultra-compact date format for tight spaces (e.g., compact view)
 export const formatDateCompact = (timestamp: number) => {
-  const date = new Date(timestamp * 1000)
+  const safe = typeof timestamp === 'number' && isFinite(timestamp) && timestamp > 0 ? timestamp : Math.floor(Date.now() / 1000)
+  const date = new Date(safe * 1000)
   const now = new Date()
   
   const seconds = differenceInSeconds(now, date)

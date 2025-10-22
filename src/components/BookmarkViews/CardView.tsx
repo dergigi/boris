@@ -112,10 +112,10 @@ export const CardView: React.FC<CardViewProps> = ({
             title="Open event in search"
             onClick={(e) => e.stopPropagation()}
           >
-            {formatDate(bookmark.created_at)}
+            {formatDate(bookmark.created_at || bookmark.listUpdatedAt || Math.floor(Date.now() / 1000))}
           </a>
         ) : (
-          <span className="bookmark-date">{formatDate(bookmark.created_at)}</span>
+          <span className="bookmark-date">{formatDate(bookmark.created_at || bookmark.listUpdatedAt || Math.floor(Date.now() / 1000))}</span>
         )}
       </div>
       
