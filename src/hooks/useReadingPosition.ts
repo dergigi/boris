@@ -29,6 +29,14 @@ export const useReadingPosition = ({
   const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSavedAtRef = useRef<number>(0)
   const suppressUntilRef = useRef<number>(0)
+  const syncEnabledRef = useRef(syncEnabled)
+  const onSaveRef = useRef(onSave)
+
+  // Keep refs in sync with props
+  useEffect(() => {
+    syncEnabledRef.current = syncEnabled
+    onSaveRef.current = onSave
+  }, [syncEnabled, onSave])
 
   // Suppress auto-saves for a given duration (used after programmatic restore)
   const suppressSavesFor = useCallback((ms: number) => {
@@ -180,10 +188,19 @@ export const useReadingPosition = ({
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', handleScroll)
       
-      // Clear save timer on unmount
-      if (saveTimerRef.current) {
+      // Flush pending save before unmount (don't lose progress if navigating away during debounce window)
+      if (saveTimerRef.current && syncEnabledRef.current && onSaveRef.current) {
         clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = null
+        
+        // Only flush if we have unsaved progress (position differs from last saved)
+        const hasUnsavedProgress = Math.abs(positionRef.current - lastSavedPosition.current) >= 0.05
+        if (hasUnsavedProgress && Date.now() >= suppressUntilRef.current) {
+          console.log(`[reading-position] [${new Date().toISOString()}] 💾 Flushing pending save on unmount at ${Math.round(positionRef.current * 100)}%`)
+          onSaveRef.current(positionRef.current)
+        }
       }
+      
       if (completionTimerRef.current) {
         clearTimeout(completionTimerRef.current)
       }
