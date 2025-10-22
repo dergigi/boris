@@ -166,6 +166,14 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     return generateArticleIdentifier(selectedUrl)
   }, [selectedUrl])
 
+  // Use refs for content to avoid recreating callback on every content change
+  const htmlRef = useRef(html)
+  const markdownRef = useRef(markdown)
+  useEffect(() => {
+    htmlRef.current = html
+    markdownRef.current = markdown
+  }, [html, markdown])
+
   // Callback to save reading position
   const handleSavePosition = useCallback(async (position: number) => {
     if (!activeAccount || !relayPool || !eventStore || !articleIdentifier) {
@@ -178,7 +186,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }
     
     // Check if content is long enough to track reading progress
-    if (!shouldTrackReadingProgress(html, markdown)) {
+    if (!shouldTrackReadingProgress(htmlRef.current, markdownRef.current)) {
       console.log('[reading-position] ⚠️ Save skipped: content too short')
       return
     }
@@ -203,7 +211,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     } catch (error) {
       console.error(`[reading-position] [${new Date().toISOString()}] ❌ Failed to save reading position:`, error)
     }
-  }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, html, markdown])
+  }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition])
 
   // Delay enabling position tracking to ensure content is stable
   const [isTrackingEnabled, setIsTrackingEnabled] = useState(false)
