@@ -36,61 +36,61 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
   return (
     <>
       <div className="sidebar-header-bar">
-        {!isMobile && (
-          <button 
-            onClick={onToggleCollapse}
-            className="toggle-sidebar-btn"
-            title="Collapse bookmarks sidebar"
-            aria-label="Collapse bookmarks sidebar"
-          >
-            <FontAwesomeIcon icon={faChevronRight} />
-          </button>
-        )}
-        <div className="sidebar-header-right">
         {activeAccount && (
-          <div 
-            className="profile-avatar" 
+          <button
+            className="profile-avatar-button" 
             title={getUserDisplayName()}
             onClick={() => navigate('/me')}
-            style={{ cursor: 'pointer' }}
+            aria-label={`Profile: ${getUserDisplayName()}`}
           >
             {profileImage ? (
               <img src={profileImage} alt={getUserDisplayName()} />
             ) : (
               <FontAwesomeIcon icon={faUserCircle} />
             )}
-          </div>
+          </button>
         )}
-        <IconButton
-          icon={faHome}
-          onClick={() => navigate('/')}
-          title="Home"
-          ariaLabel="Home"
-          variant="ghost"
-        />
-        <IconButton
-          icon={faNewspaper}
-          onClick={() => navigate('/explore')}
-          title="Explore"
-          ariaLabel="Explore"
-          variant="ghost"
-        />
-        <IconButton
-          icon={faGear}
-          onClick={onOpenSettings}
-          title="Settings"
-          ariaLabel="Settings"
-          variant="ghost"
-        />
-        {activeAccount && (
+        <div className="sidebar-header-right">
           <IconButton
-            icon={faRightFromBracket}
-            onClick={onLogout}
-            title="Logout"
-            ariaLabel="Logout"
+            icon={faHome}
+            onClick={() => navigate('/')}
+            title="Home"
+            ariaLabel="Home"
             variant="ghost"
           />
-        )}
+          <IconButton
+            icon={faNewspaper}
+            onClick={() => navigate('/explore')}
+            title="Explore"
+            ariaLabel="Explore"
+            variant="ghost"
+          />
+          <IconButton
+            icon={faGear}
+            onClick={onOpenSettings}
+            title="Settings"
+            ariaLabel="Settings"
+            variant="ghost"
+          />
+          {activeAccount && (
+            <IconButton
+              icon={faRightFromBracket}
+              onClick={onLogout}
+              title="Logout"
+              ariaLabel="Logout"
+              variant="ghost"
+            />
+          )}
+          {!isMobile && (
+            <button 
+              onClick={onToggleCollapse}
+              className="toggle-sidebar-btn"
+              title="Collapse bookmarks sidebar"
+              aria-label="Collapse bookmarks sidebar"
+            >
+              <FontAwesomeIcon icon={faChevronRight} />
+            </button>
+          )}
         </div>
       </div>
     </>
