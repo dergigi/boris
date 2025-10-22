@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired, faArrowsRotate, faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { faPersonHiking, faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired, faArrowsRotate, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { Hooks } from 'applesauce-react'
@@ -584,7 +584,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       />
       <div className="explore-header">
         <h1>
-          <FontAwesomeIcon icon={faNewspaper} />
+          <FontAwesomeIcon icon={faPersonHiking} />
           Explore
         </h1>
         

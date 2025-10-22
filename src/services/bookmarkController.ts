@@ -357,14 +357,6 @@ class BookmarkController {
             const bTs = (b.created_at ?? b.listUpdatedAt ?? -Infinity)
             return bTs - aTs
           })
-        
-        // DEBUG: Show top 5 sorted bookmarks
-        console.log(`🔍 Top 5 bookmarks after sorting:`)
-        sortedBookmarks.slice(0, 5).forEach((b, i) => {
-          const listDate = b.listUpdatedAt ? new Date(b.listUpdatedAt * 1000).toISOString() : 'MISSING'
-          console.log(`  ${i + 1}. listUpdatedAt: ${b.listUpdatedAt} (${listDate})`)
-          console.log(`     content: ${(b.content || '').substring(0, 40)}`)
-        })
 
         const bookmark: Bookmark = {
           id: `${activeAccount.pubkey}-bookmarks`,

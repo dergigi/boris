@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.11] - 2025-01-27
+
+### Added
+
+- Clock icon for chronological bookmark view
+- Clickable highlight count to open highlights sidebar
+- Dynamic bookmark filter titles based on selected filter
+- Profile picture moved to first position (left-aligned) with consistent sizing
+
+### Changed
+
+- Default bookmark view changed to flat chronological list (newest first)
+- Bookmark URL changed from `/me/reading-list` to `/me/bookmarks`
+- Router updated to handle `/me/reading-list` → `/me/bookmarks` redirect
+- Me.tsx bookmarks tab now uses dynamic filter titles and chronological sorting
+- Me.tsx updated to use faClock icon instead of faBars
+- Removed bookmark count from section headings for cleaner display
+- Hide close/collapse sidebar buttons on mobile for better UX
+
+### Fixed
+
+- Bookmark sorting now uses proper display time (created_at || listUpdatedAt) with nulls last
+- Robust sorting of merged bookmarks with fallback timestamps
+- Corrected bookmark timestamp to use bookmark list creation time, not content creation time
+- Preserved content created_at while adding listUpdatedAt for proper sorting
+- Removed synthetic added_at field, now uses created_at from bookmark list event
+- Consistent chronological sorting with useMemo optimization
+- Removed unused faTimes import
+- Bookmark timestamps now show sane dates using created_at fallback to listUpdatedAt
+- Guarded formatters to prevent timestamp display errors
+
+### Refactored
+
+- Removed excessive debug logging for cleaner console output
+- Bookmark timestamp handling never defaults to "now", allows nulls and sorts nulls last
+- Renders empty when timestamp is missing instead of showing invalid dates
+
 ## [0.10.10] - 2025-10-22
 
 ### Changed
@@ -2442,7 +2479,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.10.10...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.10.11...HEAD
+[0.10.11]: https://github.com/dergigi/boris/compare/v0.10.10...v0.10.11
 [0.10.10]: https://github.com/dergigi/boris/compare/v0.10.9...v0.10.10
 [0.10.9]: https://github.com/dergigi/boris/compare/v0.10.8...v0.10.9
 [0.10.8]: https://github.com/dergigi/boris/compare/v0.10.7...v0.10.8
