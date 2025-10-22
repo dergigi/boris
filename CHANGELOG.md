@@ -7,28 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Comprehensive debug logging for reading position system
-  - All position restore, save, and suppression events logged with `[reading-position]` prefix
-  - Emoji indicators for easy visual scanning (🎯 restore, 💾 save, 🛡️ suppression, etc.)
-  - Detailed metrics for troubleshooting scroll behavior
+## [0.10.15] - 2025-01-22
 
 ### Changed
 
-- Reading position auto-save now uses simple 3-second debounce
-  - Saves only after 3s of no scrolling (was 15s minimum interval)
-  - Much less aggressive, reduces relay traffic
-  - Still saves instantly at 100% completion
+- Reading position restore now uses pre-loaded data from controller
+  - No longer fetches position from scratch when opening articles
+  - Uses position already loaded and displayed on bookmark cards
+  - Faster restore with no network wait
+  - Simpler code without stabilization window complexity
+- Reading position scroll animation restored to smooth behavior
+  - Changed from instant jump back to smooth animated scroll
+  - Better user experience when restoring position
 
 ### Fixed
 
-- Reading position restore no longer causes jumpy scrolling
-  - Stabilized position collector buffers updates for ~700ms, then applies best one (newest timestamp, tie-break by highest progress)
-  - Auto-saves suppressed for 1.5s after programmatic restore to prevent feedback loops
-  - Tiny scroll deltas (<48px or <5%) ignored to avoid unnecessary movement
-  - Instant scroll (behavior: auto) instead of smooth animation reduces perceived oscillation
-  - Fixes jumpy behavior from conflicting relay updates and save-restore loops
+- Reading position no longer saves 0% during back navigation on mobile
+  - Removed save-on-unmount behavior that was error-prone
+  - Browser scroll-to-top during back gesture no longer overwrites progress
+  - Auto-save with 3-second debounce is sufficient for normal reading
+  - Prevents accidental reset of reading progress when navigating away
 
 ## [0.10.14] - 2025-01-27
 
