@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Emoji indicators for easy visual scanning (🎯 restore, 💾 save, 🛡️ suppression, etc.)
   - Detailed metrics for troubleshooting scroll behavior
 
+### Changed
+
+- Reading position auto-save now uses simple 2-second debounce
+  - Saves only after 2s of no scrolling (was 15s minimum interval)
+  - Much less aggressive, reduces relay traffic
+  - Still saves instantly at 100% completion
+
 ### Fixed
 
 - Reading position restore no longer causes jumpy scrolling
