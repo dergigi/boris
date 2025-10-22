@@ -150,8 +150,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Get event store for reading position service
   const eventStore = Hooks.useEventStore()
   
-  // Reading position tracking - only for text content, not videos
-  const isTextContent = !loading && !!(markdown || html) && !selectedUrl?.includes('youtube') && !selectedUrl?.includes('vimeo')
+  // Reading position tracking - only for text content that's loaded and long enough
+  // Wait for content to load, check it's not a video, and verify it's long enough to track
+  const isTextContent = useMemo(() => {
+    if (loading) return false
+    if (!markdown && !html) return false
+    if (selectedUrl?.includes('youtube') || selectedUrl?.includes('vimeo')) return false
+    if (!shouldTrackReadingProgress(html, markdown)) return false
+    return true
+  }, [loading, markdown, html, selectedUrl])
   
   // Generate article identifier for saving/loading position
   const articleIdentifier = useMemo(() => {
@@ -198,8 +205,28 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }
   }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, html, markdown])
 
+  // Delay enabling position tracking to ensure content is stable
+  const [isTrackingEnabled, setIsTrackingEnabled] = useState(false)
+  
+  // Reset tracking when article changes
+  useEffect(() => {
+    setIsTrackingEnabled(false)
+  }, [selectedUrl])
+  
+  // Enable tracking after content is stable
+  useEffect(() => {
+    if (isTextContent && !isTrackingEnabled) {
+      // Wait 500ms after content loads before enabling tracking
+      const timer = setTimeout(() => {
+        console.log('[reading-position] ✅ Enabling tracking after stability delay')
+        setIsTrackingEnabled(true)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [isTextContent, isTrackingEnabled])
+
   const { progressPercentage, saveNow, suppressSavesFor } = useReadingPosition({
-    enabled: isTextContent,
+    enabled: isTrackingEnabled,
     syncEnabled: settings?.syncReadingPosition !== false,
     onSave: handleSavePosition,
     onReadingComplete: () => {
@@ -225,24 +252,45 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     suppressSavesForRef.current = suppressSavesFor
   }, [suppressSavesFor])
 
-  // Track if we've already attempted restore for this article
+  // Track if we've successfully started restore for this article + tracking state
+  // Use a composite key to ensure we only restore once per article when tracking is enabled
+  const restoreKey = `${articleIdentifier}-${isTrackingEnabled}`
   const hasAttemptedRestoreRef = useRef<string | null>(null)
 
   useEffect(() => {
+    console.log('[reading-position] 🔍 Restore effect running:', {
+      isTextContent,
+      isTrackingEnabled,
+      hasAccount: !!activeAccount,
+      hasRelayPool: !!relayPool,
+      hasEventStore: !!eventStore,
+      articleIdentifier,
+      restoreKey,
+      hasAttempted: hasAttemptedRestoreRef.current
+    })
+    
     if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) {
+      console.log('[reading-position] ⏭️ Restore skipped: missing dependencies or not text content')
       return
     }
     if (settings?.syncReadingPosition === false) {
+      console.log('[reading-position] ⏭️ Restore skipped: sync disabled in settings')
+      return
+    }
+    if (!isTrackingEnabled) {
+      console.log('[reading-position] ⏭️ Restore skipped: tracking not yet enabled (waiting for content stability)')
       return
     }
 
-    // Only attempt restore once per article
-    if (hasAttemptedRestoreRef.current === articleIdentifier) {
+    // Only attempt restore once per article (after tracking is enabled)
+    if (hasAttemptedRestoreRef.current === restoreKey) {
+      console.log('[reading-position] ⏭️ Restore skipped: already attempted for this article')
       return
     }
 
     console.log('[reading-position] 🔄 Initiating restore for article:', articleIdentifier)
-    hasAttemptedRestoreRef.current = articleIdentifier
+    // Mark as attempted using composite key
+    hasAttemptedRestoreRef.current = restoreKey
     
     // Suppress saves during restore window (700ms collection + 500ms render + 500ms buffer = 1700ms)
     if (suppressSavesForRef.current) {
@@ -318,17 +366,24 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       console.log('[reading-position] 🛑 Stopping restore collector')
       collector.stop()
     }
-  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl])
+  }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl, isTrackingEnabled, restoreKey])
 
   // Save position before unmounting or changing article
   const saveNowRef = useRef(saveNow)
+  const isTrackingEnabledRef = useRef(isTrackingEnabled)
+  
   useEffect(() => {
     saveNowRef.current = saveNow
   }, [saveNow])
+  
+  useEffect(() => {
+    isTrackingEnabledRef.current = isTrackingEnabled
+  }, [isTrackingEnabled])
 
   useEffect(() => {
     return () => {
-      if (saveNowRef.current) {
+      // Only save on unmount if tracking was actually enabled
+      if (saveNowRef.current && isTrackingEnabledRef.current) {
         saveNowRef.current()
       }
     }
