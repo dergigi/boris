@@ -790,7 +790,7 @@ const Debug: React.FC<DebugProps> = ({
           const keys = Array.from(progressMap.keys())
           const sample = keys.slice(0, 5).join(', ')
           DebugBus.info('debug', `Progress keys sample: ${sample}`)
-        } catch {}
+        } catch { /* ignore */ }
       })
 
       // Run both in parallel

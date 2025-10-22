@@ -1,0 +1,18 @@
+---
+description: fetching data from relays
+alwaysApply: false
+---
+
+We fetch data from relays using controllers:
+- Start controllers immediatly; don’t await.
+- Stream via onEvent; dedupe replaceables; emit immediately.
+- Parallel local/remote queries; complete on EOSE.
+- Finalize and persist since after completion.
+- Guard with generations to cancel stale runs.
+- UI flips off loading on first streamed result.
+
+We always include and prefer local relays for reads; optionally rebroadcast fetched content to local relays (depending on setting); and tolerate local‑only mode for writes (queueing for later).
+
+Since we are streaming results, we should NEVER use timeouts for fetching data. We should always rely on EOSE.
+
+In short: Local-first hydration, background network fetch, reactive updates, and replaceable lookups provide instant UI with eventual consistency. Use local relays as local data store for everything we fetch from remote relays.

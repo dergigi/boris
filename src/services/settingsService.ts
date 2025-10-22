@@ -111,8 +111,8 @@ export function startSettingsStream(
 
   // Caller manages lifecycle
   return () => {
-    try { storeSub.unsubscribe() } catch {}
-    try { networkSub.unsubscribe() } catch {}
+    try { storeSub.unsubscribe() } catch { /* ignore */ }
+    try { networkSub.unsubscribe() } catch { /* ignore */ }
   }
 }
 
