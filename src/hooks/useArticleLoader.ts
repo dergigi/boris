@@ -37,6 +37,11 @@ export function useArticleLoader({
   settings
 }: UseArticleLoaderProps) {
   const mountedRef = useRef(true)
+  // Hold latest settings without retriggering effect
+  const settingsRef = useRef<UserSettings | undefined>(settings)
+  useEffect(() => {
+    settingsRef.current = settings
+  }, [settings])
   
   useEffect(() => {
     mountedRef.current = true
@@ -52,7 +57,7 @@ export function useArticleLoader({
       setIsCollapsed(true)
       
       try {
-        const article = await fetchArticleByNaddr(relayPool, naddr, false, settings)
+        const article = await fetchArticleByNaddr(relayPool, naddr, false, settingsRef.current)
         
         if (!mountedRef.current) return
         
@@ -123,7 +128,6 @@ export function useArticleLoader({
   }, [
     naddr,
     relayPool,
-    settings,
     setSelectedUrl,
     setReaderContent,
     setReaderLoading,
