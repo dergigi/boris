@@ -150,8 +150,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Get event store for reading position service
   const eventStore = Hooks.useEventStore()
   
-  // Reading position tracking - only for text content, not videos
-  const isTextContent = !loading && !!(markdown || html) && !selectedUrl?.includes('youtube') && !selectedUrl?.includes('vimeo')
+  // Reading position tracking - only for text content that's loaded and long enough
+  // Wait for content to load, check it's not a video, and verify it's long enough to track
+  const isTextContent = useMemo(() => {
+    if (loading) return false
+    if (!markdown && !html) return false
+    if (selectedUrl?.includes('youtube') || selectedUrl?.includes('vimeo')) return false
+    if (!shouldTrackReadingProgress(html, markdown)) return false
+    return true
+  }, [loading, markdown, html, selectedUrl])
   
   // Generate article identifier for saving/loading position
   const articleIdentifier = useMemo(() => {
@@ -198,8 +205,20 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }
   }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, html, markdown])
 
+  // Delay enabling position tracking to ensure content is stable
+  const [isTrackingEnabled, setIsTrackingEnabled] = useState(false)
+  useEffect(() => {
+    if (isTextContent) {
+      // Wait 500ms after content loads before enabling tracking
+      const timer = setTimeout(() => setIsTrackingEnabled(true), 500)
+      return () => clearTimeout(timer)
+    } else {
+      setIsTrackingEnabled(false)
+    }
+  }, [isTextContent, selectedUrl])
+
   const { progressPercentage, saveNow, suppressSavesFor } = useReadingPosition({
-    enabled: isTextContent,
+    enabled: isTrackingEnabled,
     syncEnabled: settings?.syncReadingPosition !== false,
     onSave: handleSavePosition,
     onReadingComplete: () => {
