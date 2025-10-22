@@ -352,9 +352,9 @@ class BookmarkController {
             urlReferences: extractUrlsFromContent(b.content)
           }))
           .sort((a, b) => {
-            // Sort by listUpdatedAt desc, nulls last
-            const aTs = a.listUpdatedAt ?? -Infinity
-            const bTs = b.listUpdatedAt ?? -Infinity
+            // Sort by display time: created_at, else listUpdatedAt. Newest first. Nulls last.
+            const aTs = (a.created_at ?? a.listUpdatedAt ?? -Infinity)
+            const bTs = (b.created_at ?? b.listUpdatedAt ?? -Infinity)
             return bTs - aTs
           })
         
