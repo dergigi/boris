@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.14] - 2025-01-27
+
+### Added
+
+- Third relay education article link in PWA settings
+  - Added "Relay Setup 101" article to relay information section
+  - Now links to three educational resources about relays
+
+### Changed
+
+- Timestamp links in bookmark cards now navigate within app
+  - Articles (kind:30023) open in `/a/{naddr}` route
+  - Notes (kind:1) open in `/e/{eventId}` route
+  - External URLs open in `/r/{encodedUrl}` route
+  - Uses React Router Link for client-side navigation instead of external search
+- Relay article links punctuation improved for better readability
+  - Changed from "here and here" to "here, here, and here"
+
+### Fixed
+
+- Duplicate video embeds and stray HTML artifacts eliminated
+  - VideoEmbedProcessor now processes HTML and extracts URLs in single pass
+  - Placeholder indices now correctly match collected video URLs
+  - Empty HTML parts no longer rendered, preventing stray characters like `">`
+- Highlights loading spinner no longer spins forever when article has zero highlights
+  - Loading state properly cleared when no highlights exist
+  - "No highlights" message displays immediately
+
 ## [0.10.13] - 2025-01-27
 
 ### Added
