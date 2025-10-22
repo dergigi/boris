@@ -82,6 +82,38 @@ export function useArticleLoader({
         let firstEmitted = false
         let latestEvent: NostrEvent | null = null
 
+        // Check eventStore first for instant load (from bookmark cards, explore, etc.)
+        if (eventStore) {
+          try {
+            const coordinate = `${pointer.kind}:${pointer.pubkey}:${pointer.identifier}`
+            const storedEvent = eventStore.getEvent?.(coordinate)
+            if (storedEvent) {
+              latestEvent = storedEvent as NostrEvent
+              firstEmitted = true
+              const title = Helpers.getArticleTitle(storedEvent) || 'Untitled Article'
+              const image = Helpers.getArticleImage(storedEvent)
+              const summary = Helpers.getArticleSummary(storedEvent)
+              const published = Helpers.getArticlePublished(storedEvent)
+              setReaderContent({
+                title,
+                markdown: storedEvent.content,
+                image,
+                summary,
+                published,
+                url: `nostr:${naddr}`
+              })
+              const dTag = storedEvent.tags.find(t => t[0] === 'd')?.[1] || ''
+              const articleCoordinate = `${storedEvent.kind}:${storedEvent.pubkey}:${dTag}`
+              setCurrentArticleCoordinate(articleCoordinate)
+              setCurrentArticleEventId(storedEvent.id)
+              setCurrentArticle?.(storedEvent)
+              setReaderLoading(false)
+            }
+          } catch (err) {
+            // Ignore store errors, fall through to relay query
+          }
+        }
+
         // Stream local-first via queryEvents; rely on EOSE (no timeouts)
         const events = await queryEvents(relayPool, filter, {
           onEvent: (evt) => {
