@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Comprehensive debug logging for reading position system
+  - All position restore, save, and suppression events logged with `[reading-position]` prefix
+  - Emoji indicators for easy visual scanning (🎯 restore, 💾 save, 🛡️ suppression, etc.)
+  - Detailed metrics for troubleshooting scroll behavior
+
 ### Fixed
 
 - Reading position restore no longer causes jumpy scrolling
