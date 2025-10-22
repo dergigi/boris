@@ -44,6 +44,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   fullWidthImages: true,
   renderVideoLinksAsEmbeds: true,
   syncReadingPosition: true,
+  autoScrollToReadingPosition: true,
   autoMarkAsReadOnCompletion: false,
   hideBookmarksWithoutCreationDate: true,
   ttsUseSystemLanguage: false,

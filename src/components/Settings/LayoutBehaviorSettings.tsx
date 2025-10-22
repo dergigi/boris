@@ -119,6 +119,19 @@ const LayoutBehaviorSettings: React.FC<LayoutBehaviorSettingsProps> = ({ setting
       </div>
 
       <div className="setting-group">
+        <label htmlFor="autoScrollToReadingPosition" className="checkbox-label">
+          <input
+            id="autoScrollToReadingPosition"
+            type="checkbox"
+            checked={settings.autoScrollToReadingPosition !== false}
+            onChange={(e) => onUpdate({ autoScrollToReadingPosition: e.target.checked })}
+            className="setting-checkbox"
+          />
+          <span>Auto-scroll to saved reading position</span>
+        </label>
+      </div>
+
+      <div className="setting-group">
         <label htmlFor="autoMarkAsReadOnCompletion" className="checkbox-label">
           <input
             id="autoMarkAsReadOnCompletion"

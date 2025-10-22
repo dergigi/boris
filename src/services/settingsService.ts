@@ -62,6 +62,7 @@ export interface UserSettings {
   renderVideoLinksAsEmbeds?: boolean // default: false
   // Reading position sync
   syncReadingPosition?: boolean // default: false (opt-in)
+  autoScrollToReadingPosition?: boolean // default: true - automatically scroll to saved position when opening article
   autoMarkAsReadOnCompletion?: boolean // default: false (opt-in)
   // Bookmark filtering
   hideBookmarksWithoutCreationDate?: boolean // default: false

@@ -275,6 +275,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     if (settings?.syncReadingPosition === false) {
       return
     }
+    if (settings?.autoScrollToReadingPosition === false) {
+      return
+    }
     if (!isTrackingEnabled) {
       return
     }
@@ -324,7 +327,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         behavior: 'smooth'
       })
     }, 500) // Give content time to render
-  }, [isTextContent, activeAccount, articleIdentifier, settings?.syncReadingPosition, selectedUrl, isTrackingEnabled, restoreKey])
+  }, [isTextContent, activeAccount, articleIdentifier, settings?.syncReadingPosition, settings?.autoScrollToReadingPosition, selectedUrl, isTrackingEnabled, restoreKey])
 
   // Note: We intentionally do NOT save on unmount because:
   // 1. Browser may scroll to top during back navigation, causing 0% saves
