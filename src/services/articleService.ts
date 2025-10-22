@@ -114,7 +114,28 @@ export async function fetchArticleByNaddr(
     // Parallel local+remote, stream immediate, collect up to first from each
     const { local$, remote$ } = createParallelReqStreams(relayPool, localRelays, remoteRelays, filter, 1200, 6000)
     const collected = await lastValueFrom(merge(local$.pipe(take(1)), remote$.pipe(take(1))).pipe(rxToArray()))
-    const events = collected as NostrEvent[]
+    let events = collected as NostrEvent[]
+
+    // Fallback: if nothing found, try a second round against a set of reliable public relays
+    if (events.length === 0) {
+      const reliableRelays = Array.from(new Set<string>([
+        'wss://relay.nostr.band',
+        'wss://relay.primal.net',
+        'wss://relay.damus.io',
+        'wss://nos.lol',
+        ...remoteRelays // keep any configured remote relays
+      ]))
+      const { remote$: fallback$ } = createParallelReqStreams(
+        relayPool,
+        [], // no local
+        reliableRelays,
+        filter,
+        1500,
+        12000
+      )
+      const fallbackCollected = await lastValueFrom(fallback$.pipe(take(1), rxToArray()))
+      events = fallbackCollected as NostrEvent[]
+    }
 
     if (events.length === 0) {
       throw new Error('Article not found')
