@@ -43,8 +43,8 @@ import { EventFactory } from 'applesauce-factory'
 import { Hooks } from 'applesauce-react'
 import { 
   generateArticleIdentifier, 
-  loadReadingPosition, 
-  saveReadingPosition 
+  saveReadingPosition,
+  startReadingPositionStream
 } from '../services/readingPositionService'
 import TTSControls from './TTSControls'
 
@@ -207,7 +207,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   useEffect(() => {
   }, [isTextContent, settings?.syncReadingPosition, activeAccount, relayPool, eventStore, articleIdentifier, progressPercentage])
 
-  // Load saved reading position when article loads
+  // Load saved reading position when article loads (non-blocking, EOSE-driven)
   useEffect(() => {
     if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) {
       return
@@ -216,15 +216,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       return
     }
 
-    const loadPosition = async () => {
-      try {
-        const savedPosition = await loadReadingPosition(
-          relayPool,
-          eventStore,
-          activeAccount.pubkey,
-          articleIdentifier
-        )
-
+    const stop = startReadingPositionStream(
+      relayPool,
+      eventStore,
+      activeAccount.pubkey,
+      articleIdentifier,
+      (savedPosition) => {
         if (savedPosition && savedPosition.position > 0.05 && savedPosition.position < 1) {
           // Wait for content to be fully rendered before scrolling
           setTimeout(() => {
@@ -237,19 +234,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               behavior: 'smooth'
             })
           }, 500) // Give content time to render
-        } else if (savedPosition) {
-          if (savedPosition.position === 1) {
-            // Article was completed, start from top
-          } else {
-            // Position was too early, skip restore
-          }
         }
-      } catch (error) {
-        console.error('❌ [ContentPanel] Failed to load reading position:', error)
       }
-    }
+    )
 
-    loadPosition()
+    return () => stop()
   }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl])
 
   // Save position before unmounting or changing article
