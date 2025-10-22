@@ -116,13 +116,16 @@ export const useReadingPosition = ({
       const windowHeight = window.innerHeight
       const documentHeight = document.documentElement.scrollHeight
       
+      // Ignore if document is too small (likely during page transition)
+      if (documentHeight < 100) return
+      
       // Calculate position based on how much of the content has been scrolled through
-      // Add a small threshold (5px) to account for rounding and make it easier to reach 100%
       const maxScroll = documentHeight - windowHeight
       const scrollProgress = maxScroll > 0 ? scrollTop / maxScroll : 0
       
-      // If we're within 5px of the bottom, consider it 100%
-      const isAtBottom = scrollTop + windowHeight >= documentHeight - 5
+      // Only consider it 100% if we're truly at the bottom AND have scrolled significantly
+      // This prevents false 100% during page transitions
+      const isAtBottom = scrollTop + windowHeight >= documentHeight - 5 && scrollTop > 100
       const clampedProgress = isAtBottom ? 1 : Math.max(0, Math.min(1, scrollProgress))
       
       setPosition(clampedProgress)
