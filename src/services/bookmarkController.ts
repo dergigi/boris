@@ -194,7 +194,9 @@ class BookmarkController {
       byPubkey.get(coord.pubkey)!.push(coord.identifier || '')
     }
 
-    // Fetch each group
+    // Kick off all queries in parallel (fire-and-forget)
+    const promises: Promise<void>[] = []
+    
     for (const [kind, byPubkey] of filtersByKind) {
       for (const [pubkey, identifiers] of byPubkey) {
         // Separate empty and non-empty identifiers
@@ -205,63 +207,74 @@ class BookmarkController {
         
         // Fetch events with non-empty d-tags
         if (nonEmptyIdentifiers.length > 0) {
-          await queryEvents(
-            this.relayPool,
-            { kinds: [kind], authors: [pubkey], '#d': nonEmptyIdentifiers },
-            {
-              onEvent: (event) => {
-                // Check if hydration was cancelled
-                if (this.hydrationGeneration !== generation) return
+          promises.push(
+            queryEvents(
+              this.relayPool,
+              { kinds: [kind], authors: [pubkey], '#d': nonEmptyIdentifiers },
+              {
+                onEvent: (event) => {
+                  // Check if hydration was cancelled
+                  if (this.hydrationGeneration !== generation) return
 
-                const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-                const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
-                console.log('[BookmarkController] Hydrated article (non-empty d):', coordinate, getArticleTitle(event) || 'No title')
-                idToEvent.set(coordinate, event)
-                idToEvent.set(event.id, event)
-                
-                // Add to external event store if available
-                if (this.externalEventStore) {
-                  this.externalEventStore.add(event)
+                  const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+                  const coordinate = `${event.kind}:${event.pubkey}:${dTag}`
+                  console.log('[BookmarkController] Hydrated article (non-empty d):', coordinate, getArticleTitle(event) || 'No title')
+                  idToEvent.set(coordinate, event)
+                  idToEvent.set(event.id, event)
+                  
+                  // Add to external event store if available
+                  if (this.externalEventStore) {
+                    this.externalEventStore.add(event)
+                  }
+                  
+                  onProgress()
                 }
-                
-                onProgress()
               }
-            }
+            ).catch(() => {
+              // Silent error - individual query failed
+            })
           )
         }
         
         // Fetch events with empty d-tag separately (without '#d' filter)
         if (hasEmptyIdentifier) {
           console.log('[BookmarkController] Fetching events with empty d-tag for kind', kind, 'pubkey', pubkey.slice(0, 8))
-          await queryEvents(
-            this.relayPool,
-            { kinds: [kind], authors: [pubkey] },
-            {
-              onEvent: (event) => {
-                // Check if hydration was cancelled
-                if (this.hydrationGeneration !== generation) return
-                
-                // Only process events with empty d-tag
-                const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
-                if (dTag !== '') return
+          promises.push(
+            queryEvents(
+              this.relayPool,
+              { kinds: [kind], authors: [pubkey] },
+              {
+                onEvent: (event) => {
+                  // Check if hydration was cancelled
+                  if (this.hydrationGeneration !== generation) return
+                  
+                  // Only process events with empty d-tag
+                  const dTag = event.tags?.find((t: string[]) => t[0] === 'd')?.[1] || ''
+                  if (dTag !== '') return
 
-                const coordinate = `${event.kind}:${event.pubkey}:`
-                console.log('[BookmarkController] Hydrated article (empty d):', coordinate, getArticleTitle(event) || 'No title')
-                idToEvent.set(coordinate, event)
-                idToEvent.set(event.id, event)
-                
-                // Add to external event store if available
-                if (this.externalEventStore) {
-                  this.externalEventStore.add(event)
+                  const coordinate = `${event.kind}:${event.pubkey}:`
+                  console.log('[BookmarkController] Hydrated article (empty d):', coordinate, getArticleTitle(event) || 'No title')
+                  idToEvent.set(coordinate, event)
+                  idToEvent.set(event.id, event)
+                  
+                  // Add to external event store if available
+                  if (this.externalEventStore) {
+                    this.externalEventStore.add(event)
+                  }
+                  
+                  onProgress()
                 }
-                
-                onProgress()
               }
-            }
+            ).catch(() => {
+              // Silent error - individual query failed
+            })
           )
         }
       }
     }
+    
+    // Wait for all queries to complete
+    await Promise.all(promises)
     console.log('[BookmarkController] Coordinate hydration complete')
   }
 
