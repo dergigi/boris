@@ -151,11 +151,21 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
               >
                 here
               </a>
-              {' and '}
+              {', '}
               <a 
                 onClick={(e) => {
                   e.preventDefault()
                   handleLinkClick('https://davidebtc186.substack.com/p/the-importance-of-hosting-your-own')
+                }}
+                style={{ color: 'var(--accent, #8b5cf6)', cursor: 'pointer' }}
+              >
+                here
+              </a>
+              {', and '}
+              <a 
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleLinkClick('/a/naddr1qvzqqqr4gupzq3svyhng9ld8sv44950j957j9vchdktj7cxumsep9mvvjthc2pjuqq9hyetvv9uj6um9w36hq9mgjg8')
                 }}
                 style={{ color: 'var(--accent, #8b5cf6)', cursor: 'pointer' }}
               >
