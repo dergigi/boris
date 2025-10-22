@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHighlighter, faBookmark, faPenToSquare, faLink, faLayerGroup, faBars } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faBookmark, faPenToSquare, faLink, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
+import { faClock } from '@fortawesome/free-regular-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { IEventStore } from 'applesauce-core'
 import { BlogPostSkeleton, HighlightSkeleton, BookmarkSkeleton } from './Skeletons'
@@ -664,7 +665,7 @@ const Me: React.FC<MeProps> = ({
               borderTop: '1px solid var(--border-color)'
             }}>
               <IconButton
-                icon={groupingMode === 'grouped' ? faLayerGroup : faBars}
+                icon={groupingMode === 'grouped' ? faLayerGroup : faClock}
                 onClick={toggleGroupingMode}
                 title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
                 ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
