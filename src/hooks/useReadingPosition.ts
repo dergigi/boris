@@ -47,7 +47,7 @@ export const useReadingPosition = ({
 
   // Debounced save function - simple 2s debounce
   const scheduleSave = useCallback((currentPosition: number) => {
-    if (!syncEnabled || !onSave) {
+    if (!syncEnabledRef.current || !onSaveRef.current) {
       return
     }
 
@@ -61,7 +61,7 @@ export const useReadingPosition = ({
       lastSavedPosition.current = 1
       hasSavedOnce.current = true
       lastSavedAtRef.current = Date.now()
-      onSave(1)
+      onSaveRef.current(1)
       return
     }
 
@@ -84,19 +84,21 @@ export const useReadingPosition = ({
       lastSavedPosition.current = currentPosition
       hasSavedOnce.current = true
       lastSavedAtRef.current = Date.now()
-      onSave(currentPosition)
+      if (onSaveRef.current) {
+        onSaveRef.current(currentPosition)
+      }
       saveTimerRef.current = null
     }, DEBOUNCE_MS)
-  }, [syncEnabled, onSave])
+  }, [])
 
   // Immediate save function
   const saveNow = useCallback(() => {
-    if (!syncEnabled || !onSave) return
+    if (!syncEnabledRef.current || !onSaveRef.current) return
     
     // Check suppression even for saveNow (e.g., during restore)
     if (Date.now() < suppressUntilRef.current) {
       const remainingMs = suppressUntilRef.current - Date.now()
-      console.log(`[reading-position] [${new Date().toISOString()}] ⏭️ saveNow() suppressed (${remainingMs}ms remaining) at ${Math.round(position * 100)}%`)
+      console.log(`[reading-position] [${new Date().toISOString()}] ⏭️ saveNow() suppressed (${remainingMs}ms remaining) at ${Math.round(positionRef.current * 100)}%`)
       return
     }
     
@@ -104,12 +106,12 @@ export const useReadingPosition = ({
       clearTimeout(saveTimerRef.current)
       saveTimerRef.current = null
     }
-    console.log(`[reading-position] [${new Date().toISOString()}] 💾 saveNow() called at ${Math.round(position * 100)}%`)
-    lastSavedPosition.current = position
+    console.log(`[reading-position] [${new Date().toISOString()}] 💾 saveNow() called at ${Math.round(positionRef.current * 100)}%`)
+    lastSavedPosition.current = positionRef.current
     hasSavedOnce.current = true
     lastSavedAtRef.current = Date.now()
-    onSave(position)
-  }, [syncEnabled, onSave, position])
+    onSaveRef.current(positionRef.current)
+  }, [])
 
   useEffect(() => {
     if (!enabled) return
