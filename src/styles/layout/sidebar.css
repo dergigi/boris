@@ -114,6 +114,16 @@
   transition: all 0.2s ease;
 }
 
+/* Mobile touch target improvements */
+@media (max-width: 768px) {
+  .profile-avatar-button {
+    min-width: var(--min-touch-target);
+    min-height: var(--min-touch-target);
+    width: var(--min-touch-target);
+    height: var(--min-touch-target);
+  }
+}
+
 .profile-avatar-button:hover {
   background: var(--color-bg-hover);
   border-color: var(--color-border);
