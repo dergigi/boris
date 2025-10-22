@@ -225,7 +225,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }
   }, [isTextContent, isTrackingEnabled])
 
-  const { progressPercentage, saveNow, suppressSavesFor } = useReadingPosition({
+  const { progressPercentage, suppressSavesFor } = useReadingPosition({
     enabled: isTrackingEnabled,
     syncEnabled: settings?.syncReadingPosition !== false,
     onSave: handleSavePosition,
@@ -345,26 +345,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     }, 500) // Give content time to render
   }, [isTextContent, activeAccount, articleIdentifier, settings?.syncReadingPosition, selectedUrl, isTrackingEnabled, restoreKey])
 
-  // Save position before unmounting or changing article
-  const saveNowRef = useRef(saveNow)
-  const isTrackingEnabledRef = useRef(isTrackingEnabled)
-  
-  useEffect(() => {
-    saveNowRef.current = saveNow
-  }, [saveNow])
-  
-  useEffect(() => {
-    isTrackingEnabledRef.current = isTrackingEnabled
-  }, [isTrackingEnabled])
-
-  useEffect(() => {
-    return () => {
-      // Only save on unmount if tracking was actually enabled
-      if (saveNowRef.current && isTrackingEnabledRef.current) {
-        saveNowRef.current()
-      }
-    }
-  }, [selectedUrl])
+  // Note: We intentionally do NOT save on unmount because:
+  // 1. Browser may scroll to top during back navigation, causing 0% saves
+  // 2. The auto-save with 3s debounce already captures position during reading
+  // 3. Position state may not reflect actual reading position during navigation
 
   // Close menu when clicking outside
   useEffect(() => {
