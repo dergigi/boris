@@ -246,6 +246,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
     console.log('[reading-position] 🔄 Initiating restore for article:', articleIdentifier)
     hasAttemptedRestoreRef.current = articleIdentifier
+    
+    // Suppress saves during restore window (700ms collection + 500ms render + 500ms buffer = 1700ms)
+    if (suppressSavesForRef.current) {
+      suppressSavesForRef.current(1700)
+    }
+
     const collector = collectReadingPositionsOnce({
       relayPool,
       eventStore,
@@ -257,6 +263,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     collector.onStable((bestPosition) => {
       if (!bestPosition) {
         console.log('[reading-position] ℹ️ No position to restore')
+        // No saved position, allow saves immediately
+        if (suppressSavesForRef.current) {
+          suppressSavesForRef.current(0)
+        }
         return
       }
 
@@ -284,12 +294,16 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         const deltaPct = maxScroll > 0 ? Math.abs((targetTop - currentTop) / maxScroll) : 0
         if (deltaPx < 48 || deltaPct < 0.05) {
           console.log('[reading-position] ⏭️ Restore skipped: delta too small (', deltaPx, 'px,', Math.round(deltaPct * 100) + '%)')
+          // Allow saves immediately since no scroll happened
+          if (suppressSavesForRef.current) {
+            suppressSavesForRef.current(0)
+          }
           return
         }
 
         console.log('[reading-position] 📜 Restoring scroll position (delta:', deltaPx, 'px,', Math.round(deltaPct * 100) + '%)')
 
-        // Suppress saves briefly to avoid feedback loop
+        // Suppress saves for another 1.5s after scroll to avoid saving the restored position
         if (suppressSavesForRef.current) {
           suppressSavesForRef.current(1500)
         }
