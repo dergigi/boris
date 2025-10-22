@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Reading position restore no longer causes jumpy scrolling
+  - Stabilized position collector buffers updates for ~700ms, then applies best one (newest timestamp, tie-break by highest progress)
+  - Auto-saves suppressed for 1.5s after programmatic restore to prevent feedback loops
+  - Tiny scroll deltas (<48px or <5%) ignored to avoid unnecessary movement
+  - Instant scroll (behavior: auto) instead of smooth animation reduces perceived oscillation
+  - Fixes jumpy behavior from conflicting relay updates and save-restore loops
+
 ## [0.10.14] - 2025-01-27
 
 ### Added
