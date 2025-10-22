@@ -922,13 +922,16 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                       <FontAwesomeIcon icon={faCopy} />
                       <span>Copy URL</span>
                     </button>
-                    <button
-                      className="article-menu-item"
-                      onClick={handleOpenExternalUrl}
-                    >
-                      <FontAwesomeIcon icon={faExternalLinkAlt} />
-                      <span>Open Original</span>
-                    </button>
+                    {/* Only show "Open Original" for actual external URLs, not nostr events */}
+                    {!selectedUrl?.startsWith('nostr-event:') && (
+                      <button
+                        className="article-menu-item"
+                        onClick={handleOpenExternalUrl}
+                      >
+                        <FontAwesomeIcon icon={faExternalLinkAlt} />
+                        <span>Open Original</span>
+                      </button>
+                    )}
                     <button
                       className="article-menu-item"
                       onClick={handleSearchExternalUrl}
