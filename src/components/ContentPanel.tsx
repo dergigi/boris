@@ -295,13 +295,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl, suppressSavesFor])
 
   // Save position before unmounting or changing article
+  const saveNowRef = useRef(saveNow)
+  useEffect(() => {
+    saveNowRef.current = saveNow
+  }, [saveNow])
+
   useEffect(() => {
     return () => {
-      if (saveNow) {
-        saveNow()
+      if (saveNowRef.current) {
+        saveNowRef.current()
       }
     }
-  }, [saveNow, selectedUrl])
+  }, [selectedUrl])
 
   // Close menu when clicking outside
   useEffect(() => {
