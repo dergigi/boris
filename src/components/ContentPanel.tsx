@@ -225,6 +225,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     suppressSavesForRef.current = suppressSavesFor
   }, [suppressSavesFor])
 
+  // Track if we've already attempted restore for this article
+  const hasAttemptedRestoreRef = useRef<string | null>(null)
+
   useEffect(() => {
     if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) {
       console.log('[reading-position] ⏭️ Restore skipped: missing dependencies or not text content')
@@ -235,7 +238,14 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       return
     }
 
+    // Only attempt restore once per article
+    if (hasAttemptedRestoreRef.current === articleIdentifier) {
+      console.log('[reading-position] ⏭️ Restore skipped: already attempted for this article')
+      return
+    }
+
     console.log('[reading-position] 🔄 Initiating restore for article:', articleIdentifier)
+    hasAttemptedRestoreRef.current = articleIdentifier
     const collector = collectReadingPositionsOnce({
       relayPool,
       eventStore,
