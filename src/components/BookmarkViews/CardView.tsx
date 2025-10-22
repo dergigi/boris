@@ -9,7 +9,7 @@ import RichContent from '../RichContent'
 import { classifyUrl } from '../../utils/helpers'
 import { useImageCache } from '../../hooks/useImageCache'
 import { getPreviewImage, fetchOgImage } from '../../utils/imagePreview'
-import { getEventUrl } from '../../config/nostrGateways'
+import { naddrEncode } from 'nostr-tools/nip19'
 
 interface CardViewProps {
   bookmark: IndividualBookmark
@@ -18,7 +18,6 @@ interface CardViewProps {
   extractedUrls: string[]
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
   authorNpub: string
-  eventNevent?: string
   getAuthorDisplayName: () => string
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
   articleImage?: string
@@ -34,7 +33,6 @@ export const CardView: React.FC<CardViewProps> = ({
   extractedUrls,
   onSelectUrl,
   authorNpub,
-  eventNevent,
   getAuthorDisplayName,
   handleReadNow,
   articleImage,
@@ -82,6 +80,29 @@ export const CardView: React.FC<CardViewProps> = ({
     }
   }
 
+  // Get internal route for the bookmark
+  const getInternalRoute = (): string | null => {
+    if (bookmark.kind === 30023) {
+      // Nostr-native article - use /a/ route
+      const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1]
+      if (dTag) {
+        const naddr = naddrEncode({
+          kind: bookmark.kind,
+          pubkey: bookmark.pubkey,
+          identifier: dTag
+        })
+        return `/a/${naddr}`
+      }
+    } else if (bookmark.kind === 1) {
+      // Note - use /e/ route
+      return `/e/${bookmark.id}`
+    } else if (firstUrl) {
+      // External URL - use /r/ route
+      return `/r/${encodeURIComponent(firstUrl)}`
+    }
+    return null
+  }
+
   return (
     <div 
       key={`${bookmark.id}-${index}`}
@@ -103,17 +124,15 @@ export const CardView: React.FC<CardViewProps> = ({
           <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
         </span>
         
-        {eventNevent ? (
-          <a
-            href={getEventUrl(eventNevent)}
-            target="_blank"
-            rel="noopener noreferrer"
+        {getInternalRoute() ? (
+          <Link
+            to={getInternalRoute()!}
             className="bookmark-date-link"
-            title="Open event in search"
+            title="Open in app"
             onClick={(e) => e.stopPropagation()}
           >
             {formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}
-          </a>
+          </Link>
         ) : (
           <span className="bookmark-date">{formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}</span>
         )}

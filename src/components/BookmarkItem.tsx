@@ -4,7 +4,7 @@ import { faGlobe, faLink } from '@fortawesome/free-solid-svg-icons'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
-import { npubEncode, neventEncode } from 'nostr-tools/nip19'
+import { npubEncode } from 'nostr-tools/nip19'
 import { IndividualBookmark } from '../types/bookmarks'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { classifyUrl } from '../utils/helpers'
@@ -58,8 +58,6 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   // Resolve author profile using applesauce
   const authorProfile = useEventModel(Models.ProfileModel, [bookmark.pubkey])
   const authorNpub = npubEncode(bookmark.pubkey)
-  const isHexId = /^[0-9a-f]{64}$/i.test(bookmark.id)
-  const eventNevent = isHexId ? neventEncode({ id: bookmark.id }) : undefined
   
   // Get display name for author
   const getAuthorDisplayName = () => {
@@ -135,7 +133,6 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     extractedUrls,
     onSelectUrl,
     authorNpub,
-    eventNevent,
     getAuthorDisplayName,
     handleReadNow,
     articleImage,
@@ -152,7 +149,6 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       extractedUrls,
       onSelectUrl,
       authorNpub,
-      eventNevent,
       getAuthorDisplayName,
       handleReadNow,
       articleSummary,
