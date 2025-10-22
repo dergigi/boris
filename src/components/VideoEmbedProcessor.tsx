@@ -21,9 +21,10 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
   onMouseUp,
   onTouchEnd
 }, ref) => {
-  const processedHtml = useMemo(() => {
+  // Process HTML and extract video URLs in a single pass to keep them in sync
+  const { processedHtml, videoUrls } = useMemo(() => {
     if (!renderVideoLinksAsEmbeds || !html) {
-      return html
+      return { processedHtml: html, videoUrls: [] }
     }
 
     // Process HTML in stages: <video> blocks, <img> tags with video src, and bare video URLs
@@ -86,71 +87,19 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
 
     const remainingUrls = [...fileVideoUrls, ...platformVideoUrls].filter(url => !collectedUrls.includes(url))
 
-    let processedHtml = result
+    let finalHtml = result
     remainingUrls.forEach((url) => {
       const placeholder = `__VIDEO_EMBED_${placeholderIndex}__`
-      processedHtml = processedHtml.replace(new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), placeholder)
+      finalHtml = finalHtml.replace(new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), placeholder)
       collectedUrls.push(url)
       placeholderIndex++
     })
 
-    // If nothing collected, return original html
-    if (collectedUrls.length === 0) {
-      return html
+    // Return both processed HTML and collected URLs (in the same order as placeholders)
+    return {
+      processedHtml: collectedUrls.length > 0 ? finalHtml : html,
+      videoUrls: collectedUrls
     }
-
-    return processedHtml
-  }, [html, renderVideoLinksAsEmbeds])
-
-  const videoUrls = useMemo(() => {
-    if (!renderVideoLinksAsEmbeds || !html) {
-      return []
-    }
-
-    const urls: string[] = []
-
-    // 1) Extract from <video> blocks first (video src or nested source src)
-    const videoBlockPattern = /<video[^>]*>[\s\S]*?<\/video>/gi
-    const videoBlocks = html.match(videoBlockPattern) || []
-    videoBlocks.forEach((block) => {
-      let url: string | null = null
-      const videoSrcMatch = block.match(/<video[^>]*\s+src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?[^>]*>/i)
-      if (videoSrcMatch && videoSrcMatch[1]) {
-        url = videoSrcMatch[1]
-      } else {
-        const sourceSrcMatch = block.match(/<source[^>]*\s+src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?[^>]*>/i)
-        if (sourceSrcMatch && sourceSrcMatch[1]) {
-          url = sourceSrcMatch[1]
-        }
-      }
-      if (url && !urls.includes(url)) urls.push(url)
-    })
-
-    // 2) Extract from <img> tags with video src
-    const imgTagPattern = /<img[^>]*>/gi
-    const allImgTags = html.match(imgTagPattern) || []
-    allImgTags.forEach((imgTag) => {
-      const srcMatch = imgTag.match(/src=["']?(https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)[^\s<>"']*)["']?/i)
-      if (srcMatch && srcMatch[1] && !urls.includes(srcMatch[1])) {
-        urls.push(srcMatch[1])
-      }
-    })
-
-    // 3) Extract remaining direct file URLs and platform-classified video URLs
-    const fileVideoPattern = /https?:\/\/[^\s<>"']+\.(mp4|webm|ogg|mov|avi|mkv|m4v)(?:\?[^\s<>"']*)?/gi
-    const fileVideoUrls: string[] = html.match(fileVideoPattern) || []
-    fileVideoUrls.forEach(u => { if (!urls.includes(u)) urls.push(u) })
-
-    const allUrlPattern = /https?:\/\/[^\s<>"']+(?=\s|>|"|'|$)/gi
-    const allUrls: string[] = html.match(allUrlPattern) || []
-    allUrls.forEach(u => {
-      const classification = classifyUrl(u)
-      if (classification.type === 'video' && !urls.includes(u)) {
-        urls.push(u)
-      }
-    })
-
-    return urls
   }, [html, renderVideoLinksAsEmbeds])
 
   // If no video embedding is enabled, just render the HTML normally
@@ -195,13 +144,16 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
           }
         }
         
-        // Regular HTML content
-        return (
-          <div 
-            key={index}
-            dangerouslySetInnerHTML={{ __html: part }}
-          />
-        )
+        // Regular HTML content - only render if not empty
+        if (part.trim()) {
+          return (
+            <div 
+              key={index}
+              dangerouslySetInnerHTML={{ __html: part }}
+            />
+          )
+        }
+        return null
       })}
     </div>
   )
