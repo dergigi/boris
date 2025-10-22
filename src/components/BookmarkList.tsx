@@ -120,7 +120,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
     localStorage.setItem('bookmarkGroupingMode', newMode)
   }
 
-  const getFilterTitle = (filter: BookmarkFilterType, count: number): string => {
+  const getFilterTitle = (filter: BookmarkFilterType): string => {
     const titles: Record<BookmarkFilterType, string> = {
       'all': 'All Bookmarks',
       'article': 'Bookmarked Reads',
@@ -129,7 +129,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
       'note': 'Bookmarked Notes',
       'web': 'Web Bookmarks'
     }
-    return `${titles[filter]} (${count})`
+    return titles[filter]
   }
 
   const handleSaveBookmark = async (url: string, title?: string, description?: string, tags?: string[]) => {
@@ -168,7 +168,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   const groups = groupIndividualBookmarks(bookmarksWithoutSet)
   const sections: Array<{ key: string; title: string; items: IndividualBookmark[] }> = 
     groupingMode === 'flat'
-      ? [{ key: 'all', title: getFilterTitle(selectedFilter, filteredBookmarks.length), items: sortIndividualBookmarks(filteredBookmarks) }]
+      ? [{ key: 'all', title: getFilterTitle(selectedFilter), items: sortIndividualBookmarks(filteredBookmarks) }]
       : [
           { key: 'nip51-private', title: 'Private Bookmarks', items: groups.nip51Private },
           { key: 'nip51-public', title: 'My Bookmarks', items: groups.nip51Public },
