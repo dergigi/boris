@@ -387,6 +387,11 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
               currentArticle={props.currentArticle}
               isSidebarCollapsed={props.isCollapsed}
               isHighlightsCollapsed={props.isHighlightsCollapsed}
+              onOpenHighlights={() => {
+                if (props.isHighlightsCollapsed) {
+                  props.onToggleHighlightsPanel()
+                }
+              }}
             />
           )}
         </div>

@@ -20,6 +20,7 @@ interface ReaderHeaderProps {
   settings?: UserSettings
   highlights?: Highlight[]
   highlightVisibility?: HighlightVisibility
+  onHighlightCountClick?: () => void
 }
 
 const ReaderHeader: React.FC<ReaderHeaderProps> = ({
@@ -32,7 +33,8 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   highlightCount,
   settings,
   highlights = [],
-  highlightVisibility = { nostrverse: true, friends: true, mine: true }
+  highlightVisibility = { nostrverse: true, friends: true, mine: true },
+  onHighlightCountClick
 }) => {
   const cachedImage = useImageCache(image)
   const { textColor } = useAdaptiveTextColor(cachedImage)
@@ -107,8 +109,10 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
                 )}
                 {hasHighlights && (
                   <div 
-                    className="highlight-indicator"
+                    className="highlight-indicator clickable"
                     style={getHighlightIndicatorStyles(true)}
+                    onClick={onHighlightCountClick}
+                    title="Open highlights sidebar"
                   >
                     <FontAwesomeIcon icon={faHighlighter} />
                     <span>{highlightCount} highlight{highlightCount !== 1 ? 's' : ''}</span>
@@ -152,8 +156,10 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
             )}
             {hasHighlights && (
               <div 
-                className="highlight-indicator"
+                className="highlight-indicator clickable"
                 style={getHighlightIndicatorStyles(false)}
+                onClick={onHighlightCountClick}
+                title="Open highlights sidebar"
               >
                 <FontAwesomeIcon icon={faHighlighter} />
                 <span>{highlightCount} highlight{highlightCount !== 1 ? 's' : ''}</span>

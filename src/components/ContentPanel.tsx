@@ -76,6 +76,7 @@ interface ContentPanelProps {
   // For reading progress indicator positioning
   isSidebarCollapsed?: boolean
   isHighlightsCollapsed?: boolean
+  onOpenHighlights?: () => void
 }
 
 const ContentPanel: React.FC<ContentPanelProps> = ({ 
@@ -103,7 +104,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   onTextSelection,
   onClearSelection,
   isSidebarCollapsed = false,
-  isHighlightsCollapsed = false
+  isHighlightsCollapsed = false,
+  onOpenHighlights
 }) => {
   const [isMarkedAsRead, setIsMarkedAsRead] = useState(false)
   const [isCheckingReadStatus, setIsCheckingReadStatus] = useState(false)
@@ -778,6 +780,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         settings={settings}
         highlights={relevantHighlights}
         highlightVisibility={highlightVisibility}
+        onHighlightCountClick={onOpenHighlights}
       />
       {isTextContent && articleText && (
         <div style={{ padding: '0 0.75rem 0.5rem 0.75rem' }}>
