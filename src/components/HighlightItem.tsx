@@ -212,12 +212,23 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
             pubkey,
             identifier
           })
-          navigate(`/a/${naddr}`)
+          // Pass highlight ID in navigation state to trigger scroll
+          navigate(`/a/${naddr}`, { 
+            state: { 
+              highlightId: highlight.id,
+              openHighlights: true 
+            } 
+          })
         }
       }
     } else if (highlight.urlReference) {
-      // Navigate to external URL
-      navigate(`/r/${encodeURIComponent(highlight.urlReference)}`)
+      // Navigate to external URL with highlight ID to trigger scroll
+      navigate(`/r/${encodeURIComponent(highlight.urlReference)}`, {
+        state: {
+          highlightId: highlight.id,
+          openHighlights: true
+        }
+      })
     }
   }
   
