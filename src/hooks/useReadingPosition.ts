@@ -31,6 +31,7 @@ export const useReadingPosition = ({
   const suppressUntilRef = useRef<number>(0)
   const syncEnabledRef = useRef(syncEnabled)
   const onSaveRef = useRef(onSave)
+  const scheduleSaveRef = useRef<((pos: number) => void) | null>(null)
 
   // Keep refs in sync with props
   useEffect(() => {
@@ -91,6 +92,11 @@ export const useReadingPosition = ({
     }, DEBOUNCE_MS)
   }, [])
 
+  // Store scheduleSave in ref for use in scroll handler
+  useEffect(() => {
+    scheduleSaveRef.current = scheduleSave
+  }, [scheduleSave])
+
   // Immediate save function
   const saveNow = useCallback(() => {
     if (!syncEnabledRef.current || !onSaveRef.current) return
@@ -143,7 +149,7 @@ export const useReadingPosition = ({
 
       // Schedule auto-save if sync is enabled (unless suppressed)
       if (Date.now() >= suppressUntilRef.current) {
-        scheduleSave(clampedProgress)
+        scheduleSaveRef.current?.(clampedProgress)
       } else {
         const remainingMs = suppressUntilRef.current - Date.now()
         console.log(`[reading-position] [${new Date().toISOString()}] 🛡️ Save suppressed (${remainingMs}ms remaining) at ${Math.round(clampedProgress * 100)}%`)
@@ -207,7 +213,7 @@ export const useReadingPosition = ({
         clearTimeout(completionTimerRef.current)
       }
     }
-  }, [enabled, onPositionChange, onReadingComplete, readingCompleteThreshold, scheduleSave, completionHoldMs])
+  }, [enabled, onPositionChange, onReadingComplete, readingCompleteThreshold, completionHoldMs])
 
   // Reset reading complete state when enabled changes
   useEffect(() => {
