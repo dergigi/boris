@@ -34,7 +34,7 @@ export const useReadingPosition = ({
   const suppressSavesFor = useCallback((ms: number) => {
     const until = Date.now() + ms
     suppressUntilRef.current = until
-    console.log('[reading-position] 🛡️ Suppressing saves for', ms, 'ms until', new Date(until).toISOString())
+    console.log(`[reading-position] [${new Date().toISOString()}] 🛡️ Suppressing saves for ${ms}ms until ${new Date(until).toISOString()}`)
   }, [])
 
   // Debounced save function - simple 2s debounce
@@ -49,7 +49,7 @@ export const useReadingPosition = ({
         clearTimeout(saveTimerRef.current)
         saveTimerRef.current = null
       }
-      console.log('[reading-position] 💾 Instant save at 100% completion')
+      console.log(`[reading-position] [${new Date().toISOString()}] 💾 Instant save at 100% completion`)
       lastSavedPosition.current = 1
       hasSavedOnce.current = true
       lastSavedAtRef.current = Date.now()
@@ -71,9 +71,9 @@ export const useReadingPosition = ({
     }
 
     const DEBOUNCE_MS = 3000 // Save max every 3 seconds
-    console.log('[reading-position] ⏱️ Debouncing save for', DEBOUNCE_MS, 'ms (pos:', Math.round(currentPosition * 100) + '%)')
+    console.log(`[reading-position] [${new Date().toISOString()}] ⏱️ Debouncing save for ${DEBOUNCE_MS}ms (pos: ${Math.round(currentPosition * 100)}%)`)
     saveTimerRef.current = setTimeout(() => {
-      console.log('[reading-position] 💾 Auto-save at', Math.round(currentPosition * 100) + '%')
+      console.log(`[reading-position] [${new Date().toISOString()}] 💾 Auto-save at ${Math.round(currentPosition * 100)}%`)
       lastSavedPosition.current = currentPosition
       hasSavedOnce.current = true
       lastSavedAtRef.current = Date.now()
@@ -89,7 +89,7 @@ export const useReadingPosition = ({
       clearTimeout(saveTimerRef.current)
       saveTimerRef.current = null
     }
-    console.log('[reading-position] 💾 saveNow() called at', Math.round(position * 100) + '%')
+    console.log(`[reading-position] [${new Date().toISOString()}] 💾 saveNow() called at ${Math.round(position * 100)}%`)
     lastSavedPosition.current = position
     hasSavedOnce.current = true
     lastSavedAtRef.current = Date.now()
@@ -126,7 +126,7 @@ export const useReadingPosition = ({
         scheduleSave(clampedProgress)
       } else {
         const remainingMs = suppressUntilRef.current - Date.now()
-        console.log('[reading-position] 🛡️ Save suppressed (', remainingMs, 'ms remaining) at', Math.round(clampedProgress * 100) + '%')
+        console.log(`[reading-position] [${new Date().toISOString()}] 🛡️ Save suppressed (${remainingMs}ms remaining) at ${Math.round(clampedProgress * 100)}%`)
       }
 
       // Completion detection with 2s hold at 100%

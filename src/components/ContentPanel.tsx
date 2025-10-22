@@ -179,7 +179,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop
 
     try {
-      console.log('[reading-position] 🚀 Publishing position', Math.round(position * 100) + '% to relays...')
+      console.log(`[reading-position] [${new Date().toISOString()}] 🚀 Publishing position ${Math.round(position * 100)}% to relays...`)
       const factory = new EventFactory({ signer: activeAccount })
       await saveReadingPosition(
         relayPool,
@@ -192,9 +192,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           scrollTop
         }
       )
-      console.log('[reading-position] ✅ Position published successfully')
+      console.log(`[reading-position] [${new Date().toISOString()}] ✅ Position published successfully`)
     } catch (error) {
-      console.error('[reading-position] ❌ Failed to save reading position:', error)
+      console.error(`[reading-position] [${new Date().toISOString()}] ❌ Failed to save reading position:`, error)
     }
   }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, html, markdown])
 
