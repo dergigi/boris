@@ -134,6 +134,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     currentUserPubkey,
     followedPubkeys
   })
+  // Key used to force re-mount of markdown preview/render when content changes
+  const contentKey = useMemo(() => {
+    // Prefer selectedUrl as a stable per-article key; fallback to title+length
+    return selectedUrl || `${title || ''}:${(markdown || html || '').length}`
+  }, [selectedUrl, title, markdown, html])
 
   const { contentRef, handleSelectionEnd } = useHighlightInteractions({
     onHighlightClick,
@@ -751,7 +756,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       <div className="reader" style={{ '--highlight-rgb': highlightRgb } as React.CSSProperties}>
         {/* Hidden markdown preview to convert markdown to HTML */}
       {markdown && (
-        <div ref={markdownPreviewRef} style={{ display: 'none' }}>
+        <div ref={markdownPreviewRef} key={`preview:${contentKey}`} style={{ display: 'none' }}>
           <ReactMarkdown 
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw, rehypePrism]}
@@ -872,6 +877,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           {markdown ? (
             renderedMarkdownHtml && finalHtml ? (
               <VideoEmbedProcessor
+                key={`content:${contentKey}`}
                 ref={contentRef}
                 html={finalHtml}
                 renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true && !isExternalVideo}
@@ -888,6 +894,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             )
           ) : (
             <VideoEmbedProcessor
+              key={`content:${contentKey}`}
               ref={contentRef}
               html={finalHtml || html || ''}
               renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true && !isExternalVideo}
