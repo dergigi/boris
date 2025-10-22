@@ -244,8 +244,13 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     suppressSavesForRef.current = suppressSavesFor
   }, [suppressSavesFor])
 
-  // Track if we've already attempted restore for this article
+  // Track if we've successfully started restore for this article
   const hasAttemptedRestoreRef = useRef<string | null>(null)
+  
+  // Reset attempt tracker when article changes
+  useEffect(() => {
+    hasAttemptedRestoreRef.current = null
+  }, [articleIdentifier])
 
   useEffect(() => {
     if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) {
@@ -257,13 +262,14 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       return
     }
 
-    // Only attempt restore once per article
+    // Only attempt restore once per article (after dependencies are ready)
     if (hasAttemptedRestoreRef.current === articleIdentifier) {
       console.log('[reading-position] ⏭️ Restore skipped: already attempted for this article')
       return
     }
 
     console.log('[reading-position] 🔄 Initiating restore for article:', articleIdentifier)
+    // Mark as attempted ONLY after all checks pass
     hasAttemptedRestoreRef.current = articleIdentifier
     
     // Suppress saves during restore window (700ms collection + 500ms render + 500ms buffer = 1700ms)
