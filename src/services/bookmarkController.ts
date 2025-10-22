@@ -230,7 +230,9 @@ class BookmarkController {
                   onProgress()
                 }
               }
-            ).catch(() => {
+            ).then(() => {
+              // Query completed successfully
+            }).catch(() => {
               // Silent error - individual query failed
             })
           )
@@ -265,7 +267,9 @@ class BookmarkController {
                   onProgress()
                 }
               }
-            ).catch(() => {
+            ).then(() => {
+              // Query completed successfully
+            }).catch(() => {
               // Silent error - individual query failed
             })
           )
