@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.12] - 2025-01-27
+
+### Added
+
+- Person hiking icon (fa-person-hiking) for explore navigation
+
+### Changed
+
+- Explore icon changed from newspaper to person hiking for better semantic meaning
+- Settings button moved before explore button in sidebar navigation
+- Profile avatar button now uses 44px touch target on mobile (matches other icon buttons)
+
+### Fixed
+
+- Web bookmarks (kind:39701) now properly deduplicate by d-tag
+- Same URL bookmarked multiple times now only appears once
+- Web bookmark IDs use coordinate format (kind:pubkey:d-tag) for consistent deduplication
+- Profile avatar button sizing on mobile now matches other IconButton components
+- Removed all console.log statements from bookmarkController and bookmarkProcessing
+
 ## [0.10.11] - 2025-01-27
 
 ### Added
@@ -2479,7 +2499,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
 
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.10.11...HEAD
+[Unreleased]: https://github.com/dergigi/boris/compare/v0.10.12...HEAD
+[0.10.12]: https://github.com/dergigi/boris/compare/v0.10.11...v0.10.12
 [0.10.11]: https://github.com/dergigi/boris/compare/v0.10.10...v0.10.11
 [0.10.10]: https://github.com/dergigi/boris/compare/v0.10.9...v0.10.10
 [0.10.9]: https://github.com/dergigi/boris/compare/v0.10.8...v0.10.9
