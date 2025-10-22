@@ -73,7 +73,7 @@ export const CompactView: React.FC<CompactViewProps> = ({
             <code>{bookmark.id.slice(0, 12)}...</code>
           </div>
         )}
-        <span className="bookmark-date-compact">{formatDateCompact(bookmark.created_at || bookmark.listUpdatedAt || Math.floor(Date.now() / 1000))}</span>
+        <span className="bookmark-date-compact">{formatDateCompact(bookmark.created_at ?? bookmark.listUpdatedAt)}</span>
         {/* CTA removed */}
       </div>
       

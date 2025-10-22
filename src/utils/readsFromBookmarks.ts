@@ -49,7 +49,7 @@ export function deriveReadsFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
         source: 'bookmark',
         type: 'article',
         readingProgress: 0,
-        readingTimestamp: bookmark.created_at,
+        readingTimestamp: bookmark.created_at ?? undefined,
         title,
         summary,
         image,

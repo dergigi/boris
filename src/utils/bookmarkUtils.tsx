@@ -4,16 +4,16 @@ import { ParsedContent, ParsedNode, IndividualBookmark } from '../types/bookmark
 import ResolvedMention from '../components/ResolvedMention'
 // Note: RichContent is imported by components directly to keep this file component-only for fast refresh
 
-export const formatDate = (timestamp: number) => {
-  const safe = typeof timestamp === 'number' && isFinite(timestamp) && timestamp > 0 ? timestamp : Math.floor(Date.now() / 1000)
-  const date = new Date(safe * 1000)
+export const formatDate = (timestamp: number | null | undefined) => {
+  if (!timestamp || !isFinite(timestamp) || timestamp <= 0) return ''
+  const date = new Date(timestamp * 1000)
   return formatDistanceToNow(date, { addSuffix: true })
 }
 
 // Ultra-compact date format for tight spaces (e.g., compact view)
-export const formatDateCompact = (timestamp: number) => {
-  const safe = typeof timestamp === 'number' && isFinite(timestamp) && timestamp > 0 ? timestamp : Math.floor(Date.now() / 1000)
-  const date = new Date(safe * 1000)
+export const formatDateCompact = (timestamp: number | null | undefined) => {
+  if (!timestamp || !isFinite(timestamp) || timestamp <= 0) return ''
+  const date = new Date(timestamp * 1000)
   const now = new Date()
   
   const seconds = differenceInSeconds(now, date)
@@ -89,7 +89,11 @@ export const renderParsedContent = (parsedContent: ParsedContent) => {
 export const sortIndividualBookmarks = (items: IndividualBookmark[]) => {
   return items
     .slice()
-    .sort((a, b) => (b.listUpdatedAt || 0) - (a.listUpdatedAt || 0))
+    .sort((a, b) => {
+      const aTs = a.listUpdatedAt ?? -Infinity
+      const bTs = b.listUpdatedAt ?? -Infinity
+      return bTs - aTs
+    })
 }
 
 export function groupIndividualBookmarks(items: IndividualBookmark[]) {
@@ -124,10 +128,7 @@ export function hasContent(bookmark: IndividualBookmark): boolean {
 export function hasCreationDate(bookmark: IndividualBookmark): boolean {
   if (!bookmark.created_at) return false
   // If timestamp is missing or equals current time (within 1 second), consider it invalid
-  const now = Math.floor(Date.now() / 1000)
-  const createdAt = Math.floor(bookmark.created_at)
-  // If created_at is within 1 second of now, it's likely missing/placeholder
-  return Math.abs(createdAt - now) > 1
+  return true
 }
 
 // Bookmark sets helpers (kind 30003)

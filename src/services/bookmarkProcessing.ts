@@ -136,7 +136,7 @@ export async function collectBookmarksFromEvents(
       publicItemsAll.push({
         id: evt.id,
         content: evt.content || '',
-        created_at: evt.created_at || Math.floor(Date.now() / 1000),
+        created_at: evt.created_at ?? null,
         pubkey: evt.pubkey,
         kind: evt.kind,
         tags: evt.tags || [],
@@ -148,7 +148,7 @@ export async function collectBookmarksFromEvents(
         setTitle,
         setDescription,
         setImage,
-        listUpdatedAt: evt.created_at || Math.floor(Date.now() / 1000)
+        listUpdatedAt: evt.created_at ?? null
       })
       continue
     }

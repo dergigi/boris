@@ -419,7 +419,7 @@ const Me: React.FC<MeProps> = ({
     const mockEvent = {
       id: item.id,
       pubkey: item.author || '',
-      created_at: item.readingTimestamp || Math.floor(Date.now() / 1000),
+      created_at: item.readingTimestamp || 0,
       kind: 1,
       tags: [] as string[][],
       content: item.title || item.url || 'Untitled',

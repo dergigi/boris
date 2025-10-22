@@ -144,7 +144,7 @@ export const LargeView: React.FC<LargeViewProps> = ({
               className="bookmark-date-link"
               onClick={(e) => e.stopPropagation()}
             >
-              {formatDate(bookmark.created_at || bookmark.listUpdatedAt || Math.floor(Date.now() / 1000))}
+              {formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}
             </a>
           )}
           

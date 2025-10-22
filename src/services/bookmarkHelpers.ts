@@ -81,7 +81,7 @@ export const processApplesauceBookmarks = (
         allItems.push({
           id: note.id,
           content: '',
-          created_at: note.created_at || 0,
+          created_at: note.created_at ?? null,
           pubkey: note.author || activeAccount.pubkey,
           kind: 1, // Short note kind
           tags: [],
@@ -101,14 +101,14 @@ export const processApplesauceBookmarks = (
         allItems.push({
           id: coordinate,
           content: '',
-          created_at: article.created_at || 0,
+          created_at: article.created_at ?? null,
           pubkey: article.pubkey,
           kind: article.kind, // Usually 30023 for long-form articles
           tags: [],
           parsedContent: undefined,
           type: 'event' as const,
           isPrivate,
-          listUpdatedAt: parentCreatedAt || 0
+          listUpdatedAt: parentCreatedAt ?? null
         })
       })
     }
@@ -126,7 +126,7 @@ export const processApplesauceBookmarks = (
           parsedContent: undefined,
           type: 'event' as const,
           isPrivate,
-          listUpdatedAt: parentCreatedAt || 0
+          listUpdatedAt: parentCreatedAt ?? null
         })
       })
     }
@@ -159,14 +159,14 @@ export const processApplesauceBookmarks = (
       return {
         id: bookmark.id!,
         content: bookmark.content || '',
-        created_at: bookmark.created_at || 0,
+        created_at: bookmark.created_at ?? null,
         pubkey: activeAccount.pubkey,
         kind: bookmark.kind || 30001,
         tags: bookmark.tags || [],
         parsedContent: bookmark.content ? (getParsedContent(bookmark.content) as ParsedContent) : undefined,
         type: 'event' as const,
         isPrivate,
-        listUpdatedAt: parentCreatedAt || 0
+        listUpdatedAt: parentCreatedAt ?? null
       }
     })
   

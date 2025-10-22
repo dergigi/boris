@@ -343,7 +343,7 @@ class BookmarkController {
           ...b,
           tags: b.tags || [],
           content: b.content || this.externalEventStore?.getEvent(b.id)?.content || '', // Fallback to eventStore content
-          created_at: b.created_at || this.externalEventStore?.getEvent(b.id)?.created_at || b.created_at
+          created_at: (b.created_at ?? this.externalEventStore?.getEvent(b.id)?.created_at ?? null)
         }))
         
         const sortedBookmarks = enriched
@@ -352,9 +352,10 @@ class BookmarkController {
             urlReferences: extractUrlsFromContent(b.content)
           }))
           .sort((a, b) => {
-            // Sort by listUpdatedAt (timestamp of bookmark list event = proxy for when bookmarked)
-            // Newest first (descending)
-            return (b.listUpdatedAt || 0) - (a.listUpdatedAt || 0)
+            // Sort by listUpdatedAt desc, nulls last
+            const aTs = a.listUpdatedAt ?? -Infinity
+            const bTs = b.listUpdatedAt ?? -Infinity
+            return bTs - aTs
           })
         
         // DEBUG: Show top 5 sorted bookmarks
@@ -370,7 +371,7 @@ class BookmarkController {
           title: `Bookmarks (${sortedBookmarks.length})`,
           url: '',
           content: latestContent,
-          created_at: newestCreatedAt || Math.floor(Date.now() / 1000),
+          created_at: newestCreatedAt || 0,
           tags: allTags,
           bookmarkCount: sortedBookmarks.length,
           eventReferences: allTags.filter((tag: string[]) => tag[0] === 'e').map((tag: string[]) => tag[1]),
