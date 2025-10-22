@@ -36,16 +36,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
   return (
     <>
       <div className="sidebar-header-bar">
-        {isMobile ? (
-          <IconButton
-            icon={faTimes}
-            onClick={onToggleCollapse}
-            title="Close sidebar"
-            ariaLabel="Close sidebar"
-            variant="ghost"
-            className="mobile-close-btn"
-          />
-        ) : (
+        {!isMobile && (
           <button 
             onClick={onToggleCollapse}
             className="toggle-sidebar-btn"

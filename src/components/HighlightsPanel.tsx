@@ -37,6 +37,7 @@ interface HighlightsPanelProps {
   relayPool?: RelayPool | null
   eventStore?: IEventStore | null
   settings?: UserSettings
+  isMobile?: boolean
 }
 
 export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
@@ -56,7 +57,8 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   followedPubkeys = new Set(),
   relayPool,
   eventStore,
-  settings
+  settings,
+  isMobile = false
 }) => {
   const [showHighlights, setShowHighlights] = useState(true)
   const [localHighlights, setLocalHighlights] = useState(highlights)
@@ -125,6 +127,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
         onRefresh={onRefresh}
         onToggleCollapse={onToggleCollapse}
         onHighlightVisibilityChange={onHighlightVisibilityChange}
+        isMobile={isMobile}
       />
 
       {loading && filteredHighlights.length === 0 ? (

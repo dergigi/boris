@@ -413,6 +413,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             relayPool={props.relayPool}
             eventStore={props.eventStore}
             settings={props.settings}
+            isMobile={isMobile}
           />
         </div>
       </div>

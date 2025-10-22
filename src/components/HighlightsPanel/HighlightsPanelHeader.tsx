@@ -13,6 +13,7 @@ interface HighlightsPanelHeaderProps {
   onRefresh?: () => void
   onToggleCollapse: () => void
   onHighlightVisibilityChange?: (visibility: HighlightVisibility) => void
+  isMobile?: boolean
 }
 
 const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
@@ -24,7 +25,8 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
   onToggleHighlights,
   onRefresh,
   onToggleCollapse,
-  onHighlightVisibilityChange
+  onHighlightVisibilityChange,
+  isMobile = false
 }) => {
   return (
     <div className="highlights-header">
@@ -101,14 +103,16 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
             />
           )}
         </div>
-        <IconButton
-          icon={faChevronRight}
-          onClick={onToggleCollapse}
-          title="Collapse highlights panel"
-          ariaLabel="Collapse highlights panel"
-          variant="ghost"
-          style={{ transform: 'rotate(180deg)' }}
-        />
+        {!isMobile && (
+          <IconButton
+            icon={faChevronRight}
+            onClick={onToggleCollapse}
+            title="Collapse highlights panel"
+            ariaLabel="Collapse highlights panel"
+            variant="ghost"
+            style={{ transform: 'rotate(180deg)' }}
+          />
+        )}
       </div>
     </div>
   )
