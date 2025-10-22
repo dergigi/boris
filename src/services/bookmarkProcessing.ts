@@ -133,8 +133,12 @@ export async function collectBookmarksFromEvents(
 
     // Handle web bookmarks (kind:39701) as individual bookmarks
     if (evt.kind === 39701) {
+      // Use coordinate format for web bookmarks to enable proper deduplication
+      // Web bookmarks are replaceable events (kind:39701:pubkey:d-tag)
+      const webBookmarkId = dTag ? `${evt.kind}:${evt.pubkey}:${dTag}` : evt.id
+      
       publicItemsAll.push({
-        id: evt.id,
+        id: webBookmarkId,
         content: evt.content || '',
         created_at: evt.created_at ?? null,
         pubkey: evt.pubkey,
