@@ -89,7 +89,12 @@ export function useArticleLoader({
             if (currentRequestIdRef.current !== requestId) return
 
             // Store in event store for future local reads
-            try { eventStore?.add?.(evt as unknown as any) } catch {}
+            try { 
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              eventStore?.add?.(evt as unknown as any) 
+            } catch {
+              // Silently ignore store errors
+            }
 
             // Keep latest by created_at
             if (!latestEvent || evt.created_at > latestEvent.created_at) {
@@ -186,7 +191,7 @@ export function useArticleLoader({
                   return next.sort((a, b) => b.created_at - a.created_at)
                 })
               },
-              settings
+              settingsRef.current
             )
           }
         } catch (err) {
