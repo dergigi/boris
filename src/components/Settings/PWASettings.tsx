@@ -33,7 +33,13 @@ const PWASettings: React.FC<PWASettingsProps> = ({ settings, onUpdate, onClose }
 
   const handleLinkClick = (url: string) => {
     if (onClose) onClose()
-    navigate(`/r/${encodeURIComponent(url)}`)
+    // If it's an internal route (starts with /), navigate directly
+    if (url.startsWith('/')) {
+      navigate(url)
+    } else {
+      // External URL: wrap with /r/ path
+      navigate(`/r/${encodeURIComponent(url)}`)
+    }
   }
 
   const handleClearCache = async () => {
