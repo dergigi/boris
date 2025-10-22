@@ -351,13 +351,20 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Save position before unmounting or changing article
   const saveNowRef = useRef(saveNow)
+  const isTrackingEnabledRef = useRef(isTrackingEnabled)
+  
   useEffect(() => {
     saveNowRef.current = saveNow
   }, [saveNow])
+  
+  useEffect(() => {
+    isTrackingEnabledRef.current = isTrackingEnabled
+  }, [isTrackingEnabled])
 
   useEffect(() => {
     return () => {
-      if (saveNowRef.current) {
+      // Only save on unmount if tracking was actually enabled
+      if (saveNowRef.current && isTrackingEnabledRef.current) {
         saveNowRef.current()
       }
     }
