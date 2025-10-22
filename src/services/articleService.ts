@@ -97,10 +97,10 @@ export async function fetchArticleByNaddr(
 
     const pointer = decoded.data as AddressPointer
 
-    // Define relays to query - prefer relays from naddr, fallback to configured relays (including local)
-    const baseRelays = pointer.relays && pointer.relays.length > 0 
-      ? pointer.relays 
-      : RELAYS
+    // Define relays to query - use union of relay hints from naddr and configured relays
+    // This avoids failures when naddr contains stale/unreachable relay hints
+    const hintedRelays = (pointer.relays && pointer.relays.length > 0) ? pointer.relays : []
+    const baseRelays = Array.from(new Set<string>([...hintedRelays, ...RELAYS]))
     const orderedRelays = prioritizeLocalRelays(baseRelays)
     const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
 
