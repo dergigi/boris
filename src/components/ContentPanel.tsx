@@ -162,20 +162,24 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Callback to save reading position
   const handleSavePosition = useCallback(async (position: number) => {
     if (!activeAccount || !relayPool || !eventStore || !articleIdentifier) {
+      console.log('[reading-position] ❌ Cannot save: missing dependencies')
       return
     }
     if (!settings?.syncReadingPosition) {
+      console.log('[reading-position] ⚠️ Save skipped: sync disabled in settings')
       return
     }
     
     // Check if content is long enough to track reading progress
     if (!shouldTrackReadingProgress(html, markdown)) {
+      console.log('[reading-position] ⚠️ Save skipped: content too short')
       return
     }
 
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop
 
     try {
+      console.log('[reading-position] 🚀 Publishing position', Math.round(position * 100) + '% to relays...')
       const factory = new EventFactory({ signer: activeAccount })
       await saveReadingPosition(
         relayPool,
@@ -188,8 +192,9 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           scrollTop
         }
       )
+      console.log('[reading-position] ✅ Position published successfully')
     } catch (error) {
-      console.error('[progress] ❌ ContentPanel: Failed to save reading position:', error)
+      console.error('[reading-position] ❌ Failed to save reading position:', error)
     }
   }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, html, markdown])
 
@@ -217,12 +222,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Load saved reading position when article loads (stabilized one-shot restore)
   useEffect(() => {
     if (!isTextContent || !activeAccount || !relayPool || !eventStore || !articleIdentifier) {
+      console.log('[reading-position] ⏭️ Restore skipped: missing dependencies or not text content')
       return
     }
     if (settings?.syncReadingPosition === false) {
+      console.log('[reading-position] ⏭️ Restore skipped: sync disabled in settings')
       return
     }
 
+    console.log('[reading-position] 🔄 Initiating restore for article:', articleIdentifier)
     const collector = collectReadingPositionsOnce({
       relayPool,
       eventStore,
@@ -232,7 +240,12 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     })
 
     collector.onStable((bestPosition) => {
-      if (!bestPosition) return
+      if (!bestPosition) {
+        console.log('[reading-position] ℹ️ No position to restore')
+        return
+      }
+
+      console.log('[reading-position] 🎯 Stable position received:', Math.round(bestPosition.position * 100) + '%')
 
       // Wait for content to be fully rendered
       setTimeout(() => {
@@ -242,12 +255,24 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         const currentTop = window.pageYOffset || document.documentElement.scrollTop
         const targetTop = bestPosition.position * maxScroll
 
+        console.log('[reading-position] 📐 Restore calculation:', {
+          docHeight: docH,
+          winHeight: winH,
+          maxScroll,
+          currentTop,
+          targetTop,
+          targetPercent: Math.round(bestPosition.position * 100) + '%'
+        })
+
         // Skip if delta is too small (< 48px or < 5%)
         const deltaPx = Math.abs(targetTop - currentTop)
         const deltaPct = maxScroll > 0 ? Math.abs((targetTop - currentTop) / maxScroll) : 0
         if (deltaPx < 48 || deltaPct < 0.05) {
+          console.log('[reading-position] ⏭️ Restore skipped: delta too small (', deltaPx, 'px,', Math.round(deltaPct * 100) + '%)')
           return
         }
+
+        console.log('[reading-position] 📜 Restoring scroll position (delta:', deltaPx, 'px,', Math.round(deltaPct * 100) + '%)')
 
         // Suppress saves briefly to avoid feedback loop
         if (suppressSavesFor) {
@@ -259,10 +284,14 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           top: targetTop,
           behavior: 'auto'
         })
+        console.log('[reading-position] ✅ Scroll restored to', Math.round(bestPosition.position * 100) + '%')
       }, 500) // Give content time to render
     })
 
-    return () => collector.stop()
+    return () => {
+      console.log('[reading-position] 🛑 Stopping restore collector')
+      collector.stop()
+    }
   }, [isTextContent, activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition, selectedUrl, suppressSavesFor])
 
   // Save position before unmounting or changing article

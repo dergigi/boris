@@ -34,7 +34,9 @@ export const useReadingPosition = ({
 
   // Suppress auto-saves for a given duration (used after programmatic restore)
   const suppressSavesFor = useCallback((ms: number) => {
-    suppressUntilRef.current = Date.now() + ms
+    const until = Date.now() + ms
+    suppressUntilRef.current = until
+    console.log('[reading-position] 🛡️ Suppressing saves for', ms, 'ms until', new Date(until).toISOString())
   }, [])
 
   // Debounced save function
@@ -49,6 +51,7 @@ export const useReadingPosition = ({
         clearTimeout(saveTimerRef.current)
         saveTimerRef.current = null
       }
+      console.log('[reading-position] 💾 Instant save at 100% completion')
       lastSavedPosition.current = 1
       hasSavedOnce.current = true
       lastSavedAtRef.current = Date.now()
@@ -80,7 +83,9 @@ export const useReadingPosition = ({
       }
       const remaining = Math.max(0, MIN_INTERVAL_MS - (nowMs - lastSavedAtRef.current))
       const delay = Math.max(autoSaveInterval, remaining)
+      console.log('[reading-position] ⏱️ Rescheduling save in', delay, 'ms (pos:', Math.round(currentPosition * 100) + '%)')
       saveTimerRef.current = setTimeout(() => {
+        console.log('[reading-position] 💾 Auto-save (rescheduled) at', Math.round(currentPosition * 100) + '%')
         lastSavedPosition.current = currentPosition
         hasSavedOnce.current = true
         lastSavedAtRef.current = Date.now()
@@ -96,7 +101,9 @@ export const useReadingPosition = ({
 
     // Schedule new save using the larger of autoSaveInterval and MIN_INTERVAL_MS
     const delay = Math.max(autoSaveInterval, MIN_INTERVAL_MS)
+    console.log('[reading-position] ⏱️ Scheduling save in', delay, 'ms (pos:', Math.round(currentPosition * 100) + '%)')
     saveTimerRef.current = setTimeout(() => {
+      console.log('[reading-position] 💾 Auto-save at', Math.round(currentPosition * 100) + '%')
       lastSavedPosition.current = currentPosition
       hasSavedOnce.current = true
       lastSavedAtRef.current = Date.now()
@@ -111,6 +118,7 @@ export const useReadingPosition = ({
       clearTimeout(saveTimerRef.current)
       saveTimerRef.current = null
     }
+    console.log('[reading-position] 💾 saveNow() called at', Math.round(position * 100) + '%')
     lastSavedPosition.current = position
     hasSavedOnce.current = true
     lastSavedAtRef.current = Date.now()
@@ -145,6 +153,9 @@ export const useReadingPosition = ({
       // Schedule auto-save if sync is enabled (unless suppressed)
       if (Date.now() >= suppressUntilRef.current) {
         scheduleSave(clampedProgress)
+      } else {
+        const remainingMs = suppressUntilRef.current - Date.now()
+        console.log('[reading-position] 🛡️ Save suppressed (', remainingMs, 'ms remaining) at', Math.round(clampedProgress * 100) + '%')
       }
 
       // Completion detection with 2s hold at 100%

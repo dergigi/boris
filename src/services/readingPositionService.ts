@@ -203,9 +203,13 @@ export function collectReadingPositionsOnce(params: {
     hasEmitted = true
 
     if (candidates.length === 0) {
+      console.log('[reading-position] 📊 No candidates collected during stabilization window')
       stableCallback(null)
       return
     }
+
+    console.log('[reading-position] 📊 Collected', candidates.length, 'position candidates:', 
+      candidates.map(c => `${Math.round(c.position * 100)}% @${new Date(c.timestamp * 1000).toLocaleTimeString()}`).join(', '))
 
     // Sort: newest first, then highest progress
     candidates.sort((a, b) => {
@@ -214,10 +218,13 @@ export function collectReadingPositionsOnce(params: {
       return b.position - a.position
     })
 
+    console.log('[reading-position] ✅ Best position selected:', Math.round(candidates[0].position * 100) + '%', 
+      'from', new Date(candidates[0].timestamp * 1000).toLocaleTimeString())
     stableCallback(candidates[0])
   }
 
   // Start streaming and collecting
+  console.log('[reading-position] 🎯 Starting stabilized position collector (window:', windowMs, 'ms)')
   streamStop = startReadingPositionStream(
     relayPool,
     eventStore,
@@ -225,13 +232,22 @@ export function collectReadingPositionsOnce(params: {
     articleIdentifier,
     (pos) => {
       if (hasEmitted) return
-      if (!pos) return
-      if (pos.position <= 0.05 || pos.position >= 1) return
+      if (!pos) {
+        console.log('[reading-position] 📥 Received null position')
+        return
+      }
+      if (pos.position <= 0.05 || pos.position >= 1) {
+        console.log('[reading-position] 🚫 Ignoring position', Math.round(pos.position * 100) + '% (outside 5%-100% range)')
+        return
+      }
       
+      console.log('[reading-position] 📥 Received position candidate:', Math.round(pos.position * 100) + '%', 
+        'from', new Date(pos.timestamp * 1000).toLocaleTimeString())
       candidates.push(pos)
 
       // Schedule one-shot emission if not already scheduled
       if (!timer) {
+        console.log('[reading-position] ⏰ Starting', windowMs, 'ms stabilization timer')
         timer = setTimeout(() => {
           emitStable()
           if (streamStop) streamStop()
