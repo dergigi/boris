@@ -153,20 +153,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Reading position tracking - only for text content that's loaded and long enough
   // Wait for content to load, check it's not a video, and verify it's long enough to track
   const isTextContent = useMemo(() => {
-    const result = {
-      loading,
-      hasMarkdown: !!markdown,
-      hasHtml: !!html,
-      isVideo: selectedUrl?.includes('youtube') || selectedUrl?.includes('vimeo'),
-      longEnough: shouldTrackReadingProgress(html, markdown)
-    }
-    
     if (loading) return false
     if (!markdown && !html) return false
     if (selectedUrl?.includes('youtube') || selectedUrl?.includes('vimeo')) return false
     if (!shouldTrackReadingProgress(html, markdown)) return false
     
-    console.log('[reading-position] 📊 isTextContent check:', result, '→', true)
     return true
   }, [loading, markdown, html, selectedUrl])
   
@@ -187,24 +178,20 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   // Callback to save reading position
   const handleSavePosition = useCallback(async (position: number) => {
     if (!activeAccount || !relayPool || !eventStore || !articleIdentifier) {
-      console.log('[reading-position] ❌ Cannot save: missing dependencies')
       return
     }
     if (!settings?.syncReadingPosition) {
-      console.log('[reading-position] ⚠️ Save skipped: sync disabled in settings')
       return
     }
     
     // Check if content is long enough to track reading progress
     if (!shouldTrackReadingProgress(htmlRef.current, markdownRef.current)) {
-      console.log('[reading-position] ⚠️ Save skipped: content too short')
       return
     }
 
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop
 
     try {
-      console.log(`[reading-position] [${new Date().toISOString()}] 🚀 Publishing position ${Math.round(position * 100)}% to relays...`)
       const factory = new EventFactory({ signer: activeAccount })
       await saveReadingPosition(
         relayPool,
@@ -217,9 +204,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           scrollTop
         }
       )
-      console.log(`[reading-position] [${new Date().toISOString()}] ✅ Position published successfully`)
     } catch (error) {
-      console.error(`[reading-position] [${new Date().toISOString()}] ❌ Failed to save reading position:`, error)
+      console.error('[reading-position] Failed to save reading position:', error)
     }
   }, [activeAccount, relayPool, eventStore, articleIdentifier, settings?.syncReadingPosition])
 
@@ -236,7 +222,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     if (!isTextContent) {
       // Disable tracking if content is not suitable
       if (isTrackingEnabled) {
-        console.log('[reading-position] ⏸️ Disabling tracking (not text content)')
         setIsTrackingEnabled(false)
       }
       return
@@ -245,7 +230,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     if (!isTrackingEnabled) {
       // Wait 500ms after content loads before enabling tracking
       const timer = setTimeout(() => {
-        console.log('[reading-position] ✅ Enabling tracking after stability delay')
         setIsTrackingEnabled(true)
       }, 500)
       return () => clearTimeout(timer)
@@ -285,35 +269,21 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const hasAttemptedRestoreRef = useRef<string | null>(null)
 
   useEffect(() => {
-    console.log('[reading-position] 🔍 Restore effect running:', {
-      isTextContent,
-      isTrackingEnabled,
-      hasAccount: !!activeAccount,
-      articleIdentifier,
-      restoreKey,
-      hasAttempted: hasAttemptedRestoreRef.current
-    })
-    
     if (!isTextContent || !activeAccount || !articleIdentifier) {
-      console.log('[reading-position] ⏭️ Restore skipped: missing dependencies or not text content')
       return
     }
     if (settings?.syncReadingPosition === false) {
-      console.log('[reading-position] ⏭️ Restore skipped: sync disabled in settings')
       return
     }
     if (!isTrackingEnabled) {
-      console.log('[reading-position] ⏭️ Restore skipped: tracking not yet enabled (waiting for content stability)')
       return
     }
 
     // Only attempt restore once per article (after tracking is enabled)
     if (hasAttemptedRestoreRef.current === restoreKey) {
-      console.log('[reading-position] ⏭️ Restore skipped: already attempted for this article')
       return
     }
 
-    console.log('[reading-position] 🔄 Initiating restore for article:', articleIdentifier)
     // Mark as attempted using composite key
     hasAttemptedRestoreRef.current = restoreKey
     
@@ -321,11 +291,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     const savedProgress = readingProgressController.getProgress(articleIdentifier)
     
     if (!savedProgress || savedProgress <= 0.05 || savedProgress >= 1) {
-      console.log('[reading-position] ℹ️ No position to restore (progress:', savedProgress, ')')
       return
     }
-
-    console.log('[reading-position] 🎯 Found saved position:', Math.round(savedProgress * 100) + '%')
 
     // Suppress saves during restore (500ms render + 1000ms smooth scroll = 1500ms)
     if (suppressSavesForRef.current) {
@@ -340,20 +307,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       const currentTop = window.pageYOffset || document.documentElement.scrollTop
       const targetTop = savedProgress * maxScroll
 
-      console.log('[reading-position] 📐 Restore calculation:', {
-        docHeight: docH,
-        winHeight: winH,
-        maxScroll,
-        currentTop,
-        targetTop,
-        targetPercent: Math.round(savedProgress * 100) + '%'
-      })
-
       // Skip if delta is too small (< 48px or < 5%)
       const deltaPx = Math.abs(targetTop - currentTop)
       const deltaPct = maxScroll > 0 ? Math.abs((targetTop - currentTop) / maxScroll) : 0
       if (deltaPx < 48 || deltaPct < 0.05) {
-        console.log('[reading-position] ⏭️ Restore skipped: delta too small (', deltaPx, 'px,', Math.round(deltaPct * 100) + '%)')
         // Allow saves immediately since no scroll happened
         if (suppressSavesForRef.current) {
           suppressSavesForRef.current(0)
@@ -361,14 +318,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
         return
       }
 
-      console.log('[reading-position] 📜 Restoring scroll position (delta:', deltaPx, 'px,', Math.round(deltaPct * 100) + '%)')
-
       // Perform smooth animated restore
       window.scrollTo({
         top: targetTop,
         behavior: 'smooth'
       })
-      console.log('[reading-position] ✅ Scroll restored to', Math.round(savedProgress * 100) + '%')
     }, 500) // Give content time to render
   }, [isTextContent, activeAccount, articleIdentifier, settings?.syncReadingPosition, selectedUrl, isTrackingEnabled, restoreKey])
 
