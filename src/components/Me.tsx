@@ -25,6 +25,7 @@ import { faBooks } from '../icons/customIcons'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { groupIndividualBookmarks, hasContent, hasCreationDate, sortIndividualBookmarks } from '../utils/bookmarkUtils'
+import { dedupeBookmarksById } from '../services/bookmarkHelpers'
 import BookmarkFilters, { BookmarkFilterType } from './BookmarkFilters'
 import { filterBookmarksByType } from '../utils/bookmarkTypeClassifier'
 import ReadingProgressFilters, { ReadingProgressFilterType } from './ReadingProgressFilters'
@@ -487,8 +488,10 @@ const Me: React.FC<MeProps> = ({
     return undefined
   }
 
-  // Merge and flatten all individual bookmarks
-  const allIndividualBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
+  // Merge and flatten all individual bookmarks with deduplication
+  const allIndividualBookmarks = dedupeBookmarksById(
+    bookmarks.flatMap(b => b.individualBookmarks || [])
+  )
     .filter(hasContent)
     .filter(b => !settings?.hideBookmarksWithoutCreationDate || hasCreationDate(b))
   
