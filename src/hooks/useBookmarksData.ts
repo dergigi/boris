@@ -158,7 +158,10 @@ export const useBookmarksData = ({
 
   // Fetch article-specific highlights when viewing an article
   useEffect(() => {
-    if (!relayPool || !activeAccount) return
+    if (!relayPool || !activeAccount) {
+      setHighlightsLoading(false)
+      return
+    }
     // Fetch article-specific highlights when viewing an article
     // External URLs have their highlights fetched by useExternalUrlLoader
     if (effectiveArticleCoordinate && !externalUrl) {
@@ -166,6 +169,9 @@ export const useBookmarksData = ({
     } else if (!naddr && !externalUrl) {
       // Clear article highlights when not viewing an article
       setArticleHighlights([])
+      setHighlightsLoading(false)
+    } else {
+      // For external URLs or other cases, loading is not needed
       setHighlightsLoading(false)
     }
   }, [relayPool, activeAccount, effectiveArticleCoordinate, naddr, externalUrl, handleFetchHighlights])
