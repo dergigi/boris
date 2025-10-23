@@ -3,6 +3,8 @@ description: anything related to UI/UX
 alwaysApply: false
 ---
 
+# Mobile-First UI/UX
+
 This is a mobile-first application. All UI elements should be designed with that in mind. The application should work well on small screens, including older smartphones. The UX should be immaculate on mobile, even when in flight mode. (We use local caches and local relays, so that app works offline too.)
 
 Let's not show too many error messages, and more importantly: let's not make them red. Nothing is ever this tragic.

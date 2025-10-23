@@ -3,8 +3,11 @@ description: fetching data from relays
 alwaysApply: false
 ---
 
+# Fetching Data with Controllers
+
 We fetch data from relays using controllers:
-- Start controllers immediatly; don’t await.
+
+- Start controllers immediatly; don't await.
 - Stream via onEvent; dedupe replaceables; emit immediately.
 - Parallel local/remote queries; complete on EOSE.
 - Finalize and persist since after completion.
