@@ -81,13 +81,16 @@ class NostrverseHighlightsController {
     const currentGeneration = this.generation
     this.setLoading(true)
 
-    try {
-      const seenIds = new Set<string>()
-      const highlightsMap = new Map<string, Highlight>()
+  try {
+    const seenIds = new Set<string>()
+    // Start with existing highlights when doing incremental sync
+    const highlightsMap = new Map<string, Highlight>(
+      this.currentHighlights.map(h => [h.id, h])
+    )
 
-      const lastSyncedAt = force ? null : this.getLastSyncedAt()
-      const filter: { kinds: number[]; since?: number } = { kinds: [KINDS.Highlights] }
-      if (lastSyncedAt) filter.since = lastSyncedAt
+    const lastSyncedAt = force ? null : this.getLastSyncedAt()
+    const filter: { kinds: number[]; since?: number } = { kinds: [KINDS.Highlights] }
+    if (lastSyncedAt) filter.since = lastSyncedAt
 
       const events = await queryEvents(
         relayPool,
@@ -111,22 +114,24 @@ class NostrverseHighlightsController {
 
       if (currentGeneration !== this.generation) return
 
-      events.forEach(evt => eventStore.add(evt))
+    events.forEach(evt => eventStore.add(evt))
 
-      const highlights = events.map(eventToHighlight)
-      const unique = Array.from(new Map(highlights.map(h => [h.id, h])).values())
-      const sorted = sortHighlights(unique)
+    const highlights = events.map(eventToHighlight)
+    // Merge new highlights with existing ones
+    highlights.forEach(h => highlightsMap.set(h.id, h))
+    const sorted = sortHighlights(Array.from(highlightsMap.values()))
 
-      this.currentHighlights = sorted
-      this.loaded = true
-      this.emitHighlights(sorted)
+    this.currentHighlights = sorted
+    this.loaded = true
+    this.emitHighlights(sorted)
 
       if (sorted.length > 0) {
         const newest = Math.max(...sorted.map(h => h.created_at))
         this.setLastSyncedAt(newest)
       }
     } catch (err) {
-      this.currentHighlights = []
+      // On error, keep existing highlights instead of clearing them
+      console.error('[nostrverse-highlights] Failed to sync:', err)
       this.emitHighlights(this.currentHighlights)
     } finally {
       if (currentGeneration === this.generation) this.setLoading(false)
