@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.21] - 2025-10-23
+
+### Fixed
+
+- Reading position tracking for internal event URLs
+  - Prevents tracking for `nostr-event:` sentinel URLs (internal convention, not a valid Nostr URI per NIP-21)
+  - Fixes "String must be lowercase or uppercase" error when loading base64-encoded event URLs
+  - These internal sentinels are no longer saved to reading position data
+- Compact bookmark view display
+  - Articles now show title instead of summary in compact view
+  - Extracts article title from NIP-23 metadata tags
+  - Removed unused `articleSummary` prop to keep code DRY
+- Bookmark deduplication in profile view
+  - Same article appearing in multiple bookmark lists/sets now displays only once
+  - Uses coordinate-based deduplication (`kind:pubkey:identifier`) for articles
+  - Applies `dedupeBookmarksById` when flattening bookmarks from different sources
+
 ## [0.10.20] - 2025-10-23
 
 ### Added
