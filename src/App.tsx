@@ -237,11 +237,11 @@ function AppRoutes({
         } 
       />
       <Route 
-        path="/me" 
-        element={<Navigate to="/me/highlights" replace />} 
+        path="/my" 
+        element={<Navigate to="/my/highlights" replace />} 
       />
       <Route 
-        path="/me/highlights" 
+        path="/my/highlights" 
         element={
           <Bookmarks 
             relayPool={relayPool}
@@ -253,7 +253,7 @@ function AppRoutes({
         } 
       />
       <Route 
-        path="/me/bookmarks" 
+        path="/my/bookmarks" 
         element={
           <Bookmarks 
             relayPool={relayPool}
@@ -265,7 +265,7 @@ function AppRoutes({
         } 
       />
       <Route 
-        path="/me/reads" 
+        path="/my/reads" 
         element={
           <Bookmarks 
             relayPool={relayPool}
@@ -277,7 +277,7 @@ function AppRoutes({
         } 
       />
       <Route 
-        path="/me/reads/:filter" 
+        path="/my/reads/:filter" 
         element={
           <Bookmarks 
             relayPool={relayPool}
@@ -289,7 +289,7 @@ function AppRoutes({
         } 
       />
       <Route 
-        path="/me/links" 
+        path="/my/links" 
         element={
           <Bookmarks 
             relayPool={relayPool}
@@ -301,7 +301,7 @@ function AppRoutes({
         } 
       />
       <Route 
-        path="/me/links/:filter" 
+        path="/my/links/:filter" 
         element={
           <Bookmarks 
             relayPool={relayPool}
@@ -313,7 +313,7 @@ function AppRoutes({
         } 
       />
       <Route 
-        path="/me/writings" 
+        path="/my/writings" 
         element={
           <Bookmarks 
             relayPool={relayPool}
