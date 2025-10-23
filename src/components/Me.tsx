@@ -14,7 +14,7 @@ import { highlightsController } from '../services/highlightsController'
 import { writingsController } from '../services/writingsController'
 import { fetchLinks } from '../services/linksService'
 import { ReadItem, readsController } from '../services/readsController'
-import { BlogPostPreview } from '../services/exploreService'
+import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import AuthorCard from './AuthorCard'
 import BlogPostCard from './BlogPostCard'
@@ -33,6 +33,7 @@ import { deriveLinksFromBookmarks } from '../utils/linksFromBookmarks'
 import { readingProgressController } from '../services/readingProgressController'
 import { archiveController } from '../services/archiveController'
 import { UserSettings } from '../services/settingsService'
+import { getActiveRelayUrls } from '../services/relayManager'
 
 interface MeProps {
   relayPool: RelayPool
@@ -129,6 +130,17 @@ const Me: React.FC<MeProps> = ({
       unsubLoading()
     }
   }, [])
+
+  // Background fetch to populate event store with ALL writings (non-blocking)
+  useEffect(() => {
+    if (!viewingPubkey || !relayPool || !eventStore) return
+    
+    // Fetch all writings in background without limits
+    const relayUrls = getActiveRelayUrls(relayPool)
+    
+    fetchBlogPostsFromAuthors(relayPool, [viewingPubkey], relayUrls, undefined, null, eventStore)
+      .catch(err => console.warn('⚠️ [Me] Failed to fetch writings:', err))
+  }, [viewingPubkey, relayPool, eventStore, refreshTrigger])
 
   // Sync filter state with URL changes
   useEffect(() => {
