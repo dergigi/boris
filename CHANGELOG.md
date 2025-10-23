@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.18] - 2025-10-23
+
+### Changed
+
+- User profile routes renamed from `/me` to `/my`
+  - `/my/highlights` - User's highlights
+  - `/my/bookmarks` - User's bookmarks
+  - `/my/reads` - Nostr-native articles with reading progress
+  - `/my/links` - External URLs with reading progress
+  - `/my/writings` - User's published articles
+  - All navigation, tabs, and internal links updated
+  - Documentation updated to reflect new paths
+
+### Fixed
+
+- `/my/writings` now displays all user writings
+  - Removed incremental loading with `since` filters from writingsController
+  - Controller now fetches ALL writings without limits
+  - Ensures complete results on profile and my pages
+- `/my/highlights` now displays all user highlights
+  - Removed incremental loading with `since` filters from highlightsController
+  - Controller now fetches ALL highlights without limits
+  - Consistent behavior across all profile views
+
+### Refactored
+
+- Centralized data fetching in controllers
+  - Removed duplicate background fetch logic from Me.tsx and Profile.tsx
+  - All writings fetching now handled by writingsController
+  - All highlights fetching now handled by highlightsController
+  - Single source of truth following controller pattern: stream, dedupe, store, emit
+  - Cleaner, more maintainable code (DRY principle)
+
 ## [0.10.17] - 2025-10-23
 
 ### Added
