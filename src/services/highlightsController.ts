@@ -8,8 +8,6 @@ import { eventToHighlight, sortHighlights } from './highlightEventProcessor'
 type HighlightsCallback = (highlights: Highlight[]) => void
 type LoadingCallback = (loading: boolean) => void
 
-const LAST_SYNCED_KEY = 'highlights_last_synced'
-
 /**
  * Shared highlights controller
  * Manages the user's highlights centrally, similar to bookmarkController
@@ -69,36 +67,9 @@ class HighlightsController {
   }
 
   /**
-   * Get last synced timestamp for incremental loading
-   */
-  private getLastSyncedAt(pubkey: string): number | null {
-    try {
-      const data = localStorage.getItem(LAST_SYNCED_KEY)
-      if (!data) return null
-      const parsed = JSON.parse(data)
-      return parsed[pubkey] || null
-    } catch {
-      return null
-    }
-  }
-
-  /**
-   * Update last synced timestamp
-   */
-  private setLastSyncedAt(pubkey: string, timestamp: number): void {
-    try {
-      const data = localStorage.getItem(LAST_SYNCED_KEY)
-      const parsed = data ? JSON.parse(data) : {}
-      parsed[pubkey] = timestamp
-      localStorage.setItem(LAST_SYNCED_KEY, JSON.stringify(parsed))
-    } catch (err) {
-      console.warn('[highlights] Failed to save last synced timestamp:', err)
-    }
-  }
-
-  /**
    * Load highlights for a user
    * Streams results and stores in event store
+   * Always fetches ALL highlights to ensure completeness
    */
   async start(options: {
     relayPool: RelayPool
@@ -124,14 +95,11 @@ class HighlightsController {
       const seenIds = new Set<string>()
       const highlightsMap = new Map<string, Highlight>()
 
-      // Get last synced timestamp for incremental loading
-      const lastSyncedAt = force ? null : this.getLastSyncedAt(pubkey)
-      const filter: { kinds: number[]; authors: string[]; since?: number } = {
+      // Fetch ALL highlights without limits (no since filter)
+      // This ensures we get complete results for profile/my pages
+      const filter = {
         kinds: [KINDS.Highlights],
         authors: [pubkey]
-      }
-      if (lastSyncedAt) {
-        filter.since = lastSyncedAt
       }
 
       const events = await queryEvents(
@@ -178,12 +146,6 @@ class HighlightsController {
       this.currentHighlights = sorted
       this.lastLoadedPubkey = pubkey
       this.emitHighlights(sorted)
-
-      // Update last synced timestamp
-      if (sorted.length > 0) {
-        const newestTimestamp = Math.max(...sorted.map(h => h.created_at))
-        this.setLastSyncedAt(pubkey, newestTimestamp)
-      }
 
     } catch (error) {
       console.error('[highlights] ❌ Failed to load highlights:', error)
