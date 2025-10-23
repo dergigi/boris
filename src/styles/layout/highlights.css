@@ -64,6 +64,27 @@
 .highlights-actions-left { display: flex; align-items: center; gap: 0.5rem; }
 .highlights-actions-right { display: flex; align-items: center; gap: 0.5rem; }
 
+/* Collapse button in highlights header */
+.highlights-header .toggle-highlights-btn {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border-subtle);
+  padding: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 33px;
+  height: 33px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.highlights-header .toggle-highlights-btn:hover { background: var(--color-bg-elevated); color: var(--color-text); }
+.highlights-header .toggle-highlights-btn:active { transform: translateY(1px); }
+
 .highlights-title { display: flex; align-items: center; gap: 0.5rem; }
 .highlights-title h3 { margin: 0; font-size: 1rem; font-weight: 600; }
 .highlights-title .count { color: var(--color-text-secondary); font-size: 0.875rem; }

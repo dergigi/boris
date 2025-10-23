@@ -1,4 +1,5 @@
 import React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight, faEye, faEyeSlash, faRotate, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 import { HighlightVisibility } from '../HighlightsPanel'
 import IconButton from '../IconButton'
@@ -33,14 +34,14 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
       <div className="highlights-actions">
         <div className="highlights-actions-left">
           {!isMobile && (
-            <IconButton
-              icon={faChevronRight}
+            <button 
               onClick={onToggleCollapse}
+              className="toggle-highlights-btn"
               title="Collapse highlights panel"
-              ariaLabel="Collapse highlights panel"
-              variant="ghost"
-              style={{ transform: 'rotate(180deg)' }}
-            />
+              aria-label="Collapse highlights panel"
+            >
+              <FontAwesomeIcon icon={faChevronRight} style={{ transform: 'rotate(180deg)' }} />
+            </button>
           )}
           {onHighlightVisibilityChange && (
             <div className="highlight-level-toggles">
