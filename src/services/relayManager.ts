@@ -81,7 +81,15 @@ export function applyRelaySetToPool(
   for (const url of toRemove) {
     const relay = relayPool.relays.get(url)
     if (relay) {
-      relay.close()
+      try {
+        // Only close if relay is actually connected or attempting to connect
+        // This helps avoid WebSocket warnings for connections that never started
+        relay.close()
+      } catch (error) {
+        // Suppress errors when closing relays that haven't fully connected yet
+        // This can happen when switching relay sets before connections establish
+        console.debug('[relay-manager] Ignoring error when closing relay:', url, error)
+      }
       relayPool.relays.delete(url)
     }
   }
