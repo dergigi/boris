@@ -1,9 +1,8 @@
 import React, { useRef, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faRotate, faHeart, faPlus, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faBookmark, faList, faThLarge, faImage, faHeart, faPlus, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { faClock } from '@fortawesome/free-regular-svg-icons'
-import { formatDistanceToNow } from 'date-fns'
 import { RelayPool } from 'applesauce-relay'
 import { Bookmark, IndividualBookmark } from '../types/bookmarks'
 import { BookmarkItem } from './BookmarkItem'
@@ -326,17 +325,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         </div>
         {activeAccount && (
           <div className="view-mode-right">
-            {onRefresh && (
-              <IconButton
-                icon={faRotate}
-                onClick={onRefresh}
-                title={lastFetchTime ? `Refresh bookmarks (updated ${formatDistanceToNow(lastFetchTime, { addSuffix: true })})` : 'Refresh bookmarks'}
-                ariaLabel="Refresh bookmarks"
-                variant="ghost"
-                disabled={isRefreshing}
-                spin={isRefreshing}
-              />
-            )}
             <IconButton
               icon={faList}
               onClick={() => onViewModeChange('compact')}
