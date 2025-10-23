@@ -28,6 +28,17 @@ export const useReadingPosition = ({
   const suppressUntilRef = useRef<number>(0)
   const pendingPositionRef = useRef<number>(0) // Track latest position for throttled save
   const lastSaved100Ref = useRef(false) // Track if we've saved 100% to avoid duplicate saves
+  
+  // Store callbacks in refs to avoid them being dependencies
+  const onPositionChangeRef = useRef(onPositionChange)
+  const onReadingCompleteRef = useRef(onReadingComplete)
+  const onSaveRef = useRef(onSave)
+  
+  useEffect(() => {
+    onPositionChangeRef.current = onPositionChange
+    onReadingCompleteRef.current = onReadingComplete
+    onSaveRef.current = onSave
+  }, [onPositionChange, onReadingComplete, onSave])
 
   // Suppress auto-saves for a given duration (used after programmatic restore)
   const suppressSavesFor = useCallback((ms: number) => {
@@ -37,7 +48,7 @@ export const useReadingPosition = ({
 
   // Throttled save function - saves at 1s intervals during scrolling
   const scheduleSave = useCallback((currentPosition: number) => {
-    if (!syncEnabled || !onSave) {
+    if (!syncEnabled || !onSaveRef.current) {
       return
     }
 
@@ -48,7 +59,7 @@ export const useReadingPosition = ({
         saveTimerRef.current = null
       }
       lastSaved100Ref.current = true
-      onSave(1)
+      onSaveRef.current(1)
       return
     }
 
@@ -65,10 +76,10 @@ export const useReadingPosition = ({
     saveTimerRef.current = setTimeout(() => {
       // Save the latest position, not the one from when timer was scheduled
       const positionToSave = pendingPositionRef.current
-      onSave(positionToSave)
+      onSaveRef.current?.(positionToSave)
       saveTimerRef.current = null
     }, THROTTLE_MS)
-  }, [syncEnabled, onSave])
+  }, [syncEnabled])
 
   useEffect(() => {
     if (!enabled) return
@@ -96,7 +107,7 @@ export const useReadingPosition = ({
       
       setPosition(clampedProgress)
       positionRef.current = clampedProgress
-      onPositionChange?.(clampedProgress)
+      onPositionChangeRef.current?.(clampedProgress)
 
       // Schedule auto-save if sync is enabled (unless suppressed)
       if (Date.now() >= suppressUntilRef.current) {
@@ -113,7 +124,7 @@ export const useReadingPosition = ({
               if (!hasTriggeredComplete.current && positionRef.current === 1) {
                 setIsReadingComplete(true)
                 hasTriggeredComplete.current = true
-                onReadingComplete?.()
+                onReadingCompleteRef.current?.()
               }
               completionTimerRef.current = null
             }, completionHoldMs)
@@ -127,7 +138,7 @@ export const useReadingPosition = ({
             if (clampedProgress >= readingCompleteThreshold) {
               setIsReadingComplete(true)
               hasTriggeredComplete.current = true
-              onReadingComplete?.()
+              onReadingCompleteRef.current?.()
             }
           }
         }
@@ -151,7 +162,7 @@ export const useReadingPosition = ({
         clearTimeout(completionTimerRef.current)
       }
     }
-  }, [enabled, onPositionChange, onReadingComplete, readingCompleteThreshold, scheduleSave, completionHoldMs])
+  }, [enabled, readingCompleteThreshold, scheduleSave, completionHoldMs])
 
   // Reset reading complete state when enabled changes
   useEffect(() => {
