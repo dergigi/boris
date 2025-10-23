@@ -433,7 +433,31 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
           title={new Date(highlight.created_at * 1000).toLocaleString()}
           onClick={(e) => {
             e.stopPropagation()
-            window.location.href = highlightLinks.native
+            // Navigate within app using same logic as handleItemClick
+            if (highlight.eventReference) {
+              const parts = highlight.eventReference.split(':')
+              if (parts.length === 3 && parts[0] === '30023') {
+                const [kind, pubkey, identifier] = parts
+                const naddr = nip19.naddrEncode({
+                  kind: 30023,
+                  pubkey,
+                  identifier
+                })
+                navigate(`/a/${naddr}`, { 
+                  state: { 
+                    highlightId: highlight.id,
+                    openHighlights: true 
+                  } 
+                })
+              }
+            } else if (highlight.urlReference) {
+              navigate(`/r/${encodeURIComponent(highlight.urlReference)}`, {
+                state: {
+                  highlightId: highlight.id,
+                  openHighlights: true
+                }
+              })
+            }
           }}
         >
           {formatDateCompact(highlight.created_at)}
