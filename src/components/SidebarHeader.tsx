@@ -156,15 +156,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
             ariaLabel="Explore"
             variant="ghost"
           />
-          {activeAccount && (
-            <IconButton
-              icon={faRightFromBracket}
-              onClick={onLogout}
-              title="Logout"
-              ariaLabel="Logout"
-              variant="ghost"
-            />
-          )}
           {!isMobile && (
             <button 
               onClick={onToggleCollapse}
