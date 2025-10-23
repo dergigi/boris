@@ -170,11 +170,11 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
       groupingMode === 'flat'
         ? [{ key: 'all', title: getFilterTitle(selectedFilter), items: sortIndividualBookmarks(filteredBookmarks) }]
         : [
+            { key: 'web', title: 'Web Bookmarks', items: groups.standaloneWeb },
             { key: 'nip51-private', title: 'Private Bookmarks', items: groups.nip51Private },
             { key: 'nip51-public', title: 'My Bookmarks', items: groups.nip51Public },
             { key: 'amethyst-private', title: 'Private Lists', items: groups.amethystPrivate },
-            { key: 'amethyst-public', title: 'My Lists', items: groups.amethystPublic },
-            { key: 'web', title: 'Web Bookmarks', items: groups.standaloneWeb }
+            { key: 'amethyst-public', title: 'My Lists', items: groups.amethystPublic }
           ]
     
     // Add bookmark sets as additional sections (only in grouped mode)
