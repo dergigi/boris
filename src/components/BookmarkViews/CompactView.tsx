@@ -5,6 +5,7 @@ import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDateCompact } from '../../utils/bookmarkUtils'
 import RichContent from '../RichContent'
+import { naddrEncode } from 'nostr-tools/nip19'
 
 interface CompactViewProps {
   bookmark: IndividualBookmark
@@ -45,7 +46,15 @@ export const CompactView: React.FC<CompactViewProps> = ({
 
   const handleCompactClick = () => {
     if (isArticle) {
-      onSelectUrl?.('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags, pubkey: bookmark.pubkey })
+      const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1]
+      if (dTag) {
+        const naddr = naddrEncode({
+          kind: bookmark.kind,
+          pubkey: bookmark.pubkey,
+          identifier: dTag
+        })
+        navigate(`/a/${naddr}`)
+      }
     } else if (hasUrls) {
       onSelectUrl?.(extractedUrls[0])
     } else if (isNote) {

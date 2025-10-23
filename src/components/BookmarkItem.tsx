@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { faNewspaper, faStickyNote, faCirclePlay, faCamera, faFileLines } from '@fortawesome/free-regular-svg-icons'
 import { faGlobe, faLink } from '@fortawesome/free-solid-svg-icons'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
-import { npubEncode } from 'nostr-tools/nip19'
+import { npubEncode, naddrEncode } from 'nostr-tools/nip19'
 import { IndividualBookmark } from '../types/bookmarks'
 import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { classifyUrl } from '../utils/helpers'
@@ -23,6 +24,7 @@ interface BookmarkItemProps {
 }
 
 export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onSelectUrl, viewMode = 'cards', readingProgress }) => {
+  const navigate = useNavigate()
   const [ogImage, setOgImage] = useState<string | null>(null)
 
   const short = (v: string) => `${v.slice(0, 8)}...${v.slice(-8)}`
@@ -108,10 +110,16 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   const handleReadNow = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
     
-    // For kind:30023 articles, pass the bookmark data instead of URL
+    // For kind:30023 articles, navigate to /a/:naddr route
     if (bookmark.kind === 30023) {
-      if (onSelectUrl) {
-        onSelectUrl('', { id: bookmark.id, kind: bookmark.kind, tags: bookmark.tags, pubkey: bookmark.pubkey })
+      const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1]
+      if (dTag) {
+        const naddr = naddrEncode({
+          kind: bookmark.kind,
+          pubkey: bookmark.pubkey,
+          identifier: dTag
+        })
+        navigate(`/a/${naddr}`)
       }
       return
     }
