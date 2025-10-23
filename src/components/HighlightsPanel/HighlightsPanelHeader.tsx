@@ -32,6 +32,16 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
     <div className="highlights-header">
       <div className="highlights-actions">
         <div className="highlights-actions-left">
+          {!isMobile && (
+            <IconButton
+              icon={faChevronRight}
+              onClick={onToggleCollapse}
+              title="Collapse highlights panel"
+              ariaLabel="Collapse highlights panel"
+              variant="ghost"
+              style={{ transform: 'rotate(180deg)' }}
+            />
+          )}
           {onHighlightVisibilityChange && (
             <div className="highlight-level-toggles">
               <IconButton
@@ -82,6 +92,8 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
               )}
             </div>
           )}
+        </div>
+        <div className="highlights-actions-right">
           {onRefresh && (
             <IconButton
               icon={faRotate}
@@ -103,16 +115,6 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
             />
           )}
         </div>
-        {!isMobile && (
-          <IconButton
-            icon={faChevronRight}
-            onClick={onToggleCollapse}
-            title="Collapse highlights panel"
-            ariaLabel="Collapse highlights panel"
-            variant="ghost"
-            style={{ transform: 'rotate(180deg)' }}
-          />
-        )}
       </div>
     </div>
   )

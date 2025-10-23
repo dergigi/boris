@@ -62,6 +62,7 @@
 
 .highlights-actions { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 .highlights-actions-left { display: flex; align-items: center; gap: 0.5rem; }
+.highlights-actions-right { display: flex; align-items: center; gap: 0.5rem; }
 
 .highlights-title { display: flex; align-items: center; gap: 0.5rem; }
 .highlights-title h3 { margin: 0; font-size: 1rem; font-weight: 600; }
