@@ -118,13 +118,11 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   return (
     <div className="highlights-container">
       <HighlightsPanelHeader
-        loading={loading}
         hasHighlights={filteredHighlights.length > 0}
         showHighlights={showHighlights}
         highlightVisibility={highlightVisibility}
         currentUserPubkey={currentUserPubkey}
         onToggleHighlights={handleToggleHighlights}
-        onRefresh={onRefresh}
         onToggleCollapse={onToggleCollapse}
         onHighlightVisibilityChange={onHighlightVisibilityChange}
         isMobile={isMobile}

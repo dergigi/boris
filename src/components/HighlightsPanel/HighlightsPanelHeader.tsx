@@ -5,26 +5,22 @@ import { HighlightVisibility } from '../HighlightsPanel'
 import IconButton from '../IconButton'
 
 interface HighlightsPanelHeaderProps {
-  loading: boolean
   hasHighlights: boolean
   showHighlights: boolean
   highlightVisibility: HighlightVisibility
   currentUserPubkey?: string
   onToggleHighlights: () => void
-  onRefresh?: () => void
   onToggleCollapse: () => void
   onHighlightVisibilityChange?: (visibility: HighlightVisibility) => void
   isMobile?: boolean
 }
 
 const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
-  loading,
   hasHighlights,
   showHighlights,
   highlightVisibility,
   currentUserPubkey,
   onToggleHighlights,
-  onRefresh,
   onToggleCollapse,
   onHighlightVisibilityChange,
   isMobile = false

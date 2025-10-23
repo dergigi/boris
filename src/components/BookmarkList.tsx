@@ -58,7 +58,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
   onOpenSettings,
   onRefresh,
   isRefreshing,
-  lastFetchTime,
   loading = false,
   relayPool,
   isMobile = false,
