@@ -192,7 +192,8 @@
   }
   
   .reader-markdown img, .reader-html img {
-    max-width: 100%;
+    max-width: 100% !important;
+    width: auto !important;
     height: auto;
   }
 }

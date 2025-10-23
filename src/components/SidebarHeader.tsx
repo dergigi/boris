@@ -1,11 +1,12 @@
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faUserCircle, faGear, faHome, faPersonHiking } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faUserCircle, faGear, faHome, faPersonHiking, faEllipsisVertical, faHighlighter, faBookmark, faPenToSquare, faLink } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import IconButton from './IconButton'
+import { faBooks } from '../icons/customIcons'
 
 interface SidebarHeaderProps {
   onToggleCollapse: () => void
@@ -18,6 +19,8 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
   const navigate = useNavigate()
   const activeAccount = Hooks.useActiveAccount()
   const profile = useEventModel(Models.ProfileModel, activeAccount ? [activeAccount.pubkey] : null)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const getProfileImage = () => {
     return profile?.picture || null
@@ -33,22 +36,103 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
 
   const profileImage = getProfileImage()
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false)
+      }
+    }
+
+    if (showProfileMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showProfileMenu])
+
+  const handleMenuItemClick = (action: () => void) => {
+    setShowProfileMenu(false)
+    action()
+  }
+
   return (
     <>
       <div className="sidebar-header-bar">
         {activeAccount && (
-          <button
-            className="profile-avatar-button" 
-            title={getUserDisplayName()}
-            onClick={() => navigate('/my')}
-            aria-label={`Profile: ${getUserDisplayName()}`}
-          >
-            {profileImage ? (
-              <img src={profileImage} alt={getUserDisplayName()} />
-            ) : (
-              <FontAwesomeIcon icon={faUserCircle} />
-            )}
-          </button>
+          <div className="profile-avatar-container">
+            <button
+              className="profile-avatar-button" 
+              title={getUserDisplayName()}
+              onClick={() => navigate('/my')}
+              aria-label={`Profile: ${getUserDisplayName()}`}
+            >
+              {profileImage ? (
+                <img src={profileImage} alt={getUserDisplayName()} />
+              ) : (
+                <FontAwesomeIcon icon={faUserCircle} />
+              )}
+            </button>
+            <div className="profile-menu-wrapper" ref={menuRef}>
+              <button
+                className="profile-menu-trigger"
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                aria-label="Profile menu"
+                title="Profile menu"
+              >
+                <FontAwesomeIcon icon={faEllipsisVertical} />
+              </button>
+              {showProfileMenu && (
+                <div className="profile-dropdown-menu">
+                  <button
+                    className="profile-menu-item"
+                    onClick={() => handleMenuItemClick(() => navigate('/my/highlights'))}
+                  >
+                    <FontAwesomeIcon icon={faHighlighter} />
+                    <span>My Highlights</span>
+                  </button>
+                  <button
+                    className="profile-menu-item"
+                    onClick={() => handleMenuItemClick(() => navigate('/my/bookmarks'))}
+                  >
+                    <FontAwesomeIcon icon={faBookmark} />
+                    <span>My Bookmarks</span>
+                  </button>
+                  <button
+                    className="profile-menu-item"
+                    onClick={() => handleMenuItemClick(() => navigate('/my/reads'))}
+                  >
+                    <FontAwesomeIcon icon={faBooks} />
+                    <span>My Reads</span>
+                  </button>
+                  <button
+                    className="profile-menu-item"
+                    onClick={() => handleMenuItemClick(() => navigate('/my/links'))}
+                  >
+                    <FontAwesomeIcon icon={faLink} />
+                    <span>My Links</span>
+                  </button>
+                  <button
+                    className="profile-menu-item"
+                    onClick={() => handleMenuItemClick(() => navigate('/my/writings'))}
+                  >
+                    <FontAwesomeIcon icon={faPenToSquare} />
+                    <span>My Writings</span>
+                  </button>
+                  <div className="profile-menu-separator"></div>
+                  <button
+                    className="profile-menu-item"
+                    onClick={() => handleMenuItemClick(onLogout)}
+                  >
+                    <FontAwesomeIcon icon={faRightFromBracket} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         )}
         <div className="sidebar-header-right">
           <IconButton
