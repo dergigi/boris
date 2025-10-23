@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.17] - 2025-10-23
+
+### Added
+
+- Setting to control auto-scroll to reading position
+  - New toggle in Settings > Reading Experience
+  - Allows users to disable automatic scroll restoration
+  - Defaults to enabled (preserves existing behavior)
+
+### Fixed
+
+- Blockquote styling on mobile devices
+  - Added equal right padding to match left padding (2rem on both sides)
+  - Prevents awkward text cutoff on narrow screens
+- Timestamp clicks in highlight cards now navigate within app
+  - Articles (kind:30023) open via `/a/{naddr}` route
+  - External URLs open via `/r/{encodedUrl}` route
+  - Previously opened external search portal (ants.sh)
+  - Highlight automatically scrolls into view with sidebar open
+- Hero images now properly extend edge-to-edge on mobile
+  - Adjusted negative margins to match new reader padding
+  - Image bleeds to screen edges while text maintains comfortable margins
+- Article relay links now open via `/a/` path instead of `/r/`
+  - Ensures nostr-native articles route correctly
+  - External links continue to use `/r/` path
+
+### Changed
+
+- Mobile reader padding increased for better readability
+  - Horizontal padding increased from 0.5rem to 1rem
+  - Title, summary, and body text now properly aligned
+  - More comfortable reading experience on small screens
+- Reading position save interval reduced from 3s to 1s
+  - More frequent auto-saves during active reading
+  - Better preservation of reading progress
+
 ## [0.10.16] - 2025-10-22
 
 ### Fixed
