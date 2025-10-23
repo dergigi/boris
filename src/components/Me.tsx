@@ -144,15 +144,15 @@ const Me: React.FC<MeProps> = ({
     setReadingProgressFilter(filter)
     if (activeTab === 'reads') {
       if (filter === 'all') {
-        navigate('/me/reads', { replace: true })
+        navigate('/my/reads', { replace: true })
       } else {
-        navigate(`/me/reads/${filter}`, { replace: true })
+        navigate(`/my/reads/${filter}`, { replace: true })
       }
     } else if (activeTab === 'links') {
       if (filter === 'all') {
-        navigate('/me/links', { replace: true })
+        navigate('/my/links', { replace: true })
       } else {
-        navigate(`/me/links/${filter}`, { replace: true })
+        navigate(`/my/links/${filter}`, { replace: true })
       }
     }
   }
@@ -867,7 +867,7 @@ const Me: React.FC<MeProps> = ({
           <button
             className={`me-tab ${activeTab === 'highlights' ? 'active' : ''}`}
             data-tab="highlights"
-            onClick={() => navigate('/me/highlights')}
+            onClick={() => navigate('/my/highlights')}
           >
             <FontAwesomeIcon icon={faHighlighter} />
             <span className="tab-label">Highlights</span>
@@ -875,7 +875,7 @@ const Me: React.FC<MeProps> = ({
           <button
             className={`me-tab ${activeTab === 'bookmarks' ? 'active' : ''}`}
             data-tab="bookmarks"
-            onClick={() => navigate('/me/bookmarks')}
+            onClick={() => navigate('/my/bookmarks')}
           >
             <FontAwesomeIcon icon={faBookmark} />
             <span className="tab-label">Bookmarks</span>
@@ -883,7 +883,7 @@ const Me: React.FC<MeProps> = ({
           <button
             className={`me-tab ${activeTab === 'reads' ? 'active' : ''}`}
             data-tab="reads"
-            onClick={() => navigate('/me/reads')}
+            onClick={() => navigate('/my/reads')}
           >
             <FontAwesomeIcon icon={faBooks} />
             <span className="tab-label">Reads</span>
@@ -891,7 +891,7 @@ const Me: React.FC<MeProps> = ({
           <button
             className={`me-tab ${activeTab === 'links' ? 'active' : ''}`}
             data-tab="links"
-            onClick={() => navigate('/me/links')}
+            onClick={() => navigate('/my/links')}
           >
             <FontAwesomeIcon icon={faLink} />
             <span className="tab-label">Links</span>
@@ -899,7 +899,7 @@ const Me: React.FC<MeProps> = ({
           <button
             className={`me-tab ${activeTab === 'writings' ? 'active' : ''}`}
             data-tab="writings"
-            onClick={() => navigate('/me/writings')}
+            onClick={() => navigate('/my/writings')}
           >
             <FontAwesomeIcon icon={faPenToSquare} />
             <span className="tab-label">Writings</span>
