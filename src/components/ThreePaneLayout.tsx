@@ -321,7 +321,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
         <div 
           ref={sidebarRef}
           className={`pane sidebar ${isMobile && props.isSidebarOpen ? 'mobile-open' : ''}`}
-          aria-hidden={isMobile && !props.isSidebarOpen}
+          inert={isMobile && !props.isSidebarOpen ? ('' as any) : undefined}
         >
           <BookmarkList 
             bookmarks={props.bookmarks}
@@ -413,7 +413,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
         <div 
           ref={highlightsRef}
           className={`pane highlights ${isMobile && !props.isHighlightsCollapsed ? 'mobile-open' : ''}`}
-          aria-hidden={isMobile && props.isHighlightsCollapsed}
+          inert={isMobile && props.isHighlightsCollapsed ? ('' as any) : undefined}
         >
           <HighlightsPanel
             highlights={props.highlights}
