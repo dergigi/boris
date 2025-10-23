@@ -82,11 +82,28 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
 
   
   
-  // Visibility filters (defaults from settings or nostrverse when logged out)
-  const [visibility, setVisibility] = useState<HighlightVisibility>({
-    nostrverse: activeAccount ? (settings?.defaultExploreScopeNostrverse ?? false) : true,
-    friends: settings?.defaultExploreScopeFriends ?? true,
-    mine: settings?.defaultExploreScopeMine ?? false
+  // Visibility filters - load from localStorage first, fallback to settings
+  const [visibility, setVisibility] = useState<HighlightVisibility>(() => {
+    // Try to load from localStorage first
+    try {
+      const saved = localStorage.getItem('exploreScopeVisibility')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        // Validate that at least one scope is enabled
+        if (parsed.nostrverse || parsed.friends || parsed.mine) {
+          return parsed
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to load explore scope from localStorage:', err)
+    }
+    
+    // Fallback to settings or defaults
+    return {
+      nostrverse: activeAccount ? (settings?.defaultExploreScopeNostrverse ?? false) : true,
+      friends: settings?.defaultExploreScopeFriends ?? true,
+      mine: settings?.defaultExploreScopeMine ?? false
+    }
   })
 
   // Ensure at least one scope remains active
@@ -95,6 +112,12 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       const next = { ...prev, [key]: !prev[key] }
       if (!next.nostrverse && !next.friends && !next.mine) {
         return prev // ignore toggle that would disable all scopes
+      }
+      // Persist to localStorage
+      try {
+        localStorage.setItem('exploreScopeVisibility', JSON.stringify(next))
+      } catch (err) {
+        console.warn('Failed to save explore scope to localStorage:', err)
       }
       return next
     })
@@ -224,18 +247,44 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
 
   // Update visibility when settings/login state changes
   useEffect(() => {
+    // Check if user has a saved preference
+    const hasSavedPreference = (() => {
+      try {
+        return localStorage.getItem('exploreScopeVisibility') !== null
+      } catch {
+        return false
+      }
+    })()
+    
+    // Only reset to defaults if no saved preference exists
+    if (hasSavedPreference) {
+      return
+    }
+    
     if (!activeAccount) {
       // When logged out, show nostrverse by default
-      setVisibility(prev => ({ ...prev, nostrverse: true, friends: false, mine: false }))
+      const defaultVisibility = { nostrverse: true, friends: false, mine: false }
+      setVisibility(defaultVisibility)
+      try {
+        localStorage.setItem('exploreScopeVisibility', JSON.stringify(defaultVisibility))
+      } catch (err) {
+        console.warn('Failed to save explore scope to localStorage:', err)
+      }
       setHasLoadedNostrverse(true) // logged out path loads nostrverse immediately
       setHasLoadedNostrverseHighlights(true)
     } else {
       // When logged in, use settings defaults immediately
-      setVisibility({
+      const defaultVisibility = {
         nostrverse: settings?.defaultExploreScopeNostrverse ?? false,
         friends: settings?.defaultExploreScopeFriends ?? true,
         mine: settings?.defaultExploreScopeMine ?? false
-      })
+      }
+      setVisibility(defaultVisibility)
+      try {
+        localStorage.setItem('exploreScopeVisibility', JSON.stringify(defaultVisibility))
+      } catch (err) {
+        console.warn('Failed to save explore scope to localStorage:', err)
+      }
       setHasLoadedNostrverse(false)
       setHasLoadedNostrverseHighlights(false)
     }
