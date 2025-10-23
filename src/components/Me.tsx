@@ -394,22 +394,8 @@ const Me: React.FC<MeProps> = ({
   }
 
   const getReadItemUrl = (item: ReadItem) => {
-    // Handle nostr-event: URLs specially - route to /e/ path
-    const urlToCheck = item.url || item.id
-    if (urlToCheck?.startsWith('nostr-event:')) {
-      const eventId = urlToCheck.replace('nostr-event:', '')
-      return `/e/${eventId}`
-    }
-    
-    if (item.type === 'article') {
-      // Check if ID is actually an naddr
-      if (item.id.startsWith('naddr1')) {
-        return `/a/${item.id}`
-      }
-      // Fallback: if it has a URL, use /r/ path
-      if (item.url) {
-        return `/r/${encodeURIComponent(item.url)}`
-      }
+    if (item.type === 'article' && item.id.startsWith('naddr1')) {
+      return `/a/${item.id}`
     } else if (item.url) {
       return `/r/${encodeURIComponent(item.url)}`
     }
@@ -450,27 +436,17 @@ const Me: React.FC<MeProps> = ({
   }
 
   const handleSelectUrl = (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => {
-    // Handle nostr-event: URLs specially - route to /e/ path
-    if (url?.startsWith('nostr-event:')) {
-      const eventId = url.replace('nostr-event:', '')
-      navigate(`/e/${eventId}`)
-      return
-    }
-    
     if (bookmark && bookmark.kind === 30023) {
-      // For kind:30023 articles, navigate to the article route
       const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1] || ''
       if (dTag && bookmark.pubkey) {
-        const pointer = {
-          identifier: dTag,
+        const naddr = nip19.naddrEncode({
           kind: 30023,
           pubkey: bookmark.pubkey,
-        }
-        const naddr = nip19.naddrEncode(pointer)
+          identifier: dTag
+        })
         navigate(`/a/${naddr}`)
       }
     } else if (url) {
-      // For regular URLs, navigate to the reader route
       navigate(`/r/${encodeURIComponent(url)}`)
     }
   }

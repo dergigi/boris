@@ -155,6 +155,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const isTextContent = useMemo(() => {
     if (loading) return false
     if (!markdown && !html) return false
+    // Don't track internal sentinel URLs (nostr-event: is not a real Nostr URI per NIP-21)
+    if (selectedUrl?.startsWith('nostr-event:')) return false
     if (selectedUrl?.includes('youtube') || selectedUrl?.includes('vimeo')) return false
     if (!shouldTrackReadingProgress(html, markdown)) return false
     
