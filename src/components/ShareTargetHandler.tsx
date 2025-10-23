@@ -60,7 +60,7 @@ export default function ShareTargetHandler({ relayPool }: ShareTargetHandlerProp
             getActiveRelayUrls(relayPool)
           )
           showToast('Bookmark saved!')
-          navigate('/me/links')
+          navigate('/my/links')
         } catch (err) {
           console.error('Failed to save shared bookmark:', err)
           showToast('Failed to save bookmark')
