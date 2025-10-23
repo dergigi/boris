@@ -53,7 +53,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   
   const showSettings = location.pathname === '/settings'
   const showExplore = location.pathname.startsWith('/explore')
-  const showMe = location.pathname.startsWith('/me')
+  const showMe = location.pathname.startsWith('/my')
   const showProfile = location.pathname.startsWith('/p/')
   const showSupport = location.pathname === '/support'
   const eventId = eventIdParam
@@ -62,12 +62,12 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   const exploreTab = location.pathname === '/explore/writings' ? 'writings' : 'highlights'
   
   // Extract tab from me routes
-  const meTab = location.pathname === '/me' ? 'highlights' : 
-                location.pathname === '/me/highlights' ? 'highlights' :
-                location.pathname === '/me/bookmarks' ? 'bookmarks' :
-                location.pathname.startsWith('/me/reads') ? 'reads' :
-                location.pathname.startsWith('/me/links') ? 'links' :
-                location.pathname === '/me/writings' ? 'writings' : 'highlights'
+  const meTab = location.pathname === '/my' ? 'highlights' : 
+                location.pathname === '/my/highlights' ? 'highlights' :
+                location.pathname === '/my/bookmarks' ? 'bookmarks' :
+                location.pathname.startsWith('/my/reads') ? 'reads' :
+                location.pathname.startsWith('/my/links') ? 'links' :
+                location.pathname === '/my/writings' ? 'writings' : 'highlights'
   
   // Extract tab from profile routes
   const profileTab = location.pathname.endsWith('/writings') ? 'writings' : 'highlights'
@@ -87,7 +87,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
     }
   }
   
-  // Track previous location for going back from settings/me/explore/profile
+  // Track previous location for going back from settings/my/explore/profile
   useEffect(() => {
     if (!showSettings && !showMe && !showExplore && !showProfile) {
       previousLocationRef.current = location.pathname
