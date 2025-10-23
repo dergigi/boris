@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faRightFromBracket, faUserCircle, faGear, faHome, faPersonHiking, faEllipsisVertical, faHighlighter, faBookmark, faPenToSquare, faLink } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faRightFromBracket, faUserCircle, faGear, faHome, faPersonHiking, faHighlighter, faBookmark, faPenToSquare, faLink } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
@@ -62,11 +62,11 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
     <>
       <div className="sidebar-header-bar">
         {activeAccount && (
-          <div className="profile-avatar-container">
+          <div className="profile-menu-wrapper" ref={menuRef}>
             <button
               className="profile-avatar-button" 
               title={getUserDisplayName()}
-              onClick={() => navigate('/my')}
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
               aria-label={`Profile: ${getUserDisplayName()}`}
             >
               {profileImage ? (
@@ -75,63 +75,53 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
                 <FontAwesomeIcon icon={faUserCircle} />
               )}
             </button>
-            <div className="profile-menu-wrapper" ref={menuRef}>
-              <button
-                className="profile-menu-trigger"
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                aria-label="Profile menu"
-                title="Profile menu"
-              >
-                <FontAwesomeIcon icon={faEllipsisVertical} />
-              </button>
-              {showProfileMenu && (
-                <div className="profile-dropdown-menu">
-                  <button
-                    className="profile-menu-item"
-                    onClick={() => handleMenuItemClick(() => navigate('/my/highlights'))}
-                  >
-                    <FontAwesomeIcon icon={faHighlighter} />
-                    <span>My Highlights</span>
-                  </button>
-                  <button
-                    className="profile-menu-item"
-                    onClick={() => handleMenuItemClick(() => navigate('/my/bookmarks'))}
-                  >
-                    <FontAwesomeIcon icon={faBookmark} />
-                    <span>My Bookmarks</span>
-                  </button>
-                  <button
-                    className="profile-menu-item"
-                    onClick={() => handleMenuItemClick(() => navigate('/my/reads'))}
-                  >
-                    <FontAwesomeIcon icon={faBooks} />
-                    <span>My Reads</span>
-                  </button>
-                  <button
-                    className="profile-menu-item"
-                    onClick={() => handleMenuItemClick(() => navigate('/my/links'))}
-                  >
-                    <FontAwesomeIcon icon={faLink} />
-                    <span>My Links</span>
-                  </button>
-                  <button
-                    className="profile-menu-item"
-                    onClick={() => handleMenuItemClick(() => navigate('/my/writings'))}
-                  >
-                    <FontAwesomeIcon icon={faPenToSquare} />
-                    <span>My Writings</span>
-                  </button>
-                  <div className="profile-menu-separator"></div>
-                  <button
-                    className="profile-menu-item"
-                    onClick={() => handleMenuItemClick(onLogout)}
-                  >
-                    <FontAwesomeIcon icon={faRightFromBracket} />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              )}
-            </div>
+            {showProfileMenu && (
+              <div className="profile-dropdown-menu">
+                <button
+                  className="profile-menu-item"
+                  onClick={() => handleMenuItemClick(() => navigate('/my/highlights'))}
+                >
+                  <FontAwesomeIcon icon={faHighlighter} />
+                  <span>My Highlights</span>
+                </button>
+                <button
+                  className="profile-menu-item"
+                  onClick={() => handleMenuItemClick(() => navigate('/my/bookmarks'))}
+                >
+                  <FontAwesomeIcon icon={faBookmark} />
+                  <span>My Bookmarks</span>
+                </button>
+                <button
+                  className="profile-menu-item"
+                  onClick={() => handleMenuItemClick(() => navigate('/my/reads'))}
+                >
+                  <FontAwesomeIcon icon={faBooks} />
+                  <span>My Reads</span>
+                </button>
+                <button
+                  className="profile-menu-item"
+                  onClick={() => handleMenuItemClick(() => navigate('/my/links'))}
+                >
+                  <FontAwesomeIcon icon={faLink} />
+                  <span>My Links</span>
+                </button>
+                <button
+                  className="profile-menu-item"
+                  onClick={() => handleMenuItemClick(() => navigate('/my/writings'))}
+                >
+                  <FontAwesomeIcon icon={faPenToSquare} />
+                  <span>My Writings</span>
+                </button>
+                <div className="profile-menu-separator"></div>
+                <button
+                  className="profile-menu-item"
+                  onClick={() => handleMenuItemClick(onLogout)}
+                >
+                  <FontAwesomeIcon icon={faRightFromBracket} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
         <div className="sidebar-header-right">

@@ -132,54 +132,9 @@
 .profile-avatar-button img { width: 100%; height: 100%; object-fit: cover; }
 .profile-avatar-button svg { font-size: 1rem; }
 
-/* Profile menu container */
-.profile-avatar-container {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  position: relative;
-}
-
-/* Profile menu trigger button */
+/* Profile menu wrapper */
 .profile-menu-wrapper {
   position: relative;
-}
-
-.profile-menu-trigger {
-  min-width: 33px;
-  min-height: 33px;
-  width: 33px;
-  height: 33px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 1px solid var(--color-border-subtle);
-  color: var(--color-text);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* Mobile touch target improvements */
-@media (max-width: 768px) {
-  .profile-menu-trigger {
-    min-width: var(--min-touch-target);
-    min-height: var(--min-touch-target);
-    width: var(--min-touch-target);
-    height: var(--min-touch-target);
-  }
-}
-
-.profile-menu-trigger:hover {
-  background: var(--color-bg-hover);
-  border-color: var(--color-border);
-}
-
-.profile-menu-trigger svg {
-  font-size: 0.875rem;
 }
 
 /* Dropdown menu */
