@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.19] - 2025-10-23
+
+### Added
+
+- Profile dropdown menu in sidebar header
+  - Click profile picture to access quick navigation menu
+  - Menu items: My Highlights, My Bookmarks, My Reads, My Links, My Writings
+  - Logout option included with separator
+  - Click outside to close
+  - Smooth slide-in animation
+
+### Changed
+
+- Profile picture interaction updated
+  - Now triggers dropdown menu instead of navigating to profile page
+  - More efficient access to all profile sections
+- Collapse buttons repositioned for symmetry
+  - Highlights collapse button moved to left side of header
+  - Both bookmarks and highlights collapse buttons now left-aligned
+  - Consistent visual hierarchy across panels
+- Grouping toggle button repositioned
+  - Moved from right/center to left side
+  - Now next to support button (orange heart)
+  - Better logical grouping of controls
+- Collapse button styling standardized
+  - Highlights collapse button now matches bookmarks style
+  - Consistent 33x33px size, border radius, and hover states
+  - Uses native button element for better consistency
+
+### Removed
+
+- Redundant logout button from sidebar header
+  - Previously next to Explore button
+  - Now only accessible via profile dropdown menu
+- Refresh buttons from sidebars
+  - Removed from bookmarks sidebar
+  - Removed from highlights sidebar
+  - Pull-to-refresh functionality remains available
+
+### Fixed
+
+- Cleaned up unused component props and parameters
+  - Removed `lastFetchTime` from BookmarkList
+  - Removed `loading` and `onRefresh` from HighlightsPanelHeader
+  - All linting errors resolved
+  - Type checking passing
+
 ## [0.10.18] - 2025-10-23
 
 ### Changed
