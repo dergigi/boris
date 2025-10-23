@@ -40,7 +40,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
           <button
             className="profile-avatar-button" 
             title={getUserDisplayName()}
-            onClick={() => navigate('/me')}
+            onClick={() => navigate('/my')}
             aria-label={`Profile: ${getUserDisplayName()}`}
           >
             {profileImage ? (
