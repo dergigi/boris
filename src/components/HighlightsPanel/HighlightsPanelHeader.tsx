@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faEye, faEyeSlash, faRotate, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faEye, faEyeSlash, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 import { HighlightVisibility } from '../HighlightsPanel'
 import IconButton from '../IconButton'
 
@@ -95,17 +95,6 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
           )}
         </div>
         <div className="highlights-actions-right">
-          {onRefresh && (
-            <IconButton
-              icon={faRotate}
-              onClick={onRefresh}
-              title="Refresh highlights"
-              ariaLabel="Refresh highlights"
-              variant="ghost"
-              disabled={loading}
-              spin={loading}
-            />
-          )}
           {hasHighlights && (
             <IconButton
               icon={showHighlights ? faEye : faEyeSlash}
