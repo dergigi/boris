@@ -136,13 +136,23 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
   // Lock body scroll when mobile sidebar or highlights is open
   useEffect(() => {
     if (isMobile && (props.isSidebarOpen || !props.isHighlightsCollapsed)) {
+      // Save current scroll position
+      const scrollY = window.scrollY
+      document.body.style.top = `-${scrollY}px`
       document.body.classList.add('mobile-sidebar-open')
     } else {
+      // Restore scroll position
+      const scrollY = document.body.style.top
       document.body.classList.remove('mobile-sidebar-open')
+      document.body.style.top = ''
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      }
     }
     
     return () => {
       document.body.classList.remove('mobile-sidebar-open')
+      document.body.style.top = ''
     }
   }, [isMobile, props.isSidebarOpen, props.isHighlightsCollapsed])
 
