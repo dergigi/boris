@@ -10,8 +10,6 @@ const { getArticleTitle, getArticleSummary, getArticleImage, getArticlePublished
 type WritingsCallback = (posts: BlogPostPreview[]) => void
 type LoadingCallback = (loading: boolean) => void
 
-const LAST_SYNCED_KEY = 'writings_last_synced'
-
 /**
  * Shared writings controller
  * Manages the user's nostr-native long-form articles (kind:30023) centrally,
@@ -72,34 +70,6 @@ class WritingsController {
   }
 
   /**
-   * Get last synced timestamp for incremental loading
-   */
-  private getLastSyncedAt(pubkey: string): number | null {
-    try {
-      const data = localStorage.getItem(LAST_SYNCED_KEY)
-      if (!data) return null
-      const parsed = JSON.parse(data)
-      return parsed[pubkey] || null
-    } catch {
-      return null
-    }
-  }
-
-  /**
-   * Update last synced timestamp
-   */
-  private setLastSyncedAt(pubkey: string, timestamp: number): void {
-    try {
-      const data = localStorage.getItem(LAST_SYNCED_KEY)
-      const parsed = data ? JSON.parse(data) : {}
-      parsed[pubkey] = timestamp
-      localStorage.setItem(LAST_SYNCED_KEY, JSON.stringify(parsed))
-    } catch (err) {
-      console.warn('[writings] Failed to save last synced timestamp:', err)
-    }
-  }
-
-  /**
    * Convert NostrEvent to BlogPostPreview using applesauce Helpers
    */
   private toPreview(event: NostrEvent): BlogPostPreview {
@@ -127,6 +97,7 @@ class WritingsController {
   /**
    * Load writings for a user (kind:30023)
    * Streams results and stores in event store
+   * Always fetches ALL writings to ensure completeness
    */
   async start(options: {
     relayPool: RelayPool
@@ -152,14 +123,11 @@ class WritingsController {
       const seenIds = new Set<string>()
       const uniqueByReplaceable = new Map<string, BlogPostPreview>()
 
-      // Get last synced timestamp for incremental loading
-      const lastSyncedAt = force ? null : this.getLastSyncedAt(pubkey)
-      const filter: { kinds: number[]; authors: string[]; since?: number } = {
+      // Fetch ALL writings without limits (no since filter)
+      // This ensures we get complete results for profile/my pages
+      const filter = {
         kinds: [KINDS.BlogPost],
         authors: [pubkey]
-      }
-      if (lastSyncedAt) {
-        filter.since = lastSyncedAt
       }
 
       const events = await queryEvents(
@@ -220,12 +188,6 @@ class WritingsController {
       this.currentPosts = sorted
       this.lastLoadedPubkey = pubkey
       this.emitWritings(sorted)
-
-      // Update last synced timestamp
-      if (sorted.length > 0) {
-        const newestTimestamp = Math.max(...sorted.map(p => p.event.created_at))
-        this.setLastSyncedAt(pubkey, newestTimestamp)
-      }
 
     } catch (error) {
       console.error('[writings] ❌ Failed to load writings:', error)

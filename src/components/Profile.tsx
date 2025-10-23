@@ -6,10 +6,8 @@ import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
 import { useNavigate } from 'react-router-dom'
 import { HighlightItem } from './HighlightItem'
-import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
-import { fetchHighlights } from '../services/highlightService'
+import { BlogPostPreview } from '../services/exploreService'
 import { KINDS } from '../config/kinds'
-import { getActiveRelayUrls } from '../services/relayManager'
 import AuthorCard from './AuthorCard'
 import BlogPostCard from './BlogPostCard'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
@@ -20,6 +18,8 @@ import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { Hooks } from 'applesauce-react'
 import { readingProgressController } from '../services/readingProgressController'
+import { writingsController } from '../services/writingsController'
+import { highlightsController } from '../services/highlightsController'
 
 interface ProfileProps {
   relayPool: RelayPool
@@ -103,17 +103,16 @@ const Profile: React.FC<ProfileProps> = ({
     })
   }, [activeAccount?.pubkey, relayPool, eventStore, refreshTrigger])
 
-  // Background fetch to populate event store (non-blocking)
+  // Background fetch via controllers to populate event store
   useEffect(() => {
     if (!pubkey || !relayPool || !eventStore) return
     
-    // Fetch all highlights and writings in background (no limits)
-    const relayUrls = getActiveRelayUrls(relayPool)
-    
-    fetchHighlights(relayPool, pubkey, undefined, undefined, false, eventStore)
+    // Start controllers to fetch and populate event store
+    // Controllers handle streaming, deduplication, and storage
+    highlightsController.start({ relayPool, eventStore, pubkey })
       .catch(err => console.warn('⚠️ [Profile] Failed to fetch highlights:', err))
     
-    fetchBlogPostsFromAuthors(relayPool, [pubkey], relayUrls, undefined, null, eventStore)
+    writingsController.start({ relayPool, eventStore, pubkey, force: refreshTrigger > 0 })
       .catch(err => console.warn('⚠️ [Profile] Failed to fetch writings:', err))
   }, [pubkey, relayPool, eventStore, refreshTrigger])
 
