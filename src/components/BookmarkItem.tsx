@@ -42,10 +42,11 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   const firstUrl = hasUrls ? extractedUrls[0] : null
   const firstUrlClassification = firstUrl ? classifyUrl(firstUrl) : null
   
-  // For kind:30023 articles, extract image and summary tags (per NIP-23)
+  // For kind:30023 articles, extract title, image and summary tags (per NIP-23)
   // Note: We extract directly from tags here since we don't have the full event.
   // When we have full events, we use getArticleImage() helper (see articleService.ts)
   const isArticle = bookmark.kind === 30023
+  const articleTitle = isArticle ? bookmark.tags.find(t => t[0] === 'title')?.[1] : undefined
   const articleImage = isArticle ? bookmark.tags.find(t => t[0] === 'image')?.[1] : undefined
   const articleSummary = isArticle ? bookmark.tags.find(t => t[0] === 'summary')?.[1] : undefined
   
@@ -156,10 +157,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
       hasUrls,
       extractedUrls,
       onSelectUrl,
-      authorNpub,
-      getAuthorDisplayName,
-      handleReadNow,
-      articleSummary,
+      articleTitle,
       contentTypeIcon: getContentTypeIcon(),
       readingProgress
     }

@@ -13,7 +13,7 @@ interface CompactViewProps {
   hasUrls: boolean
   extractedUrls: string[]
   onSelectUrl?: (url: string, bookmark?: { id: string; kind: number; tags: string[][]; pubkey: string }) => void
-  articleSummary?: string
+  articleTitle?: string
   contentTypeIcon: IconDefinition
   readingProgress?: number
 }
@@ -24,7 +24,7 @@ export const CompactView: React.FC<CompactViewProps> = ({
   hasUrls,
   extractedUrls,
   onSelectUrl,
-  articleSummary,
+  articleTitle,
   contentTypeIcon,
   readingProgress
 }) => {
@@ -34,7 +34,7 @@ export const CompactView: React.FC<CompactViewProps> = ({
   const isNote = bookmark.kind === 1
   const isClickable = hasUrls || isArticle || isWebBookmark || isNote
   
-  const displayText = isArticle && articleSummary ? articleSummary : bookmark.content
+  const displayText = isArticle && articleTitle ? articleTitle : bookmark.content
 
   // Calculate progress color
   let progressColor = '#6366f1' // Default blue (reading)
