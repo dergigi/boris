@@ -28,7 +28,7 @@ export const fetchHighlightsFromAuthors = async (
     const seenIds = new Set<string>()
     const rawEvents = await queryEvents(
       relayPool,
-      { kinds: [9802], authors: pubkeys, limit: 200 },
+      { kinds: [9802], authors: pubkeys, limit: 1000 },
       {
         onEvent: (event: NostrEvent) => {
           if (!seenIds.has(event.id)) {

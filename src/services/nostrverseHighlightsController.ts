@@ -89,8 +89,13 @@ class NostrverseHighlightsController {
     )
 
     const lastSyncedAt = force ? null : this.getLastSyncedAt()
-    const filter: { kinds: number[]; since?: number } = { kinds: [KINDS.Highlights] }
-    if (lastSyncedAt) filter.since = lastSyncedAt
+    const filter: { kinds: number[]; since?: number; limit?: number } = { kinds: [KINDS.Highlights] }
+    if (lastSyncedAt) {
+      filter.since = lastSyncedAt
+    } else {
+      // On initial load, fetch more highlights
+      filter.limit = 1000
+    }
 
       const events = await queryEvents(
         relayPool,
