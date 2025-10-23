@@ -314,9 +314,7 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
             variant="ghost"
             style={{ color: friendsColor }}
           />
-        </div>
-        {activeAccount && (
-          <div className="view-mode-right">
+          {activeAccount && (
             <IconButton
               icon={groupingMode === 'grouped' ? faLayerGroup : faClock}
               onClick={toggleGroupingMode}
@@ -324,6 +322,10 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
               ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
               variant="ghost"
             />
+          )}
+        </div>
+        {activeAccount && (
+          <div className="view-mode-right">
             {onRefresh && (
               <IconButton
                 icon={faRotate}

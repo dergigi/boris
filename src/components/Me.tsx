@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHighlighter, faBookmark, faPenToSquare, faLink, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faBookmark, faPenToSquare, faLink, faLayerGroup, faHeart } from '@fortawesome/free-solid-svg-icons'
 import { faClock } from '@fortawesome/free-regular-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { IEventStore } from 'applesauce-core'
@@ -668,21 +668,26 @@ const Me: React.FC<MeProps> = ({
                 </div>
               </div>
             )))}
-            <div className="view-mode-controls" style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              padding: '1rem',
-              marginTop: '1rem',
-              borderTop: '1px solid var(--border-color)'
-            }}>
-              <IconButton
-                icon={groupingMode === 'grouped' ? faLayerGroup : faClock}
-                onClick={toggleGroupingMode}
-                title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
-                ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
-                variant="ghost"
-              />
+            <div className="view-mode-controls">
+              <div className="view-mode-left">
+                <IconButton
+                  icon={faHeart}
+                  onClick={() => navigate('/support')}
+                  title="Support Boris"
+                  ariaLabel="Support"
+                  variant="ghost"
+                  style={{ color: 'rgb(251 146 60)' }}
+                />
+                <IconButton
+                  icon={groupingMode === 'grouped' ? faLayerGroup : faClock}
+                  onClick={toggleGroupingMode}
+                  title={groupingMode === 'grouped' ? 'Show flat chronological list' : 'Show grouped by source'}
+                  ariaLabel={groupingMode === 'grouped' ? 'Switch to flat view' : 'Switch to grouped view'}
+                  variant="ghost"
+                />
+              </div>
+              <div className="view-mode-right">
+              </div>
             </div>
           </div>
         )
