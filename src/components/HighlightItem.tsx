@@ -437,7 +437,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
             if (highlight.eventReference) {
               const parts = highlight.eventReference.split(':')
               if (parts.length === 3 && parts[0] === '30023') {
-                const [kind, pubkey, identifier] = parts
+                const [, pubkey, identifier] = parts
                 const naddr = nip19.naddrEncode({
                   kind: 30023,
                   pubkey,
