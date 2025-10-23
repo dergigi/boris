@@ -1,4 +1,4 @@
-/* Me page tabs */
+/* My page tabs */
 .me-tabs {
   display: flex;
   gap: 0.5rem;
@@ -71,7 +71,7 @@
   padding-top: 0.25rem;
 }
 
-/* Align highlight list width with profile card width on /me */
+/* Align highlight list width with profile card width on /my */
 .me-highlights-list { padding-left: 0; padding-right: 0; }
 .explore-header .author-card { max-width: 600px; margin: 0 auto; width: 100%; }
 
@@ -83,7 +83,7 @@
   text-align: left; /* Override center alignment from .app */
 }
 
-/* Bookmark filters in Me page */
+/* Bookmark filters in My page */
 .me-tab-content .bookmark-filters {
   background: transparent;
   border: none;
