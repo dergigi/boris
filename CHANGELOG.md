@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.20] - 2025-10-23
+
+### Added
+
+- Web Bookmarks section now appears first when bookmarks are grouped by source
+  - Provides quicker access to external URL bookmarks
+  - Better organization for mixed bookmark collections
+
+### Fixed
+
+- Mobile scroll position preservation when toggling highlights panel
+  - Opening/closing the highlights sidebar no longer resets scroll to top
+  - Scroll position is saved before locking and restored after unlocking
+  - Uses `requestAnimationFrame` to ensure DOM updates before restoring
+- Infinite loop in reading position tracking
+  - Fixed "Maximum update depth exceeded" error in `useReadingPosition` hook
+  - Callbacks now stored in refs to avoid dependency array issues
+  - Prevents unnecessary re-renders during scroll tracking
+- Skeleton loading state for articles with zero highlights
+  - Articles without highlights no longer show infinite loading skeletons
+  - Properly transitions to empty state message
+- Navigation to bookmarked articles
+  - Clicking bookmarked kind:30023 articles now navigates to `/a/:naddr` route
+  - Fixes issue where clicking showed "Select a bookmark" message instead
+  - Applies to both compact view and bookmark item interactions
+
 ## [0.10.19] - 2025-10-23
 
 ### Added
