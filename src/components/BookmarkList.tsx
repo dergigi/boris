@@ -105,7 +105,18 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
         return undefined
       }
     }
-    // For web bookmarks and other types, try to use URL if available
+    
+    // For web bookmarks (kind:39701), URL is in the 'd' tag
+    if (bookmark.kind === 39701) {
+      const dTag = bookmark.tags.find(t => t[0] === 'd')?.[1]
+      if (dTag) {
+        // Ensure URL has protocol
+        const url = dTag.startsWith('http') ? dTag : `https://${dTag}`
+        return readingProgressMap.get(url)
+      }
+    }
+    
+    // For other bookmark types, try to extract URL from content
     const urls = extractUrlsFromContent(bookmark.content)
     if (urls.length > 0) {
       return readingProgressMap.get(urls[0])
