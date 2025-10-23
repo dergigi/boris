@@ -40,7 +40,7 @@
 
 - **Explore**: Discover friends' highlights and writings, plus a "nostrverse" feed.
 - **Filters**: Visibility toggles (mine, friends, nostrverse) apply to Explore highlights.
-- **Profiles**: View your own (`/me`) or other users (`/p/:npub`) with tabs for Highlights, Bookmarks, Archive, and Writings.
+- **Profiles**: View your own (`/my`) or other users (`/p/:npub`) with tabs for Highlights, Bookmarks, Archive, and Writings.
 
 ## Support
 

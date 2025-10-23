@@ -70,7 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Highlights now scroll into view when clicked from `/me/highlights` page
+- Highlights now scroll into view when clicked from `/my/highlights` page
   - Navigation state properly passes highlight ID and openHighlights flag
   - Works for both article links and external URL links
 
@@ -195,8 +195,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Default bookmark view changed to flat chronological list (newest first)
-- Bookmark URL changed from `/me/reading-list` to `/me/bookmarks`
-- Router updated to handle `/me/reading-list` → `/me/bookmarks` redirect
+- Bookmark URL changed from `/my/reading-list` to `/my/bookmarks`
+- Router updated to handle `/my/reading-list` → `/my/bookmarks` redirect
 - Me.tsx bookmarks tab now uses dynamic filter titles and chronological sorting
 - Me.tsx updated to use faClock icon instead of faBars
 - Removed bookmark count from section headings for cleaner display
@@ -302,7 +302,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Tab switching regression on `/me` page
+- Tab switching regression on `/my` page
   - Resolved infinite update loop caused by circular dependency in `useCallback` hooks
   - Tab navigation now properly updates UI when URL changes
   - Removed `loadedTabs` from dependency arrays to prevent re-render cycles
@@ -660,7 +660,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `/me/bookmarks` tab now displays in cards view only
+- `/my/bookmarks` tab now displays in cards view only
   - Removed view mode toggle buttons (compact, large) from bookmarks tab
   - Cards view provides optimal bookmark browsing experience
   - Grouping toggle (grouped/flat) still available
@@ -773,7 +773,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Prevent "No highlights yet" flash on `/me/highlights` page
+- Prevent "No highlights yet" flash on `/my/highlights` page
 - Force React to remount tab content when switching tabs for proper state management
 - Deduplicate blog posts by author:d-tag instead of event ID for better accuracy
 - Show skeleton placeholders while highlights are loading for better UX
@@ -981,7 +981,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Filter icons colored when active (blue for most, green for completed)
   - URL routing support for reading progress filters
   - Reading progress filters available in Archive tab and bookmarks sidebar
-- Reads and Links tabs on `/me` page
+- Reads and Links tabs on `/my` page
   - Reads tab shows nostr-native articles with reading progress
   - Links tab shows external URLs with reading progress
   - Both tabs populate instantly from bookmarks for fast loading
@@ -1027,7 +1027,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bookmark filter buttons by content type (articles, videos, images, web links)
   - Filter bookmarks by their content type on bookmarks sidebar
-  - Filters also available on `/me` page bookmarks tab
+  - Filters also available on `/my` page bookmarks tab
   - Separate filter for external articles with link icon
   - Multiple filters can be active simultaneously
 - Private Bookmarks section for encrypted legacy bookmarks
@@ -1041,7 +1041,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Better categorization of bookmark types
 - Bookmark filter button styling refined
   - Reduced whitespace around bookmark filters for cleaner layout
-  - Dramatically reduced whitespace on both sidebar and `/me` page
+  - Dramatically reduced whitespace on both sidebar and `/my` page
 - Lock icon removed from individual bookmarks
   - Encryption status now indicated by section grouping
   - Cleaner bookmark item appearance
@@ -1208,7 +1208,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Camera icon for image bookmarks
   - Sticky note icon for text-only bookmarks without URLs
 - Bookmark grouping and sections
-  - Grouped sections in sidebar and `/me` reading-list
+  - Grouped sections in sidebar and `/my` reading-list
   - Web bookmarks, default bookmarks, and legacy bookmarks in separate sections
   - Grouping and sorting helpers for organizing bookmark sections
 - Adaptive text color for publication date over hero images
@@ -1271,7 +1271,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Mobile bookmark button visibility across all pages
-  - Now visible on `/p/` (profile), `/explore`, `/me`, and `/support` pages
+  - Now visible on `/p/` (profile), `/explore`, `/my`, and `/support` pages
   - Only hidden on settings page or when scrolling down while reading
   - Prevents users from getting stuck without navigation options
 - Mobile highlights button behavior at page top
@@ -1452,7 +1452,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Highlights tab on `/explore` page
   - View highlights from friends and followed users
-  - Tab structure matching `/me` and profile pages
+  - Tab structure matching `/my` and profile pages
   - Grid layout for highlights with cards
   - Highlights shown first, writings second
   - Clicking highlight opens source article and scrolls to position
@@ -1609,7 +1609,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Writings tab on `/me` page to display user's published articles
+- Writings tab on `/my` page to display user's published articles
 - Comprehensive headline styling (h1-h6) with Tailwind typography
 - List styling for ordered and unordered lists in articles
 - Blockquote styling with indentation and italics
@@ -1632,7 +1632,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Horizontal overflow from code blocks and wide content on mobile
 - Settings view now mobile-friendly with proper width constraints
 - Long relay URLs no longer cause horizontal overflow on mobile
-- Sidebar/highlights toggle buttons hidden on settings/explore/me pages
+- Sidebar/highlights toggle buttons hidden on settings/explore/my pages
 - Video titles now show filename instead of 'Error Loading Content'
 - AddBookmarkModal z-index issue fixed using React Portal
 - Highlight matching for text spanning multiple DOM nodes/inline elements
@@ -1687,7 +1687,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - YouTube video metadata extraction with title, description, and captions
 - Responsive video player with aspect ratio support
 - Thumbnail images in compact view
-- URL routing for /me page tabs
+- URL routing for /my page tabs
 - Bookmark navigation in reading list
 - Video duration display for video URLs
 - Three-dot menu for videos with open/native/copy/share actions
@@ -1717,7 +1717,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Style
 
-- Hide tab counts on mobile for /me page
+- Hide tab counts on mobile for /my page
 - Remove max-width on main pane, constrain reader instead
 - Full width layout for videos
 - Reader-video specific styles
@@ -1730,11 +1730,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prism.js syntax highlighting for code blocks
 - Inline image rendering in nostr-native blog posts
 - Image placeholders on blog post cards in `/explore`
-- Caching on `/me` page for faster loading
+- Caching on `/my` page for faster loading
 
 ### Changed
 
-- Reading List on `/me` now uses the same components as the bookmarks sidebar
+- Reading List on `/my` now uses the same components as the bookmarks sidebar
 - Improve bookmarks sidebar visual design
 - Make article menu button more subtle by removing border
 
@@ -1754,8 +1754,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `/me` page with tabbed layout featuring Highlights, Reading List, and Library tabs
-- Two-pane layout for `/me` page with article sources and highlights
+- `/my` page with tabbed layout featuring Highlights, Reading List, and Library tabs
+- Two-pane layout for `/my` page with article sources and highlights
 - Custom FontAwesome Pro books icon for Archive tab
 - CompactButton component for highlight cards
 - Instant mark-as-read functionality with checkmark animation and read status checking
@@ -1764,7 +1764,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Rename Library tab to Archive
 - Move highlight timestamp to top-right corner of cards
-- Replace username with AuthorCard component on `/me` page
+- Replace username with AuthorCard component on `/my` page
 - Use user's custom highlight color for Highlights tab
 - Render library articles using BlogPostCard component for consistency
 - Use faBooks icon for Mark as Read button
@@ -1784,12 +1784,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Style
 
-- Match `/me` profile card width to highlight cards
-- Improve Me page mobile tabs and avoid overlap with sidebar buttons
+- Match `/my` profile card width to highlight cards
+- Improve My page mobile tabs and avoid overlap with sidebar buttons
 - Reduce margins/paddings to make highlight cards more compact
 - Tighten vertical spacing on highlight cards
 - Left-align text inside author card
-- Constrain `/me` page content width to match author card (600px)
+- Constrain `/my` page content width to match author card (600px)
 - Improve tab border styling for dark theme
 - Make relay indicator match CompactButton (same look as menu)
 - Align relay indicator within footer with symmetric spacing
@@ -1894,7 +1894,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Highlights: merge remote results after local for article/url
 - Explore: always query remote relays after local; stream merge into UI
 - Improve mobile touch targets for highlight icons
-- Color `/me` highlights with "my highlights" color setting
+- Color `/my` highlights with "my highlights" color setting
 
 ### Performance
 
@@ -1926,7 +1926,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Confirmation dialog prevents accidental deletions
   - Styled to match relay indicator (subtle, same size)
   - Removes highlights from UI immediately after deletion request
-- `/me` page showing user's recent highlights
+- `/my` page showing user's recent highlights
   - Accessible by clicking profile picture in bookmark sidebar
   - Displays all highlights created by the logged-in user
   - Uses same rendering as Settings and Explore pages
