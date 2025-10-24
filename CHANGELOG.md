@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.22] - 2025-01-27
+
+### Added
+
+- Mobile-optimized tab interface for `/my` and `/p/` pages
+  - Tab text labels hidden on mobile screens (≤768px) to save space
+  - Shows only icons for highlights, bookmarks, reads, links, and writings tabs
+  - Maintains full functionality while improving mobile UX
+
+### Changed
+
+- Updated brand tagline from "Nostr Bookmarks" to "Read, Highlight, Explore"
+  - Updated across HTML meta tags, PWA manifest, and Open Graph metadata
+  - Better reflects core functionality: reading, highlighting, and exploring content
+- Reordered bookmarks bar navigation buttons
+  - New order: Home, Explore, Settings (previously: Home, Settings, Explore)
+- Moved highlight button higher up on screen
+  - Changed position from `bottom: 32px` to `bottom: 80px` for better accessibility
+
+### Fixed
+
+- Mobile sidebar not closing when navigating to profile sections
+  - Fixed issue where clicking "My Reads", "My Highlights", etc. didn't close mobile sidebar
+  - Added mobile sidebar close logic to all navigation buttons
+  - Improved mobile navigation experience
+- Removed unnecessary versioning from reading progress implementation
+  - Simplified reading progress events by removing `ver` field
+  - Updated cache key to remove version suffix
+  - Cleaner, more maintainable code
+
 ## [0.10.21] - 2025-10-23
 
 ### Fixed
