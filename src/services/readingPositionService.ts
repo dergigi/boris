@@ -19,7 +19,6 @@ export interface ReadingProgressContent {
   progress: number // 0-1 scroll progress
   ts?: number // Unix timestamp (optional, for display)
   loc?: number // Optional: pixel position
-  ver?: string // Schema version
 }
 
 // Helper to extract and parse reading progress from event (kind 39802)
@@ -117,8 +116,7 @@ export async function saveReadingPosition(
   const progressContent: ReadingProgressContent = {
     progress: position.position,
     ts: position.timestamp,
-    loc: position.scrollTop,
-    ver: '1'
+    loc: position.scrollTop
   }
   
   const tags = generateProgressTags(articleIdentifier)
