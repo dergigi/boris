@@ -806,9 +806,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               />
             ) : (
               <div className="reader-markdown">
-                <div className="loading-spinner">
-                  <FontAwesomeIcon icon={faSpinner} spin size="sm" />
-                </div>
+                <ContentSkeleton />
               </div>
             )
           ) : (
