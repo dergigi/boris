@@ -209,7 +209,6 @@
 }
 
 .card-content .bookmark-footer .bookmark-type {
-  color: var(--color-primary);
   font-size: 0.9rem;
   display: flex;
   align-items: center;
