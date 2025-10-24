@@ -1,10 +1,11 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { NostrEvent } from 'nostr-tools'
 import { ReadableContent } from '../services/readerService'
 import { eventManager } from '../services/eventManager'
 import { fetchProfiles } from '../services/profileService'
+import { useDocumentTitle } from './useDocumentTitle'
 
 interface UseEventLoaderProps {
   eventId?: string
@@ -25,6 +26,9 @@ export function useEventLoader({
   setReaderLoading,
   setIsCollapsed
 }: UseEventLoaderProps) {
+  // Track the current event title for document title
+  const [currentTitle, setCurrentTitle] = useState<string | undefined>()
+  useDocumentTitle({ title: currentTitle })
   const displayEvent = useCallback((event: NostrEvent) => {
     // Escape HTML in content and convert newlines to breaks for plain text display
     const escapedContent = event.content
@@ -46,6 +50,7 @@ export function useEventLoader({
       title,
       published: event.created_at
     }
+    setCurrentTitle(title)
     setReaderContent(baseContent)
 
     // Background: resolve author profile for kind:1 and update title
@@ -80,7 +85,9 @@ export function useEventLoader({
           }
 
           if (resolved) {
-            setReaderContent({ ...baseContent, title: `Note by @${resolved}` })
+            const updatedTitle = `Note by @${resolved}`
+            setCurrentTitle(updatedTitle)
+            setReaderContent({ ...baseContent, title: updatedTitle })
           }
         } catch {
           // ignore profile failures; keep fallback title
@@ -119,6 +126,7 @@ export function useEventLoader({
             html: `<div style="padding: 1rem; color: var(--color-error, red);">Failed to load event: ${err instanceof Error ? err.message : 'Unknown error'}</div>`,
             title: 'Error'
           }
+          setCurrentTitle('Error')
           setReaderContent(errorContent)
           setReaderLoading(false)
         }

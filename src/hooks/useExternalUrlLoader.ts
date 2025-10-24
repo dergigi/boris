@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from 'react'
+import { useEffect, useRef, useMemo, useState } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { fetchReadableContent, ReadableContent } from '../services/readerService'
@@ -7,6 +7,7 @@ import { Highlight } from '../types/highlights'
 import { useStoreTimeline } from './useStoreTimeline'
 import { eventToHighlight } from '../services/highlightEventProcessor'
 import { KINDS } from '../config/kinds'
+import { useDocumentTitle } from './useDocumentTitle'
 
 // Helper to extract filename from URL
 function getFilenameFromUrl(url: string): string {
@@ -52,6 +53,10 @@ export function useExternalUrlLoader({
   // Track in-flight request to prevent stale updates when switching quickly
   const currentRequestIdRef = useRef(0)
   
+  // Track the current content title for document title
+  const [currentTitle, setCurrentTitle] = useState<string | undefined>()
+  useDocumentTitle({ title: currentTitle })
+  
   // Load cached URL-specific highlights from event store
   const urlFilter = useMemo(() => {
     if (!url) return null
@@ -88,6 +93,7 @@ export function useExternalUrlLoader({
         if (!mountedRef.current) return
         if (currentRequestIdRef.current !== requestId) return
         
+        setCurrentTitle(content.title)
         setReaderContent(content)
         setReaderLoading(false)
         

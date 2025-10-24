@@ -1,4 +1,4 @@
-import { useEffect, useRef, Dispatch, SetStateAction } from 'react'
+import { useEffect, useRef, useState, Dispatch, SetStateAction } from 'react'
 import { useLocation } from 'react-router-dom'
 import { RelayPool } from 'applesauce-relay'
 import type { IEventStore } from 'applesauce-core'
@@ -12,6 +12,7 @@ import { ReadableContent } from '../services/readerService'
 import { Highlight } from '../types/highlights'
 import { NostrEvent } from 'nostr-tools'
 import { UserSettings } from '../services/settingsService'
+import { useDocumentTitle } from './useDocumentTitle'
 
 interface PreviewData {
   title: string
@@ -64,6 +65,10 @@ export function useArticleLoader({
   // Extract preview data from navigation state (from blog post cards)
   const previewData = (location.state as { previewData?: PreviewData })?.previewData
   
+  // Track the current article title for document title
+  const [currentTitle, setCurrentTitle] = useState<string | undefined>()
+  useDocumentTitle({ title: currentTitle })
+  
   useEffect(() => {
     mountedRef.current = true
     
@@ -82,6 +87,7 @@ export function useArticleLoader({
       
       // If we have preview data from navigation, show it immediately (no skeleton!)
       if (previewData) {
+        setCurrentTitle(previewData.title)
         setReaderContent({
           title: previewData.title,
           markdown: '', // Will be loaded from store or relay
@@ -121,6 +127,7 @@ export function useArticleLoader({
               latestEvent = storedEvent as NostrEvent
               firstEmitted = true
               const title = Helpers.getArticleTitle(storedEvent) || 'Untitled Article'
+              setCurrentTitle(title)
               const image = Helpers.getArticleImage(storedEvent)
               const summary = Helpers.getArticleSummary(storedEvent)
               const published = Helpers.getArticlePublished(storedEvent)
@@ -167,6 +174,7 @@ export function useArticleLoader({
             if (!firstEmitted) {
               firstEmitted = true
               const title = Helpers.getArticleTitle(evt) || 'Untitled Article'
+              setCurrentTitle(title)
               const image = Helpers.getArticleImage(evt)
               const summary = Helpers.getArticleSummary(evt)
               const published = Helpers.getArticlePublished(evt)
@@ -194,6 +202,7 @@ export function useArticleLoader({
         const finalEvent = (events.sort((a, b) => b.created_at - a.created_at)[0]) || latestEvent
         if (finalEvent) {
           const title = Helpers.getArticleTitle(finalEvent) || 'Untitled Article'
+          setCurrentTitle(title)
           const image = Helpers.getArticleImage(finalEvent)
           const summary = Helpers.getArticleSummary(finalEvent)
           const published = Helpers.getArticlePublished(finalEvent)
@@ -215,6 +224,7 @@ export function useArticleLoader({
           // As a last resort, fall back to the legacy helper (which includes cache)
           const article = await fetchArticleByNaddr(relayPool, naddr, false, settingsRef.current)
           if (!mountedRef.current || currentRequestIdRef.current !== requestId) return
+          setCurrentTitle(article.title)
           setReaderContent({
             title: article.title,
             markdown: article.markdown,
