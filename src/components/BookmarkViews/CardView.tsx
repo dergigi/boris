@@ -202,6 +202,10 @@ export const CardView: React.FC<CardViewProps> = ({
           </button>
         )}
         
+            </div>
+          </div>
+        </div>
+        
         {/* Reading progress indicator as separator - always shown */}
         {isArticle && (
           <div className="reading-progress-separator">
@@ -214,10 +218,6 @@ export const CardView: React.FC<CardViewProps> = ({
             />
           </div>
         )}
-        
-            </div>
-          </div>
-        </div>
         
         <div className="bookmark-footer">
           <div className="bookmark-meta-minimal">
