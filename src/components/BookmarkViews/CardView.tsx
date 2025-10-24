@@ -117,6 +117,11 @@ export const CardView: React.FC<CardViewProps> = ({
       onKeyDown={handleKeyDown}
     >
       <div className="card-layout">
+        {/* Bookmark type icon in top-left corner */}
+        <div className="bookmark-type-overlay">
+          <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
+        </div>
+        
         <div className="card-content">
           <div className="card-content-header">
             {(cachedImage || firstUrl) && (
@@ -134,9 +139,6 @@ export const CardView: React.FC<CardViewProps> = ({
             )}
             <div className="card-text-content">
         <div className="bookmark-header">
-          <span className="bookmark-type">
-            <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
-          </span>
           
           {getInternalRoute() ? (
             <Link
