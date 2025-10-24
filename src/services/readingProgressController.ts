@@ -13,7 +13,7 @@ type ProgressMapCallback = (progressMap: Map<string, number>) => void
 type LoadingCallback = (loading: boolean) => void
 
 const LAST_SYNCED_KEY = 'reading_progress_last_synced'
-const PROGRESS_CACHE_KEY = 'reading_progress_cache_v1'
+const PROGRESS_CACHE_KEY = 'reading_progress_cache'
 
 /**
  * Shared reading progress controller
