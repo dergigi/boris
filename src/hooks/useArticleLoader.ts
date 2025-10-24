@@ -248,7 +248,6 @@ export function useArticleLoader({
                 return h.eventReference === coord || h.eventReference === eventId
               })
             })
-            
             await fetchHighlightsForArticle(
               relayPool,
               coord,
@@ -311,5 +310,4 @@ export function useArticleLoader({
     setCurrentArticleEventId,
     setCurrentArticle
   ])
-  
 }
