@@ -217,6 +217,7 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  color: var(--color-text-secondary);
 }
 
 /* Reading progress as separator - always shown, full width */
