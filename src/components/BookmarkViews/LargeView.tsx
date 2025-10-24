@@ -8,6 +8,7 @@ import RichContent from '../RichContent'
 import { IconGetter } from './shared'
 import { useImageCache } from '../../hooks/useImageCache'
 import { naddrEncode } from 'nostr-tools/nip19'
+import { ReadingProgressBar } from '../ReadingProgressBar'
 
 interface LargeViewProps {
   bookmark: IndividualBookmark
@@ -43,15 +44,6 @@ export const LargeView: React.FC<LargeViewProps> = ({
   const cachedImage = useImageCache(previewImage || undefined)
   const isArticle = bookmark.kind === 30023
   
-  // Calculate progress display (matching readingProgressUtils.ts logic)
-  const progressPercent = readingProgress ? Math.round(readingProgress * 100) : 0
-  let progressColor = '#6366f1' // Default blue (reading)
-  
-  if (readingProgress && readingProgress >= 0.95) {
-    progressColor = '#10b981' // Green (completed)
-  } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
-    progressColor = 'var(--color-text)' // Neutral text color (started)
-  }
   
   const triggerOpen = () => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)
   const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
@@ -123,24 +115,11 @@ export const LargeView: React.FC<LargeViewProps> = ({
         )}
         
         {/* Reading progress indicator for all bookmark types - always shown */}
-        <div 
-          style={{
-            height: '3px',
-            width: '100%',
-            background: 'var(--color-border)',
-            overflow: 'hidden',
-            marginTop: '0.75rem'
-          }}
-        >
-          <div
-            style={{
-              height: '100%',
-              width: readingProgress ? `${progressPercent}%` : '0%',
-              background: readingProgress ? progressColor : 'var(--color-border)',
-              transition: 'width 0.3s ease, background 0.3s ease'
-            }}
-          />
-        </div>
+        <ReadingProgressBar 
+          readingProgress={readingProgress}
+          height={3}
+          marginTop="0.75rem"
+        />
         
         <div className="large-footer">
           <span className="bookmark-type-large">

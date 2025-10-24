@@ -9,6 +9,7 @@ import { classifyUrl } from '../../utils/helpers'
 import { useImageCache } from '../../hooks/useImageCache'
 import { getPreviewImage, fetchOgImage } from '../../utils/imagePreview'
 import { naddrEncode } from 'nostr-tools/nip19'
+import { ReadingProgressBar } from '../ReadingProgressBar'
 
 interface CardViewProps {
   bookmark: IndividualBookmark
@@ -50,13 +51,6 @@ export const CardView: React.FC<CardViewProps> = ({
   // Extract title from tags for regular bookmarks (not just articles)
   const bookmarkTitle = bookmark.tags.find(t => t[0] === 'title')?.[1]
   
-  // Calculate progress color (matching BlogPostCard logic)
-  let progressColor = '#6366f1' // Default blue (reading)
-  if (readingProgress && readingProgress >= 0.95) {
-    progressColor = '#10b981' // Green (completed)
-  } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
-    progressColor = 'var(--color-text)' // Neutral text color (started)
-  }
   
   // Determine which image to use (article image, instant preview, or OG image)
   const previewImage = articleImage || instantPreview || ogImage
@@ -153,15 +147,12 @@ export const CardView: React.FC<CardViewProps> = ({
         </div>
         
         {/* Reading progress indicator as separator - always shown for all bookmark types */}
-        <div className="reading-progress-separator">
-          <div
-            className="progress-fill"
-            style={{
-              width: readingProgress ? `${Math.round(readingProgress * 100)}%` : '0%',
-              background: readingProgress ? progressColor : 'var(--color-border)'
-            }}
-          />
-        </div>
+        <ReadingProgressBar 
+          readingProgress={readingProgress}
+          height={1}
+          marginTop="0.5rem"
+          marginBottom="0.5rem"
+        />
         
         <div className="bookmark-footer">
           <div className="bookmark-meta-minimal">
