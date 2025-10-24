@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimes, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { fetchReadableContent } from '../services/readerService'
-import { fetch } from 'fetch-opengraph'
+import { fetch as fetchOpenGraph } from 'fetch-opengraph'
 
 interface AddBookmarkModalProps {
   onClose: () => void
@@ -12,11 +12,11 @@ interface AddBookmarkModalProps {
 }
 
 // Helper to extract tags from OpenGraph data
-function extractTagsFromOgData(ogData: any): string[] {
+function extractTagsFromOgData(ogData: Record<string, unknown>): string[] {
   const tags: string[] = []
   
   // Extract keywords from OpenGraph data
-  if (ogData.keywords) {
+  if (ogData.keywords && typeof ogData.keywords === 'string') {
     ogData.keywords.split(/[,;]/)
       .map((k: string) => k.trim().toLowerCase())
       .filter((k: string) => k.length > 0 && k.length < 30)
@@ -25,14 +25,17 @@ function extractTagsFromOgData(ogData: any): string[] {
   
   // Extract article:tag from OpenGraph data
   if (ogData['article:tag']) {
-    const articleTags = Array.isArray(ogData['article:tag']) 
-      ? ogData['article:tag'] 
-      : [ogData['article:tag']]
+    const articleTagValue = ogData['article:tag']
+    const articleTags = Array.isArray(articleTagValue) 
+      ? articleTagValue 
+      : [articleTagValue]
     
-    articleTags.forEach((tag: string) => {
-      const cleanTag = tag.trim().toLowerCase()
-      if (cleanTag && cleanTag.length < 30) {
-        tags.push(cleanTag)
+    articleTags.forEach((tag: unknown) => {
+      if (typeof tag === 'string') {
+        const cleanTag = tag.trim().toLowerCase()
+        if (cleanTag && cleanTag.length < 30) {
+          tags.push(cleanTag)
+        }
       }
     })
   }
@@ -82,7 +85,7 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
         // Fetch both readable content and OpenGraph data in parallel
         const [content, ogData] = await Promise.all([
           fetchReadableContent(normalizedUrl),
-          fetch(normalizedUrl).catch(() => null) // Don't fail if OpenGraph fetch fails
+          fetchOpenGraph(normalizedUrl).catch(() => null) // Don't fail if OpenGraph fetch fails
         ])
         
         console.log('🔍 Modal fetch debug:', {

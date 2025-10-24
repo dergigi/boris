@@ -40,11 +40,6 @@ export async function deriveLinksFromBookmarks(bookmarks: Bookmark[]): Promise<R
     const summary = bookmark.tags.find(t => t[0] === 'summary')?.[1]
     const image = bookmark.tags.find(t => t[0] === 'image')?.[1]
     
-    // For web bookmarks (kind:39701), description is stored in content field, not summary tag
-    const description = bookmark.kind === KINDS.WebBookmark && bookmark.content 
-      ? bookmark.content.trim() 
-      : summary
-    
     // Create ReadItem for each unique URL
     for (const url of [...new Set(urls)]) {
       if (!linksMap.has(url)) {
@@ -54,7 +49,7 @@ export async function deriveLinksFromBookmarks(bookmarks: Bookmark[]): Promise<R
           type: 'external',
           url,
           title: title || fallbackTitleFromUrl(url),
-          summary: description,
+          summary,
           image,
           readingProgress: 0,
           readingTimestamp: bookmark.created_at ?? undefined

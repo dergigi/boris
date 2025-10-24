@@ -1,33 +1,18 @@
-import { fetch } from 'fetch-opengraph'
+import { fetch as fetchOpenGraph } from 'fetch-opengraph'
 import { ReadItem } from './readsService'
 
 // Cache for OpenGraph data to avoid repeated requests
-const ogCache = new Map<string, any>()
-const CACHE_TTL = 7 * 24 * 60 * 60 * 1000 // 7 days
+const ogCache = new Map<string, Record<string, unknown>>()
 
-interface CachedOgData {
-  data: any
-  timestamp: number
-}
-
-function getCachedOgData(url: string): any | null {
+function getCachedOgData(url: string): Record<string, unknown> | null {
   const cached = ogCache.get(url)
   if (!cached) return null
   
-  const age = Date.now() - cached.timestamp
-  if (age > CACHE_TTL) {
-    ogCache.delete(url)
-    return null
-  }
-  
-  return cached.data
+  return cached
 }
 
-function setCachedOgData(url: string, data: any): void {
-  ogCache.set(url, {
-    data,
-    timestamp: Date.now()
-  })
+function setCachedOgData(url: string, data: Record<string, unknown>): void {
+  ogCache.set(url, data)
 }
 
 /**
@@ -48,8 +33,11 @@ export async function enhanceReadItemWithOpenGraph(item: ReadItem): Promise<Read
     
     if (!ogData) {
       // Fetch OpenGraph data
-      ogData = await fetch(item.url)
-      setCachedOgData(item.url, ogData)
+      const fetchedOgData = await fetchOpenGraph(item.url)
+      if (fetchedOgData) {
+        ogData = fetchedOgData
+        setCachedOgData(item.url, fetchedOgData)
+      }
     }
     
     if (!ogData) return item
@@ -59,17 +47,26 @@ export async function enhanceReadItemWithOpenGraph(item: ReadItem): Promise<Read
     
     // Use OpenGraph title if we don't have a good title
     if (!enhanced.title || enhanced.title === fallbackTitleFromUrl(item.url)) {
-      enhanced.title = ogData['og:title'] || ogData['twitter:title'] || ogData.title || enhanced.title
+      const ogTitle = ogData['og:title'] || ogData['twitter:title'] || ogData.title
+      if (typeof ogTitle === 'string') {
+        enhanced.title = ogTitle
+      }
     }
     
     // Use OpenGraph description if we don't have a summary
     if (!enhanced.summary) {
-      enhanced.summary = ogData['og:description'] || ogData['twitter:description'] || ogData.description
+      const ogDescription = ogData['og:description'] || ogData['twitter:description'] || ogData.description
+      if (typeof ogDescription === 'string') {
+        enhanced.summary = ogDescription
+      }
     }
     
     // Use OpenGraph image if we don't have an image
     if (!enhanced.image) {
-      enhanced.image = ogData['og:image'] || ogData['twitter:image'] || ogData.image
+      const ogImage = ogData['og:image'] || ogData['twitter:image'] || ogData.image
+      if (typeof ogImage === 'string') {
+        enhanced.image = ogImage
+      }
     }
     
     return enhanced
