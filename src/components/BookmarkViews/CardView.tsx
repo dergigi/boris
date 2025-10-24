@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate, renderParsedContent } from '../../utils/bookmarkUtils'
@@ -47,10 +46,7 @@ export const CardView: React.FC<CardViewProps> = ({
   const instantPreview = firstUrl ? getPreviewImage(firstUrl, firstUrlClassificationType || '') : null
   
   const [ogImage, setOgImage] = useState<string | null>(null)
-  const [expanded, setExpanded] = useState(false)
   
-  const contentLength = (bookmark.content || '').length
-  const shouldTruncate = !expanded && contentLength > 210
   const isArticle = bookmark.kind === 30023
   
   // Extract title from tags for regular bookmarks (not just articles)
@@ -148,23 +144,10 @@ export const CardView: React.FC<CardViewProps> = ({
           <RichContent content={articleSummary} className="bookmark-content article-summary" />
         ) : bookmark.parsedContent ? (
           <div className="bookmark-content">
-            {shouldTruncate && bookmark.content
-              ? <RichContent content={`${bookmark.content.slice(0, 210).trimEnd()}…`} className="" />
-              : renderParsedContent(bookmark.parsedContent)}
+            {renderParsedContent(bookmark.parsedContent)}
           </div>
         ) : bookmark.content && (
-          <RichContent content={shouldTruncate ? `${bookmark.content.slice(0, 210).trimEnd()}…` : bookmark.content} />
-        )}
-
-        {contentLength > 210 && (
-          <button
-            className="expand-toggle"
-            onClick={(e) => { e.stopPropagation(); setExpanded(v => !v) }}
-            aria-label={expanded ? 'Collapse' : 'Expand'}
-            title={expanded ? 'Collapse' : 'Expand'}
-          >
-            <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} />
-          </button>
+          <RichContent content={bookmark.content} className="bookmark-content" />
         )}
         
             </div>
