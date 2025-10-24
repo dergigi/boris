@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.23] - 2025-01-27
+
+### Added
+
+- Video thumbnail support for cover images
+  - Extracts and displays video thumbnails for YouTube and Vimeo content
+  - Improves visual representation of video content in bookmark views
+- Note content support for direct video URLs
+  - Uses note content as title for direct video URLs when available
+  - Better content identification for video bookmarks
+- Smart highlight clearing for articles
+  - Automatically clears highlights when switching between articles
+  - Prevents highlight confusion between different articles
+- Robust highlight loading with fallback mechanisms
+  - Implements multiple fallback strategies for highlight loading
+  - Ensures highlights are loaded even when primary methods fail
+
+### Changed
+
+- Home button alignment moved to left next to profile button
+  - Improved navigation layout consistency
+- Video functionality extracted into dedicated VideoView component
+  - Better code organization and maintainability
+  - Cleaner separation of concerns for video handling
+
+### Fixed
+
+- Article loading performance and error handling improvements
+  - Better error handling for failed article loads
+  - Improved loading performance with optimized data fetching
+- Highlight loading issues for articles
+  - Resolved race conditions between content loaders
+  - Fixed missing relayPool dependency in useEffect
+  - Proper filtering of Nostr article highlights in sidebar
+- Skeleton loader improvements
+  - Consolidated multiple skeleton loaders in article view
+  - Replaced markdown loading spinner with skeleton
+  - Replaced 'No readable content found' with skeleton loader
+- Video metadata extraction improvements
+  - Enhanced YouTube and Vimeo metadata extraction
+  - Better handling of video content identification
+
 ## [0.10.22] - 2025-01-27
 
 ### Added
