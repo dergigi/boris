@@ -63,10 +63,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Since getVideoDetails doesn't exist, we'll use a simple approach
-    // In a real implementation, you might want to use YouTube's API or other methods
-    const title = '' // Will be populated from captions or other sources
-    const description = ''
+    // Fetch basic metadata from YouTube page
+    let title = ''
+    let description = ''
+    
+    try {
+      const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`)
+      if (response.ok) {
+        const html = await response.text()
+        // Extract title from HTML
+        const titleMatch = html.match(/<title>([^<]+)<\/title>/)
+        if (titleMatch) {
+          title = titleMatch[1].replace(' - YouTube', '').trim()
+        }
+        // Extract description from meta tag
+        const descMatch = html.match(/<meta name="description" content="([^"]+)"/)
+        if (descMatch) {
+          description = descMatch[1].trim()
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to fetch YouTube metadata:', error)
+    }
 
     // Language order: manual en -> uiLocale -> lang -> any manual, then auto with same order
     const langs: string[] = Array.from(new Set(['en', uiLocale, lang].filter(Boolean) as string[]))
