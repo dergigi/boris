@@ -71,6 +71,10 @@ export const CardView: React.FC<CardViewProps> = ({
     }
   }, [firstUrl, articleImage, instantPreview, ogImage])
 
+  // Add loading state for images
+  const [imageLoading, setImageLoading] = useState(false)
+  const [imageError, setImageError] = useState(false)
+
   const triggerOpen = () => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
@@ -106,122 +110,130 @@ export const CardView: React.FC<CardViewProps> = ({
   return (
     <div 
       key={`${bookmark.id}-${index}`}
-      className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}
+      className={`individual-bookmark card-view ${bookmark.isPrivate ? 'private-bookmark' : ''}`}
       onClick={triggerOpen}
       role="button"
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
-      {cachedImage && (
+      {(cachedImage || firstUrl) && (
         <div 
-          className="article-hero-image"
-          style={{ backgroundImage: `url(${cachedImage})` }}
+          className="card-hero-image"
+          style={cachedImage ? { backgroundImage: `url(${cachedImage})` } : undefined}
           onClick={() => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)}
-        />
-      )}
-      <div className="bookmark-header">
-        <span className="bookmark-type">
-          <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
-        </span>
-        
-        {getInternalRoute() ? (
-          <Link
-            to={getInternalRoute()!}
-            className="bookmark-date-link"
-            title="Open in app"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}
-          </Link>
-        ) : (
-          <span className="bookmark-date">{formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}</span>
-        )}
-      </div>
-      
-      {extractedUrls.length > 0 && (
-        <div className="bookmark-urls">
-          {(urlsExpanded ? extractedUrls : extractedUrls.slice(0, 1)).map((url, urlIndex) => {
-            return (
-              <button
-                key={urlIndex}
-                className="bookmark-url"
-                onClick={(e) => { e.stopPropagation(); onSelectUrl?.(url) }}
-                title="Open in reader"
-              >
-                {url}
-              </button>
-            )
-          })}
-          {extractedUrls.length > 1 && (
-            <button
-              className="expand-toggle-urls"
-              onClick={(e) => { e.stopPropagation(); setUrlsExpanded(v => !v) }}
-              aria-label={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
-              title={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
-            >
-              {urlsExpanded ? `Hide ${extractedUrls.length - 1} more` : `Show ${extractedUrls.length - 1} more`}
-            </button>
+        >
+          {!cachedImage && firstUrl && (
+            <div className="preview-placeholder">
+              <FontAwesomeIcon icon={contentTypeIcon} />
+            </div>
           )}
         </div>
       )}
-      
-      {isArticle && articleSummary ? (
-        <RichContent content={articleSummary} className="bookmark-content article-summary" />
-      ) : bookmark.parsedContent ? (
-        <div className="bookmark-content">
-          {shouldTruncate && bookmark.content
-            ? <RichContent content={`${bookmark.content.slice(0, 210).trimEnd()}…`} className="" />
-            : renderParsedContent(bookmark.parsedContent)}
+      <div className="card-content">
+        <div className="bookmark-header">
+          <span className="bookmark-type">
+            <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
+          </span>
+          
+          {getInternalRoute() ? (
+            <Link
+              to={getInternalRoute()!}
+              className="bookmark-date-link"
+              title="Open in app"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}
+            </Link>
+          ) : (
+            <span className="bookmark-date">{formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}</span>
+          )}
         </div>
-      ) : bookmark.content && (
-        <RichContent content={shouldTruncate ? `${bookmark.content.slice(0, 210).trimEnd()}…` : bookmark.content} />
-      )}
+      
+        {extractedUrls.length > 0 && (
+          <div className="bookmark-urls">
+            {(urlsExpanded ? extractedUrls : extractedUrls.slice(0, 1)).map((url, urlIndex) => {
+              return (
+                <button
+                  key={urlIndex}
+                  className="bookmark-url"
+                  onClick={(e) => { e.stopPropagation(); onSelectUrl?.(url) }}
+                  title="Open in reader"
+                >
+                  {url}
+                </button>
+              )
+            })}
+            {extractedUrls.length > 1 && (
+              <button
+                className="expand-toggle-urls"
+                onClick={(e) => { e.stopPropagation(); setUrlsExpanded(v => !v) }}
+                aria-label={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
+                title={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
+              >
+                {urlsExpanded ? `Hide ${extractedUrls.length - 1} more` : `Show ${extractedUrls.length - 1} more`}
+              </button>
+            )}
+          </div>
+        )}
+        
+        {isArticle && articleSummary ? (
+          <RichContent content={articleSummary} className="bookmark-content article-summary" />
+        ) : bookmark.parsedContent ? (
+          <div className="bookmark-content">
+            {shouldTruncate && bookmark.content
+              ? <RichContent content={`${bookmark.content.slice(0, 210).trimEnd()}…`} className="" />
+              : renderParsedContent(bookmark.parsedContent)}
+          </div>
+        ) : bookmark.content && (
+          <RichContent content={shouldTruncate ? `${bookmark.content.slice(0, 210).trimEnd()}…` : bookmark.content} />
+        )}
 
-      {contentLength > 210 && (
-        <button
-          className="expand-toggle"
-          onClick={(e) => { e.stopPropagation(); setExpanded(v => !v) }}
-          aria-label={expanded ? 'Collapse' : 'Expand'}
-          title={expanded ? 'Collapse' : 'Expand'}
-        >
-          <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} />
-        </button>
-      )}
-      
-      {/* Reading progress indicator for articles */}
-      {isArticle && readingProgress !== undefined && readingProgress > 0 && (
-        <div 
-          style={{
-            height: '3px',
-            width: '100%',
-            background: 'var(--color-border)',
-            overflow: 'hidden',
-            marginTop: '0.75rem'
-          }}
-        >
-          <div
-            style={{
-              height: '100%',
-              width: `${Math.round(readingProgress * 100)}%`,
-              background: progressColor,
-              transition: 'width 0.3s ease, background 0.3s ease'
-            }}
-          />
-        </div>
-      )}
-      
-      <div className="bookmark-footer">
-        <div className="bookmark-meta-minimal">
-          <Link
-            to={`/p/${authorNpub}`}
-            className="author-link-minimal"
-            title="Open author profile"
-            onClick={(e) => e.stopPropagation()}
+        {contentLength > 210 && (
+          <button
+            className="expand-toggle"
+            onClick={(e) => { e.stopPropagation(); setExpanded(v => !v) }}
+            aria-label={expanded ? 'Collapse' : 'Expand'}
+            title={expanded ? 'Collapse' : 'Expand'}
           >
-            {getAuthorDisplayName()}
-          </Link>
+            <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} />
+          </button>
+        )}
+        
+        {/* Reading progress indicator for articles */}
+        {isArticle && readingProgress !== undefined && readingProgress > 0 && (
+          <div 
+            style={{
+              height: '3px',
+              width: '100%',
+              background: 'var(--color-border)',
+              overflow: 'hidden',
+              marginTop: '0.75rem'
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                width: `${Math.round(readingProgress * 100)}%`,
+                background: progressColor,
+                transition: 'width 0.3s ease, background 0.3s ease'
+              }}
+            />
+          </div>
+        )}
+        
+        <div className="bookmark-footer">
+          <div className="bookmark-meta-minimal">
+            <Link
+              to={`/p/${authorNpub}`}
+              className="author-link-minimal"
+              title="Open author profile"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {getAuthorDisplayName()}
+            </Link>
+          </div>
+          {/* CTA removed */}
         </div>
-        {/* CTA removed */}
       </div>
     </div>
   )
