@@ -104,7 +104,7 @@ export default defineConfig({
       filename: 'sw.ts',
       injectRegister: null,
       manifest: {
-        name: 'Boris - Nostr Bookmarks',
+        name: 'Boris - Read, Highlight, Explore',
         short_name: 'Boris',
         description: 'Your reading list for the Nostr world. A minimal nostr client for bookmark management with highlights.',
         start_url: '/',

@@ -147,7 +147,7 @@ function generateHtml(naddr: string, meta: ArticleMetadata | null): string {
   const baseUrl = 'https://read.withboris.com'
   const articleUrl = `${baseUrl}/a/${naddr}`
   
-  const title = meta?.title || 'Boris – Nostr Bookmarks'
+  const title = meta?.title || 'Boris – Read, Highlight, Explore'
   const description = meta?.summary || 'Your reading list for the Nostr world. A minimal nostr client for bookmark management with highlights.'
   const image = meta?.image?.startsWith('http') ? meta.image : `${baseUrl}${meta?.image || '/boris-social-1200.png'}`
   const author = meta?.author || 'Boris'
