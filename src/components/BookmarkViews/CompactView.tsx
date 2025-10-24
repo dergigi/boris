@@ -80,12 +80,14 @@ export const CompactView: React.FC<CompactViewProps> = ({
         {/* CTA removed */}
       </div>
       
-      {/* Reading progress indicator for all bookmark types - always shown */}
-      <ReadingProgressBar 
-        readingProgress={readingProgress}
-        height={1}
-        marginLeft="1.5rem"
-      />
+      {/* Reading progress indicator - only show when there's actual progress */}
+      {readingProgress && readingProgress > 0 && (
+        <ReadingProgressBar 
+          readingProgress={readingProgress}
+          height={1}
+          marginLeft="1.5rem"
+        />
+      )}
     </div>
   )
 }
