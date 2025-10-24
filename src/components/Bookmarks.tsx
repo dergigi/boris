@@ -246,10 +246,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
     setCurrentArticleCoordinate,
     setCurrentArticleEventId,
     setCurrentArticle,
-    settings,
-    currentArticleCoordinate,
-    currentArticleEventId,
-    highlightsLoading
+    settings
   })
   
   // Load external URL if /r/* route is used
