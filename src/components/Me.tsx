@@ -280,8 +280,8 @@ const Me: React.FC<MeProps> = ({
     try {
       if (!hasBeenLoaded) setLoading(true)
       
-      // Derive links from bookmarks immediately (bookmarks come from centralized loading in App.tsx)
-      const initialLinks = deriveLinksFromBookmarks(bookmarks)
+      // Derive links from bookmarks with OpenGraph enhancement
+      const initialLinks = await deriveLinksFromBookmarks(bookmarks)
       const initialMap = new Map(initialLinks.map(item => [item.id, item]))
       setLinksMap(initialMap)
       setLinks(initialLinks)

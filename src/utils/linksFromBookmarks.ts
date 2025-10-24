@@ -2,13 +2,14 @@ import { Bookmark } from '../types/bookmarks'
 import { ReadItem } from '../services/readsService'
 import { KINDS } from '../config/kinds'
 import { fallbackTitleFromUrl } from './readItemMerge'
+import { enhanceReadItemsWithOpenGraph } from '../services/opengraphEnhancer'
 
 /**
  * Derives ReadItems from bookmarks for external URLs:
  * - Web bookmarks (kind:39701)
  * - Any bookmark with http(s) URLs in content or urlReferences
  */
-export function deriveLinksFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
+export async function deriveLinksFromBookmarks(bookmarks: Bookmark[]): Promise<ReadItem[]> {
   const linksMap = new Map<string, ReadItem>()
   
   const allBookmarks = bookmarks.flatMap(b => b.individualBookmarks || [])
@@ -59,11 +60,14 @@ export function deriveLinksFromBookmarks(bookmarks: Bookmark[]): ReadItem[] {
     }
   }
   
-  // Sort by most recent bookmark activity
-  return Array.from(linksMap.values()).sort((a, b) => {
+  // Get initial items sorted by most recent bookmark activity
+  const initialItems = Array.from(linksMap.values()).sort((a, b) => {
     const timeA = a.readingTimestamp || 0
     const timeB = b.readingTimestamp || 0
     return timeB - timeA
   })
+  
+  // Enhance with OpenGraph data
+  return await enhanceReadItemsWithOpenGraph(initialItems)
 }
 
