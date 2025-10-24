@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { faLink } from '@fortawesome/free-solid-svg-icons'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate, renderParsedContent } from '../../utils/bookmarkUtils'
 import RichContent from '../RichContent'
@@ -22,7 +22,6 @@ interface CardViewProps {
   articleImage?: string
   articleSummary?: string
   articleTitle?: string
-  contentTypeIcon: IconDefinition
   readingProgress?: number
 }
 
@@ -38,7 +37,6 @@ export const CardView: React.FC<CardViewProps> = ({
   articleImage,
   articleSummary,
   articleTitle,
-  contentTypeIcon,
   readingProgress
 }) => {
   const firstUrl = hasUrls ? extractedUrls[0] : null
@@ -122,11 +120,11 @@ export const CardView: React.FC<CardViewProps> = ({
                 style={cachedImage ? { backgroundImage: `url(${cachedImage})` } : undefined}
                 onClick={() => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)}
               >
-                {!cachedImage && firstUrl && (
-                  <div className="thumbnail-placeholder">
-                    <FontAwesomeIcon icon={contentTypeIcon} />
-                  </div>
-                )}
+            {!cachedImage && firstUrl && (
+              <div className="thumbnail-placeholder">
+                <FontAwesomeIcon icon={faLink} />
+              </div>
+            )}
               </div>
             )}
             <div className="card-text-content">
@@ -191,9 +189,6 @@ export const CardView: React.FC<CardViewProps> = ({
             ) : (
               <span className="bookmark-date">{formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}</span>
             )}
-            <span className="bookmark-type">
-              <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
-            </span>
           </div>
         </div>
       </div>
