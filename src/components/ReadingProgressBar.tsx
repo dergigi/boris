@@ -40,7 +40,8 @@ export const ReadingProgressBar: React.FC<ReadingProgressBarProps> = ({
         marginTop,
         marginBottom,
         marginLeft,
-        position: 'relative'
+        position: 'relative',
+        minHeight: `${height}px`
       }}
     >
       <div
@@ -48,7 +49,8 @@ export const ReadingProgressBar: React.FC<ReadingProgressBarProps> = ({
           height: '100%',
           width: progressWidth,
           background: progressBackground,
-          transition: 'width 0.3s ease, background 0.3s ease'
+          transition: 'width 0.3s ease, background 0.3s ease',
+          minHeight: `${height}px`
         }}
       />
     </div>
