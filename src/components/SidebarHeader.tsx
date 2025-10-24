@@ -142,18 +142,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
             variant="ghost"
           />
           <IconButton
-            icon={faGear}
-            onClick={() => {
-              if (isMobile) {
-                onToggleCollapse()
-              }
-              onOpenSettings()
-            }}
-            title="Settings"
-            ariaLabel="Settings"
-            variant="ghost"
-          />
-          <IconButton
             icon={faPersonHiking}
             onClick={() => {
               if (isMobile) {
@@ -163,6 +151,18 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
             }}
             title="Explore"
             ariaLabel="Explore"
+            variant="ghost"
+          />
+          <IconButton
+            icon={faGear}
+            onClick={() => {
+              if (isMobile) {
+                onToggleCollapse()
+              }
+              onOpenSettings()
+            }}
+            title="Settings"
+            ariaLabel="Settings"
             variant="ghost"
           />
           {!isMobile && (
