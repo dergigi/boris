@@ -165,9 +165,7 @@
 }
 
 .card-content .bookmark-header {
-  margin-bottom: 0.5rem;
-  display: flex;
-  justify-content: flex-end;
+  display: none;
 }
 
 .card-content .bookmark-title {
@@ -206,6 +204,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.card-content .bookmark-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .card-content .bookmark-footer .bookmark-type {

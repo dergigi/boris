@@ -135,18 +135,6 @@ export const CardView: React.FC<CardViewProps> = ({
             )}
             <div className="card-text-content">
         <div className="bookmark-header">
-          {getInternalRoute() ? (
-            <Link
-              to={getInternalRoute()!}
-              className="bookmark-date-link"
-              title="Open in app"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}
-            </Link>
-          ) : (
-            <span className="bookmark-date">{formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}</span>
-          )}
         </div>
         
         {/* Display title for articles or bookmarks with titles */}
@@ -207,9 +195,23 @@ export const CardView: React.FC<CardViewProps> = ({
               {getAuthorDisplayName()}
             </Link>
           </div>
-          <span className="bookmark-type">
-            <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
-          </span>
+          <div className="bookmark-footer-right">
+            {getInternalRoute() ? (
+              <Link
+                to={getInternalRoute()!}
+                className="bookmark-date-link"
+                title="Open in app"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}
+              </Link>
+            ) : (
+              <span className="bookmark-date">{formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}</span>
+            )}
+            <span className="bookmark-type">
+              <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
+            </span>
+          </div>
         </div>
       </div>
     </div>
