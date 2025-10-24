@@ -152,18 +152,16 @@ export const CardView: React.FC<CardViewProps> = ({
           </div>
         </div>
         
-        {/* Reading progress indicator as separator - always shown for articles */}
-        {isArticle && (
-          <div className="reading-progress-separator">
-            <div
-              className="progress-fill"
-              style={{
-                width: readingProgress ? `${Math.round(readingProgress * 100)}%` : '0%',
-                background: readingProgress ? progressColor : 'var(--color-border)'
-              }}
-            />
-          </div>
-        )}
+        {/* Reading progress indicator as separator - always shown for all bookmark types */}
+        <div className="reading-progress-separator">
+          <div
+            className="progress-fill"
+            style={{
+              width: readingProgress ? `${Math.round(readingProgress * 100)}%` : '0%',
+              background: readingProgress ? progressColor : 'var(--color-border)'
+            }}
+          />
+        </div>
         
         <div className="bookmark-footer">
           <div className="bookmark-meta-minimal">
