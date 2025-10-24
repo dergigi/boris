@@ -116,20 +116,21 @@ export const CardView: React.FC<CardViewProps> = ({
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
-      {(cachedImage || firstUrl) && (
-        <div 
-          className="card-hero-image"
-          style={cachedImage ? { backgroundImage: `url(${cachedImage})` } : undefined}
-          onClick={() => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)}
-        >
-          {!cachedImage && firstUrl && (
-            <div className="preview-placeholder">
-              <FontAwesomeIcon icon={contentTypeIcon} />
-            </div>
-          )}
-        </div>
-      )}
-      <div className="card-content">
+      <div className="card-layout">
+        {(cachedImage || firstUrl) && (
+          <div 
+            className="card-thumbnail"
+            style={cachedImage ? { backgroundImage: `url(${cachedImage})` } : undefined}
+            onClick={() => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)}
+          >
+            {!cachedImage && firstUrl && (
+              <div className="thumbnail-placeholder">
+                <FontAwesomeIcon icon={contentTypeIcon} />
+              </div>
+            )}
+          </div>
+        )}
+        <div className="card-content">
         <div className="bookmark-header">
           <span className="bookmark-type">
             <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
@@ -233,6 +234,7 @@ export const CardView: React.FC<CardViewProps> = ({
             </Link>
           </div>
           {/* CTA removed */}
+        </div>
         </div>
       </div>
     </div>
