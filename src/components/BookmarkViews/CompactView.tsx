@@ -81,7 +81,7 @@ export const CompactView: React.FC<CompactViewProps> = ({
       </div>
       
       {/* Reading progress indicator - only show when there's actual progress */}
-      {readingProgress && readingProgress > 0 && (
+      {readingProgress !== undefined && readingProgress > 0 && (
         <ReadingProgressBar 
           readingProgress={readingProgress}
           height={1}
