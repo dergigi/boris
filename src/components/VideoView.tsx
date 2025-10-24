@@ -7,6 +7,16 @@ import { IAccount } from 'applesauce-accounts'
 import { UserSettings } from '../services/settingsService'
 import { extractYouTubeId, getYouTubeMeta } from '../services/youtubeMetaService'
 import { buildNativeVideoUrl } from '../utils/videoHelpers'
+import { getYouTubeThumbnail } from '../utils/imagePreview'
+
+// Helper function to get Vimeo thumbnail
+const getVimeoThumbnail = (url: string): string | null => {
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+  if (!vimeoMatch) return null
+  
+  const videoId = vimeoMatch[1]
+  return `https://vumbnail.com/${videoId}.jpg`
+}
 import { 
   createWebsiteReaction,
   hasMarkedWebsiteAsRead
@@ -201,12 +211,18 @@ const VideoView: React.FC<VideoViewProps> = ({
   const displayTitle = ytMeta?.title || title
   const displaySummary = ytMeta?.description || summary
   const durationText = videoDurationSec !== null ? formatDuration(videoDurationSec) : null
+  
+  // Get video thumbnail for cover image
+  const youtubeThumbnail = getYouTubeThumbnail(videoUrl)
+  const vimeoThumbnail = getVimeoThumbnail(videoUrl)
+  const videoThumbnail = youtubeThumbnail || vimeoThumbnail
+  const displayImage = videoThumbnail || image
 
   return (
     <>
       <ReaderHeader 
         title={displayTitle}
-        image={image}
+        image={displayImage}
         summary={displaySummary}
         published={published}
         readingTimeText={durationText}

@@ -94,7 +94,7 @@ async function pickCaptions(videoID: string, preferredLangs: string[], manualFir
   return null
 }
 
-async function getVimeoMetadata(videoId: string): Promise<{ title: string; description: string }> {
+async function getVimeoMetadata(videoId: string): Promise<{ title: string; description: string; thumbnail_url?: string }> {
   const vimeoUrl = `https://vimeo.com/${videoId}`
   const oembedUrl = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(vimeoUrl)}`
   
@@ -107,7 +107,8 @@ async function getVimeoMetadata(videoId: string): Promise<{ title: string; descr
   
   return {
     title: data.title || '',
-    description: data.description || ''
+    description: data.description || '',
+    thumbnail_url: data.thumbnail_url || ''
   }
 }
 
@@ -197,11 +198,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return ok(res, response)
     } else if (videoInfo.source === 'vimeo') {
       // Vimeo handling
-      const { title, description } = await getVimeoMetadata(videoInfo.id)
+      const { title, description, thumbnail_url } = await getVimeoMetadata(videoInfo.id)
       
       const response = {
         title,
         description,
+        thumbnail_url,
         captions: [], // Vimeo doesn't provide captions through oEmbed API
         transcript: '', // No transcript available
         lang: 'en', // Default language
