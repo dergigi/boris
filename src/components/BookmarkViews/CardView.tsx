@@ -66,7 +66,7 @@ export const CardView: React.FC<CardViewProps> = ({
           return faCirclePlay
         case 'image':
           return faCamera
-        case 'document':
+        case 'article':
           return faFileLines
         default:
           return faGlobe
