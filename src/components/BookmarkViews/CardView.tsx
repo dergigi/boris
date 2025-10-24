@@ -117,20 +117,22 @@ export const CardView: React.FC<CardViewProps> = ({
       onKeyDown={handleKeyDown}
     >
       <div className="card-layout">
-        {(cachedImage || firstUrl) && (
-          <div 
-            className="card-thumbnail"
-            style={cachedImage ? { backgroundImage: `url(${cachedImage})` } : undefined}
-            onClick={() => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)}
-          >
-            {!cachedImage && firstUrl && (
-              <div className="thumbnail-placeholder">
-                <FontAwesomeIcon icon={contentTypeIcon} />
+        <div className="card-content">
+          <div className="card-content-header">
+            {(cachedImage || firstUrl) && (
+              <div 
+                className="card-thumbnail"
+                style={cachedImage ? { backgroundImage: `url(${cachedImage})` } : undefined}
+                onClick={() => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)}
+              >
+                {!cachedImage && firstUrl && (
+                  <div className="thumbnail-placeholder">
+                    <FontAwesomeIcon icon={contentTypeIcon} />
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
-        <div className="card-content">
+            <div className="card-text-content">
         <div className="bookmark-header">
           <span className="bookmark-type">
             <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
@@ -213,6 +215,10 @@ export const CardView: React.FC<CardViewProps> = ({
           </div>
         )}
         
+            </div>
+          </div>
+        </div>
+        
         <div className="bookmark-footer">
           <div className="bookmark-meta-minimal">
             <Link
@@ -225,7 +231,6 @@ export const CardView: React.FC<CardViewProps> = ({
             </Link>
           </div>
           {/* CTA removed */}
-        </div>
         </div>
       </div>
     </div>
