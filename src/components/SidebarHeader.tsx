@@ -55,6 +55,10 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
 
   const handleMenuItemClick = (action: () => void) => {
     setShowProfileMenu(false)
+    // Close mobile sidebar when navigating on mobile
+    if (isMobile) {
+      onToggleCollapse()
+    }
     action()
   }
 
@@ -127,21 +131,36 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
         <div className="sidebar-header-right">
           <IconButton
             icon={faHome}
-            onClick={() => navigate('/')}
+            onClick={() => {
+              if (isMobile) {
+                onToggleCollapse()
+              }
+              navigate('/')
+            }}
             title="Home"
             ariaLabel="Home"
             variant="ghost"
           />
           <IconButton
             icon={faGear}
-            onClick={onOpenSettings}
+            onClick={() => {
+              if (isMobile) {
+                onToggleCollapse()
+              }
+              onOpenSettings()
+            }}
             title="Settings"
             ariaLabel="Settings"
             variant="ghost"
           />
           <IconButton
             icon={faPersonHiking}
-            onClick={() => navigate('/explore')}
+            onClick={() => {
+              if (isMobile) {
+                onToggleCollapse()
+              }
+              navigate('/explore')
+            }}
             title="Explore"
             ariaLabel="Explore"
             variant="ghost"
