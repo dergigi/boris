@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.25] - 2025-01-27
+
+### Added
+
+- Reading progress bar for all bookmark types across all view modes
+  - Consistent progress tracking for articles, videos, and other content types
+  - Visual progress indicator in compact, medium, and large card views
+- Title display for regular bookmarks/links
+  - Better content identification for web bookmarks
+  - Improved visual hierarchy in bookmark cards
+
+### Changed
+
+- Redesigned medium-sized bookmark cards with left-side thumbnails
+  - More compact and visually appealing card layout
+  - Better use of space with thumbnail positioning
+- Made bookmark cards significantly more compact
+  - Reduced vertical spacing and improved density
+  - Better information display in limited space
+- Moved bookmark type icon to bottom right footer
+  - Cleaner card layout with consistent icon positioning
+  - Better visual organization of card elements
+- Enhanced card layout with author positioning in bottom-left corner
+  - Improved visual hierarchy and content organization
+  - Better balance between content and metadata
+
+### Fixed
+
+- Corrected TypeScript error in content type icon logic
+- Resolved linting issues in CardView component
+- Eliminated 0 artefacts in compact view conditional rendering
+- Ensured consistent reading progress bar thickness in large cards
+- Fixed reading progress bar display logic for compact view
+- Ensured empty reading progress bar is always visible for articles
+- Resolved timestamp and icon display alignment issues
+- Removed unused variables to resolve linting errors
+
+### Removed
+
+- Type icon from medium-sized bookmark cards
+  - Cleaner visual design with reduced clutter
+  - Focus on content rather than type indicators
+- Text expansion mechanic from medium-sized cards
+  - Simplified interaction model
+  - More consistent card behavior across view modes
+- URL display from medium-sized bookmark cards
+  - Cleaner card appearance
+  - Better focus on title and content
+
 ## [0.10.24] - 2025-01-27
 
 ### Added
