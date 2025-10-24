@@ -4,41 +4,40 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimes, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
 import { fetchReadableContent } from '../services/readerService'
+import { fetch as fetchOpenGraph } from 'fetch-opengraph'
 
 interface AddBookmarkModalProps {
   onClose: () => void
   onSave: (url: string, title?: string, description?: string, tags?: string[]) => Promise<void>
 }
 
-// Helper to extract metadata from HTML
-function extractMetaTag(html: string, patterns: string[]): string | null {
-  for (const pattern of patterns) {
-    const match = html.match(new RegExp(pattern, 'i'))
-    if (match) return match[1]
-  }
-  return null
-}
-
-function extractTags(html: string): string[] {
+// Helper to extract tags from OpenGraph data
+function extractTagsFromOgData(ogData: Record<string, unknown>): string[] {
   const tags: string[] = []
   
-  // Extract keywords meta tag
-  const keywords = extractMetaTag(html, [
-    '<meta\\s+name=["\'"]keywords["\'"]\\s+content=["\'"]([^"\']+)["\']'
-  ])
-  if (keywords) {
-    keywords.split(/[,;]/)
-      .map(k => k.trim().toLowerCase())
-      .filter(k => k.length > 0 && k.length < 30)
-      .forEach(k => tags.push(k))
+  // Extract keywords from OpenGraph data
+  if (ogData.keywords && typeof ogData.keywords === 'string') {
+    ogData.keywords.split(/[,;]/)
+      .map((k: string) => k.trim().toLowerCase())
+      .filter((k: string) => k.length > 0 && k.length < 30)
+      .forEach((k: string) => tags.push(k))
   }
   
-  // Extract article:tag (multiple possible)
-  const articleTagRegex = /<meta\s+property=["']article:tag["']\s+content=["']([^"']+)["']/gi
-  let match
-  while ((match = articleTagRegex.exec(html)) !== null) {
-    const tag = match[1].trim().toLowerCase()
-    if (tag && tag.length < 30) tags.push(tag)
+  // Extract article:tag from OpenGraph data
+  if (ogData['article:tag']) {
+    const articleTagValue = ogData['article:tag']
+    const articleTags = Array.isArray(articleTagValue) 
+      ? articleTagValue 
+      : [articleTagValue]
+    
+    articleTags.forEach((tag: unknown) => {
+      if (typeof tag === 'string') {
+        const cleanTag = tag.trim().toLowerCase()
+        if (cleanTag && cleanTag.length < 30) {
+          tags.push(cleanTag)
+        }
+      }
+    })
   }
   
   return Array.from(new Set(tags)).slice(0, 5)
@@ -83,17 +82,34 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
     fetchTimeoutRef.current = window.setTimeout(async () => {
       setIsFetchingMetadata(true)
       try {
-        const content = await fetchReadableContent(normalizedUrl)
-        lastFetchedUrlRef.current = normalizedUrl
+        // Fetch both readable content and OpenGraph data in parallel
+        const [content, ogData] = await Promise.all([
+          fetchReadableContent(normalizedUrl),
+          fetchOpenGraph(normalizedUrl).catch(() => null) // Don't fail if OpenGraph fetch fails
+        ])
         
+        console.log('🔍 Modal fetch debug:', {
+          url: normalizedUrl,
+          hasContent: !!content,
+          hasOgData: !!ogData,
+          ogDataKeys: ogData ? Object.keys(ogData) : null
+        })
+        
+        lastFetchedUrlRef.current = normalizedUrl
         let extractedAnything = false
         
-        // Extract title: prioritize og:title > twitter:title > <title>
-        if (!title && content.html) {
-          const extractedTitle = extractMetaTag(content.html, [
-            '<meta\\s+property=["\'"]og:title["\'"]\\s+content=["\'"]([^"\']+)["\']',
-            '<meta\\s+name=["\'"]twitter:title["\'"]\\s+content=["\'"]([^"\']+)["\']'
-          ]) || content.title
+        // Extract title: prioritize og:title > twitter:title > content.title
+        if (!title) {
+          let extractedTitle = null
+          
+          if (ogData) {
+            extractedTitle = ogData['og:title'] || ogData['twitter:title'] || ogData.title
+          }
+          
+          // Fallback to content.title if no OpenGraph title found
+          if (!extractedTitle) {
+            extractedTitle = content.title
+          }
           
           if (extractedTitle) {
             setTitle(extractedTitle)
@@ -102,12 +118,15 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
         }
         
         // Extract description: prioritize og:description > twitter:description > meta description
-        if (!description && content.html) {
-          const extractedDesc = extractMetaTag(content.html, [
-            '<meta\\s+property=["\'"]og:description["\'"]\\s+content=["\'"]([^"\']+)["\']',
-            '<meta\\s+name=["\'"]twitter:description["\'"]\\s+content=["\'"]([^"\']+)["\']',
-            '<meta\\s+name=["\'"]description["\'"]\\s+content=["\'"]([^"\']+)["\']'
-          ])
+        if (!description && ogData) {
+          const extractedDesc = ogData['og:description'] || ogData['twitter:description'] || ogData.description
+          
+          console.log('🔍 Description extraction debug:', {
+            currentDescription: description,
+            hasOgData: !!ogData,
+            extractedDesc: extractedDesc,
+            willSetDescription: !!extractedDesc
+          })
           
           if (extractedDesc) {
             setDescription(extractedDesc)
@@ -116,8 +135,8 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
         }
         
         // Extract tags from keywords and article:tag (only if user hasn't modified tags)
-        if (!tagsInput && content.html) {
-          const extractedTags = extractTags(content.html)
+        if (!tagsInput && ogData) {
+          const extractedTags = extractTagsFromOgData(ogData)
           
           // Only add boris tag if we extracted something
           if (extractedAnything || extractedTags.length > 0) {

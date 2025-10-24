@@ -14,6 +14,7 @@ import { useBookmarksUI } from '../hooks/useBookmarksUI'
 import { useRelayStatus } from '../hooks/useRelayStatus'
 import { useOfflineSync } from '../hooks/useOfflineSync'
 import { useEventLoader } from '../hooks/useEventLoader'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { Bookmark } from '../types/bookmarks'
 import ThreePaneLayout from './ThreePaneLayout'
 import Explore from './Explore'
@@ -57,6 +58,12 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   const showProfile = location.pathname.startsWith('/p/')
   const showSupport = location.pathname === '/support'
   const eventId = eventIdParam
+  
+  // Manage document title based on current route
+  const isViewingContent = !!(naddr || externalUrl || eventId)
+  useDocumentTitle({ 
+    title: isViewingContent ? undefined : 'Boris - Read, Highlight, Explore'
+  })
   
   // Extract tab from explore routes
   const exploreTab = location.pathname === '/explore/writings' ? 'writings' : 'highlights'
