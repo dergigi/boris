@@ -150,8 +150,8 @@ export const CardView: React.FC<CardViewProps> = ({
         <ReadingProgressBar 
           readingProgress={readingProgress}
           height={1}
-          marginTop="0.25rem"
-          marginBottom="0.25rem"
+          marginTop="0.125rem"
+          marginBottom="0.125rem"
         />
         
         <div className="bookmark-footer">
