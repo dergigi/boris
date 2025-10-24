@@ -59,7 +59,7 @@
 .compact-read-btn:active { transform: translateY(1px); }
 
 .bookmark-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
-.bookmark-type { color: var(--color-primary); font-size: 0.9rem; display: flex; align-items: center; gap: 0.35rem; }
+.bookmark-type { font-size: 0.9rem; display: flex; align-items: center; gap: 0.35rem; }
 .bookmark-id { font-family: monospace; font-size: 0.8rem; color: var(--color-text-secondary); background: var(--color-bg); padding: 0.25rem 0.5rem; border-radius: 4px; }
 .bookmark-date { font-size: 0.8rem; color: var(--color-text-muted); }
 .bookmark-date-link { font-size: 0.8rem; color: var(--color-text-muted); text-decoration: none; transition: color 0.2s ease; }
