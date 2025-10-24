@@ -76,6 +76,10 @@ export function useArticleLoader({
       setSelectedUrl(`nostr:${naddr}`)
       setIsCollapsed(true)
       
+      // Clear highlights immediately when starting to load a new article
+      setHighlights([])
+      setHighlightsLoading(false) // Don't show loading yet
+      
       // If we have preview data from navigation, show it immediately (no skeleton!)
       if (previewData) {
         setReaderContent({
@@ -251,7 +255,9 @@ export function useArticleLoader({
                   return next.sort((a, b) => b.created_at - a.created_at)
                 })
               },
-              settingsRef.current
+              settingsRef.current,
+              false, // force
+              eventStore || undefined
             )
           } else {
             // No article event to fetch highlights for - clear and don't show loading
