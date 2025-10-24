@@ -56,7 +56,7 @@ export const CompactView: React.FC<CompactViewProps> = ({
         navigate(`/a/${naddr}`)
       }
     } else if (hasUrls) {
-      onSelectUrl?.(extractedUrls[0])
+      onSelectUrl?.(extractedUrls[0], bookmark)
     } else if (isNote) {
       navigate(`/e/${bookmark.id}`)
     }

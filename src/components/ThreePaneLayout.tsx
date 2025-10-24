@@ -381,6 +381,12 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             const isExternalVideo = !isNostrArticle && !!props.selectedUrl && ['youtube', 'video'].includes(classifyUrl(props.selectedUrl).type)
             
             if (isExternalVideo) {
+              // Check if this is a direct video URL from a Nostr note
+              // For URLs like /r/https%3A%2F%2Fv.nostr.build%2FWFO5YkruM9GFJjeg.mp4
+              const isDirectVideoFromNote = props.selectedUrl?.includes('nostr.build') || 
+                                          props.selectedUrl?.includes('nostr.video') ||
+                                          props.selectedUrl?.includes('v.nostr.build')
+              
               return (
                 <VideoView
                   videoUrl={props.selectedUrl!}
@@ -391,6 +397,7 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
                   settings={props.settings}
                   relayPool={props.relayPool}
                   activeAccount={props.activeAccount}
+                  noteContent={isDirectVideoFromNote ? "This video was shared from a Nostr note. The original note content would be displayed here if available." : undefined}
                   onOpenHighlights={() => {
                     if (props.isHighlightsCollapsed) {
                       props.onToggleHighlightsPanel()

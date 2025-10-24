@@ -34,6 +34,7 @@ interface VideoViewProps {
   relayPool?: RelayPool | null
   activeAccount?: IAccount | null
   onOpenHighlights?: () => void
+  noteContent?: string // Content from the original Nostr note
 }
 
 const VideoView: React.FC<VideoViewProps> = ({
@@ -45,7 +46,8 @@ const VideoView: React.FC<VideoViewProps> = ({
   settings,
   relayPool,
   activeAccount,
-  onOpenHighlights
+  onOpenHighlights,
+  noteContent
 }) => {
   const [isMarkedAsWatched, setIsMarkedAsWatched] = useState(false)
   const [isCheckingWatchedStatus, setIsCheckingWatchedStatus] = useState(false)
@@ -209,7 +211,8 @@ const VideoView: React.FC<VideoViewProps> = ({
   }
 
   const displayTitle = ytMeta?.title || title
-  const displaySummary = ytMeta?.description || summary
+  // For direct video URLs from Nostr notes, prioritize note content over metadata
+  const displaySummary = noteContent || ytMeta?.description || summary
   const durationText = videoDurationSec !== null ? formatDuration(videoDurationSec) : null
   
   // Get video thumbnail for cover image
