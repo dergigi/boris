@@ -728,13 +728,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     )
   }
 
-  if (loading) {
-    return (
-      <div className="reader" aria-busy="true">
-        <ContentSkeleton />
-      </div>
-    )
-  }
 
   const highlightRgb = hexToRgb(highlightColor)
 
@@ -791,7 +784,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           <TTSControls text={articleText} defaultLang={navigator?.language} settings={settings} />
         </div>
       )}
-      {markdown || html ? (
+      {loading || !markdown && !html ? (
+        <div className="reader" aria-busy="true">
+          <ContentSkeleton />
+        </div>
+      ) : markdown || html ? (
         <>
           {markdown ? (
             renderedMarkdownHtml && finalHtml ? (
@@ -973,11 +970,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             </div>
           )}
         </>
-      ) : (
-        <div className="reader" aria-busy="true">
-          <ContentSkeleton />
-        </div>
-      )}
+      ) : null}
       </div>
     </>
   )
