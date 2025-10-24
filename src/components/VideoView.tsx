@@ -34,7 +34,6 @@ interface VideoViewProps {
   relayPool?: RelayPool | null
   activeAccount?: IAccount | null
   onOpenHighlights?: () => void
-  noteContent?: string // Content from the original Nostr note
 }
 
 const VideoView: React.FC<VideoViewProps> = ({
@@ -46,8 +45,7 @@ const VideoView: React.FC<VideoViewProps> = ({
   settings,
   relayPool,
   activeAccount,
-  onOpenHighlights,
-  noteContent
+  onOpenHighlights
 }) => {
   const [isMarkedAsWatched, setIsMarkedAsWatched] = useState(false)
   const [isCheckingWatchedStatus, setIsCheckingWatchedStatus] = useState(false)
@@ -91,7 +89,7 @@ const VideoView: React.FC<VideoViewProps> = ({
     }
 
     checkWatchedStatus()
-  }, [activeAccount, videoUrl])
+  }, [activeAccount, videoUrl, relayPool])
 
   // Handle click outside to close menu
   useEffect(() => {
@@ -210,11 +208,8 @@ const VideoView: React.FC<VideoViewProps> = ({
     }
   }
 
-  // For direct video URLs from Nostr notes, use note content for title and description
-  const displayTitle = noteContent ? 
-    (noteContent.length > 100 ? noteContent.substring(0, 100).trim() + '...' : noteContent) :
-    (ytMeta?.title || title)
-  const displaySummary = noteContent || ytMeta?.description || summary
+  const displayTitle = ytMeta?.title || title
+  const displaySummary = ytMeta?.description || summary
   const durationText = videoDurationSec !== null ? formatDuration(videoDurationSec) : null
   
   // Get video thumbnail for cover image
