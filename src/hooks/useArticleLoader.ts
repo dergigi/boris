@@ -76,8 +76,8 @@ export function useArticleLoader({
       setSelectedUrl(`nostr:${naddr}`)
       setIsCollapsed(true)
       
-      // Clear highlights immediately when starting to load a new article
-      setHighlights([])
+      // Don't clear highlights yet - let the smart filtering logic handle it
+      // when we know the article coordinate
       setHighlightsLoading(false) // Don't show loading yet
       
       // If we have preview data from navigation, show it immediately (no skeleton!)
@@ -241,7 +241,13 @@ export function useArticleLoader({
           
           if (coord && eventId) {
             setHighlightsLoading(true)
-            setHighlights([])
+            // Clear highlights that don't belong to this article coordinate
+            setHighlights((prev) => {
+              return prev.filter(h => {
+                // Keep highlights that match this article coordinate or event ID
+                return h.eventReference === coord || h.eventReference === eventId
+              })
+            })
             await fetchHighlightsForArticle(
               relayPool,
               coord,
