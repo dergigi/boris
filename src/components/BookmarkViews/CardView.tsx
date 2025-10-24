@@ -200,14 +200,14 @@ export const CardView: React.FC<CardViewProps> = ({
           </button>
         )}
         
-        {/* Reading progress indicator as separator */}
-        {isArticle && readingProgress !== undefined && readingProgress > 0 && (
+        {/* Reading progress indicator as separator - always shown */}
+        {isArticle && (
           <div className="reading-progress-separator">
             <div
               className="progress-fill"
               style={{
-                width: `${Math.round(readingProgress * 100)}%`,
-                background: progressColor
+                width: readingProgress ? `${Math.round(readingProgress * 100)}%` : '0%',
+                background: readingProgress ? progressColor : 'transparent'
               }}
             />
           </div>

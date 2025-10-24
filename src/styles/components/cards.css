@@ -178,12 +178,12 @@
   padding-top: 0.75rem;
 }
 
-/* Reading progress as separator */
+/* Reading progress as separator - always shown */
 .card-content .reading-progress-separator {
-  height: 4px;
+  height: 1px;
   width: 100%;
   background: var(--color-border);
-  border-radius: 2px;
+  border-radius: 0.5px;
   overflow: hidden;
   margin: 0.75rem 0;
   position: relative;
@@ -191,18 +191,8 @@
 
 .card-content .reading-progress-separator .progress-fill {
   height: 100%;
-  border-radius: 2px;
+  border-radius: 0.5px;
   transition: width 0.3s ease, background 0.3s ease;
-}
-
-/* Subtle separator for cards without reading progress */
-.card-content .bookmark-footer::before {
-  content: '';
-  display: block;
-  height: 1px;
-  background: var(--color-border-subtle);
-  margin-bottom: 0.75rem;
-  opacity: 0.5;
 }
 
 .card-content .bookmark-urls {
