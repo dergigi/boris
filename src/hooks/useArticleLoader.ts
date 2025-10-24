@@ -34,6 +34,9 @@ interface UseArticleLoaderProps {
   setCurrentArticleEventId: (id: string | undefined) => void
   setCurrentArticle?: (article: NostrEvent) => void
   settings?: UserSettings
+  currentArticleCoordinate?: string
+  currentArticleEventId?: string
+  highlightsLoading?: boolean
 }
 
 export function useArticleLoader({
@@ -49,7 +52,10 @@ export function useArticleLoader({
   setCurrentArticleCoordinate,
   setCurrentArticleEventId,
   setCurrentArticle,
-  settings
+  settings,
+  currentArticleCoordinate,
+  currentArticleEventId,
+  highlightsLoading
 }: UseArticleLoaderProps) {
   const location = useLocation()
   const mountedRef = useRef(true)
@@ -230,8 +236,8 @@ export function useArticleLoader({
           setCurrentArticle?.(article.event)
         }
 
-        // Fetch highlights after content is shown
-        try {
+        // Fetch highlights after content is shown - ensure this happens reliably
+        const fetchHighlightsForCurrentArticle = async () => {
           if (!mountedRef.current) return
           
           const le = latestEvent as NostrEvent | null
@@ -240,6 +246,7 @@ export function useArticleLoader({
           const eventId = le ? le.id : undefined
           
           if (coord && eventId) {
+            console.log('Loading highlights for article:', coord, eventId)
             setHighlightsLoading(true)
             // Clear highlights that don't belong to this article coordinate
             setHighlights((prev) => {
@@ -248,34 +255,65 @@ export function useArticleLoader({
                 return h.eventReference === coord || h.eventReference === eventId
               })
             })
-            await fetchHighlightsForArticle(
-              relayPool,
-              coord,
-              eventId,
-              (highlight) => {
-                if (!mountedRef.current) return
-                if (currentRequestIdRef.current !== requestId) return
-                setHighlights((prev: Highlight[]) => {
-                  if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
-                  const next = [highlight, ...prev]
-                  return next.sort((a, b) => b.created_at - a.created_at)
-                })
-              },
-              settingsRef.current,
-              false, // force
-              eventStore || undefined
-            )
+            
+            try {
+              await fetchHighlightsForArticle(
+                relayPool,
+                coord,
+                eventId,
+                (highlight) => {
+                  if (!mountedRef.current) return
+                  if (currentRequestIdRef.current !== requestId) return
+                  console.log('Received highlight:', highlight.id, highlight.content.substring(0, 50))
+                  setHighlights((prev: Highlight[]) => {
+                    if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
+                    const next = [highlight, ...prev]
+                    return next.sort((a, b) => b.created_at - a.created_at)
+                  })
+                },
+                settingsRef.current,
+                false, // force
+                eventStore || undefined
+              )
+              console.log('Finished loading highlights for article:', coord)
+            } catch (err) {
+              console.error('Failed to fetch highlights for article:', coord, err)
+            }
           } else {
+            console.log('No article coordinate or event ID available for highlights')
             // No article event to fetch highlights for - clear and don't show loading
             setHighlights([])
             setHighlightsLoading(false)
           }
+        }
+        
+        // Always try to fetch highlights, even if we don't have the latest event yet
+        try {
+          await fetchHighlightsForCurrentArticle()
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {
           if (mountedRef.current && currentRequestIdRef.current === requestId) {
             setHighlightsLoading(false)
           }
+        }
+        
+        // Add a fallback mechanism to ensure highlights are loaded
+        // This helps with cases where the initial highlight loading might fail
+        const fallbackTimeout = setTimeout(async () => {
+          if (mountedRef.current && currentRequestIdRef.current === requestId) {
+            console.log('Fallback: Attempting to load highlights again...')
+            try {
+              await fetchHighlightsForCurrentArticle()
+            } catch (err) {
+              console.error('Fallback highlight loading failed:', err)
+            }
+          }
+        }, 2000) // Retry after 2 seconds
+        
+        // Clean up timeout if component unmounts or new article loads
+        return () => {
+          clearTimeout(fallbackTimeout)
         }
       } catch (err) {
         console.error('Failed to load article:', err)
@@ -310,4 +348,44 @@ export function useArticleLoader({
     setCurrentArticleEventId,
     setCurrentArticle
   ])
+  
+  // Additional effect to ensure highlights are loaded when article coordinate changes
+  // This provides a backup mechanism in case the main loading doesn't work
+  useEffect(() => {
+    if (!relayPool || !eventStore) return
+    
+    const loadHighlightsIfNeeded = async () => {
+      // Only load if we have a coordinate but no highlights are loading
+      if (currentArticleCoordinate && currentArticleEventId && !highlightsLoading) {
+        console.log('Backup: Loading highlights for coordinate:', currentArticleCoordinate)
+        try {
+          setHighlightsLoading(true)
+          await fetchHighlightsForArticle(
+            relayPool,
+            currentArticleCoordinate,
+            currentArticleEventId,
+            (highlight) => {
+              setHighlights((prev: Highlight[]) => {
+                if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
+                const next = [highlight, ...prev]
+                return next.sort((a, b) => b.created_at - a.created_at)
+              })
+            },
+            settingsRef.current,
+            false, // force
+            eventStore
+          )
+        } catch (err) {
+          console.error('Backup highlight loading failed:', err)
+        } finally {
+          setHighlightsLoading(false)
+        }
+      }
+    }
+    
+    // Small delay to ensure the main loading has a chance to work first
+    const timeout = setTimeout(loadHighlightsIfNeeded, 1000)
+    
+    return () => clearTimeout(timeout)
+  }, [currentArticleCoordinate, currentArticleEventId, relayPool, eventStore, highlightsLoading])
 }
