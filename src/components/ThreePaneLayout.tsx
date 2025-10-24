@@ -5,6 +5,7 @@ import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { BookmarkList } from './BookmarkList'
 import ContentPanel from './ContentPanel'
+import VideoView from './VideoView'
 import { HighlightsPanel } from './HighlightsPanel'
 import Settings from './Settings'
 import Toast from './Toast'
@@ -19,6 +20,7 @@ import { HighlightVisibility } from './HighlightsPanel'
 import { HighlightButtonRef } from './HighlightButton'
 import { BookmarkReference } from '../utils/contentLoader'
 import { useIsMobile } from '../hooks/useMediaQuery'
+import { classifyUrl } from '../utils/helpers'
 import { useScrollDirection } from '../hooks/useScrollDirection'
 import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'
@@ -373,42 +375,68 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             <>
               {props.support}
             </>
-          ) : (
-            <ContentPanel 
-              loading={props.readerLoading}
-              title={props.readerContent?.title}
-              html={props.readerContent?.html}
-              markdown={props.readerContent?.markdown}
-              image={props.readerContent?.image}
-              summary={props.readerContent?.summary}
-              published={props.readerContent?.published}
-              selectedUrl={props.selectedUrl}
-              highlights={props.selectedUrl && props.selectedUrl.startsWith('nostr:')
-                ? props.highlights // article-specific highlights only
-                : props.classifiedHighlights}
-              showHighlights={props.showHighlights}
-              highlightStyle={props.settings.highlightStyle || 'marker'}
-              highlightColor={props.settings.highlightColor || '#ffff00'}
-              onHighlightClick={props.onHighlightClick}
-              selectedHighlightId={props.selectedHighlightId}
-              highlightVisibility={props.highlightVisibility}
-              onTextSelection={props.onTextSelection}
-              onClearSelection={props.onClearSelection}
-              currentUserPubkey={props.currentUserPubkey}
-              followedPubkeys={props.followedPubkeys}
-              settings={props.settings}
-              relayPool={props.relayPool}
-              activeAccount={props.activeAccount}
-              currentArticle={props.currentArticle}
-              isSidebarCollapsed={props.isCollapsed}
-              isHighlightsCollapsed={props.isHighlightsCollapsed}
-              onOpenHighlights={() => {
-                if (props.isHighlightsCollapsed) {
-                  props.onToggleHighlightsPanel()
-                }
-              }}
-            />
-          )}
+          ) : (() => {
+            // Determine if this is a video URL
+            const isNostrArticle = props.selectedUrl && props.selectedUrl.startsWith('nostr:')
+            const isExternalVideo = !isNostrArticle && !!props.selectedUrl && ['youtube', 'video'].includes(classifyUrl(props.selectedUrl).type)
+            
+            if (isExternalVideo) {
+              return (
+                <VideoView
+                  videoUrl={props.selectedUrl!}
+                  title={props.readerContent?.title}
+                  image={props.readerContent?.image}
+                  summary={props.readerContent?.summary}
+                  published={props.readerContent?.published}
+                  settings={props.settings}
+                  relayPool={props.relayPool}
+                  activeAccount={props.activeAccount}
+                  onOpenHighlights={() => {
+                    if (props.isHighlightsCollapsed) {
+                      props.onToggleHighlightsPanel()
+                    }
+                  }}
+                />
+              )
+            }
+            
+            return (
+              <ContentPanel 
+                loading={props.readerLoading}
+                title={props.readerContent?.title}
+                html={props.readerContent?.html}
+                markdown={props.readerContent?.markdown}
+                image={props.readerContent?.image}
+                summary={props.readerContent?.summary}
+                published={props.readerContent?.published}
+                selectedUrl={props.selectedUrl}
+                highlights={props.selectedUrl && props.selectedUrl.startsWith('nostr:')
+                  ? props.highlights // article-specific highlights only
+                  : props.classifiedHighlights}
+                showHighlights={props.showHighlights}
+                highlightStyle={props.settings.highlightStyle || 'marker'}
+                highlightColor={props.settings.highlightColor || '#ffff00'}
+                onHighlightClick={props.onHighlightClick}
+                selectedHighlightId={props.selectedHighlightId}
+                highlightVisibility={props.highlightVisibility}
+                onTextSelection={props.onTextSelection}
+                onClearSelection={props.onClearSelection}
+                currentUserPubkey={props.currentUserPubkey}
+                followedPubkeys={props.followedPubkeys}
+                settings={props.settings}
+                relayPool={props.relayPool}
+                activeAccount={props.activeAccount}
+                currentArticle={props.currentArticle}
+                isSidebarCollapsed={props.isCollapsed}
+                isHighlightsCollapsed={props.isHighlightsCollapsed}
+                onOpenHighlights={() => {
+                  if (props.isHighlightsCollapsed) {
+                    props.onToggleHighlightsPanel()
+                  }
+                }}
+              />
+            )
+          })()}
         </div>
         <div 
           ref={highlightsRef}

@@ -54,6 +54,13 @@
   }
 }
 
+.sidebar-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
 .sidebar-header-right {
   display: flex;
   align-items: center;

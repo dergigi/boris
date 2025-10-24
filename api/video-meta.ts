@@ -94,7 +94,7 @@ async function pickCaptions(videoID: string, preferredLangs: string[], manualFir
   return null
 }
 
-async function getVimeoMetadata(videoId: string): Promise<{ title: string; description: string }> {
+async function getVimeoMetadata(videoId: string): Promise<{ title: string; description: string; thumbnail_url?: string }> {
   const vimeoUrl = `https://vimeo.com/${videoId}`
   const oembedUrl = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(vimeoUrl)}`
   
@@ -107,7 +107,8 @@ async function getVimeoMetadata(videoId: string): Promise<{ title: string; descr
   
   return {
     title: data.title || '',
-    description: data.description || ''
+    description: data.description || '',
+    thumbnail_url: data.thumbnail_url || ''
   }
 }
 
@@ -147,9 +148,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (videoInfo.source === 'youtube') {
       // YouTube handling
-      // Note: getVideoDetails doesn't exist in the library, so we use a simplified approach
-      const title = ''
-      const description = ''
+      // Fetch basic metadata from YouTube page
+      let title = ''
+      let description = ''
+      
+      try {
+        const response = await fetch(`https://www.youtube.com/watch?v=${videoInfo.id}`)
+        if (response.ok) {
+          const html = await response.text()
+          // Extract title from HTML
+          const titleMatch = html.match(/<title>([^<]+)<\/title>/)
+          if (titleMatch) {
+            title = titleMatch[1].replace(' - YouTube', '').trim()
+          }
+          // Extract description from meta tag
+          const descMatch = html.match(/<meta name="description" content="([^"]+)"/)
+          if (descMatch) {
+            description = descMatch[1].trim()
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch YouTube metadata:', error)
+      }
 
       // Language order: manual en -> uiLocale -> lang -> any manual, then auto with same order
       const langs: string[] = Array.from(new Set(['en', uiLocale, lang].filter(Boolean) as string[]))
@@ -178,11 +198,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return ok(res, response)
     } else if (videoInfo.source === 'vimeo') {
       // Vimeo handling
-      const { title, description } = await getVimeoMetadata(videoInfo.id)
+      const { title, description, thumbnail_url } = await getVimeoMetadata(videoInfo.id)
       
       const response = {
         title,
         description,
+        thumbnail_url,
         captions: [], // Vimeo doesn't provide captions through oEmbed API
         transcript: '', // No transcript available
         lang: 'en', // Default language

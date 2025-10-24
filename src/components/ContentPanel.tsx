@@ -1,5 +1,4 @@
 import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react'
-import ReactPlayer from 'react-player'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
@@ -34,9 +33,7 @@ import { unarchiveEvent, unarchiveWebsite } from '../services/unarchiveService'
 import { archiveController } from '../services/archiveController'
 import AuthorCard from './AuthorCard'
 import { faBooks } from '../icons/customIcons'
-import { extractYouTubeId, getYouTubeMeta } from '../services/youtubeMetaService'
-import { classifyUrl, shouldTrackReadingProgress } from '../utils/helpers'
-import { buildNativeVideoUrl } from '../utils/videoHelpers'
+import { shouldTrackReadingProgress } from '../utils/helpers'
 import { useReadingPosition } from '../hooks/useReadingPosition'
 import { ReadingProgressIndicator } from './ReadingProgressIndicator'
 import { EventFactory } from 'applesauce-factory'
@@ -111,15 +108,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const [isCheckingReadStatus, setIsCheckingReadStatus] = useState(false)
   const [showCheckAnimation, setShowCheckAnimation] = useState(false)
   const [showArticleMenu, setShowArticleMenu] = useState(false)
-  const [showVideoMenu, setShowVideoMenu] = useState(false)
   const [showExternalMenu, setShowExternalMenu] = useState(false)
   const [articleMenuOpenUpward, setArticleMenuOpenUpward] = useState(false)
-  const [videoMenuOpenUpward, setVideoMenuOpenUpward] = useState(false)
   const [externalMenuOpenUpward, setExternalMenuOpenUpward] = useState(false)
   const articleMenuRef = useRef<HTMLDivElement>(null)
-  const videoMenuRef = useRef<HTMLDivElement>(null)
   const externalMenuRef = useRef<HTMLDivElement>(null)
-  const [ytMeta, setYtMeta] = useState<{ title?: string; description?: string; transcript?: string } | null>(null)
   const { renderedHtml: renderedMarkdownHtml, previewRef: markdownPreviewRef, processedMarkdown } = useMarkdownToHTML(markdown, relayPool)
   
   const { finalHtml, relevantHighlights } = useHighlightedContent({
@@ -343,21 +336,18 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       if (articleMenuRef.current && !articleMenuRef.current.contains(target)) {
         setShowArticleMenu(false)
       }
-      if (videoMenuRef.current && !videoMenuRef.current.contains(target)) {
-        setShowVideoMenu(false)
-      }
       if (externalMenuRef.current && !externalMenuRef.current.contains(target)) {
         setShowExternalMenu(false)
       }
     }
     
-    if (showArticleMenu || showVideoMenu || showExternalMenu) {
+    if (showArticleMenu || showExternalMenu) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => {
         document.removeEventListener('mousedown', handleClickOutside)
       }
     }
-  }, [showArticleMenu, showVideoMenu, showExternalMenu])
+  }, [showArticleMenu, showExternalMenu])
 
   // Check available space and position menu upward if needed
   useEffect(() => {
@@ -380,13 +370,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     if (showArticleMenu) {
       checkMenuPosition(articleMenuRef, setArticleMenuOpenUpward)
     }
-    if (showVideoMenu) {
-      checkMenuPosition(videoMenuRef, setVideoMenuOpenUpward)
-    }
     if (showExternalMenu) {
       checkMenuPosition(externalMenuRef, setExternalMenuOpenUpward)
     }
-  }, [showArticleMenu, showVideoMenu, showExternalMenu])
+  }, [showArticleMenu, showExternalMenu])
 
   const readingStats = useMemo(() => {
     const content = markdown || html || ''
@@ -418,34 +405,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Determine if we're on a nostr-native article (/a/) or external URL (/r/)
   const isNostrArticle = selectedUrl && selectedUrl.startsWith('nostr:')
-  const isExternalVideo = !isNostrArticle && !!selectedUrl && ['youtube', 'video'].includes(classifyUrl(selectedUrl).type)
 
-  // Track external video duration (in seconds) for display in header
-  const [videoDurationSec, setVideoDurationSec] = useState<number | null>(null)
-  // Load YouTube metadata/captions when applicable
-  useEffect(() => {
-    (async () => {
-      try {
-        if (!selectedUrl) return setYtMeta(null)
-        const id = extractYouTubeId(selectedUrl)
-        if (!id) return setYtMeta(null)
-        const locale = navigator?.language?.split('-')[0] || 'en'
-        const data = await getYouTubeMeta(id, locale)
-        if (data) setYtMeta({ title: data.title, description: data.description, transcript: data.transcript })
-      } catch {
-        setYtMeta(null)
-      }
-    })()
-  }, [selectedUrl])
 
-  const formatDuration = (totalSeconds: number): string => {
-    const hours = Math.floor(totalSeconds / 3600)
-    const minutes = Math.floor((totalSeconds % 3600) / 60)
-    const seconds = Math.floor(totalSeconds % 60)
-    const mm = hours > 0 ? String(minutes).padStart(2, '0') : String(minutes)
-    const ss = String(seconds).padStart(2, '0')
-    return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`
-  }
   
 
   // Get article links for menu
@@ -483,7 +444,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     setShowArticleMenu(!showArticleMenu)
   }
 
-  const toggleVideoMenu = () => setShowVideoMenu(v => !v)
 
   const handleOpenPortal = () => {
     if (articleLinks) {
@@ -571,46 +531,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     setShowArticleMenu(false)
   }
   
-  // Video actions
-  const handleOpenVideoExternal = () => {
-    if (selectedUrl) window.open(selectedUrl, '_blank', 'noopener,noreferrer')
-    setShowVideoMenu(false)
-  }
-
-  const handleOpenVideoNative = () => {
-    if (!selectedUrl) return
-    const native = buildNativeVideoUrl(selectedUrl)
-    if (native) {
-      window.location.href = native
-    } else {
-      window.location.href = selectedUrl
-    }
-    setShowVideoMenu(false)
-  }
-
-  const handleCopyVideoUrl = async () => {
-    try {
-      if (selectedUrl) await navigator.clipboard.writeText(selectedUrl)
-    } catch (e) {
-      console.warn('Clipboard copy failed', e)
-    } finally {
-      setShowVideoMenu(false)
-    }
-  }
-
-  const handleShareVideoUrl = async () => {
-    try {
-      if (selectedUrl && (navigator as { share?: (d: { title?: string; url?: string }) => Promise<void> }).share) {
-        await (navigator as { share: (d: { title?: string; url?: string }) => Promise<void> }).share({ title: title || 'Video', url: selectedUrl })
-      } else if (selectedUrl) {
-        await navigator.clipboard.writeText(selectedUrl)
-      }
-    } catch (e) {
-      console.warn('Share failed', e)
-    } finally {
-      setShowVideoMenu(false)
-    }
-  }
 
   // External article actions
   const toggleExternalMenu = () => setShowExternalMenu(v => !v)
@@ -808,13 +728,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     )
   }
 
-  if (loading) {
-    return (
-      <div className="reader" aria-busy="true">
-        <ContentSkeleton />
-      </div>
-    )
-  }
 
   const highlightRgb = hexToRgb(highlightColor)
 
@@ -854,11 +767,11 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
       )}
       
       <ReaderHeader 
-        title={ytMeta?.title || title}
+        title={title}
         image={image}
         summary={summary}
         published={published}
-        readingTimeText={isExternalVideo ? (videoDurationSec !== null ? formatDuration(videoDurationSec) : null) : (readingStats ? readingStats.text : null)}
+        readingTimeText={readingStats ? readingStats.text : null}
         hasHighlights={hasHighlights}
         highlightCount={relevantHighlights.length}
         settings={settings}
@@ -871,86 +784,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           <TTSControls text={articleText} defaultLang={navigator?.language} settings={settings} />
         </div>
       )}
-      {isExternalVideo ? (
-        <>
-          <div className="reader-video">
-            <ReactPlayer 
-              url={selectedUrl as string} 
-              controls 
-              width="100%"
-              height="auto"
-              style={{ 
-                width: '100%', 
-                height: 'auto', 
-                aspectRatio: '16/9' 
-              }}
-              onDuration={(d) => setVideoDurationSec(Math.floor(d))}
-            />
-          </div>
-          {ytMeta?.description && (
-            <div className="large-text" style={{ color: '#ddd', padding: '0 0.75rem', whiteSpace: 'pre-wrap', marginBottom: '0.75rem' }}>
-              {ytMeta.description}
-            </div>
-          )}
-          {ytMeta?.transcript && (
-            <div style={{ padding: '0 0.75rem 1rem 0.75rem' }}>
-              <h3 style={{ margin: '1rem 0 0.5rem 0', fontSize: '1rem', color: '#aaa' }}>Transcript</h3>
-              <div className="large-text" style={{ whiteSpace: 'pre-wrap', color: '#ddd' }}>
-                {ytMeta.transcript}
-              </div>
-            </div>
-          )}
-          <div className="article-menu-container">
-            <div className="article-menu-wrapper" ref={videoMenuRef}>
-              <button
-                className="article-menu-btn"
-                onClick={toggleVideoMenu}
-                title="More options"
-              >
-                <FontAwesomeIcon icon={faEllipsisH} />
-              </button>
-              {showVideoMenu && (
-                <div className={`article-menu ${videoMenuOpenUpward ? 'open-upward' : ''}`}>
-                  <button className="article-menu-item" onClick={handleOpenVideoExternal}>
-                    <FontAwesomeIcon icon={faExternalLinkAlt} />
-                    <span>Open Link</span>
-                  </button>
-                  <button className="article-menu-item" onClick={handleOpenVideoNative}>
-                    <FontAwesomeIcon icon={faMobileAlt} />
-                    <span>Open in Native App</span>
-                  </button>
-                  <button className="article-menu-item" onClick={handleCopyVideoUrl}>
-                    <FontAwesomeIcon icon={faCopy} />
-                    <span>Copy URL</span>
-                  </button>
-                  <button className="article-menu-item" onClick={handleShareVideoUrl}>
-                    <FontAwesomeIcon icon={faShare} />
-                    <span>Share</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          {activeAccount && (
-            <div className="mark-as-read-container">
-              <button
-                className={`mark-as-read-btn ${isMarkedAsRead ? 'marked' : ''} ${showCheckAnimation ? 'animating' : ''}`}
-                onClick={handleMarkAsRead}
-                disabled={isCheckingReadStatus}
-                title={isMarkedAsRead ? 'Already Marked as Watched' : 'Mark as Watched'}
-                style={isMarkedAsRead ? { opacity: 0.85 } : undefined}
-              >
-                <FontAwesomeIcon 
-                  icon={isCheckingReadStatus ? faSpinner : isMarkedAsRead ? faCheckCircle : faBooks} 
-                  spin={isCheckingReadStatus} 
-                />
-                <span>
-                  {isCheckingReadStatus ? 'Checking...' : isMarkedAsRead ? 'Marked as Watched' : 'Mark as Watched'}
-                </span>
-              </button>
-            </div>
-          )}
-        </>
+      {loading || !markdown && !html ? (
+        <div className="reader" aria-busy="true">
+          <ContentSkeleton />
+        </div>
       ) : markdown || html ? (
         <>
           {markdown ? (
@@ -959,16 +796,14 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 key={`content:${contentKey}`}
                 ref={contentRef}
                 html={finalHtml}
-                renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true && !isExternalVideo}
+                renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true}
                 className="reader-markdown"
                 onMouseUp={handleSelectionEnd}
                 onTouchEnd={handleSelectionEnd}
               />
             ) : (
               <div className="reader-markdown">
-                <div className="loading-spinner">
-                  <FontAwesomeIcon icon={faSpinner} spin size="sm" />
-                </div>
+                <ContentSkeleton />
               </div>
             )
           ) : (
@@ -976,7 +811,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               key={`content:${contentKey}`}
               ref={contentRef}
               html={finalHtml || html || ''}
-              renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true && !isExternalVideo}
+              renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true}
               className="reader-html"
               onMouseUp={handleSelectionEnd}
               onTouchEnd={handleSelectionEnd}
@@ -984,7 +819,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           )}
           
           {/* Article menu for external URLs */}
-          {!isNostrArticle && !isExternalVideo && selectedUrl && (
+          {!isNostrArticle && selectedUrl && (
             <div className="article-menu-container">
               <div className="article-menu-wrapper" ref={externalMenuRef}>
                 <button
@@ -1135,11 +970,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             </div>
           )}
         </>
-      ) : (
-        <div className="reader empty">
-          <p>No readable content found for this URL.</p>
-        </div>
-      )}
+      ) : null}
       </div>
     </>
   )
