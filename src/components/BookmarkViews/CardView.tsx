@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
-import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { faLink } from '@fortawesome/free-solid-svg-icons'
+import { faNewspaper, faStickyNote, faCirclePlay, faCamera, faFileLines } from '@fortawesome/free-regular-svg-icons'
+import { faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate, renderParsedContent } from '../../utils/bookmarkUtils'
 import RichContent from '../RichContent'
@@ -10,6 +11,7 @@ import { classifyUrl } from '../../utils/helpers'
 import { useImageCache } from '../../hooks/useImageCache'
 import { getPreviewImage, fetchOgImage } from '../../utils/imagePreview'
 import { naddrEncode } from 'nostr-tools/nip19'
+import { ReadingProgressBar } from '../ReadingProgressBar'
 
 interface CardViewProps {
   bookmark: IndividualBookmark
@@ -22,7 +24,7 @@ interface CardViewProps {
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
   articleImage?: string
   articleSummary?: string
-  contentTypeIcon: IconDefinition
+  articleTitle?: string
   readingProgress?: number
 }
 
@@ -31,13 +33,12 @@ export const CardView: React.FC<CardViewProps> = ({
   index,
   hasUrls,
   extractedUrls,
-  onSelectUrl,
   authorNpub,
   getAuthorDisplayName,
   handleReadNow,
   articleImage,
   articleSummary,
-  contentTypeIcon,
+  articleTitle,
   readingProgress
 }) => {
   const firstUrl = hasUrls ? extractedUrls[0] : null
@@ -45,20 +46,40 @@ export const CardView: React.FC<CardViewProps> = ({
   const instantPreview = firstUrl ? getPreviewImage(firstUrl, firstUrlClassificationType || '') : null
   
   const [ogImage, setOgImage] = useState<string | null>(null)
-  const [expanded, setExpanded] = useState(false)
-  const [urlsExpanded, setUrlsExpanded] = useState(false)
   
-  const contentLength = (bookmark.content || '').length
-  const shouldTruncate = !expanded && contentLength > 210
   const isArticle = bookmark.kind === 30023
+  const isWebBookmark = bookmark.kind === 39701
+  const isNote = bookmark.kind === 1
   
-  // Calculate progress color (matching BlogPostCard logic)
-  let progressColor = '#6366f1' // Default blue (reading)
-  if (readingProgress && readingProgress >= 0.95) {
-    progressColor = '#10b981' // Green (completed)
-  } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
-    progressColor = 'var(--color-text)' // Neutral text color (started)
+  // Extract title from tags for regular bookmarks (not just articles)
+  const bookmarkTitle = bookmark.tags.find(t => t[0] === 'title')?.[1]
+  
+  // Get content type icon based on bookmark kind and URL classification
+  const getContentTypeIcon = () => {
+    if (isArticle) return faNewspaper // Nostr-native article
+    
+    // For web bookmarks, classify the URL to determine icon
+    if (isWebBookmark && firstUrlClassificationType) {
+      switch (firstUrlClassificationType) {
+        case 'youtube':
+        case 'video':
+          return faCirclePlay
+        case 'image':
+          return faCamera
+        case 'article':
+          return faFileLines
+        default:
+          return faGlobe
+      }
+    }
+    
+    // For notes, use sticky note icon
+    if (isNote) return faStickyNote
+    
+    // Default fallback
+    return faLink
   }
+  
   
   // Determine which image to use (article image, instant preview, or OG image)
   const previewImage = articleImage || instantPreview || ogImage
@@ -70,6 +91,7 @@ export const CardView: React.FC<CardViewProps> = ({
       fetchOgImage(firstUrl).then(setOgImage)
     }
   }, [firstUrl, articleImage, instantPreview, ogImage])
+
 
   const triggerOpen = () => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)
 
@@ -106,122 +128,87 @@ export const CardView: React.FC<CardViewProps> = ({
   return (
     <div 
       key={`${bookmark.id}-${index}`}
-      className={`individual-bookmark ${bookmark.isPrivate ? 'private-bookmark' : ''}`}
+      className={`individual-bookmark card-view ${bookmark.isPrivate ? 'private-bookmark' : ''}`}
       onClick={triggerOpen}
       role="button"
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
-      {cachedImage && (
-        <div 
-          className="article-hero-image"
-          style={{ backgroundImage: `url(${cachedImage})` }}
-          onClick={() => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)}
-        />
-      )}
-      <div className="bookmark-header">
-        <span className="bookmark-type">
-          <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
-        </span>
-        
-        {getInternalRoute() ? (
-          <Link
-            to={getInternalRoute()!}
-            className="bookmark-date-link"
-            title="Open in app"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}
-          </Link>
-        ) : (
-          <span className="bookmark-date">{formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}</span>
-        )}
-      </div>
-      
-      {extractedUrls.length > 0 && (
-        <div className="bookmark-urls">
-          {(urlsExpanded ? extractedUrls : extractedUrls.slice(0, 1)).map((url, urlIndex) => {
-            return (
-              <button
-                key={urlIndex}
-                className="bookmark-url"
-                onClick={(e) => { e.stopPropagation(); onSelectUrl?.(url) }}
-                title="Open in reader"
+      <div className="card-layout">
+        <div className="card-content">
+          <div className="card-content-header">
+            {(cachedImage || firstUrl) && (
+              <div 
+                className="card-thumbnail"
+                style={cachedImage ? { backgroundImage: `url(${cachedImage})` } : undefined}
+                onClick={() => handleReadNow({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>)}
               >
-                {url}
-              </button>
-            )
-          })}
-          {extractedUrls.length > 1 && (
-            <button
-              className="expand-toggle-urls"
-              onClick={(e) => { e.stopPropagation(); setUrlsExpanded(v => !v) }}
-              aria-label={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
-              title={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
+            {!cachedImage && firstUrl && (
+              <div className="thumbnail-placeholder">
+                <FontAwesomeIcon icon={getContentTypeIcon()} />
+              </div>
+            )}
+              </div>
+            )}
+            <div className="card-text-content">
+        <div className="bookmark-header">
+        </div>
+        
+        {/* Display title for articles or bookmarks with titles */}
+        {(articleTitle || bookmarkTitle) && (
+          <h3 className="bookmark-title">
+            <RichContent content={articleTitle || bookmarkTitle || ''} className="" />
+          </h3>
+        )}
+        
+        {isArticle && articleSummary ? (
+          <RichContent content={articleSummary} className="bookmark-content article-summary" />
+        ) : bookmark.parsedContent ? (
+          <div className="bookmark-content">
+            {renderParsedContent(bookmark.parsedContent)}
+          </div>
+        ) : bookmark.content && (
+          <RichContent content={bookmark.content} className="bookmark-content" />
+        )}
+        
+            </div>
+          </div>
+        </div>
+        
+        {/* Reading progress indicator as separator - always shown for all bookmark types */}
+        <ReadingProgressBar 
+          readingProgress={readingProgress}
+          height={1}
+          marginTop="0.125rem"
+          marginBottom="0.125rem"
+        />
+        
+        <div className="bookmark-footer">
+          <div className="bookmark-meta-minimal">
+            <Link
+              to={`/p/${authorNpub}`}
+              className="author-link-minimal"
+              title="Open author profile"
+              onClick={(e) => e.stopPropagation()}
             >
-              {urlsExpanded ? `Hide ${extractedUrls.length - 1} more` : `Show ${extractedUrls.length - 1} more`}
-            </button>
-          )}
+              {getAuthorDisplayName()}
+            </Link>
+          </div>
+          <div className="bookmark-footer-right">
+            {getInternalRoute() ? (
+              <Link
+                to={getInternalRoute()!}
+                className="bookmark-date-link"
+                title="Open in app"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}
+              </Link>
+            ) : (
+              <span className="bookmark-date">{formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}</span>
+            )}
+          </div>
         </div>
-      )}
-      
-      {isArticle && articleSummary ? (
-        <RichContent content={articleSummary} className="bookmark-content article-summary" />
-      ) : bookmark.parsedContent ? (
-        <div className="bookmark-content">
-          {shouldTruncate && bookmark.content
-            ? <RichContent content={`${bookmark.content.slice(0, 210).trimEnd()}…`} className="" />
-            : renderParsedContent(bookmark.parsedContent)}
-        </div>
-      ) : bookmark.content && (
-        <RichContent content={shouldTruncate ? `${bookmark.content.slice(0, 210).trimEnd()}…` : bookmark.content} />
-      )}
-
-      {contentLength > 210 && (
-        <button
-          className="expand-toggle"
-          onClick={(e) => { e.stopPropagation(); setExpanded(v => !v) }}
-          aria-label={expanded ? 'Collapse' : 'Expand'}
-          title={expanded ? 'Collapse' : 'Expand'}
-        >
-          <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} />
-        </button>
-      )}
-      
-      {/* Reading progress indicator for articles */}
-      {isArticle && readingProgress !== undefined && readingProgress > 0 && (
-        <div 
-          style={{
-            height: '3px',
-            width: '100%',
-            background: 'var(--color-border)',
-            overflow: 'hidden',
-            marginTop: '0.75rem'
-          }}
-        >
-          <div
-            style={{
-              height: '100%',
-              width: `${Math.round(readingProgress * 100)}%`,
-              background: progressColor,
-              transition: 'width 0.3s ease, background 0.3s ease'
-            }}
-          />
-        </div>
-      )}
-      
-      <div className="bookmark-footer">
-        <div className="bookmark-meta-minimal">
-          <Link
-            to={`/p/${authorNpub}`}
-            className="author-link-minimal"
-            title="Open author profile"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {getAuthorDisplayName()}
-          </Link>
-        </div>
-        {/* CTA removed */}
       </div>
     </div>
   )

@@ -6,6 +6,7 @@ import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDateCompact } from '../../utils/bookmarkUtils'
 import RichContent from '../RichContent'
 import { naddrEncode } from 'nostr-tools/nip19'
+import { ReadingProgressBar } from '../ReadingProgressBar'
 
 interface CompactViewProps {
   bookmark: IndividualBookmark
@@ -36,13 +37,6 @@ export const CompactView: React.FC<CompactViewProps> = ({
   
   const displayText = isArticle && articleTitle ? articleTitle : bookmark.content
 
-  // Calculate progress color
-  let progressColor = '#6366f1' // Default blue (reading)
-  if (readingProgress && readingProgress >= 0.95) {
-    progressColor = '#10b981' // Green (completed)
-  } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
-    progressColor = 'var(--color-text)' // Neutral text color (started)
-  }
 
   const handleCompactClick = () => {
     if (isArticle) {
@@ -86,27 +80,13 @@ export const CompactView: React.FC<CompactViewProps> = ({
         {/* CTA removed */}
       </div>
       
-      {/* Reading progress indicator for all bookmark types with reading data */}
+      {/* Reading progress indicator - only show when there's actual progress */}
       {readingProgress !== undefined && readingProgress > 0 && (
-        <div 
-          style={{
-            height: '1px',
-            width: '100%',
-            background: 'var(--color-border)',
-            overflow: 'hidden',
-            margin: '0',
-            marginLeft: '1.5rem'
-          }}
-        >
-          <div
-            style={{
-              height: '100%',
-              width: `${Math.round(readingProgress * 100)}%`,
-              background: progressColor,
-              transition: 'width 0.3s ease, background 0.3s ease'
-            }}
-          />
-        </div>
+        <ReadingProgressBar 
+          readingProgress={readingProgress}
+          height={1}
+          marginLeft="1.5rem"
+        />
       )}
     </div>
   )

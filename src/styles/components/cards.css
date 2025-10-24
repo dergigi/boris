@@ -59,7 +59,7 @@
 .compact-read-btn:active { transform: translateY(1px); }
 
 .bookmark-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
-.bookmark-type { color: var(--color-primary); font-size: 0.9rem; display: flex; align-items: center; gap: 0.35rem; }
+.bookmark-type { font-size: 0.9rem; display: flex; align-items: center; gap: 0.35rem; }
 .bookmark-id { font-family: monospace; font-size: 0.8rem; color: var(--color-text-secondary); background: var(--color-bg); padding: 0.25rem 0.5rem; border-radius: 4px; }
 .bookmark-date { font-size: 0.8rem; color: var(--color-text-muted); }
 .bookmark-date-link { font-size: 0.8rem; color: var(--color-text-muted); text-decoration: none; transition: color 0.2s ease; }
@@ -75,6 +75,179 @@
 .read-now-button-minimal:hover { background: var(--color-primary-hover); }
 .expand-toggle-urls { margin-top: 0.5rem; background: transparent; border: none; color: var(--color-primary); cursor: pointer; font-size: 0.8rem; padding: 0.25rem 0; text-decoration: underline; }
 .expand-toggle-urls:hover { color: var(--color-primary-hover); }
+
+/* Medium-sized card view */
+.individual-bookmark.card-view { 
+  padding: 0; 
+  display: flex; 
+  flex-direction: column; 
+  overflow: hidden; 
+  border: 1px solid var(--color-bg-elevated); 
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: var(--color-bg);
+}
+
+.individual-bookmark.card-view:hover {
+  border-color: var(--color-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.card-layout {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  gap: 0.75rem;
+}
+
+.card-content-header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.card-text-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card-thumbnail {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--color-bg-elevated) 0%, var(--color-bg-subtle) 50%, var(--color-bg-elevated) 100%);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-thumbnail:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.card-thumbnail::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.1) 100%);
+  pointer-events: none;
+}
+
+.card-thumbnail .thumbnail-placeholder {
+  font-size: 1.5rem;
+  color: var(--color-border-subtle);
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.card-content .bookmark-header {
+  display: none;
+}
+
+.card-content .bookmark-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 0.25rem 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.card-content .bookmark-content {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-content .bookmark-content.article-summary {
+  -webkit-line-clamp: 2;
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.card-content .bookmark-footer {
+  margin-top: auto;
+  padding-top: 0.125rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-content .bookmark-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+}
+
+.card-content .bookmark-footer .bookmark-type {
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-text-secondary) !important;
+}
+
+.card-content .bookmark-footer .bookmark-type .content-type-icon {
+  color: var(--color-text-secondary) !important;
+}
+
+.card-content .bookmark-footer .bookmark-date,
+.card-content .bookmark-footer .bookmark-date-link {
+  display: inline;
+  white-space: nowrap;
+}
+
+/* Reading progress as separator - always shown, full width */
+.reading-progress-separator {
+  height: 1px;
+  width: 100%;
+  background: var(--color-border);
+  border-radius: 0.5px;
+  overflow: hidden;
+  margin: 0.125rem 0;
+  position: relative;
+}
+
+.reading-progress-separator .progress-fill {
+  height: 100%;
+  border-radius: 0.5px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
 
 /* Large preview view */
 .individual-bookmark.large { padding: 0; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--color-bg-elevated); }
@@ -115,6 +288,74 @@
 .blog-post-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--color-border); font-size: 0.75rem; color: var(--color-text-muted); flex-wrap: wrap; }
 .blog-post-card-author, .blog-post-card-date { display: flex; align-items: center; gap: 0.5rem; }
 .blog-post-card-author svg, .blog-post-card-date svg { opacity: 0.7; }
+/* Responsive design for medium-sized cards */
+@media (max-width: 768px) {
+  .individual-bookmark.card-view {
+    border-radius: 8px;
+  }
+  
+  .card-layout {
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .card-content-header {
+    gap: 0.75rem;
+  }
+  
+  .card-thumbnail {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .card-text-content {
+    gap: 0.5rem;
+  }
+  
+  .card-content .bookmark-title {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .card-content .bookmark-content {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  
+  .card-content .bookmark-footer {
+    padding-top: 0.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-layout {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  
+  .card-content-header {
+    gap: 0.5rem;
+  }
+  
+  .card-thumbnail {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .card-thumbnail .thumbnail-placeholder {
+    font-size: 1.2rem;
+  }
+  
+  .card-content .bookmark-title {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .card-content .bookmark-content {
+    font-size: 0.8rem;
+  }
+}
+
 @media (max-width: 768px) {
   .explore-container { padding: 1rem; }
   .explore-header h1 { font-size: 2rem; }
