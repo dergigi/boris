@@ -122,27 +122,25 @@ export const LargeView: React.FC<LargeViewProps> = ({
           <RichContent content={bookmark.content} className="large-text" />
         )}
         
-        {/* Reading progress indicator for articles - shown only if there's progress */}
-        {isArticle && readingProgress !== undefined && readingProgress > 0 && (
-          <div 
+        {/* Reading progress indicator for all bookmark types - always shown */}
+        <div 
+          style={{
+            height: '3px',
+            width: '100%',
+            background: 'var(--color-border)',
+            overflow: 'hidden',
+            marginTop: '0.75rem'
+          }}
+        >
+          <div
             style={{
-              height: '3px',
-              width: '100%',
-              background: 'var(--color-border)',
-              overflow: 'hidden',
-              marginTop: '0.75rem'
+              height: '100%',
+              width: readingProgress ? `${progressPercent}%` : '0%',
+              background: readingProgress ? progressColor : 'var(--color-border)',
+              transition: 'width 0.3s ease, background 0.3s ease'
             }}
-          >
-            <div
-              style={{
-                height: '100%',
-                width: `${progressPercent}%`,
-                background: progressColor,
-                transition: 'width 0.3s ease, background 0.3s ease'
-              }}
-            />
-          </div>
-        )}
+          />
+        </div>
         
         <div className="large-footer">
           <span className="bookmark-type-large">

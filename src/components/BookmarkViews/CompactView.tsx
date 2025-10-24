@@ -86,28 +86,26 @@ export const CompactView: React.FC<CompactViewProps> = ({
         {/* CTA removed */}
       </div>
       
-      {/* Reading progress indicator for all bookmark types with reading data */}
-      {readingProgress !== undefined && readingProgress > 0 && (
-        <div 
+      {/* Reading progress indicator for all bookmark types - always shown */}
+      <div 
+        style={{
+          height: '1px',
+          width: '100%',
+          background: 'var(--color-border)',
+          overflow: 'hidden',
+          margin: '0',
+          marginLeft: '1.5rem'
+        }}
+      >
+        <div
           style={{
-            height: '1px',
-            width: '100%',
-            background: 'var(--color-border)',
-            overflow: 'hidden',
-            margin: '0',
-            marginLeft: '1.5rem'
+            height: '100%',
+            width: readingProgress ? `${Math.round(readingProgress * 100)}%` : '0%',
+            background: readingProgress ? progressColor : 'var(--color-border)',
+            transition: 'width 0.3s ease, background 0.3s ease'
           }}
-        >
-          <div
-            style={{
-              height: '100%',
-              width: `${Math.round(readingProgress * 100)}%`,
-              background: progressColor,
-              transition: 'width 0.3s ease, background 0.3s ease'
-            }}
-          />
-        </div>
-      )}
+        />
+      </div>
     </div>
   )
 }
