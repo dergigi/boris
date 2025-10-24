@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.24] - 2025-01-27
+
+### Added
+
+- Dynamic browser title based on content
+  - Browser title now updates to reflect the current content being viewed
+  - Improves user experience and bookmark identification
+- Enhanced Links type bookmarks with OpenGraph data
+  - Web bookmarks now include rich OpenGraph metadata
+  - Better visual representation and content preview for web bookmarks
+
+### Changed
+
+- Replaced custom OpenGraph extraction with fetch-opengraph library
+  - More reliable and standardized OpenGraph data extraction
+  - Better performance and maintainability for web bookmark processing
+
+### Fixed
+
+- Description extraction from web bookmark content field
+  - Improved extraction of descriptions from web bookmark content
+  - Better content identification and display for web bookmarks
+- Resolved all linting and TypeScript issues
+  - Code quality improvements and type safety enhancements
+  - Cleaner codebase with better maintainability
+
 ## [0.10.23] - 2025-01-27
 
 ### Added
