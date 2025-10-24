@@ -976,8 +976,8 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
           )}
         </>
       ) : (
-        <div className="reader empty">
-          <p>No readable content found for this URL.</p>
+        <div className="reader" aria-busy="true">
+          <ContentSkeleton />
         </div>
       )}
       </div>
