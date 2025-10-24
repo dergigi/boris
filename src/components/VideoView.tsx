@@ -210,8 +210,10 @@ const VideoView: React.FC<VideoViewProps> = ({
     }
   }
 
-  const displayTitle = ytMeta?.title || title
-  // For direct video URLs from Nostr notes, prioritize note content over metadata
+  // For direct video URLs from Nostr notes, use note content for title and description
+  const displayTitle = noteContent ? 
+    (noteContent.length > 100 ? noteContent.substring(0, 100).trim() + '...' : noteContent) :
+    (ytMeta?.title || title)
   const displaySummary = noteContent || ytMeta?.description || summary
   const durationText = videoDurationSec !== null ? formatDuration(videoDurationSec) : null
   
