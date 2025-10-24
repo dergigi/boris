@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLink } from '@fortawesome/free-solid-svg-icons'
+import { faNewspaper, faStickyNote, faCirclePlay, faCamera, faFileLines } from '@fortawesome/free-regular-svg-icons'
+import { faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { IndividualBookmark } from '../../types/bookmarks'
 import { formatDate, renderParsedContent } from '../../utils/bookmarkUtils'
 import RichContent from '../RichContent'
@@ -46,9 +48,37 @@ export const CardView: React.FC<CardViewProps> = ({
   const [ogImage, setOgImage] = useState<string | null>(null)
   
   const isArticle = bookmark.kind === 30023
+  const isWebBookmark = bookmark.kind === 39701
+  const isNote = bookmark.kind === 1
   
   // Extract title from tags for regular bookmarks (not just articles)
   const bookmarkTitle = bookmark.tags.find(t => t[0] === 'title')?.[1]
+  
+  // Get content type icon based on bookmark kind and URL classification
+  const getContentTypeIcon = () => {
+    if (isArticle) return faNewspaper // Nostr-native article
+    
+    // For web bookmarks, classify the URL to determine icon
+    if (isWebBookmark && firstUrlClassificationType) {
+      switch (firstUrlClassificationType) {
+        case 'youtube':
+        case 'video':
+          return faCirclePlay
+        case 'image':
+          return faCamera
+        case 'document':
+          return faFileLines
+        default:
+          return faGlobe
+      }
+    }
+    
+    // For notes, use sticky note icon
+    if (isNote) return faStickyNote
+    
+    // Default fallback
+    return faLink
+  }
   
   
   // Determine which image to use (article image, instant preview, or OG image)
@@ -115,7 +145,7 @@ export const CardView: React.FC<CardViewProps> = ({
               >
             {!cachedImage && firstUrl && (
               <div className="thumbnail-placeholder">
-                <FontAwesomeIcon icon={faLink} />
+                <FontAwesomeIcon icon={getContentTypeIcon()} />
               </div>
             )}
               </div>
