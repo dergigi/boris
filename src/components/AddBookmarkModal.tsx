@@ -85,6 +85,13 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
           fetch(normalizedUrl).catch(() => null) // Don't fail if OpenGraph fetch fails
         ])
         
+        console.log('🔍 Modal fetch debug:', {
+          url: normalizedUrl,
+          hasContent: !!content,
+          hasOgData: !!ogData,
+          ogDataKeys: ogData ? Object.keys(ogData) : null
+        })
+        
         lastFetchedUrlRef.current = normalizedUrl
         let extractedAnything = false
         
@@ -110,6 +117,13 @@ const AddBookmarkModal: React.FC<AddBookmarkModalProps> = ({ onClose, onSave }) 
         // Extract description: prioritize og:description > twitter:description > meta description
         if (!description && ogData) {
           const extractedDesc = ogData['og:description'] || ogData['twitter:description'] || ogData.description
+          
+          console.log('🔍 Description extraction debug:', {
+            currentDescription: description,
+            hasOgData: !!ogData,
+            extractedDesc: extractedDesc,
+            willSetDescription: !!extractedDesc
+          })
           
           if (extractedDesc) {
             setDescription(extractedDesc)
