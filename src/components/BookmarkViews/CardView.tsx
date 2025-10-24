@@ -132,10 +132,6 @@ export const CardView: React.FC<CardViewProps> = ({
             )}
             <div className="card-text-content">
         <div className="bookmark-header">
-          <span className="bookmark-type">
-            <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
-          </span>
-          
           {getInternalRoute() ? (
             <Link
               to={getInternalRoute()!}
@@ -208,7 +204,9 @@ export const CardView: React.FC<CardViewProps> = ({
               {getAuthorDisplayName()}
             </Link>
           </div>
-          {/* CTA removed */}
+          <span className="bookmark-type">
+            <FontAwesomeIcon icon={contentTypeIcon} className="content-type-icon" />
+          </span>
         </div>
       </div>
     </div>

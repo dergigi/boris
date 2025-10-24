@@ -166,6 +166,8 @@
 
 .card-content .bookmark-header {
   margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .card-content .bookmark-title {
@@ -201,6 +203,17 @@
 .card-content .bookmark-footer {
   margin-top: auto;
   padding-top: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-content .bookmark-footer .bookmark-type {
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 /* Reading progress as separator - always shown, full width */
