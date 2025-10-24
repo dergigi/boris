@@ -145,7 +145,7 @@ export const CardView: React.FC<CardViewProps> = ({
               <button
                 key={urlIndex}
                 className="bookmark-url"
-                onClick={(e) => { e.stopPropagation(); onSelectUrl?.(url, bookmark) }}
+                onClick={(e) => { e.stopPropagation(); onSelectUrl?.(url) }}
                 title="Open in reader"
               >
                 {url}

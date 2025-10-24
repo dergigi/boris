@@ -129,7 +129,7 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
     if (!hasUrls) return
     const firstUrl = extractedUrls[0]
     if (onSelectUrl) {
-      onSelectUrl(firstUrl, bookmark)
+      onSelectUrl(firstUrl)
     } else {
       window.open(firstUrl, '_blank')
     }
