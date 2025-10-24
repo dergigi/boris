@@ -1,4 +1,5 @@
 import { Highlight } from '../types/highlights'
+import { nip19 } from 'nostr-tools'
 
 export function normalizeUrl(url: string): string {
   try {
@@ -15,10 +16,26 @@ export function filterHighlightsByUrl(highlights: Highlight[], selectedUrl: stri
   }
   
   
-  // For Nostr articles, we already fetched highlights specifically for this article
-  // So we don't need to filter them - they're all relevant
+  // For Nostr articles, filter by article coordinate
   if (selectedUrl.startsWith('nostr:')) {
-    return highlights
+    try {
+      const decoded = nip19.decode(selectedUrl.replace('nostr:', ''))
+      if (decoded.type === 'naddr') {
+        const ptr = decoded.data as { kind: number; pubkey: string; identifier: string }
+        const articleCoordinate = `${ptr.kind}:${ptr.pubkey}:${ptr.identifier}`
+        
+        return highlights.filter(h => {
+          // Keep highlights that match this article coordinate
+          return h.eventReference === articleCoordinate
+        })
+      } else {
+        // Not a valid naddr, return empty array
+        return []
+      }
+    } catch {
+      // Invalid naddr, return empty array
+      return []
+    }
   }
   
   // For web URLs, filter by URL matching
