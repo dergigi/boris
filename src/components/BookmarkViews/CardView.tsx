@@ -22,6 +22,7 @@ interface CardViewProps {
   handleReadNow: (e: React.MouseEvent<HTMLButtonElement>) => void
   articleImage?: string
   articleSummary?: string
+  articleTitle?: string
   contentTypeIcon: IconDefinition
   readingProgress?: number
 }
@@ -37,6 +38,7 @@ export const CardView: React.FC<CardViewProps> = ({
   handleReadNow,
   articleImage,
   articleSummary,
+  articleTitle,
   contentTypeIcon,
   readingProgress
 }) => {
@@ -148,6 +150,13 @@ export const CardView: React.FC<CardViewProps> = ({
             <span className="bookmark-date">{formatDate(bookmark.created_at ?? bookmark.listUpdatedAt)}</span>
           )}
         </div>
+        
+        {/* Display title for articles */}
+        {articleTitle && (
+          <h3 className="bookmark-title">
+            <RichContent content={articleTitle} className="" />
+          </h3>
+        )}
       
         {extractedUrls.length > 0 && (
           <div className="bookmark-urls">

@@ -168,6 +168,19 @@
   margin-bottom: 0.5rem;
 }
 
+.card-content .bookmark-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 .card-content .bookmark-content {
   font-size: 0.9rem;
   line-height: 1.6;
@@ -295,6 +308,11 @@
     gap: 0.5rem;
   }
   
+  .card-content .bookmark-title {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
   .card-content .bookmark-content {
     font-size: 0.85rem;
     line-height: 1.5;
@@ -322,6 +340,11 @@
   
   .card-thumbnail .thumbnail-placeholder {
     font-size: 1.2rem;
+  }
+  
+  .card-content .bookmark-title {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
   }
   
   .card-content .bookmark-content {
