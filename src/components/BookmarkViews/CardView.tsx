@@ -48,7 +48,6 @@ export const CardView: React.FC<CardViewProps> = ({
   
   const [ogImage, setOgImage] = useState<string | null>(null)
   const [expanded, setExpanded] = useState(false)
-  const [urlsExpanded, setUrlsExpanded] = useState(false)
   
   const contentLength = (bookmark.content || '').length
   const shouldTruncate = !expanded && contentLength > 210
@@ -156,33 +155,6 @@ export const CardView: React.FC<CardViewProps> = ({
           <h3 className="bookmark-title">
             <RichContent content={articleTitle} className="" />
           </h3>
-        )}
-      
-        {extractedUrls.length > 0 && (
-          <div className="bookmark-urls">
-            {(urlsExpanded ? extractedUrls : extractedUrls.slice(0, 1)).map((url, urlIndex) => {
-              return (
-                <button
-                  key={urlIndex}
-                  className="bookmark-url"
-                  onClick={(e) => { e.stopPropagation(); onSelectUrl?.(url) }}
-                  title="Open in reader"
-                >
-                  {url}
-                </button>
-              )
-            })}
-            {extractedUrls.length > 1 && (
-              <button
-                className="expand-toggle-urls"
-                onClick={(e) => { e.stopPropagation(); setUrlsExpanded(v => !v) }}
-                aria-label={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
-                title={urlsExpanded ? 'Collapse URLs' : 'Expand URLs'}
-              >
-                {urlsExpanded ? `Hide ${extractedUrls.length - 1} more` : `Show ${extractedUrls.length - 1} more`}
-              </button>
-            )}
-          </div>
         )}
         
         {isArticle && articleSummary ? (
