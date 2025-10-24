@@ -31,7 +31,6 @@ export const CardView: React.FC<CardViewProps> = ({
   index,
   hasUrls,
   extractedUrls,
-  onSelectUrl,
   authorNpub,
   getAuthorDisplayName,
   handleReadNow,
