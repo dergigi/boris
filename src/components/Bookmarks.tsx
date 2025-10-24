@@ -226,9 +226,15 @@ const Bookmarks: React.FC<BookmarksProps> = ({
     settings
   })
 
+  // Determine which loader should be active based on route
+  // Only one loader should run at a time to prevent state conflicts
+  const shouldLoadArticle = !!naddr && !externalUrl && !eventId
+  const shouldLoadExternal = !!externalUrl && !naddr && !eventId  
+  const shouldLoadEvent = !!eventId && !naddr && !externalUrl
+
   // Load nostr-native article if naddr is in URL
   useArticleLoader({
-    naddr,
+    naddr: shouldLoadArticle ? naddr : undefined,
     relayPool,
     eventStore,
     setSelectedUrl,
@@ -245,7 +251,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   
   // Load external URL if /r/* route is used
   useExternalUrlLoader({
-    url: externalUrl,
+    url: shouldLoadExternal ? externalUrl : undefined,
     relayPool,
     eventStore,
     setSelectedUrl,
@@ -260,7 +266,7 @@ const Bookmarks: React.FC<BookmarksProps> = ({
 
   // Load event if /e/:eventId route is used
   useEventLoader({
-    eventId,
+    eventId: shouldLoadEvent ? eventId : undefined,
     relayPool,
     eventStore,
     setSelectedUrl,
