@@ -53,6 +53,9 @@ export const CardView: React.FC<CardViewProps> = ({
   const shouldTruncate = !expanded && contentLength > 210
   const isArticle = bookmark.kind === 30023
   
+  // Extract title from tags for regular bookmarks (not just articles)
+  const bookmarkTitle = bookmark.tags.find(t => t[0] === 'title')?.[1]
+  
   // Calculate progress color (matching BlogPostCard logic)
   let progressColor = '#6366f1' // Default blue (reading)
   if (readingProgress && readingProgress >= 0.95) {
@@ -146,10 +149,10 @@ export const CardView: React.FC<CardViewProps> = ({
           )}
         </div>
         
-        {/* Display title for articles */}
-        {articleTitle && (
+        {/* Display title for articles or bookmarks with titles */}
+        {(articleTitle || bookmarkTitle) && (
           <h3 className="bookmark-title">
-            <RichContent content={articleTitle} className="" />
+            <RichContent content={articleTitle || bookmarkTitle || ''} className="" />
           </h3>
         )}
         
