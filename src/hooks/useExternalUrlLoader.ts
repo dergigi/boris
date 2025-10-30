@@ -165,6 +165,9 @@ export function useExternalUrlLoader({
     return () => {
       mountedRef.current = false
     }
+    // Dependencies intentionally excluded to prevent re-renders when relay/eventStore state changes
+    // This fixes the loading skeleton appearing when going offline (flight mode)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     url,
     cachedUrlHighlights

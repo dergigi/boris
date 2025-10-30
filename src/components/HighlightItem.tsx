@@ -140,8 +140,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         setIsSyncing(syncingState)
         // When sync completes successfully, update highlight to show all relays
         if (!syncingState) {
-          setShowOfflineIndicator(false)
-          
           // Update the highlight with all relays after successful sync
           if (onHighlightUpdate && highlight.isLocalOnly && relayPool) {
             const updatedHighlight = {
@@ -284,9 +282,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       if (onHighlightUpdate) {
         onHighlightUpdate(updatedHighlight)
       }
-      
-      // Update local state
-      setShowOfflineIndicator(false)
       
     } catch (error) {
       console.error('❌ Failed to rebroadcast:', error)

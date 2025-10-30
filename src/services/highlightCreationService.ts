@@ -7,12 +7,21 @@ import { Helpers, IEventStore } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
 import { Highlight } from '../types/highlights'
 import { UserSettings } from './settingsService'
-import { isLocalRelay, areAllRelaysLocal } from '../utils/helpers'
+import { isLocalRelay } from '../utils/helpers'
 import { setHighlightMetadata } from './highlightEventProcessor'
 
 // Boris pubkey for zap splits
 // npub19802see0gnk3vjlus0dnmfdagusqrtmsxpl5yfmkwn9uvnfnqylqduhr0x
 export const BORIS_PUBKEY = '29dea8672f44ed164bfc83db3da5bd472001af70307f42277674cbc64d33013e'
+
+// Extended event type with highlight metadata
+interface HighlightEvent extends NostrEvent {
+  __highlightProps?: {
+    publishedRelays?: string[]
+    isLocalOnly?: boolean
+    isSyncing?: boolean
+  }
+}
 
 const {
   getHighlightText,
@@ -119,7 +128,7 @@ export async function createHighlight(
   const signedEvent = await factory.sign(highlightEvent)
 
   // Initialize custom properties on the event (will be updated after publishing)
-  ;(signedEvent as any).__highlightProps = {
+  ;(signedEvent as HighlightEvent).__highlightProps = {
     publishedRelays: [],
     isLocalOnly: false,
     isSyncing: false
@@ -170,9 +179,9 @@ export async function createHighlight(
       connectedRelays: connectedRelays.length,
       successfulRelays: successfulRelays.length,
       failedRelays: failedRelays.length,
+      failedRelayDetails: failedRelays,
       successfulLocalRelays,
       successfulRemoteRelays,
-      failedRelays,
       isLocalOnly,
       flightModeReason: isLocalOnly 
         ? 'Only local relays accepted the event' 
@@ -196,7 +205,7 @@ export async function createHighlight(
     })
 
     // Also update the event with the actual properties (for backwards compatibility)
-    ;(signedEvent as any).__highlightProps = {
+    ;(signedEvent as HighlightEvent).__highlightProps = {
       publishedRelays: successfulRelaysList,
       isLocalOnly,
       isSyncing: false
@@ -227,7 +236,7 @@ export async function createHighlight(
     })
     
     // Also update the event with the error state (for backwards compatibility)
-    ;(signedEvent as any).__highlightProps = {
+    ;(signedEvent as HighlightEvent).__highlightProps = {
       publishedRelays: [],
       isLocalOnly: true,
       isSyncing: false

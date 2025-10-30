@@ -2,6 +2,15 @@ import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 import { Highlight } from '../types/highlights'
 
+// Extended event type with highlight metadata
+interface HighlightEvent extends NostrEvent {
+  __highlightProps?: {
+    publishedRelays?: string[]
+    isLocalOnly?: boolean
+    isSyncing?: boolean
+  }
+}
+
 const {
   getHighlightText,
   getHighlightContext,
@@ -67,7 +76,7 @@ export function eventToHighlight(event: NostrEvent): Highlight {
   const cachedMetadata = getHighlightMetadata(event.id)
   
   // Fall back to __highlightProps if cache doesn't have it (for backwards compatibility)
-  const customProps = cachedMetadata || (event as any).__highlightProps || {}
+  const customProps = cachedMetadata || (event as HighlightEvent).__highlightProps || {}
   
   return {
     id: event.id,
