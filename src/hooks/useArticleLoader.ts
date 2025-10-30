@@ -320,10 +320,11 @@ export function useArticleLoader({
               console.log('[article-loader] ✅ First event received - updating UI immediately')
               firstEmitted = true
               const title = Helpers.getArticleTitle(evt) || 'Untitled Article'
-              setCurrentTitle(title)
               const image = Helpers.getArticleImage(evt)
               const summary = Helpers.getArticleSummary(evt)
               const published = Helpers.getArticlePublished(evt)
+              
+              setCurrentTitle(title)
               setReaderContent({
                 title,
                 markdown: evt.content,
@@ -338,7 +339,21 @@ export function useArticleLoader({
               setCurrentArticleEventId(evt.id)
               setCurrentArticle?.(evt)
               setReaderLoading(false)
-              console.log('[article-loader] UI updated with first event')
+              
+              // Save to cache immediately when we get the first event
+              // Don't wait for queryEvents to complete in case it hangs
+              const articleContent = {
+                title,
+                markdown: evt.content,
+                image,
+                summary,
+                published,
+                author: evt.pubkey,
+                event: evt
+              }
+              saveToCache(naddr, articleContent)
+              
+              console.log('[article-loader] UI updated with first event and saved to cache')
             }
           }
         })
@@ -384,19 +399,29 @@ export function useArticleLoader({
           setCurrentArticleEventId(finalEvent.id)
           setCurrentArticle?.(finalEvent)
           
-          // Save to cache for future loads
-          const articleContent = {
-            title,
-            markdown: finalEvent.content,
-            image,
-            summary,
-            published,
-            author: finalEvent.pubkey,
-            event: finalEvent
+          // Save to cache for future loads (if we haven't already saved from first event)
+          // Only save if this is a different/newer event than what we first rendered
+          if (!firstEmitted || (latestEvent && finalEvent.id !== latestEvent.id)) {
+            console.log('[article-loader] Saving newer event to cache', {
+              wasFirstEmitted: firstEmitted,
+              finalEventId: finalEvent.id,
+              latestEventId: latestEvent?.id
+            })
+            const articleContent = {
+              title,
+              markdown: finalEvent.content,
+              image,
+              summary,
+              published,
+              author: finalEvent.pubkey,
+              event: finalEvent
+            }
+            saveToCache(naddr, articleContent)
+          } else {
+            console.log('[article-loader] Cache already saved from first event, skipping')
           }
-          saveToCache(naddr, articleContent)
           
-          console.log('[article-loader] ✅ Finalized with event from relays and saved to cache')
+          console.log('[article-loader] ✅ Finalized with event from relays')
         } else {
           // As a last resort, fall back to the legacy helper (which includes cache)
           console.log('[article-loader] ⚠️ No events from relays, falling back to fetchArticleByNaddr')
