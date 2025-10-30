@@ -327,8 +327,24 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         highlightId: highlight.id,
         isLocalOnly,
         publishedRelays,
+        highlightPublishedRelays: highlight.publishedRelays,
+        highlightIsLocalOnly: highlight.isLocalOnly,
         willShowAirplane: isLocalOnly === true
       })
+    }
+    
+    // If isLocalOnly is true (from any fallback), show airplane icon
+    if (isLocalOnly === true) {
+      const relayNames = publishedRelays.length > 0
+        ? publishedRelays.map(url => url.replace(/^wss?:\/\//, '').replace(/\/$/, ''))
+        : []
+      return {
+        icon: faPlane,
+        tooltip: publishedRelays.length > 0
+          ? 'Local relays only - will sync when remote relays available'
+          : 'Created in flight mode - will sync when remote relays available',
+        spin: false
+      }
     }
     
     // Show highlighter icon with relay info if available
@@ -337,8 +353,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
       )
       return {
-        icon: isLocalOnly ? faPlane : faHighlighter,
-        tooltip: isLocalOnly ? 'Local relays only - will sync when remote relays available' : relayNames.join('\n'),
+        icon: faHighlighter,
+        tooltip: relayNames.join('\n'),
         spin: false
       }
     }
