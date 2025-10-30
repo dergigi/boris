@@ -120,50 +120,54 @@ export async function createHighlight(
   // Store the event in EventStore first for immediate UI display
   eventStore.add(signedEvent)
 
-  // Get all configured relays and determine which ones are connected
+  // Publish to all relays and get individual responses
   const allRelays = RELAYS
-  const connectedRelays = Array.from(relayPool.relays.values())
-    .filter(relay => relay.connected)
-    .map(relay => relay.url)
+  let publishResponses: { ok: boolean; message?: string; from: string }[] = []
+  let isLocalOnly = false
 
-  const connectedLocalRelays = connectedRelays.filter(url => isLocalRelay(url))
-  const connectedRemoteRelays = connectedRelays.filter(url => !isLocalRelay(url))
+  try {
+    // Publish to all relays and wait for responses
+    publishResponses = await relayPool.publish(allRelays, signedEvent)
+    
+    // Determine which relays successfully accepted the event
+    const successfulRelays = publishResponses
+      .filter(response => response.ok)
+      .map(response => response.from)
+    
+    const successfulLocalRelays = successfulRelays.filter(url => isLocalRelay(url))
+    const successfulRemoteRelays = successfulRelays.filter(url => !isLocalRelay(url))
+    
+    // isLocalOnly is true if only local relays accepted the event
+    isLocalOnly = successfulLocalRelays.length > 0 && successfulRemoteRelays.length === 0
 
-  // Always try to publish to ALL relays, but track which ones are actually connected
-  const targetRelays = allRelays
-  const actuallyConnectedRelays = connectedRelays
-
-  // isLocalOnly is true if we only have local relays connected (flight mode)
-  const isLocalOnly = connectedLocalRelays.length > 0 && connectedRemoteRelays.length === 0
-
-  console.log('🔍 Highlight creation debug:', {
-    allRelays,
-    connectedRelays,
-    connectedLocalRelays,
-    connectedRemoteRelays,
-    targetRelays,
-    actuallyConnectedRelays,
-    isLocalOnly
-  })
-
-  // Publish to all relays (fire-and-forget)
-  relayPool.publish(targetRelays, signedEvent)
-    .then(() => {
-      console.log('✅ Highlight published successfully to all relays')
-    })
-    .catch((error) => {
-      console.warn('⚠️ Failed to publish highlight to some relays:', error)
+    console.log('🔍 Highlight creation debug:', {
+      allRelays,
+      publishResponses,
+      successfulRelays,
+      successfulLocalRelays,
+      successfulRemoteRelays,
+      isLocalOnly
     })
 
-  // Mark for offline sync if we're in local-only mode
-  if (isLocalOnly) {
+    // Mark for offline sync if we're in local-only mode
+    if (isLocalOnly) {
+      const { markEventAsOfflineCreated } = await import('./offlineSyncService')
+      markEventAsOfflineCreated(signedEvent.id)
+    }
+
+  } catch (error) {
+    console.warn('⚠️ Failed to publish highlight to relays:', error)
+    // If publishing fails completely, assume local-only mode
+    isLocalOnly = true
     const { markEventAsOfflineCreated } = await import('./offlineSyncService')
     markEventAsOfflineCreated(signedEvent.id)
   }
 
   // Convert to Highlight with relay tracking info and return IMMEDIATELY
   const highlight = eventToHighlight(signedEvent)
-  highlight.publishedRelays = actuallyConnectedRelays
+  highlight.publishedRelays = publishResponses
+    .filter(response => response.ok)
+    .map(response => response.from)
   highlight.isLocalOnly = isLocalOnly
 
   return highlight
