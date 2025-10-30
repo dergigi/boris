@@ -8,7 +8,6 @@ import { RELAYS } from '../config/relays'
 import { Highlight } from '../types/highlights'
 import { UserSettings } from './settingsService'
 import { isLocalRelay, areAllRelaysLocal } from '../utils/helpers'
-import { publishEvent } from './writeService'
 
 // Boris pubkey for zap splits
 // npub19802see0gnk3vjlus0dnmfdagusqrtmsxpl5yfmkwn9uvnfnqylqduhr0x
@@ -118,36 +117,53 @@ export async function createHighlight(
   // Sign the event
   const signedEvent = await factory.sign(highlightEvent)
 
-  // Check current connection status BEFORE publishing
+  // Store the event in EventStore first for immediate UI display
+  eventStore.add(signedEvent)
+
+  // Get all configured relays and determine which ones are connected
+  const allRelays = RELAYS
   const connectedRelays = Array.from(relayPool.relays.values())
     .filter(relay => relay.connected)
     .map(relay => relay.url)
 
-  const hasRemoteConnection = connectedRelays.some(url => !isLocalRelay(url))
-  const hasLocalConnection = connectedRelays.some(url => isLocalRelay(url))
-  
-  // Determine which relays we should publish to
-  const targetRelays = hasRemoteConnection
-    ? RELAYS  // Publish to all relays (local + remote)
-    : RELAYS.filter(isLocalRelay)  // Only publish to local relays
-  
-  // isLocalOnly is true if we only have local connections (flight mode)
-  const isLocalOnly = hasLocalConnection && !hasRemoteConnection
+  const connectedLocalRelays = connectedRelays.filter(url => isLocalRelay(url))
+  const connectedRemoteRelays = connectedRelays.filter(url => !isLocalRelay(url))
+
+  // Always try to publish to ALL relays, but track which ones are actually connected
+  const targetRelays = allRelays
+  const actuallyConnectedRelays = connectedRelays
+
+  // isLocalOnly is true if we only have local relays connected (flight mode)
+  const isLocalOnly = connectedLocalRelays.length > 0 && connectedRemoteRelays.length === 0
 
   console.log('🔍 Highlight creation debug:', {
+    allRelays,
     connectedRelays,
-    hasRemoteConnection,
-    hasLocalConnection,
+    connectedLocalRelays,
+    connectedRemoteRelays,
     targetRelays,
+    actuallyConnectedRelays,
     isLocalOnly
   })
 
-  // Use unified write service to store and publish
-  await publishEvent(relayPool, eventStore, signedEvent)
+  // Publish to all relays (fire-and-forget)
+  relayPool.publish(targetRelays, signedEvent)
+    .then(() => {
+      console.log('✅ Highlight published successfully to all relays')
+    })
+    .catch((error) => {
+      console.warn('⚠️ Failed to publish highlight to some relays:', error)
+    })
+
+  // Mark for offline sync if we're in local-only mode
+  if (isLocalOnly) {
+    const { markEventAsOfflineCreated } = await import('./offlineSyncService')
+    markEventAsOfflineCreated(signedEvent.id)
+  }
 
   // Convert to Highlight with relay tracking info and return IMMEDIATELY
   const highlight = eventToHighlight(signedEvent)
-  highlight.publishedRelays = targetRelays
+  highlight.publishedRelays = actuallyConnectedRelays
   highlight.isLocalOnly = isLocalOnly
 
   return highlight
