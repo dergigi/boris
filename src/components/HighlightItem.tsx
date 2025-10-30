@@ -324,9 +324,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     
     // If isLocalOnly is true (from any fallback), show airplane icon
     if (isLocalOnly === true) {
-      const relayNames = publishedRelays.length > 0
-        ? publishedRelays.map(url => url.replace(/^wss?:\/\//, '').replace(/\/$/, ''))
-        : []
       return {
         icon: faPlane,
         tooltip: publishedRelays.length > 0

@@ -156,10 +156,6 @@ export async function createHighlight(
       .filter(response => response.ok)
       .map(response => response.from)
     
-    const failedRelays = publishResponses
-      .filter(response => !response.ok)
-      .map(response => ({ from: response.from, message: response.message }))
-    
     const successfulLocalRelays = successfulRelays.filter(url => isLocalRelay(url))
     const successfulRemoteRelays = successfulRelays.filter(url => !isLocalRelay(url))
     
