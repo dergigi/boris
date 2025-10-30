@@ -7,12 +7,21 @@ import { Helpers, IEventStore } from 'applesauce-core'
 import { RELAYS } from '../config/relays'
 import { Highlight } from '../types/highlights'
 import { UserSettings } from './settingsService'
-import { isLocalRelay, areAllRelaysLocal } from '../utils/helpers'
-import { publishEvent } from './writeService'
+import { isLocalRelay } from '../utils/helpers'
+import { setHighlightMetadata } from './highlightEventProcessor'
 
 // Boris pubkey for zap splits
 // npub19802see0gnk3vjlus0dnmfdagusqrtmsxpl5yfmkwn9uvnfnqylqduhr0x
 export const BORIS_PUBKEY = '29dea8672f44ed164bfc83db3da5bd472001af70307f42277674cbc64d33013e'
+
+// Extended event type with highlight metadata
+interface HighlightEvent extends NostrEvent {
+  __highlightProps?: {
+    publishedRelays?: string[]
+    isLocalOnly?: boolean
+    isSyncing?: boolean
+  }
+}
 
 const {
   getHighlightText,
@@ -118,25 +127,111 @@ export async function createHighlight(
   // Sign the event
   const signedEvent = await factory.sign(highlightEvent)
 
-  // Use unified write service to store and publish
-  await publishEvent(relayPool, eventStore, signedEvent)
+  // Initialize custom properties on the event (will be updated after publishing)
+  ;(signedEvent as HighlightEvent).__highlightProps = {
+    publishedRelays: [],
+    isLocalOnly: false,
+    isSyncing: false
+  }
 
-  // Check current connection status for UI feedback
+  // Get only connected relays to avoid long timeouts
   const connectedRelays = Array.from(relayPool.relays.values())
     .filter(relay => relay.connected)
     .map(relay => relay.url)
+  
+  let publishResponses: { ok: boolean; message?: string; from: string }[] = []
+  let isLocalOnly = false
 
-  const hasRemoteConnection = connectedRelays.some(url => !isLocalRelay(url))
-  const expectedSuccessRelays = hasRemoteConnection
-    ? RELAYS
-    : RELAYS.filter(isLocalRelay)
-  const isLocalOnly = areAllRelaysLocal(expectedSuccessRelays)
 
-  // Convert to Highlight with relay tracking info and return IMMEDIATELY
+  try {
+    // Publish only to connected relays to avoid long timeouts
+    if (connectedRelays.length === 0) {
+      isLocalOnly = true
+    } else {
+      publishResponses = await relayPool.publish(connectedRelays, signedEvent)
+    }
+    
+    // Determine which relays successfully accepted the event
+    const successfulRelays = publishResponses
+      .filter(response => response.ok)
+      .map(response => response.from)
+    
+    const successfulLocalRelays = successfulRelays.filter(url => isLocalRelay(url))
+    const successfulRemoteRelays = successfulRelays.filter(url => !isLocalRelay(url))
+    
+    // isLocalOnly is true if only local relays accepted the event
+    isLocalOnly = successfulLocalRelays.length > 0 && successfulRemoteRelays.length === 0
+
+
+    // Handle case when no relays were connected
+    const successfulRelaysList = publishResponses.length > 0
+      ? publishResponses
+          .filter(response => response.ok)
+          .map(response => response.from)
+      : []
+
+    // Store metadata in cache (persists across EventStore serialization)
+    setHighlightMetadata(signedEvent.id, {
+      publishedRelays: successfulRelaysList,
+      isLocalOnly,
+      isSyncing: false
+    })
+
+    // Also update the event with the actual properties (for backwards compatibility)
+    ;(signedEvent as HighlightEvent).__highlightProps = {
+      publishedRelays: successfulRelaysList,
+      isLocalOnly,
+      isSyncing: false
+    }
+
+    // Store the event in EventStore AFTER updating with final properties
+    eventStore.add(signedEvent)
+
+    // Mark for offline sync if we're in local-only mode
+    if (isLocalOnly) {
+      const { markEventAsOfflineCreated } = await import('./offlineSyncService')
+      markEventAsOfflineCreated(signedEvent.id)
+    }
+
+  } catch (error) {
+    console.error('❌ [HIGHLIGHT-PUBLISH] Failed to publish highlight to relays:', error)
+    // If publishing fails completely, assume local-only mode
+    isLocalOnly = true
+    
+    // Store metadata in cache (persists across EventStore serialization)
+    setHighlightMetadata(signedEvent.id, {
+      publishedRelays: [],
+      isLocalOnly: true,
+      isSyncing: false
+    })
+    
+    // Also update the event with the error state (for backwards compatibility)
+    ;(signedEvent as HighlightEvent).__highlightProps = {
+      publishedRelays: [],
+      isLocalOnly: true,
+      isSyncing: false
+    }
+    
+    // Store the event in EventStore AFTER updating with final properties
+    eventStore.add(signedEvent)
+    
+    const { markEventAsOfflineCreated } = await import('./offlineSyncService')
+    markEventAsOfflineCreated(signedEvent.id)
+  }
+
+  // Convert to Highlight with relay tracking info
   const highlight = eventToHighlight(signedEvent)
-  highlight.publishedRelays = expectedSuccessRelays
+  
+  // Manually set the properties since __highlightProps might not be working
+  const finalPublishedRelays = publishResponses.length > 0
+    ? publishResponses
+        .filter(response => response.ok)
+        .map(response => response.from)
+    : []
+  
+  highlight.publishedRelays = finalPublishedRelays
   highlight.isLocalOnly = isLocalOnly
-  highlight.isOfflineCreated = isLocalOnly
+  highlight.isSyncing = false
 
   return highlight
 }

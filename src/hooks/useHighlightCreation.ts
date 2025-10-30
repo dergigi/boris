@@ -44,6 +44,7 @@ export const useHighlightCreation = ({
   }, [])
 
   const handleCreateHighlight = useCallback(async (text: string) => {
+
     if (!activeAccount || !relayPool || !eventStore) {
       console.error('Missing requirements for highlight creation')
       return
@@ -60,7 +61,6 @@ export const useHighlightCreation = ({
         ? currentArticle.content 
         : readerContent?.markdown || readerContent?.html
       
-      
       const newHighlight = await createHighlight(
         text,
         source,
@@ -73,7 +73,6 @@ export const useHighlightCreation = ({
       )
       
       // Highlight created successfully
-      
       // Clear the browser's text selection immediately to allow DOM update
       const selection = window.getSelection()
       if (selection) {
