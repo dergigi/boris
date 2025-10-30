@@ -310,6 +310,18 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     const isLocalOnly = highlight.isLocalOnly
     const publishedRelays = highlight.publishedRelays || []
     
+    // Debug: Log what we're working with (remove after fixing)
+    if (highlight.id && (isLocalOnly !== undefined || publishedRelays.length > 0)) {
+      console.log('🔍 [HIGHLIGHT-UI-DEBUG] Highlight data:', {
+        highlightId: highlight.id,
+        isLocalOnly,
+        publishedRelays,
+        seenOnRelays: highlight.seenOnRelays,
+        willUsePublishedRelays: !!(highlight.publishedRelays && highlight.publishedRelays.length > 0),
+        willUseSeenOnRelays: !!(highlight.seenOnRelays && highlight.seenOnRelays.length > 0)
+      })
+    }
+    
     // Show highlighter icon with relay info if available
     if (highlight.publishedRelays && highlight.publishedRelays.length > 0) {
       const relayNames = highlight.publishedRelays.map(url => 
