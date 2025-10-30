@@ -317,16 +317,6 @@ export function useArticleLoader({
     }
   }, [
     naddr,
-    eventStore,
-    previewData,
-    setSelectedUrl,
-    setReaderContent,
-    setReaderLoading,
-    setIsCollapsed,
-    setHighlights,
-    setHighlightsLoading,
-    setCurrentArticleCoordinate,
-    setCurrentArticleEventId,
-    setCurrentArticle
+    previewData
   ])
 }

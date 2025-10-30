@@ -167,16 +167,7 @@ export function useExternalUrlLoader({
     }
   }, [
     url,
-    eventStore,
-    cachedUrlHighlights,
-    setReaderContent,
-    setReaderLoading,
-    setIsCollapsed,
-    setSelectedUrl,
-    setHighlights,
-    setCurrentArticleCoordinate,
-    setCurrentArticleEventId,
-    setHighlightsLoading
+    cachedUrlHighlights
   ])
 
   // Keep UI highlights synced with cached store updates without reloading content
