@@ -229,7 +229,14 @@ const Bookmarks: React.FC<BookmarksProps> = ({
     currentArticle,
     selectedUrl,
     readerContent,
-    onHighlightCreated: (highlight) => setHighlights(prev => [highlight, ...prev]),
+    onHighlightCreated: (highlight) => setHighlights(prev => {
+      // Deduplicate by checking if highlight with this ID already exists
+      const exists = prev.some(h => h.id === highlight.id)
+      if (exists) {
+        return prev // Don't add duplicate
+      }
+      return [highlight, ...prev]
+    }),
     settings
   })
 

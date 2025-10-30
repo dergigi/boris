@@ -310,39 +310,16 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     const isLocalOnly = highlight.isLocalOnly
     const publishedRelays = highlight.publishedRelays || []
     
-    // Only log when values are meaningful (not undefined/empty) to reduce spam
-    if (isLocalOnly !== undefined || publishedRelays.length > 0) {
-      console.log('🎯 [HIGHLIGHT-UI] Rendering highlight relay indicator:', {
-        highlightId: highlight.id,
-        isLocalOnly: isLocalOnly,
-        publishedRelays: publishedRelays,
-        publishedRelayCount: publishedRelays.length,
-        willShowAirplaneIcon: isLocalOnly
-      })
-    }
-    
     // Show highlighter icon with relay info if available
     if (highlight.publishedRelays && highlight.publishedRelays.length > 0) {
       const relayNames = highlight.publishedRelays.map(url => 
         url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
       )
-      const iconInfo = {
+      return {
         icon: isLocalOnly ? faPlane : faHighlighter,
         tooltip: isLocalOnly ? 'Local relays only - will sync when remote relays available' : relayNames.join('\n'),
         spin: false
       }
-      
-      console.log('🔍 [HIGHLIGHT-UI] Icon decision made:', {
-        highlightId: highlight.id,
-        isLocalOnly: isLocalOnly,
-        iconType: isLocalOnly ? 'airplane' : 'highlighter',
-        tooltip: iconInfo.tooltip,
-        actualPublishedRelaysInUI: publishedRelays,
-        relayNames: relayNames,
-        conditionResult: isLocalOnly ? 'SHOULD_SHOW_AIRPLANE' : 'SHOULD_SHOW_HIGHLIGHTER'
-      })
-      
-      return iconInfo
     }
     
     if (highlight.seenOnRelays && highlight.seenOnRelays.length > 0) {
