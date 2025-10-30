@@ -213,14 +213,22 @@ export async function createHighlight(
     markEventAsOfflineCreated(signedEvent.id)
   }
 
-  // Convert to Highlight with relay tracking info and return IMMEDIATELY
-  console.log('🔄 [HIGHLIGHT-CREATION] About to convert event to highlight:', {
-    eventId: signedEvent.id,
-    hasHighlightProps: !!(signedEvent as any).__highlightProps,
-    highlightProps: (signedEvent as any).__highlightProps
-  })
-  
+  // Convert to Highlight with relay tracking info
   const highlight = eventToHighlight(signedEvent)
+  
+  // Manually set the properties since __highlightProps might not be working
+  highlight.publishedRelays = publishResponses
+    .filter(response => response.ok)
+    .map(response => response.from)
+  highlight.isLocalOnly = isLocalOnly
+  highlight.isSyncing = false
+  
+  console.log('🔄 [HIGHLIGHT-CREATION] Final highlight properties set:', {
+    eventId: signedEvent.id,
+    publishedRelays: highlight.publishedRelays,
+    isLocalOnly: highlight.isLocalOnly,
+    isSyncing: highlight.isSyncing
+  })
 
   return highlight
 }
