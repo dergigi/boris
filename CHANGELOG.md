@@ -7,6 +7,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.26] - 2025-10-31
+
+### Added
+
+- Persist highlight metadata and offline events to localStorage
+  - Highlights created offline are now preserved across sessions
+  - Better data persistence for flight mode highlights
+- Proper relay response tracking for flight mode
+  - Accurate detection of which relays have received highlight events
+  - Improved flight mode indicator accuracy
+
+### Changed
+
+- Implemented proper flight mode detection for highlights
+  - More reliable identification of highlights created offline
+  - Better tracking of highlight publication status
+- Refactored to use isLocalOnly flag instead of isOfflineCreated
+  - More consistent naming and clearer intent
+  - Improved code maintainability
+
+### Fixed
+
+- Show airplane icon for flight mode highlights
+  - Visual indicator now correctly displays for offline-created highlights
+  - Better user feedback for highlights pending publication
+- Prioritize isLocalOnly check to show airplane icon
+  - Icon display logic now correctly identifies flight mode highlights
+- Preserve isLocalOnly and publishedRelays in eventToHighlight conversion
+  - Highlight metadata is maintained during event transformations
+  - Flight mode status preserved across data conversions
+- Use metadata cache to preserve highlight properties across EventStore
+  - Highlights maintain their properties when stored in EventStore
+  - Prevents loss of flight mode metadata
+- Add fallback logic for detecting flight mode highlights
+  - More robust detection when primary methods fail
+  - Better handling of edge cases
+- Determine isLocalOnly before publishing, not after
+  - Correct timing for flight mode detection
+  - Prevents incorrect status during highlight creation
+- Store event in EventStore after updating properties
+  - Ensures all highlight properties are saved correctly
+  - Prevents data loss during highlight creation
+- Manually set highlight properties after eventToHighlight conversion
+  - Ensures all metadata is properly assigned
+  - Correct property mapping during conversions
+- Prevent duplicate highlights
+  - Eliminates duplicate highlight entries
+  - Cleaner highlight list display
+- Publish only to connected relays to avoid long timeouts
+  - Faster highlight publishing
+  - Better user experience when some relays are unavailable
+- Prevent unnecessary relay queries when article content is cached
+  - Improved performance by avoiding redundant network requests
+  - Better resource utilization
+- Remove relayPool dependency from content loaders
+  - Cleaner architecture and reduced coupling
+  - Better separation of concerns
+- Check EventStore before setting loading state
+  - Prevents unnecessary loading states
+  - Better state management
+- Remove eventStore and setter functions from useEffect dependencies
+  - Fixes React hook dependency issues
+  - Prevents unnecessary re-renders
+- Replace require() with ES module imports
+  - Modern JavaScript module system
+  - Better compatibility with build tools
+- Resolve all linting errors and type issues
+  - Improved code quality
+  - Better type safety
+- Remove unused variables to resolve lint errors
+  - Cleaner codebase
+  - Eliminates lint warnings
+
+### Performance
+
+- Remove excessive debug logging for better performance
+  - Reduced overhead from logging operations
+  - Improved application performance
+
+### Removed
+
+- Debug console.log statements
+  - Cleaner console output
+  - Production-ready code
+
 ## [0.10.25] - 2025-01-27
 
 ### Added
