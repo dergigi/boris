@@ -311,7 +311,6 @@ export function useArticleLoader({
     }
   }, [
     naddr,
-    relayPool,
     eventStore,
     previewData,
     setSelectedUrl,

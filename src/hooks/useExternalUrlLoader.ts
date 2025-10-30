@@ -167,7 +167,6 @@ export function useExternalUrlLoader({
     }
   }, [
     url,
-    relayPool,
     eventStore,
     cachedUrlHighlights,
     setReaderContent,
