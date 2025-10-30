@@ -8,6 +8,7 @@ import { Helpers } from 'applesauce-core'
 import { queryEvents } from '../services/dataFetch'
 import { fetchArticleByNaddr, getFromCache, saveToCache } from '../services/articleService'
 import { fetchHighlightsForArticle } from '../services/highlightService'
+import { preloadImage } from './useImageCache'
 import { ReadableContent } from '../services/readerService'
 import { Highlight } from '../types/highlights'
 import { NostrEvent } from 'nostr-tools'
@@ -110,6 +111,13 @@ export function useArticleLoader({
         setReaderLoading(false)
         setSelectedUrl(`nostr:${naddr}`)
         setIsCollapsed(true)
+        
+        // Preload image if available to ensure it's cached by Service Worker
+        // This ensures images are available when offline
+        if (cachedArticle.image) {
+          console.log('[article-loader] Preloading image for offline access:', cachedArticle.image)
+          preloadImage(cachedArticle.image)
+        }
         
         // Store in EventStore for future lookups
         if (eventStore) {
@@ -352,6 +360,12 @@ export function useArticleLoader({
                 event: evt
               }
               saveToCache(naddr, articleContent)
+              
+              // Preload image to ensure it's cached by Service Worker
+              if (image) {
+                console.log('[article-loader] Preloading image for offline access:', image)
+                preloadImage(image)
+              }
               
               console.log('[article-loader] UI updated with first event and saved to cache')
             }
