@@ -6,7 +6,7 @@ import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { Helpers } from 'applesauce-core'
 import { queryEvents } from '../services/dataFetch'
-import { fetchArticleByNaddr } from '../services/articleService'
+import { fetchArticleByNaddr, getFromCache } from '../services/articleService'
 import { fetchHighlightsForArticle } from '../services/highlightService'
 import { ReadableContent } from '../services/readerService'
 import { Highlight } from '../types/highlights'
@@ -123,8 +123,89 @@ export function useArticleLoader({
             }
           }
         } catch (err) {
-          // Ignore store errors, fall through to relay query
+          // Ignore store errors, fall through to cache/relay query
         }
+      }
+
+      // Check localStorage cache before querying relays (survives browser refresh)
+      // This prevents unnecessary relay queries when we have cached content
+      const cachedArticle = getFromCache(naddr)
+      if (cachedArticle) {
+        const title = cachedArticle.title || 'Untitled Article'
+        setCurrentTitle(title)
+        setReaderContent({
+          title,
+          markdown: cachedArticle.markdown,
+          image: cachedArticle.image,
+          summary: cachedArticle.summary,
+          published: cachedArticle.published,
+          url: `nostr:${naddr}`
+        })
+        const dTag = cachedArticle.event.tags.find(t => t[0] === 'd')?.[1] || ''
+        const articleCoordinate = `${cachedArticle.event.kind}:${cachedArticle.author}:${dTag}`
+        setCurrentArticleCoordinate(articleCoordinate)
+        setCurrentArticleEventId(cachedArticle.event.id)
+        setCurrentArticle?.(cachedArticle.event)
+        setReaderLoading(false)
+        
+        // Store in EventStore for future lookups (don't query relays if we have cache)
+        if (eventStore) {
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            eventStore.add?.(cachedArticle.event as unknown as any)
+          } catch {
+            // Silently ignore store errors
+          }
+        }
+        
+        // Still fetch highlights, but don't query relays for article content
+        try {
+          if (!mountedRef.current) return
+          
+          const dTag = cachedArticle.event.tags.find((t: string[]) => t[0] === 'd')?.[1] || ''
+          const coord = dTag ? `${cachedArticle.event.kind}:${cachedArticle.author}:${dTag}` : undefined
+          const eventId = cachedArticle.event.id
+          
+          if (coord && eventId) {
+            setHighlightsLoading(true)
+            // Clear highlights that don't belong to this article coordinate
+            setHighlights((prev) => {
+              return prev.filter(h => {
+                // Keep highlights that match this article coordinate or event ID
+                return h.eventReference === coord || h.eventReference === eventId
+              })
+            })
+            await fetchHighlightsForArticle(
+              relayPool,
+              coord,
+              eventId,
+              (highlight) => {
+                if (!mountedRef.current) return
+                if (currentRequestIdRef.current !== requestId) return
+                setHighlights((prev: Highlight[]) => {
+                  if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
+                  const next = [highlight, ...prev]
+                  return next.sort((a, b) => b.created_at - a.created_at)
+                })
+              },
+              settingsRef.current,
+              false, // force
+              eventStore || undefined
+            )
+          } else {
+            setHighlights([])
+            setHighlightsLoading(false)
+          }
+        } catch (err) {
+          console.error('Failed to fetch highlights:', err)
+        } finally {
+          if (mountedRef.current && currentRequestIdRef.current === requestId) {
+            setHighlightsLoading(false)
+          }
+        }
+        
+        // Return early since we have cached content - no need to query relays
+        return
       }
 
       // If we have preview data from navigation, show it immediately (no skeleton!)

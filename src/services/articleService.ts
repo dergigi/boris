@@ -34,7 +34,7 @@ function getCacheKey(naddr: string): string {
   return `${CACHE_PREFIX}${naddr}`
 }
 
-function getFromCache(naddr: string): ArticleContent | null {
+export function getFromCache(naddr: string): ArticleContent | null {
   try {
     const cacheKey = getCacheKey(naddr)
     const cached = localStorage.getItem(cacheKey)
