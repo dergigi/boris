@@ -401,12 +401,10 @@ export function useArticleLoader({
           
           // Save to cache for future loads (if we haven't already saved from first event)
           // Only save if this is a different/newer event than what we first rendered
-          if (!firstEmitted || (latestEvent && finalEvent.id !== latestEvent.id)) {
-            console.log('[article-loader] Saving newer event to cache', {
-              wasFirstEmitted: firstEmitted,
-              finalEventId: finalEvent.id,
-              latestEventId: latestEvent?.id
-            })
+          // Note: We already saved from first event, so only save if this is different
+          if (!firstEmitted) {
+            // First event wasn't emitted, so save now
+            console.log('[article-loader] Saving event to cache (first event was not emitted)')
             const articleContent = {
               title,
               markdown: finalEvent.content,
@@ -418,7 +416,8 @@ export function useArticleLoader({
             }
             saveToCache(naddr, articleContent)
           } else {
-            console.log('[article-loader] Cache already saved from first event, skipping')
+            // Cache was already saved when first event was received
+            console.log('[article-loader] Cache already saved from first event, skipping duplicate save')
           }
           
           console.log('[article-loader] ✅ Finalized with event from relays')
