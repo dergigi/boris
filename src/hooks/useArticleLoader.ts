@@ -85,47 +85,18 @@ export function useArticleLoader({
       // when we know the article coordinate
       setHighlightsLoading(false) // Don't show loading yet
       
-      // If we have preview data from navigation, show it immediately (no skeleton!)
-      if (previewData) {
-        setCurrentTitle(previewData.title)
-        setReaderContent({
-          title: previewData.title,
-          markdown: '', // Will be loaded from store or relay
-          image: previewData.image,
-          summary: previewData.summary,
-          published: previewData.published,
-          url: `nostr:${naddr}`
-        })
-        setReaderLoading(false) // Turn off loading immediately - we have the preview!
-      } else {
-        setReaderLoading(true)
-        setReaderContent(undefined)
-      }
-      
-      try {
-        // Decode naddr to filter
-        const decoded = nip19.decode(naddr)
-        if (decoded.type !== 'naddr') {
-          throw new Error('Invalid naddr format')
-        }
-        const pointer = decoded.data as AddressPointer
-        const filter = {
-          kinds: [pointer.kind],
-          authors: [pointer.pubkey],
-          '#d': [pointer.identifier]
-        }
-
-        let firstEmitted = false
-        let latestEvent: NostrEvent | null = null
-
-        // Check eventStore first for instant load (from bookmark cards, explore, etc.)
-        if (eventStore) {
-          try {
+      // Check eventStore first for instant load (from bookmark cards, explore, etc.)
+      let foundInStore = false
+      if (eventStore) {
+        try {
+          // Decode naddr to get the coordinate
+          const decoded = nip19.decode(naddr)
+          if (decoded.type === 'naddr') {
+            const pointer = decoded.data as AddressPointer
             const coordinate = `${pointer.kind}:${pointer.pubkey}:${pointer.identifier}`
             const storedEvent = eventStore.getEvent?.(coordinate)
             if (storedEvent) {
-              latestEvent = storedEvent as NostrEvent
-              firstEmitted = true
+              foundInStore = true
               const title = Helpers.getArticleTitle(storedEvent) || 'Untitled Article'
               setCurrentTitle(title)
               const image = Helpers.getArticleImage(storedEvent)
@@ -150,10 +121,45 @@ export function useArticleLoader({
               // This prevents unnecessary relay queries when offline
               return
             }
-          } catch (err) {
-            // Ignore store errors, fall through to relay query
           }
+        } catch (err) {
+          // Ignore store errors, fall through to relay query
         }
+      }
+
+      // If we have preview data from navigation, show it immediately (no skeleton!)
+      if (previewData) {
+        setCurrentTitle(previewData.title)
+        setReaderContent({
+          title: previewData.title,
+          markdown: '', // Will be loaded from store or relay
+          image: previewData.image,
+          summary: previewData.summary,
+          published: previewData.published,
+          url: `nostr:${naddr}`
+        })
+        setReaderLoading(false) // Turn off loading immediately - we have the preview!
+      } else if (!foundInStore) {
+        // Only show loading if we didn't find content in store and no preview data
+        setReaderLoading(true)
+        setReaderContent(undefined)
+      }
+      
+      try {
+        // Decode naddr to filter
+        const decoded = nip19.decode(naddr)
+        if (decoded.type !== 'naddr') {
+          throw new Error('Invalid naddr format')
+        }
+        const pointer = decoded.data as AddressPointer
+        const filter = {
+          kinds: [pointer.kind],
+          authors: [pointer.pubkey],
+          '#d': [pointer.identifier]
+        }
+
+        let firstEmitted = false
+        let latestEvent: NostrEvent | null = null
 
         // Stream local-first via queryEvents; rely on EOSE (no timeouts)
         const events = await queryEvents(relayPool, filter, {
