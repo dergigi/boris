@@ -7,8 +7,8 @@ import { useEventModel } from 'applesauce-react/hooks'
 import { Models, IEventStore } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
 import { Hooks } from 'applesauce-react'
-import { onSyncStateChange, isEventSyncing } from '../services/offlineSyncService'
-import { areAllRelaysLocal } from '../utils/helpers'
+import { onSyncStateChange, isEventSyncing, isEventOfflineCreated } from '../services/offlineSyncService'
+import { areAllRelaysLocal, isLocalRelay } from '../utils/helpers'
 import { getActiveRelayUrls } from '../services/relayManager'
 import { nip19 } from 'nostr-tools'
 import { formatDateCompact } from '../utils/bookmarkUtils'
@@ -312,7 +312,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     
     // Fallback 1: Check if this highlight was marked for offline sync (flight mode)
     if (isLocalOnly === undefined) {
-      const { isEventOfflineCreated } = require('../services/offlineSyncService')
       if (isEventOfflineCreated(highlight.id)) {
         isLocalOnly = true
       }
@@ -320,7 +319,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     
     // Fallback 2: If publishedRelays only contains local relays, it's local-only
     if (isLocalOnly === undefined && publishedRelays.length > 0) {
-      const { isLocalRelay } = require('../utils/helpers')
       const hasOnlyLocalRelays = publishedRelays.every(url => isLocalRelay(url))
       const hasRemoteRelays = publishedRelays.some(url => !isLocalRelay(url))
       if (hasOnlyLocalRelays && !hasRemoteRelays) {
