@@ -31,6 +31,14 @@ export function eventToHighlight(event: NostrEvent): Highlight {
   // Check if this event has custom properties from our highlight creation process
   const customProps = (event as any).__highlightProps || {}
   
+  console.log('🔄 [EVENT-TO-HIGHLIGHT] Converting event to highlight:', {
+    eventId: event.id,
+    hasCustomProps: !!(event as any).__highlightProps,
+    customProps: customProps,
+    publishedRelays: customProps.publishedRelays,
+    isLocalOnly: customProps.isLocalOnly
+  })
+  
   return {
     id: event.id,
     pubkey: event.pubkey,

@@ -214,6 +214,12 @@ export async function createHighlight(
   }
 
   // Convert to Highlight with relay tracking info and return IMMEDIATELY
+  console.log('🔄 [HIGHLIGHT-CREATION] About to convert event to highlight:', {
+    eventId: signedEvent.id,
+    hasHighlightProps: !!(signedEvent as any).__highlightProps,
+    highlightProps: (signedEvent as any).__highlightProps
+  })
+  
   const highlight = eventToHighlight(signedEvent)
 
   return highlight
