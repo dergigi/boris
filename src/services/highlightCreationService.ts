@@ -127,10 +127,23 @@ export async function createHighlight(
     .map(relay => relay.url)
 
   const hasRemoteConnection = connectedRelays.some(url => !isLocalRelay(url))
+  const hasLocalConnection = connectedRelays.some(url => isLocalRelay(url))
+  
+  // Determine which relays we actually published to
   const expectedSuccessRelays = hasRemoteConnection
-    ? RELAYS
-    : RELAYS.filter(isLocalRelay)
-  const isLocalOnly = areAllRelaysLocal(expectedSuccessRelays)
+    ? RELAYS  // Published to all relays (local + remote)
+    : RELAYS.filter(isLocalRelay)  // Only published to local relays
+  
+  // isLocalOnly is true if we only have local connections (flight mode)
+  const isLocalOnly = hasLocalConnection && !hasRemoteConnection
+
+  console.log('🔍 Highlight creation debug:', {
+    connectedRelays,
+    hasRemoteConnection,
+    hasLocalConnection,
+    expectedSuccessRelays,
+    isLocalOnly
+  })
 
   // Convert to Highlight with relay tracking info and return IMMEDIATELY
   const highlight = eventToHighlight(signedEvent)
