@@ -117,15 +117,12 @@ export async function createHighlight(
   // Sign the event
   const signedEvent = await factory.sign(highlightEvent)
 
-  // Attach custom properties to the event for later retrieval
+  // Initialize custom properties on the event (will be updated after publishing)
   ;(signedEvent as any).__highlightProps = {
     publishedRelays: [],
     isLocalOnly: false,
     isSyncing: false
   }
-
-  // Store the event in EventStore first for immediate UI display
-  eventStore.add(signedEvent)
 
   // Publish to all relays and get individual responses
   const allRelays = RELAYS
@@ -184,6 +181,9 @@ export async function createHighlight(
       isSyncing: false
     }
 
+    // Store the event in EventStore AFTER updating with final properties
+    eventStore.add(signedEvent)
+
     // Mark for offline sync if we're in local-only mode
     if (isLocalOnly) {
       console.log('✈️ [HIGHLIGHT-PUBLISH] Marking event for offline sync (flight mode)')
@@ -204,6 +204,9 @@ export async function createHighlight(
       isLocalOnly: true,
       isSyncing: false
     }
+    
+    // Store the event in EventStore AFTER updating with final properties
+    eventStore.add(signedEvent)
     
     console.log('✈️ [HIGHLIGHT-PUBLISH] Publishing failed, marking for offline sync (flight mode)')
     const { markEventAsOfflineCreated } = await import('./offlineSyncService')

@@ -310,14 +310,16 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     const isLocalOnly = highlight.isLocalOnly
     const publishedRelays = highlight.publishedRelays || []
     
-    console.log('🎯 [HIGHLIGHT-UI] Rendering highlight relay indicator:', {
-      highlightId: highlight.id,
-      isLocalOnly: isLocalOnly,
-      publishedRelays: publishedRelays,
-      publishedRelayCount: publishedRelays.length,
-      willShowAirplaneIcon: isLocalOnly,
-      highlightObject: highlight // Log the entire highlight object to see what's actually there
-    })
+    // Only log when values are meaningful (not undefined/empty) to reduce spam
+    if (isLocalOnly !== undefined || publishedRelays.length > 0) {
+      console.log('🎯 [HIGHLIGHT-UI] Rendering highlight relay indicator:', {
+        highlightId: highlight.id,
+        isLocalOnly: isLocalOnly,
+        publishedRelays: publishedRelays,
+        publishedRelayCount: publishedRelays.length,
+        willShowAirplaneIcon: isLocalOnly
+      })
+    }
     
     // Show highlighter icon with relay info if available
     if (highlight.publishedRelays && highlight.publishedRelays.length > 0) {
