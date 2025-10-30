@@ -74,6 +74,85 @@ export function useArticleLoader({
     
     if (!relayPool || !naddr) return
     
+    // Synchronously check cache sources BEFORE starting async loading
+    // This prevents showing loading skeletons when content is immediately available
+    // Do this outside the async function for immediate execution
+    try {
+      // Check localStorage cache first (synchronous)
+      const cachedArticle = getFromCache(naddr)
+      if (cachedArticle) {
+        const title = cachedArticle.title || 'Untitled Article'
+        setCurrentTitle(title)
+        setReaderContent({
+          title,
+          markdown: cachedArticle.markdown,
+          image: cachedArticle.image,
+          summary: cachedArticle.summary,
+          published: cachedArticle.published,
+          url: `nostr:${naddr}`
+        })
+        const dTag = cachedArticle.event.tags.find(t => t[0] === 'd')?.[1] || ''
+        const articleCoordinate = `${cachedArticle.event.kind}:${cachedArticle.author}:${dTag}`
+        setCurrentArticleCoordinate(articleCoordinate)
+        setCurrentArticleEventId(cachedArticle.event.id)
+        setCurrentArticle?.(cachedArticle.event)
+        setReaderLoading(false)
+        setSelectedUrl(`nostr:${naddr}`)
+        setIsCollapsed(true)
+        
+        // Store in EventStore for future lookups
+        if (eventStore) {
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            eventStore.add?.(cachedArticle.event as unknown as any)
+          } catch {
+            // Silently ignore store errors
+          }
+        }
+        
+        // Fetch highlights in background (don't block UI)
+        if (mountedRef.current) {
+          const dTag = cachedArticle.event.tags.find((t: string[]) => t[0] === 'd')?.[1] || ''
+          const coord = dTag ? `${cachedArticle.event.kind}:${cachedArticle.author}:${dTag}` : undefined
+          const eventId = cachedArticle.event.id
+          
+          if (coord && eventId && relayPool) {
+            setHighlightsLoading(true)
+            fetchHighlightsForArticle(
+              relayPool,
+              coord,
+              eventId,
+              (highlight) => {
+                if (!mountedRef.current) return
+                setHighlights((prev: Highlight[]) => {
+                  if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
+                  const next = [highlight, ...prev]
+                  return next.sort((a, b) => b.created_at - a.created_at)
+                })
+              },
+              settings,
+              false,
+              eventStore || undefined
+            ).then(() => {
+              if (mountedRef.current) {
+                setHighlightsLoading(false)
+              }
+            }).catch(() => {
+              if (mountedRef.current) {
+                setHighlightsLoading(false)
+              }
+            })
+          }
+        }
+        
+        // Return early - we have cached content, no need to query relays
+        return
+      }
+    } catch (err) {
+      // If cache check fails, fall through to async loading
+      console.warn('Cache check failed:', err)
+    }
+    
     const loadArticle = async () => {
       const requestId = ++currentRequestIdRef.current
       if (!mountedRef.current) return
@@ -85,8 +164,8 @@ export function useArticleLoader({
       // when we know the article coordinate
       setHighlightsLoading(false) // Don't show loading yet
       
-      // Check eventStore first for instant load (from bookmark cards, explore, etc.)
-      let foundInStore = false
+      // Check eventStore for instant load (from bookmark cards, explore, etc.)
+      // Cache was already checked synchronously above, so this only handles EventStore
       if (eventStore) {
         try {
           // Decode naddr to get the coordinate
@@ -96,7 +175,6 @@ export function useArticleLoader({
             const coordinate = `${pointer.kind}:${pointer.pubkey}:${pointer.identifier}`
             const storedEvent = eventStore.getEvent?.(coordinate)
             if (storedEvent) {
-              foundInStore = true
               const title = Helpers.getArticleTitle(storedEvent) || 'Untitled Article'
               setCurrentTitle(title)
               const image = Helpers.getArticleImage(storedEvent)
@@ -123,105 +201,26 @@ export function useArticleLoader({
             }
           }
         } catch (err) {
-          // Ignore store errors, fall through to cache/relay query
+          // Ignore store errors, fall through to relay query
         }
       }
 
-      // Check localStorage cache before querying relays (survives browser refresh)
-      // This prevents unnecessary relay queries when we have cached content
-      const cachedArticle = getFromCache(naddr)
-      if (cachedArticle) {
-        const title = cachedArticle.title || 'Untitled Article'
-        setCurrentTitle(title)
-        setReaderContent({
-          title,
-          markdown: cachedArticle.markdown,
-          image: cachedArticle.image,
-          summary: cachedArticle.summary,
-          published: cachedArticle.published,
-          url: `nostr:${naddr}`
-        })
-        const dTag = cachedArticle.event.tags.find(t => t[0] === 'd')?.[1] || ''
-        const articleCoordinate = `${cachedArticle.event.kind}:${cachedArticle.author}:${dTag}`
-        setCurrentArticleCoordinate(articleCoordinate)
-        setCurrentArticleEventId(cachedArticle.event.id)
-        setCurrentArticle?.(cachedArticle.event)
-        setReaderLoading(false)
-        
-        // Store in EventStore for future lookups (don't query relays if we have cache)
-        if (eventStore) {
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            eventStore.add?.(cachedArticle.event as unknown as any)
-          } catch {
-            // Silently ignore store errors
-          }
-        }
-        
-        // Still fetch highlights, but don't query relays for article content
-        try {
-          if (!mountedRef.current) return
-          
-          const dTag = cachedArticle.event.tags.find((t: string[]) => t[0] === 'd')?.[1] || ''
-          const coord = dTag ? `${cachedArticle.event.kind}:${cachedArticle.author}:${dTag}` : undefined
-          const eventId = cachedArticle.event.id
-          
-          if (coord && eventId) {
-            setHighlightsLoading(true)
-            // Clear highlights that don't belong to this article coordinate
-            setHighlights((prev) => {
-              return prev.filter(h => {
-                // Keep highlights that match this article coordinate or event ID
-                return h.eventReference === coord || h.eventReference === eventId
-              })
-            })
-            await fetchHighlightsForArticle(
-              relayPool,
-              coord,
-              eventId,
-              (highlight) => {
-                if (!mountedRef.current) return
-                if (currentRequestIdRef.current !== requestId) return
-                setHighlights((prev: Highlight[]) => {
-                  if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
-                  const next = [highlight, ...prev]
-                  return next.sort((a, b) => b.created_at - a.created_at)
-                })
-              },
-              settingsRef.current,
-              false, // force
-              eventStore || undefined
-            )
-          } else {
-            setHighlights([])
-            setHighlightsLoading(false)
-          }
-        } catch (err) {
-          console.error('Failed to fetch highlights:', err)
-        } finally {
-          if (mountedRef.current && currentRequestIdRef.current === requestId) {
-            setHighlightsLoading(false)
-          }
-        }
-        
-        // Return early since we have cached content - no need to query relays
-        return
-      }
-
-      // If we have preview data from navigation, show it immediately (no skeleton!)
+      // At this point, we've checked EventStore and cache - neither had content
+      // Only show loading skeleton if we also don't have preview data
       if (previewData) {
+        // If we have preview data from navigation, show it immediately (no skeleton!)
         setCurrentTitle(previewData.title)
         setReaderContent({
           title: previewData.title,
-          markdown: '', // Will be loaded from store or relay
+          markdown: '', // Will be loaded from relay
           image: previewData.image,
           summary: previewData.summary,
           published: previewData.published,
           url: `nostr:${naddr}`
         })
         setReaderLoading(false) // Turn off loading immediately - we have the preview!
-      } else if (!foundInStore) {
-        // Only show loading if we didn't find content in store and no preview data
+      } else {
+        // No cache, no EventStore, no preview data - need to load from relays
         setReaderLoading(true)
         setReaderContent(undefined)
       }
