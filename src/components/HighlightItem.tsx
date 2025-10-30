@@ -307,7 +307,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     }
     
     // Check if this highlight was created offline (flight mode)
-    const isOfflineCreated = highlight.isOfflineCreated || highlight.isLocalOnly
+    const isOfflineCreated = highlight.isOfflineCreated
     
     // Show highlighter icon with relay info if available
     if (highlight.publishedRelays && highlight.publishedRelays.length > 0) {
