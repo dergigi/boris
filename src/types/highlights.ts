@@ -15,10 +15,10 @@ export interface Highlight {
   comment?: string // optional comment about the highlight
   // Level classification (computed based on user's context)
   level?: HighlightLevel
-  // Relay tracking for offline highlights
+  // Relay tracking for local-only highlights
   publishedRelays?: string[] // URLs of relays where this was published (for user-created highlights)
   seenOnRelays?: string[] // URLs of relays where this event was fetched from
-  isOfflineCreated?: boolean // true if created while in flight mode (offline)
+  isLocalOnly?: boolean // true if only published to local relays
   isSyncing?: boolean // true if currently being synced to remote relays
 }
 

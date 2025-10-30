@@ -306,8 +306,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       }
     }
     
-    // Check if this highlight was created offline (flight mode)
-    const isOfflineCreated = highlight.isOfflineCreated
+    // Check if this highlight was only published to local relays
+    const isLocalOnly = highlight.isLocalOnly
     
     // Show highlighter icon with relay info if available
     if (highlight.publishedRelays && highlight.publishedRelays.length > 0) {
@@ -315,8 +315,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
       )
       return {
-        icon: isOfflineCreated ? faPlane : faHighlighter,
-        tooltip: isOfflineCreated ? 'Created offline - will sync when online' : relayNames.join('\n'),
+        icon: isLocalOnly ? faPlane : faHighlighter,
+        tooltip: isLocalOnly ? 'Local relays only - will sync when remote relays available' : relayNames.join('\n'),
         spin: false
       }
     }

@@ -135,7 +135,7 @@ export async function createHighlight(
   // Convert to Highlight with relay tracking info and return IMMEDIATELY
   const highlight = eventToHighlight(signedEvent)
   highlight.publishedRelays = expectedSuccessRelays
-  highlight.isOfflineCreated = isLocalOnly
+  highlight.isLocalOnly = isLocalOnly
 
   return highlight
 }
