@@ -118,10 +118,7 @@ export async function createHighlight(
   // Sign the event
   const signedEvent = await factory.sign(highlightEvent)
 
-  // Use unified write service to store and publish
-  await publishEvent(relayPool, eventStore, signedEvent)
-
-  // Check current connection status for UI feedback
+  // Check current connection status BEFORE publishing
   const connectedRelays = Array.from(relayPool.relays.values())
     .filter(relay => relay.connected)
     .map(relay => relay.url)
@@ -129,10 +126,10 @@ export async function createHighlight(
   const hasRemoteConnection = connectedRelays.some(url => !isLocalRelay(url))
   const hasLocalConnection = connectedRelays.some(url => isLocalRelay(url))
   
-  // Determine which relays we actually published to
-  const expectedSuccessRelays = hasRemoteConnection
-    ? RELAYS  // Published to all relays (local + remote)
-    : RELAYS.filter(isLocalRelay)  // Only published to local relays
+  // Determine which relays we should publish to
+  const targetRelays = hasRemoteConnection
+    ? RELAYS  // Publish to all relays (local + remote)
+    : RELAYS.filter(isLocalRelay)  // Only publish to local relays
   
   // isLocalOnly is true if we only have local connections (flight mode)
   const isLocalOnly = hasLocalConnection && !hasRemoteConnection
@@ -141,13 +138,16 @@ export async function createHighlight(
     connectedRelays,
     hasRemoteConnection,
     hasLocalConnection,
-    expectedSuccessRelays,
+    targetRelays,
     isLocalOnly
   })
 
+  // Use unified write service to store and publish
+  await publishEvent(relayPool, eventStore, signedEvent)
+
   // Convert to Highlight with relay tracking info and return IMMEDIATELY
   const highlight = eventToHighlight(signedEvent)
-  highlight.publishedRelays = expectedSuccessRelays
+  highlight.publishedRelays = targetRelays
   highlight.isLocalOnly = isLocalOnly
 
   return highlight
