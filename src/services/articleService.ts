@@ -71,16 +71,23 @@ export function getFromCache(naddr: string): ArticleContent | null {
   }
 }
 
-function saveToCache(naddr: string, content: ArticleContent): void {
+export function saveToCache(naddr: string, content: ArticleContent): void {
   try {
     const cacheKey = getCacheKey(naddr)
+    console.log('[article-cache] 💾 Saving to cache', {
+      key: cacheKey,
+      title: content.title,
+      hasMarkdown: !!content.markdown,
+      markdownLength: content.markdown?.length
+    })
     const cached: CachedArticle = {
       content,
       timestamp: Date.now()
     }
     localStorage.setItem(cacheKey, JSON.stringify(cached))
+    console.log('[article-cache] ✅ Successfully saved to cache')
   } catch (err) {
-    console.warn('Failed to cache article:', err)
+    console.warn('[article-cache] Failed to cache article:', err)
     // Silently fail if storage is full or unavailable
   }
 }

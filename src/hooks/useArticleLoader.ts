@@ -6,7 +6,7 @@ import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { Helpers } from 'applesauce-core'
 import { queryEvents } from '../services/dataFetch'
-import { fetchArticleByNaddr, getFromCache } from '../services/articleService'
+import { fetchArticleByNaddr, getFromCache, saveToCache } from '../services/articleService'
 import { fetchHighlightsForArticle } from '../services/highlightService'
 import { ReadableContent } from '../services/readerService'
 import { Highlight } from '../types/highlights'
@@ -364,10 +364,11 @@ export function useArticleLoader({
             wasFirstEmitted: firstEmitted
           })
           const title = Helpers.getArticleTitle(finalEvent) || 'Untitled Article'
-          setCurrentTitle(title)
           const image = Helpers.getArticleImage(finalEvent)
           const summary = Helpers.getArticleSummary(finalEvent)
           const published = Helpers.getArticlePublished(finalEvent)
+          
+          setCurrentTitle(title)
           setReaderContent({
             title,
             markdown: finalEvent.content,
@@ -382,7 +383,20 @@ export function useArticleLoader({
           setCurrentArticleCoordinate(articleCoordinate)
           setCurrentArticleEventId(finalEvent.id)
           setCurrentArticle?.(finalEvent)
-          console.log('[article-loader] ✅ Finalized with event from relays')
+          
+          // Save to cache for future loads
+          const articleContent = {
+            title,
+            markdown: finalEvent.content,
+            image,
+            summary,
+            published,
+            author: finalEvent.pubkey,
+            event: finalEvent
+          }
+          saveToCache(naddr, articleContent)
+          
+          console.log('[article-loader] ✅ Finalized with event from relays and saved to cache')
         } else {
           // As a last resort, fall back to the legacy helper (which includes cache)
           console.log('[article-loader] ⚠️ No events from relays, falling back to fetchArticleByNaddr')
