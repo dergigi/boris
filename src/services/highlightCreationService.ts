@@ -8,6 +8,7 @@ import { RELAYS } from '../config/relays'
 import { Highlight } from '../types/highlights'
 import { UserSettings } from './settingsService'
 import { isLocalRelay, areAllRelaysLocal } from '../utils/helpers'
+import { setHighlightMetadata } from './highlightEventProcessor'
 
 // Boris pubkey for zap splits
 // npub19802see0gnk3vjlus0dnmfdagusqrtmsxpl5yfmkwn9uvnfnqylqduhr0x
@@ -187,7 +188,14 @@ export async function createHighlight(
           .map(response => response.from)
       : []
 
-    // Update the event with the actual properties
+    // Store metadata in cache (persists across EventStore serialization)
+    setHighlightMetadata(signedEvent.id, {
+      publishedRelays: successfulRelaysList,
+      isLocalOnly,
+      isSyncing: false
+    })
+
+    // Also update the event with the actual properties (for backwards compatibility)
     ;(signedEvent as any).__highlightProps = {
       publishedRelays: successfulRelaysList,
       isLocalOnly,
@@ -211,7 +219,14 @@ export async function createHighlight(
     // If publishing fails completely, assume local-only mode
     isLocalOnly = true
     
-    // Update the event with the error state
+    // Store metadata in cache (persists across EventStore serialization)
+    setHighlightMetadata(signedEvent.id, {
+      publishedRelays: [],
+      isLocalOnly: true,
+      isSyncing: false
+    })
+    
+    // Also update the event with the error state (for backwards compatibility)
     ;(signedEvent as any).__highlightProps = {
       publishedRelays: [],
       isLocalOnly: true,

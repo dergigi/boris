@@ -13,6 +13,41 @@ const {
 } = Helpers
 
 /**
+ * Cache for highlight metadata that persists across EventStore serialization
+ * Key: event ID, Value: { publishedRelays, isLocalOnly, isSyncing }
+ */
+const highlightMetadataCache = new Map<string, {
+  publishedRelays?: string[]
+  isLocalOnly?: boolean
+  isSyncing?: boolean
+}>()
+
+/**
+ * Store highlight metadata for an event ID
+ */
+export function setHighlightMetadata(
+  eventId: string,
+  metadata: {
+    publishedRelays?: string[]
+    isLocalOnly?: boolean
+    isSyncing?: boolean
+  }
+): void {
+  highlightMetadataCache.set(eventId, metadata)
+}
+
+/**
+ * Get highlight metadata for an event ID
+ */
+export function getHighlightMetadata(eventId: string): {
+  publishedRelays?: string[]
+  isLocalOnly?: boolean
+  isSyncing?: boolean
+} | undefined {
+  return highlightMetadataCache.get(eventId)
+}
+
+/**
  * Convert a NostrEvent to a Highlight object
  */
 export function eventToHighlight(event: NostrEvent): Highlight {
@@ -28,8 +63,11 @@ export function eventToHighlight(event: NostrEvent): Highlight {
   const eventReference = sourceEventPointer?.id || 
     (sourceAddressPointer ? `${sourceAddressPointer.kind}:${sourceAddressPointer.pubkey}:${sourceAddressPointer.identifier}` : undefined)
   
-  // Check if this event has custom properties from our highlight creation process
-  const customProps = (event as any).__highlightProps || {}
+  // Check cache first (persists across EventStore serialization)
+  const cachedMetadata = getHighlightMetadata(event.id)
+  
+  // Fall back to __highlightProps if cache doesn't have it (for backwards compatibility)
+  const customProps = cachedMetadata || (event as any).__highlightProps || {}
   
   return {
     id: event.id,
