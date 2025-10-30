@@ -28,6 +28,9 @@ export function eventToHighlight(event: NostrEvent): Highlight {
   const eventReference = sourceEventPointer?.id || 
     (sourceAddressPointer ? `${sourceAddressPointer.kind}:${sourceAddressPointer.pubkey}:${sourceAddressPointer.identifier}` : undefined)
   
+  // Check if this event has custom properties from our highlight creation process
+  const customProps = (event as any).__highlightProps || {}
+  
   return {
     id: event.id,
     pubkey: event.pubkey,
@@ -38,7 +41,11 @@ export function eventToHighlight(event: NostrEvent): Highlight {
     urlReference: sourceUrl,
     author,
     context,
-    comment
+    comment,
+    // Preserve custom properties if they exist
+    publishedRelays: customProps.publishedRelays,
+    isLocalOnly: customProps.isLocalOnly,
+    isSyncing: customProps.isSyncing
   }
 }
 
