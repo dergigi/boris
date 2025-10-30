@@ -124,21 +124,29 @@ export async function createHighlight(
     isSyncing: false
   }
 
-  // Publish to all relays and get individual responses
-  const allRelays = RELAYS
+  // Get only connected relays to avoid long timeouts
+  const connectedRelays = Array.from(relayPool.relays.values())
+    .filter(relay => relay.connected)
+    .map(relay => relay.url)
+  
   let publishResponses: { ok: boolean; message?: string; from: string }[] = []
   let isLocalOnly = false
 
   console.log('🚀 [HIGHLIGHT-PUBLISH] Starting highlight publication process', {
     eventId: signedEvent.id,
-    allRelays,
-    relayCount: allRelays.length
+    connectedRelays,
+    connectedRelayCount: connectedRelays.length
   })
 
   try {
-    // Publish to all relays and wait for responses
-    console.log('📡 [HIGHLIGHT-PUBLISH] Publishing to all relays...')
-    publishResponses = await relayPool.publish(allRelays, signedEvent)
+    // Publish only to connected relays to avoid long timeouts
+    if (connectedRelays.length === 0) {
+      console.log('⚠️ [HIGHLIGHT-PUBLISH] No connected relays, marking as local-only')
+      isLocalOnly = true
+    } else {
+      console.log('📡 [HIGHLIGHT-PUBLISH] Publishing to connected relays...')
+      publishResponses = await relayPool.publish(connectedRelays, signedEvent)
+    }
     
     console.log('📨 [HIGHLIGHT-PUBLISH] Received responses from relays:', publishResponses)
     
@@ -158,7 +166,7 @@ export async function createHighlight(
     isLocalOnly = successfulLocalRelays.length > 0 && successfulRemoteRelays.length === 0
 
     console.log('✅ [HIGHLIGHT-PUBLISH] Publishing analysis:', {
-      totalRelays: allRelays.length,
+      connectedRelays: connectedRelays.length,
       successfulRelays: successfulRelays.length,
       failedRelays: failedRelays.length,
       successfulLocalRelays,
@@ -172,11 +180,16 @@ export async function createHighlight(
           : 'No relays accepted the event'
     })
 
+    // Handle case when no relays were connected
+    const successfulRelaysList = publishResponses.length > 0
+      ? publishResponses
+          .filter(response => response.ok)
+          .map(response => response.from)
+      : []
+
     // Update the event with the actual properties
     ;(signedEvent as any).__highlightProps = {
-      publishedRelays: publishResponses
-        .filter(response => response.ok)
-        .map(response => response.from),
+      publishedRelays: successfulRelaysList,
       isLocalOnly,
       isSyncing: false
     }
@@ -217,9 +230,13 @@ export async function createHighlight(
   const highlight = eventToHighlight(signedEvent)
   
   // Manually set the properties since __highlightProps might not be working
-  highlight.publishedRelays = publishResponses
-    .filter(response => response.ok)
-    .map(response => response.from)
+  const finalPublishedRelays = publishResponses.length > 0
+    ? publishResponses
+        .filter(response => response.ok)
+        .map(response => response.from)
+    : []
+  
+  highlight.publishedRelays = finalPublishedRelays
   highlight.isLocalOnly = isLocalOnly
   highlight.isSyncing = false
   
@@ -227,7 +244,8 @@ export async function createHighlight(
     eventId: signedEvent.id,
     publishedRelays: highlight.publishedRelays,
     isLocalOnly: highlight.isLocalOnly,
-    isSyncing: highlight.isSyncing
+    isSyncing: highlight.isSyncing,
+    relayCount: highlight.publishedRelays.length
   })
 
   return highlight
