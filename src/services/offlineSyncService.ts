@@ -23,6 +23,13 @@ export function markEventAsOfflineCreated(eventId: string): void {
 }
 
 /**
+ * Check if an event was created during offline period (flight mode)
+ */
+export function isEventOfflineCreated(eventId: string): boolean {
+  return offlineCreatedEvents.has(eventId)
+}
+
+/**
  * Check if an event is currently being synced
  */
 export function isEventSyncing(eventId: string): boolean {

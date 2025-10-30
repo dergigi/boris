@@ -307,18 +307,34 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     }
     
     // Check if this highlight was only published to local relays
-    const isLocalOnly = highlight.isLocalOnly
+    let isLocalOnly = highlight.isLocalOnly
     const publishedRelays = highlight.publishedRelays || []
     
-    // Debug: Log what we're working with (remove after fixing)
-    if (highlight.id && (isLocalOnly !== undefined || publishedRelays.length > 0)) {
-      console.log('🔍 [HIGHLIGHT-UI-DEBUG] Highlight data:', {
+    // Fallback 1: Check if this highlight was marked for offline sync (flight mode)
+    if (isLocalOnly === undefined) {
+      const { isEventOfflineCreated } = require('../services/offlineSyncService')
+      if (isEventOfflineCreated(highlight.id)) {
+        isLocalOnly = true
+      }
+    }
+    
+    // Fallback 2: If publishedRelays only contains local relays, it's local-only
+    if (isLocalOnly === undefined && publishedRelays.length > 0) {
+      const { isLocalRelay } = require('../utils/helpers')
+      const hasOnlyLocalRelays = publishedRelays.every(url => isLocalRelay(url))
+      const hasRemoteRelays = publishedRelays.some(url => !isLocalRelay(url))
+      if (hasOnlyLocalRelays && !hasRemoteRelays) {
+        isLocalOnly = true
+      }
+    }
+    
+    // Debug: Log for flight mode highlights
+    if (highlight.id && (isLocalOnly === true || publishedRelays.some(url => url.includes('localhost')))) {
+      console.log('🔍 [HIGHLIGHT-UI-DEBUG] Flight mode highlight:', {
         highlightId: highlight.id,
         isLocalOnly,
         publishedRelays,
-        seenOnRelays: highlight.seenOnRelays,
-        willUsePublishedRelays: !!(highlight.publishedRelays && highlight.publishedRelays.length > 0),
-        willUseSeenOnRelays: !!(highlight.seenOnRelays && highlight.seenOnRelays.length > 0)
+        willShowAirplane: isLocalOnly === true
       })
     }
     
