@@ -44,14 +44,6 @@ export const useHighlightCreation = ({
   }, [])
 
   const handleCreateHighlight = useCallback(async (text: string) => {
-    console.log('🎯 [HIGHLIGHT-CREATION] Starting highlight creation process', {
-      text: text.substring(0, 50) + '...',
-      hasActiveAccount: !!activeAccount,
-      hasRelayPool: !!relayPool,
-      hasEventStore: !!eventStore,
-      hasCurrentArticle: !!currentArticle,
-      hasSelectedUrl: !!selectedUrl
-    })
 
     if (!activeAccount || !relayPool || !eventStore) {
       console.error('Missing requirements for highlight creation')
@@ -69,7 +61,6 @@ export const useHighlightCreation = ({
         ? currentArticle.content 
         : readerContent?.markdown || readerContent?.html
       
-      console.log('🎯 [HIGHLIGHT-CREATION] Calling createHighlight function')
       const newHighlight = await createHighlight(
         text,
         source,
@@ -82,13 +73,6 @@ export const useHighlightCreation = ({
       )
       
       // Highlight created successfully
-      console.log('🎯 [HIGHLIGHT-CREATION] Highlight created successfully:', {
-        highlightId: newHighlight.id,
-        isLocalOnly: newHighlight.isLocalOnly,
-        publishedRelays: newHighlight.publishedRelays,
-        willShowAirplaneIcon: newHighlight.isLocalOnly
-      })
-      
       // Clear the browser's text selection immediately to allow DOM update
       const selection = window.getSelection()
       if (selection) {

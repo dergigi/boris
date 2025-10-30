@@ -43,10 +43,6 @@ export function setHighlightMetadata(
   }
 ): void {
   highlightMetadataCache.set(eventId, metadata)
-  console.log('💾 [HIGHLIGHT-METADATA] Stored metadata in cache:', {
-    eventId,
-    metadata
-  })
 }
 
 /**
@@ -81,16 +77,6 @@ export function eventToHighlight(event: NostrEvent): Highlight {
   
   // Fall back to __highlightProps if cache doesn't have it (for backwards compatibility)
   const customProps = cachedMetadata || (event as HighlightEvent).__highlightProps || {}
-  
-  // Debug: Log cache lookup for recently created highlights
-  if (event.id && (cachedMetadata || (event as HighlightEvent).__highlightProps)) {
-    console.log('🔍 [EVENT-TO-HIGHLIGHT] Cache lookup:', {
-      eventId: event.id,
-      foundInCache: !!cachedMetadata,
-      hasHighlightProps: !!(event as HighlightEvent).__highlightProps,
-      customProps
-    })
-  }
   
   return {
     id: event.id,

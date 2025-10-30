@@ -142,23 +142,14 @@ export async function createHighlight(
   let publishResponses: { ok: boolean; message?: string; from: string }[] = []
   let isLocalOnly = false
 
-  console.log('🚀 [HIGHLIGHT-PUBLISH] Starting highlight publication process', {
-    eventId: signedEvent.id,
-    connectedRelays,
-    connectedRelayCount: connectedRelays.length
-  })
 
   try {
     // Publish only to connected relays to avoid long timeouts
     if (connectedRelays.length === 0) {
-      console.log('⚠️ [HIGHLIGHT-PUBLISH] No connected relays, marking as local-only')
       isLocalOnly = true
     } else {
-      console.log('📡 [HIGHLIGHT-PUBLISH] Publishing to connected relays...')
       publishResponses = await relayPool.publish(connectedRelays, signedEvent)
     }
-    
-    console.log('📨 [HIGHLIGHT-PUBLISH] Received responses from relays:', publishResponses)
     
     // Determine which relays successfully accepted the event
     const successfulRelays = publishResponses
@@ -175,20 +166,6 @@ export async function createHighlight(
     // isLocalOnly is true if only local relays accepted the event
     isLocalOnly = successfulLocalRelays.length > 0 && successfulRemoteRelays.length === 0
 
-    console.log('✅ [HIGHLIGHT-PUBLISH] Publishing analysis:', {
-      connectedRelays: connectedRelays.length,
-      successfulRelays: successfulRelays.length,
-      failedRelays: failedRelays.length,
-      failedRelayDetails: failedRelays,
-      successfulLocalRelays,
-      successfulRemoteRelays,
-      isLocalOnly,
-      flightModeReason: isLocalOnly 
-        ? 'Only local relays accepted the event' 
-        : successfulRemoteRelays.length > 0 
-          ? 'Remote relays also accepted the event'
-          : 'No relays accepted the event'
-    })
 
     // Handle case when no relays were connected
     const successfulRelaysList = publishResponses.length > 0
@@ -216,11 +193,8 @@ export async function createHighlight(
 
     // Mark for offline sync if we're in local-only mode
     if (isLocalOnly) {
-      console.log('✈️ [HIGHLIGHT-PUBLISH] Marking event for offline sync (flight mode)')
       const { markEventAsOfflineCreated } = await import('./offlineSyncService')
       markEventAsOfflineCreated(signedEvent.id)
-    } else {
-      console.log('🌐 [HIGHLIGHT-PUBLISH] Event published to remote relays, no offline sync needed')
     }
 
   } catch (error) {
@@ -245,7 +219,6 @@ export async function createHighlight(
     // Store the event in EventStore AFTER updating with final properties
     eventStore.add(signedEvent)
     
-    console.log('✈️ [HIGHLIGHT-PUBLISH] Publishing failed, marking for offline sync (flight mode)')
     const { markEventAsOfflineCreated } = await import('./offlineSyncService')
     markEventAsOfflineCreated(signedEvent.id)
   }
@@ -263,14 +236,6 @@ export async function createHighlight(
   highlight.publishedRelays = finalPublishedRelays
   highlight.isLocalOnly = isLocalOnly
   highlight.isSyncing = false
-  
-  console.log('🔄 [HIGHLIGHT-CREATION] Final highlight properties set:', {
-    eventId: signedEvent.id,
-    publishedRelays: highlight.publishedRelays,
-    isLocalOnly: highlight.isLocalOnly,
-    isSyncing: highlight.isSyncing,
-    relayCount: highlight.publishedRelays.length
-  })
 
   return highlight
 }

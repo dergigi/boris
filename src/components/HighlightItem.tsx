@@ -321,17 +321,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       }
     }
     
-    // Debug: Log for flight mode highlights
-    if (highlight.id && (isLocalOnly === true || publishedRelays.some(url => url.includes('localhost')))) {
-      console.log('🔍 [HIGHLIGHT-UI-DEBUG] Flight mode highlight:', {
-        highlightId: highlight.id,
-        isLocalOnly,
-        publishedRelays,
-        highlightPublishedRelays: highlight.publishedRelays,
-        highlightIsLocalOnly: highlight.isLocalOnly,
-        willShowAirplane: isLocalOnly === true
-      })
-    }
     
     // If isLocalOnly is true (from any fallback), show airplane icon
     if (isLocalOnly === true) {
