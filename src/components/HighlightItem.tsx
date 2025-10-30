@@ -114,7 +114,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   const itemRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const [isSyncing, setIsSyncing] = useState(() => isEventSyncing(highlight.id))
-  const [showOfflineIndicator, setShowOfflineIndicator] = useState(() => highlight.isOfflineCreated && !isSyncing)
   const [isRebroadcasting, setIsRebroadcasting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -133,12 +132,6 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     return `${highlight.pubkey.slice(0, 8)}...` // fallback to short pubkey
   }
   
-  // Update offline indicator when highlight prop changes
-  useEffect(() => {
-    if (highlight.isOfflineCreated && !isSyncing) {
-      setShowOfflineIndicator(true)
-    }
-  }, [highlight.isOfflineCreated, isSyncing])
   
   // Listen to sync state changes
   useEffect(() => {
@@ -313,8 +306,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       }
     }
     
-    // Always show relay list, use plane icon for local-only
-    const isLocalOrOffline = highlight.isLocalOnly || showOfflineIndicator
+    // Check if this highlight was created offline (flight mode)
+    const isOfflineCreated = highlight.isOfflineCreated || highlight.isLocalOnly
     
     // Show highlighter icon with relay info if available
     if (highlight.publishedRelays && highlight.publishedRelays.length > 0) {
@@ -322,8 +315,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
       )
       return {
-        icon: isLocalOrOffline ? faPlane : faHighlighter,
-        tooltip: relayNames.join('\n'),
+        icon: isOfflineCreated ? faPlane : faHighlighter,
+        tooltip: isOfflineCreated ? 'Created offline - will sync when online' : relayNames.join('\n'),
         spin: false
       }
     }
