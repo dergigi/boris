@@ -37,19 +37,36 @@ function getCacheKey(naddr: string): string {
 export function getFromCache(naddr: string): ArticleContent | null {
   try {
     const cacheKey = getCacheKey(naddr)
+    console.log('[article-cache] Checking cache with key:', cacheKey)
     const cached = localStorage.getItem(cacheKey)
-    if (!cached) return null
+    if (!cached) {
+      console.log('[article-cache] ❌ No cached entry found')
+      return null
+    }
 
     const { content, timestamp }: CachedArticle = JSON.parse(cached)
     const age = Date.now() - timestamp
+    console.log('[article-cache] Found cached entry', {
+      age: age,
+      ageDays: Math.floor(age / (24 * 60 * 60 * 1000)),
+      ttlDays: Math.floor(CACHE_TTL / (24 * 60 * 60 * 1000)),
+      isExpired: age > CACHE_TTL
+    })
 
     if (age > CACHE_TTL) {
+      console.log('[article-cache] ⚠️ Cache expired, removing')
       localStorage.removeItem(cacheKey)
       return null
     }
 
+    console.log('[article-cache] ✅ Cache valid, returning content', {
+      title: content.title,
+      hasMarkdown: !!content.markdown,
+      markdownLength: content.markdown?.length
+    })
     return content
-  } catch {
+  } catch (err) {
+    console.warn('[article-cache] Error reading cache:', err)
     return null
   }
 }
