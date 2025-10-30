@@ -309,16 +309,32 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     // Check if this highlight was only published to local relays
     const isLocalOnly = highlight.isLocalOnly
     
+    console.log('🎯 [HIGHLIGHT-UI] Rendering highlight relay indicator:', {
+      highlightId: highlight.id,
+      isLocalOnly,
+      publishedRelays: highlight.publishedRelays,
+      willShowAirplaneIcon: isLocalOnly
+    })
+    
     // Show highlighter icon with relay info if available
     if (highlight.publishedRelays && highlight.publishedRelays.length > 0) {
       const relayNames = highlight.publishedRelays.map(url => 
         url.replace(/^wss?:\/\//, '').replace(/\/$/, '')
       )
-      return {
+      const iconInfo = {
         icon: isLocalOnly ? faPlane : faHighlighter,
         tooltip: isLocalOnly ? 'Local relays only - will sync when remote relays available' : relayNames.join('\n'),
         spin: false
       }
+      
+      console.log('🔍 [HIGHLIGHT-UI] Icon decision made:', {
+        highlightId: highlight.id,
+        isLocalOnly,
+        iconType: isLocalOnly ? 'airplane' : 'highlighter',
+        tooltip: iconInfo.tooltip
+      })
+      
+      return iconInfo
     }
     
     if (highlight.seenOnRelays && highlight.seenOnRelays.length > 0) {
