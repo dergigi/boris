@@ -308,12 +308,15 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     
     // Check if this highlight was only published to local relays
     const isLocalOnly = highlight.isLocalOnly
+    const publishedRelays = highlight.publishedRelays || []
     
     console.log('🎯 [HIGHLIGHT-UI] Rendering highlight relay indicator:', {
       highlightId: highlight.id,
-      isLocalOnly,
-      publishedRelays: highlight.publishedRelays,
-      willShowAirplaneIcon: isLocalOnly
+      isLocalOnly: isLocalOnly,
+      publishedRelays: publishedRelays,
+      publishedRelayCount: publishedRelays.length,
+      willShowAirplaneIcon: isLocalOnly,
+      highlightObject: highlight // Log the entire highlight object to see what's actually there
     })
     
     // Show highlighter icon with relay info if available
@@ -329,9 +332,12 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       
       console.log('🔍 [HIGHLIGHT-UI] Icon decision made:', {
         highlightId: highlight.id,
-        isLocalOnly,
+        isLocalOnly: isLocalOnly,
         iconType: isLocalOnly ? 'airplane' : 'highlighter',
-        tooltip: iconInfo.tooltip
+        tooltip: iconInfo.tooltip,
+        actualPublishedRelaysInUI: publishedRelays,
+        relayNames: relayNames,
+        conditionResult: isLocalOnly ? 'SHOULD_SHOW_AIRPLANE' : 'SHOULD_SHOW_HIGHLIGHTER'
       })
       
       return iconInfo
