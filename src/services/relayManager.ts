@@ -88,7 +88,7 @@ export function applyRelaySetToPool(
       } catch (error) {
         // Suppress errors when closing relays that haven't fully connected yet
         // This can happen when switching relay sets before connections establish
-        console.debug('[relay-manager] Ignoring error when closing relay:', url, error)
+        // Silently ignore
       }
       relayPool.relays.delete(url)
     }
