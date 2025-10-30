@@ -145,6 +145,10 @@ export function useArticleLoader({
               setCurrentArticleEventId(storedEvent.id)
               setCurrentArticle?.(storedEvent)
               setReaderLoading(false)
+              
+              // If we found the content in EventStore, we can return early
+              // This prevents unnecessary relay queries when offline
+              return
             }
           } catch (err) {
             // Ignore store errors, fall through to relay query
