@@ -5,7 +5,8 @@
  * Service Worker automatically caches images on fetch
  */
 
-const CACHE_NAME = 'boris-image-cache-v1'
+// Must match the cache name in src/sw.ts
+const CACHE_NAME = 'boris-images'
 
 /**
  * Clear all cached images

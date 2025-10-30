@@ -10,6 +10,8 @@ export function useImageCache(
   imageUrl: string | undefined
 ): string | undefined {
   // Service Worker handles everything - just return the URL as-is
+  // The Service Worker will intercept fetch requests and cache them
+  // Make sure images use standard <img src> tags for SW interception
   return imageUrl
 }
 
