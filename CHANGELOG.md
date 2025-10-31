@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.29] - 2025-11-01
+
+### Fixed
+
+- Full-width images setting now uses width instead of max-width
+  - Change from --image-max-width CSS variable to --image-width
+  - When enabled, sets images to width: 100% (enlarging small images)
+  - Always constrains with max-width: 100% to prevent overflow
+  - Update mobile responsive styles to respect the setting
+
 ## [0.10.28] - 2025-11-01
 
 ### Fixed
