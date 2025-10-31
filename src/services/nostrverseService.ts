@@ -5,6 +5,7 @@ import { BlogPostPreview } from './exploreService'
 import { Highlight } from '../types/highlights'
 import { eventToHighlight, dedupeHighlights, sortHighlights } from './highlightEventProcessor'
 import { queryEvents } from './dataFetch'
+import { cacheArticleEvent } from './articleService'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -57,6 +58,9 @@ export const fetchNostrverseBlogPosts = async (
               }
               onPost(post)
             }
+            
+            // Cache article content in localStorage for offline access
+            cacheArticleEvent(event)
           }
         }
       }
@@ -78,7 +82,6 @@ export const fetchNostrverseBlogPosts = async (
         const timeB = b.published || b.event.created_at
         return timeB - timeA // Most recent first
       })
-    
     
     return blogPosts
   } catch (error) {
