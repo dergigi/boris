@@ -211,6 +211,7 @@ function replaceNostrUrisSafely(
   }
   
   // Replace nostr URIs, but skip those inside link URLs
+  // Also check if nostr URI is part of any URL pattern (http/https URLs)
   // Callback params: (match, encoded, type, offset, string)
   let nostrMatchCount = 0
   const result = markdown.replace(NOSTR_URI_REGEX, (match, encoded, _type, offset, fullString) => {
@@ -220,7 +221,7 @@ function replaceNostrUrisSafely(
     console.log('[nostrUriResolver]   - Match:', match)
     console.log('[nostrUriResolver]   - Encoded:', encoded)
     console.log('[nostrUriResolver]   - Position:', offset, 'to', matchEnd)
-    console.log('[nostrUriResolver]   - Context around match:', fullString.slice(Math.max(0, offset - 30), matchEnd + 30))
+    console.log('[nostrUriResolver]   - Context around match:', fullString.slice(Math.max(0, offset - 50), matchEnd + 50))
     
     // Check if this match is inside a markdown link URL
     // Check both start and end positions to ensure we catch the whole match
@@ -232,7 +233,7 @@ function replaceNostrUrisSafely(
         (offset >= r.start && offset < r.end) || 
         (matchEnd - 1 >= r.start && matchEnd - 1 < r.end)
       )
-      console.log('[nostrUriResolver] SKIPPING replacement - inside link URL')
+      console.log('[nostrUriResolver] SKIPPING replacement - inside markdown link URL')
       console.log('[nostrUriResolver]   - Match range:', offset, 'to', matchEnd)
       console.log('[nostrUriResolver]   - Link URL range:', range)
       console.log('[nostrUriResolver]   - Link URL content:', range ? markdown.slice(range.start, range.end).slice(0, 200) : 'N/A')
@@ -240,7 +241,27 @@ function replaceNostrUrisSafely(
       return match
     }
     
-    console.log('[nostrUriResolver] REPLACING nostr URI (NOT inside any link URL)')
+    // Also check if the nostr URI is part of an HTTP/HTTPS URL pattern
+    // This catches cases where the source markdown has URLs like https://example.com/naddr1...
+    // before they're formatted as markdown links
+    const contextBefore = fullString.slice(Math.max(0, offset - 200), offset)
+    const contextAfter = fullString.slice(matchEnd, Math.min(fullString.length, matchEnd + 10))
+    
+    // Check if we're inside an http/https URL (looking for https?:// pattern before the match)
+    // and the match is followed by valid URL characters (not whitespace or closing paren)
+    const urlPatternBefore = /https?:\/\/[^\s)]*$/i
+    const isInHttpUrl = urlPatternBefore.test(contextBefore)
+    const isValidUrlContinuation = !contextAfter.match(/^[\s)]/) // Not followed by space or closing paren
+    
+    if (isInHttpUrl && isValidUrlContinuation) {
+      console.log('[nostrUriResolver] SKIPPING replacement - appears to be part of HTTP URL')
+      console.log('[nostrUriResolver]   - Context before:', contextBefore.slice(-80))
+      console.log('[nostrUriResolver]   - Context after:', contextAfter)
+      // Don't replace - return original match
+      return match
+    }
+    
+    console.log('[nostrUriResolver] REPLACING nostr URI (NOT inside any link URL or HTTP URL)')
     // encoded is already the NIP-19 identifier without nostr: prefix (from capture group)
     const replacement = getReplacement(encoded)
     console.log('[nostrUriResolver]   - Replacement:', replacement)
