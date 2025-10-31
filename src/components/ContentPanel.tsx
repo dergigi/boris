@@ -263,6 +263,15 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const restoreKey = `${articleIdentifier}-${isTrackingEnabled}`
   const hasAttemptedRestoreRef = useRef<string | null>(null)
 
+  // Reset scroll position and restore ref when article changes
+  useEffect(() => {
+    // Reset scroll to top when article identifier changes
+    // This prevents showing wrong scroll position from previous article
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    // Reset restore attempt tracking for new article
+    hasAttemptedRestoreRef.current = null
+  }, [articleIdentifier])
+
   useEffect(() => {
     if (!isTextContent || !activeAccount || !articleIdentifier) {
       return
