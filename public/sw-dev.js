@@ -19,24 +19,26 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.open('boris-images-dev').then((cache) => {
         return cache.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse
-          }
-          
+          // Try to fetch from network
           return fetch(event.request).then((response) => {
+            // If fetch succeeds, cache it and return
             if (response.ok) {
-              cache.put(event.request, response.clone())
+              cache.put(event.request, response.clone()).catch(() => {
+                // Ignore cache put errors
+              })
             }
             return response
           }).catch((error) => {
             // If fetch fails (network error, CORS, etc.), return cached response if available
-            // or let the error propagate so the browser can handle it
-            // Don't cache failed responses
-            return cachedResponse || Promise.reject(error)
+            if (cachedResponse) {
+              return cachedResponse
+            }
+            // No cache available, reject the promise so browser handles it
+            return Promise.reject(error)
           })
         })
       }).catch(() => {
-        // If cache.open or match fails, try to fetch directly without caching
+        // If cache operations fail, try to fetch directly without caching
         return fetch(event.request)
       })
     )
