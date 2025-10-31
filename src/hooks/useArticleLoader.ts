@@ -75,12 +75,9 @@ export function useArticleLoader({
     
     // First check: naddr is required
     if (!naddr) {
-      console.log('[article-loader] Skipping load - missing naddr')
       setReaderContent(undefined)
       return
     }
-    
-    console.log('[article-loader] Starting load for naddr:', naddr)
     
     // Clear readerContent immediately to prevent showing stale content from previous article
     // This ensures images from previous articles don't flash briefly
@@ -91,15 +88,9 @@ export function useArticleLoader({
     // and fixes the race condition where relayPool isn't ready yet
     let foundInCache = false
     try {
-      console.log('[article-loader] Checking localStorage cache...')
       // Check localStorage cache first (synchronous, doesn't need relayPool)
       const cachedArticle = getFromCache(naddr)
       if (cachedArticle) {
-        console.log('[article-loader] ✅ Cache HIT - loading from localStorage', {
-          title: cachedArticle.title,
-          hasMarkdown: !!cachedArticle.markdown,
-          markdownLength: cachedArticle.markdown?.length
-        })
         foundInCache = true
         const title = cachedArticle.title || 'Untitled Article'
         setCurrentTitle(title)
@@ -123,7 +114,6 @@ export function useArticleLoader({
         // Preload image if available to ensure it's cached by Service Worker
         // This ensures images are available when offline
         if (cachedArticle.image) {
-          console.log('[article-loader] Preloading image for offline access:', cachedArticle.image)
           preloadImage(cachedArticle.image)
         }
         
@@ -174,10 +164,7 @@ export function useArticleLoader({
         }
         
         // Return early - we have cached content, no need to query relays
-        console.log('[article-loader] Returning early with cached content')
         return
-      } else {
-        console.log('[article-loader] ❌ Cache MISS - not found in localStorage')
       }
     } catch (err) {
       // If cache check fails, fall through to async loading
@@ -187,23 +174,15 @@ export function useArticleLoader({
     // Check EventStore synchronously (also doesn't need relayPool)
     let foundInEventStore = false
     if (eventStore && !foundInCache) {
-      console.log('[article-loader] Checking EventStore...')
       try {
         // Decode naddr to get the coordinate
         const decoded = nip19.decode(naddr)
         if (decoded.type === 'naddr') {
           const pointer = decoded.data as AddressPointer
           const coordinate = `${pointer.kind}:${pointer.pubkey}:${pointer.identifier}`
-          console.log('[article-loader] Looking for event with coordinate:', coordinate)
           const storedEvent = eventStore.getEvent?.(coordinate)
           if (storedEvent) {
             foundInEventStore = true
-            console.log('[article-loader] ✅ EventStore HIT - found event', {
-              id: storedEvent.id,
-              kind: storedEvent.kind,
-              hasContent: !!storedEvent.content,
-              contentLength: storedEvent.content?.length
-            })
             const title = Helpers.getArticleTitle(storedEvent) || 'Untitled Article'
             setCurrentTitle(title)
             const image = Helpers.getArticleImage(storedEvent)
@@ -262,10 +241,7 @@ export function useArticleLoader({
             
             // Return early - we have EventStore content, no need to query relays yet
             // But we might want to fetch from relays in background if relayPool becomes available
-            console.log('[article-loader] Returning early with EventStore content')
             return
-          } else {
-            console.log('[article-loader] ❌ EventStore MISS - no event found for coordinate:', coordinate)
           }
         }
       } catch (err) {
@@ -276,7 +252,6 @@ export function useArticleLoader({
     
     // Only return early if we have no content AND no relayPool to fetch from
     if (!relayPool && !foundInCache && !foundInEventStore) {
-      console.log('[article-loader] No relayPool available and no cached content - showing loading skeleton')
       setReaderLoading(true)
       setReaderContent(undefined)
       return
@@ -284,16 +259,13 @@ export function useArticleLoader({
     
     // If we have relayPool, proceed with async loading
     if (!relayPool) {
-      console.log('[article-loader] Waiting for relayPool to become available...')
       return
     }
     
     const loadArticle = async () => {
       const requestId = ++currentRequestIdRef.current
-      console.log('[article-loader] Starting async loadArticle function', { requestId })
       
       if (!mountedRef.current) {
-        console.log('[article-loader] Component unmounted, aborting')
         return
       }
       
@@ -310,7 +282,6 @@ export function useArticleLoader({
       // At this point, we've checked EventStore and cache - neither had content
       // Only show loading skeleton if we also don't have preview data
       if (previewData) {
-        console.log('[article-loader] Using preview data (no skeleton)', { title: previewData.title })
         // If we have preview data from navigation, show it immediately (no skeleton!)
         setCurrentTitle(previewData.title)
         setReaderContent({
@@ -324,13 +295,11 @@ export function useArticleLoader({
         setReaderLoading(false) // Turn off loading immediately - we have the preview!
       } else {
         // No cache, no EventStore, no preview data - need to load from relays
-        console.log('[article-loader] ⚠️ No cache, EventStore, or preview - showing loading skeleton and querying relays')
         setReaderLoading(true)
         setReaderContent(undefined)
       }
       
       try {
-        console.log('[article-loader] Querying relays for article...')
         // Decode naddr to filter
         const decoded = nip19.decode(naddr)
         if (decoded.type !== 'naddr') {
@@ -342,34 +311,19 @@ export function useArticleLoader({
           authors: [pointer.pubkey],
           '#d': [pointer.identifier]
         }
-        console.log('[article-loader] Relay query filter:', filter)
 
         let firstEmitted = false
         let latestEvent: NostrEvent | null = null
 
         // Stream local-first via queryEvents; rely on EOSE (no timeouts)
-        console.log('[article-loader] Starting queryEvents...')
         const events = await queryEvents(relayPool, filter, {
           onEvent: (evt) => {
             if (!mountedRef.current) {
-              console.log('[article-loader] Component unmounted during event stream, ignoring')
               return
             }
             if (currentRequestIdRef.current !== requestId) {
-              console.log('[article-loader] Request ID mismatch, ignoring event', {
-                currentRequestId: currentRequestIdRef.current,
-                eventRequestId: requestId
-              })
               return
             }
-
-            console.log('[article-loader] 📨 Received event from relay', {
-              id: evt.id,
-              kind: evt.kind,
-              created_at: evt.created_at,
-              contentLength: evt.content?.length,
-              isFirst: !firstEmitted
-            })
 
             // Store in event store for future local reads
             try { 
@@ -386,7 +340,6 @@ export function useArticleLoader({
 
             // Emit immediately on first event
             if (!firstEmitted) {
-              console.log('[article-loader] ✅ First event received - updating UI immediately')
               firstEmitted = true
               const title = Helpers.getArticleTitle(evt) || 'Untitled Article'
               const image = Helpers.getArticleImage(evt)
@@ -424,35 +377,19 @@ export function useArticleLoader({
               
               // Preload image to ensure it's cached by Service Worker
               if (image) {
-                console.log('[article-loader] Preloading image for offline access:', image)
                 preloadImage(image)
               }
-              
-              console.log('[article-loader] UI updated with first event and saved to cache')
             }
           }
         })
 
-        console.log('[article-loader] QueryEvents completed', {
-          eventCount: events.length,
-          hasLatestEvent: !!latestEvent,
-          mounted: mountedRef.current,
-          requestIdMatch: currentRequestIdRef.current === requestId
-        })
-
         if (!mountedRef.current || currentRequestIdRef.current !== requestId) {
-          console.log('[article-loader] Component unmounted or request ID changed, aborting')
           return
         }
 
         // Finalize with newest version if it's newer than what we first rendered
         const finalEvent = (events.sort((a, b) => b.created_at - a.created_at)[0]) || latestEvent
         if (finalEvent) {
-          console.log('[article-loader] ✅ Finalizing with event', {
-            id: finalEvent.id,
-            created_at: finalEvent.created_at,
-            wasFirstEmitted: firstEmitted
-          })
           const title = Helpers.getArticleTitle(finalEvent) || 'Untitled Article'
           const image = Helpers.getArticleImage(finalEvent)
           const summary = Helpers.getArticleSummary(finalEvent)
@@ -479,7 +416,6 @@ export function useArticleLoader({
           // Note: We already saved from first event, so only save if this is different
           if (!firstEmitted) {
             // First event wasn't emitted, so save now
-            console.log('[article-loader] Saving event to cache (first event was not emitted)')
             const articleContent = {
               title,
               markdown: finalEvent.content,
@@ -490,21 +426,10 @@ export function useArticleLoader({
               event: finalEvent
             }
             saveToCache(naddr, articleContent)
-          } else {
-            // Cache was already saved when first event was received
-            console.log('[article-loader] Cache already saved from first event, skipping duplicate save')
           }
-          
-          console.log('[article-loader] ✅ Finalized with event from relays')
         } else {
           // As a last resort, fall back to the legacy helper (which includes cache)
-          console.log('[article-loader] ⚠️ No events from relays, falling back to fetchArticleByNaddr')
           const article = await fetchArticleByNaddr(relayPool, naddr, false, settingsRef.current)
-          console.log('[article-loader] fetchArticleByNaddr result:', {
-            hasArticle: !!article,
-            title: article?.title,
-            hasMarkdown: !!article?.markdown
-          })
           if (!mountedRef.current || currentRequestIdRef.current !== requestId) return
           setCurrentTitle(article.title)
           setReaderContent({
