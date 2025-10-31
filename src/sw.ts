@@ -31,15 +31,6 @@ registerRoute(
                     /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url.pathname)
     // Cache all images, not just cross-origin ones
     // This ensures article images from any source get cached
-    
-    if (isImage) {
-      console.log('[sw-image-cache] Intercepting image request:', {
-        url: url.href,
-        destination: request.destination,
-        method: request.method
-      })
-    }
-    
     return isImage
   },
   new StaleWhileRevalidate({
@@ -53,26 +44,8 @@ registerRoute(
         statuses: [0, 200],
       }),
       {
-        cacheKeyWillBeUsed: async ({ request }) => {
-          console.log('[sw-image-cache] Cache key generated for:', request.url)
-          return request
-        },
         cacheWillUpdate: async ({ response }) => {
-          console.log('[sw-image-cache] Caching response:', {
-            url: response.url,
-            status: response.status,
-            type: response.type,
-            ok: response.ok
-          })
           return response.ok ? response : null
-        },
-        cachedResponseWillBeUsed: async ({ cachedResponse, request }) => {
-          if (cachedResponse) {
-            console.log('[sw-image-cache] ✅ Serving from cache:', request.url)
-          } else {
-            console.log('[sw-image-cache] ❌ No cached response found:', request.url)
-          }
-          return cachedResponse || null
         }
       }
     ],

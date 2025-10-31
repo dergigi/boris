@@ -52,7 +52,7 @@ export function getFromCache(naddr: string): ArticleContent | null {
 
     return content
   } catch (err) {
-    console.warn('[article-cache] Error reading cache:', err)
+    // Silently handle cache read errors
     return null
   }
 }
@@ -86,7 +86,6 @@ export function cacheArticleEvent(event: NostrEvent, settings?: UserSettings): v
     saveToCache(naddr, articleContent, settings)
   } catch (err) {
     // Silently fail cache saves - quota exceeded, invalid data, etc.
-    console.warn('[article-cache] Failed to cache article event:', err)
   }
 }
 
@@ -105,16 +104,8 @@ export function saveToCache(naddr: string, content: ArticleContent, settings?: U
     }
     localStorage.setItem(cacheKey, JSON.stringify(cached))
   } catch (err) {
-    // Handle quota exceeded errors specifically
-    if (err instanceof DOMException && (err.code === 22 || err.code === 1014 || err.name === 'QuotaExceededError')) {
-      console.warn('[article-cache] ⚠️ Storage quota exceeded - article not cached:', {
-        title: content.title,
-        error: err.message
-      })
-    } else {
-      console.warn('[article-cache] Failed to cache article:', err)
-    }
     // Silently fail - don't block the UI if caching fails
+    // Handles quota exceeded, invalid data, and other errors gracefully
   }
 }
 

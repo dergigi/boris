@@ -41,11 +41,6 @@ export function preloadImage(imageUrl: string | undefined): void {
   // Create a link element with rel=prefetch or use Image object to trigger fetch
   // Service Worker will intercept and cache the request
   const img = new Image()
-  
-  img.onerror = (err) => {
-    console.error('[image-preload] Failed to load image:', imageUrl, err)
-  }
-  
   img.src = imageUrl
   
   // Also try using fetch to explicitly trigger Service Worker
