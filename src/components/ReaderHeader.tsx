@@ -37,17 +37,6 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   onHighlightCountClick
 }) => {
   const cachedImage = useImageCache(image)
-  
-  // Debug: Log image loading state
-  React.useEffect(() => {
-    if (image) {
-      console.log('[reader-header] Image provided:', image)
-      if (cachedImage) {
-        console.log('[reader-header] Using cached image URL:', cachedImage)
-      }
-    }
-  }, [image, cachedImage])
-  
   const { textColor } = useAdaptiveTextColor(cachedImage)
   const formattedDate = published ? format(new Date(published * 1000), 'MMM d, yyyy') : null
   const isLongSummary = summary && summary.length > 150
@@ -94,16 +83,8 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
             <img 
               src={cachedImage} 
               alt={title || 'Article image'}
-              onLoad={() => {
-                console.log('[reader-header] ✅ Image loaded successfully:', cachedImage)
-              }}
               onError={(e) => {
-                console.error('[reader-header] ❌ Image failed to load:', cachedImage, {
-                  error: e,
-                  target: e.currentTarget,
-                  naturalWidth: e.currentTarget.naturalWidth,
-                  naturalHeight: e.currentTarget.naturalHeight
-                })
+                console.error('[reader-header] Image failed to load:', cachedImage, e)
               }}
             />
           ) : (

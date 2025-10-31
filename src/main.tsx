@@ -12,94 +12,45 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swPath = '/sw.js'
     
-    console.log('[sw-registration] Attempting to register Service Worker:', swPath, {
-      isProd: import.meta.env.PROD,
-      isDev: import.meta.env.DEV,
-      hasController: !!navigator.serviceWorker.controller
-    })
-    
     // Check if already registered/active first
     navigator.serviceWorker.getRegistrations().then(async (registrations) => {
-      console.log('[sw-registration] Existing registrations:', registrations.length)
-      
       if (registrations.length > 0) {
-        const existingReg = registrations[0]
-        console.log('[sw-registration] Service Worker already registered:', {
-          scope: existingReg.scope,
-          active: !!existingReg.active,
-          installing: !!existingReg.installing,
-          waiting: !!existingReg.waiting,
-          controller: !!navigator.serviceWorker.controller
-        })
-        
-        if (existingReg.active) {
-          console.log('[sw-registration] ✅ Service Worker is active')
-        }
-        return existingReg
+        return registrations[0]
       }
       
       // Not registered yet, try to register
       // In dev mode, use the dev Service Worker for testing
       if (import.meta.env.DEV) {
         const devSwPath = '/sw-dev.js'
-        console.log('[sw-registration] Dev mode - using development Service Worker:', devSwPath)
         try {
           // Check if dev SW exists
           const response = await fetch(devSwPath)
           const contentType = response.headers.get('content-type') || ''
           const isJavaScript = contentType.includes('javascript') || contentType.includes('application/javascript')
           
-          console.log('[sw-registration] Dev SW check:', {
-            status: response.status,
-            contentType,
-            isJavaScript
-          })
-          
           if (response.ok && isJavaScript) {
-            console.log('[sw-registration] Development Service Worker available, proceeding with registration')
             return await navigator.serviceWorker.register(devSwPath, { scope: '/' })
           } else {
-            console.warn('[sw-registration] ⚠️ Development Service Worker not available:', {
-              status: response.status,
-              contentType
-            })
+            console.warn('[sw-registration] Development Service Worker not available')
             return null
           }
         } catch (err) {
-          console.warn('[sw-registration] ⚠️ Could not load development Service Worker:', err)
+          console.warn('[sw-registration] Could not load development Service Worker:', err)
           return null
         }
       } else {
         // In production, just register directly
-        console.log('[sw-registration] No existing registration, attempting to register:', swPath)
         return await navigator.serviceWorker.register(swPath)
       }
     })
       .then(registration => {
         if (!registration) return
         
-        console.log('[sw-registration] ✅ Service Worker registration successful:', {
-          scope: registration.scope,
-          active: !!registration.active,
-          installing: !!registration.installing,
-          waiting: !!registration.waiting,
-          controller: !!navigator.serviceWorker.controller
-        })
-        
         // Wait for Service Worker to activate
-        if (registration.active) {
-          console.log('[sw-registration] Service Worker is already active and controlling page')
-        } else if (registration.installing) {
-          console.log('[sw-registration] Service Worker is installing...')
+        if (registration.installing) {
           registration.installing.addEventListener('statechange', () => {
-            const state = registration.installing?.state
-            console.log('[sw-registration] Service Worker state changed:', state)
-            if (state === 'activated') {
-              console.log('[sw-registration] ✅ Service Worker activated and ready')
-            }
+            // Service Worker state changed
           })
-        } else if (registration.waiting) {
-          console.log('[sw-registration] Service Worker is waiting to activate')
         }
         
         // Check for updates periodically (production only)
@@ -111,11 +62,9 @@ if ('serviceWorker' in navigator) {
         
         // Handle service worker updates
         registration.addEventListener('updatefound', () => {
-          console.log('[sw-registration] Service Worker update found')
           const newWorker = registration.installing
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
-              console.log('[sw-registration] New Service Worker state:', newWorker.state)
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 // New service worker available
                 const updateAvailable = new CustomEvent('sw-update-available')
