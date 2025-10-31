@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendar, faUser, faNewspaper } from '@fortawesome/free-solid-svg-icons'
@@ -7,7 +7,6 @@ import { BlogPostPreview } from '../services/exploreService'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { isKnownBot } from '../config/bots'
-import { preloadImage } from '../hooks/useImageCache'
 
 interface BlogPostCardProps {
   post: BlogPostPreview
@@ -20,14 +19,10 @@ interface BlogPostCardProps {
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingProgress, hideBotByName = true }) => {
   const profile = useEventModel(Models.ProfileModel, [post.author])
   
-  // Preload image when card is rendered to ensure it's cached by Service Worker
-  // This prevents re-fetching the image when navigating to the article
-  // Must be called before any conditional returns to satisfy React hooks rules
-  useEffect(() => {
-    if (post.image) {
-      preloadImage(post.image)
-    }
-  }, [post.image])
+  // Note: Images are lazy-loaded (loading="lazy" below), so they'll be fetched
+  // when they come into view. The Service Worker will cache them automatically.
+  // No need to preload all images at once - this causes ERR_INSUFFICIENT_RESOURCES
+  // when there are many blog posts.
   
   const displayName = profile?.name || profile?.display_name || 
     `${post.author.slice(0, 8)}...${post.author.slice(-4)}`

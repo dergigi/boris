@@ -5,7 +5,6 @@ import { IEventStore } from 'applesauce-core'
 import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 import { rebroadcastEvents } from './rebroadcastService'
 import { UserSettings } from './settingsService'
-import { preloadImage } from '../hooks/useImageCache'
 
 /**
  * Fetches profile metadata (kind:0) for a list of pubkeys
@@ -66,18 +65,9 @@ export const fetchProfiles = async (
 
     const profiles = Array.from(profilesByPubkey.values())
 
-    // Preload profile images for offline access
-    for (const profile of profiles) {
-      try {
-        const profileData = JSON.parse(profile.content)
-        const picture = profileData.picture
-        if (picture) {
-          preloadImage(picture)
-        }
-      } catch {
-        // Ignore parse errors - profile content might be invalid JSON
-      }
-    }
+    // Note: We don't preload all profile images here to avoid ERR_INSUFFICIENT_RESOURCES
+    // Profile images will be cached by Service Worker when they're actually displayed.
+    // Only the logged-in user's profile image is preloaded (in SidebarHeader).
 
     // Rebroadcast profiles to local/all relays based on settings
     if (profiles.length > 0) {
