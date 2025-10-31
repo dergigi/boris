@@ -115,6 +115,8 @@ function replaceNostrUrisSafely(
   markdown: string,
   getReplacement: (encoded: string) => string
 ): string {
+  console.log('[nostrUriResolver] Starting markdown processing, length:', markdown.length)
+  
   // Pattern to match markdown links: [text](url)
   // Uses a more robust approach to handle URLs with special characters
   // Match: [ followed by any text (including escaped brackets), then ]( then URL (can contain parentheses if escaped), then )
@@ -130,37 +132,68 @@ function replaceNostrUrisSafely(
   // Find all markdown links and track their URL positions
   while ((match = markdownLinkRegex.exec(markdown)) !== null) {
     const linkStart = match.index
+    const fullLink = match[0]
+    
+    console.log('[nostrUriResolver] Found markdown link at', linkStart, ':', fullLink.slice(0, 100))
     
     // Find the start of the URL part (after "]( )
     const urlStartMatch = match[0].match(/\]\(/)
     if (urlStartMatch) {
       const urlStartOffset = match[0].indexOf(urlStartMatch[0]) + urlStartMatch[0].length
       const urlEndOffset = match[0].length - 1 // -1 to exclude the closing )
+      const urlStart = linkStart + urlStartOffset
+      const urlEnd = linkStart + urlEndOffset
+      const urlContent = markdown.slice(urlStart, urlEnd)
+      
+      console.log('[nostrUriResolver] Link URL range:', urlStart, '-', urlEnd, 'content:', urlContent.slice(0, 100))
       
       linkRanges.push({
-        start: linkStart + urlStartOffset,
-        end: linkStart + urlEndOffset
+        start: urlStart,
+        end: urlEnd
       })
+    } else {
+      console.warn('[nostrUriResolver] Could not find ]( in markdown link:', fullLink.slice(0, 100))
     }
   }
   
+  console.log('[nostrUriResolver] Total link ranges tracked:', linkRanges.length)
+  
   // Check if a position is inside any markdown link URL
   const isInsideLinkUrl = (pos: number): boolean => {
-    return linkRanges.some(range => pos >= range.start && pos < range.end)
+    const inside = linkRanges.some(range => pos >= range.start && pos < range.end)
+    if (inside) {
+      const matchingRange = linkRanges.find(range => pos >= range.start && pos < range.end)
+      console.log('[nostrUriResolver] Position', pos, 'is inside link URL range', matchingRange)
+    }
+    return inside
   }
   
   // Replace nostr URIs, but skip those inside link URLs
   // Callback params: (match, encoded, type, offset, string)
-  return markdown.replace(NOSTR_URI_REGEX, (match, encoded, _type, offset) => {
+  let nostrMatchCount = 0
+  const result = markdown.replace(NOSTR_URI_REGEX, (match, encoded, _type, offset) => {
+    nostrMatchCount++
+    console.log('[nostrUriResolver] Found nostr URI match #' + nostrMatchCount + ' at offset', offset + ':', match, 'encoded:', encoded)
+    
     // Check if this match is inside a markdown link URL
     if (isInsideLinkUrl(offset)) {
+      console.log('[nostrUriResolver] SKIPPING replacement - inside link URL')
       // Don't replace - return original match
       return match
     }
     
+    console.log('[nostrUriResolver] REPLACING nostr URI')
     // encoded is already the NIP-19 identifier without nostr: prefix (from capture group)
-    return getReplacement(encoded)
+    const replacement = getReplacement(encoded)
+    console.log('[nostrUriResolver] Replacement:', replacement)
+    return replacement
   })
+  
+  console.log('[nostrUriResolver] Processing complete. Total nostr matches:', nostrMatchCount)
+  console.log('[nostrUriResolver] Result length:', result.length)
+  console.log('[nostrUriResolver] Result preview:', result.slice(0, 500))
+  
+  return result
 }
 
 /**
@@ -168,6 +201,7 @@ function replaceNostrUrisSafely(
  * This converts: nostr:npub1... to [label](link)
  */
 export function replaceNostrUrisInMarkdown(markdown: string): string {
+  console.log('[nostrUriResolver] replaceNostrUrisInMarkdown called')
   return replaceNostrUrisSafely(markdown, (encoded) => {
     const link = createNostrLink(encoded)
     const label = getNostrUriLabel(encoded)
@@ -185,6 +219,7 @@ export function replaceNostrUrisInMarkdownWithTitles(
   markdown: string, 
   articleTitles: Map<string, string>
 ): string {
+  console.log('[nostrUriResolver] replaceNostrUrisInMarkdownWithTitles called, articleTitles:', articleTitles.size)
   return replaceNostrUrisSafely(markdown, (encoded) => {
     const link = createNostrLink(encoded)
     
