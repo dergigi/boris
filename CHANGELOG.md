@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.27] - 2025-10-31
+
+### Added
+
+- Refresh button to highlights sidebar header
+  - Users can manually refresh highlights panel
+  - Better control over highlights data updates
+- Image preloading in BlogPostCard for better caching
+  - Images are preloaded when blog posts are displayed
+  - Improved offline access to article images
+- Preload logged-in user profile image for offline access
+  - User profile picture is cached for offline viewing
+  - Better user experience when network is unavailable
+- Development Service Worker for testing image caching
+  - Service Worker enabled in development mode
+  - Improved testing capabilities for offline functionality
+
+### Fixed
+
+- Service Worker registration error handling
+  - Better error handling for Service Worker registration failures
+  - More robust development mode Service Worker support
+  - Proper error handling for fetch requests in Service Worker
+- Article loading race conditions
+  - Resolved race condition when loading articles from cache
+  - Cache is checked synchronously before setting loading state
+  - Articles are populated in cache from explore view
+- Image caching issues
+  - Images are properly preloaded when loading articles from cache
+  - Removed bulk image preloading to prevent resource exhaustion errors
+  - Avoid redundant image preload when using preview data
+- Scroll position management
+  - Scroll position is reset when switching articles
+  - Save suppression added when resetting scroll position
+  - Reader content is cleared immediately when article changes
+- React hook ordering issues
+  - useEffect moved before early return in BlogPostCard
+  - Prevents React hooks dependency violations
+- TypeScript and linting issues
+  - Cache save logic simplified to avoid TypeScript errors
+  - Unused settings parameter marked as intentionally unused
+  - Articles are saved to localStorage cache after loading from relays
+  - Cache is saved immediately when first event is received
+
+### Performance
+
+- Avoid redundant image preload when using preview data
+  - Prevents unnecessary image loading operations
+  - Improved resource utilization
+
+### Removed
+
+- Debug console.log statements
+  - Removed all debug console output from article cache and service worker
+  - Removed debug logging from useImageCache hook
+  - Cleaner console output in production
+- Unused refresh button from highlights panel header
+  - Cleaned up unused UI component
+
 ## [0.10.26] - 2025-10-31
 
 ### Added
