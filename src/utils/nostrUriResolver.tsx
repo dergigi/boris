@@ -130,7 +130,6 @@ function replaceNostrUrisSafely(
   // Find all markdown links and track their URL positions
   while ((match = markdownLinkRegex.exec(markdown)) !== null) {
     const linkStart = match.index
-    const linkEnd = linkStart + match[0].length
     
     // Find the start of the URL part (after "]( )
     const urlStartMatch = match[0].match(/\]\(/)
@@ -152,7 +151,7 @@ function replaceNostrUrisSafely(
   
   // Replace nostr URIs, but skip those inside link URLs
   // Callback params: (match, encoded, type, offset, string)
-  return markdown.replace(NOSTR_URI_REGEX, (match, encoded, type, offset) => {
+  return markdown.replace(NOSTR_URI_REGEX, (match, encoded, _type, offset) => {
     // Check if this match is inside a markdown link URL
     if (isInsideLinkUrl(offset)) {
       // Don't replace - return original match
