@@ -28,8 +28,16 @@ self.addEventListener('fetch', (event) => {
               cache.put(event.request, response.clone())
             }
             return response
+          }).catch((error) => {
+            // If fetch fails (network error, CORS, etc.), return cached response if available
+            // or let the error propagate so the browser can handle it
+            // Don't cache failed responses
+            return cachedResponse || Promise.reject(error)
           })
         })
+      }).catch(() => {
+        // If cache.open or match fails, try to fetch directly without caching
+        return fetch(event.request)
       })
     )
   }
