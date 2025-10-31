@@ -23,13 +23,15 @@ sw.skipWaiting()
 clientsClaim()
 
 
-// Runtime cache: Cross-origin images
-// This preserves the existing image caching behavior
+// Runtime cache: All images (cross-origin and same-origin)
+// Cache both external images and any internal image assets
 registerRoute(
   ({ request, url }) => {
     const isImage = request.destination === 'image' || 
                     /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url.pathname)
-    return isImage && url.origin !== sw.location.origin
+    // Cache all images, not just cross-origin ones
+    // This ensures article images from any source get cached
+    return isImage
   },
   new StaleWhileRevalidate({
     cacheName: 'boris-images',
@@ -41,6 +43,11 @@ registerRoute(
       new CacheableResponsePlugin({
         statuses: [0, 200],
       }),
+      {
+        cacheWillUpdate: async ({ response }) => {
+          return response.ok ? response : null
+        }
+      }
     ],
   })
 )

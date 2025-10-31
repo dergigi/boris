@@ -34,11 +34,13 @@ function getCacheKey(naddr: string): string {
   return `${CACHE_PREFIX}${naddr}`
 }
 
-function getFromCache(naddr: string): ArticleContent | null {
+export function getFromCache(naddr: string): ArticleContent | null {
   try {
     const cacheKey = getCacheKey(naddr)
     const cached = localStorage.getItem(cacheKey)
-    if (!cached) return null
+    if (!cached) {
+      return null
+    }
 
     const { content, timestamp }: CachedArticle = JSON.parse(cached)
     const age = Date.now() - timestamp
@@ -49,12 +51,51 @@ function getFromCache(naddr: string): ArticleContent | null {
     }
 
     return content
-  } catch {
+  } catch (err) {
+    // Silently handle cache read errors
     return null
   }
 }
 
-function saveToCache(naddr: string, content: ArticleContent): void {
+/**
+ * Caches an article event to localStorage for offline access
+ * @param event - The Nostr event to cache
+ * @param settings - Optional user settings
+ */
+export function cacheArticleEvent(event: NostrEvent, settings?: UserSettings): void {
+  try {
+    const dTag = event.tags.find(t => t[0] === 'd')?.[1] || ''
+    if (!dTag || event.kind !== 30023) return
+
+    const naddr = nip19.naddrEncode({
+      kind: 30023,
+      pubkey: event.pubkey,
+      identifier: dTag
+    })
+    
+    const articleContent: ArticleContent = {
+      title: getArticleTitle(event) || 'Untitled Article',
+      markdown: event.content,
+      image: getArticleImage(event),
+      published: getArticlePublished(event),
+      summary: getArticleSummary(event),
+      author: event.pubkey,
+      event
+    }
+    
+    saveToCache(naddr, articleContent, settings)
+  } catch (err) {
+    // Silently fail cache saves - quota exceeded, invalid data, etc.
+  }
+}
+
+export function saveToCache(naddr: string, content: ArticleContent, settings?: UserSettings): void {
+  // Respect user settings: if image caching is disabled, we could skip article caching too
+  // However, for offline-first design, we default to caching unless explicitly disabled
+  // Future: could add explicit enableArticleCache setting
+  // For now, we cache aggressively but handle errors gracefully
+  // Note: settings parameter reserved for future use
+  void settings // Mark as intentionally unused for now
   try {
     const cacheKey = getCacheKey(naddr)
     const cached: CachedArticle = {
@@ -63,8 +104,8 @@ function saveToCache(naddr: string, content: ArticleContent): void {
     }
     localStorage.setItem(cacheKey, JSON.stringify(cached))
   } catch (err) {
-    console.warn('Failed to cache article:', err)
-    // Silently fail if storage is full or unavailable
+    // Silently fail - don't block the UI if caching fails
+    // Handles quota exceeded, invalid data, and other errors gracefully
   }
 }
 
@@ -164,7 +205,7 @@ export async function fetchArticleByNaddr(
     }
 
     // Save to cache before returning
-    saveToCache(naddr, content)
+    saveToCache(naddr, content, settings)
     
     // Image caching is handled automatically by Service Worker
     

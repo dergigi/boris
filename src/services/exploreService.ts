@@ -3,6 +3,7 @@ import { NostrEvent } from 'nostr-tools'
 import { Helpers, IEventStore } from 'applesauce-core'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
+import { cacheArticleEvent } from './articleService'
 
 const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
@@ -75,6 +76,9 @@ export const fetchBlogPostsFromAuthors = async (
               }
               onPost(post)
             }
+            
+            // Cache article content in localStorage for offline access
+            cacheArticleEvent(event)
           }
         }
       }
@@ -104,7 +108,6 @@ export const fetchBlogPostsFromAuthors = async (
         const timeB = b.published || b.event.created_at
         return timeB - timeA // Most recent first
       })
-    
     
     return blogPosts
   } catch (error) {

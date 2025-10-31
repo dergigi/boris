@@ -139,7 +139,10 @@ export default defineConfig({
       },
       devOptions: {
         enabled: true,
-        type: 'module'
+        type: 'module',
+        // Use generateSW strategy for dev mode to enable SW testing
+        // This creates a working SW in dev mode, while injectManifest is used in production
+        navigateFallback: 'index.html'
       }
     })
   ],

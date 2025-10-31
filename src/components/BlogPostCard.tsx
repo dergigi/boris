@@ -18,6 +18,12 @@ interface BlogPostCardProps {
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingProgress, hideBotByName = true }) => {
   const profile = useEventModel(Models.ProfileModel, [post.author])
+  
+  // Note: Images are lazy-loaded (loading="lazy" below), so they'll be fetched
+  // when they come into view. The Service Worker will cache them automatically.
+  // No need to preload all images at once - this causes ERR_INSUFFICIENT_RESOURCES
+  // when there are many blog posts.
+  
   const displayName = profile?.name || profile?.display_name || 
     `${post.author.slice(0, 8)}...${post.author.slice(-4)}`
   const rawName = (profile?.name || profile?.display_name || '').toLowerCase()
@@ -41,7 +47,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
   } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
     progressColor = 'var(--color-text)' // Neutral text color (started)
   }
-  
+
   // Debug log - reading progress shown as visual indicator
   if (readingProgress !== undefined) {
     // Reading progress display

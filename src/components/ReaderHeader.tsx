@@ -80,7 +80,13 @@ const ReaderHeader: React.FC<ReaderHeaderProps> = ({
       <>
         <div className="reader-hero-image">
           {cachedImage ? (
-            <img src={cachedImage} alt={title || 'Article image'} />
+            <img 
+              src={cachedImage} 
+              alt={title || 'Article image'}
+              onError={(e) => {
+                console.error('[reader-header] Image failed to load:', cachedImage, e)
+              }}
+            />
           ) : (
             <div className="reader-hero-placeholder">
               <FontAwesomeIcon icon={faNewspaper} />

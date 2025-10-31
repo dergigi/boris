@@ -65,6 +65,10 @@ export const fetchProfiles = async (
 
     const profiles = Array.from(profilesByPubkey.values())
 
+    // Note: We don't preload all profile images here to avoid ERR_INSUFFICIENT_RESOURCES
+    // Profile images will be cached by Service Worker when they're actually displayed.
+    // Only the logged-in user's profile image is preloaded (in SidebarHeader).
+
     // Rebroadcast profiles to local/all relays based on settings
     if (profiles.length > 0) {
       await rebroadcastEvents(profiles, relayPool, settings)
