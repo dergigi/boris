@@ -39,34 +39,34 @@ if ('serviceWorker' in navigator) {
       }
       
       // Not registered yet, try to register
-      // In dev mode, check if SW file exists and has correct MIME type before registering
+      // In dev mode, use the dev Service Worker for testing
       if (import.meta.env.DEV) {
+        const devSwPath = '/sw-dev.js'
+        console.log('[sw-registration] Dev mode - using development Service Worker:', devSwPath)
         try {
-          const response = await fetch(swPath)
+          // Check if dev SW exists
+          const response = await fetch(devSwPath)
           const contentType = response.headers.get('content-type') || ''
           const isJavaScript = contentType.includes('javascript') || contentType.includes('application/javascript')
           
-          console.log('[sw-registration] Dev mode - checking SW file:', {
+          console.log('[sw-registration] Dev SW check:', {
             status: response.status,
             contentType,
-            isJavaScript,
-            isHTML: contentType.includes('text/html')
+            isJavaScript
           })
           
           if (response.ok && isJavaScript) {
-            console.log('[sw-registration] Service Worker file available in dev mode, proceeding with registration')
-            return await navigator.serviceWorker.register(swPath)
+            console.log('[sw-registration] Development Service Worker available, proceeding with registration')
+            return await navigator.serviceWorker.register(devSwPath, { scope: '/' })
           } else {
-            console.warn('[sw-registration] ⚠️ Service Worker file not available in dev mode:', {
+            console.warn('[sw-registration] ⚠️ Development Service Worker not available:', {
               status: response.status,
               contentType
             })
-            console.warn('[sw-registration] Image caching will not work in dev mode - test in production build')
             return null
           }
         } catch (err) {
-          console.warn('[sw-registration] ⚠️ Could not check Service Worker file in dev mode:', err)
-          console.warn('[sw-registration] Image caching will not work in dev mode - test in production build')
+          console.warn('[sw-registration] ⚠️ Could not load development Service Worker:', err)
           return null
         }
       } else {
