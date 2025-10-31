@@ -19,6 +19,16 @@ interface BlogPostCardProps {
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingProgress, hideBotByName = true }) => {
   const profile = useEventModel(Models.ProfileModel, [post.author])
+  
+  // Preload image when card is rendered to ensure it's cached by Service Worker
+  // This prevents re-fetching the image when navigating to the article
+  // Must be called before any conditional returns to satisfy React hooks rules
+  useEffect(() => {
+    if (post.image) {
+      preloadImage(post.image)
+    }
+  }, [post.image])
+  
   const displayName = profile?.name || profile?.display_name || 
     `${post.author.slice(0, 8)}...${post.author.slice(-4)}`
   const rawName = (profile?.name || profile?.display_name || '').toLowerCase()
@@ -42,14 +52,6 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
   } else if (readingProgress && readingProgress > 0 && readingProgress <= 0.10) {
     progressColor = 'var(--color-text)' // Neutral text color (started)
   }
-  
-  // Preload image when card is rendered to ensure it's cached by Service Worker
-  // This prevents re-fetching the image when navigating to the article
-  useEffect(() => {
-    if (post.image) {
-      preloadImage(post.image)
-    }
-  }, [post.image])
 
   // Debug log - reading progress shown as visual indicator
   if (readingProgress !== undefined) {
