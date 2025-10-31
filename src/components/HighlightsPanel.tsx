@@ -125,8 +125,6 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
         onToggleHighlights={handleToggleHighlights}
         onToggleCollapse={onToggleCollapse}
         onHighlightVisibilityChange={onHighlightVisibilityChange}
-        onRefresh={onRefresh}
-        isLoading={loading}
         isMobile={isMobile}
       />
 

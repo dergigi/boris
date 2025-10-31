@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faEye, faEyeSlash, faUser, faUserGroup, faNetworkWired, faArrowsRotate } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faEye, faEyeSlash, faUser, faUserGroup, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 import { HighlightVisibility } from '../HighlightsPanel'
 import IconButton from '../IconButton'
 
@@ -12,8 +12,6 @@ interface HighlightsPanelHeaderProps {
   onToggleHighlights: () => void
   onToggleCollapse: () => void
   onHighlightVisibilityChange?: (visibility: HighlightVisibility) => void
-  onRefresh?: () => void
-  isLoading?: boolean
   isMobile?: boolean
 }
 
@@ -25,8 +23,6 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
   onToggleHighlights,
   onToggleCollapse,
   onHighlightVisibilityChange,
-  onRefresh,
-  isLoading = false,
   isMobile = false
 }) => {
   return (
@@ -95,17 +91,6 @@ const HighlightsPanelHeader: React.FC<HighlightsPanelHeaderProps> = ({
           )}
         </div>
         <div className="highlights-actions-right">
-          {onRefresh && (
-            <IconButton
-              icon={faArrowsRotate}
-              onClick={onRefresh}
-              title="Refresh highlights"
-              ariaLabel="Refresh highlights"
-              variant="ghost"
-              disabled={isLoading}
-              spin={isLoading}
-            />
-          )}
           {hasHighlights && (
             <IconButton
               icon={showHighlights ? faEye : faEyeSlash}
