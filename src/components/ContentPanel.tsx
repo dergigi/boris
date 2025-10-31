@@ -265,6 +265,14 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
   // Reset scroll position and restore ref when article changes
   useEffect(() => {
+    if (!articleIdentifier) return
+    
+    // Suppress saves during navigation to prevent saving 0% position
+    // The 500ms suppression covers the scroll reset and initial render
+    if (suppressSavesForRef.current) {
+      suppressSavesForRef.current(500)
+    }
+    
     // Reset scroll to top when article identifier changes
     // This prevents showing wrong scroll position from previous article
     window.scrollTo({ top: 0, behavior: 'instant' })
