@@ -108,16 +108,70 @@ export function getNostrUriLabel(encoded: string): string {
 }
 
 /**
+ * Process markdown to replace nostr URIs while skipping those inside markdown links
+ * This prevents nested markdown link issues when nostr identifiers appear in URLs
+ */
+function replaceNostrUrisSafely(
+  markdown: string,
+  getReplacement: (encoded: string) => string
+): string {
+  // Pattern to match markdown links: [text](url)
+  // Uses a more robust approach to handle URLs with special characters
+  // Match: [ followed by any text (including escaped brackets), then ]( then URL (can contain parentheses if escaped), then )
+  const markdownLinkRegex = /\[(?:[^\]]|\\\])*\]\((?:[^)]|\\\))*\)/g
+  
+  // Track positions where we're inside a markdown link URL
+  const linkRanges: Array<{ start: number, end: number }> = []
+  let match: RegExpExecArray | null
+  
+  // Reset regex lastIndex
+  markdownLinkRegex.lastIndex = 0
+  
+  // Find all markdown links and track their URL positions
+  while ((match = markdownLinkRegex.exec(markdown)) !== null) {
+    const linkStart = match.index
+    const linkEnd = linkStart + match[0].length
+    
+    // Find the start of the URL part (after "]( )
+    const urlStartMatch = match[0].match(/\]\(/)
+    if (urlStartMatch) {
+      const urlStartOffset = match[0].indexOf(urlStartMatch[0]) + urlStartMatch[0].length
+      const urlEndOffset = match[0].length - 1 // -1 to exclude the closing )
+      
+      linkRanges.push({
+        start: linkStart + urlStartOffset,
+        end: linkStart + urlEndOffset
+      })
+    }
+  }
+  
+  // Check if a position is inside any markdown link URL
+  const isInsideLinkUrl = (pos: number): boolean => {
+    return linkRanges.some(range => pos >= range.start && pos < range.end)
+  }
+  
+  // Replace nostr URIs, but skip those inside link URLs
+  // Callback params: (match, encoded, type, offset, string)
+  return markdown.replace(NOSTR_URI_REGEX, (match, encoded, type, offset) => {
+    // Check if this match is inside a markdown link URL
+    if (isInsideLinkUrl(offset)) {
+      // Don't replace - return original match
+      return match
+    }
+    
+    // encoded is already the NIP-19 identifier without nostr: prefix (from capture group)
+    return getReplacement(encoded)
+  })
+}
+
+/**
  * Replace nostr: URIs in markdown with proper markdown links
  * This converts: nostr:npub1... to [label](link)
  */
 export function replaceNostrUrisInMarkdown(markdown: string): string {
-  return markdown.replace(NOSTR_URI_REGEX, (match) => {
-    // Extract just the NIP-19 identifier (without nostr: prefix)
-    const encoded = match.replace(/^nostr:/, '')
+  return replaceNostrUrisSafely(markdown, (encoded) => {
     const link = createNostrLink(encoded)
     const label = getNostrUriLabel(encoded)
-    
     return `[${label}](${link})`
   })
 }
@@ -132,9 +186,7 @@ export function replaceNostrUrisInMarkdownWithTitles(
   markdown: string, 
   articleTitles: Map<string, string>
 ): string {
-  return markdown.replace(NOSTR_URI_REGEX, (match) => {
-    // Extract just the NIP-19 identifier (without nostr: prefix)
-    const encoded = match.replace(/^nostr:/, '')
+  return replaceNostrUrisSafely(markdown, (encoded) => {
     const link = createNostrLink(encoded)
     
     // For articles, use the resolved title if available
