@@ -105,11 +105,13 @@ export function cacheArticleEvent(event: NostrEvent, settings?: UserSettings): v
 }
 
 export function saveToCache(naddr: string, content: ArticleContent, settings?: UserSettings): void {
+  // Respect user settings: if image caching is disabled, we could skip article caching too
+  // However, for offline-first design, we default to caching unless explicitly disabled
+  // Future: could add explicit enableArticleCache setting
+  // For now, we cache aggressively but handle errors gracefully
+  // Note: settings parameter reserved for future use
+  void settings // Mark as intentionally unused for now
   try {
-    // Respect user settings: if image caching is disabled, we could skip article caching too
-    // However, for offline-first design, we default to caching unless explicitly disabled
-    // Future: could add explicit enableArticleCache setting
-    // For now, we cache aggressively but handle errors gracefully
     
     const cacheKey = getCacheKey(naddr)
     console.log('[article-cache] 💾 Saving to cache', {
