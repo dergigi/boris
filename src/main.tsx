@@ -7,16 +7,14 @@ import 'react-loading-skeleton/dist/skeleton.css'
 
 // Register Service Worker for PWA functionality
 // With injectRegister: null, we need to register manually
-// In dev mode with devOptions.enabled, vite-plugin-pwa serves SW at /sw.js (not /dev-sw.js)
-if ('serviceWorker' in navigator) {
+// Note: With injectManifest strategy, SW file is only built in production
+// So we skip registration in dev mode (image caching won't work in dev, but that's okay)
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    // Try to register - in dev mode vite-plugin-pwa serves it via Vite dev server
-    // The path should be the same in both dev and prod when using injectManifest
     const swPath = '/sw.js'
     
     console.log('[sw-registration] Attempting to register Service Worker:', swPath, {
       isProd: import.meta.env.PROD,
-      isDev: import.meta.env.DEV,
       hasController: !!navigator.serviceWorker.controller
     })
     
@@ -40,30 +38,9 @@ if ('serviceWorker' in navigator) {
         return existingReg
       }
       
-      // Not registered yet, try to register
+      // Not registered yet, try to register (production only)
       console.log('[sw-registration] No existing registration, attempting to register:', swPath)
-      
-      // In dev mode, check if file exists first by trying to fetch it
-      if (import.meta.env.DEV) {
-        try {
-          const response = await fetch(swPath, { method: 'HEAD' })
-          if (response.ok) {
-            console.log('[sw-registration] Service Worker file exists, proceeding with registration')
-            return await navigator.serviceWorker.register(swPath)
-          } else {
-            console.warn('[sw-registration] ⚠️ Service Worker file returned non-OK status:', response.status)
-            return null
-          }
-        } catch (err) {
-          console.warn('[sw-registration] ⚠️ Service Worker file not found at:', swPath)
-          console.warn('[sw-registration] This is expected in dev mode if vite-plugin-pwa is not serving it')
-          console.warn('[sw-registration] Error:', err)
-          return null
-        }
-      } else {
-        // In production, just register directly
-        return await navigator.serviceWorker.register(swPath)
-      }
+      return await navigator.serviceWorker.register(swPath)
     })
       .then(registration => {
         if (!registration) return
@@ -122,13 +99,11 @@ if ('serviceWorker' in navigator) {
           name: error.name,
           stack: error.stack
         })
-        
-        // In dev mode, SW might not be available - this is okay for development
-        if (import.meta.env.DEV) {
-          console.warn('[sw-registration] ⚠️ Service Worker not available in dev mode - this is expected if vite-plugin-pwa dev server is not running')
-        }
       })
   })
+} else if (import.meta.env.DEV) {
+  // In dev mode, SW registration is skipped (injectManifest requires build)
+  console.log('[sw-registration] Skipping Service Worker registration in dev mode (injectManifest requires build)')
 } else {
   console.warn('[sw-registration] ⚠️ Service Workers not supported in this browser')
 }
