@@ -117,42 +117,61 @@ function replaceNostrUrisSafely(
 ): string {
   console.log('[nostrUriResolver] Starting markdown processing, length:', markdown.length)
   
-  // Pattern to match markdown links: [text](url)
-  // Uses a more robust approach to handle URLs with special characters
-  // Match: [ followed by any text (including escaped brackets), then ]( then URL (can contain parentheses if escaped), then )
-  const markdownLinkRegex = /\[(?:[^\]]|\\\])*\]\((?:[^)]|\\\))*\)/g
-  
   // Track positions where we're inside a markdown link URL
+  // Use a parser approach to correctly handle URLs with brackets/parentheses
   const linkRanges: Array<{ start: number, end: number }> = []
-  let match: RegExpExecArray | null
   
-  // Reset regex lastIndex
-  markdownLinkRegex.lastIndex = 0
-  
-  // Find all markdown links and track their URL positions
-  while ((match = markdownLinkRegex.exec(markdown)) !== null) {
-    const linkStart = match.index
-    const fullLink = match[0]
+  // Find all markdown link URLs by looking for ]( pattern and tracking to matching )
+  let i = 0
+  while (i < markdown.length) {
+    // Look for ]( pattern that starts a markdown link URL
+    const urlStartMatch = markdown.indexOf('](', i)
+    if (urlStartMatch === -1) break
     
-    console.log('[nostrUriResolver] Found markdown link at', linkStart, ':', fullLink.slice(0, 100))
+    const urlStart = urlStartMatch + 2 // Position after "]("
     
-    // Find the start of the URL part (after "]( )
-    const urlStartMatch = match[0].match(/\]\(/)
-    if (urlStartMatch) {
-      const urlStartOffset = match[0].indexOf(urlStartMatch[0]) + urlStartMatch[0].length
-      const urlEndOffset = match[0].length - 1 // -1 to exclude the closing )
-      const urlStart = linkStart + urlStartOffset
-      const urlEnd = linkStart + urlEndOffset
-      const urlContent = markdown.slice(urlStart, urlEnd)
+    // Now find the matching closing parenthesis
+    // We need to account for nested parentheses and escaped characters
+    let pos = urlStart
+    let depth = 1 // We're inside one set of parentheses
+    let urlEnd = -1
+    
+    while (pos < markdown.length && depth > 0) {
+      const char = markdown[pos]
+      const nextChar = pos + 1 < markdown.length ? markdown[pos + 1] : ''
       
-      console.log('[nostrUriResolver] Link URL range:', urlStart, '-', urlEnd, 'content:', urlContent.slice(0, 100))
+      // Check for escaped characters
+      if (char === '\\' && nextChar) {
+        pos += 2 // Skip escaped character
+        continue
+      }
+      
+      if (char === '(') {
+        depth++
+      } else if (char === ')') {
+        depth--
+        if (depth === 0) {
+          urlEnd = pos
+          break
+        }
+      }
+      
+      pos++
+    }
+    
+    if (urlEnd !== -1) {
+      const urlContent = markdown.slice(urlStart, urlEnd)
+      console.log('[nostrUriResolver] Found markdown link URL at', urlStart, '-', urlEnd, 'content:', urlContent.slice(0, 100))
       
       linkRanges.push({
         start: urlStart,
         end: urlEnd
       })
+      
+      i = urlEnd + 1
     } else {
-      console.warn('[nostrUriResolver] Could not find ]( in markdown link:', fullLink.slice(0, 100))
+      // No matching closing paren found, skip this one
+      i = urlStart + 1
     }
   }
   
