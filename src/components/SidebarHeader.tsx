@@ -7,6 +7,7 @@ import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import IconButton from './IconButton'
 import { faBooks } from '../icons/customIcons'
+import { preloadImage } from '../hooks/useImageCache'
 
 interface SidebarHeaderProps {
   onToggleCollapse: () => void
@@ -35,6 +36,13 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
   }
 
   const profileImage = getProfileImage()
+
+  // Preload profile image for offline access
+  useEffect(() => {
+    if (profileImage) {
+      preloadImage(profileImage)
+    }
+  }, [profileImage])
 
   // Close menu when clicking outside
   useEffect(() => {

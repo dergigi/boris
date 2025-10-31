@@ -5,6 +5,7 @@ import { IEventStore } from 'applesauce-core'
 import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 import { rebroadcastEvents } from './rebroadcastService'
 import { UserSettings } from './settingsService'
+import { preloadImage } from '../hooks/useImageCache'
 
 /**
  * Fetches profile metadata (kind:0) for a list of pubkeys
@@ -64,6 +65,19 @@ export const fetchProfiles = async (
     await lastValueFrom(merge(local$, remote$).pipe(toArray()))
 
     const profiles = Array.from(profilesByPubkey.values())
+
+    // Preload profile images for offline access
+    for (const profile of profiles) {
+      try {
+        const profileData = JSON.parse(profile.content)
+        const picture = profileData.picture
+        if (picture) {
+          preloadImage(picture)
+        }
+      } catch {
+        // Ignore parse errors - profile content might be invalid JSON
+      }
+    }
 
     // Rebroadcast profiles to local/all relays based on settings
     if (profiles.length > 0) {
