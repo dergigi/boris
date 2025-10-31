@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendar, faUser, faNewspaper } from '@fortawesome/free-solid-svg-icons'
@@ -7,6 +7,7 @@ import { BlogPostPreview } from '../services/exploreService'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { isKnownBot } from '../config/bots'
+import { preloadImage } from '../hooks/useImageCache'
 
 interface BlogPostCardProps {
   post: BlogPostPreview
@@ -42,6 +43,14 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
     progressColor = 'var(--color-text)' // Neutral text color (started)
   }
   
+  // Preload image when card is rendered to ensure it's cached by Service Worker
+  // This prevents re-fetching the image when navigating to the article
+  useEffect(() => {
+    if (post.image) {
+      preloadImage(post.image)
+    }
+  }, [post.image])
+
   // Debug log - reading progress shown as visual indicator
   if (readingProgress !== undefined) {
     // Reading progress display
