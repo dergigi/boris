@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.28] - 2025-11-01
+
+### Fixed
+
+- Nostr URI processing in markdown links
+  - Prevent double-processing of markdown to avoid nested links
+  - Add HTTP URL detection to prevent processing nostr URIs in URLs
+  - Use parser-based approach to detect markdown link URLs
+  - Prevent nostr URI replacement inside markdown link URLs
+  - Remove unused variables in nostrUriResolver
+  - Improved blog post rendering with proper link handling
+
+### Removed
+
+- Debug console.log statements from nostrUriResolver
+  - Cleaned up debug logging used during troubleshooting
+  - Cleaner console output in production
+
 ## [0.10.27] - 2025-10-31
 
 ### Added
