@@ -7,14 +7,14 @@ import 'react-loading-skeleton/dist/skeleton.css'
 
 // Register Service Worker for PWA functionality
 // With injectRegister: null, we need to register manually
-// Note: With injectManifest strategy, SW file is only built in production
-// So we skip registration in dev mode (image caching won't work in dev, but that's okay)
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+// With devOptions.enabled: true, vite-plugin-pwa serves SW in dev mode too
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swPath = '/sw.js'
     
     console.log('[sw-registration] Attempting to register Service Worker:', swPath, {
       isProd: import.meta.env.PROD,
+      isDev: import.meta.env.DEV,
       hasController: !!navigator.serviceWorker.controller
     })
     
@@ -38,9 +38,42 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
         return existingReg
       }
       
-      // Not registered yet, try to register (production only)
-      console.log('[sw-registration] No existing registration, attempting to register:', swPath)
-      return await navigator.serviceWorker.register(swPath)
+      // Not registered yet, try to register
+      // In dev mode, check if SW file exists and has correct MIME type before registering
+      if (import.meta.env.DEV) {
+        try {
+          const response = await fetch(swPath)
+          const contentType = response.headers.get('content-type') || ''
+          const isJavaScript = contentType.includes('javascript') || contentType.includes('application/javascript')
+          
+          console.log('[sw-registration] Dev mode - checking SW file:', {
+            status: response.status,
+            contentType,
+            isJavaScript,
+            isHTML: contentType.includes('text/html')
+          })
+          
+          if (response.ok && isJavaScript) {
+            console.log('[sw-registration] Service Worker file available in dev mode, proceeding with registration')
+            return await navigator.serviceWorker.register(swPath)
+          } else {
+            console.warn('[sw-registration] ⚠️ Service Worker file not available in dev mode:', {
+              status: response.status,
+              contentType
+            })
+            console.warn('[sw-registration] Image caching will not work in dev mode - test in production build')
+            return null
+          }
+        } catch (err) {
+          console.warn('[sw-registration] ⚠️ Could not check Service Worker file in dev mode:', err)
+          console.warn('[sw-registration] Image caching will not work in dev mode - test in production build')
+          return null
+        }
+      } else {
+        // In production, just register directly
+        console.log('[sw-registration] No existing registration, attempting to register:', swPath)
+        return await navigator.serviceWorker.register(swPath)
+      }
     })
       .then(registration => {
         if (!registration) return
@@ -99,11 +132,14 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
           name: error.name,
           stack: error.stack
         })
+        
+        // In dev mode, this is expected if vite-plugin-pwa isn't serving the SW
+        if (import.meta.env.DEV) {
+          console.warn('[sw-registration] ⚠️ This is expected in dev mode if vite-plugin-pwa is not serving the SW file')
+          console.warn('[sw-registration] Image caching will not work in dev mode - test in production build')
+        }
       })
   })
-} else if (import.meta.env.DEV) {
-  // In dev mode, SW registration is skipped (injectManifest requires build)
-  console.log('[sw-registration] Skipping Service Worker registration in dev mode (injectManifest requires build)')
 } else {
   console.warn('[sw-registration] ⚠️ Service Workers not supported in this browser')
 }
