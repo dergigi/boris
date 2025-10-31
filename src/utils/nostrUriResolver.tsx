@@ -123,6 +123,18 @@ function replaceNostrUrisSafely(
   const existingLinkCount = (markdown.match(/\]\(/g) || []).length
   console.log('[nostrUriResolver] Existing markdown links in input:', existingLinkCount)
   
+  // Check if markdown already contains our internal routes (indicates it's been processed)
+  // This prevents double-processing which can cause nested links
+  const hasInternalRoutes = /\]\(\/(?:a|p)\/[a-z0-9]+1[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{58,}\)/i.test(markdown)
+  if (hasInternalRoutes) {
+    // Count how many internal routes we see
+    const internalRouteMatches = markdown.match(/\]\(\/(?:a|p)\/[a-z0-9]+1[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{58,}\)/gi) || []
+    console.log('[nostrUriResolver] ⚠️ WARNING: Markdown appears to already be processed (contains', internalRouteMatches.length, 'internal routes like /a/naddr1... or /p/npub1...)')
+    console.log('[nostrUriResolver] Skipping re-processing to avoid nested links')
+    // Return as-is - don't process again
+    return markdown
+  }
+  
   // Track positions where we're inside a markdown link URL
   // Use a parser approach to correctly handle URLs with brackets/parentheses
   const linkRanges: Array<{ start: number, end: number }> = []
