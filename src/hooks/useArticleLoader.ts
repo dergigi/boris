@@ -76,10 +76,15 @@ export function useArticleLoader({
     // First check: naddr is required
     if (!naddr) {
       console.log('[article-loader] Skipping load - missing naddr')
+      setReaderContent(undefined)
       return
     }
     
     console.log('[article-loader] Starting load for naddr:', naddr)
+    
+    // Clear readerContent immediately to prevent showing stale content from previous article
+    // This ensures images from previous articles don't flash briefly
+    setReaderContent(undefined)
     
     // Synchronously check cache sources BEFORE checking relayPool
     // This prevents showing loading skeletons when content is immediately available
