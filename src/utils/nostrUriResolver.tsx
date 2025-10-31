@@ -108,16 +108,122 @@ export function getNostrUriLabel(encoded: string): string {
 }
 
 /**
+ * Process markdown to replace nostr URIs while skipping those inside markdown links
+ * This prevents nested markdown link issues when nostr identifiers appear in URLs
+ */
+function replaceNostrUrisSafely(
+  markdown: string,
+  getReplacement: (encoded: string) => string
+): string {
+  // Track positions where we're inside a markdown link URL
+  // Use a parser approach to correctly handle URLs with brackets/parentheses
+  const linkRanges: Array<{ start: number, end: number }> = []
+  
+  // Find all markdown link URLs by looking for ]( pattern and tracking to matching )
+  let i = 0
+  while (i < markdown.length) {
+    // Look for ]( pattern that starts a markdown link URL
+    const urlStartMatch = markdown.indexOf('](', i)
+    if (urlStartMatch === -1) break
+    
+    const urlStart = urlStartMatch + 2 // Position after "]("
+    
+    // Now find the matching closing parenthesis
+    // We need to account for nested parentheses and escaped characters
+    let pos = urlStart
+    let depth = 1 // We're inside one set of parentheses
+    let urlEnd = -1
+    
+    while (pos < markdown.length && depth > 0) {
+      const char = markdown[pos]
+      const nextChar = pos + 1 < markdown.length ? markdown[pos + 1] : ''
+      
+      // Check for escaped characters
+      if (char === '\\' && nextChar) {
+        pos += 2 // Skip escaped character
+        continue
+      }
+      
+      if (char === '(') {
+        depth++
+      } else if (char === ')') {
+        depth--
+        if (depth === 0) {
+          urlEnd = pos
+          break
+        }
+      }
+      
+      pos++
+    }
+    
+    if (urlEnd !== -1) {
+      linkRanges.push({
+        start: urlStart,
+        end: urlEnd
+      })
+      
+      i = urlEnd + 1
+    } else {
+      // No matching closing paren found, skip this one
+      i = urlStart + 1
+    }
+  }
+  
+  // Check if a position is inside any markdown link URL
+  const isInsideLinkUrl = (pos: number): boolean => {
+    return linkRanges.some(range => pos >= range.start && pos < range.end)
+  }
+  
+  // Replace nostr URIs, but skip those inside link URLs
+  // Also check if nostr URI is part of any URL pattern (http/https URLs)
+  // Callback params: (match, encoded, type, offset, string)
+  const result = markdown.replace(NOSTR_URI_REGEX, (match, encoded, _type, offset, fullString) => {
+    const matchEnd = offset + match.length
+    
+    // Check if this match is inside a markdown link URL
+    // Check both start and end positions to ensure we catch the whole match
+    const startInside = isInsideLinkUrl(offset)
+    const endInside = isInsideLinkUrl(matchEnd - 1) // Check end position
+    
+    if (startInside || endInside) {
+      // Don't replace - return original match
+      return match
+    }
+    
+    // Also check if the nostr URI is part of an HTTP/HTTPS URL pattern
+    // This catches cases where the source markdown has URLs like https://example.com/naddr1...
+    // before they're formatted as markdown links
+    const contextBefore = fullString.slice(Math.max(0, offset - 200), offset)
+    const contextAfter = fullString.slice(matchEnd, Math.min(fullString.length, matchEnd + 10))
+    
+    // Check if we're inside an http/https URL (looking for https?:// pattern before the match)
+    // and the match is followed by valid URL characters (not whitespace or closing paren)
+    const urlPatternBefore = /https?:\/\/[^\s)]*$/i
+    const isInHttpUrl = urlPatternBefore.test(contextBefore)
+    const isValidUrlContinuation = !contextAfter.match(/^[\s)]/) // Not followed by space or closing paren
+    
+    if (isInHttpUrl && isValidUrlContinuation) {
+      // Don't replace - return original match
+      return match
+    }
+    
+    // encoded is already the NIP-19 identifier without nostr: prefix (from capture group)
+    const replacement = getReplacement(encoded)
+    return replacement
+  })
+  
+  return result
+}
+
+/**
  * Replace nostr: URIs in markdown with proper markdown links
  * This converts: nostr:npub1... to [label](link)
  */
 export function replaceNostrUrisInMarkdown(markdown: string): string {
-  return markdown.replace(NOSTR_URI_REGEX, (match) => {
-    // Extract just the NIP-19 identifier (without nostr: prefix)
-    const encoded = match.replace(/^nostr:/, '')
+  return replaceNostrUrisSafely(markdown, (encoded) => {
     const link = createNostrLink(encoded)
     const label = getNostrUriLabel(encoded)
-    
     return `[${label}](${link})`
   })
 }
@@ -132,9 +238,7 @@ export function replaceNostrUrisInMarkdownWithTitles(
   markdown: string, 
   articleTitles: Map<string, string>
 ): string {
-  return markdown.replace(NOSTR_URI_REGEX, (match) => {
-    // Extract just the NIP-19 identifier (without nostr: prefix)
-    const encoded = match.replace(/^nostr:/, '')
+  return replaceNostrUrisSafely(markdown, (encoded) => {
     const link = createNostrLink(encoded)
     
     // For articles, use the resolved title if available
