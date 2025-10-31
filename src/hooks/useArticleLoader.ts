@@ -293,6 +293,9 @@ export function useArticleLoader({
           url: `nostr:${naddr}`
         })
         setReaderLoading(false) // Turn off loading immediately - we have the preview!
+        
+        // Don't preload image here - it should already be cached from BlogPostCard
+        // Preloading again would be redundant and could cause unnecessary network requests
       } else {
         // No cache, no EventStore, no preview data - need to load from relays
         setReaderLoading(true)
