@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.30] - 2025-11-01
+
+### Added
+
+- Navigate to author's writings page from article author card
+  - Clicking the author card at the end of an article now navigates to `/p/${npub}/writings`
+  - Previously navigated to the author's profile page
+  - Better discovery of author's published articles
+
+### Fixed
+
+- Reset scroll to top when navigating to profile pages
+  - Profile pages (including writings page) now scroll to top on navigation
+  - Prevents landing in the middle of the page when navigating from articles
+  - Better user experience when browsing author profiles
+- Preserve image aspect ratio when full-width images setting is enabled
+  - Images maintain their aspect ratio when full-width setting is active
+  - Prevents image distortion when enlarging small images
+
 ## [0.10.29] - 2025-11-01
 
 ### Fixed
