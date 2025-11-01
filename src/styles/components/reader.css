@@ -59,11 +59,12 @@
 .reader .reader-html img, .reader .reader-markdown img { 
   width: var(--image-width, auto);
   max-width: 100%; 
-  max-height: 70vh; 
+  max-height: var(--image-max-height, 70vh); 
   height: auto; 
   display: block; 
   margin: 0.75rem auto; 
   border-radius: 6px; 
+  object-fit: contain;
 }
 /* Headlines with Tailwind typography */
 .reader-markdown h1, .reader-html h1 { 
@@ -194,7 +195,9 @@
   .reader-markdown img, .reader-html img {
     width: var(--image-width, auto) !important;
     max-width: 100% !important;
+    max-height: var(--image-max-height, 70vh) !important;
     height: auto;
+    object-fit: contain;
   }
 }
 

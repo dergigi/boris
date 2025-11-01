@@ -71,8 +71,9 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       // Set paragraph alignment
       root.setProperty('--paragraph-alignment', settings.paragraphAlignment || 'justify')
       
-      // Set image width based on full-width setting
+      // Set image width and max-height based on full-width setting
       root.setProperty('--image-width', settings.fullWidthImages ? '100%' : 'auto')
+      root.setProperty('--image-max-height', settings.fullWidthImages ? 'none' : '70vh')
       
     }
     
