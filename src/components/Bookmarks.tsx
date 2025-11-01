@@ -100,6 +100,17 @@ const Bookmarks: React.FC<BookmarksProps> = ({
       previousLocationRef.current = location.pathname
     }
   }, [location.pathname, showSettings, showMe, showExplore, showProfile])
+
+  // Reset scroll to top when navigating to profile routes
+  useEffect(() => {
+    if (showProfile) {
+      // Reset scroll position when navigating to profile pages
+      // Use requestAnimationFrame to ensure it happens after DOM updates
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' })
+      })
+    }
+  }, [location.pathname, showProfile])
     
   const activeAccount = Hooks.useActiveAccount()
   const accountManager = Hooks.useAccountManager()
