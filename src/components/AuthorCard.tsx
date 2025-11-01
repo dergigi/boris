@@ -27,7 +27,7 @@ const AuthorCard: React.FC<AuthorCardProps> = ({ authorPubkey, clickable = true 
   const handleClick = () => {
     if (clickable) {
       const npub = nip19.npubEncode(authorPubkey)
-      navigate(`/p/${npub}`)
+      navigate(`/p/${npub}/writings`)
     }
   }
   
