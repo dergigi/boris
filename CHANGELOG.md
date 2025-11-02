@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.31] - 2025-11-02
+
+### Added
+
+- Move add bookmark button to filter bar
+  - Moved add bookmark button from web section header to filter bar
+  - Positioned button on the right side of filter bar
+  - Removed conditional rendering (always show button)
+  - Added bookmark-filters-wrapper styling for proper layout
+
+### Fixed
+
+- Align add bookmark button with filter buttons
+  - Matched CompactButton styling to filter-btn when inside filter bar
+  - Ensured same size, padding, and alignment for consistent appearance
+
 ## [0.10.30] - 2025-11-01
 
 ### Added
