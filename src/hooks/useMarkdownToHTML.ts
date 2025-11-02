@@ -80,7 +80,7 @@ export const useMarkdownToHTML = (
         
         if (isCancelled) return
         
-        console.log(`[markdown-to-html] Processed markdown, loading states:`, Array.from(profileLoading.entries()).filter(([_, l]) => l).map(([e, _]) => e.slice(0, 16) + '...'))
+        console.log(`[markdown-to-html] Processed markdown, loading states:`, Array.from(profileLoading.entries()).filter(([, l]) => l).map(([e]) => e.slice(0, 16) + '...'))
         setProcessedMarkdown(processed)
       } catch (error) {
         console.error(`[markdown-to-html] Error processing markdown:`, error)
