@@ -315,12 +315,14 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
   profileLabels: Map<string, string> = new Map(),
   articleTitles: Map<string, string> = new Map()
 ): string {
+  console.log(`[markdown-replace] Replacing URIs with ${profileLabels.size} profile labels and ${articleTitles.size} article titles`)
   return replaceNostrUrisSafely(markdown, (encoded) => {
     const link = createNostrLink(encoded)
     
     // Check if we have a resolved profile name
     if (profileLabels.has(encoded)) {
       const displayName = profileLabels.get(encoded)!
+      console.log(`[markdown-replace] Using profile label for ${encoded.slice(0, 20)}...: ${displayName}`)
       return `[${displayName}](${link})`
     }
     
@@ -329,6 +331,7 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
       const decoded = decode(encoded)
       if (decoded.type === 'naddr' && articleTitles.has(encoded)) {
         const title = articleTitles.get(encoded)!
+        console.log(`[markdown-replace] Using article title for ${encoded.slice(0, 20)}...: ${title}`)
         return `[${title}](${link})`
       }
     } catch (error) {
@@ -337,6 +340,7 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
     
     // For other types or if not resolved, use default label (shortened npub format)
     const label = getNostrUriLabel(encoded)
+    console.log(`[markdown-replace] Using default label for ${encoded.slice(0, 20)}...: ${label}`)
     return `[${label}](${link})`
   })
 }
