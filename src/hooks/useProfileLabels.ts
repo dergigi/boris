@@ -86,45 +86,67 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
         .then((fetchedProfiles) => {
           console.log('[npub-resolve] fetchProfiles returned', fetchedProfiles.length, 'profiles')
           
-          // Re-check eventStore for all profiles (including ones we just fetched)
-          // This ensures we get profiles even if fetchProfiles didn't return them in the array
+          // First, use the profiles returned from fetchProfiles directly
           const updatedLabels = new Map(labels)
-          let foundInStore = 0
+          const fetchedProfilesByPubkey = new Map(fetchedProfiles.map(p => [p.pubkey, p]))
+          
+          let resolvedFromArray = 0
+          let resolvedFromStore = 0
           let withNames = 0
           let withoutNames = 0
           let missingFromStore = 0
           
           profileData.forEach(({ encoded, pubkey }) => {
-            if (!updatedLabels.has(encoded) && eventStore) {
-              const profileEvent = eventStore.getEvent(pubkey + ':0')
-              if (profileEvent) {
-                foundInStore++
+            if (!updatedLabels.has(encoded)) {
+              // First, try to use the profile from the returned array
+              const fetchedProfile = fetchedProfilesByPubkey.get(pubkey)
+              if (fetchedProfile) {
+                resolvedFromArray++
                 try {
-                  const profileData = JSON.parse(profileEvent.content || '{}') as { name?: string; display_name?: string; nip05?: string }
+                  const profileData = JSON.parse(fetchedProfile.content || '{}') as { name?: string; display_name?: string; nip05?: string }
                   const displayName = profileData.display_name || profileData.name || profileData.nip05
                   if (displayName) {
                     updatedLabels.set(encoded, `@${displayName}`)
                     withNames++
-                    console.log('[npub-resolve] Resolved profile:', encoded.slice(0, 30) + '...', '->', displayName)
+                    console.log('[npub-resolve] Resolved from fetched array:', encoded.slice(0, 30) + '...', '->', displayName)
                   } else {
                     withoutNames++
-                    if (withoutNames <= 3) { // Log first few for debugging
-                      console.log('[npub-resolve] Profile event found but no name/display_name/nip05:', encoded.slice(0, 30) + '...', 'content keys:', Object.keys(profileData))
+                    if (withoutNames <= 3) {
+                      console.log('[npub-resolve] Fetched profile has no name/display_name/nip05:', encoded.slice(0, 30) + '...', 'content keys:', Object.keys(profileData))
                     }
                   }
                 } catch (err) {
-                  console.error('[npub-resolve] Error parsing profile event for', encoded.slice(0, 30) + '...', err)
+                  console.error('[npub-resolve] Error parsing fetched profile for', encoded.slice(0, 30) + '...', err)
+                }
+              } else if (eventStore) {
+                // Fallback: check eventStore (in case fetchProfiles stored but didn't return)
+                const profileEvent = eventStore.getEvent(pubkey + ':0')
+                if (profileEvent) {
+                  resolvedFromStore++
+                  try {
+                    const profileData = JSON.parse(profileEvent.content || '{}') as { name?: string; display_name?: string; nip05?: string }
+                    const displayName = profileData.display_name || profileData.name || profileData.nip05
+                    if (displayName) {
+                      updatedLabels.set(encoded, `@${displayName}`)
+                      withNames++
+                      console.log('[npub-resolve] Resolved from eventStore:', encoded.slice(0, 30) + '...', '->', displayName)
+                    }
+                  } catch (err) {
+                    console.error('[npub-resolve] Error parsing profile event for', encoded.slice(0, 30) + '...', err)
+                  }
+                } else {
+                  missingFromStore++
+                  if (missingFromStore <= 3) {
+                    console.log('[npub-resolve] Profile not found in array or eventStore:', pubkey.slice(0, 16) + '...')
+                  }
                 }
               } else {
                 missingFromStore++
-                if (missingFromStore <= 3) { // Log first few for debugging
-                  console.log('[npub-resolve] Profile not in eventStore after fetch:', pubkey.slice(0, 16) + '...')
-                }
               }
             }
           })
           
-          console.log('[npub-resolve] After fetch - resolved:', updatedLabels.size, 'total | found in store:', foundInStore, '| with names:', withNames, '| without names:', withoutNames, '| missing:', missingFromStore, '| out of', profileData.length)
+          console.log('[npub-resolve] After fetch - resolved:', updatedLabels.size, 'total | from array:', resolvedFromArray, '| from store:', resolvedFromStore, '| with names:', withNames, '| without names:', withoutNames, '| missing:', missingFromStore, '| out of', profileData.length)
           setProfileLabels(updatedLabels)
         })
         .catch(err => {
