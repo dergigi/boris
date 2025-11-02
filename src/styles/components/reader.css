@@ -273,3 +273,21 @@
 
 /* Reading Progress Indicator - now using Tailwind utilities in component */
 
+/* Profile loading state - subtle opacity pulse animation */
+.profile-loading {
+  opacity: 0.6;
+  animation: profile-loading-pulse 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-loading {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+@keyframes profile-loading-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+

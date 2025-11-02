@@ -6,6 +6,8 @@ import { ReadableContent } from '../services/readerService'
 import { eventManager } from '../services/eventManager'
 import { fetchProfiles } from '../services/profileService'
 import { useDocumentTitle } from './useDocumentTitle'
+import { getNpubFallbackDisplay } from '../utils/nostrUriResolver'
+import { extractProfileDisplayName } from '../utils/profileUtils'
 
 interface UseEventLoaderProps {
   eventId?: string
@@ -40,7 +42,7 @@ export function useEventLoader({
     // Initial title
     let title = `Note (${event.kind})`
     if (event.kind === 1) {
-      title = `Note by @${event.pubkey.slice(0, 8)}...`
+      title = `Note by ${getNpubFallbackDisplay(event.pubkey)}`
     }
 
     // Emit immediately
@@ -62,11 +64,12 @@ export function useEventLoader({
           // First, try to get from event store cache
           const storedProfile = eventStore.getEvent(event.pubkey + ':0')
           if (storedProfile) {
-            try {
-              const obj = JSON.parse(storedProfile.content || '{}') as { name?: string; display_name?: string; nip05?: string }
-              resolved = obj.display_name || obj.name || obj.nip05 || ''
-            } catch {
-              // ignore parse errors
+            const displayName = extractProfileDisplayName(storedProfile as NostrEvent)
+            if (displayName && !displayName.startsWith('@')) {
+              // Remove @ prefix if present (we'll add it when displaying)
+              resolved = displayName
+            } else if (displayName) {
+              resolved = displayName.substring(1) // Remove @ prefix
             }
           }
 
@@ -75,15 +78,15 @@ export function useEventLoader({
             const profiles = await fetchProfiles(relayPool, eventStore as unknown as IEventStore, [event.pubkey])
             if (profiles && profiles.length > 0) {
               const latest = profiles.sort((a, b) => (b.created_at || 0) - (a.created_at || 0))[0]
-              try {
-                const obj = JSON.parse(latest.content || '{}') as { name?: string; display_name?: string; nip05?: string }
-                resolved = obj.display_name || obj.name || obj.nip05 || ''
-              } catch {
-                // ignore parse errors
+              const displayName = extractProfileDisplayName(latest)
+              if (displayName && !displayName.startsWith('@')) {
+                resolved = displayName
+              } else if (displayName) {
+                resolved = displayName.substring(1) // Remove @ prefix
               }
             }
           }
-
+          
           if (resolved) {
             const updatedTitle = `Note by @${resolved}`
             setCurrentTitle(updatedTitle)

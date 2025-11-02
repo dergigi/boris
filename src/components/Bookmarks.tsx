@@ -2,8 +2,11 @@ import React, { useMemo, useEffect, useRef } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { Hooks } from 'applesauce-react'
 import { useEventStore } from 'applesauce-react/hooks'
+import { Helpers } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
+
+const { getPubkeyFromDecodeResult } = Helpers
 import { useSettings } from '../hooks/useSettings'
 import { useArticleLoader } from '../hooks/useArticleLoader'
 import { useExternalUrlLoader } from '../hooks/useExternalUrlLoader'
@@ -79,16 +82,12 @@ const Bookmarks: React.FC<BookmarksProps> = ({
   // Extract tab from profile routes
   const profileTab = location.pathname.endsWith('/writings') ? 'writings' : 'highlights'
   
-  // Decode npub or nprofile to pubkey for profile view
+  // Decode npub or nprofile to pubkey for profile view using applesauce helper
   let profilePubkey: string | undefined
   if (npub && showProfile) {
     try {
       const decoded = nip19.decode(npub)
-      if (decoded.type === 'npub') {
-        profilePubkey = decoded.data
-      } else if (decoded.type === 'nprofile') {
-        profilePubkey = decoded.data.pubkey
-      }
+      profilePubkey = getPubkeyFromDecodeResult(decoded)
     } catch (err) {
       console.error('Failed to decode npub/nprofile:', err)
     }

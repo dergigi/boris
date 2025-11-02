@@ -1,7 +1,12 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { nip19 } from 'nostr-tools'
 import { useEventModel } from 'applesauce-react/hooks'
-import { Models } from 'applesauce-core'
+import { Hooks } from 'applesauce-react'
+import { Models, Helpers } from 'applesauce-core'
+import { getProfileDisplayName } from '../utils/nostrUriResolver'
+import { isProfileInCacheOrStore } from '../utils/profileLoadingUtils'
+
+const { getPubkeyFromDecodeResult } = Helpers
 
 interface NostrMentionLinkProps {
   nostrUri: string
@@ -20,24 +25,30 @@ const NostrMentionLink: React.FC<NostrMentionLinkProps> = ({
 }) => {
   // Decode the nostr URI first
   let decoded: ReturnType<typeof nip19.decode> | null = null
-  let pubkey: string | undefined
   
   try {
     const identifier = nostrUri.replace(/^nostr:/, '')
     decoded = nip19.decode(identifier)
-    
-    // Extract pubkey for profile fetching (works for npub and nprofile)
-    if (decoded.type === 'npub') {
-      pubkey = decoded.data
-    } else if (decoded.type === 'nprofile') {
-      pubkey = decoded.data.pubkey
-    }
   } catch (error) {
     // Decoding failed, will fallback to shortened identifier
   }
   
+  // Extract pubkey for profile fetching using applesauce helper (works for npub and nprofile)
+  const pubkey = decoded ? getPubkeyFromDecodeResult(decoded) : undefined
+  
+  const eventStore = Hooks.useEventStore()
   // Fetch profile at top level (Rules of Hooks)
   const profile = useEventModel(Models.ProfileModel, pubkey ? [pubkey] : null)
+  
+  // Check if profile is in cache or eventStore for loading detection
+  const isInCacheOrStore = useMemo(() => {
+    if (!pubkey) return false
+    return isProfileInCacheOrStore(pubkey, eventStore)
+  }, [pubkey, eventStore])
+  
+  // Show loading if profile doesn't exist and not in cache/store (for npub/nprofile)
+  // pubkey will be undefined for non-profile types, so no need for explicit type check
+  const isLoading = !profile && pubkey && !isInCacheOrStore
   
   // If decoding failed, show shortened identifier
   if (!decoded) {
@@ -49,37 +60,30 @@ const NostrMentionLink: React.FC<NostrMentionLinkProps> = ({
     )
   }
   
+  // Helper function to render profile links (used for both npub and nprofile)
+  const renderProfileLink = (pubkey: string) => {
+    const npub = nip19.npubEncode(pubkey)
+    const displayName = getProfileDisplayName(profile, pubkey)
+    const linkClassName = isLoading ? `${className} profile-loading` : className
+    
+    return (
+      <a
+        href={`/p/${npub}`}
+        className={linkClassName}
+        onClick={onClick}
+      >
+        @{displayName}
+      </a>
+    )
+  }
+
   // Render based on decoded type
+  // If we have a pubkey (from npub/nprofile), render profile link directly
+  if (pubkey) {
+    return renderProfileLink(pubkey)
+  }
+  
   switch (decoded.type) {
-    case 'npub': {
-      const pk = decoded.data
-      const displayName = profile?.name || profile?.display_name || profile?.nip05 || `${pk.slice(0, 8)}...`
-      
-      return (
-        <a
-          href={`/p/${nip19.npubEncode(pk)}`}
-          className={className}
-          onClick={onClick}
-        >
-          @{displayName}
-        </a>
-      )
-    }
-    case 'nprofile': {
-      const { pubkey: pk } = decoded.data
-      const displayName = profile?.name || profile?.display_name || profile?.nip05 || `${pk.slice(0, 8)}...`
-      const npub = nip19.npubEncode(pk)
-      
-      return (
-        <a
-          href={`/p/${npub}`}
-          className={className}
-          onClick={onClick}
-        >
-          @{displayName}
-        </a>
-      )
-    }
     case 'naddr': {
       const { kind, pubkey: pk, identifier: addrIdentifier } = decoded.data
       // Check if it's a blog post (kind:30023)

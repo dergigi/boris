@@ -1,40 +1,51 @@
 import { decode, npubEncode, noteEncode } from 'nostr-tools/nip19'
 import { getNostrUrl } from '../config/nostrGateways'
+import { Tokens } from 'applesauce-content/helpers'
+import { getContentPointers } from 'applesauce-factory/helpers'
+import { encodeDecodeResult } from 'applesauce-core/helpers'
+import { Helpers } from 'applesauce-core'
+
+const { getPubkeyFromDecodeResult } = Helpers
 
 /**
  * Regular expression to match nostr: URIs and bare NIP-19 identifiers
+ * Uses applesauce Tokens.nostrLink which includes word boundary checks
  * Matches: nostr:npub1..., nostr:note1..., nostr:nprofile1..., nostr:nevent1..., nostr:naddr1...
  * Also matches bare identifiers without the nostr: prefix
  */
-const NOSTR_URI_REGEX = /(?:nostr:)?((npub|note|nprofile|nevent|naddr)1[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{58,})/gi
+const NOSTR_URI_REGEX = Tokens.nostrLink
 
 /**
- * Extract all nostr URIs from text
+ * Extract all nostr URIs from text using applesauce helpers
  */
 export function extractNostrUris(text: string): string[] {
-  const matches = text.match(NOSTR_URI_REGEX)
-  if (!matches) return []
-  
-  // Extract just the NIP-19 identifier (without nostr: prefix)
-  return matches.map(match => {
-    const cleanMatch = match.replace(/^nostr:/, '')
-    return cleanMatch
-  })
+  try {
+    const pointers = getContentPointers(text)
+    const result: string[] = []
+    pointers.forEach(pointer => {
+      try {
+        const encoded = encodeDecodeResult(pointer)
+        if (encoded) {
+          result.push(encoded)
+        }
+      } catch {
+        // Ignore encoding errors, continue processing other pointers
+      }
+    })
+    return result
+  } catch {
+    return []
+  }
 }
 
 /**
- * Extract all naddr (article) identifiers from text
+ * Extract all naddr (article) identifiers from text using applesauce helpers
  */
 export function extractNaddrUris(text: string): string[] {
-  const allUris = extractNostrUris(text)
-  return allUris.filter(uri => {
-    try {
-      const decoded = decode(uri)
-      return decoded.type === 'naddr'
-    } catch {
-      return false
-    }
-  })
+  const pointers = getContentPointers(text)
+  return pointers
+    .filter(pointer => pointer.type === 'naddr')
+    .map(pointer => encodeDecodeResult(pointer))
 }
 
 /**
@@ -77,13 +88,14 @@ export function getNostrUriLabel(encoded: string): string {
   try {
     const decoded = decode(encoded)
     
+    // Use applesauce helper to extract pubkey for npub/nprofile
+    const pubkey = getPubkeyFromDecodeResult(decoded)
+    if (pubkey) {
+      // Use shared fallback display function and add @ for label
+      return `@${getNpubFallbackDisplay(pubkey)}`
+    }
+    
     switch (decoded.type) {
-      case 'npub':
-        return `@${encoded.slice(0, 12)}...`
-      case 'nprofile': {
-        const npub = npubEncode(decoded.data.pubkey)
-        return `@${npub.slice(0, 12)}...`
-      }
       case 'note':
         return `note:${encoded.slice(5, 12)}...`
       case 'nevent': {
@@ -105,6 +117,44 @@ export function getNostrUriLabel(encoded: string): string {
   } catch (error) {
     return encoded.slice(0, 16) + '...'
   }
+}
+
+/**
+ * Get a standardized fallback display name for a pubkey when profile has no name
+ * Returns npub format: abc1234... (without @ prefix)
+ * Components should add @ prefix when rendering mentions/links
+ * @param pubkey The pubkey in hex format
+ * @returns Formatted npub display string without @ prefix
+ */
+export function getNpubFallbackDisplay(pubkey: string): string {
+  try {
+    const npub = npubEncode(pubkey)
+    // Remove "npub1" prefix (5 chars) and show next 7 chars
+    return `${npub.slice(5, 12)}...`
+  } catch {
+    // Fallback to shortened pubkey if encoding fails
+    return `${pubkey.slice(0, 8)}...`
+  }
+}
+
+/**
+ * Get display name for a profile with consistent priority order
+ * Returns: profile.name || profile.display_name || profile.nip05 || npub fallback
+ * This function works with parsed profile objects (from useEventModel)
+ * For NostrEvent objects, use extractProfileDisplayName from profileUtils
+ * @param profile Profile object with optional name, display_name, and nip05 fields
+ * @param pubkey The pubkey in hex format (required for fallback)
+ * @returns Display name string
+ */
+export function getProfileDisplayName(
+  profile: { name?: string; display_name?: string; nip05?: string } | null | undefined,
+  pubkey: string
+): string {
+  // Consistent priority order: name || display_name || nip05 || fallback
+  if (profile?.name) return profile.name
+  if (profile?.display_name) return profile.display_name
+  if (profile?.nip05) return profile.nip05
+  return getNpubFallbackDisplay(pubkey)
 }
 
 /**
@@ -259,13 +309,119 @@ export function replaceNostrUrisInMarkdownWithTitles(
 }
 
 /**
+ * Replace nostr: URIs in markdown with proper markdown links, using resolved profile names and article titles
+ * This converts: nostr:npub1... to [@username](link) and nostr:naddr1... to [Article Title](link)
+ * Labels update progressively as profiles load
+ * @param markdown The markdown content to process
+ * @param profileLabels Map of pubkey (hex) -> display name (e.g., pubkey -> @username)
+ * @param articleTitles Map of naddr -> title for resolved articles
+ * @param profileLoading Map of pubkey (hex) -> boolean indicating if profile is loading
+ */
+export function replaceNostrUrisInMarkdownWithProfileLabels(
+  markdown: string,
+  profileLabels: Map<string, string> = new Map(),
+  articleTitles: Map<string, string> = new Map(),
+  profileLoading: Map<string, boolean> = new Map()
+): string {
+  return replaceNostrUrisSafely(markdown, (encoded) => {
+    const link = createNostrLink(encoded)
+    
+    // For articles, use the resolved title if available
+    try {
+      const decoded = decode(encoded)
+      if (decoded.type === 'naddr' && articleTitles.has(encoded)) {
+        const title = articleTitles.get(encoded)!
+        return `[${title}](${link})`
+      }
+      
+      // For npub/nprofile, extract pubkey using applesauce helper
+      const pubkey = getPubkeyFromDecodeResult(decoded)
+      if (pubkey) {
+        // Check if we have a resolved profile name using pubkey as key
+        // Use the label if: 1) we have a label, AND 2) profile is not currently loading (false or undefined)
+        const isLoading = profileLoading.get(pubkey)
+        const hasLabel = profileLabels.has(pubkey)
+        
+        // Use resolved label if we have one and profile is not loading
+        // isLoading can be: true (loading), false (loaded), or undefined (never was loading)
+        // We only avoid using the label if isLoading === true
+        if (isLoading !== true && hasLabel) {
+          const displayName = profileLabels.get(pubkey)!
+          return `[${displayName}](${link})`
+        }
+        
+        // If loading or no resolved label yet, use fallback (will show loading via post-processing)
+        const label = getNostrUriLabel(encoded)
+        return `[${label}](${link})`
+      }
+    } catch (error) {
+      // Ignore decode errors, fall through to default label
+    }
+    
+    // For other types or if not resolved, use default label (shortened npub format)
+    const label = getNostrUriLabel(encoded)
+    return `[${label}](${link})`
+  })
+}
+
+/**
+ * Post-process rendered HTML to add loading class to profile links that are still loading
+ * This is necessary because HTML inside markdown links doesn't render correctly
+ * @param html The rendered HTML string
+ * @param profileLoading Map of pubkey (hex) -> boolean indicating if profile is loading
+ * @returns HTML with profile-loading class added to loading profile links
+ */
+export function addLoadingClassToProfileLinks(
+  html: string,
+  profileLoading: Map<string, boolean>
+): string {
+  if (profileLoading.size === 0) {
+    return html
+  }
+  
+  // Find all <a> tags with href starting with /p/ (profile links)
+  const result = html.replace(/<a\s+[^>]*?href="\/p\/([^"]+)"[^>]*?>/g, (match, npub: string) => {
+    try {
+      // Decode npub or nprofile to get pubkey using applesauce helper
+      const decoded: ReturnType<typeof decode> = decode(npub)
+      const pubkey = getPubkeyFromDecodeResult(decoded)
+      
+      if (pubkey) {
+        // Check if this profile is loading
+        const isLoading = profileLoading.get(pubkey)
+        
+        if (isLoading === true) {
+          // Add profile-loading class if not already present
+          if (!match.includes('profile-loading')) {
+            // Insert class before the closing >
+            const classMatch = /class="([^"]*)"/.exec(match)
+            if (classMatch) {
+              const updated = match.replace(/class="([^"]*)"/, `class="$1 profile-loading"`)
+              return updated
+            } else {
+              const updated = match.replace(/(<a\s+[^>]*?)>/, '$1 class="profile-loading">')
+              return updated
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Ignore processing errors
+    }
+    
+    return match
+  })
+  
+  return result
+}
+
+/**
  * Replace nostr: URIs in HTML with clickable links
  * This is used when processing HTML content directly
  */
 export function replaceNostrUrisInHTML(html: string): string {
-  return html.replace(NOSTR_URI_REGEX, (match) => {
-    // Extract just the NIP-19 identifier (without nostr: prefix)
-    const encoded = match.replace(/^nostr:/, '')
+  return html.replace(NOSTR_URI_REGEX, (_match, encoded) => {
+    // encoded is already the NIP-19 identifier without nostr: prefix (from capture group)
     const link = createNostrLink(encoded)
     const label = getNostrUriLabel(encoded)
     

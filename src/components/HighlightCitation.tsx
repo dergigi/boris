@@ -5,6 +5,7 @@ import { Models } from 'applesauce-core'
 import { nip19 } from 'nostr-tools'
 import { fetchArticleTitle } from '../services/articleTitleResolver'
 import { Highlight } from '../types/highlights'
+import { getProfileDisplayName } from '../utils/nostrUriResolver'
 
 interface HighlightCitationProps {
   highlight: Highlight
@@ -79,7 +80,8 @@ export const HighlightCitation: React.FC<HighlightCitationProps> = ({
     loadTitle()
   }, [highlight.eventReference, relayPool])
   
-  const authorName = authorProfile?.name || authorProfile?.display_name
+  // Use centralized profile display name utility
+  const authorName = authorPubkey ? getProfileDisplayName(authorProfile, authorPubkey) : undefined
   
   // For nostr-native content with article reference
   if (highlight.eventReference && (authorName || articleTitle)) {

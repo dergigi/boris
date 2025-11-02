@@ -4,6 +4,7 @@ import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent, Filter } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
+import { extractProfileDisplayName } from '../src/utils/profileUtils'
 
 const { getArticleTitle, getArticleImage, getArticleSummary } = Helpers
 
@@ -117,14 +118,14 @@ async function fetchArticleMetadata(naddr: string): Promise<ArticleMetadata | nu
     const summary = getArticleSummary(article) || 'Read this article on Boris'
     const image = getArticleImage(article) || '/boris-social-1200.png'
 
-    // Extract author name from profile
+    // Extract author name from profile using centralized utility
     let authorName = pointer.pubkey.slice(0, 8) + '...'
     if (profileEvents.length > 0) {
-      try {
-        const profileData = JSON.parse(profileEvents[0].content)
-        authorName = profileData.display_name || profileData.name || authorName
-      } catch {
-        // Use fallback
+      const displayName = extractProfileDisplayName(profileEvents[0])
+      if (displayName && !displayName.startsWith('@')) {
+        authorName = displayName
+      } else if (displayName) {
+        authorName = displayName.substring(1) // Remove @ prefix
       }
     }
 
