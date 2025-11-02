@@ -32,13 +32,13 @@ const RichContent: React.FC<RichContentProps> = ({
     const parts = content.split(combinedPattern)
     console.log('[RichContent] Split into parts:', parts.length)
   
-  // Helper to check if a string is a nostr identifier (without mutating regex state)
-  const isNostrIdentifier = (str: string): boolean => {
-    const testPattern = new RegExp(nostrPattern.source, nostrPattern.flags)
-    return testPattern.test(str)
-  }
-  
-  return (
+    // Helper to check if a string is a nostr identifier (without mutating regex state)
+    const isNostrIdentifier = (str: string): boolean => {
+      const testPattern = new RegExp(nostrPattern.source, nostrPattern.flags)
+      return testPattern.test(str)
+    }
+    
+    return (
     <div className={className}>
       {parts.map((part, index) => {
         // Handle nostr: URIs - Tokens.nostrLink matches both formats
