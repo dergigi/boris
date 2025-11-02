@@ -20,14 +20,17 @@ export function extractNostrUris(text: string): string[] {
   try {
     const pointers = getContentPointers(text)
     console.log('[nostrUriResolver] Found pointers:', pointers.length)
-    const result = pointers.map(pointer => {
+    const result: string[] = []
+    pointers.forEach(pointer => {
       try {
-        return encodeDecodeResult(pointer)
+        const encoded = encodeDecodeResult(pointer)
+        if (encoded) {
+          result.push(encoded)
+        }
       } catch (err) {
         console.error('[nostrUriResolver] Error encoding pointer:', err, pointer)
-        return null
       }
-    }).filter((v): v is string => v !== null)
+    })
     console.log('[nostrUriResolver] Extracted URIs:', result.length)
     return result
   } catch (err) {

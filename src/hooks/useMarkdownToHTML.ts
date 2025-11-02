@@ -24,7 +24,7 @@ export const useMarkdownToHTML = (
   console.log('[useMarkdownToHTML] Hook called, markdown length:', markdown?.length || 0, 'hasRelayPool:', !!relayPool)
 
   // Resolve profile labels progressively as profiles load
-  const profileLabels = useProfileLabels(markdown || '')
+  const profileLabels = useProfileLabels(markdown || '', relayPool)
   console.log('[useMarkdownToHTML] Profile labels size:', profileLabels.size)
 
   // Fetch article titles
