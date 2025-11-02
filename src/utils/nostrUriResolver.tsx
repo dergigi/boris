@@ -341,13 +341,18 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
         // Check if we have a resolved profile name using pubkey as key
         // Only use Map value if profile is not loading (meaning it's actually resolved)
         const isLoading = profileLoading.get(pubkey)
-        if (!isLoading && profileLabels.has(pubkey)) {
+        const hasLabel = profileLabels.has(pubkey)
+        console.log(`[shimmer-debug][markdown-replace] ${decoded.type} pubkey=${pubkey.slice(0, 16)}..., isLoading=${isLoading}, hasLabel=${hasLabel}`)
+        
+        if (!isLoading && hasLabel) {
           const displayName = profileLabels.get(pubkey)!
+          console.log(`[shimmer-debug][markdown-replace] Using resolved name: ${displayName}`)
           return `[${displayName}](${link})`
         }
         
         // If loading or no resolved label yet, use fallback (will show loading via post-processing)
         const label = getNostrUriLabel(encoded)
+        console.log(`[shimmer-debug][markdown-replace] Using fallback label: ${label} (isLoading=${isLoading})`)
         return `[${label}](${link})`
       }
     } catch (error) {
@@ -371,40 +376,66 @@ export function addLoadingClassToProfileLinks(
   html: string,
   profileLoading: Map<string, boolean>
 ): string {
-  if (profileLoading.size === 0) return html
+  console.log(`[shimmer-debug][post-process] Starting post-process, profileLoading.size=${profileLoading.size}`)
+  console.log(`[shimmer-debug][post-process] Loading pubkeys:`, Array.from(profileLoading.entries()).filter(([, l]) => l).map(([k]) => k.slice(0, 16) + '...'))
+  
+  if (profileLoading.size === 0) {
+    console.log(`[shimmer-debug][post-process] No loading profiles, skipping`)
+    return html
+  }
+  
+  let linksProcessed = 0
+  let linksWithLoadingClass = 0
   
   // Find all <a> tags with href starting with /p/ (profile links)
-  return html.replace(/<a\s+[^>]*?href="\/p\/([^"]+)"[^>]*?>/g, (match, npub) => {
+  const result = html.replace(/<a\s+[^>]*?href="\/p\/([^"]+)"[^>]*?>/g, (match, npub) => {
+    linksProcessed++
     try {
       // Decode npub to get pubkey
       const decoded = decode(npub)
-      if (decoded.type !== 'npub') return match
+      if (decoded.type !== 'npub') {
+        console.log(`[shimmer-debug][post-process] Link ${linksProcessed}: decoded type is ${decoded.type}, not npub`)
+        return match
+      }
       
       const pubkey = decoded.data
+      console.log(`[shimmer-debug][post-process] Link ${linksProcessed}: npub=${npub.slice(0, 20)}..., pubkey=${pubkey.slice(0, 16)}...`)
       
       // Check if this profile is loading
       const isLoading = profileLoading.get(pubkey)
+      console.log(`[shimmer-debug][post-process] Link ${linksProcessed}: isLoading=${isLoading}, type=${typeof isLoading}`)
+      
       if (isLoading === true) {
-        console.log(`[profile-loading-debug][post-process] Adding loading class to link for ${pubkey.slice(0, 16)}...`)
+        console.log(`[shimmer-debug][post-process] Link ${linksProcessed}: Profile is loading, adding class`)
         // Add profile-loading class if not already present
         if (!match.includes('profile-loading')) {
+          linksWithLoadingClass++
           // Insert class before the closing >
           const classMatch = /class="([^"]*)"/.exec(match)
           if (classMatch) {
-            // Update existing class attribute
-            return match.replace(/class="([^"]*)"/, `class="$1 profile-loading"`)
+            const updated = match.replace(/class="([^"]*)"/, `class="$1 profile-loading"`)
+            console.log(`[shimmer-debug][post-process] Link ${linksProcessed}: Updated existing class, result="${updated.slice(0, 60)}..."`)
+            return updated
           } else {
-            // Add new class attribute
-            return match.replace(/(<a\s+[^>]*?)>/, '$1 class="profile-loading">')
+            const updated = match.replace(/(<a\s+[^>]*?)>/, '$1 class="profile-loading">')
+            console.log(`[shimmer-debug][post-process] Link ${linksProcessed}: Added new class attribute, result="${updated.slice(0, 60)}..."`)
+            return updated
           }
+        } else {
+          console.log(`[shimmer-debug][post-process] Link ${linksProcessed}: Already has profile-loading class`)
         }
+      } else {
+        console.log(`[shimmer-debug][post-process] Link ${linksProcessed}: Profile not loading, skipping`)
       }
     } catch (error) {
-      // If decoding fails, just return the original match
+      console.log(`[shimmer-debug][post-process] Link ${linksProcessed}: Error processing link:`, error)
     }
     
     return match
   })
+  
+  console.log(`[shimmer-debug][post-process] Finished: processed ${linksProcessed} links, added class to ${linksWithLoadingClass} links`)
+  return result
 }
 
 /**

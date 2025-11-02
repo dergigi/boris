@@ -139,8 +139,23 @@ export const useMarkdownToHTML = (
       const rafId = requestAnimationFrame(() => {
         if (previewRef.current && !isCancelled) {
           let html = previewRef.current.innerHTML
+          console.log(`[shimmer-debug][markdown-to-html] Extracted HTML, length=${html.length}, loading profiles=${profileLoadingRef.current.size}`)
+          console.log(`[shimmer-debug][markdown-to-html] HTML sample (first 200 chars):`, html.slice(0, 200))
+          
           // Post-process HTML to add loading class to profile links
+          const htmlBefore = html
           html = addLoadingClassToProfileLinks(html, profileLoadingRef.current)
+          
+          if (html !== htmlBefore) {
+            console.log(`[shimmer-debug][markdown-to-html] HTML changed after post-processing`)
+            console.log(`[shimmer-debug][markdown-to-html] HTML after (first 200 chars):`, html.slice(0, 200))
+            // Count how many profile-loading classes are in the HTML
+            const loadingClassCount = (html.match(/profile-loading/g) || []).length
+            console.log(`[shimmer-debug][markdown-to-html] Found ${loadingClassCount} profile-loading classes in final HTML`)
+          } else {
+            console.log(`[shimmer-debug][markdown-to-html] HTML unchanged after post-processing`)
+          }
+          
           setRenderedHtml(html)
         } else if (!isCancelled) {
           console.warn('⚠️ markdownPreviewRef.current is null')
