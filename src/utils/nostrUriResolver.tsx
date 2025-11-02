@@ -324,6 +324,9 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
   console.log(`[profile-loading-debug][nostr-uri-resolve] Loading keys:`, Array.from(profileLoading.entries()).filter(([, l]) => l).map(([k]) => k.slice(0, 16) + '...'))
   
   return replaceNostrUrisSafely(markdown, (encoded) => {
+    console.log(`[profile-loading-debug][nostr-uri-resolve] Processing encoded="${encoded.slice(0, 30)}..."`)
+    console.log(`[profile-loading-debug][nostr-uri-resolve] Map keys sample:`, Array.from(profileLoading.keys()).slice(0, 3).map(k => k.slice(0, 30) + '...'))
+    
     const link = createNostrLink(encoded)
     
     // Check if we have a resolved profile name
