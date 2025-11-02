@@ -16,10 +16,10 @@ const NOSTR_URI_REGEX = Tokens.nostrLink
  * Extract all nostr URIs from text using applesauce helpers
  */
 export function extractNostrUris(text: string): string[] {
-  console.log('[nostrUriResolver] extractNostrUris called, text length:', text?.length || 0)
+  console.log('[npub-resolve] extractNostrUris: text length:', text?.length || 0)
   try {
     const pointers = getContentPointers(text)
-    console.log('[nostrUriResolver] Found pointers:', pointers.length)
+    console.log('[npub-resolve] extractNostrUris: Found pointers:', pointers.length)
     const result: string[] = []
     pointers.forEach(pointer => {
       try {
@@ -28,13 +28,13 @@ export function extractNostrUris(text: string): string[] {
           result.push(encoded)
         }
       } catch (err) {
-        console.error('[nostrUriResolver] Error encoding pointer:', err, pointer)
+        console.error('[npub-resolve] extractNostrUris: Error encoding pointer:', err, pointer)
       }
     })
-    console.log('[nostrUriResolver] Extracted URIs:', result.length)
+    console.log('[npub-resolve] extractNostrUris: Extracted URIs:', result.length)
     return result
   } catch (err) {
-    console.error('[nostrUriResolver] Error in extractNostrUris:', err)
+    console.error('[npub-resolve] extractNostrUris: Error:', err)
     return []
   }
 }

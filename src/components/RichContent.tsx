@@ -19,7 +19,7 @@ const RichContent: React.FC<RichContentProps> = ({
   content, 
   className = 'bookmark-content' 
 }) => {
-  console.log('[RichContent] Rendering, content length:', content?.length || 0)
+  console.log('[npub-resolve] RichContent: Rendering, content length:', content?.length || 0)
   
   try {
     // Pattern to match:
@@ -30,7 +30,7 @@ const RichContent: React.FC<RichContentProps> = ({
     const combinedPattern = new RegExp(`(${nostrPattern.source}|${urlPattern.source})`, 'gi')
     
     const parts = content.split(combinedPattern)
-    console.log('[RichContent] Split into parts:', parts.length)
+    console.log('[npub-resolve] RichContent: Split into parts:', parts.length)
   
     // Helper to check if a string is a nostr identifier (without mutating regex state)
     const isNostrIdentifier = (str: string): boolean => {
@@ -82,7 +82,7 @@ const RichContent: React.FC<RichContentProps> = ({
     </div>
     )
   } catch (err) {
-    console.error('[RichContent] Error rendering:', err)
+    console.error('[npub-resolve] RichContent: Error rendering:', err)
     return <div className={className}>Error rendering content</div>
   }
 }

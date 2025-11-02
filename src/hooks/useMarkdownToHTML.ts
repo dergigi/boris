@@ -21,11 +21,11 @@ export const useMarkdownToHTML = (
   const [processedMarkdown, setProcessedMarkdown] = useState<string>('')
   const [articleTitles, setArticleTitles] = useState<Map<string, string>>(new Map())
 
-  console.log('[useMarkdownToHTML] Hook called, markdown length:', markdown?.length || 0, 'hasRelayPool:', !!relayPool)
+  console.log('[npub-resolve] useMarkdownToHTML: markdown length:', markdown?.length || 0, 'hasRelayPool:', !!relayPool)
 
   // Resolve profile labels progressively as profiles load
   const profileLabels = useProfileLabels(markdown || '', relayPool)
-  console.log('[useMarkdownToHTML] Profile labels size:', profileLabels.size)
+  console.log('[npub-resolve] useMarkdownToHTML: Profile labels size:', profileLabels.size)
 
   // Fetch article titles
   useEffect(() => {
@@ -71,8 +71,8 @@ export const useMarkdownToHTML = (
     let isCancelled = false
 
     const processMarkdown = () => {
-      console.log('[useMarkdownToHTML] Processing markdown, length:', markdown.length)
-      console.log('[useMarkdownToHTML] Profile labels:', profileLabels.size, 'Article titles:', articleTitles.size)
+      console.log('[npub-resolve] useMarkdownToHTML: Processing markdown, length:', markdown.length)
+      console.log('[npub-resolve] useMarkdownToHTML: Profile labels:', profileLabels.size, 'Article titles:', articleTitles.size)
       try {
         // Replace nostr URIs with profile labels (progressive) and article titles
         const processed = replaceNostrUrisInMarkdownWithProfileLabels(
@@ -80,13 +80,13 @@ export const useMarkdownToHTML = (
           profileLabels,
           articleTitles
         )
-        console.log('[useMarkdownToHTML] Processed markdown length:', processed.length)
+        console.log('[npub-resolve] useMarkdownToHTML: Processed markdown length:', processed.length)
         
         if (isCancelled) return
         
         setProcessedMarkdown(processed)
       } catch (err) {
-        console.error('[useMarkdownToHTML] Error processing markdown:', err)
+        console.error('[npub-resolve] useMarkdownToHTML: Error processing markdown:', err)
         if (!isCancelled) {
           setProcessedMarkdown(markdown) // Fallback to original
         }
