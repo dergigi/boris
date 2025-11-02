@@ -320,6 +320,9 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
   articleTitles: Map<string, string> = new Map(),
   profileLoading: Map<string, boolean> = new Map()
 ): string {
+  console.log(`[profile-loading-debug][nostr-uri-resolve] Processing markdown, profileLabels=${profileLabels.size}, profileLoading=${profileLoading.size}`)
+  console.log(`[profile-loading-debug][nostr-uri-resolve] Loading keys:`, Array.from(profileLoading.entries()).filter(([, l]) => l).map(([k]) => k.slice(0, 16) + '...'))
+  
   return replaceNostrUrisSafely(markdown, (encoded) => {
     const link = createNostrLink(encoded)
     
@@ -338,11 +341,17 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
       }
       
       // For npub/nprofile, check if loading and show loading state
-      if ((decoded.type === 'npub' || decoded.type === 'nprofile') && profileLoading.has(encoded) && profileLoading.get(encoded)) {
-        const label = getNostrUriLabel(encoded)
-        console.log(`[profile-loading-debug][nostr-uri-resolve] ${encoded.slice(0, 16)}... is LOADING, showing loading state`)
-        // Wrap in span with profile-loading class for CSS styling
-        return `[<span class="profile-loading">${label}</span>](${link})`
+      if (decoded.type === 'npub' || decoded.type === 'nprofile') {
+        const hasLoading = profileLoading.has(encoded)
+        const isLoading = profileLoading.get(encoded)
+        console.log(`[profile-loading-debug][nostr-uri-resolve] ${encoded.slice(0, 16)}... type=${decoded.type}, hasLoading=${hasLoading}, isLoading=${isLoading}`)
+        
+        if (hasLoading && isLoading) {
+          const label = getNostrUriLabel(encoded)
+          console.log(`[profile-loading-debug][nostr-uri-resolve] ${encoded.slice(0, 16)}... is LOADING, showing loading state`)
+          // Wrap in span with profile-loading class for CSS styling
+          return `[<span class="profile-loading">${label}</span>](${link})`
+        }
       }
     } catch (error) {
       // Ignore decode errors, fall through to default label
