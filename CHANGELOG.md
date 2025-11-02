@@ -9,13 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.10.31] - 2025-11-02
 
-### Added
+### Changed
 
-- Moved add bookmark button to filter bar
-
-### Fixed
-
-- Aligned add bookmark button with filter buttons
+- Moved add bookmark button to filter bar and aligned with filter buttons
 
 ## [0.10.30] - 2025-11-01
 
@@ -49,27 +45,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Refresh button to highlights sidebar header
-- Image preloading in BlogPostCard for better caching
-- Preload logged-in user profile image for offline access
+- Image preloading for blog posts and user profiles (offline caching)
 - Development Service Worker for testing image caching
 
 ### Fixed
 
-- Service Worker registration error handling
+- Service Worker registration and error handling
 - Article loading race conditions
-- Image caching issues
 - Scroll position management
 - React hook ordering issues
 - TypeScript and linting issues
-
-### Performance
-
-- Avoid redundant image preload when using preview data
-
-### Removed
-
-- Debug console.log statements
-- Unused refresh button from highlights panel header
 
 ## [0.10.26] - 2025-10-31
 
@@ -80,36 +65,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Implemented proper flight mode detection for highlights
+- Improved flight mode detection and tracking for highlights
 - Refactored to use isLocalOnly flag instead of isOfflineCreated
 
 ### Fixed
 
-- Show airplane icon for flight mode highlights
-- Prioritize isLocalOnly check to show airplane icon
-- Preserve isLocalOnly and publishedRelays in eventToHighlight conversion
-- Use metadata cache to preserve highlight properties across EventStore
-- Add fallback logic for detecting flight mode highlights
-- Determine isLocalOnly before publishing, not after
-- Store event in EventStore after updating properties
-- Manually set highlight properties after eventToHighlight conversion
+- Flight mode highlights now properly show airplane icon and track status
+- Preserve highlight metadata across event conversions and EventStore
 - Prevent duplicate highlights
-- Publish only to connected relays to avoid long timeouts
-- Prevent unnecessary relay queries when article content is cached
-- Remove relayPool dependency from content loaders
-- Check EventStore before setting loading state
-- Remove eventStore and setter functions from useEffect dependencies
-- Replace require() with ES module imports
-- Resolve all linting errors and type issues
-- Remove unused variables to resolve lint errors
-
-### Performance
-
-- Remove excessive debug logging for better performance
-
-### Removed
-
-- Debug console.log statements
+- Publish only to connected relays to avoid timeouts
+- Prevent unnecessary relay queries when content is cached
+- Various TypeScript, linting, and React hook dependency issues
 
 ## [0.10.25] - 2025-01-27
 
@@ -127,14 +93,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Corrected TypeScript error in content type icon logic
-- Resolved linting issues in CardView component
-- Eliminated 0 artefacts in compact view conditional rendering
-- Ensured consistent reading progress bar thickness in large cards
-- Fixed reading progress bar display logic for compact view
-- Ensured empty reading progress bar is always visible for articles
-- Resolved timestamp and icon display alignment issues
-- Removed unused variables to resolve linting errors
+- Reading progress bar display and consistency across view modes
+- Timestamp and icon alignment issues
+- TypeScript and linting errors
 
 ### Removed
 
@@ -147,16 +108,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Dynamic browser title based on content
-- Enhanced Links type bookmarks with OpenGraph data
-
-### Changed
-
-- Replaced custom OpenGraph extraction with fetch-opengraph library
+- Enhanced web bookmarks with OpenGraph data (using fetch-opengraph library)
 
 ### Fixed
 
 - Description extraction from web bookmark content field
-- Resolved all linting and TypeScript issues
+- Linting and TypeScript issues
 
 ## [0.10.23] - 2025-01-27
 
@@ -174,10 +131,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Article loading performance and error handling improvements
-- Highlight loading issues for articles
-- Skeleton loader improvements
-- Video metadata extraction improvements
+- Article loading performance and error handling
+- Highlight loading for articles
+- Skeleton loader display
+- Video metadata extraction
 
 ## [0.10.22] - 2025-01-27
 
@@ -376,15 +333,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Bookmark sorting uses proper display time (created_at || listUpdatedAt) with nulls last
-- Robust sorting of merged bookmarks with fallback timestamps
-- Corrected bookmark timestamp to use bookmark list creation time, not content creation time
-- Preserved content created_at while adding listUpdatedAt for proper sorting
-- Removed synthetic added_at field, uses created_at from bookmark list event
-- Consistent chronological sorting with useMemo optimization
-- Removed unused faTimes import
-- Bookmark timestamps show sane dates using created_at fallback to listUpdatedAt
-- Guarded formatters to prevent timestamp display errors
+- Bookmark sorting now uses proper timestamps (created_at || listUpdatedAt, nulls last)
+- Bookmark timestamps display correctly with fallbacks
+- Chronological sorting consistency
 
 ### Refactored
 
