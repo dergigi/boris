@@ -45,6 +45,7 @@ export function useProfileLabels(
   }, [content])
 
   // Initialize labels synchronously from cache on first render to avoid delay
+  // Use pubkey (hex) as the key instead of encoded string for canonical identification
   const initialLabels = useMemo(() => {
     if (profileData.length === 0) {
       return new Map<string, string>()
@@ -54,18 +55,18 @@ export function useProfileLabels(
     const cachedProfiles = loadCachedProfiles(allPubkeys)
     const labels = new Map<string, string>()
     
-    profileData.forEach(({ encoded, pubkey }) => {
+    profileData.forEach(({ pubkey }) => {
       const cachedProfile = cachedProfiles.get(pubkey)
       if (cachedProfile) {
         const displayName = extractProfileDisplayName(cachedProfile)
         if (displayName) {
           // Only add @ prefix if we have a real name, otherwise use fallback format directly
           const label = displayName.startsWith('@') ? displayName : `@${displayName}`
-          labels.set(encoded, label)
+          labels.set(pubkey, label)
         } else {
           // Use fallback npub display if profile has no name
           const fallback = getNpubFallbackDisplay(pubkey)
-          labels.set(encoded, fallback)
+          labels.set(pubkey, fallback)
         }
       }
     })
@@ -78,6 +79,7 @@ export function useProfileLabels(
   
   // Batching strategy: Collect profile updates and apply them in batches via RAF to prevent UI flicker
   // when many profiles resolve simultaneously. We use refs to avoid stale closures in async callbacks.
+  // Use pubkey (hex) as the key for canonical identification
   const pendingUpdatesRef = useRef<Map<string, string>>(new Map())
   const rafScheduledRef = useRef<number | null>(null)
   
@@ -125,13 +127,13 @@ export function useProfileLabels(
   useEffect(() => {
     // Use a functional update to access current state without including it in dependencies
     setProfileLabels(prevLabels => {
-      const currentEncodedIds = new Set(Array.from(prevLabels.keys()))
-      const newEncodedIds = new Set(profileData.map(p => p.encoded))
+      const currentPubkeys = new Set(Array.from(prevLabels.keys()))
+      const newPubkeys = new Set(profileData.map(p => p.pubkey))
       
       // If the content changed significantly (different set of profiles), reset state
       const hasDifferentProfiles = 
-        currentEncodedIds.size !== newEncodedIds.size ||
-        !Array.from(newEncodedIds).every(id => currentEncodedIds.has(id))
+        currentPubkeys.size !== newPubkeys.size ||
+        !Array.from(newPubkeys).every(pk => currentPubkeys.has(pk))
       
       if (hasDifferentProfiles) {
         // Clear pending updates and cancel RAF for old profiles
@@ -145,10 +147,10 @@ export function useProfileLabels(
       } else {
         // Same profiles, merge initial labels with existing state (initial labels take precedence for missing ones)
         const merged = new Map(prevLabels)
-        for (const [encoded, label] of initialLabels.entries()) {
+        for (const [pubkey, label] of initialLabels.entries()) {
           // Only update if missing or if initial label has a better value (not a fallback)
-          if (!merged.has(encoded) || (!prevLabels.get(encoded)?.startsWith('@') && label.startsWith('@'))) {
-            merged.set(encoded, label)
+          if (!merged.has(pubkey) || (!prevLabels.get(pubkey)?.startsWith('@') && label.startsWith('@'))) {
+            merged.set(pubkey, label)
           }
         }
         return merged
@@ -157,12 +159,12 @@ export function useProfileLabels(
     
     // Reset loading state when content changes significantly
     setProfileLoading(prevLoading => {
-      const currentEncodedIds = new Set(Array.from(prevLoading.keys()))
-      const newEncodedIds = new Set(profileData.map(p => p.encoded))
+      const currentPubkeys = new Set(Array.from(prevLoading.keys()))
+      const newPubkeys = new Set(profileData.map(p => p.pubkey))
       
       const hasDifferentProfiles = 
-        currentEncodedIds.size !== newEncodedIds.size ||
-        !Array.from(newEncodedIds).every(id => currentEncodedIds.has(id))
+        currentPubkeys.size !== newPubkeys.size ||
+        !Array.from(newPubkeys).every(pk => currentPubkeys.has(pk))
       
       if (hasDifferentProfiles) {
         return new Map()
@@ -198,16 +200,17 @@ export function useProfileLabels(
     
     // Build labels from localStorage cache and eventStore
     // initialLabels already has all cached profiles, so we only need to check eventStore
+    // Use pubkey (hex) as the key for canonical identification
     const labels = new Map<string, string>(initialLabels)
     const loading = new Map<string, boolean>()
     
     const pubkeysToFetch: string[] = []
     
-    profileData.forEach(({ encoded, pubkey }) => {
+    profileData.forEach(({ pubkey }) => {
       // Skip if already resolved from initial cache
-      if (labels.has(encoded)) {
-        loading.set(encoded, false)
-        console.log(`[profile-loading-debug][profile-labels-loading] ${encoded.slice(0, 16)}... in cache, not loading`)
+      if (labels.has(pubkey)) {
+        loading.set(pubkey, false)
+        console.log(`[profile-loading-debug][profile-labels-loading] ${pubkey.slice(0, 16)}... in cache, not loading`)
         return
       }
       
@@ -220,69 +223,59 @@ export function useProfileLabels(
         if (displayName) {
           // Only add @ prefix if we have a real name, otherwise use fallback format directly
           const label = displayName.startsWith('@') ? displayName : `@${displayName}`
-          labels.set(encoded, label)
+          labels.set(pubkey, label)
         } else {
           // Use fallback npub display if profile has no name
           const fallback = getNpubFallbackDisplay(pubkey)
-          labels.set(encoded, fallback)
+          labels.set(pubkey, fallback)
         }
-        loading.set(encoded, false)
-        console.log(`[profile-loading-debug][profile-labels-loading] ${encoded.slice(0, 16)}... in eventStore, not loading`)
+        loading.set(pubkey, false)
+        console.log(`[profile-loading-debug][profile-labels-loading] ${pubkey.slice(0, 16)}... in eventStore, not loading`)
       } else {
         // No profile found yet, will use fallback after fetch or keep empty
         // We'll set fallback labels for missing profiles at the end
         // Mark as loading since we'll fetch it
         pubkeysToFetch.push(pubkey)
-        loading.set(encoded, true)
-        console.log(`[profile-loading-debug][profile-labels-loading] ${encoded.slice(0, 16)}... not found, SET LOADING=true`)
+        loading.set(pubkey, true)
+        console.log(`[profile-loading-debug][profile-labels-loading] ${pubkey.slice(0, 16)}... not found, SET LOADING=true`)
       }
     })
     
     // Set fallback labels for profiles that weren't found
-    profileData.forEach(({ encoded, pubkey }) => {
-      if (!labels.has(encoded)) {
+    profileData.forEach(({ pubkey }) => {
+      if (!labels.has(pubkey)) {
         const fallback = getNpubFallbackDisplay(pubkey)
-        labels.set(encoded, fallback)
+        labels.set(pubkey, fallback)
       }
     })
     
     setProfileLabels(new Map(labels))
     setProfileLoading(new Map(loading))
-    console.log(`[profile-loading-debug][profile-labels-loading] Initial loading state:`, Array.from(loading.entries()).map(([e, l]) => `${e.slice(0, 16)}...=${l}`))
+    console.log(`[profile-loading-debug][profile-labels-loading] Initial loading state:`, Array.from(loading.entries()).map(([pk, l]) => `${pk.slice(0, 16)}...=${l}`))
     
     // Fetch missing profiles asynchronously with reactive updates
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
       console.log(`[profile-loading-debug][profile-labels-loading] Starting fetch for ${pubkeysToFetch.length} profiles:`, pubkeysToFetch.map(p => p.slice(0, 16) + '...'))
-      const pubkeysToFetchSet = new Set(pubkeysToFetch)
-      // Create a map from pubkey to encoded identifier for quick lookup
-      const pubkeyToEncoded = new Map<string, string>()
-      profileData.forEach(({ encoded, pubkey }) => {
-        if (pubkeysToFetchSet.has(pubkey)) {
-          pubkeyToEncoded.set(pubkey, encoded)
-        }
-      })
       
       // Reactive callback: collects profile updates and batches them via RAF to prevent flicker
       // Strategy: Collect updates in ref, schedule RAF on first update, apply all in batch
       const handleProfileEvent = (event: NostrEvent) => {
-        const encoded = pubkeyToEncoded.get(event.pubkey)
-        if (!encoded) {
-          return
-        }
+        // Use pubkey directly as the key
+        const pubkey = event.pubkey
         
         // Determine the label for this profile using centralized utility
         const displayName = extractProfileDisplayName(event)
-        const label = displayName ? (displayName.startsWith('@') ? displayName : `@${displayName}`) : getNpubFallbackDisplay(event.pubkey)
+        const label = displayName ? (displayName.startsWith('@') ? displayName : `@${displayName}`) : getNpubFallbackDisplay(pubkey)
         
         // Add to pending updates and schedule batched application
-        pendingUpdatesRef.current.set(encoded, label)
+        pendingUpdatesRef.current.set(pubkey, label)
         scheduleBatchedUpdate()
         
         // Clear loading state for this profile when it resolves
-        console.log(`[profile-loading-debug][profile-labels-loading] Profile resolved for ${encoded.slice(0, 16)}..., CLEARING LOADING`)
+        console.log(`[profile-loading-debug][profile-labels-loading] Profile resolved for ${pubkey.slice(0, 16)}..., CLEARING LOADING`)
         setProfileLoading(prevLoading => {
           const updated = new Map(prevLoading)
-          updated.set(encoded, false)
+          updated.set(pubkey, false)
           return updated
         })
       }
@@ -298,13 +291,10 @@ export function useProfileLabels(
           setProfileLoading(prevLoading => {
             const updated = new Map(prevLoading)
             pubkeysToFetch.forEach(pubkey => {
-              const encoded = pubkeyToEncoded.get(pubkey)
-              if (encoded) {
-                const wasLoading = updated.get(encoded)
-                updated.set(encoded, false)
-                if (wasLoading) {
-                  console.log(`[profile-loading-debug][profile-labels-loading] ${encoded.slice(0, 16)}... CLEARED loading after fetch complete`)
-                }
+              const wasLoading = updated.get(pubkey)
+              updated.set(pubkey, false)
+              if (wasLoading) {
+                console.log(`[profile-loading-debug][profile-labels-loading] ${pubkey.slice(0, 16)}... CLEARED loading after fetch complete`)
               }
             })
             return updated
@@ -323,10 +313,7 @@ export function useProfileLabels(
           setProfileLoading(prevLoading => {
             const updated = new Map(prevLoading)
             pubkeysToFetch.forEach(pubkey => {
-              const encoded = pubkeyToEncoded.get(pubkey)
-              if (encoded) {
-                updated.set(encoded, false)
-              }
+              updated.set(pubkey, false)
             })
             return updated
           })

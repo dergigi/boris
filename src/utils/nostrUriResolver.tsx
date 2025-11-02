@@ -310,9 +310,9 @@ export function replaceNostrUrisInMarkdownWithTitles(
  * This converts: nostr:npub1... to [@username](link) and nostr:naddr1... to [Article Title](link)
  * Labels update progressively as profiles load
  * @param markdown The markdown content to process
- * @param profileLabels Map of encoded identifier -> display name (e.g., npub1... -> @username)
+ * @param profileLabels Map of pubkey (hex) -> display name (e.g., pubkey -> @username)
  * @param articleTitles Map of naddr -> title for resolved articles
- * @param profileLoading Map of encoded identifier -> boolean indicating if profile is loading
+ * @param profileLoading Map of pubkey (hex) -> boolean indicating if profile is loading
  */
 export function replaceNostrUrisInMarkdownWithProfileLabels(
   markdown: string,
@@ -326,12 +326,6 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
   return replaceNostrUrisSafely(markdown, (encoded) => {
     const link = createNostrLink(encoded)
     
-    // Check if we have a resolved profile name
-    if (profileLabels.has(encoded)) {
-      const displayName = profileLabels.get(encoded)!
-      return `[${displayName}](${link})`
-    }
-    
     // For articles, use the resolved title if available
     try {
       const decoded = decode(encoded)
@@ -340,25 +334,21 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
         return `[${title}](${link})`
       }
       
-      // For npub/nprofile, check if loading and show loading state
+      // For npub/nprofile, extract pubkey and use it as the lookup key
       if (decoded.type === 'npub' || decoded.type === 'nprofile') {
-        const hasLoading = profileLoading.has(encoded)
-        const isLoading = profileLoading.get(encoded)
+        const pubkey = decoded.type === 'npub' ? decoded.data : decoded.data.pubkey
         
-        // Debug: Check if there's a key mismatch
-        if (!hasLoading && profileLoading.size > 0) {
-          // Check if there's a similar key (for debugging)
-          const matchingKey = Array.from(profileLoading.keys()).find(k => k.includes(encoded.slice(0, 20)) || encoded.includes(k.slice(0, 20)))
-          if (matchingKey) {
-            console.log(`[profile-loading-debug][nostr-uri-resolve] KEY MISMATCH: encoded="${encoded.slice(0, 50)}..." vs Map key="${matchingKey.slice(0, 50)}..."`)
-            console.log(`[profile-loading-debug][nostr-uri-resolve] Full encoded length=${encoded.length}, Full key length=${matchingKey.length}`)
-            console.log(`[profile-loading-debug][nostr-uri-resolve] encoded === key? ${encoded === matchingKey}`)
-          }
+        // Check if we have a resolved profile name using pubkey as key
+        if (profileLabels.has(pubkey)) {
+          const displayName = profileLabels.get(pubkey)!
+          return `[${displayName}](${link})`
         }
         
-        if (hasLoading && isLoading) {
+        // Check loading state using pubkey as key
+        const isLoading = profileLoading.get(pubkey)
+        if (isLoading === true) {
           const label = getNostrUriLabel(encoded)
-          console.log(`[profile-loading-debug][nostr-uri-resolve] ${encoded.slice(0, 16)}... is LOADING, showing loading state`)
+          console.log(`[profile-loading-debug][nostr-uri-resolve] ${pubkey.slice(0, 16)}... is LOADING, showing loading state`)
           // Wrap in span with profile-loading class for CSS styling
           return `[<span class="profile-loading">${label}</span>](${link})`
         }
