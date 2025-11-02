@@ -2,7 +2,8 @@ import { decode, npubEncode, noteEncode } from 'nostr-tools/nip19'
 import { getNostrUrl } from '../config/nostrGateways'
 import { Tokens } from 'applesauce-content/helpers'
 import { getContentPointers } from 'applesauce-factory/helpers'
-import { encodeDecodeResult, Helpers } from 'applesauce-core/helpers'
+import { encodeDecodeResult } from 'applesauce-core/helpers'
+import { Helpers } from 'applesauce-core'
 
 const { getPubkeyFromDecodeResult } = Helpers
 
