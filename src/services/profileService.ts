@@ -282,7 +282,7 @@ export const fetchProfiles = async (
             onlyEvents(),
             tap((event: NostrEvent) => processEvent(event)),
             completeOnEose(),
-            takeUntil(timer(6000))
+            takeUntil(timer(10000)) // Increased from 6000ms to 10000ms to give slow relays more time
           )
       : new Observable<NostrEvent>((sub) => sub.complete())
 
