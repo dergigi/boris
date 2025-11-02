@@ -27,7 +27,12 @@ export const useMarkdownToHTML = (
   // Create stable dependencies based on Map contents, not Map objects
   // This prevents unnecessary reprocessing when Maps are recreated with same content
   const profileLabelsKey = useMemo(() => {
-    return Array.from(profileLabels.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}:${v}`).join('|')
+    const key = Array.from(profileLabels.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}:${v}`).join('|')
+    console.log(`[shimmer-debug][markdown-to-html] profileLabelsKey computed, profileLabels.size=${profileLabels.size}, key length=${key.length}`)
+    if (profileLabels.size > 0) {
+      console.log(`[shimmer-debug][markdown-to-html] Profile labels in key:`, Array.from(profileLabels.entries()).slice(0, 3).map(([k, v]) => `${k.slice(0, 16)}...="${v}"`))
+    }
+    return key
   }, [profileLabels])
   
   const profileLoadingKey = useMemo(() => {

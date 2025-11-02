@@ -89,7 +89,11 @@ export function useProfileLabels(
    */
   const applyPendingUpdates = () => {
     const pendingUpdates = pendingUpdatesRef.current
-    if (pendingUpdates.size === 0) return
+    console.log(`[shimmer-debug][profile-labels] applyPendingUpdates called, pendingUpdates.size=${pendingUpdates.size}`)
+    if (pendingUpdates.size === 0) {
+      console.log(`[shimmer-debug][profile-labels] No pending updates to apply`)
+      return
+    }
     
     // Cancel scheduled RAF since we're applying synchronously
     if (rafScheduledRef.current !== null) {
@@ -100,9 +104,13 @@ export function useProfileLabels(
     // Apply all pending updates in one batch
     setProfileLabels(prevLabels => {
       const updatedLabels = new Map(prevLabels)
-      for (const [encoded, label] of pendingUpdates.entries()) {
-        updatedLabels.set(encoded, label)
+      const updatesList: string[] = []
+      for (const [pubkey, label] of pendingUpdates.entries()) {
+        updatedLabels.set(pubkey, label)
+        updatesList.push(`${pubkey.slice(0, 16)}...="${label}"`)
       }
+      console.log(`[shimmer-debug][profile-labels] Applying ${updatesList.length} pending updates:`, updatesList)
+      console.log(`[shimmer-debug][profile-labels] Profile labels before: ${prevLabels.size}, after: ${updatedLabels.size}`)
       pendingUpdates.clear()
       return updatedLabels
     })
@@ -115,10 +123,14 @@ export function useProfileLabels(
    */
   const scheduleBatchedUpdate = useCallback(() => {
     if (rafScheduledRef.current === null) {
+      console.log(`[shimmer-debug][profile-labels] Scheduling batched update via RAF`)
       rafScheduledRef.current = requestAnimationFrame(() => {
+        console.log(`[shimmer-debug][profile-labels] RAF fired, calling applyPendingUpdates`)
         applyPendingUpdates()
         rafScheduledRef.current = null
       })
+    } else {
+      console.log(`[shimmer-debug][profile-labels] RAF already scheduled, skipping`)
     }
   }, []) // Empty deps: only uses refs which are stable
   
@@ -265,6 +277,7 @@ export function useProfileLabels(
         const label = displayName ? (displayName.startsWith('@') ? displayName : `@${displayName}`) : getNpubFallbackDisplay(pubkey)
         
         // Add to pending updates and schedule batched application
+        console.log(`[shimmer-debug][profile-labels] Adding to pending updates: ${pubkey.slice(0, 16)}...="${label}", pendingUpdates.size=${pendingUpdatesRef.current.size + 1}`)
         pendingUpdatesRef.current.set(pubkey, label)
         scheduleBatchedUpdate()
         
