@@ -142,12 +142,15 @@ export function useProfileLabels(
       const currentPubkeys = new Set(Array.from(prevLabels.keys()))
       const newPubkeys = new Set(profileData.map(p => p.pubkey))
       
+      console.log(`[shimmer-debug][profile-labels] useEffect sync: prevLabels.size=${prevLabels.size}, initialLabels.size=${initialLabels.size}, profileData.length=${profileData.length}`)
+      
       // If the content changed significantly (different set of profiles), reset state
       const hasDifferentProfiles = 
         currentPubkeys.size !== newPubkeys.size ||
         !Array.from(newPubkeys).every(pk => currentPubkeys.has(pk))
       
       if (hasDifferentProfiles) {
+        console.log(`[shimmer-debug][profile-labels] useEffect: Different profiles detected, resetting state`)
         // Clear pending updates and cancel RAF for old profiles
         pendingUpdatesRef.current.clear()
         if (rafScheduledRef.current !== null) {
@@ -157,14 +160,17 @@ export function useProfileLabels(
         // Reset to initial labels
         return new Map(initialLabels)
       } else {
-        // Same profiles, merge initial labels with existing state (initial labels take precedence for missing ones)
+        // Same profiles, merge initial labels with existing state
+        // IMPORTANT: Preserve existing labels (from pending updates) and only add initial labels if missing
         const merged = new Map(prevLabels)
         for (const [pubkey, label] of initialLabels.entries()) {
-          // Only update if missing or if initial label has a better value (not a fallback)
-          if (!merged.has(pubkey) || (!prevLabels.get(pubkey)?.startsWith('@') && label.startsWith('@'))) {
+          // Only add initial label if we don't already have a label for this pubkey
+          // This preserves labels that were added via applyPendingUpdates
+          if (!merged.has(pubkey)) {
             merged.set(pubkey, label)
           }
         }
+        console.log(`[shimmer-debug][profile-labels] useEffect: Merged labels, before=${prevLabels.size}, after=${merged.size}`)
         return merged
       }
     })
