@@ -378,32 +378,36 @@ export function addLoadingClassToProfileLinks(
   }
   
   // Find all <a> tags with href starting with /p/ (profile links)
-  const result = html.replace(/<a\s+[^>]*?href="\/p\/([^"]+)"[^>]*?>/g, (match, npub) => {
+  const result = html.replace(/<a\s+[^>]*?href="\/p\/([^"]+)"[^>]*?>/g, (match, npub: string) => {
     try {
       // Decode npub to get pubkey
-      const decoded = decode(npub)
-      if (decoded.type !== 'npub') {
-        return match
-      }
-      
-      const pubkey = decoded.data
-      
-      // Check if this profile is loading
-      const isLoading = profileLoading.get(pubkey)
-      
-      if (isLoading === true) {
-        // Add profile-loading class if not already present
-        if (!match.includes('profile-loading')) {
-          // Insert class before the closing >
-          const classMatch = /class="([^"]*)"/.exec(match)
-          if (classMatch) {
-            const updated = match.replace(/class="([^"]*)"/, `class="$1 profile-loading"`)
-            return updated
-          } else {
-            const updated = match.replace(/(<a\s+[^>]*?)>/, '$1 class="profile-loading">')
-            return updated
+      const decoded: ReturnType<typeof decode> = decode(npub)
+      switch (decoded.type) {
+        case 'npub': {
+          const pubkey = decoded.data
+          
+          // Check if this profile is loading
+          const isLoading = profileLoading.get(pubkey)
+          
+          if (isLoading === true) {
+            // Add profile-loading class if not already present
+            if (!match.includes('profile-loading')) {
+              // Insert class before the closing >
+              const classMatch = /class="([^"]*)"/.exec(match)
+              if (classMatch) {
+                const updated = match.replace(/class="([^"]*)"/, `class="$1 profile-loading"`)
+                return updated
+              } else {
+                const updated = match.replace(/(<a\s+[^>]*?)>/, '$1 class="profile-loading">')
+                return updated
+              }
+            }
           }
+          break
         }
+        default:
+          // Not an npub, ignore
+          break
       }
     } catch (error) {
       // Ignore processing errors
