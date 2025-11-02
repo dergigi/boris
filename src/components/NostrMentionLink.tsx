@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { nip19 } from 'nostr-tools'
-import { useEventModel } from 'applesauce-react/hooks'
+import { useEventModel, Hooks } from 'applesauce-react/hooks'
 import { Models, Helpers } from 'applesauce-core'
 import { getProfileDisplayName } from '../utils/nostrUriResolver'
+import { loadCachedProfiles } from '../services/profileService'
 
 const { getPubkeyFromDecodeResult } = Helpers
 
@@ -34,8 +35,24 @@ const NostrMentionLink: React.FC<NostrMentionLinkProps> = ({
   // Extract pubkey for profile fetching using applesauce helper (works for npub and nprofile)
   const pubkey = decoded ? getPubkeyFromDecodeResult(decoded) : undefined
   
+  const eventStore = Hooks.useEventStore()
   // Fetch profile at top level (Rules of Hooks)
   const profile = useEventModel(Models.ProfileModel, pubkey ? [pubkey] : null)
+  
+  // Check if profile is in cache or eventStore for loading detection
+  const isInCacheOrStore = useMemo(() => {
+    if (!pubkey) return false
+    // Check cache
+    const cached = loadCachedProfiles([pubkey])
+    if (cached.has(pubkey)) return true
+    // Check eventStore
+    const eventStoreProfile = eventStore?.getEvent(pubkey + ':0')
+    return !!eventStoreProfile
+  }, [pubkey, eventStore])
+  
+  // Show loading if profile doesn't exist and not in cache/store (for npub/nprofile)
+  const isLoading = !profile && pubkey && !isInCacheOrStore && 
+    decoded && (decoded.type === 'npub' || decoded.type === 'nprofile')
   
   // If decoding failed, show shortened identifier
   if (!decoded) {
@@ -51,11 +68,12 @@ const NostrMentionLink: React.FC<NostrMentionLinkProps> = ({
   const renderProfileLink = (pubkey: string) => {
     const npub = nip19.npubEncode(pubkey)
     const displayName = getProfileDisplayName(profile, pubkey)
+    const linkClassName = isLoading ? `${className} profile-loading` : className
     
     return (
       <a
         href={`/p/${npub}`}
-        className={className}
+        className={linkClassName}
         onClick={onClick}
       >
         @{displayName}

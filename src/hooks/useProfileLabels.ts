@@ -12,9 +12,12 @@ const { getPubkeyFromDecodeResult, encodeDecodeResult } = Helpers
 
 /**
  * Hook to resolve profile labels from content containing npub/nprofile identifiers
- * Returns a Map of encoded identifier -> display name that updates progressively as profiles load
+ * Returns an object with labels Map and loading Map that updates progressively as profiles load
  */
-export function useProfileLabels(content: string, relayPool?: RelayPool | null): Map<string, string> {
+export function useProfileLabels(
+  content: string, 
+  relayPool?: RelayPool | null
+): { labels: Map<string, string>; loading: Map<string, boolean> } {
   const eventStore = Hooks.useEventStore()
   
   // Extract profile pointers (npub and nprofile) using applesauce helpers
@@ -71,6 +74,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
   }, [profileData])
 
   const [profileLabels, setProfileLabels] = useState<Map<string, string>>(initialLabels)
+  const [profileLoading, setProfileLoading] = useState<Map<string, boolean>>(new Map())
   
   // Batching strategy: Collect profile updates and apply them in batches via RAF to prevent UI flicker
   // when many profiles resolve simultaneously. We use refs to avoid stale closures in async callbacks.
@@ -116,7 +120,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     }
   }, []) // Empty deps: only uses refs which are stable
   
-  // Sync state when initialLabels changes (e.g., when content changes)
+    // Sync state when initialLabels changes (e.g., when content changes)
   // This ensures we start with the correct cached labels even if profiles haven't loaded yet
   useEffect(() => {
     // Use a functional update to access current state without including it in dependencies
@@ -150,6 +154,21 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
         return merged
       }
     })
+    
+    // Reset loading state when content changes significantly
+    setProfileLoading(prevLoading => {
+      const currentEncodedIds = new Set(Array.from(prevLoading.keys()))
+      const newEncodedIds = new Set(profileData.map(p => p.encoded))
+      
+      const hasDifferentProfiles = 
+        currentEncodedIds.size !== newEncodedIds.size ||
+        !Array.from(newEncodedIds).every(id => currentEncodedIds.has(id))
+      
+      if (hasDifferentProfiles) {
+        return new Map()
+      }
+      return prevLoading
+    })
   }, [initialLabels, profileData])
 
   // Build initial labels: localStorage cache -> eventStore -> fetch from relays
@@ -159,6 +178,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     
     if (allPubkeys.length === 0) {
       setProfileLabels(new Map())
+      setProfileLoading(new Map())
       // Clear pending updates and cancel RAF when clearing labels
       pendingUpdatesRef.current.clear()
       if (rafScheduledRef.current !== null) {
@@ -179,12 +199,14 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     // Build labels from localStorage cache and eventStore
     // initialLabels already has all cached profiles, so we only need to check eventStore
     const labels = new Map<string, string>(initialLabels)
+    const loading = new Map<string, boolean>()
     
     const pubkeysToFetch: string[] = []
     
     profileData.forEach(({ encoded, pubkey }) => {
       // Skip if already resolved from initial cache
       if (labels.has(encoded)) {
+        loading.set(encoded, false)
         return
       }
       
@@ -203,10 +225,13 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           const fallback = getNpubFallbackDisplay(pubkey)
           labels.set(encoded, fallback)
         }
+        loading.set(encoded, false)
       } else {
         // No profile found yet, will use fallback after fetch or keep empty
         // We'll set fallback labels for missing profiles at the end
+        // Mark as loading since we'll fetch it
         pubkeysToFetch.push(pubkey)
+        loading.set(encoded, true)
       }
     })
     
@@ -219,6 +244,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     })
     
     setProfileLabels(new Map(labels))
+    setProfileLoading(new Map(loading))
     
     // Fetch missing profiles asynchronously with reactive updates
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
@@ -246,6 +272,13 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
         // Add to pending updates and schedule batched application
         pendingUpdatesRef.current.set(encoded, label)
         scheduleBatchedUpdate()
+        
+        // Clear loading state for this profile when it resolves
+        setProfileLoading(prevLoading => {
+          const updated = new Map(prevLoading)
+          updated.set(encoded, false)
+          return updated
+        })
       }
       
       fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch, undefined, handleProfileEvent)
@@ -253,6 +286,18 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           // After EOSE: apply any remaining pending updates immediately
           // This ensures all profile updates are applied even if RAF hasn't fired yet
           applyPendingUpdates()
+          
+          // Clear loading state for all fetched profiles
+          setProfileLoading(prevLoading => {
+            const updated = new Map(prevLoading)
+            pubkeysToFetch.forEach(pubkey => {
+              const encoded = pubkeyToEncoded.get(pubkey)
+              if (encoded) {
+                updated.set(encoded, false)
+              }
+            })
+            return updated
+          })
         })
         .catch((error) => {
           console.error(`[profile-labels] Error fetching profiles:`, error)
@@ -262,6 +307,18 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
             cancelAnimationFrame(rafScheduledRef.current)
             rafScheduledRef.current = null
           }
+          
+          // Clear loading state on error (show fallback)
+          setProfileLoading(prevLoading => {
+            const updated = new Map(prevLoading)
+            pubkeysToFetch.forEach(pubkey => {
+              const encoded = pubkeyToEncoded.get(pubkey)
+              if (encoded) {
+                updated.set(encoded, false)
+              }
+            })
+            return updated
+          })
         })
       
       // Cleanup: apply any pending updates before unmount to avoid losing them
@@ -271,6 +328,6 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     }
   }, [profileData, eventStore, relayPool, initialLabels, scheduleBatchedUpdate])
   
-  return profileLabels
+  return { labels: profileLabels, loading: profileLoading }
 }
 

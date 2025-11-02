@@ -312,11 +312,13 @@ export function replaceNostrUrisInMarkdownWithTitles(
  * @param markdown The markdown content to process
  * @param profileLabels Map of encoded identifier -> display name (e.g., npub1... -> @username)
  * @param articleTitles Map of naddr -> title for resolved articles
+ * @param profileLoading Map of encoded identifier -> boolean indicating if profile is loading
  */
 export function replaceNostrUrisInMarkdownWithProfileLabels(
   markdown: string,
   profileLabels: Map<string, string> = new Map(),
-  articleTitles: Map<string, string> = new Map()
+  articleTitles: Map<string, string> = new Map(),
+  profileLoading: Map<string, boolean> = new Map()
 ): string {
   return replaceNostrUrisSafely(markdown, (encoded) => {
     const link = createNostrLink(encoded)
@@ -333,6 +335,13 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
       if (decoded.type === 'naddr' && articleTitles.has(encoded)) {
         const title = articleTitles.get(encoded)!
         return `[${title}](${link})`
+      }
+      
+      // For npub/nprofile, check if loading and show loading state
+      if ((decoded.type === 'npub' || decoded.type === 'nprofile') && profileLoading.has(encoded) && profileLoading.get(encoded)) {
+        const label = getNostrUriLabel(encoded)
+        // Wrap in span with profile-loading class for CSS styling
+        return `[<span class="profile-loading">${label}</span>](${link})`
       }
     } catch (error) {
       // Ignore decode errors, fall through to default label

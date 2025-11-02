@@ -22,7 +22,7 @@ export const useMarkdownToHTML = (
   const [articleTitles, setArticleTitles] = useState<Map<string, string>>(new Map())
 
   // Resolve profile labels progressively as profiles load
-  const profileLabels = useProfileLabels(markdown || '', relayPool)
+  const { labels: profileLabels, loading: profileLoading } = useProfileLabels(markdown || '', relayPool)
 
   // Fetch article titles
   useEffect(() => {
@@ -72,7 +72,8 @@ export const useMarkdownToHTML = (
         const processed = replaceNostrUrisInMarkdownWithProfileLabels(
           markdown,
           profileLabels,
-          articleTitles
+          articleTitles,
+          profileLoading
         )
         
         if (isCancelled) return
@@ -102,7 +103,7 @@ export const useMarkdownToHTML = (
     return () => {
       isCancelled = true
     }
-  }, [markdown, profileLabels, articleTitles])
+  }, [markdown, profileLabels, profileLoading, articleTitles])
 
   return { renderedHtml, previewRef, processedMarkdown }
 }
