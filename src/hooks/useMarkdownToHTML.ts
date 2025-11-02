@@ -28,10 +28,6 @@ export const useMarkdownToHTML = (
   // This prevents unnecessary reprocessing when Maps are recreated with same content
   const profileLabelsKey = useMemo(() => {
     const key = Array.from(profileLabels.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}:${v}`).join('|')
-    console.log(`[shimmer-debug][markdown-to-html] profileLabelsKey computed, profileLabels.size=${profileLabels.size}, key length=${key.length}`)
-    if (profileLabels.size > 0) {
-      console.log(`[shimmer-debug][markdown-to-html] Profile labels in key:`, Array.from(profileLabels.entries()).slice(0, 3).map(([k, v]) => `${k.slice(0, 16)}...="${v}"`))
-    }
     return key
   }, [profileLabels])
   
@@ -102,11 +98,6 @@ export const useMarkdownToHTML = (
   // Process markdown with progressive profile labels and article titles
   // Use stable string keys instead of Map objects to prevent excessive reprocessing
   useEffect(() => {
-    const labelsSize = profileLabelsRef.current.size
-    const loadingSize = profileLoadingRef.current.size
-    const titlesSize = articleTitlesRef.current.size
-    console.log(`[profile-loading-debug][markdown-to-html] Processing markdown, profileLabels=${labelsSize}, profileLoading=${loadingSize}, articleTitles=${titlesSize}`)
-    
     if (!markdown) {
       setRenderedHtml('')
       setProcessedMarkdown('')
@@ -130,11 +121,6 @@ export const useMarkdownToHTML = (
         
         if (isCancelled) return
         
-        const loadingStates = Array.from(profileLoadingRef.current.entries())
-          .filter(([, l]) => l)
-          .map(([e]) => e.slice(0, 16) + '...')
-        console.log(`[profile-loading-debug][markdown-to-html] Processed markdown, loading states:`, loadingStates)
-        console.log(`[shimmer-debug][markdown-to-html] Setting processedMarkdown, length=${processed.length}`)
         setProcessedMarkdown(processed)
         processedMarkdownRef.current = processed
         // HTML extraction will happen in separate useEffect that watches processedMarkdown
@@ -153,7 +139,6 @@ export const useMarkdownToHTML = (
     previousMarkdownRef.current = markdown
     
     if (isMarkdownChange || !processedMarkdownRef.current) {
-      console.log(`[profile-loading-debug][markdown-to-html] Clearing rendered HTML and processed markdown (markdown changed: ${isMarkdownChange})`)
       setRenderedHtml('')
       setProcessedMarkdown('')
       processedMarkdownRef.current = ''
@@ -175,8 +160,6 @@ export const useMarkdownToHTML = (
 
     let isCancelled = false
     
-    console.log(`[shimmer-debug][markdown-to-html] processedMarkdown changed, scheduling HTML extraction`)
-    
     // Use double RAF to ensure ReactMarkdown has finished rendering:
     // First RAF: let React complete its render cycle
     // Second RAF: extract HTML after DOM has updated
@@ -184,29 +167,9 @@ export const useMarkdownToHTML = (
       htmlExtractionRafIdRef.current = requestAnimationFrame(() => {
         if (previewRef.current && !isCancelled) {
           let html = previewRef.current.innerHTML
-          console.log(`[shimmer-debug][markdown-to-html] Extracted HTML after processedMarkdown change, length=${html.length}, loading profiles=${profileLoadingRef.current.size}`)
-          
-          // Check if HTML actually contains the updated content by looking for resolved names
-          const hasResolvedNames = Array.from(profileLabelsRef.current.entries()).some(([, label]) => {
-            // Check if label is a resolved name (starts with @ and isn't a fallback npub)
-            return label.startsWith('@') && !label.startsWith('@npub') && html.includes(label)
-          })
-          console.log(`[shimmer-debug][markdown-to-html] HTML contains resolved names: ${hasResolvedNames}`)
-          
-          if (html.length === 0) {
-            console.log(`[shimmer-debug][markdown-to-html] Warning: HTML is empty, ReactMarkdown may not have rendered yet`)
-          }
           
           // Post-process HTML to add loading class to profile links
-          const htmlBefore = html
           html = addLoadingClassToProfileLinks(html, profileLoadingRef.current)
-          
-          if (html !== htmlBefore) {
-            console.log(`[shimmer-debug][markdown-to-html] HTML changed after post-processing`)
-            // Count how many profile-loading classes are in the HTML
-            const loadingClassCount = (html.match(/profile-loading/g) || []).length
-            console.log(`[shimmer-debug][markdown-to-html] Found ${loadingClassCount} profile-loading classes in final HTML`)
-          }
           
           setRenderedHtml(html)
         } else if (!isCancelled && processedMarkdown) {

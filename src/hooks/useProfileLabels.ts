@@ -89,9 +89,7 @@ export function useProfileLabels(
    */
   const applyPendingUpdates = () => {
     const pendingUpdates = pendingUpdatesRef.current
-    console.log(`[shimmer-debug][profile-labels] applyPendingUpdates called, pendingUpdates.size=${pendingUpdates.size}`)
     if (pendingUpdates.size === 0) {
-      console.log(`[shimmer-debug][profile-labels] No pending updates to apply`)
       return
     }
     
@@ -104,13 +102,9 @@ export function useProfileLabels(
     // Apply all pending updates in one batch
     setProfileLabels(prevLabels => {
       const updatedLabels = new Map(prevLabels)
-      const updatesList: string[] = []
       for (const [pubkey, label] of pendingUpdates.entries()) {
         updatedLabels.set(pubkey, label)
-        updatesList.push(`${pubkey.slice(0, 16)}...="${label}"`)
       }
-      console.log(`[shimmer-debug][profile-labels] Applying ${updatesList.length} pending updates:`, updatesList)
-      console.log(`[shimmer-debug][profile-labels] Profile labels before: ${prevLabels.size}, after: ${updatedLabels.size}`)
       pendingUpdates.clear()
       return updatedLabels
     })
@@ -123,14 +117,10 @@ export function useProfileLabels(
    */
   const scheduleBatchedUpdate = useCallback(() => {
     if (rafScheduledRef.current === null) {
-      console.log(`[shimmer-debug][profile-labels] Scheduling batched update via RAF`)
       rafScheduledRef.current = requestAnimationFrame(() => {
-        console.log(`[shimmer-debug][profile-labels] RAF fired, calling applyPendingUpdates`)
         applyPendingUpdates()
         rafScheduledRef.current = null
       })
-    } else {
-      console.log(`[shimmer-debug][profile-labels] RAF already scheduled, skipping`)
     }
   }, []) // Empty deps: only uses refs which are stable
   
@@ -142,15 +132,12 @@ export function useProfileLabels(
       const currentPubkeys = new Set(Array.from(prevLabels.keys()))
       const newPubkeys = new Set(profileData.map(p => p.pubkey))
       
-      console.log(`[shimmer-debug][profile-labels] useEffect sync: prevLabels.size=${prevLabels.size}, initialLabels.size=${initialLabels.size}, profileData.length=${profileData.length}`)
-      
       // If the content changed significantly (different set of profiles), reset state
       const hasDifferentProfiles = 
         currentPubkeys.size !== newPubkeys.size ||
         !Array.from(newPubkeys).every(pk => currentPubkeys.has(pk))
       
       if (hasDifferentProfiles) {
-        console.log(`[shimmer-debug][profile-labels] useEffect: Different profiles detected, resetting state`)
         // Clear pending updates and cancel RAF for old profiles
         pendingUpdatesRef.current.clear()
         if (rafScheduledRef.current !== null) {
@@ -170,7 +157,6 @@ export function useProfileLabels(
             merged.set(pubkey, label)
           }
         }
-        console.log(`[shimmer-debug][profile-labels] useEffect: Merged labels, before=${prevLabels.size}, after=${merged.size}`)
         return merged
       }
     })
@@ -228,7 +214,6 @@ export function useProfileLabels(
       // Skip if already resolved from initial cache
       if (labels.has(pubkey)) {
         loading.set(pubkey, false)
-        console.log(`[profile-loading-debug][profile-labels-loading] ${pubkey.slice(0, 16)}... in cache, not loading`)
         return
       }
       
@@ -248,15 +233,12 @@ export function useProfileLabels(
           labels.set(pubkey, fallback)
         }
         loading.set(pubkey, false)
-        console.log(`[profile-loading-debug][profile-labels-loading] ${pubkey.slice(0, 16)}... in eventStore, not loading`)
       } else {
       // No profile found yet, will use fallback after fetch or keep empty
       // We'll set fallback labels for missing profiles at the end
       // Mark as loading since we'll fetch it
       pubkeysToFetch.push(pubkey)
       loading.set(pubkey, true)
-      console.log(`[profile-loading-debug][profile-labels-loading] ${pubkey.slice(0, 16)}... not found, SET LOADING=true`)
-      console.log(`[shimmer-debug][profile-labels] Marking profile as loading: ${pubkey.slice(0, 16)}..., will need to fetch`)
       }
     })
     
@@ -265,12 +247,9 @@ export function useProfileLabels(
     
     setProfileLabels(new Map(labels))
     setProfileLoading(new Map(loading))
-    console.log(`[profile-loading-debug][profile-labels-loading] Initial loading state:`, Array.from(loading.entries()).map(([pk, l]) => `${pk.slice(0, 16)}...=${l}`))
-    console.log(`[shimmer-debug][profile-labels] Set initial loading state, loading count=${Array.from(loading.values()).filter(l => l).length}, total profiles=${loading.size}`)
     
     // Fetch missing profiles asynchronously with reactive updates
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
-      console.log(`[profile-loading-debug][profile-labels-loading] Starting fetch for ${pubkeysToFetch.length} profiles:`, pubkeysToFetch.map(p => p.slice(0, 16) + '...'))
       
       // Reactive callback: collects profile updates and batches them via RAF to prevent flicker
       // Strategy: Apply label immediately when profile resolves, but still batch for multiple profiles
@@ -284,7 +263,6 @@ export function useProfileLabels(
         
         // Apply label immediately to prevent race condition with loading state
         // This ensures labels are available when isLoading becomes false
-        console.log(`[shimmer-debug][profile-labels] Applying label immediately: ${pubkey.slice(0, 16)}...="${label}"`)
         setProfileLabels(prevLabels => {
           const updated = new Map(prevLabels)
           updated.set(pubkey, label)
@@ -292,13 +270,9 @@ export function useProfileLabels(
         })
         
         // Clear loading state for this profile when it resolves
-        console.log(`[profile-loading-debug][profile-labels-loading] Profile resolved for ${pubkey.slice(0, 16)}..., CLEARING LOADING`)
-        console.log(`[shimmer-debug][profile-labels] Profile resolved: ${pubkey.slice(0, 16)}..., setting loading=false, label="${label}"`)
         setProfileLoading(prevLoading => {
           const updated = new Map(prevLoading)
-          const wasLoading = updated.get(pubkey) === true
           updated.set(pubkey, false)
-          console.log(`[shimmer-debug][profile-labels] Updated loading state: ${pubkey.slice(0, 16)}... wasLoading=${wasLoading}, nowLoading=${updated.get(pubkey)}`)
           return updated
         })
       }
@@ -310,20 +284,11 @@ export function useProfileLabels(
           applyPendingUpdates()
           
           // Clear loading state for all fetched profiles
-          console.log(`[profile-loading-debug][profile-labels-loading] Fetch complete, clearing loading for all ${pubkeysToFetch.length} profiles`)
-          console.log(`[shimmer-debug][profile-labels] Fetch complete, clearing loading for ${pubkeysToFetch.length} profiles`)
           setProfileLoading(prevLoading => {
             const updated = new Map(prevLoading)
-            const loadingCountBefore = Array.from(updated.values()).filter(l => l).length
             pubkeysToFetch.forEach(pubkey => {
-              const wasLoading = updated.get(pubkey)
               updated.set(pubkey, false)
-              if (wasLoading) {
-                console.log(`[profile-loading-debug][profile-labels-loading] ${pubkey.slice(0, 16)}... CLEARED loading after fetch complete`)
-              }
             })
-            const loadingCountAfter = Array.from(updated.values()).filter(l => l).length
-            console.log(`[shimmer-debug][profile-labels] Loading state after fetch complete: ${loadingCountBefore} -> ${loadingCountAfter} loading profiles`)
             return updated
           })
         })
