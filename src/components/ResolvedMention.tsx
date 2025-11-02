@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { useEventModel, Hooks } from 'applesauce-react/hooks'
+import { useEventModel } from 'applesauce-react/hooks'
+import { Hooks } from 'applesauce-react'
 import { Models, Helpers } from 'applesauce-core'
 import { decode, npubEncode } from 'nostr-tools/nip19'
 import { getProfileDisplayName } from '../utils/nostrUriResolver'

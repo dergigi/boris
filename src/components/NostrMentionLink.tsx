@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { nip19 } from 'nostr-tools'
-import { useEventModel, Hooks } from 'applesauce-react/hooks'
+import { useEventModel } from 'applesauce-react/hooks'
+import { Hooks } from 'applesauce-react'
 import { Models, Helpers } from 'applesauce-core'
 import { getProfileDisplayName } from '../utils/nostrUriResolver'
 import { loadCachedProfiles } from '../services/profileService'
