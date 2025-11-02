@@ -88,6 +88,42 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
   // Refs for batching updates to prevent flickering
   const pendingUpdatesRef = useRef<Map<string, string>>(new Map())
   const rafScheduledRef = useRef<number | null>(null)
+  
+  // Sync state when initialLabels changes (e.g., when content changes)
+  // This ensures we start with the correct cached labels even if profiles haven't loaded yet
+  useEffect(() => {
+    // Use a functional update to access current state without including it in dependencies
+    setProfileLabels(prevLabels => {
+      const currentEncodedIds = new Set(Array.from(prevLabels.keys()))
+      const newEncodedIds = new Set(profileData.map(p => p.encoded))
+      
+      // If the content changed significantly (different set of profiles), reset state
+      const hasDifferentProfiles = 
+        currentEncodedIds.size !== newEncodedIds.size ||
+        !Array.from(newEncodedIds).every(id => currentEncodedIds.has(id))
+      
+      if (hasDifferentProfiles) {
+        // Clear pending updates for old profiles
+        pendingUpdatesRef.current.clear()
+        if (rafScheduledRef.current !== null) {
+          cancelAnimationFrame(rafScheduledRef.current)
+          rafScheduledRef.current = null
+        }
+        // Reset to initial labels
+        return new Map(initialLabels)
+      } else {
+        // Same profiles, merge initial labels with existing state (initial labels take precedence for missing ones)
+        const merged = new Map(prevLabels)
+        for (const [encoded, label] of initialLabels.entries()) {
+          // Only update if missing or if initial label has a better value (not a fallback)
+          if (!merged.has(encoded) || (!prevLabels.get(encoded)?.startsWith('@') && label.startsWith('@'))) {
+            merged.set(encoded, label)
+          }
+        }
+        return merged
+      }
+    })
+  }, [initialLabels, profileData])
 
   // Build initial labels: localStorage cache -> eventStore -> fetch from relays
   useEffect(() => {
@@ -96,6 +132,12 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     
     if (allPubkeys.length === 0) {
       setProfileLabels(new Map())
+      // Clear pending updates when clearing labels
+      pendingUpdatesRef.current.clear()
+      if (rafScheduledRef.current !== null) {
+        cancelAnimationFrame(rafScheduledRef.current)
+        rafScheduledRef.current = null
+      }
       return
     }
     
@@ -247,14 +289,29 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
       fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch, undefined, handleProfileEvent)
         .then((fetchedProfiles) => {
           console.log(`[profile-labels] Fetch completed (EOSE), received ${fetchedProfiles.length} profiles total`)
-          // Ensure any pending batched updates are applied
+          
+          // Ensure any pending batched updates are applied immediately after EOSE
+          // This ensures all profile updates are applied even if RAF hasn't fired yet
+          const pendingUpdates = pendingUpdatesRef.current
+          const pendingCount = pendingUpdates.size
+          
+          // Cancel any pending RAF since we're applying updates synchronously now
           if (rafScheduledRef.current !== null) {
-            // Wait for the scheduled RAF to complete
-            requestAnimationFrame(() => {
-              setProfileLabels(prevLabels => {
-                console.log(`[profile-labels] Final labels after EOSE:`, Array.from(prevLabels.entries()).map(([enc, label]) => ({ encoded: enc.slice(0, 20) + '...', label })))
-                return prevLabels
-              })
+            cancelAnimationFrame(rafScheduledRef.current)
+            rafScheduledRef.current = null
+          }
+          
+          if (pendingCount > 0) {
+            // Apply all pending updates synchronously
+            setProfileLabels(prevLabels => {
+              const updatedLabels = new Map(prevLabels)
+              for (const [encoded, label] of pendingUpdates.entries()) {
+                updatedLabels.set(encoded, label)
+              }
+              pendingUpdates.clear()
+              console.log(`[profile-labels] Flushed ${pendingCount} pending updates after EOSE`)
+              console.log(`[profile-labels] Final labels after EOSE:`, Array.from(updatedLabels.entries()).map(([enc, label]) => ({ encoded: enc.slice(0, 20) + '...', label })))
+              return updatedLabels
             })
           } else {
             // No pending updates, just log final state
@@ -269,9 +326,26 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           // Silently handle fetch errors
         })
       
-      // Cleanup: cancel any pending RAF and clear pending updates
+      // Cleanup: flush any pending updates before clearing, then cancel RAF
       return () => {
-        if (rafScheduledRef.current !== null) {
+        // Flush any pending updates before cleanup to avoid losing them
+        const pendingUpdates = pendingUpdatesRef.current
+        if (pendingUpdates.size > 0 && rafScheduledRef.current !== null) {
+          // Cancel the scheduled RAF and apply updates immediately
+          cancelAnimationFrame(rafScheduledRef.current)
+          rafScheduledRef.current = null
+          
+          // Apply pending updates synchronously before cleanup
+          setProfileLabels(prevLabels => {
+            const updatedLabels = new Map(prevLabels)
+            for (const [encoded, label] of pendingUpdates.entries()) {
+              updatedLabels.set(encoded, label)
+            }
+            return updatedLabels
+          })
+          
+          pendingUpdates.clear()
+        } else if (rafScheduledRef.current !== null) {
           cancelAnimationFrame(rafScheduledRef.current)
           rafScheduledRef.current = null
         }
