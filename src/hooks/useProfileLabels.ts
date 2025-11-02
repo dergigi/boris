@@ -81,63 +81,51 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     
     // Fetch missing profiles asynchronously
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
-      console.log('[npub-resolve] Fetching', pubkeysToFetch.length, 'missing profiles:', pubkeysToFetch.slice(0, 3).map(p => p.slice(0, 8) + '...'))
+      console.log('[npub-resolve] Fetching', pubkeysToFetch.length, 'missing profiles')
       fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch)
-        .then(() => {
-          // Re-check eventStore periodically as profiles arrive asynchronously
-          let checkCount = 0
-          const maxChecks = 10
-          const checkInterval = 200 // ms
+        .then((fetchedProfiles) => {
+          console.log('[npub-resolve] fetchProfiles returned', fetchedProfiles.length, 'profiles')
           
-          // Keep track of resolved labels across checks
-          let currentLabels = new Map(labels)
+          // Re-check eventStore for all profiles (including ones we just fetched)
+          // This ensures we get profiles even if fetchProfiles didn't return them in the array
+          const updatedLabels = new Map(labels)
+          let foundInStore = 0
+          let withNames = 0
+          let withoutNames = 0
+          let missingFromStore = 0
           
-          const checkForProfiles = () => {
-            checkCount++
-            const updatedLabels = new Map(currentLabels)
-            let newlyResolvedCount = 0
-            let withEventsCount = 0
-            let withoutNamesCount = 0
-            
-            profileData.forEach(({ encoded, pubkey }) => {
-              if (!updatedLabels.has(encoded) && eventStore) {
-                const profileEvent = eventStore.getEvent(pubkey + ':0')
-                if (profileEvent) {
-                  withEventsCount++
-                  try {
-                    const profileData = JSON.parse(profileEvent.content || '{}') as { name?: string; display_name?: string; nip05?: string }
-                    const displayName = profileData.display_name || profileData.name || profileData.nip05
-                    if (displayName) {
-                      updatedLabels.set(encoded, `@${displayName}`)
-                      newlyResolvedCount++
-                      console.log('[npub-resolve] Resolved profile:', encoded.slice(0, 20) + '...', '->', displayName)
-                    } else {
-                      withoutNamesCount++
-                      if (checkCount === 1) { // Only log once on first check
-                        console.log('[npub-resolve] Profile has no name:', encoded.slice(0, 20) + '...', 'content keys:', Object.keys(profileData))
-                      }
+          profileData.forEach(({ encoded, pubkey }) => {
+            if (!updatedLabels.has(encoded) && eventStore) {
+              const profileEvent = eventStore.getEvent(pubkey + ':0')
+              if (profileEvent) {
+                foundInStore++
+                try {
+                  const profileData = JSON.parse(profileEvent.content || '{}') as { name?: string; display_name?: string; nip05?: string }
+                  const displayName = profileData.display_name || profileData.name || profileData.nip05
+                  if (displayName) {
+                    updatedLabels.set(encoded, `@${displayName}`)
+                    withNames++
+                    console.log('[npub-resolve] Resolved profile:', encoded.slice(0, 30) + '...', '->', displayName)
+                  } else {
+                    withoutNames++
+                    if (withoutNames <= 3) { // Log first few for debugging
+                      console.log('[npub-resolve] Profile event found but no name/display_name/nip05:', encoded.slice(0, 30) + '...', 'content keys:', Object.keys(profileData))
                     }
-                  } catch (err) {
-                    console.error('[npub-resolve] Error parsing profile:', encoded.slice(0, 20) + '...', err)
                   }
+                } catch (err) {
+                  console.error('[npub-resolve] Error parsing profile event for', encoded.slice(0, 30) + '...', err)
+                }
+              } else {
+                missingFromStore++
+                if (missingFromStore <= 3) { // Log first few for debugging
+                  console.log('[npub-resolve] Profile not in eventStore after fetch:', pubkey.slice(0, 16) + '...')
                 }
               }
-            })
-            
-            currentLabels = updatedLabels
-            console.log('[npub-resolve] Check', checkCount, '- resolved:', updatedLabels.size, 'total,', newlyResolvedCount, 'new,', withEventsCount, 'with events,', withoutNamesCount, 'without names')
-            setProfileLabels(updatedLabels)
-            
-            // Continue checking if we haven't resolved all profiles and haven't exceeded max checks
-            if (updatedLabels.size < profileData.length && checkCount < maxChecks) {
-              setTimeout(checkForProfiles, checkInterval)
-            } else if (updatedLabels.size < profileData.length) {
-              console.warn('[npub-resolve] Stopped checking after', checkCount, 'attempts. Resolved', updatedLabels.size, 'out of', profileData.length)
             }
-          }
+          })
           
-          // Start checking immediately, then periodically
-          checkForProfiles()
+          console.log('[npub-resolve] After fetch - resolved:', updatedLabels.size, 'total | found in store:', foundInStore, '| with names:', withNames, '| without names:', withoutNames, '| missing:', missingFromStore, '| out of', profileData.length)
+          setProfileLabels(updatedLabels)
         })
         .catch(err => {
           console.error('[npub-resolve] Error fetching profiles:', err)
