@@ -47,8 +47,8 @@ const NostrMentionLink: React.FC<NostrMentionLinkProps> = ({
   }, [pubkey, eventStore])
   
   // Show loading if profile doesn't exist and not in cache/store (for npub/nprofile)
-  const isLoading = !profile && pubkey && !isInCacheOrStore && 
-    decoded && (decoded.type === 'npub' || decoded.type === 'nprofile')
+  // pubkey will be undefined for non-profile types, so no need for explicit type check
+  const isLoading = !profile && pubkey && !isInCacheOrStore
   
   // If decoding failed, show shortened identifier
   if (!decoded) {
@@ -78,15 +78,12 @@ const NostrMentionLink: React.FC<NostrMentionLinkProps> = ({
   }
 
   // Render based on decoded type
+  // If we have a pubkey (from npub/nprofile), render profile link directly
+  if (pubkey) {
+    return renderProfileLink(pubkey)
+  }
+  
   switch (decoded.type) {
-    case 'npub': {
-      const pk = decoded.data
-      return renderProfileLink(pk)
-    }
-    case 'nprofile': {
-      const { pubkey: pk } = decoded.data
-      return renderProfileLink(pk)
-    }
     case 'naddr': {
       const { kind, pubkey: pk, identifier: addrIdentifier } = decoded.data
       // Check if it's a blog post (kind:30023)

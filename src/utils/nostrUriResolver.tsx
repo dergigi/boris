@@ -2,7 +2,9 @@ import { decode, npubEncode, noteEncode } from 'nostr-tools/nip19'
 import { getNostrUrl } from '../config/nostrGateways'
 import { Tokens } from 'applesauce-content/helpers'
 import { getContentPointers } from 'applesauce-factory/helpers'
-import { encodeDecodeResult } from 'applesauce-core/helpers'
+import { encodeDecodeResult, Helpers } from 'applesauce-core/helpers'
+
+const { getPubkeyFromDecodeResult } = Helpers
 
 /**
  * Regular expression to match nostr: URIs and bare NIP-19 identifiers
@@ -85,17 +87,14 @@ export function getNostrUriLabel(encoded: string): string {
   try {
     const decoded = decode(encoded)
     
+    // Use applesauce helper to extract pubkey for npub/nprofile
+    const pubkey = getPubkeyFromDecodeResult(decoded)
+    if (pubkey) {
+      // Use shared fallback display function and add @ for label
+      return `@${getNpubFallbackDisplay(pubkey)}`
+    }
+    
     switch (decoded.type) {
-      case 'npub': {
-        // Use shared fallback display function and add @ for label
-        const pubkey = decoded.data
-        return `@${getNpubFallbackDisplay(pubkey)}`
-      }
-      case 'nprofile': {
-        // Use shared fallback display function and add @ for label
-        const pubkey = decoded.data.pubkey
-        return `@${getNpubFallbackDisplay(pubkey)}`
-      }
       case 'note':
         return `note:${encoded.slice(5, 12)}...`
       case 'nevent': {
@@ -334,10 +333,9 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
         return `[${title}](${link})`
       }
       
-      // For npub/nprofile, extract pubkey and use it as the lookup key
-      if (decoded.type === 'npub' || decoded.type === 'nprofile') {
-        const pubkey = decoded.type === 'npub' ? decoded.data : decoded.data.pubkey
-        
+      // For npub/nprofile, extract pubkey using applesauce helper
+      const pubkey = getPubkeyFromDecodeResult(decoded)
+      if (pubkey) {
         // Check if we have a resolved profile name using pubkey as key
         // Use the label if: 1) we have a label, AND 2) profile is not currently loading (false or undefined)
         const isLoading = profileLoading.get(pubkey)
@@ -383,15 +381,9 @@ export function addLoadingClassToProfileLinks(
   // Find all <a> tags with href starting with /p/ (profile links)
   const result = html.replace(/<a\s+[^>]*?href="\/p\/([^"]+)"[^>]*?>/g, (match, npub: string) => {
     try {
-      // Decode npub or nprofile to get pubkey
+      // Decode npub or nprofile to get pubkey using applesauce helper
       const decoded: ReturnType<typeof decode> = decode(npub)
-      
-      let pubkey: string | undefined
-      if (decoded.type === 'npub') {
-        pubkey = decoded.data
-      } else if (decoded.type === 'nprofile') {
-        pubkey = decoded.data.pubkey
-      }
+      const pubkey = getPubkeyFromDecodeResult(decoded)
       
       if (pubkey) {
         // Check if this profile is loading
