@@ -339,12 +339,15 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
         const pubkey = decoded.type === 'npub' ? decoded.data : decoded.data.pubkey
         
         // Check if we have a resolved profile name using pubkey as key
-        // Only use Map value if profile is not loading (meaning it's actually resolved)
+        // Use the label if: 1) we have a label, AND 2) profile is not currently loading (false or undefined)
         const isLoading = profileLoading.get(pubkey)
         const hasLabel = profileLabels.has(pubkey)
         console.log(`[shimmer-debug][markdown-replace] ${decoded.type} pubkey=${pubkey.slice(0, 16)}..., isLoading=${isLoading}, hasLabel=${hasLabel}`)
         
-        if (!isLoading && hasLabel) {
+        // Use resolved label if we have one and profile is not loading
+        // isLoading can be: true (loading), false (loaded), or undefined (never was loading)
+        // We only avoid using the label if isLoading === true
+        if (isLoading !== true && hasLabel) {
           const displayName = profileLabels.get(pubkey)!
           console.log(`[shimmer-debug][markdown-replace] Using resolved name: ${displayName}`)
           return `[${displayName}](${link})`

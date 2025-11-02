@@ -273,7 +273,7 @@ export function useProfileLabels(
       console.log(`[profile-loading-debug][profile-labels-loading] Starting fetch for ${pubkeysToFetch.length} profiles:`, pubkeysToFetch.map(p => p.slice(0, 16) + '...'))
       
       // Reactive callback: collects profile updates and batches them via RAF to prevent flicker
-      // Strategy: Collect updates in ref, schedule RAF on first update, apply all in batch
+      // Strategy: Apply label immediately when profile resolves, but still batch for multiple profiles
       const handleProfileEvent = (event: NostrEvent) => {
         // Use pubkey directly as the key
         const pubkey = event.pubkey
@@ -282,10 +282,14 @@ export function useProfileLabels(
         const displayName = extractProfileDisplayName(event)
         const label = displayName ? (displayName.startsWith('@') ? displayName : `@${displayName}`) : getNpubFallbackDisplay(pubkey)
         
-        // Add to pending updates and schedule batched application
-        console.log(`[shimmer-debug][profile-labels] Adding to pending updates: ${pubkey.slice(0, 16)}...="${label}", pendingUpdates.size=${pendingUpdatesRef.current.size + 1}`)
-        pendingUpdatesRef.current.set(pubkey, label)
-        scheduleBatchedUpdate()
+        // Apply label immediately to prevent race condition with loading state
+        // This ensures labels are available when isLoading becomes false
+        console.log(`[shimmer-debug][profile-labels] Applying label immediately: ${pubkey.slice(0, 16)}...="${label}"`)
+        setProfileLabels(prevLabels => {
+          const updated = new Map(prevLabels)
+          updated.set(pubkey, label)
+          return updated
+        })
         
         // Clear loading state for this profile when it resolves
         console.log(`[profile-loading-debug][profile-labels-loading] Profile resolved for ${pubkey.slice(0, 16)}..., CLEARING LOADING`)
