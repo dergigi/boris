@@ -148,13 +148,16 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     
     // Fetch missing profiles asynchronously
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
+      const pubkeysToFetchSet = new Set(pubkeysToFetch)
       fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch)
         .then((fetchedProfiles) => {
           const updatedLabels = new Map(labels)
           const fetchedProfilesByPubkey = new Map(fetchedProfiles.map(p => [p.pubkey, p]))
           
           profileData.forEach(({ encoded, pubkey }) => {
-            if (!updatedLabels.has(encoded)) {
+            // Only update profiles that were in pubkeysToFetch (i.e., were being fetched)
+            // This allows us to replace fallback labels with resolved names
+            if (pubkeysToFetchSet.has(pubkey)) {
               // First, try to use the profile from the returned array
               const fetchedProfile = fetchedProfilesByPubkey.get(pubkey)
               if (fetchedProfile) {
@@ -192,16 +195,10 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
                     const fallback = getNpubFallbackDisplay(pubkey)
                     updatedLabels.set(encoded, fallback)
                   }
-                } else {
-                  // No profile found, use fallback
-                  const fallback = getNpubFallbackDisplay(pubkey)
-                  updatedLabels.set(encoded, fallback)
                 }
-              } else {
-                // No eventStore, use fallback
-                const fallback = getNpubFallbackDisplay(pubkey)
-                updatedLabels.set(encoded, fallback)
+                // If no profile found in eventStore, keep existing fallback
               }
+              // If no eventStore, keep existing fallback
             }
           })
           
