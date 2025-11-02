@@ -5,6 +5,7 @@ import { faUserCircle } from '@fortawesome/free-solid-svg-icons'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { nip19 } from 'nostr-tools'
+import { getProfileDisplayName } from '../utils/nostrUriResolver'
 
 interface AuthorCardProps {
   authorPubkey: string
@@ -16,9 +17,7 @@ const AuthorCard: React.FC<AuthorCardProps> = ({ authorPubkey, clickable = true 
   const profile = useEventModel(Models.ProfileModel, [authorPubkey])
   
   const getAuthorName = () => {
-    if (profile?.name) return profile.name
-    if (profile?.display_name) return profile.display_name
-    return `${authorPubkey.slice(0, 8)}...${authorPubkey.slice(-8)}`
+    return getProfileDisplayName(profile, authorPubkey)
   }
   
   const authorImage = profile?.picture || profile?.image

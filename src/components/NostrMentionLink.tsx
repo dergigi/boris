@@ -2,6 +2,7 @@ import React from 'react'
 import { nip19 } from 'nostr-tools'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models, Helpers } from 'applesauce-core'
+import { getProfileDisplayName } from '../utils/nostrUriResolver'
 
 const { getPubkeyFromDecodeResult } = Helpers
 
@@ -46,41 +47,31 @@ const NostrMentionLink: React.FC<NostrMentionLinkProps> = ({
     )
   }
   
+  // Helper function to render profile links (used for both npub and nprofile)
+  const renderProfileLink = (pubkey: string) => {
+    const npub = nip19.npubEncode(pubkey)
+    const displayName = getProfileDisplayName(profile, pubkey)
+    
+    return (
+      <a
+        href={`/p/${npub}`}
+        className={className}
+        onClick={onClick}
+      >
+        @{displayName}
+      </a>
+    )
+  }
+
   // Render based on decoded type
   switch (decoded.type) {
     case 'npub': {
       const pk = decoded.data
-      const npub = nip19.npubEncode(pk)
-      // Fallback: show npub without "npub1" prefix
-      const fallbackDisplay = `@${npub.slice(5, 12)}...`
-      const displayName = profile?.name || profile?.display_name || profile?.nip05 || fallbackDisplay
-      
-      return (
-        <a
-          href={`/p/${npub}`}
-          className={className}
-          onClick={onClick}
-        >
-          @{displayName}
-        </a>
-      )
+      return renderProfileLink(pk)
     }
     case 'nprofile': {
       const { pubkey: pk } = decoded.data
-      const npub = nip19.npubEncode(pk)
-      // Fallback: show npub without "npub1" prefix
-      const fallbackDisplay = `@${npub.slice(5, 12)}...`
-      const displayName = profile?.name || profile?.display_name || profile?.nip05 || fallbackDisplay
-      
-      return (
-        <a
-          href={`/p/${npub}`}
-          className={className}
-          onClick={onClick}
-        >
-          @{displayName}
-        </a>
-      )
+      return renderProfileLink(pk)
     }
     case 'naddr': {
       const { kind, pubkey: pk, identifier: addrIdentifier } = decoded.data

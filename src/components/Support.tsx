@@ -10,6 +10,7 @@ import { Models } from 'applesauce-core'
 import { useEventModel } from 'applesauce-react/hooks'
 import { useNavigate } from 'react-router-dom'
 import { nip19 } from 'nostr-tools'
+import { getProfileDisplayName } from '../utils/nostrUriResolver'
 
 interface SupportProps {
   relayPool: RelayPool
@@ -182,7 +183,7 @@ const SupporterCard: React.FC<SupporterCardProps> = ({ supporter, isWhale }) => 
   const profile = useEventModel(Models.ProfileModel, [supporter.pubkey])
 
   const picture = profile?.picture
-  const name = profile?.name || profile?.display_name || `${supporter.pubkey.slice(0, 8)}...`
+  const name = getProfileDisplayName(profile, supporter.pubkey)
 
   const handleClick = () => {
     const npub = nip19.npubEncode(supporter.pubkey)

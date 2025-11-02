@@ -6,6 +6,7 @@ import { ReadableContent } from '../services/readerService'
 import { eventManager } from '../services/eventManager'
 import { fetchProfiles } from '../services/profileService'
 import { useDocumentTitle } from './useDocumentTitle'
+import { getNpubFallbackDisplay } from '../utils/nostrUriResolver'
 
 interface UseEventLoaderProps {
   eventId?: string
@@ -40,7 +41,7 @@ export function useEventLoader({
     // Initial title
     let title = `Note (${event.kind})`
     if (event.kind === 1) {
-      title = `Note by @${event.pubkey.slice(0, 8)}...`
+      title = `Note by ${getNpubFallbackDisplay(event.pubkey)}`
     }
 
     // Emit immediately
@@ -83,7 +84,7 @@ export function useEventLoader({
               }
             }
           }
-
+          
           if (resolved) {
             const updatedTitle = `Note by @${resolved}`
             setCurrentTitle(updatedTitle)

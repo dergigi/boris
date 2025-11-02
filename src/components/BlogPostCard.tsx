@@ -7,6 +7,7 @@ import { BlogPostPreview } from '../services/exploreService'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models } from 'applesauce-core'
 import { isKnownBot } from '../config/bots'
+import { getProfileDisplayName } from '../utils/nostrUriResolver'
 
 interface BlogPostCardProps {
   post: BlogPostPreview
@@ -24,8 +25,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
   // No need to preload all images at once - this causes ERR_INSUFFICIENT_RESOURCES
   // when there are many blog posts.
   
-  const displayName = profile?.name || profile?.display_name || 
-    `${post.author.slice(0, 8)}...${post.author.slice(-4)}`
+  const displayName = getProfileDisplayName(profile, post.author)
   const rawName = (profile?.name || profile?.display_name || '').toLowerCase()
 
   // Hide bot authors by name/display_name

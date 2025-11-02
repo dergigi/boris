@@ -8,6 +8,7 @@ import { Models } from 'applesauce-core'
 import IconButton from './IconButton'
 import { faBooks } from '../icons/customIcons'
 import { preloadImage } from '../hooks/useImageCache'
+import { getProfileDisplayName } from '../utils/nostrUriResolver'
 
 interface SidebarHeaderProps {
   onToggleCollapse: () => void
@@ -29,10 +30,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ onToggleCollapse, onLogou
 
   const getUserDisplayName = () => {
     if (!activeAccount) return 'Unknown User'
-    if (profile?.name) return profile.name
-    if (profile?.display_name) return profile.display_name
-    if (profile?.nip05) return profile.nip05
-    return `${activeAccount.pubkey.slice(0, 8)}...${activeAccount.pubkey.slice(-8)}`
+    return getProfileDisplayName(profile, activeAccount.pubkey)
   }
 
   const profileImage = getProfileImage()

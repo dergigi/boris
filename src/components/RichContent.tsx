@@ -2,7 +2,7 @@ import React from 'react'
 import NostrMentionLink from './NostrMentionLink'
 import { Tokens } from 'applesauce-content/helpers'
 
-// Helper to add timestamps to logs
+// Helper to add timestamps to error logs
 const ts = () => {
   const now = new Date()
   const ms = now.getMilliseconds().toString().padStart(3, '0')
@@ -26,8 +26,6 @@ const RichContent: React.FC<RichContentProps> = ({
   content, 
   className = 'bookmark-content' 
 }) => {
-  console.log(`[${ts()}] [npub-resolve] RichContent: Rendering, content length:`, content?.length || 0)
-  
   try {
     // Pattern to match:
     // 1. nostr: URIs (nostr:npub1..., nostr:note1..., etc.) using applesauce Tokens.nostrLink
@@ -37,7 +35,6 @@ const RichContent: React.FC<RichContentProps> = ({
     const combinedPattern = new RegExp(`(${nostrPattern.source}|${urlPattern.source})`, 'gi')
     
     const parts = content.split(combinedPattern)
-    console.log(`[${ts()}] [npub-resolve] RichContent: Split into parts:`, parts.length)
   
     // Helper to check if a string is a nostr identifier (without mutating regex state)
     const isNostrIdentifier = (str: string): boolean => {

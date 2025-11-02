@@ -135,6 +135,23 @@ export function getNpubFallbackDisplay(pubkey: string): string {
 }
 
 /**
+ * Get display name for a profile with consistent priority order
+ * Returns: profile.name || profile.display_name || profile.nip05 || npub fallback
+ * @param profile Profile object with optional name, display_name, and nip05 fields
+ * @param pubkey The pubkey in hex format (required for fallback)
+ * @returns Display name string
+ */
+export function getProfileDisplayName(
+  profile: { name?: string; display_name?: string; nip05?: string } | null | undefined,
+  pubkey: string
+): string {
+  if (profile?.name) return profile.name
+  if (profile?.display_name) return profile.display_name
+  if (profile?.nip05) return profile.nip05
+  return getNpubFallbackDisplay(pubkey)
+}
+
+/**
  * Process markdown to replace nostr URIs while skipping those inside markdown links
  * This prevents nested markdown link issues when nostr identifiers appear in URLs
  */

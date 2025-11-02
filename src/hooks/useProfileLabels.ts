@@ -4,6 +4,7 @@ import { Helpers, IEventStore } from 'applesauce-core'
 import { getContentPointers } from 'applesauce-factory/helpers'
 import { RelayPool } from 'applesauce-relay'
 import { fetchProfiles, loadCachedProfiles } from '../services/profileService'
+import { getNpubFallbackDisplay } from '../utils/nostrUriResolver'
 
 const { getPubkeyFromDecodeResult, encodeDecodeResult } = Helpers
 
@@ -55,9 +56,15 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           const displayName = profileData.display_name || profileData.name || profileData.nip05
           if (displayName) {
             labels.set(encoded, `@${displayName}`)
+          } else {
+            // Use fallback npub display if profile has no name
+            const fallback = getNpubFallbackDisplay(pubkey)
+            labels.set(encoded, fallback)
           }
         } catch {
-          // Ignore parsing errors, will fetch later
+          // Use fallback npub display if parsing fails
+          const fallback = getNpubFallbackDisplay(pubkey)
+          labels.set(encoded, fallback)
         }
       }
     })
@@ -113,13 +120,27 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           if (displayName) {
             labels.set(encoded, `@${displayName}`)
           } else {
-            pubkeysToFetch.push(pubkey)
+            // Use fallback npub display if profile has no name
+            const fallback = getNpubFallbackDisplay(pubkey)
+            labels.set(encoded, fallback)
           }
         } catch {
-          pubkeysToFetch.push(pubkey)
+          // Use fallback npub display if parsing fails
+          const fallback = getNpubFallbackDisplay(pubkey)
+          labels.set(encoded, fallback)
         }
       } else {
+        // No profile found yet, will use fallback after fetch or keep empty
+        // We'll set fallback labels for missing profiles at the end
         pubkeysToFetch.push(pubkey)
+      }
+    })
+    
+    // Set fallback labels for profiles that weren't found
+    profileData.forEach(({ encoded, pubkey }) => {
+      if (!labels.has(encoded)) {
+        const fallback = getNpubFallbackDisplay(pubkey)
+        labels.set(encoded, fallback)
       }
     })
     
@@ -142,9 +163,15 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
                   const displayName = profileData.display_name || profileData.name || profileData.nip05
                   if (displayName) {
                     updatedLabels.set(encoded, `@${displayName}`)
+                  } else {
+                    // Use fallback npub display if profile has no name
+                    const fallback = getNpubFallbackDisplay(pubkey)
+                    updatedLabels.set(encoded, fallback)
                   }
                 } catch {
-                  // Ignore parsing errors
+                  // Use fallback npub display if parsing fails
+                  const fallback = getNpubFallbackDisplay(pubkey)
+                  updatedLabels.set(encoded, fallback)
                 }
               } else if (eventStore) {
                 // Fallback: check eventStore (in case fetchProfiles stored but didn't return)
@@ -155,11 +182,25 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
                     const displayName = profileData.display_name || profileData.name || profileData.nip05
                     if (displayName) {
                       updatedLabels.set(encoded, `@${displayName}`)
+                    } else {
+                      // Use fallback npub display if profile has no name
+                      const fallback = getNpubFallbackDisplay(pubkey)
+                      updatedLabels.set(encoded, fallback)
                     }
                   } catch {
-                    // Ignore parsing errors
+                    // Use fallback npub display if parsing fails
+                    const fallback = getNpubFallbackDisplay(pubkey)
+                    updatedLabels.set(encoded, fallback)
                   }
+                } else {
+                  // No profile found, use fallback
+                  const fallback = getNpubFallbackDisplay(pubkey)
+                  updatedLabels.set(encoded, fallback)
                 }
+              } else {
+                // No eventStore, use fallback
+                const fallback = getNpubFallbackDisplay(pubkey)
+                updatedLabels.set(encoded, fallback)
               }
             }
           })

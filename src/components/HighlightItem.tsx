@@ -18,6 +18,7 @@ import CompactButton from './CompactButton'
 import { HighlightCitation } from './HighlightCitation'
 import { useNavigate } from 'react-router-dom'
 import NostrMentionLink from './NostrMentionLink'
+import { getProfileDisplayName } from '../utils/nostrUriResolver'
 
 // Helper to detect if a URL is an image
 const isImageUrl = (url: string): boolean => {
@@ -127,9 +128,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   
   // Get display name for the user
   const getUserDisplayName = () => {
-    if (profile?.name) return profile.name
-    if (profile?.display_name) return profile.display_name
-    return `${highlight.pubkey.slice(0, 8)}...` // fallback to short pubkey
+    return getProfileDisplayName(profile, highlight.pubkey)
   }
   
   

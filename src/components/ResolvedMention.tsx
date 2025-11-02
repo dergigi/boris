@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useEventModel } from 'applesauce-react/hooks'
 import { Models, Helpers } from 'applesauce-core'
 import { decode, npubEncode } from 'nostr-tools/nip19'
-import { getNpubFallbackDisplay } from '../utils/nostrUriResolver'
+import { getProfileDisplayName } from '../utils/nostrUriResolver'
 
 const { getPubkeyFromDecodeResult } = Helpers
 
@@ -21,7 +21,7 @@ const ResolvedMention: React.FC<ResolvedMentionProps> = ({ encoded }) => {
   }
 
   const profile = pubkey ? useEventModel(Models.ProfileModel, [pubkey]) : undefined
-  const display = profile?.name || profile?.display_name || profile?.nip05 || (pubkey ? getNpubFallbackDisplay(pubkey) : encoded)
+  const display = pubkey ? getProfileDisplayName(profile, pubkey) : encoded
   const npub = pubkey ? npubEncode(pubkey) : undefined
 
   if (npub) {
