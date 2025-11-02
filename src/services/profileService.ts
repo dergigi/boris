@@ -41,7 +41,7 @@ export function getCachedProfile(pubkey: string): NostrEvent | null {
     return event
   } catch (err) {
     // Log cache read errors for debugging
-    console.error(`[profile-cache] Error reading cached profile for ${pubkey.slice(0, 16)}...:`, err)
+    console.error(`[npub-cache] Error reading cached profile for ${pubkey.slice(0, 16)}...:`, err)
     return null
   }
 }
@@ -53,7 +53,7 @@ export function getCachedProfile(pubkey: string): NostrEvent | null {
 export function cacheProfile(profile: NostrEvent): void {
   try {
     if (profile.kind !== 0) {
-      console.warn(`[profile-cache] Attempted to cache non-profile event (kind ${profile.kind})`)
+      console.warn(`[npub-cache] Attempted to cache non-profile event (kind ${profile.kind})`)
       return // Only cache kind:0 (profile) events
     }
 
@@ -63,10 +63,10 @@ export function cacheProfile(profile: NostrEvent): void {
       timestamp: Date.now()
     }
     localStorage.setItem(cacheKey, JSON.stringify(cached))
-    console.log(`[profile-cache] Cached profile:`, profile.pubkey.slice(0, 16) + '...')
+    console.log(`[npub-cache] Cached profile:`, profile.pubkey.slice(0, 16) + '...')
   } catch (err) {
     // Log caching errors for debugging
-    console.error(`[profile-cache] Failed to cache profile ${profile.pubkey.slice(0, 16)}...:`, err)
+    console.error(`[npub-cache] Failed to cache profile ${profile.pubkey.slice(0, 16)}...:`, err)
     // Don't block the UI if caching fails
     // Handles quota exceeded, invalid data, and other errors gracefully
   }
