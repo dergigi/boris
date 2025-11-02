@@ -47,6 +47,9 @@ export const useMarkdownToHTML = (
   const profileLoadingRef = useRef(profileLoading)
   const articleTitlesRef = useRef(articleTitles)
   
+  // Ref to track second RAF ID for HTML extraction cleanup
+  const htmlExtractionRafIdRef = useRef<number | null>(null)
+  
   useEffect(() => {
     profileLabelsRef.current = profileLabels
     profileLoadingRef.current = profileLoading
@@ -126,8 +129,10 @@ export const useMarkdownToHTML = (
           .filter(([, l]) => l)
           .map(([e]) => e.slice(0, 16) + '...')
         console.log(`[profile-loading-debug][markdown-to-html] Processed markdown, loading states:`, loadingStates)
+        console.log(`[shimmer-debug][markdown-to-html] Setting processedMarkdown, length=${processed.length}`)
         setProcessedMarkdown(processed)
         processedMarkdownRef.current = processed
+        // HTML extraction will happen in separate useEffect that watches processedMarkdown
       } catch (error) {
         console.error(`[markdown-to-html] Error processing markdown:`, error)
         if (!isCancelled) {
@@ -135,34 +140,6 @@ export const useMarkdownToHTML = (
           processedMarkdownRef.current = markdown
         }
       }
-
-      const rafId = requestAnimationFrame(() => {
-        if (previewRef.current && !isCancelled) {
-          let html = previewRef.current.innerHTML
-          console.log(`[shimmer-debug][markdown-to-html] Extracted HTML, length=${html.length}, loading profiles=${profileLoadingRef.current.size}`)
-          console.log(`[shimmer-debug][markdown-to-html] HTML sample (first 200 chars):`, html.slice(0, 200))
-          
-          // Post-process HTML to add loading class to profile links
-          const htmlBefore = html
-          html = addLoadingClassToProfileLinks(html, profileLoadingRef.current)
-          
-          if (html !== htmlBefore) {
-            console.log(`[shimmer-debug][markdown-to-html] HTML changed after post-processing`)
-            console.log(`[shimmer-debug][markdown-to-html] HTML after (first 200 chars):`, html.slice(0, 200))
-            // Count how many profile-loading classes are in the HTML
-            const loadingClassCount = (html.match(/profile-loading/g) || []).length
-            console.log(`[shimmer-debug][markdown-to-html] Found ${loadingClassCount} profile-loading classes in final HTML`)
-          } else {
-            console.log(`[shimmer-debug][markdown-to-html] HTML unchanged after post-processing`)
-          }
-          
-          setRenderedHtml(html)
-        } else if (!isCancelled) {
-          console.warn('⚠️ markdownPreviewRef.current is null')
-        }
-      })
-
-      return () => cancelAnimationFrame(rafId)
     }
 
     // Only clear previous content if this is the first processing or markdown changed
@@ -183,6 +160,65 @@ export const useMarkdownToHTML = (
       isCancelled = true
     }
   }, [markdown, profileLabelsKey, profileLoadingKey, articleTitlesKey])
+
+  // Extract HTML after processedMarkdown renders
+  // This useEffect watches processedMarkdown and extracts HTML once ReactMarkdown has rendered it
+  useEffect(() => {
+    if (!processedMarkdown || !markdown) {
+      return
+    }
+
+    let isCancelled = false
+    
+    console.log(`[shimmer-debug][markdown-to-html] processedMarkdown changed, scheduling HTML extraction`)
+    
+    // Use double RAF to ensure ReactMarkdown has finished rendering:
+    // First RAF: let React complete its render cycle
+    // Second RAF: extract HTML after DOM has updated
+    const rafId1 = requestAnimationFrame(() => {
+      htmlExtractionRafIdRef.current = requestAnimationFrame(() => {
+        if (previewRef.current && !isCancelled) {
+          let html = previewRef.current.innerHTML
+          console.log(`[shimmer-debug][markdown-to-html] Extracted HTML after processedMarkdown change, length=${html.length}, loading profiles=${profileLoadingRef.current.size}`)
+          
+          // Check if HTML actually contains the updated content by looking for resolved names
+          const hasResolvedNames = Array.from(profileLabelsRef.current.entries()).some(([, label]) => {
+            // Check if label is a resolved name (starts with @ and isn't a fallback npub)
+            return label.startsWith('@') && !label.startsWith('@npub') && html.includes(label)
+          })
+          console.log(`[shimmer-debug][markdown-to-html] HTML contains resolved names: ${hasResolvedNames}`)
+          
+          if (html.length === 0) {
+            console.log(`[shimmer-debug][markdown-to-html] Warning: HTML is empty, ReactMarkdown may not have rendered yet`)
+          }
+          
+          // Post-process HTML to add loading class to profile links
+          const htmlBefore = html
+          html = addLoadingClassToProfileLinks(html, profileLoadingRef.current)
+          
+          if (html !== htmlBefore) {
+            console.log(`[shimmer-debug][markdown-to-html] HTML changed after post-processing`)
+            // Count how many profile-loading classes are in the HTML
+            const loadingClassCount = (html.match(/profile-loading/g) || []).length
+            console.log(`[shimmer-debug][markdown-to-html] Found ${loadingClassCount} profile-loading classes in final HTML`)
+          }
+          
+          setRenderedHtml(html)
+        } else if (!isCancelled && processedMarkdown) {
+          console.warn('⚠️ markdownPreviewRef.current is null but processedMarkdown exists')
+        }
+      })
+    })
+
+    return () => {
+      isCancelled = true
+      cancelAnimationFrame(rafId1)
+      if (htmlExtractionRafIdRef.current !== null) {
+        cancelAnimationFrame(htmlExtractionRafIdRef.current)
+        htmlExtractionRafIdRef.current = null
+      }
+    }
+  }, [processedMarkdown, markdown])
 
   return { renderedHtml, previewRef, processedMarkdown }
 }
