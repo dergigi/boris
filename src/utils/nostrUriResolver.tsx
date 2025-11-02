@@ -339,12 +339,14 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
         const pubkey = decoded.type === 'npub' ? decoded.data : decoded.data.pubkey
         
         // Check if we have a resolved profile name using pubkey as key
-        if (profileLabels.has(pubkey)) {
+        // Only use Map value if profile is not loading (meaning it's actually resolved)
+        const isLoading = profileLoading.get(pubkey)
+        if (!isLoading && profileLabels.has(pubkey)) {
           const displayName = profileLabels.get(pubkey)!
           return `[${displayName}](${link})`
         }
         
-        // If no resolved label yet, use fallback (will show loading via post-processing)
+        // If loading or no resolved label yet, use fallback (will show loading via post-processing)
         const label = getNostrUriLabel(encoded)
         return `[${label}](${link})`
       }
@@ -381,7 +383,9 @@ export function addLoadingClassToProfileLinks(
       const pubkey = decoded.data
       
       // Check if this profile is loading
-      if (profileLoading.get(pubkey) === true) {
+      const isLoading = profileLoading.get(pubkey)
+      if (isLoading === true) {
+        console.log(`[profile-loading-debug][post-process] Adding loading class to link for ${pubkey.slice(0, 16)}...`)
         // Add profile-loading class if not already present
         if (!match.includes('profile-loading')) {
           // Insert class before the closing >

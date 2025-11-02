@@ -241,13 +241,8 @@ export function useProfileLabels(
       }
     })
     
-    // Set fallback labels for profiles that weren't found
-    profileData.forEach(({ pubkey }) => {
-      if (!labels.has(pubkey)) {
-        const fallback = getNpubFallbackDisplay(pubkey)
-        labels.set(pubkey, fallback)
-      }
-    })
+    // Don't set fallback labels in the Map - we'll use fallback directly when rendering
+    // This allows us to distinguish between "no label yet" (use fallback) vs "resolved label" (use Map value)
     
     setProfileLabels(new Map(labels))
     setProfileLoading(new Map(loading))
