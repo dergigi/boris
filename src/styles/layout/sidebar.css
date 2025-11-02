@@ -267,6 +267,21 @@
 .read-inline-btn:hover { background: rgb(22 163 74); /* green-600 */ }
 
 /* Bookmark filters */
+.bookmark-filters-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.bookmark-filters-wrapper > .bookmark-filters {
+  padding: 0;
+  border-bottom: none;
+  background: transparent;
+}
+
 .bookmark-filters {
   display: flex;
   gap: 0.5rem;

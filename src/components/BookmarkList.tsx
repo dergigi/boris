@@ -247,10 +247,19 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
       />
       
       {allIndividualBookmarks.length > 0 && (
-        <BookmarkFilters
-          selectedFilter={selectedFilter}
-          onFilterChange={setSelectedFilter}
-        />
+        <div className="bookmark-filters-wrapper">
+          <BookmarkFilters
+            selectedFilter={selectedFilter}
+            onFilterChange={setSelectedFilter}
+          />
+          <CompactButton
+            icon={faPlus}
+            onClick={() => setShowAddModal(true)}
+            title="Add web bookmark"
+            ariaLabel="Add web bookmark"
+            className="bookmark-section-action"
+          />
+        </div>
       )}
       
       {!activeAccount ? (
@@ -287,15 +296,6 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({
             <div key={section.key} className="bookmarks-section">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <h3 className="bookmarks-section-title" style={{ margin: 0, padding: '1.5rem 0.5rem 0.375rem', flex: 1 }}>{section.title}</h3>
-                {section.key === 'web' && activeAccount && (
-                  <CompactButton
-                    icon={faPlus}
-                    onClick={() => setShowAddModal(true)}
-                    title="Add web bookmark"
-                    ariaLabel="Add web bookmark"
-                    className="bookmark-section-action"
-                  />
-                )}
               </div>
               <div className={`bookmarks-grid bookmarks-${viewMode}`}>
                 {section.items.map((individualBookmark, index) => (
