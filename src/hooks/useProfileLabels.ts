@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { Hooks } from 'applesauce-react'
 import { Helpers, IEventStore } from 'applesauce-core'
 import { getContentPointers } from 'applesauce-factory/helpers'
@@ -84,6 +84,10 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
   }, [profileData])
 
   const [profileLabels, setProfileLabels] = useState<Map<string, string>>(initialLabels)
+  
+  // Refs for batching updates to prevent flickering
+  const pendingUpdatesRef = useRef<Map<string, string>>(new Map())
+  const rafScheduledRef = useRef<number | null>(null)
 
   // Build initial labels: localStorage cache -> eventStore -> fetch from relays
   useEffect(() => {
@@ -185,7 +189,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
       console.log(`[profile-labels] Fetching ${pubkeysToFetch.length} profiles from relays`)
       console.log(`[profile-labels] Calling fetchProfiles with relayPool and ${pubkeysToFetch.length} pubkeys`)
       
-      // Reactive callback: update labels as profiles stream in
+      // Reactive callback: batch updates to prevent flickering
       const handleProfileEvent = (event: NostrEvent) => {
         const encoded = pubkeyToEncoded.get(event.pubkey)
         if (!encoded) {
@@ -194,44 +198,85 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
         }
         
         console.log(`[profile-labels] Received profile event for ${encoded.slice(0, 20)}...`)
-        setProfileLabels(prevLabels => {
-          const updatedLabels = new Map(prevLabels)
-          try {
-            const profileData = JSON.parse(event.content || '{}') as { name?: string; display_name?: string; nip05?: string }
-            const displayName = profileData.display_name || profileData.name || profileData.nip05
-            if (displayName) {
-              updatedLabels.set(encoded, `@${displayName}`)
-              console.log(`[profile-labels] Updated label reactively for ${encoded.slice(0, 20)}... to @${displayName}`)
-            } else {
-              // Use fallback npub display if profile has no name
-              const fallback = getNpubFallbackDisplay(event.pubkey)
-              updatedLabels.set(encoded, fallback)
-              console.log(`[profile-labels] Profile for ${encoded.slice(0, 20)}... has no name, keeping fallback: ${fallback}`)
-            }
-          } catch (error) {
-            // Use fallback npub display if parsing fails
-            const fallback = getNpubFallbackDisplay(event.pubkey)
-            updatedLabels.set(encoded, fallback)
-            console.warn(`[profile-labels] Error parsing profile for ${encoded.slice(0, 20)}..., using fallback:`, error)
+        
+        // Determine the label for this profile
+        let label: string
+        try {
+          const profileData = JSON.parse(event.content || '{}') as { name?: string; display_name?: string; nip05?: string }
+          const displayName = profileData.display_name || profileData.name || profileData.nip05
+          if (displayName) {
+            label = `@${displayName}`
+            console.log(`[profile-labels] Updated label reactively for ${encoded.slice(0, 20)}... to @${displayName}`)
+          } else {
+            // Use fallback npub display if profile has no name
+            label = getNpubFallbackDisplay(event.pubkey)
+            console.log(`[profile-labels] Profile for ${encoded.slice(0, 20)}... has no name, keeping fallback: ${label}`)
           }
-          return updatedLabels
-        })
+        } catch (error) {
+          // Use fallback npub display if parsing fails
+          label = getNpubFallbackDisplay(event.pubkey)
+          console.warn(`[profile-labels] Error parsing profile for ${encoded.slice(0, 20)}..., using fallback:`, error)
+        }
+        
+        // Add to pending updates
+        pendingUpdatesRef.current.set(encoded, label)
+        
+        // Schedule batched update if not already scheduled
+        if (rafScheduledRef.current === null) {
+          rafScheduledRef.current = requestAnimationFrame(() => {
+            // Apply all pending updates in one batch
+            setProfileLabels(prevLabels => {
+              const updatedLabels = new Map(prevLabels)
+              const pendingUpdates = pendingUpdatesRef.current
+              
+              // Apply all pending updates
+              for (const [encoded, label] of pendingUpdates.entries()) {
+                updatedLabels.set(encoded, label)
+              }
+              
+              // Clear pending updates
+              pendingUpdates.clear()
+              rafScheduledRef.current = null
+              
+              return updatedLabels
+            })
+          })
+        }
       }
       
       fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch, undefined, handleProfileEvent)
         .then((fetchedProfiles) => {
           console.log(`[profile-labels] Fetch completed (EOSE), received ${fetchedProfiles.length} profiles total`)
-          // Labels have already been updated reactively via handleProfileEvent
-          // Just log final state for debugging
-          setProfileLabels(prevLabels => {
-            console.log(`[profile-labels] Final labels after EOSE:`, Array.from(prevLabels.entries()).map(([enc, label]) => ({ encoded: enc.slice(0, 20) + '...', label })))
-            return prevLabels // No change needed, already updated reactively
-          })
+          // Ensure any pending batched updates are applied
+          if (rafScheduledRef.current !== null) {
+            // Wait for the scheduled RAF to complete
+            requestAnimationFrame(() => {
+              setProfileLabels(prevLabels => {
+                console.log(`[profile-labels] Final labels after EOSE:`, Array.from(prevLabels.entries()).map(([enc, label]) => ({ encoded: enc.slice(0, 20) + '...', label })))
+                return prevLabels
+              })
+            })
+          } else {
+            // No pending updates, just log final state
+            setProfileLabels(prevLabels => {
+              console.log(`[profile-labels] Final labels after EOSE:`, Array.from(prevLabels.entries()).map(([enc, label]) => ({ encoded: enc.slice(0, 20) + '...', label })))
+              return prevLabels
+            })
+          }
         })
         .catch((error) => {
           console.error(`[profile-labels] Error fetching profiles:`, error)
           // Silently handle fetch errors
         })
+      
+      // Cleanup: cancel any pending RAF and clear pending updates
+      return () => {
+        if (rafScheduledRef.current !== null) {
+          cancelAnimationFrame(rafScheduledRef.current)
+          rafScheduledRef.current = null
+        }
+        pendingUpdatesRef.current.clear()
+      }
     } else {
       if (pubkeysToFetch.length === 0) {
         console.log(`[profile-labels] No profiles to fetch`)
