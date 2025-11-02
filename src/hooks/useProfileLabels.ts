@@ -60,13 +60,13 @@ export function useProfileLabels(
       if (cachedProfile) {
         const displayName = extractProfileDisplayName(cachedProfile)
         if (displayName) {
-          // Only add @ prefix if we have a real name, otherwise use fallback format directly
-          const label = displayName.startsWith('@') ? displayName : `@${displayName}`
+          // Add @ prefix (extractProfileDisplayName returns name without @)
+          const label = `@${displayName}`
           labels.set(pubkey, label)
         } else {
-          // Use fallback npub display if profile has no name
+          // Use fallback npub display if profile has no name (add @ prefix)
           const fallback = getNpubFallbackDisplay(pubkey)
-          labels.set(pubkey, fallback)
+          labels.set(pubkey, `@${fallback}`)
         }
       }
     })
@@ -224,13 +224,13 @@ export function useProfileLabels(
         // Extract display name using centralized utility
         const displayName = extractProfileDisplayName(eventStoreProfile as NostrEvent)
         if (displayName) {
-          // Only add @ prefix if we have a real name, otherwise use fallback format directly
-          const label = displayName.startsWith('@') ? displayName : `@${displayName}`
+          // Add @ prefix (extractProfileDisplayName returns name without @)
+          const label = `@${displayName}`
           labels.set(pubkey, label)
         } else {
-          // Use fallback npub display if profile has no name
+          // Use fallback npub display if profile has no name (add @ prefix)
           const fallback = getNpubFallbackDisplay(pubkey)
-          labels.set(pubkey, fallback)
+          labels.set(pubkey, `@${fallback}`)
         }
         loading.set(pubkey, false)
       } else {
@@ -258,8 +258,9 @@ export function useProfileLabels(
         const pubkey = event.pubkey
         
         // Determine the label for this profile using centralized utility
+        // Add @ prefix (both extractProfileDisplayName and getNpubFallbackDisplay return names without @)
         const displayName = extractProfileDisplayName(event)
-        const label = displayName ? (displayName.startsWith('@') ? displayName : `@${displayName}`) : getNpubFallbackDisplay(pubkey)
+        const label = displayName ? `@${displayName}` : `@${getNpubFallbackDisplay(pubkey)}`
         
         // Apply label immediately to prevent race condition with loading state
         // This ensures labels are available when isLoading becomes false

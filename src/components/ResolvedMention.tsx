@@ -5,7 +5,7 @@ import { Hooks } from 'applesauce-react'
 import { Models, Helpers } from 'applesauce-core'
 import { decode, npubEncode } from 'nostr-tools/nip19'
 import { getProfileDisplayName } from '../utils/nostrUriResolver'
-import { loadCachedProfiles } from '../services/profileService'
+import { isProfileInCacheOrStore } from '../utils/profileLoadingUtils'
 
 const { getPubkeyFromDecodeResult } = Helpers
 
@@ -28,14 +28,7 @@ const ResolvedMention: React.FC<ResolvedMentionProps> = ({ encoded }) => {
   // Check if profile is in cache or eventStore
   const isInCacheOrStore = useMemo(() => {
     if (!pubkey) return false
-    // Check cache
-    const cached = loadCachedProfiles([pubkey])
-    if (cached.has(pubkey)) {
-      return true
-    }
-    // Check eventStore
-    const eventStoreProfile = eventStore?.getEvent(pubkey + ':0')
-    return !!eventStoreProfile
+    return isProfileInCacheOrStore(pubkey, eventStore)
   }, [pubkey, eventStore])
   
   // Show loading if profile doesn't exist and not in cache/store

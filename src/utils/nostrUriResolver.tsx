@@ -86,13 +86,15 @@ export function getNostrUriLabel(encoded: string): string {
     const decoded = decode(encoded)
     
     switch (decoded.type) {
-      case 'npub':
-        // Remove "npub1" prefix (5 chars) and show next 7 chars
-        return `@${encoded.slice(5, 12)}...`
+      case 'npub': {
+        // Use shared fallback display function and add @ for label
+        const pubkey = decoded.data
+        return `@${getNpubFallbackDisplay(pubkey)}`
+      }
       case 'nprofile': {
-        const npub = npubEncode(decoded.data.pubkey)
-        // Remove "npub1" prefix (5 chars) and show next 7 chars
-        return `@${npub.slice(5, 12)}...`
+        // Use shared fallback display function and add @ for label
+        const pubkey = decoded.data.pubkey
+        return `@${getNpubFallbackDisplay(pubkey)}`
       }
       case 'note':
         return `note:${encoded.slice(5, 12)}...`
@@ -119,18 +121,19 @@ export function getNostrUriLabel(encoded: string): string {
 
 /**
  * Get a standardized fallback display name for a pubkey when profile has no name
- * Returns npub format: @abc1234...
+ * Returns npub format: abc1234... (without @ prefix)
+ * Components should add @ prefix when rendering mentions/links
  * @param pubkey The pubkey in hex format
- * @returns Formatted npub display string
+ * @returns Formatted npub display string without @ prefix
  */
 export function getNpubFallbackDisplay(pubkey: string): string {
   try {
     const npub = npubEncode(pubkey)
     // Remove "npub1" prefix (5 chars) and show next 7 chars
-    return `@${npub.slice(5, 12)}...`
+    return `${npub.slice(5, 12)}...`
   } catch {
     // Fallback to shortened pubkey if encoding fails
-    return `@${pubkey.slice(0, 8)}...`
+    return `${pubkey.slice(0, 8)}...`
   }
 }
 
@@ -380,34 +383,34 @@ export function addLoadingClassToProfileLinks(
   // Find all <a> tags with href starting with /p/ (profile links)
   const result = html.replace(/<a\s+[^>]*?href="\/p\/([^"]+)"[^>]*?>/g, (match, npub: string) => {
     try {
-      // Decode npub to get pubkey
+      // Decode npub or nprofile to get pubkey
       const decoded: ReturnType<typeof decode> = decode(npub)
-      switch (decoded.type) {
-        case 'npub': {
-          const pubkey = decoded.data
-          
-          // Check if this profile is loading
-          const isLoading = profileLoading.get(pubkey)
-          
-          if (isLoading === true) {
-            // Add profile-loading class if not already present
-            if (!match.includes('profile-loading')) {
-              // Insert class before the closing >
-              const classMatch = /class="([^"]*)"/.exec(match)
-              if (classMatch) {
-                const updated = match.replace(/class="([^"]*)"/, `class="$1 profile-loading"`)
-                return updated
-              } else {
-                const updated = match.replace(/(<a\s+[^>]*?)>/, '$1 class="profile-loading">')
-                return updated
-              }
+      
+      let pubkey: string | undefined
+      if (decoded.type === 'npub') {
+        pubkey = decoded.data
+      } else if (decoded.type === 'nprofile') {
+        pubkey = decoded.data.pubkey
+      }
+      
+      if (pubkey) {
+        // Check if this profile is loading
+        const isLoading = profileLoading.get(pubkey)
+        
+        if (isLoading === true) {
+          // Add profile-loading class if not already present
+          if (!match.includes('profile-loading')) {
+            // Insert class before the closing >
+            const classMatch = /class="([^"]*)"/.exec(match)
+            if (classMatch) {
+              const updated = match.replace(/class="([^"]*)"/, `class="$1 profile-loading"`)
+              return updated
+            } else {
+              const updated = match.replace(/(<a\s+[^>]*?)>/, '$1 class="profile-loading">')
+              return updated
             }
           }
-          break
         }
-        default:
-          // Not an npub, ignore
-          break
       }
     } catch (error) {
       // Ignore processing errors
