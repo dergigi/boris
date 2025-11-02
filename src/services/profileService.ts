@@ -17,6 +17,10 @@ const PROFILE_CACHE_PREFIX = 'profile_cache_'
 const MAX_CACHED_PROFILES = 1000 // Limit number of cached profiles to prevent quota issues
 let quotaExceededLogged = false // Only log quota error once per session
 
+// Request deduplication: track in-flight fetch requests by sorted pubkey array
+// Key: sorted, comma-separated pubkeys, Value: Promise for that fetch
+const inFlightRequests = new Map<string, Promise<NostrEvent[]>>()
+
 function getProfileCacheKey(pubkey: string): string {
   return `${PROFILE_CACHE_PREFIX}${pubkey}`
 }
@@ -185,6 +189,7 @@ export function loadCachedProfiles(pubkeys: string[]): Map<string, NostrEvent> {
  * Fetches profile metadata (kind:0) for a list of pubkeys
  * Checks localStorage cache first, then fetches from relays for missing/expired profiles
  * Stores profiles in the event store and caches to localStorage
+ * Implements request deduplication to prevent duplicate relay requests for the same pubkey sets
  */
 export const fetchProfiles = async (
   relayPool: RelayPool,
@@ -198,103 +203,121 @@ export const fetchProfiles = async (
       return []
     }
 
-    const uniquePubkeys = Array.from(new Set(pubkeys))
+    const uniquePubkeys = Array.from(new Set(pubkeys)).sort()
     
-    // First, check localStorage cache for all requested profiles
-    const cachedProfiles = loadCachedProfiles(uniquePubkeys)
-    const profilesByPubkey = new Map<string, NostrEvent>()
-    
-    // Add cached profiles to the map and EventStore
-    for (const [pubkey, profile] of cachedProfiles.entries()) {
-      profilesByPubkey.set(pubkey, profile)
-      // Ensure cached profiles are also in EventStore for consistency
-      eventStore.add(profile)
+    // Check for in-flight request with same pubkey set (deduplication)
+    const requestKey = uniquePubkeys.join(',')
+    const existingRequest = inFlightRequests.get(requestKey)
+    if (existingRequest) {
+      return existingRequest
     }
     
-    // Determine which pubkeys need to be fetched from relays
-    const pubkeysToFetch = uniquePubkeys.filter(pubkey => !cachedProfiles.has(pubkey))
-    
-    // If all profiles are cached, return early
-    if (pubkeysToFetch.length === 0) {
-      return Array.from(profilesByPubkey.values())
-    }
-
-    // Fetch missing profiles from relays
-    const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-    const prioritized = prioritizeLocalRelays(relayUrls)
-    const { local: localRelays, remote: remoteRelays } = partitionRelays(prioritized)
-    const hasPurplePages = relayUrls.some(url => url.includes('purplepag.es'))
-    if (!hasPurplePages) {
-      console.warn(`[fetch-profiles] purplepag.es not in active relay pool, adding it temporarily`)
-      // Add purplepag.es if it's not in the pool (it might not have connected yet)
-      const purplePagesUrl = 'wss://purplepag.es'
-      if (!relayPool.relays.has(purplePagesUrl)) {
-        relayPool.group([purplePagesUrl])
+    // Create the fetch promise and track it
+    const fetchPromise = (async () => {
+      // First, check localStorage cache for all requested profiles
+      const cachedProfiles = loadCachedProfiles(uniquePubkeys)
+      const profilesByPubkey = new Map<string, NostrEvent>()
+      
+      // Add cached profiles to the map and EventStore
+      for (const [pubkey, profile] of cachedProfiles.entries()) {
+        profilesByPubkey.set(pubkey, profile)
+        // Ensure cached profiles are also in EventStore for consistency
+        eventStore.add(profile)
       }
-      // Ensure it's included in the remote relays for this fetch
-      if (!remoteRelays.includes(purplePagesUrl)) {
-        remoteRelays.push(purplePagesUrl)
+      
+      // Determine which pubkeys need to be fetched from relays
+      const pubkeysToFetch = uniquePubkeys.filter(pubkey => !cachedProfiles.has(pubkey))
+      
+      // If all profiles are cached, return early
+      if (pubkeysToFetch.length === 0) {
+        return Array.from(profilesByPubkey.values())
       }
-    }
-    let eventCount = 0
-    const fetchedPubkeys = new Set<string>()
 
-    const processEvent = (event: NostrEvent) => {
-      eventCount++
-      fetchedPubkeys.add(event.pubkey)
-      const existing = profilesByPubkey.get(event.pubkey)
-      if (!existing || event.created_at > existing.created_at) {
-        profilesByPubkey.set(event.pubkey, event)
-        // Store in event store immediately
-        eventStore.add(event)
-        // Cache to localStorage for future use
-        cacheProfile(event)
+      // Fetch missing profiles from relays
+      const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+      const prioritized = prioritizeLocalRelays(relayUrls)
+      const { local: localRelays, remote: remoteRelays } = partitionRelays(prioritized)
+      const hasPurplePages = relayUrls.some(url => url.includes('purplepag.es'))
+      if (!hasPurplePages) {
+        console.warn(`[fetch-profiles] purplepag.es not in active relay pool, adding it temporarily`)
+        // Add purplepag.es if it's not in the pool (it might not have connected yet)
+        const purplePagesUrl = 'wss://purplepag.es'
+        if (!relayPool.relays.has(purplePagesUrl)) {
+          relayPool.group([purplePagesUrl])
+        }
+        // Ensure it's included in the remote relays for this fetch
+        if (!remoteRelays.includes(purplePagesUrl)) {
+          remoteRelays.push(purplePagesUrl)
+        }
       }
-    }
+      const fetchedPubkeys = new Set<string>()
 
-    const local$ = localRelays.length > 0
-      ? relayPool
-          .req(localRelays, { kinds: [0], authors: pubkeysToFetch })
-          .pipe(
-            onlyEvents(),
-            onEvent ? tap((event: NostrEvent) => onEvent(event)) : tap(() => {}),
-            tap((event: NostrEvent) => processEvent(event)),
-            completeOnEose()
-          )
-      : new Observable<NostrEvent>((sub) => sub.complete())
+      const processEvent = (event: NostrEvent) => {
+        fetchedPubkeys.add(event.pubkey)
+        const existing = profilesByPubkey.get(event.pubkey)
+        if (!existing || event.created_at > existing.created_at) {
+          profilesByPubkey.set(event.pubkey, event)
+          // Store in event store immediately
+          eventStore.add(event)
+          // Cache to localStorage for future use
+          cacheProfile(event)
+        }
+      }
 
-    const remote$ = remoteRelays.length > 0
-      ? relayPool
-          .req(remoteRelays, { kinds: [0], authors: pubkeysToFetch })
-          .pipe(
-            onlyEvents(),
-            onEvent ? tap((event: NostrEvent) => onEvent(event)) : tap(() => {}),
-            tap((event: NostrEvent) => processEvent(event)),
-            completeOnEose()
-          )
-      : new Observable<NostrEvent>((sub) => sub.complete())
+      const local$ = localRelays.length > 0
+        ? relayPool
+            .req(localRelays, { kinds: [0], authors: pubkeysToFetch })
+            .pipe(
+              onlyEvents(),
+              onEvent ? tap((event: NostrEvent) => onEvent(event)) : tap(() => {}),
+              tap((event: NostrEvent) => processEvent(event)),
+              completeOnEose()
+            )
+        : new Observable<NostrEvent>((sub) => sub.complete())
 
-    await lastValueFrom(merge(local$, remote$).pipe(toArray()))
+      const remote$ = remoteRelays.length > 0
+        ? relayPool
+            .req(remoteRelays, { kinds: [0], authors: pubkeysToFetch })
+            .pipe(
+              onlyEvents(),
+              onEvent ? tap((event: NostrEvent) => onEvent(event)) : tap(() => {}),
+              tap((event: NostrEvent) => processEvent(event)),
+              completeOnEose()
+            )
+        : new Observable<NostrEvent>((sub) => sub.complete())
 
-    const profiles = Array.from(profilesByPubkey.values())
+      await lastValueFrom(merge(local$, remote$).pipe(toArray()))
+
+      const profiles = Array.from(profilesByPubkey.values())
+      
+      const missingPubkeys = pubkeysToFetch.filter(p => !fetchedPubkeys.has(p))
+      if (missingPubkeys.length > 0) {
+        console.warn(`[fetch-profiles] ${missingPubkeys.length} profiles not found on relays:`, missingPubkeys.map(p => p.slice(0, 16) + '...'))
+      }
+
+      // Note: We don't preload all profile images here to avoid ERR_INSUFFICIENT_RESOURCES
+      // Profile images will be cached by Service Worker when they're actually displayed.
+      // Only the logged-in user's profile image is preloaded (in SidebarHeader).
+
+      // Rebroadcast profiles to local/all relays based on settings
+      // Only rebroadcast newly fetched profiles, not cached ones
+      const newlyFetchedProfiles = profiles.filter(p => pubkeysToFetch.includes(p.pubkey))
+      if (newlyFetchedProfiles.length > 0) {
+        await rebroadcastEvents(newlyFetchedProfiles, relayPool, settings)
+      }
+
+      return profiles
+    })()
     
-    const missingPubkeys = pubkeysToFetch.filter(p => !fetchedPubkeys.has(p))
-    if (missingPubkeys.length > 0) {
-      console.warn(`[fetch-profiles] ${missingPubkeys.length} profiles not found on relays:`, missingPubkeys.map(p => p.slice(0, 16) + '...'))
-    }
-
-    // Note: We don't preload all profile images here to avoid ERR_INSUFFICIENT_RESOURCES
-    // Profile images will be cached by Service Worker when they're actually displayed.
-    // Only the logged-in user's profile image is preloaded (in SidebarHeader).
-
-    // Rebroadcast profiles to local/all relays based on settings
-    // Only rebroadcast newly fetched profiles, not cached ones
-    const newlyFetchedProfiles = profiles.filter(p => pubkeysToFetch.includes(p.pubkey))
-    if (newlyFetchedProfiles.length > 0) {
-      await rebroadcastEvents(newlyFetchedProfiles, relayPool, settings)
-    }
-
-    return profiles
+    // Track the request
+    inFlightRequests.set(requestKey, fetchPromise)
+    
+    // Clean up when request completes (success or failure)
+    fetchPromise.finally(() => {
+      inFlightRequests.delete(requestKey)
+    })
+    
+    return fetchPromise
   } catch (error) {
     console.error('[fetch-profiles] Failed to fetch profiles:', error)
     return []

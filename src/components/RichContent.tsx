@@ -45,6 +45,11 @@ const RichContent: React.FC<RichContentProps> = ({
     return (
     <div className={className}>
       {parts.map((part, index) => {
+        // Skip empty or undefined parts
+        if (!part) {
+          return null
+        }
+        
         // Handle nostr: URIs - Tokens.nostrLink matches both formats
         if (part.startsWith('nostr:')) {
           return (

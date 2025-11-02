@@ -137,6 +137,8 @@ export function getNpubFallbackDisplay(pubkey: string): string {
 /**
  * Get display name for a profile with consistent priority order
  * Returns: profile.name || profile.display_name || profile.nip05 || npub fallback
+ * This function works with parsed profile objects (from useEventModel)
+ * For NostrEvent objects, use extractProfileDisplayName from profileUtils
  * @param profile Profile object with optional name, display_name, and nip05 fields
  * @param pubkey The pubkey in hex format (required for fallback)
  * @returns Display name string
@@ -145,6 +147,7 @@ export function getProfileDisplayName(
   profile: { name?: string; display_name?: string; nip05?: string } | null | undefined,
   pubkey: string
 ): string {
+  // Consistent priority order: name || display_name || nip05 || fallback
   if (profile?.name) return profile.name
   if (profile?.display_name) return profile.display_name
   if (profile?.nip05) return profile.nip05

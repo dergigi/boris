@@ -11,6 +11,7 @@ import { extractUrlsFromContent } from '../services/bookmarkHelpers'
 import { classifyUrl } from '../utils/helpers'
 import { ViewMode } from './Bookmarks'
 import { getPreviewImage, fetchOgImage } from '../utils/imagePreview'
+import { getProfileDisplayName } from '../utils/nostrUriResolver'
 import { CompactView } from './BookmarkViews/CompactView'
 import { LargeView } from './BookmarkViews/LargeView'
 import { CardView } from './BookmarkViews/CardView'
@@ -62,12 +63,15 @@ export const BookmarkItem: React.FC<BookmarkItemProps> = ({ bookmark, index, onS
   const authorProfile = useEventModel(Models.ProfileModel, [bookmark.pubkey])
   const authorNpub = npubEncode(bookmark.pubkey)
   
-  // Get display name for author
+  // Get display name for author using centralized utility
   const getAuthorDisplayName = () => {
-    if (authorProfile?.name) return authorProfile.name
-    if (authorProfile?.display_name) return authorProfile.display_name
-    if (authorProfile?.nip05) return authorProfile.nip05
-    return short(bookmark.pubkey) // fallback to short pubkey
+    const displayName = getProfileDisplayName(authorProfile, bookmark.pubkey)
+    // getProfileDisplayName returns npub format for fallback, but we want short pubkey format
+    // So check if it's the fallback format and use short() instead
+    if (displayName.startsWith('@') && displayName.includes('...')) {
+      return short(bookmark.pubkey)
+    }
+    return displayName
   }
 
   // Get content type icon based on bookmark kind and URL classification
