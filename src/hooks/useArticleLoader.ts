@@ -264,10 +264,10 @@ export function useArticleLoader({
     
     const loadArticle = async () => {
       const requestId = ++currentRequestIdRef.current
-      console.log(`[article-loader] Starting loadArticle requestId=${requestId} for naddr=${naddr.slice(0, 20)}...`)
+      console.log(`[profile-loading-debug][article-loader] Starting loadArticle requestId=${requestId} for naddr=${naddr.slice(0, 20)}...`)
       
       if (!mountedRef.current) {
-        console.log(`[article-loader] Aborted loadArticle requestId=${requestId} - not mounted`)
+        console.log(`[profile-loading-debug][article-loader] Aborted loadArticle requestId=${requestId} - not mounted`)
         return
       }
       
@@ -284,7 +284,7 @@ export function useArticleLoader({
       // At this point, we've checked EventStore and cache - neither had content
       // Only show loading skeleton if we also don't have preview data
       if (previewData) {
-        console.log(`[article-loader] requestId=${requestId} has previewData, showing immediately`)
+        console.log(`[profile-loading-debug][article-loader] requestId=${requestId} has previewData, showing immediately`)
         // If we have preview data from navigation, show it immediately (no skeleton!)
         setCurrentTitle(previewData.title)
         setReaderContent({
@@ -301,7 +301,7 @@ export function useArticleLoader({
         // Preloading again would be redundant and could cause unnecessary network requests
       } else {
         // No cache, no EventStore, no preview data - need to load from relays
-        console.log(`[article-loader] requestId=${requestId} no previewData, setting loading=true, content=undefined`)
+        console.log(`[profile-loading-debug][article-loader] requestId=${requestId} no previewData, setting loading=true, content=undefined`)
         setReaderLoading(true)
         setReaderContent(undefined)
       }

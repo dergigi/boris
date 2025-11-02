@@ -31,14 +31,14 @@ const ResolvedMention: React.FC<ResolvedMentionProps> = ({ encoded }) => {
     // Check cache
     const cached = loadCachedProfiles([pubkey])
     if (cached.has(pubkey)) {
-      console.log(`[resolved-mention] ${encoded?.slice(0, 16)}... in cache`)
+      console.log(`[profile-loading-debug][resolved-mention] ${encoded?.slice(0, 16)}... in cache`)
       return true
     }
     // Check eventStore
     const eventStoreProfile = eventStore?.getEvent(pubkey + ':0')
     const inStore = !!eventStoreProfile
     if (inStore) {
-      console.log(`[resolved-mention] ${encoded?.slice(0, 16)}... in eventStore`)
+      console.log(`[profile-loading-debug][resolved-mention] ${encoded?.slice(0, 16)}... in eventStore`)
     }
     return inStore
   }, [pubkey, eventStore, encoded])
@@ -46,7 +46,7 @@ const ResolvedMention: React.FC<ResolvedMentionProps> = ({ encoded }) => {
   // Show loading if profile doesn't exist and not in cache/store
   const isLoading = !profile && pubkey && !isInCacheOrStore
   if (isLoading && encoded) {
-    console.log(`[resolved-mention] ${encoded.slice(0, 16)}... isLoading=true (profile=${!!profile}, pubkey=${!!pubkey}, inCacheOrStore=${isInCacheOrStore})`)
+    console.log(`[profile-loading-debug][resolved-mention] ${encoded.slice(0, 16)}... isLoading=true (profile=${!!profile}, pubkey=${!!pubkey}, inCacheOrStore=${isInCacheOrStore})`)
   }
   
   const display = pubkey ? getProfileDisplayName(profile, pubkey) : encoded

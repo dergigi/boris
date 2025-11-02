@@ -207,7 +207,7 @@ export function useProfileLabels(
       // Skip if already resolved from initial cache
       if (labels.has(encoded)) {
         loading.set(encoded, false)
-        console.log(`[profile-labels-loading] ${encoded.slice(0, 16)}... in cache, not loading`)
+        console.log(`[profile-loading-debug][profile-labels-loading] ${encoded.slice(0, 16)}... in cache, not loading`)
         return
       }
       
@@ -227,14 +227,14 @@ export function useProfileLabels(
           labels.set(encoded, fallback)
         }
         loading.set(encoded, false)
-        console.log(`[profile-labels-loading] ${encoded.slice(0, 16)}... in eventStore, not loading`)
+        console.log(`[profile-loading-debug][profile-labels-loading] ${encoded.slice(0, 16)}... in eventStore, not loading`)
       } else {
         // No profile found yet, will use fallback after fetch or keep empty
         // We'll set fallback labels for missing profiles at the end
         // Mark as loading since we'll fetch it
         pubkeysToFetch.push(pubkey)
         loading.set(encoded, true)
-        console.log(`[profile-labels-loading] ${encoded.slice(0, 16)}... not found, SET LOADING=true`)
+        console.log(`[profile-loading-debug][profile-labels-loading] ${encoded.slice(0, 16)}... not found, SET LOADING=true`)
       }
     })
     
@@ -248,11 +248,11 @@ export function useProfileLabels(
     
     setProfileLabels(new Map(labels))
     setProfileLoading(new Map(loading))
-    console.log(`[profile-labels-loading] Initial loading state:`, Array.from(loading.entries()).map(([e, l]) => `${e.slice(0, 16)}...=${l}`))
+    console.log(`[profile-loading-debug][profile-labels-loading] Initial loading state:`, Array.from(loading.entries()).map(([e, l]) => `${e.slice(0, 16)}...=${l}`))
     
     // Fetch missing profiles asynchronously with reactive updates
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
-      console.log(`[profile-labels-loading] Starting fetch for ${pubkeysToFetch.length} profiles:`, pubkeysToFetch.map(p => p.slice(0, 16) + '...'))
+      console.log(`[profile-loading-debug][profile-labels-loading] Starting fetch for ${pubkeysToFetch.length} profiles:`, pubkeysToFetch.map(p => p.slice(0, 16) + '...'))
       const pubkeysToFetchSet = new Set(pubkeysToFetch)
       // Create a map from pubkey to encoded identifier for quick lookup
       const pubkeyToEncoded = new Map<string, string>()
@@ -279,7 +279,7 @@ export function useProfileLabels(
         scheduleBatchedUpdate()
         
         // Clear loading state for this profile when it resolves
-        console.log(`[profile-labels-loading] Profile resolved for ${encoded.slice(0, 16)}..., CLEARING LOADING`)
+        console.log(`[profile-loading-debug][profile-labels-loading] Profile resolved for ${encoded.slice(0, 16)}..., CLEARING LOADING`)
         setProfileLoading(prevLoading => {
           const updated = new Map(prevLoading)
           updated.set(encoded, false)
@@ -294,7 +294,7 @@ export function useProfileLabels(
           applyPendingUpdates()
           
           // Clear loading state for all fetched profiles
-          console.log(`[profile-labels-loading] Fetch complete, clearing loading for all ${pubkeysToFetch.length} profiles`)
+          console.log(`[profile-loading-debug][profile-labels-loading] Fetch complete, clearing loading for all ${pubkeysToFetch.length} profiles`)
           setProfileLoading(prevLoading => {
             const updated = new Map(prevLoading)
             pubkeysToFetch.forEach(pubkey => {
@@ -303,7 +303,7 @@ export function useProfileLabels(
                 const wasLoading = updated.get(encoded)
                 updated.set(encoded, false)
                 if (wasLoading) {
-                  console.log(`[profile-labels-loading] ${encoded.slice(0, 16)}... CLEARED loading after fetch complete`)
+                  console.log(`[profile-loading-debug][profile-labels-loading] ${encoded.slice(0, 16)}... CLEARED loading after fetch complete`)
                 }
               }
             })

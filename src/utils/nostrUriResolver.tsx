@@ -340,7 +340,7 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
       // For npub/nprofile, check if loading and show loading state
       if ((decoded.type === 'npub' || decoded.type === 'nprofile') && profileLoading.has(encoded) && profileLoading.get(encoded)) {
         const label = getNostrUriLabel(encoded)
-        console.log(`[nostr-uri-resolve] ${encoded.slice(0, 16)}... is LOADING, showing loading state`)
+        console.log(`[profile-loading-debug][nostr-uri-resolve] ${encoded.slice(0, 16)}... is LOADING, showing loading state`)
         // Wrap in span with profile-loading class for CSS styling
         return `[<span class="profile-loading">${label}</span>](${link})`
       }

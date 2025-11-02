@@ -46,14 +46,14 @@ const NostrMentionLink: React.FC<NostrMentionLinkProps> = ({
     // Check cache
     const cached = loadCachedProfiles([pubkey])
     if (cached.has(pubkey)) {
-      console.log(`[nostr-mention-link] ${nostrUri.slice(0, 30)}... in cache`)
+      console.log(`[profile-loading-debug][nostr-mention-link] ${nostrUri.slice(0, 30)}... in cache`)
       return true
     }
     // Check eventStore
     const eventStoreProfile = eventStore?.getEvent(pubkey + ':0')
     const inStore = !!eventStoreProfile
     if (inStore) {
-      console.log(`[nostr-mention-link] ${nostrUri.slice(0, 30)}... in eventStore`)
+      console.log(`[profile-loading-debug][nostr-mention-link] ${nostrUri.slice(0, 30)}... in eventStore`)
     }
     return inStore
   }, [pubkey, eventStore, nostrUri])
@@ -62,7 +62,7 @@ const NostrMentionLink: React.FC<NostrMentionLinkProps> = ({
   const isLoading = !profile && pubkey && !isInCacheOrStore && 
     decoded && (decoded.type === 'npub' || decoded.type === 'nprofile')
   if (isLoading) {
-    console.log(`[nostr-mention-link] ${nostrUri.slice(0, 30)}... isLoading=true (profile=${!!profile}, pubkey=${!!pubkey}, inCacheOrStore=${isInCacheOrStore})`)
+    console.log(`[profile-loading-debug][nostr-mention-link] ${nostrUri.slice(0, 30)}... isLoading=true (profile=${!!profile}, pubkey=${!!pubkey}, inCacheOrStore=${isInCacheOrStore})`)
   }
   
   // If decoding failed, show shortened identifier
