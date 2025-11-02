@@ -174,6 +174,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
       const pubkeysToFetchSet = new Set(pubkeysToFetch)
       console.log(`[profile-labels] Fetching ${pubkeysToFetch.length} profiles from relays`)
+      console.log(`[profile-labels] Calling fetchProfiles with relayPool and ${pubkeysToFetch.length} pubkeys`)
       fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch)
         .then((fetchedProfiles) => {
           console.log(`[profile-labels] Fetch completed, received ${fetchedProfiles.length} profiles`)
