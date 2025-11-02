@@ -231,6 +231,10 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
       console.log(`[profile-labels] Fetching ${pubkeysToFetch.length} profiles from relays`)
       console.log(`[profile-labels] Calling fetchProfiles with relayPool and ${pubkeysToFetch.length} pubkeys`)
       
+      // Capture refs at effect level for cleanup function
+      const currentPendingUpdatesRef = pendingUpdatesRef
+      const currentRafScheduledRef = rafScheduledRef
+      
       // Reactive callback: batch updates to prevent flickering
       const handleProfileEvent = (event: NostrEvent) => {
         const encoded = pubkeyToEncoded.get(event.pubkey)
@@ -261,15 +265,15 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
         }
         
         // Add to pending updates
-        pendingUpdatesRef.current.set(encoded, label)
+        currentPendingUpdatesRef.current.set(encoded, label)
         
         // Schedule batched update if not already scheduled
-        if (rafScheduledRef.current === null) {
-          rafScheduledRef.current = requestAnimationFrame(() => {
+        if (currentRafScheduledRef.current === null) {
+          currentRafScheduledRef.current = requestAnimationFrame(() => {
             // Apply all pending updates in one batch
             setProfileLabels(prevLabels => {
               const updatedLabels = new Map(prevLabels)
-              const pendingUpdates = pendingUpdatesRef.current
+              const pendingUpdates = currentPendingUpdatesRef.current
               
               // Apply all pending updates
               for (const [encoded, label] of pendingUpdates.entries()) {
@@ -278,7 +282,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
               
               // Clear pending updates
               pendingUpdates.clear()
-              rafScheduledRef.current = null
+              currentRafScheduledRef.current = null
               
               return updatedLabels
             })
@@ -292,13 +296,13 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           
           // Ensure any pending batched updates are applied immediately after EOSE
           // This ensures all profile updates are applied even if RAF hasn't fired yet
-          const pendingUpdates = pendingUpdatesRef.current
+          const pendingUpdates = currentPendingUpdatesRef.current
           const pendingCount = pendingUpdates.size
           
           // Cancel any pending RAF since we're applying updates synchronously now
-          if (rafScheduledRef.current !== null) {
-            cancelAnimationFrame(rafScheduledRef.current)
-            rafScheduledRef.current = null
+          if (currentRafScheduledRef.current !== null) {
+            cancelAnimationFrame(currentRafScheduledRef.current)
+            currentRafScheduledRef.current = null
           }
           
           if (pendingCount > 0) {
@@ -328,12 +332,15 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
       
       // Cleanup: flush any pending updates before clearing, then cancel RAF
       return () => {
+        // Use captured refs from effect scope to avoid stale closure issues
+        const pendingUpdates = currentPendingUpdatesRef.current
+        const scheduledRaf = currentRafScheduledRef.current
+        
         // Flush any pending updates before cleanup to avoid losing them
-        const pendingUpdates = pendingUpdatesRef.current
-        if (pendingUpdates.size > 0 && rafScheduledRef.current !== null) {
+        if (pendingUpdates.size > 0 && scheduledRaf !== null) {
           // Cancel the scheduled RAF and apply updates immediately
-          cancelAnimationFrame(rafScheduledRef.current)
-          rafScheduledRef.current = null
+          cancelAnimationFrame(scheduledRaf)
+          currentRafScheduledRef.current = null
           
           // Apply pending updates synchronously before cleanup
           setProfileLabels(prevLabels => {
@@ -345,11 +352,12 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           })
           
           pendingUpdates.clear()
-        } else if (rafScheduledRef.current !== null) {
-          cancelAnimationFrame(rafScheduledRef.current)
-          rafScheduledRef.current = null
+        } else if (scheduledRaf !== null) {
+          cancelAnimationFrame(scheduledRaf)
+          currentRafScheduledRef.current = null
         }
-        pendingUpdatesRef.current.clear()
+        // Clear using captured reference to avoid linter warning
+        pendingUpdates.clear()
       }
     } else {
       if (pubkeysToFetch.length === 0) {
