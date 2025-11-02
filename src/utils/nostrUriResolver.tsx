@@ -338,20 +338,15 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
       if (decoded.type === 'npub' || decoded.type === 'nprofile') {
         const pubkey = decoded.type === 'npub' ? decoded.data : decoded.data.pubkey
         
-        // Check loading state FIRST - show loading even if we have a fallback label
-        const isLoading = profileLoading.get(pubkey)
-        if (isLoading === true) {
-          const label = getNostrUriLabel(encoded)
-          console.log(`[profile-loading-debug][nostr-uri-resolve] ${pubkey.slice(0, 16)}... is LOADING, showing loading state`)
-          // Wrap in span with profile-loading class for CSS styling
-          return `[<span class="profile-loading">${label}</span>](${link})`
-        }
-        
         // Check if we have a resolved profile name using pubkey as key
         if (profileLabels.has(pubkey)) {
           const displayName = profileLabels.get(pubkey)!
           return `[${displayName}](${link})`
         }
+        
+        // If no resolved label yet, use fallback (will show loading via post-processing)
+        const label = getNostrUriLabel(encoded)
+        return `[${label}](${link})`
       }
     } catch (error) {
       // Ignore decode errors, fall through to default label
@@ -360,6 +355,51 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
     // For other types or if not resolved, use default label (shortened npub format)
     const label = getNostrUriLabel(encoded)
     return `[${label}](${link})`
+  })
+}
+
+/**
+ * Post-process rendered HTML to add loading class to profile links that are still loading
+ * This is necessary because HTML inside markdown links doesn't render correctly
+ * @param html The rendered HTML string
+ * @param profileLoading Map of pubkey (hex) -> boolean indicating if profile is loading
+ * @returns HTML with profile-loading class added to loading profile links
+ */
+export function addLoadingClassToProfileLinks(
+  html: string,
+  profileLoading: Map<string, boolean>
+): string {
+  if (profileLoading.size === 0) return html
+  
+  // Find all <a> tags with href starting with /p/ (profile links)
+  return html.replace(/<a\s+[^>]*?href="\/p\/([^"]+)"[^>]*?>/g, (match, npub) => {
+    try {
+      // Decode npub to get pubkey
+      const decoded = decode(npub)
+      if (decoded.type !== 'npub') return match
+      
+      const pubkey = decoded.data
+      
+      // Check if this profile is loading
+      if (profileLoading.get(pubkey) === true) {
+        // Add profile-loading class if not already present
+        if (!match.includes('profile-loading')) {
+          // Insert class before the closing >
+          const classMatch = /class="([^"]*)"/.exec(match)
+          if (classMatch) {
+            // Update existing class attribute
+            return match.replace(/class="([^"]*)"/, `class="$1 profile-loading"`)
+          } else {
+            // Add new class attribute
+            return match.replace(/(<a\s+[^>]*?)>/, '$1 class="profile-loading">')
+          }
+        }
+      }
+    } catch (error) {
+      // If decoding fails, just return the original match
+    }
+    
+    return match
   })
 }
 

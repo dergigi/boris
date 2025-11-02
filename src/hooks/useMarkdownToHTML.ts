@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { RelayPool } from 'applesauce-relay'
-import { extractNaddrUris, replaceNostrUrisInMarkdownWithProfileLabels } from '../utils/nostrUriResolver'
+import { extractNaddrUris, replaceNostrUrisInMarkdownWithProfileLabels, addLoadingClassToProfileLinks } from '../utils/nostrUriResolver'
 import { fetchArticleTitles } from '../services/articleTitleResolver'
 import { useProfileLabels } from './useProfileLabels'
 
@@ -138,7 +138,9 @@ export const useMarkdownToHTML = (
 
       const rafId = requestAnimationFrame(() => {
         if (previewRef.current && !isCancelled) {
-          const html = previewRef.current.innerHTML
+          let html = previewRef.current.innerHTML
+          // Post-process HTML to add loading class to profile links
+          html = addLoadingClassToProfileLinks(html, profileLoadingRef.current)
           setRenderedHtml(html)
         } else if (!isCancelled) {
           console.warn('⚠️ markdownPreviewRef.current is null')
