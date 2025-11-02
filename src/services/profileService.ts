@@ -9,10 +9,13 @@ import { UserSettings } from './settingsService'
 interface CachedProfile {
   event: NostrEvent
   timestamp: number
+  lastAccessed: number // For LRU eviction
 }
 
 const PROFILE_CACHE_TTL = 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds (profiles change less frequently than articles)
 const PROFILE_CACHE_PREFIX = 'profile_cache_'
+const MAX_CACHED_PROFILES = 1000 // Limit number of cached profiles to prevent quota issues
+let quotaExceededLogged = false // Only log quota error once per session
 
 function getProfileCacheKey(pubkey: string): string {
   return `${PROFILE_CACHE_PREFIX}${pubkey}`
@@ -21,6 +24,7 @@ function getProfileCacheKey(pubkey: string): string {
 /**
  * Get a cached profile from localStorage
  * Returns null if not found, expired, or on error
+ * Updates lastAccessed timestamp for LRU eviction
  */
 export function getCachedProfile(pubkey: string): NostrEvent | null {
   try {
@@ -30,45 +34,133 @@ export function getCachedProfile(pubkey: string): NostrEvent | null {
       return null
     }
 
-    const { event, timestamp }: CachedProfile = JSON.parse(cached)
-    const age = Date.now() - timestamp
+    const data: CachedProfile = JSON.parse(cached)
+    const age = Date.now() - data.timestamp
 
     if (age > PROFILE_CACHE_TTL) {
       localStorage.removeItem(cacheKey)
       return null
     }
 
-    return event
+    // Update lastAccessed for LRU eviction (but don't fail if update fails)
+    try {
+      data.lastAccessed = Date.now()
+      localStorage.setItem(cacheKey, JSON.stringify(data))
+    } catch {
+      // Ignore update errors, still return the profile
+    }
+
+    return data.event
   } catch (err) {
-    // Log cache read errors for debugging
-    console.error(`[npub-cache] Error reading cached profile for ${pubkey.slice(0, 16)}...:`, err)
+    // Silently handle cache read errors (quota, invalid data, etc.)
     return null
+  }
+}
+
+/**
+ * Get all cached profile keys for eviction
+ */
+function getAllCachedProfileKeys(): Array<{ key: string; lastAccessed: number }> {
+  const keys: Array<{ key: string; lastAccessed: number }> = []
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(PROFILE_CACHE_PREFIX)) {
+        try {
+          const cached = localStorage.getItem(key)
+          if (cached) {
+            const data: CachedProfile = JSON.parse(cached)
+            keys.push({
+              key,
+              lastAccessed: data.lastAccessed || data.timestamp || 0
+            })
+          }
+        } catch {
+          // Skip invalid entries
+        }
+      }
+    }
+  } catch {
+    // Ignore errors during enumeration
+  }
+  return keys
+}
+
+/**
+ * Evict oldest profiles (LRU) to free up space
+ * Removes the oldest accessed profiles until we're under the limit
+ */
+function evictOldProfiles(targetCount: number): void {
+  try {
+    const keys = getAllCachedProfileKeys()
+    if (keys.length <= targetCount) {
+      return
+    }
+
+    // Sort by lastAccessed (oldest first) and remove oldest
+    keys.sort((a, b) => a.lastAccessed - b.lastAccessed)
+    const toRemove = keys.slice(0, keys.length - targetCount)
+    
+    for (const { key } of toRemove) {
+      localStorage.removeItem(key)
+    }
+  } catch {
+    // Silently fail eviction
   }
 }
 
 /**
  * Cache a profile to localStorage
  * Handles errors gracefully (quota exceeded, invalid data, etc.)
+ * Implements LRU eviction when cache is full
  */
 export function cacheProfile(profile: NostrEvent): void {
   try {
     if (profile.kind !== 0) {
-      console.warn(`[npub-cache] Attempted to cache non-profile event (kind ${profile.kind})`)
       return // Only cache kind:0 (profile) events
     }
 
     const cacheKey = getProfileCacheKey(profile.pubkey)
+    
+    // Check if we need to evict before caching
+    const existingKeys = getAllCachedProfileKeys()
+    if (existingKeys.length >= MAX_CACHED_PROFILES) {
+      // Check if this profile is already cached
+      const alreadyCached = existingKeys.some(k => k.key === cacheKey)
+      if (!alreadyCached) {
+        // Evict oldest profiles to make room (keep 90% of max)
+        evictOldProfiles(Math.floor(MAX_CACHED_PROFILES * 0.9))
+      }
+    }
+
     const cached: CachedProfile = {
       event: profile,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      lastAccessed: Date.now()
     }
     localStorage.setItem(cacheKey, JSON.stringify(cached))
-    console.log(`[npub-cache] Cached profile:`, profile.pubkey.slice(0, 16) + '...')
   } catch (err) {
-    // Log caching errors for debugging
-    console.error(`[npub-cache] Failed to cache profile ${profile.pubkey.slice(0, 16)}...:`, err)
-    // Don't block the UI if caching fails
-    // Handles quota exceeded, invalid data, and other errors gracefully
+    // Handle quota exceeded by evicting and retrying once
+    if (err instanceof DOMException && err.name === 'QuotaExceededError') {
+      if (!quotaExceededLogged) {
+        console.warn(`[npub-cache] localStorage quota exceeded, evicting old profiles...`)
+        quotaExceededLogged = true
+      }
+      
+      // Try evicting more aggressively and retry
+      try {
+        evictOldProfiles(Math.floor(MAX_CACHED_PROFILES * 0.5))
+        const cached: CachedProfile = {
+          event: profile,
+          timestamp: Date.now(),
+          lastAccessed: Date.now()
+        }
+        localStorage.setItem(getProfileCacheKey(profile.pubkey), JSON.stringify(cached))
+      } catch {
+        // Silently fail if still can't cache - don't block the UI
+      }
+    }
+    // Silently handle other caching errors (invalid data, etc.)
   }
 }
 
