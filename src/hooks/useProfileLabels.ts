@@ -81,31 +81,63 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     
     // Fetch missing profiles asynchronously
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
-      console.log('[npub-resolve] Fetching', pubkeysToFetch.length, 'missing profiles')
+      console.log('[npub-resolve] Fetching', pubkeysToFetch.length, 'missing profiles:', pubkeysToFetch.slice(0, 3).map(p => p.slice(0, 8) + '...'))
       fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch)
         .then(() => {
-          // Re-check eventStore for all profiles (including ones we just fetched)
-          // This ensures we get profiles even if fetchProfiles didn't return them in the array
-          const updatedLabels = new Map(labels)
-          profileData.forEach(({ encoded, pubkey }) => {
-            if (!updatedLabels.has(encoded) && eventStore) {
-              const profileEvent = eventStore.getEvent(pubkey + ':0')
-              if (profileEvent) {
-                try {
-                  const profileData = JSON.parse(profileEvent.content || '{}') as { name?: string; display_name?: string; nip05?: string }
-                  const displayName = profileData.display_name || profileData.name || profileData.nip05
-                  if (displayName) {
-                    updatedLabels.set(encoded, `@${displayName}`)
-                    console.log('[npub-resolve] Resolved profile:', encoded, '->', displayName)
+          // Re-check eventStore periodically as profiles arrive asynchronously
+          let checkCount = 0
+          const maxChecks = 10
+          const checkInterval = 200 // ms
+          
+          // Keep track of resolved labels across checks
+          let currentLabels = new Map(labels)
+          
+          const checkForProfiles = () => {
+            checkCount++
+            const updatedLabels = new Map(currentLabels)
+            let newlyResolvedCount = 0
+            let withEventsCount = 0
+            let withoutNamesCount = 0
+            
+            profileData.forEach(({ encoded, pubkey }) => {
+              if (!updatedLabels.has(encoded) && eventStore) {
+                const profileEvent = eventStore.getEvent(pubkey + ':0')
+                if (profileEvent) {
+                  withEventsCount++
+                  try {
+                    const profileData = JSON.parse(profileEvent.content || '{}') as { name?: string; display_name?: string; nip05?: string }
+                    const displayName = profileData.display_name || profileData.name || profileData.nip05
+                    if (displayName) {
+                      updatedLabels.set(encoded, `@${displayName}`)
+                      newlyResolvedCount++
+                      console.log('[npub-resolve] Resolved profile:', encoded.slice(0, 20) + '...', '->', displayName)
+                    } else {
+                      withoutNamesCount++
+                      if (checkCount === 1) { // Only log once on first check
+                        console.log('[npub-resolve] Profile has no name:', encoded.slice(0, 20) + '...', 'content keys:', Object.keys(profileData))
+                      }
+                    }
+                  } catch (err) {
+                    console.error('[npub-resolve] Error parsing profile:', encoded.slice(0, 20) + '...', err)
                   }
-                } catch {
-                  // ignore parse errors
                 }
               }
+            })
+            
+            currentLabels = updatedLabels
+            console.log('[npub-resolve] Check', checkCount, '- resolved:', updatedLabels.size, 'total,', newlyResolvedCount, 'new,', withEventsCount, 'with events,', withoutNamesCount, 'without names')
+            setProfileLabels(updatedLabels)
+            
+            // Continue checking if we haven't resolved all profiles and haven't exceeded max checks
+            if (updatedLabels.size < profileData.length && checkCount < maxChecks) {
+              setTimeout(checkForProfiles, checkInterval)
+            } else if (updatedLabels.size < profileData.length) {
+              console.warn('[npub-resolve] Stopped checking after', checkCount, 'attempts. Resolved', updatedLabels.size, 'out of', profileData.length)
             }
-          })
-          console.log('[npub-resolve] After fetch, resolved:', updatedLabels.size, 'out of', profileData.length)
-          setProfileLabels(updatedLabels)
+          }
+          
+          // Start checking immediately, then periodically
+          checkForProfiles()
         })
         .catch(err => {
           console.error('[npub-resolve] Error fetching profiles:', err)
