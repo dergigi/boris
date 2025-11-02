@@ -324,9 +324,6 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
   console.log(`[profile-loading-debug][nostr-uri-resolve] Loading keys:`, Array.from(profileLoading.entries()).filter(([, l]) => l).map(([k]) => k.slice(0, 16) + '...'))
   
   return replaceNostrUrisSafely(markdown, (encoded) => {
-    console.log(`[profile-loading-debug][nostr-uri-resolve] Processing encoded="${encoded.slice(0, 30)}..."`)
-    console.log(`[profile-loading-debug][nostr-uri-resolve] Map keys sample:`, Array.from(profileLoading.keys()).slice(0, 3).map(k => k.slice(0, 30) + '...'))
-    
     const link = createNostrLink(encoded)
     
     // Check if we have a resolved profile name
@@ -347,7 +344,17 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
       if (decoded.type === 'npub' || decoded.type === 'nprofile') {
         const hasLoading = profileLoading.has(encoded)
         const isLoading = profileLoading.get(encoded)
-        console.log(`[profile-loading-debug][nostr-uri-resolve] ${encoded.slice(0, 16)}... type=${decoded.type}, hasLoading=${hasLoading}, isLoading=${isLoading}`)
+        
+        // Debug: Check if there's a key mismatch
+        if (!hasLoading && profileLoading.size > 0) {
+          // Check if there's a similar key (for debugging)
+          const matchingKey = Array.from(profileLoading.keys()).find(k => k.includes(encoded.slice(0, 20)) || encoded.includes(k.slice(0, 20)))
+          if (matchingKey) {
+            console.log(`[profile-loading-debug][nostr-uri-resolve] KEY MISMATCH: encoded="${encoded.slice(0, 50)}..." vs Map key="${matchingKey.slice(0, 50)}..."`)
+            console.log(`[profile-loading-debug][nostr-uri-resolve] Full encoded length=${encoded.length}, Full key length=${matchingKey.length}`)
+            console.log(`[profile-loading-debug][nostr-uri-resolve] encoded === key? ${encoded === matchingKey}`)
+          }
+        }
         
         if (hasLoading && isLoading) {
           const label = getNostrUriLabel(encoded)
