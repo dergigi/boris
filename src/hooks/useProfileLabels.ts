@@ -74,6 +74,9 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
       }
     })
     
+    if (labels.size > 0) {
+      console.log(`[${ts()}] [npub-resolve] Initial labels from cache (useMemo):`, labels.size, 'labels')
+    }
     return labels
   }, [profileData])
 
@@ -116,6 +119,8 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     
     // Build labels from localStorage cache and eventStore (initialLabels already has cache, add eventStore)
     // Start with labels from initial cache lookup (in useMemo)
+    // Note: initialLabels should already have all cached profiles, but we rebuild here
+    // to also check EventStore and handle any profiles that weren't in cache
     const labels = new Map<string, string>(initialLabels)
     
     const pubkeysToFetch: string[] = []
