@@ -166,11 +166,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     // Update labels with what we found in localStorage cache and eventStore
     const initialResolveTime = Date.now() - startTime
     console.log(`[${ts()}] [npub-resolve] Initial resolution complete:`, labels.size, 'labels resolved in', initialResolveTime, 'ms. Will fetch', pubkeysToFetch.length, 'missing profiles.')
-    
-    // Only update if labels changed (avoid unnecessary re-renders)
-    if (labels.size !== profileLabels.size || Array.from(labels.keys()).some(k => labels.get(k) !== profileLabels.get(k))) {
-      setProfileLabels(new Map(labels))
-    }
+    setProfileLabels(new Map(labels))
     
     // Fetch missing profiles asynchronously
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
@@ -250,9 +246,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           console.error(`[${ts()}] [npub-resolve] Error fetching profiles after`, fetchDuration, 'ms:', err)
         })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // initialLabels is derived from profileData, profileLabels is state we update (would cause loops)
-  }, [profileData, eventStore, relayPool])
+  }, [profileData, eventStore, relayPool, initialLabels])
 
   // Only log when size actually changes to reduce noise
   useEffect(() => {
