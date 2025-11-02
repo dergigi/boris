@@ -3,7 +3,7 @@ import { Hooks } from 'applesauce-react'
 import { Helpers, IEventStore } from 'applesauce-core'
 import { getContentPointers } from 'applesauce-factory/helpers'
 import { RelayPool } from 'applesauce-relay'
-import { fetchProfiles } from '../services/profileService'
+import { fetchProfiles, loadCachedProfiles } from '../services/profileService'
 
 const { getPubkeyFromDecodeResult, encodeDecodeResult } = Helpers
 
@@ -52,32 +52,58 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
   const [profileLabels, setProfileLabels] = useState<Map<string, string>>(new Map())
   const lastLoggedSize = useRef<number>(0)
 
-  // Build initial labels from eventStore, then fetch missing profiles
+  // Build initial labels: localStorage cache -> eventStore -> fetch from relays
   useEffect(() => {
     const startTime = Date.now()
     console.log(`[${ts()}] [npub-resolve] Building labels, profileData:`, profileData.length, 'hasEventStore:', !!eventStore)
     
-    // First, get profiles from eventStore synchronously
+    // Extract all pubkeys
+    const allPubkeys = profileData.map(({ pubkey }) => pubkey)
+    
+    // First, check localStorage cache (synchronous, instant)
+    const cachedProfiles = loadCachedProfiles(allPubkeys)
+    console.log(`[${ts()}] [npub-resolve] Found in localStorage cache:`, cachedProfiles.size, 'out of', allPubkeys.length)
+    
+    // Add cached profiles to EventStore for consistency
+    if (eventStore) {
+      for (const profile of cachedProfiles.values()) {
+        eventStore.add(profile)
+      }
+    }
+    
+    // Build initial labels from localStorage cache and eventStore
     const labels = new Map<string, string>()
     const pubkeysToFetch: string[] = []
     
     profileData.forEach(({ encoded, pubkey }) => {
-      if (eventStore) {
-        const profileEvent = eventStore.getEvent(pubkey + ':0')
-        if (profileEvent) {
-          try {
-            const profileData = JSON.parse(profileEvent.content || '{}') as { name?: string; display_name?: string; nip05?: string }
-            const displayName = profileData.display_name || profileData.name || profileData.nip05
-            if (displayName) {
-              labels.set(encoded, `@${displayName}`)
-              console.log(`[${ts()}] [npub-resolve] Found in eventStore:`, encoded, '->', displayName)
-            } else {
-              pubkeysToFetch.push(pubkey)
-            }
-          } catch {
+      let profileEvent: { content: string } | null = null
+      let foundSource = ''
+      
+      // Check localStorage cache first
+      const cachedProfile = cachedProfiles.get(pubkey)
+      if (cachedProfile) {
+        profileEvent = cachedProfile
+        foundSource = 'localStorage cache'
+      } else if (eventStore) {
+        // Then check EventStore (in-memory from current session)
+        const eventStoreProfile = eventStore.getEvent(pubkey + ':0')
+        if (eventStoreProfile) {
+          profileEvent = eventStoreProfile
+          foundSource = 'eventStore'
+        }
+      }
+      
+      if (profileEvent) {
+        try {
+          const profileData = JSON.parse(profileEvent.content || '{}') as { name?: string; display_name?: string; nip05?: string }
+          const displayName = profileData.display_name || profileData.name || profileData.nip05
+          if (displayName) {
+            labels.set(encoded, `@${displayName}`)
+            console.log(`[${ts()}] [npub-resolve] Found in ${foundSource}:`, encoded.slice(0, 30) + '...', '->', displayName)
+          } else {
             pubkeysToFetch.push(pubkey)
           }
-        } else {
+        } catch {
           pubkeysToFetch.push(pubkey)
         }
       } else {
@@ -85,7 +111,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
       }
     })
     
-    // Update labels with what we found in eventStore
+    // Update labels with what we found in localStorage cache and eventStore
     setProfileLabels(new Map(labels))
     
     // Fetch missing profiles asynchronously
