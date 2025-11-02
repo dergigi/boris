@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { extractNaddrUris, replaceNostrUrisInMarkdownWithProfileLabels } from '../utils/nostrUriResolver'
 import { fetchArticleTitles } from '../services/articleTitleResolver'
@@ -28,11 +28,13 @@ export const useMarkdownToHTML = (
   const [processedMarkdown, setProcessedMarkdown] = useState<string>('')
   const [articleTitles, setArticleTitles] = useState<Map<string, string>>(new Map())
 
-  console.log(`[${ts()}] [npub-resolve] useMarkdownToHTML: markdown length:`, markdown?.length || 0, 'hasRelayPool:', !!relayPool)
-
   // Resolve profile labels progressively as profiles load
   const profileLabels = useProfileLabels(markdown || '', relayPool)
-  console.log(`[${ts()}] [npub-resolve] useMarkdownToHTML: Profile labels size:`, profileLabels.size)
+  
+  // Log when markdown or profile labels change (but throttle excessive logs)
+  useEffect(() => {
+    console.log(`[${ts()}] [npub-resolve] useMarkdownToHTML: markdown length:`, markdown?.length || 0, 'hasRelayPool:', !!relayPool, 'Profile labels size:', profileLabels.size)
+  }, [markdown?.length, profileLabels.size, relayPool])
 
   // Fetch article titles
   useEffect(() => {

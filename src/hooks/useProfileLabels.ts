@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { Hooks } from 'applesauce-react'
 import { Helpers, IEventStore } from 'applesauce-core'
 import { getContentPointers } from 'applesauce-factory/helpers'
@@ -50,9 +50,11 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
   }, [content])
 
   const [profileLabels, setProfileLabels] = useState<Map<string, string>>(new Map())
+  const lastLoggedSize = useRef<number>(0)
 
   // Build initial labels from eventStore, then fetch missing profiles
   useEffect(() => {
+    const startTime = Date.now()
     console.log(`[${ts()}] [npub-resolve] Building labels, profileData:`, profileData.length, 'hasEventStore:', !!eventStore)
     
     // First, get profiles from eventStore synchronously
@@ -88,10 +90,12 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     
     // Fetch missing profiles asynchronously
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
+      const fetchStartTime = Date.now()
       console.log(`[${ts()}] [npub-resolve] Fetching`, pubkeysToFetch.length, 'missing profiles')
       fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch)
         .then((fetchedProfiles) => {
-          console.log(`[${ts()}] [npub-resolve] fetchProfiles returned`, fetchedProfiles.length, 'profiles')
+          const fetchDuration = Date.now() - fetchStartTime
+          console.log(`[${ts()}] [npub-resolve] fetchProfiles returned`, fetchedProfiles.length, 'profiles in', fetchDuration, 'ms')
           
           // First, use the profiles returned from fetchProfiles directly
           const updatedLabels = new Map(labels)
@@ -153,16 +157,25 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
             }
           })
           
-          console.log(`[${ts()}] [npub-resolve] After fetch - resolved:`, updatedLabels.size, 'total | from array:', resolvedFromArray, '| from store:', resolvedFromStore, '| with names:', withNames, '| without names:', withoutNames, '| missing:', missingFromStore, '| out of', profileData.length)
+          const totalDuration = Date.now() - startTime
+          console.log(`[${ts()}] [npub-resolve] After fetch - resolved:`, updatedLabels.size, 'total | from array:', resolvedFromArray, '| from store:', resolvedFromStore, '| with names:', withNames, '| without names:', withoutNames, '| missing:', missingFromStore, '| out of', profileData.length, '| total time:', totalDuration, 'ms')
           setProfileLabels(updatedLabels)
         })
         .catch(err => {
-          console.error(`[${ts()}] [npub-resolve] Error fetching profiles:`, err)
+          const fetchDuration = Date.now() - fetchStartTime
+          console.error(`[${ts()}] [npub-resolve] Error fetching profiles after`, fetchDuration, 'ms:', err)
         })
     }
   }, [profileData, eventStore, relayPool])
 
-  console.log(`[${ts()}] [npub-resolve] Final labels map size:`, profileLabels.size)
+  // Only log when size actually changes to reduce noise
+  useEffect(() => {
+    if (profileLabels.size !== lastLoggedSize.current) {
+      console.log(`[${ts()}] [npub-resolve] Final labels map size:`, profileLabels.size)
+      lastLoggedSize.current = profileLabels.size
+    }
+  }, [profileLabels.size])
+  
   return profileLabels
 }
 
