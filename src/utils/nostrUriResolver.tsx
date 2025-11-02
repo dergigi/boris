@@ -91,10 +91,12 @@ export function getNostrUriLabel(encoded: string): string {
     
     switch (decoded.type) {
       case 'npub':
-        return `@${encoded.slice(0, 12)}...`
+        // Remove "npub1" prefix (5 chars) and show next 7 chars
+        return `@${encoded.slice(5, 12)}...`
       case 'nprofile': {
         const npub = npubEncode(decoded.data.pubkey)
-        return `@${npub.slice(0, 12)}...`
+        // Remove "npub1" prefix (5 chars) and show next 7 chars
+        return `@${npub.slice(5, 12)}...`
       }
       case 'note':
         return `note:${encoded.slice(5, 12)}...`

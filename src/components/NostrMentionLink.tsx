@@ -50,11 +50,14 @@ const NostrMentionLink: React.FC<NostrMentionLinkProps> = ({
   switch (decoded.type) {
     case 'npub': {
       const pk = decoded.data
-      const displayName = profile?.name || profile?.display_name || profile?.nip05 || `${pk.slice(0, 8)}...`
+      const npub = nip19.npubEncode(pk)
+      // Fallback: show npub without "npub1" prefix
+      const fallbackDisplay = `@${npub.slice(5, 12)}...`
+      const displayName = profile?.name || profile?.display_name || profile?.nip05 || fallbackDisplay
       
       return (
         <a
-          href={`/p/${nip19.npubEncode(pk)}`}
+          href={`/p/${npub}`}
           className={className}
           onClick={onClick}
         >
@@ -64,8 +67,10 @@ const NostrMentionLink: React.FC<NostrMentionLinkProps> = ({
     }
     case 'nprofile': {
       const { pubkey: pk } = decoded.data
-      const displayName = profile?.name || profile?.display_name || profile?.nip05 || `${pk.slice(0, 8)}...`
       const npub = nip19.npubEncode(pk)
+      // Fallback: show npub without "npub1" prefix
+      const fallbackDisplay = `@${npub.slice(5, 12)}...`
+      const displayName = profile?.name || profile?.display_name || profile?.nip05 || fallbackDisplay
       
       return (
         <a
