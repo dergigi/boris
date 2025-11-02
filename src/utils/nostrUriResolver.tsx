@@ -338,19 +338,19 @@ export function replaceNostrUrisInMarkdownWithProfileLabels(
       if (decoded.type === 'npub' || decoded.type === 'nprofile') {
         const pubkey = decoded.type === 'npub' ? decoded.data : decoded.data.pubkey
         
-        // Check if we have a resolved profile name using pubkey as key
-        if (profileLabels.has(pubkey)) {
-          const displayName = profileLabels.get(pubkey)!
-          return `[${displayName}](${link})`
-        }
-        
-        // Check loading state using pubkey as key
+        // Check loading state FIRST - show loading even if we have a fallback label
         const isLoading = profileLoading.get(pubkey)
         if (isLoading === true) {
           const label = getNostrUriLabel(encoded)
           console.log(`[profile-loading-debug][nostr-uri-resolve] ${pubkey.slice(0, 16)}... is LOADING, showing loading state`)
           // Wrap in span with profile-loading class for CSS styling
           return `[<span class="profile-loading">${label}</span>](${link})`
+        }
+        
+        // Check if we have a resolved profile name using pubkey as key
+        if (profileLabels.has(pubkey)) {
+          const displayName = profileLabels.get(pubkey)!
+          return `[${displayName}](${link})`
         }
       }
     } catch (error) {
