@@ -56,6 +56,8 @@ export const useMarkdownToHTML = (
 
   // Process markdown with progressive profile labels and article titles
   useEffect(() => {
+    console.log(`[markdown-to-html] Processing markdown, profileLabels=${profileLabels.size}, profileLoading=${profileLoading.size}, articleTitles=${articleTitles.size}`)
+    console.log(`[markdown-to-html] Clearing rendered HTML and processed markdown`)
     // Always clear previous render immediately to avoid showing stale content while processing
     setRenderedHtml('')
     setProcessedMarkdown('')
@@ -78,6 +80,7 @@ export const useMarkdownToHTML = (
         
         if (isCancelled) return
         
+        console.log(`[markdown-to-html] Processed markdown, loading states:`, Array.from(profileLoading.entries()).filter(([_, l]) => l).map(([e, _]) => e.slice(0, 16) + '...'))
         setProcessedMarkdown(processed)
       } catch (error) {
         console.error(`[markdown-to-html] Error processing markdown:`, error)
