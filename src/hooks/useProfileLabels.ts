@@ -7,6 +7,13 @@ import { fetchProfiles } from '../services/profileService'
 
 const { getPubkeyFromDecodeResult, encodeDecodeResult } = Helpers
 
+// Helper to add timestamps to logs
+const ts = () => {
+  const now = new Date()
+  const ms = now.getMilliseconds().toString().padStart(3, '0')
+  return `${now.toLocaleTimeString('en-US', { hour12: false })}.${ms}`
+}
+
 /**
  * Hook to resolve profile labels from content containing npub/nprofile identifiers
  * Returns a Map of encoded identifier -> display name that updates progressively as profiles load
@@ -16,12 +23,12 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
   
   // Extract profile pointers (npub and nprofile) using applesauce helpers
   const profileData = useMemo(() => {
-      console.log('[npub-resolve] Processing content, length:', content?.length || 0)
+      console.log(`[${ts()}] [npub-resolve] Processing content, length:`, content?.length || 0)
       try {
         const pointers = getContentPointers(content)
-        console.log('[npub-resolve] Found pointers:', pointers.length, 'types:', pointers.map(p => p.type))
+        console.log(`[${ts()}] [npub-resolve] Found pointers:`, pointers.length, 'types:', pointers.map(p => p.type))
         const filtered = pointers.filter(p => p.type === 'npub' || p.type === 'nprofile')
-        console.log('[npub-resolve] Profile pointers:', filtered.length)
+        console.log(`[${ts()}] [npub-resolve] Profile pointers:`, filtered.length)
       const result: Array<{ pubkey: string; encoded: string }> = []
       filtered.forEach(pointer => {
         try {
@@ -31,13 +38,13 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
             result.push({ pubkey, encoded: encoded as string })
           }
         } catch (err) {
-            console.error('[npub-resolve] Error processing pointer:', err, pointer)
+            console.error(`[${ts()}] [npub-resolve] Error processing pointer:`, err, pointer)
         }
       })
-      console.log('[npub-resolve] Profile data after filtering:', result.length)
+      console.log(`[${ts()}] [npub-resolve] Profile data after filtering:`, result.length)
       return result
     } catch (err) {
-      console.error('[npub-resolve] Error extracting pointers:', err)
+      console.error(`[${ts()}] [npub-resolve] Error extracting pointers:`, err)
       return []
     }
   }, [content])
@@ -46,7 +53,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
 
   // Build initial labels from eventStore, then fetch missing profiles
   useEffect(() => {
-    console.log('[npub-resolve] Building labels, profileData:', profileData.length, 'hasEventStore:', !!eventStore)
+    console.log(`[${ts()}] [npub-resolve] Building labels, profileData:`, profileData.length, 'hasEventStore:', !!eventStore)
     
     // First, get profiles from eventStore synchronously
     const labels = new Map<string, string>()
@@ -61,7 +68,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
             const displayName = profileData.display_name || profileData.name || profileData.nip05
             if (displayName) {
               labels.set(encoded, `@${displayName}`)
-              console.log('[npub-resolve] Found in eventStore:', encoded, '->', displayName)
+              console.log(`[${ts()}] [npub-resolve] Found in eventStore:`, encoded, '->', displayName)
             } else {
               pubkeysToFetch.push(pubkey)
             }
@@ -81,10 +88,10 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     
     // Fetch missing profiles asynchronously
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
-      console.log('[npub-resolve] Fetching', pubkeysToFetch.length, 'missing profiles')
+      console.log(`[${ts()}] [npub-resolve] Fetching`, pubkeysToFetch.length, 'missing profiles')
       fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch)
         .then((fetchedProfiles) => {
-          console.log('[npub-resolve] fetchProfiles returned', fetchedProfiles.length, 'profiles')
+          console.log(`[${ts()}] [npub-resolve] fetchProfiles returned`, fetchedProfiles.length, 'profiles')
           
           // First, use the profiles returned from fetchProfiles directly
           const updatedLabels = new Map(labels)
@@ -108,15 +115,15 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
                   if (displayName) {
                     updatedLabels.set(encoded, `@${displayName}`)
                     withNames++
-                    console.log('[npub-resolve] Resolved from fetched array:', encoded.slice(0, 30) + '...', '->', displayName)
+                    console.log(`[${ts()}] [npub-resolve] Resolved from fetched array:`, encoded.slice(0, 30) + '...', '->', displayName)
                   } else {
                     withoutNames++
                     if (withoutNames <= 3) {
-                      console.log('[npub-resolve] Fetched profile has no name/display_name/nip05:', encoded.slice(0, 30) + '...', 'content keys:', Object.keys(profileData))
+                      console.log(`[${ts()}] [npub-resolve] Fetched profile has no name/display_name/nip05:`, encoded.slice(0, 30) + '...', 'content keys:', Object.keys(profileData))
                     }
                   }
                 } catch (err) {
-                  console.error('[npub-resolve] Error parsing fetched profile for', encoded.slice(0, 30) + '...', err)
+                  console.error(`[${ts()}] [npub-resolve] Error parsing fetched profile for`, encoded.slice(0, 30) + '...', err)
                 }
               } else if (eventStore) {
                 // Fallback: check eventStore (in case fetchProfiles stored but didn't return)
@@ -129,15 +136,15 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
                     if (displayName) {
                       updatedLabels.set(encoded, `@${displayName}`)
                       withNames++
-                      console.log('[npub-resolve] Resolved from eventStore:', encoded.slice(0, 30) + '...', '->', displayName)
+                      console.log(`[${ts()}] [npub-resolve] Resolved from eventStore:`, encoded.slice(0, 30) + '...', '->', displayName)
                     }
                   } catch (err) {
-                    console.error('[npub-resolve] Error parsing profile event for', encoded.slice(0, 30) + '...', err)
+                    console.error(`[${ts()}] [npub-resolve] Error parsing profile event for`, encoded.slice(0, 30) + '...', err)
                   }
                 } else {
                   missingFromStore++
                   if (missingFromStore <= 3) {
-                    console.log('[npub-resolve] Profile not found in array or eventStore:', pubkey.slice(0, 16) + '...')
+                    console.log(`[${ts()}] [npub-resolve] Profile not found in array or eventStore:`, pubkey.slice(0, 16) + '...')
                   }
                 }
               } else {
@@ -146,16 +153,16 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
             }
           })
           
-          console.log('[npub-resolve] After fetch - resolved:', updatedLabels.size, 'total | from array:', resolvedFromArray, '| from store:', resolvedFromStore, '| with names:', withNames, '| without names:', withoutNames, '| missing:', missingFromStore, '| out of', profileData.length)
+          console.log(`[${ts()}] [npub-resolve] After fetch - resolved:`, updatedLabels.size, 'total | from array:', resolvedFromArray, '| from store:', resolvedFromStore, '| with names:', withNames, '| without names:', withoutNames, '| missing:', missingFromStore, '| out of', profileData.length)
           setProfileLabels(updatedLabels)
         })
         .catch(err => {
-          console.error('[npub-resolve] Error fetching profiles:', err)
+          console.error(`[${ts()}] [npub-resolve] Error fetching profiles:`, err)
         })
     }
   }, [profileData, eventStore, relayPool])
 
-  console.log('[npub-resolve] Final labels map size:', profileLabels.size)
+  console.log(`[${ts()}] [npub-resolve] Final labels map size:`, profileLabels.size)
   return profileLabels
 }
 

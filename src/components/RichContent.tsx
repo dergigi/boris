@@ -2,6 +2,13 @@ import React from 'react'
 import NostrMentionLink from './NostrMentionLink'
 import { Tokens } from 'applesauce-content/helpers'
 
+// Helper to add timestamps to logs
+const ts = () => {
+  const now = new Date()
+  const ms = now.getMilliseconds().toString().padStart(3, '0')
+  return `${now.toLocaleTimeString('en-US', { hour12: false })}.${ms}`
+}
+
 interface RichContentProps {
   content: string
   className?: string
@@ -19,7 +26,7 @@ const RichContent: React.FC<RichContentProps> = ({
   content, 
   className = 'bookmark-content' 
 }) => {
-  console.log('[npub-resolve] RichContent: Rendering, content length:', content?.length || 0)
+  console.log(`[${ts()}] [npub-resolve] RichContent: Rendering, content length:`, content?.length || 0)
   
   try {
     // Pattern to match:
@@ -30,7 +37,7 @@ const RichContent: React.FC<RichContentProps> = ({
     const combinedPattern = new RegExp(`(${nostrPattern.source}|${urlPattern.source})`, 'gi')
     
     const parts = content.split(combinedPattern)
-    console.log('[npub-resolve] RichContent: Split into parts:', parts.length)
+    console.log(`[${ts()}] [npub-resolve] RichContent: Split into parts:`, parts.length)
   
     // Helper to check if a string is a nostr identifier (without mutating regex state)
     const isNostrIdentifier = (str: string): boolean => {
@@ -82,7 +89,7 @@ const RichContent: React.FC<RichContentProps> = ({
     </div>
     )
   } catch (err) {
-    console.error('[npub-resolve] RichContent: Error rendering:', err)
+    console.error(`[${ts()}] [npub-resolve] RichContent: Error rendering:`, err)
     return <div className={className}>Error rendering content</div>
   }
 }
