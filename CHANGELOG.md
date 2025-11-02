@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.32] - 2025-11-02
+
+### Added
+
+- Loading states with shimmer effect for profile lookups in articles
+- localStorage caching for profile resolution with LRU eviction
+- Progressive profile resolution that updates from fallback to resolved names
+
+### Changed
+
+- Standardized applesauce helpers for npub/nprofile detection and display
+- Standardized profile display name fallbacks across codebase
+- Removed 'npub1' prefix from shortened npub displays
+- Improved @ prefix handling for profile mentions
+- Profile fetching is now reactive (removed timeouts)
+- Profile label updates are batched to prevent UI flickering
+
+### Fixed
+
+- Profile label updates now work correctly and preserve pending updates
+- Race condition in profile label updates resolved
+- React hooks exhaustive-deps warnings resolved
+- Rules of Hooks violation in profile mapping
+- Syntax error in RichContent try-catch structure
+- Profile fetching re-checks eventStore for async profile arrivals
+- LRU cache eviction handles QuotaExceededError
+- Reduced markdown reprocessing to prevent flicker
+- TypeScript errors in nostrUriResolver resolved
+- Profile labels initialize synchronously from cache for instant display
+
+### Performance
+
+- Added timing metrics for profile resolution performance
+- Increased remote relay timeout for profile fetches
+- Batch profile label updates to prevent UI flickering
+- Ensure purplepag.es relay is used for profile lookups
+
+### Refactored
+
+- Replaced custom NIP-19 parsing with applesauce helpers
+- Standardized profile name extraction and code quality
+- Standardized npub/nprofile display implementation
+- Use pubkey (hex) as Map key instead of encoded nprofile/npub strings
+- Standardized profile display name fallbacks
+
 ## [0.10.31] - 2025-11-02
 
 ### Changed
