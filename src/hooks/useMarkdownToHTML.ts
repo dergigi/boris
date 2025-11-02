@@ -61,14 +61,12 @@ export const useMarkdownToHTML = (
     setProcessedMarkdown('')
     
     if (!markdown) {
-      console.log(`[markdown-to-html] No markdown provided`)
       return
     }
 
     let isCancelled = false
 
     const processMarkdown = () => {
-      console.log(`[markdown-to-html] Processing markdown with ${profileLabels.size} profile labels`)
       try {
         // Replace nostr URIs with profile labels (progressive) and article titles
         const processed = replaceNostrUrisInMarkdownWithProfileLabels(
@@ -79,7 +77,6 @@ export const useMarkdownToHTML = (
         
         if (isCancelled) return
         
-        console.log(`[markdown-to-html] Markdown processed, length: ${processed.length}`)
         setProcessedMarkdown(processed)
       } catch (error) {
         console.error(`[markdown-to-html] Error processing markdown:`, error)

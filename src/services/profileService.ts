@@ -195,12 +195,10 @@ export const fetchProfiles = async (
 ): Promise<NostrEvent[]> => {
   try {
     if (pubkeys.length === 0) {
-      console.log(`[fetch-profiles] No pubkeys provided`)
       return []
     }
 
     const uniquePubkeys = Array.from(new Set(pubkeys))
-    console.log(`[fetch-profiles] Requested ${pubkeys.length} profiles (${uniquePubkeys.length} unique)`)
     
     // First, check localStorage cache for all requested profiles
     const cachedProfiles = loadCachedProfiles(uniquePubkeys)
@@ -213,16 +211,11 @@ export const fetchProfiles = async (
       eventStore.add(profile)
     }
     
-    console.log(`[fetch-profiles] Found ${cachedProfiles.size} profiles in cache`)
-    
     // Determine which pubkeys need to be fetched from relays
     const pubkeysToFetch = uniquePubkeys.filter(pubkey => !cachedProfiles.has(pubkey))
     
-    console.log(`[fetch-profiles] Need to fetch ${pubkeysToFetch.length} profiles from relays`)
-    
     // If all profiles are cached, return early
     if (pubkeysToFetch.length === 0) {
-      console.log(`[fetch-profiles] All profiles cached, returning ${profilesByPubkey.size} profiles`)
       return Array.from(profilesByPubkey.values())
     }
 
@@ -230,9 +223,6 @@ export const fetchProfiles = async (
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
     const prioritized = prioritizeLocalRelays(relayUrls)
     const { local: localRelays, remote: remoteRelays } = partitionRelays(prioritized)
-
-    console.log(`[fetch-profiles] Querying ${localRelays.length} local relays and ${remoteRelays.length} remote relays`)
-    console.log(`[fetch-profiles] Active relays:`, relayUrls)
     const hasPurplePages = relayUrls.some(url => url.includes('purplepag.es'))
     if (!hasPurplePages) {
       console.warn(`[fetch-profiles] purplepag.es not in active relay pool, adding it temporarily`)
@@ -259,9 +249,6 @@ export const fetchProfiles = async (
         eventStore.add(event)
         // Cache to localStorage for future use
         cacheProfile(event)
-        console.log(`[fetch-profiles] Received profile for ${event.pubkey.slice(0, 16)}... (event #${eventCount})`)
-      } else {
-        console.log(`[fetch-profiles] Received older profile for ${event.pubkey.slice(0, 16)}..., keeping existing`)
       }
     }
 
@@ -291,12 +278,10 @@ export const fetchProfiles = async (
 
     const profiles = Array.from(profilesByPubkey.values())
     
-    console.log(`[fetch-profiles] Fetch completed: received ${eventCount} events, ${fetchedPubkeys.size} unique profiles`)
     const missingPubkeys = pubkeysToFetch.filter(p => !fetchedPubkeys.has(p))
     if (missingPubkeys.length > 0) {
       console.warn(`[fetch-profiles] ${missingPubkeys.length} profiles not found on relays:`, missingPubkeys.map(p => p.slice(0, 16) + '...'))
     }
-    console.log(`[fetch-profiles] Returning ${profiles.length} total profiles (${cachedProfiles.size} cached + ${fetchedPubkeys.size} fetched)`)
 
     // Note: We don't preload all profile images here to avoid ERR_INSUFFICIENT_RESOURCES
     // Profile images will be cached by Service Worker when they're actually displayed.

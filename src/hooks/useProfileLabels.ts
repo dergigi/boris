@@ -33,7 +33,6 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           // Ignore errors, continue processing other pointers
         }
       })
-      console.log(`[profile-labels] Extracted ${result.length} profile identifiers from content:`, result.map(r => ({ encoded: r.encoded.slice(0, 20) + '...', pubkey: r.pubkey.slice(0, 16) + '...' })))
       return result
     } catch (error) {
       console.warn(`[profile-labels] Error extracting profile pointers:`, error)
@@ -44,13 +43,11 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
   // Initialize labels synchronously from cache on first render to avoid delay
   const initialLabels = useMemo(() => {
     if (profileData.length === 0) {
-      console.log(`[profile-labels] No profile data, returning empty labels`)
       return new Map<string, string>()
     }
     
     const allPubkeys = profileData.map(({ pubkey }) => pubkey)
     const cachedProfiles = loadCachedProfiles(allPubkeys)
-    console.log(`[profile-labels] Loaded ${cachedProfiles.size} cached profiles out of ${allPubkeys.length} requested`)
     const labels = new Map<string, string>()
     
     profileData.forEach(({ encoded, pubkey }) => {
@@ -61,12 +58,10 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           const displayName = profileData.display_name || profileData.name || profileData.nip05
           if (displayName) {
             labels.set(encoded, `@${displayName}`)
-            console.log(`[profile-labels] Found cached name for ${encoded.slice(0, 20)}...: ${displayName}`)
           } else {
             // Use fallback npub display if profile has no name
             const fallback = getNpubFallbackDisplay(pubkey)
             labels.set(encoded, fallback)
-            console.log(`[profile-labels] Cached profile for ${encoded.slice(0, 20)}... has no name, using fallback: ${fallback}`)
           }
         } catch (error) {
           // Use fallback npub display if parsing fails
@@ -74,12 +69,9 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           labels.set(encoded, fallback)
           console.warn(`[profile-labels] Error parsing cached profile for ${encoded.slice(0, 20)}..., using fallback:`, error)
         }
-      } else {
-        console.log(`[profile-labels] No cached profile for ${encoded.slice(0, 20)}... (pubkey: ${pubkey.slice(0, 16)}...)`)
       }
     })
     
-    console.log(`[profile-labels] Initial labels from cache:`, Array.from(labels.entries()).map(([enc, label]) => ({ encoded: enc.slice(0, 20) + '...', label })))
     return labels
   }, [profileData])
 
@@ -155,11 +147,9 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     
     const pubkeysToFetch: string[] = []
     
-    console.log(`[profile-labels] Checking eventStore for ${profileData.length} profiles`)
     profileData.forEach(({ encoded, pubkey }) => {
       // Skip if already resolved from initial cache
       if (labels.has(encoded)) {
-        console.log(`[profile-labels] Skipping ${encoded.slice(0, 20)}..., already has label from cache`)
         return
       }
       
@@ -169,12 +159,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
         const eventStoreProfile = eventStore.getEvent(pubkey + ':0')
         if (eventStoreProfile) {
           profileEvent = eventStoreProfile
-          console.log(`[profile-labels] Found profile in eventStore for ${encoded.slice(0, 20)}...`)
-        } else {
-          console.log(`[profile-labels] Profile not in eventStore for ${encoded.slice(0, 20)}... (pubkey: ${pubkey.slice(0, 16)}...)`)
         }
-      } else {
-        console.log(`[profile-labels] No eventStore available`)
       }
       
       if (profileEvent) {
@@ -183,12 +168,10 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           const displayName = profileData.display_name || profileData.name || profileData.nip05
           if (displayName) {
             labels.set(encoded, `@${displayName}`)
-            console.log(`[profile-labels] Set label from eventStore for ${encoded.slice(0, 20)}...: @${displayName}`)
           } else {
             // Use fallback npub display if profile has no name
             const fallback = getNpubFallbackDisplay(pubkey)
             labels.set(encoded, fallback)
-            console.log(`[profile-labels] Profile in eventStore for ${encoded.slice(0, 20)}... has no name, using fallback: ${fallback}`)
           }
         } catch (error) {
           // Use fallback npub display if parsing fails
@@ -199,7 +182,6 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
       } else {
         // No profile found yet, will use fallback after fetch or keep empty
         // We'll set fallback labels for missing profiles at the end
-        console.log(`[profile-labels] Adding ${encoded.slice(0, 20)}... to fetch queue`)
         pubkeysToFetch.push(pubkey)
       }
     })
@@ -209,12 +191,9 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
       if (!labels.has(encoded)) {
         const fallback = getNpubFallbackDisplay(pubkey)
         labels.set(encoded, fallback)
-        console.log(`[profile-labels] Setting fallback label for ${encoded.slice(0, 20)}...: ${fallback}`)
       }
     })
     
-    console.log(`[profile-labels] Labels after checking cache and eventStore:`, Array.from(labels.entries()).map(([enc, label]) => ({ encoded: enc.slice(0, 20) + '...', label })))
-    console.log(`[profile-labels] Profiles to fetch: ${pubkeysToFetch.length}`, pubkeysToFetch.map(p => p.slice(0, 16) + '...'))
     setProfileLabels(new Map(labels))
     
     // Fetch missing profiles asynchronously with reactive updates
@@ -228,9 +207,6 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
         }
       })
       
-      console.log(`[profile-labels] Fetching ${pubkeysToFetch.length} profiles from relays`)
-      console.log(`[profile-labels] Calling fetchProfiles with relayPool and ${pubkeysToFetch.length} pubkeys`)
-      
       // Capture refs at effect level for cleanup function
       const currentPendingUpdatesRef = pendingUpdatesRef
       const currentRafScheduledRef = rafScheduledRef
@@ -239,11 +215,8 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
       const handleProfileEvent = (event: NostrEvent) => {
         const encoded = pubkeyToEncoded.get(event.pubkey)
         if (!encoded) {
-          console.log(`[profile-labels] Received profile for unknown pubkey ${event.pubkey.slice(0, 16)}..., skipping`)
           return
         }
-        
-        console.log(`[profile-labels] Received profile event for ${encoded.slice(0, 20)}...`)
         
         // Determine the label for this profile
         let label: string
@@ -252,11 +225,9 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           const displayName = profileData.display_name || profileData.name || profileData.nip05
           if (displayName) {
             label = `@${displayName}`
-            console.log(`[profile-labels] Updated label reactively for ${encoded.slice(0, 20)}... to @${displayName}`)
           } else {
             // Use fallback npub display if profile has no name
             label = getNpubFallbackDisplay(event.pubkey)
-            console.log(`[profile-labels] Profile for ${encoded.slice(0, 20)}... has no name, keeping fallback: ${label}`)
           }
         } catch (error) {
           // Use fallback npub display if parsing fails
@@ -292,8 +263,6 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
       
       fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch, undefined, handleProfileEvent)
         .then((fetchedProfiles) => {
-          console.log(`[profile-labels] Fetch completed (EOSE), received ${fetchedProfiles.length} profiles total`)
-          
           // Ensure any pending batched updates are applied immediately after EOSE
           // This ensures all profile updates are applied even if RAF hasn't fired yet
           const pendingUpdates = currentPendingUpdatesRef.current
@@ -313,15 +282,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
                 updatedLabels.set(encoded, label)
               }
               pendingUpdates.clear()
-              console.log(`[profile-labels] Flushed ${pendingCount} pending updates after EOSE`)
-              console.log(`[profile-labels] Final labels after EOSE:`, Array.from(updatedLabels.entries()).map(([enc, label]) => ({ encoded: enc.slice(0, 20) + '...', label })))
               return updatedLabels
-            })
-          } else {
-            // No pending updates, just log final state
-            setProfileLabels(prevLabels => {
-              console.log(`[profile-labels] Final labels after EOSE:`, Array.from(prevLabels.entries()).map(([enc, label]) => ({ encoded: enc.slice(0, 20) + '...', label })))
-              return prevLabels
             })
           }
         })
@@ -358,14 +319,6 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
         }
         // Clear using captured reference to avoid linter warning
         pendingUpdates.clear()
-      }
-    } else {
-      if (pubkeysToFetch.length === 0) {
-        console.log(`[profile-labels] No profiles to fetch`)
-      } else if (!relayPool) {
-        console.log(`[profile-labels] No relayPool available, cannot fetch profiles`)
-      } else if (!eventStore) {
-        console.log(`[profile-labels] No eventStore available, cannot fetch profiles`)
       }
     }
   }, [profileData, eventStore, relayPool, initialLabels])
