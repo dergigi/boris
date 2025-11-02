@@ -21,8 +21,11 @@ export const useMarkdownToHTML = (
   const [processedMarkdown, setProcessedMarkdown] = useState<string>('')
   const [articleTitles, setArticleTitles] = useState<Map<string, string>>(new Map())
 
+  console.log('[useMarkdownToHTML] Hook called, markdown length:', markdown?.length || 0, 'hasRelayPool:', !!relayPool)
+
   // Resolve profile labels progressively as profiles load
   const profileLabels = useProfileLabels(markdown || '')
+  console.log('[useMarkdownToHTML] Profile labels size:', profileLabels.size)
 
   // Fetch article titles
   useEffect(() => {
@@ -68,16 +71,26 @@ export const useMarkdownToHTML = (
     let isCancelled = false
 
     const processMarkdown = () => {
-      // Replace nostr URIs with profile labels (progressive) and article titles
-      const processed = replaceNostrUrisInMarkdownWithProfileLabels(
-        markdown,
-        profileLabels,
-        articleTitles
-      )
-      
-      if (isCancelled) return
-      
-      setProcessedMarkdown(processed)
+      console.log('[useMarkdownToHTML] Processing markdown, length:', markdown.length)
+      console.log('[useMarkdownToHTML] Profile labels:', profileLabels.size, 'Article titles:', articleTitles.size)
+      try {
+        // Replace nostr URIs with profile labels (progressive) and article titles
+        const processed = replaceNostrUrisInMarkdownWithProfileLabels(
+          markdown,
+          profileLabels,
+          articleTitles
+        )
+        console.log('[useMarkdownToHTML] Processed markdown length:', processed.length)
+        
+        if (isCancelled) return
+        
+        setProcessedMarkdown(processed)
+      } catch (err) {
+        console.error('[useMarkdownToHTML] Error processing markdown:', err)
+        if (!isCancelled) {
+          setProcessedMarkdown(markdown) // Fallback to original
+        }
+      }
 
       const rafId = requestAnimationFrame(() => {
         if (previewRef.current && !isCancelled) {

@@ -19,14 +19,18 @@ const RichContent: React.FC<RichContentProps> = ({
   content, 
   className = 'bookmark-content' 
 }) => {
-  // Pattern to match:
-  // 1. nostr: URIs (nostr:npub1..., nostr:note1..., etc.) using applesauce Tokens.nostrLink
-  // 2. http(s) URLs
-  const nostrPattern = Tokens.nostrLink
-  const urlPattern = /https?:\/\/[^\s]+/gi
-  const combinedPattern = new RegExp(`(${nostrPattern.source}|${urlPattern.source})`, 'gi')
+  console.log('[RichContent] Rendering, content length:', content?.length || 0)
   
-  const parts = content.split(combinedPattern)
+  try {
+    // Pattern to match:
+    // 1. nostr: URIs (nostr:npub1..., nostr:note1..., etc.) using applesauce Tokens.nostrLink
+    // 2. http(s) URLs
+    const nostrPattern = Tokens.nostrLink
+    const urlPattern = /https?:\/\/[^\s]+/gi
+    const combinedPattern = new RegExp(`(${nostrPattern.source}|${urlPattern.source})`, 'gi')
+    
+    const parts = content.split(combinedPattern)
+    console.log('[RichContent] Split into parts:', parts.length)
   
   // Helper to check if a string is a nostr identifier (without mutating regex state)
   const isNostrIdentifier = (str: string): boolean => {
@@ -76,7 +80,11 @@ const RichContent: React.FC<RichContentProps> = ({
         return <React.Fragment key={index}>{part}</React.Fragment>
       })}
     </div>
-  )
+    )
+  } catch (err) {
+    console.error('[RichContent] Error rendering:', err)
+    return <div className={className}>Error rendering content</div>
+  }
 }
 
 export default RichContent

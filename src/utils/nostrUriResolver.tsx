@@ -16,8 +16,24 @@ const NOSTR_URI_REGEX = Tokens.nostrLink
  * Extract all nostr URIs from text using applesauce helpers
  */
 export function extractNostrUris(text: string): string[] {
-  const pointers = getContentPointers(text)
-  return pointers.map(pointer => encodeDecodeResult(pointer))
+  console.log('[nostrUriResolver] extractNostrUris called, text length:', text?.length || 0)
+  try {
+    const pointers = getContentPointers(text)
+    console.log('[nostrUriResolver] Found pointers:', pointers.length)
+    const result = pointers.map(pointer => {
+      try {
+        return encodeDecodeResult(pointer)
+      } catch (err) {
+        console.error('[nostrUriResolver] Error encoding pointer:', err, pointer)
+        return null
+      }
+    }).filter((v): v is string => v !== null)
+    console.log('[nostrUriResolver] Extracted URIs:', result.length)
+    return result
+  } catch (err) {
+    console.error('[nostrUriResolver] Error in extractNostrUris:', err)
+    return []
+  }
 }
 
 /**
