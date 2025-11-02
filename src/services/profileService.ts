@@ -40,7 +40,8 @@ export function getCachedProfile(pubkey: string): NostrEvent | null {
 
     return event
   } catch (err) {
-    // Silently handle cache read errors
+    // Log cache read errors for debugging
+    console.error(`[profile-cache] Error reading cached profile for ${pubkey.slice(0, 16)}...:`, err)
     return null
   }
 }
@@ -51,7 +52,10 @@ export function getCachedProfile(pubkey: string): NostrEvent | null {
  */
 export function cacheProfile(profile: NostrEvent): void {
   try {
-    if (profile.kind !== 0) return // Only cache kind:0 (profile) events
+    if (profile.kind !== 0) {
+      console.warn(`[profile-cache] Attempted to cache non-profile event (kind ${profile.kind})`)
+      return // Only cache kind:0 (profile) events
+    }
 
     const cacheKey = getProfileCacheKey(profile.pubkey)
     const cached: CachedProfile = {
@@ -59,8 +63,11 @@ export function cacheProfile(profile: NostrEvent): void {
       timestamp: Date.now()
     }
     localStorage.setItem(cacheKey, JSON.stringify(cached))
+    console.log(`[profile-cache] Cached profile:`, profile.pubkey.slice(0, 16) + '...')
   } catch (err) {
-    // Silently fail - don't block the UI if caching fails
+    // Log caching errors for debugging
+    console.error(`[profile-cache] Failed to cache profile ${profile.pubkey.slice(0, 16)}...:`, err)
+    // Don't block the UI if caching fails
     // Handles quota exceeded, invalid data, and other errors gracefully
   }
 }

@@ -49,20 +49,63 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     }
   }, [content])
 
-  const [profileLabels, setProfileLabels] = useState<Map<string, string>>(new Map())
+  // Initialize labels synchronously from cache on first render to avoid delay
+  const initialLabels = useMemo(() => {
+    if (profileData.length === 0) {
+      return new Map<string, string>()
+    }
+    
+    const allPubkeys = profileData.map(({ pubkey }) => pubkey)
+    const cachedProfiles = loadCachedProfiles(allPubkeys)
+    const labels = new Map<string, string>()
+    
+    profileData.forEach(({ encoded, pubkey }) => {
+      const cachedProfile = cachedProfiles.get(pubkey)
+      if (cachedProfile) {
+        try {
+          const profileData = JSON.parse(cachedProfile.content || '{}') as { name?: string; display_name?: string; nip05?: string }
+          const displayName = profileData.display_name || profileData.name || profileData.nip05
+          if (displayName) {
+            labels.set(encoded, `@${displayName}`)
+          }
+        } catch {
+          // Ignore parsing errors, will fetch later
+        }
+      }
+    })
+    
+    return labels
+  }, [profileData])
+
+  const [profileLabels, setProfileLabels] = useState<Map<string, string>>(initialLabels)
   const lastLoggedSize = useRef<number>(0)
 
   // Build initial labels: localStorage cache -> eventStore -> fetch from relays
   useEffect(() => {
     const startTime = Date.now()
-    console.log(`[${ts()}] [npub-resolve] Building labels, profileData:`, profileData.length, 'hasEventStore:', !!eventStore)
+    console.log(`[${ts()}] [npub-resolve] Building labels, profileData:`, profileData.length, 'hasEventStore:', !!eventStore, 'hasRelayPool:', !!relayPool)
     
     // Extract all pubkeys
     const allPubkeys = profileData.map(({ pubkey }) => pubkey)
     
+    if (allPubkeys.length === 0) {
+      console.log(`[${ts()}] [npub-resolve] No pubkeys to resolve, clearing labels`)
+      setProfileLabels(new Map())
+      return
+    }
+    
     // First, check localStorage cache (synchronous, instant)
+    const cacheStartTime = Date.now()
     const cachedProfiles = loadCachedProfiles(allPubkeys)
-    console.log(`[${ts()}] [npub-resolve] Found in localStorage cache:`, cachedProfiles.size, 'out of', allPubkeys.length)
+    const cacheDuration = Date.now() - cacheStartTime
+    console.log(`[${ts()}] [npub-resolve] Found in localStorage cache:`, cachedProfiles.size, 'out of', allPubkeys.length, 'in', cacheDuration, 'ms')
+    
+    // Log which pubkeys were found in cache
+    if (cachedProfiles.size > 0) {
+      cachedProfiles.forEach((_profile, pubkey) => {
+        console.log(`[${ts()}] [npub-resolve] Cached profile found:`, pubkey.slice(0, 16) + '...')
+      })
+    }
     
     // Add cached profiles to EventStore for consistency
     if (eventStore) {
@@ -71,15 +114,22 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
       }
     }
     
-    // Build initial labels from localStorage cache and eventStore
-    const labels = new Map<string, string>()
+    // Build labels from localStorage cache and eventStore (initialLabels already has cache, add eventStore)
+    // Start with labels from initial cache lookup (in useMemo)
+    const labels = new Map<string, string>(initialLabels)
+    
     const pubkeysToFetch: string[] = []
     
     profileData.forEach(({ encoded, pubkey }) => {
+      // Skip if already resolved from initial cache
+      if (labels.has(encoded)) {
+        return
+      }
+      
       let profileEvent: { content: string } | null = null
       let foundSource = ''
       
-      // Check localStorage cache first
+      // Check localStorage cache first (should already be checked in initialLabels, but double-check)
       const cachedProfile = cachedProfiles.get(pubkey)
       if (cachedProfile) {
         profileEvent = cachedProfile
@@ -101,9 +151,11 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
             labels.set(encoded, `@${displayName}`)
             console.log(`[${ts()}] [npub-resolve] Found in ${foundSource}:`, encoded.slice(0, 30) + '...', '->', displayName)
           } else {
+            console.log(`[${ts()}] [npub-resolve] Profile from ${foundSource} has no display name, will fetch:`, pubkey.slice(0, 16) + '...')
             pubkeysToFetch.push(pubkey)
           }
-        } catch {
+        } catch (err) {
+          console.error(`[${ts()}] [npub-resolve] Error parsing profile from ${foundSource}:`, err)
           pubkeysToFetch.push(pubkey)
         }
       } else {
@@ -112,7 +164,13 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     })
     
     // Update labels with what we found in localStorage cache and eventStore
-    setProfileLabels(new Map(labels))
+    const initialResolveTime = Date.now() - startTime
+    console.log(`[${ts()}] [npub-resolve] Initial resolution complete:`, labels.size, 'labels resolved in', initialResolveTime, 'ms. Will fetch', pubkeysToFetch.length, 'missing profiles.')
+    
+    // Only update if labels changed (avoid unnecessary re-renders)
+    if (labels.size !== profileLabels.size || Array.from(labels.keys()).some(k => labels.get(k) !== profileLabels.get(k))) {
+      setProfileLabels(new Map(labels))
+    }
     
     // Fetch missing profiles asynchronously
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
