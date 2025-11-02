@@ -11,234 +11,119 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Move add bookmark button to filter bar
-  - Moved add bookmark button from web section header to filter bar
-  - Positioned button on the right side of filter bar
-  - Removed conditional rendering (always show button)
-  - Added bookmark-filters-wrapper styling for proper layout
+- Moved add bookmark button to filter bar
 
 ### Fixed
 
-- Align add bookmark button with filter buttons
-  - Matched CompactButton styling to filter-btn when inside filter bar
-  - Ensured same size, padding, and alignment for consistent appearance
+- Aligned add bookmark button with filter buttons
 
 ## [0.10.30] - 2025-11-01
 
 ### Added
 
 - Navigate to author's writings page from article author card
-  - Clicking the author card at the end of an article now navigates to `/p/${npub}/writings`
-  - Previously navigated to the author's profile page
-  - Better discovery of author's published articles
 
 ### Fixed
 
 - Reset scroll to top when navigating to profile pages
-  - Profile pages (including writings page) now scroll to top on navigation
-  - Prevents landing in the middle of the page when navigating from articles
-  - Better user experience when browsing author profiles
 - Preserve image aspect ratio when full-width images setting is enabled
-  - Images maintain their aspect ratio when full-width setting is active
-  - Prevents image distortion when enlarging small images
 
 ## [0.10.29] - 2025-11-01
 
 ### Fixed
 
-- Full-width images setting now uses width instead of max-width
-  - Change from --image-max-width CSS variable to --image-width
-  - When enabled, sets images to width: 100% (enlarging small images)
-  - Always constrains with max-width: 100% to prevent overflow
-  - Update mobile responsive styles to respect the setting
+- Full-width images setting uses width instead of max-width
 
 ## [0.10.28] - 2025-11-01
 
 ### Fixed
 
 - Nostr URI processing in markdown links
-  - Prevent double-processing of markdown to avoid nested links
-  - Add HTTP URL detection to prevent processing nostr URIs in URLs
-  - Use parser-based approach to detect markdown link URLs
-  - Prevent nostr URI replacement inside markdown link URLs
-  - Remove unused variables in nostrUriResolver
-  - Improved blog post rendering with proper link handling
 
 ### Removed
 
 - Debug console.log statements from nostrUriResolver
-  - Cleaned up debug logging used during troubleshooting
-  - Cleaner console output in production
 
 ## [0.10.27] - 2025-10-31
 
 ### Added
 
 - Refresh button to highlights sidebar header
-  - Users can manually refresh highlights panel
-  - Better control over highlights data updates
 - Image preloading in BlogPostCard for better caching
-  - Images are preloaded when blog posts are displayed
-  - Improved offline access to article images
 - Preload logged-in user profile image for offline access
-  - User profile picture is cached for offline viewing
-  - Better user experience when network is unavailable
 - Development Service Worker for testing image caching
-  - Service Worker enabled in development mode
-  - Improved testing capabilities for offline functionality
 
 ### Fixed
 
 - Service Worker registration error handling
-  - Better error handling for Service Worker registration failures
-  - More robust development mode Service Worker support
-  - Proper error handling for fetch requests in Service Worker
 - Article loading race conditions
-  - Resolved race condition when loading articles from cache
-  - Cache is checked synchronously before setting loading state
-  - Articles are populated in cache from explore view
 - Image caching issues
-  - Images are properly preloaded when loading articles from cache
-  - Removed bulk image preloading to prevent resource exhaustion errors
-  - Avoid redundant image preload when using preview data
 - Scroll position management
-  - Scroll position is reset when switching articles
-  - Save suppression added when resetting scroll position
-  - Reader content is cleared immediately when article changes
 - React hook ordering issues
-  - useEffect moved before early return in BlogPostCard
-  - Prevents React hooks dependency violations
 - TypeScript and linting issues
-  - Cache save logic simplified to avoid TypeScript errors
-  - Unused settings parameter marked as intentionally unused
-  - Articles are saved to localStorage cache after loading from relays
-  - Cache is saved immediately when first event is received
 
 ### Performance
 
 - Avoid redundant image preload when using preview data
-  - Prevents unnecessary image loading operations
-  - Improved resource utilization
 
 ### Removed
 
 - Debug console.log statements
-  - Removed all debug console output from article cache and service worker
-  - Removed debug logging from useImageCache hook
-  - Cleaner console output in production
 - Unused refresh button from highlights panel header
-  - Cleaned up unused UI component
 
 ## [0.10.26] - 2025-10-31
 
 ### Added
 
 - Persist highlight metadata and offline events to localStorage
-  - Highlights created offline are now preserved across sessions
-  - Better data persistence for flight mode highlights
 - Proper relay response tracking for flight mode
-  - Accurate detection of which relays have received highlight events
-  - Improved flight mode indicator accuracy
 
 ### Changed
 
 - Implemented proper flight mode detection for highlights
-  - More reliable identification of highlights created offline
-  - Better tracking of highlight publication status
 - Refactored to use isLocalOnly flag instead of isOfflineCreated
-  - More consistent naming and clearer intent
-  - Improved code maintainability
 
 ### Fixed
 
 - Show airplane icon for flight mode highlights
-  - Visual indicator now correctly displays for offline-created highlights
-  - Better user feedback for highlights pending publication
 - Prioritize isLocalOnly check to show airplane icon
-  - Icon display logic now correctly identifies flight mode highlights
 - Preserve isLocalOnly and publishedRelays in eventToHighlight conversion
-  - Highlight metadata is maintained during event transformations
-  - Flight mode status preserved across data conversions
 - Use metadata cache to preserve highlight properties across EventStore
-  - Highlights maintain their properties when stored in EventStore
-  - Prevents loss of flight mode metadata
 - Add fallback logic for detecting flight mode highlights
-  - More robust detection when primary methods fail
-  - Better handling of edge cases
 - Determine isLocalOnly before publishing, not after
-  - Correct timing for flight mode detection
-  - Prevents incorrect status during highlight creation
 - Store event in EventStore after updating properties
-  - Ensures all highlight properties are saved correctly
-  - Prevents data loss during highlight creation
 - Manually set highlight properties after eventToHighlight conversion
-  - Ensures all metadata is properly assigned
-  - Correct property mapping during conversions
 - Prevent duplicate highlights
-  - Eliminates duplicate highlight entries
-  - Cleaner highlight list display
 - Publish only to connected relays to avoid long timeouts
-  - Faster highlight publishing
-  - Better user experience when some relays are unavailable
 - Prevent unnecessary relay queries when article content is cached
-  - Improved performance by avoiding redundant network requests
-  - Better resource utilization
 - Remove relayPool dependency from content loaders
-  - Cleaner architecture and reduced coupling
-  - Better separation of concerns
 - Check EventStore before setting loading state
-  - Prevents unnecessary loading states
-  - Better state management
 - Remove eventStore and setter functions from useEffect dependencies
-  - Fixes React hook dependency issues
-  - Prevents unnecessary re-renders
 - Replace require() with ES module imports
-  - Modern JavaScript module system
-  - Better compatibility with build tools
 - Resolve all linting errors and type issues
-  - Improved code quality
-  - Better type safety
 - Remove unused variables to resolve lint errors
-  - Cleaner codebase
-  - Eliminates lint warnings
 
 ### Performance
 
 - Remove excessive debug logging for better performance
-  - Reduced overhead from logging operations
-  - Improved application performance
 
 ### Removed
 
 - Debug console.log statements
-  - Cleaner console output
-  - Production-ready code
 
 ## [0.10.25] - 2025-01-27
 
 ### Added
 
 - Reading progress bar for all bookmark types across all view modes
-  - Consistent progress tracking for articles, videos, and other content types
-  - Visual progress indicator in compact, medium, and large card views
 - Title display for regular bookmarks/links
-  - Better content identification for web bookmarks
-  - Improved visual hierarchy in bookmark cards
 
 ### Changed
 
 - Redesigned medium-sized bookmark cards with left-side thumbnails
-  - More compact and visually appealing card layout
-  - Better use of space with thumbnail positioning
 - Made bookmark cards significantly more compact
-  - Reduced vertical spacing and improved density
-  - Better information display in limited space
 - Moved bookmark type icon to bottom right footer
-  - Cleaner card layout with consistent icon positioning
-  - Better visual organization of card elements
 - Enhanced card layout with author positioning in bottom-left corner
-  - Improved visual hierarchy and content organization
-  - Better balance between content and metadata
 
 ### Fixed
 
@@ -254,391 +139,201 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Type icon from medium-sized bookmark cards
-  - Cleaner visual design with reduced clutter
-  - Focus on content rather than type indicators
 - Text expansion mechanic from medium-sized cards
-  - Simplified interaction model
-  - More consistent card behavior across view modes
 - URL display from medium-sized bookmark cards
-  - Cleaner card appearance
-  - Better focus on title and content
 
 ## [0.10.24] - 2025-01-27
 
 ### Added
 
 - Dynamic browser title based on content
-  - Browser title now updates to reflect the current content being viewed
-  - Improves user experience and bookmark identification
 - Enhanced Links type bookmarks with OpenGraph data
-  - Web bookmarks now include rich OpenGraph metadata
-  - Better visual representation and content preview for web bookmarks
 
 ### Changed
 
 - Replaced custom OpenGraph extraction with fetch-opengraph library
-  - More reliable and standardized OpenGraph data extraction
-  - Better performance and maintainability for web bookmark processing
 
 ### Fixed
 
 - Description extraction from web bookmark content field
-  - Improved extraction of descriptions from web bookmark content
-  - Better content identification and display for web bookmarks
 - Resolved all linting and TypeScript issues
-  - Code quality improvements and type safety enhancements
-  - Cleaner codebase with better maintainability
 
 ## [0.10.23] - 2025-01-27
 
 ### Added
 
 - Video thumbnail support for cover images
-  - Extracts and displays video thumbnails for YouTube and Vimeo content
-  - Improves visual representation of video content in bookmark views
 - Note content support for direct video URLs
-  - Uses note content as title for direct video URLs when available
-  - Better content identification for video bookmarks
 - Smart highlight clearing for articles
-  - Automatically clears highlights when switching between articles
-  - Prevents highlight confusion between different articles
 - Robust highlight loading with fallback mechanisms
-  - Implements multiple fallback strategies for highlight loading
-  - Ensures highlights are loaded even when primary methods fail
 
 ### Changed
 
 - Home button alignment moved to left next to profile button
-  - Improved navigation layout consistency
 - Video functionality extracted into dedicated VideoView component
-  - Better code organization and maintainability
-  - Cleaner separation of concerns for video handling
 
 ### Fixed
 
 - Article loading performance and error handling improvements
-  - Better error handling for failed article loads
-  - Improved loading performance with optimized data fetching
 - Highlight loading issues for articles
-  - Resolved race conditions between content loaders
-  - Fixed missing relayPool dependency in useEffect
-  - Proper filtering of Nostr article highlights in sidebar
 - Skeleton loader improvements
-  - Consolidated multiple skeleton loaders in article view
-  - Replaced markdown loading spinner with skeleton
-  - Replaced 'No readable content found' with skeleton loader
 - Video metadata extraction improvements
-  - Enhanced YouTube and Vimeo metadata extraction
-  - Better handling of video content identification
 
 ## [0.10.22] - 2025-01-27
 
 ### Added
 
 - Mobile-optimized tab interface for `/my` and `/p/` pages
-  - Tab text labels hidden on mobile screens (≤768px) to save space
-  - Shows only icons for highlights, bookmarks, reads, links, and writings tabs
-  - Maintains full functionality while improving mobile UX
 
 ### Changed
 
 - Updated brand tagline from "Nostr Bookmarks" to "Read, Highlight, Explore"
-  - Updated across HTML meta tags, PWA manifest, and Open Graph metadata
-  - Better reflects core functionality: reading, highlighting, and exploring content
 - Reordered bookmarks bar navigation buttons
-  - New order: Home, Explore, Settings (previously: Home, Settings, Explore)
 - Moved highlight button higher up on screen
-  - Changed position from `bottom: 32px` to `bottom: 80px` for better accessibility
 
 ### Fixed
 
 - Mobile sidebar not closing when navigating to profile sections
-  - Fixed issue where clicking "My Reads", "My Highlights", etc. didn't close mobile sidebar
-  - Added mobile sidebar close logic to all navigation buttons
-  - Improved mobile navigation experience
 - Removed unnecessary versioning from reading progress implementation
-  - Simplified reading progress events by removing `ver` field
-  - Updated cache key to remove version suffix
-  - Cleaner, more maintainable code
 
 ## [0.10.21] - 2025-10-23
 
 ### Fixed
 
 - Reading position tracking for internal event URLs
-  - Prevents tracking for `nostr-event:` sentinel URLs (internal convention, not a valid Nostr URI per NIP-21)
-  - Fixes "String must be lowercase or uppercase" error when loading base64-encoded event URLs
-  - These internal sentinels are no longer saved to reading position data
 - Compact bookmark view display
-  - Articles now show title instead of summary in compact view
-  - Extracts article title from NIP-23 metadata tags
-  - Removed unused `articleSummary` prop to keep code DRY
 - Bookmark deduplication in profile view
-  - Same article appearing in multiple bookmark lists/sets now displays only once
-  - Uses coordinate-based deduplication (`kind:pubkey:identifier`) for articles
-  - Applies `dedupeBookmarksById` when flattening bookmarks from different sources
 
 ## [0.10.20] - 2025-10-23
 
 ### Added
 
-- Web Bookmarks section now appears first when bookmarks are grouped by source
-  - Provides quicker access to external URL bookmarks
-  - Better organization for mixed bookmark collections
+- Web Bookmarks section appears first when bookmarks are grouped by source
 
 ### Fixed
 
 - Mobile scroll position preservation when toggling highlights panel
-  - Opening/closing the highlights sidebar no longer resets scroll to top
-  - Scroll position is saved before locking and restored after unlocking
-  - Uses `requestAnimationFrame` to ensure DOM updates before restoring
 - Infinite loop in reading position tracking
-  - Fixed "Maximum update depth exceeded" error in `useReadingPosition` hook
-  - Callbacks now stored in refs to avoid dependency array issues
-  - Prevents unnecessary re-renders during scroll tracking
 - Skeleton loading state for articles with zero highlights
-  - Articles without highlights no longer show infinite loading skeletons
-  - Properly transitions to empty state message
 - Navigation to bookmarked articles
-  - Clicking bookmarked kind:30023 articles now navigates to `/a/:naddr` route
-  - Fixes issue where clicking showed "Select a bookmark" message instead
-  - Applies to both compact view and bookmark item interactions
 
 ## [0.10.19] - 2025-10-23
 
 ### Added
 
 - Profile dropdown menu in sidebar header
-  - Click profile picture to access quick navigation menu
-  - Menu items: My Highlights, My Bookmarks, My Reads, My Links, My Writings
-  - Logout option included with separator
-  - Click outside to close
-  - Smooth slide-in animation
 
 ### Changed
 
 - Profile picture interaction updated
-  - Now triggers dropdown menu instead of navigating to profile page
-  - More efficient access to all profile sections
 - Collapse buttons repositioned for symmetry
-  - Highlights collapse button moved to left side of header
-  - Both bookmarks and highlights collapse buttons now left-aligned
-  - Consistent visual hierarchy across panels
 - Grouping toggle button repositioned
-  - Moved from right/center to left side
-  - Now next to support button (orange heart)
-  - Better logical grouping of controls
 - Collapse button styling standardized
-  - Highlights collapse button now matches bookmarks style
-  - Consistent 33x33px size, border radius, and hover states
-  - Uses native button element for better consistency
 
 ### Removed
 
 - Redundant logout button from sidebar header
-  - Previously next to Explore button
-  - Now only accessible via profile dropdown menu
 - Refresh buttons from sidebars
-  - Removed from bookmarks sidebar
-  - Removed from highlights sidebar
-  - Pull-to-refresh functionality remains available
 
 ### Fixed
 
 - Cleaned up unused component props and parameters
-  - Removed `lastFetchTime` from BookmarkList
-  - Removed `loading` and `onRefresh` from HighlightsPanelHeader
-  - All linting errors resolved
-  - Type checking passing
 
 ## [0.10.18] - 2025-10-23
 
 ### Changed
 
 - User profile routes renamed from `/me` to `/my`
-  - `/my/highlights` - User's highlights
-  - `/my/bookmarks` - User's bookmarks
-  - `/my/reads` - Nostr-native articles with reading progress
-  - `/my/links` - External URLs with reading progress
-  - `/my/writings` - User's published articles
-  - All navigation, tabs, and internal links updated
-  - Documentation updated to reflect new paths
 
 ### Fixed
 
-- `/my/writings` now displays all user writings
-  - Removed incremental loading with `since` filters from writingsController
-  - Controller now fetches ALL writings without limits
-  - Ensures complete results on profile and my pages
-- `/my/highlights` now displays all user highlights
-  - Removed incremental loading with `since` filters from highlightsController
-  - Controller now fetches ALL highlights without limits
-  - Consistent behavior across all profile views
+- `/my/writings` displays all user writings
+- `/my/highlights` displays all user highlights
 
 ### Refactored
 
 - Centralized data fetching in controllers
-  - Removed duplicate background fetch logic from Me.tsx and Profile.tsx
-  - All writings fetching now handled by writingsController
-  - All highlights fetching now handled by highlightsController
-  - Single source of truth following controller pattern: stream, dedupe, store, emit
-  - Cleaner, more maintainable code (DRY principle)
 
 ## [0.10.17] - 2025-10-23
 
 ### Added
 
 - Setting to control auto-scroll to reading position
-  - New toggle in Settings > Reading Experience
-  - Allows users to disable automatic scroll restoration
-  - Defaults to enabled (preserves existing behavior)
 
 ### Fixed
 
 - Blockquote styling on mobile devices
-  - Added equal right padding to match left padding (2rem on both sides)
-  - Prevents awkward text cutoff on narrow screens
-- Timestamp clicks in highlight cards now navigate within app
-  - Articles (kind:30023) open via `/a/{naddr}` route
-  - External URLs open via `/r/{encodedUrl}` route
-  - Previously opened external search portal (ants.sh)
-  - Highlight automatically scrolls into view with sidebar open
-- Hero images now properly extend edge-to-edge on mobile
-  - Adjusted negative margins to match new reader padding
-  - Image bleeds to screen edges while text maintains comfortable margins
-- Article relay links now open via `/a/` path instead of `/r/`
-  - Ensures nostr-native articles route correctly
-  - External links continue to use `/r/` path
+- Timestamp clicks in highlight cards navigate within app
+- Hero images properly extend edge-to-edge on mobile
+- Article relay links open via `/a/` path instead of `/r/`
 
 ### Changed
 
 - Mobile reader padding increased for better readability
-  - Horizontal padding increased from 0.5rem to 1rem
-  - Title, summary, and body text now properly aligned
-  - More comfortable reading experience on small screens
 - Reading position save interval reduced from 3s to 1s
-  - More frequent auto-saves during active reading
-  - Better preservation of reading progress
 
 ## [0.10.16] - 2025-10-22
 
 ### Fixed
 
-- Reading position auto-save now works correctly during continuous scrolling
-  - Fixed critical bug where save timer was cleared when tracking toggled
-  - Timer now persists across tracking state changes
-  - Saves fire reliably every 3 seconds during active reading
-  - Throttle mechanism now works as intended
+- Reading position auto-save works correctly during continuous scrolling
 - Reading position tracking stability improved
-  - Tracking state no longer toggles erratically
-  - Content stability checks refined to prevent false negatives
-  - Infinite loop fixed in position save handler
 
 ### Changed
 
 - Reading position save mechanism changed from debounce to throttle
-  - Ensures saves happen at regular 3-second intervals during continuous scrolling
-  - Previous debounce approach could skip saves during slow continuous scrolling
-  - More predictable save behavior for users
 - Simplified reading position logic by removing unused complexity
-  - Removed 5% delta requirement for scheduling saves
-  - Removed unnecessary state tracking (lastSavedPosition, hasSavedOnce, lastSavedAtRef)
-  - Cleaner, more maintainable code
 
 ### Fixed
 
-- Highlights now scroll into view when clicked from `/my/highlights` page
-  - Navigation state properly passes highlight ID and openHighlights flag
-  - Works for both article links and external URL links
+- Highlights scroll into view when clicked from `/my/highlights` page
 
 ## [0.10.15] - 2025-01-22
 
 ### Changed
 
-- Reading position restore now uses pre-loaded data from controller
-  - No longer fetches position from scratch when opening articles
-  - Uses position already loaded and displayed on bookmark cards
-  - Faster restore with no network wait
-  - Simpler code without stabilization window complexity
+- Reading position restore uses pre-loaded data from controller
 - Reading position scroll animation restored to smooth behavior
-  - Changed from instant jump back to smooth animated scroll
-  - Better user experience when restoring position
 
 ### Fixed
 
 - Reading position no longer saves 0% during back navigation on mobile
-  - Removed save-on-unmount behavior that was error-prone
-  - Browser scroll-to-top during back gesture no longer overwrites progress
-  - Auto-save with 3-second debounce is sufficient for normal reading
-  - Prevents accidental reset of reading progress when navigating away
 
 ## [0.10.14] - 2025-01-27
 
 ### Added
 
 - Third relay education article link in PWA settings
-  - Added "Relay Setup 101" article to relay information section
-  - Now links to three educational resources about relays
 
 ### Changed
 
-- Timestamp links in bookmark cards now navigate within app
-  - Articles (kind:30023) open in `/a/{naddr}` route
-  - Notes (kind:1) open in `/e/{eventId}` route
-  - External URLs open in `/r/{encodedUrl}` route
-  - Uses React Router Link for client-side navigation instead of external search
+- Timestamp links in bookmark cards navigate within app
 - Relay article links punctuation improved for better readability
-  - Changed from "here and here" to "here, here, and here"
 
 ### Fixed
 
 - Duplicate video embeds and stray HTML artifacts eliminated
-  - VideoEmbedProcessor now processes HTML and extracts URLs in single pass
-  - Placeholder indices now correctly match collected video URLs
-  - Empty HTML parts no longer rendered, preventing stray characters like `">`
 - Highlights loading spinner no longer spins forever when article has zero highlights
-  - Loading state properly cleared when no highlights exist
-  - "No highlights" message displays immediately
 
 ## [0.10.13] - 2025-01-27
 
 ### Added
 
 - Instant article preview when navigating from blog post cards
-  - Title, image, summary, and date display immediately via navigation state
-  - No skeleton loading for metadata already visible on cards
-  - Article content loads seamlessly in background from eventStore or relays
 - Reliable relay fallback for article fetching
-  - Queries nostr.band, primal, damus, and nos.lol if initial fetch returns no events
-  - Reduces "Article not found" errors
 
 ### Changed
 
-- Article loading now follows local-first controller pattern
-  - Uses eventStore and queryEvents for streaming results
-  - Emits content immediately on first event from store or local relays
-  - Finalizes with newest version after EOSE (no artificial timeouts)
-  - Background relay query continues to check for updates
-- Service Worker now only registers in production builds
-  - Disabled in development to avoid stale cache issues
-  - Preserves PWA functionality in production
+- Article loading follows local-first controller pattern
+- Service Worker only registers in production builds
 - Article fetching queries union of naddr relay hints and configured relays
-  - Prevents failures when naddr contains stale or unreachable relay hints
-  - Maintains fast local/hinted paths with reliable fallback
 
 ### Fixed
 
 - Article loading race conditions eliminated
-  - Request ID guards prevent stale fetches from overwriting current content
-  - Stale highlights from previous articles no longer appear
 - Content/title mismatch when switching articles resolved
-  - Markdown preview clears immediately on content change
-  - Forced re-mount of rendered HTML per article via stable content keys
-  - Request guards in external URL loader prevent cross-article bleed
 - Article re-fetching on settings changes prevented
-  - Settings memoized via ref to avoid triggering effect dependencies
-- Explore writings tab now shows skeletons instead of spinner when loading
-  - Consistent loading UI across all views
+- Explore writings tab shows skeletons instead of spinner when loading
 
 ## [0.10.12] - 2025-01-27
 
@@ -650,14 +345,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Explore icon changed from newspaper to person hiking for better semantic meaning
 - Settings button moved before explore button in sidebar navigation
-- Profile avatar button now uses 44px touch target on mobile (matches other icon buttons)
+- Profile avatar button uses 44px touch target on mobile
 
 ### Fixed
 
-- Web bookmarks (kind:39701) now properly deduplicate by d-tag
-- Same URL bookmarked multiple times now only appears once
-- Web bookmark IDs use coordinate format (kind:pubkey:d-tag) for consistent deduplication
-- Profile avatar button sizing on mobile now matches other IconButton components
+- Web bookmarks (kind:39701) properly deduplicate by d-tag
+- Same URL bookmarked multiple times only appears once
+- Web bookmark IDs use coordinate format (kind
+- Profile avatar button sizing on mobile matches other IconButton components
 - Removed all console.log statements from bookmarkController and bookmarkProcessing
 
 ## [0.10.11] - 2025-01-27
@@ -671,24 +366,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Default bookmark view changed to flat chronological list (newest first)
+- Default bookmark view changed to flat chronological list
 - Bookmark URL changed from `/my/reading-list` to `/my/bookmarks`
 - Router updated to handle `/my/reading-list` → `/my/bookmarks` redirect
-- Me.tsx bookmarks tab now uses dynamic filter titles and chronological sorting
+- Me.tsx bookmarks tab uses dynamic filter titles and chronological sorting
 - Me.tsx updated to use faClock icon instead of faBars
 - Removed bookmark count from section headings for cleaner display
 - Hide close/collapse sidebar buttons on mobile for better UX
 
 ### Fixed
 
-- Bookmark sorting now uses proper display time (created_at || listUpdatedAt) with nulls last
+- Bookmark sorting uses proper display time (created_at || listUpdatedAt) with nulls last
 - Robust sorting of merged bookmarks with fallback timestamps
 - Corrected bookmark timestamp to use bookmark list creation time, not content creation time
 - Preserved content created_at while adding listUpdatedAt for proper sorting
-- Removed synthetic added_at field, now uses created_at from bookmark list event
+- Removed synthetic added_at field, uses created_at from bookmark list event
 - Consistent chronological sorting with useMemo optimization
 - Removed unused faTimes import
-- Bookmark timestamps now show sane dates using created_at fallback to listUpdatedAt
+- Bookmark timestamps show sane dates using created_at fallback to listUpdatedAt
 - Guarded formatters to prevent timestamp display errors
 
 ### Refactored
@@ -701,112 +396,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Version bump for consistency (no user-facing changes)
+- Version bump for consistency
 
 ## [0.10.9] - 2025-10-21
 
 ### Fixed
 
 - Event fetching reliability with exponential backoff in eventManager
-  - Improved retry logic with incremental backoff delays
-  - Better handling of concurrent event requests
-  - More robust event retrieval from relay pool
 - Bookmark timestamp handling
-  - Use per-item `added_at`/`created_at` timestamps when available
-  - Improves accuracy of bookmark date tracking
 
 ### Changed
 
 - Removed all debug console logs
-  - Cleaner console output in development and production
-  - Improved performance by eliminating debugging statements
 
 ## [0.10.8] - 2025-10-21
 
 ### Added
 
 - Individual event rendering via `/e/:eventId` path
-  - Display `kind:1` notes and other events with article-like presentation
-  - Publication date displayed in top-right corner like articles
-  - Author attribution with "Note by @author" titles
-  - Direct event loading with intelligent caching from eventStore
 - Centralized event fetching via new `eventManager` singleton
-  - Request deduplication for concurrent fetches
-  - Automatic retry logic when relay pool becomes available
-  - Non-blocking background fetching with 12-second timeout
-  - Seamless integration with eventStore for instant cached event display
 
 ### Fixed
 
 - Bookmark hydration efficiency
-  - Only request content for bookmarks missing data (not all bookmarks)
-  - Use eventStore fallback for instant display of cached profiles
-  - Prevents over-fetching and improves initial load performance
 - Search button behavior for notes
-  - Opens `kind:1` notes directly via `/e/{eventId}` instead of search portal
-  - Articles continue to use search portal with proper naddr encoding
-  - Removes unwanted `nostr-event:` prefix from URLs
 - Author profile resolution
-  - Fetch author profiles from eventStore cache first before relay requests
-  - Instant title updates if profile already loaded
-  - Graceful fallback to short pubkey display if profile unavailable
 
 ## [0.10.7] - 2025-10-21
 
 ### Fixed
 
-- Profile pages now display all writings correctly
-  - Events are now stored in eventStore as they stream in from relays
-  - `fetchBlogPostsFromAuthors` now accepts `eventStore` parameter like other fetch functions
-  - Ensures all writings appear on `/p/` routes, not just the first few
-  - Background fetching of highlights and writings uses consistent patterns
+- Profile pages display all writings correctly
 
 ### Changed
 
 - Simplified profile background fetching logic for better maintainability
-  - Extracted relay URLs to variable for clarity
-  - Consistent error handling patterns across fetch functions
-  - Clearer comments about no-limit fetching behavior
 
 ## [0.10.6] - 2025-10-21
 
 ### Added
 
 - Text-to-speech reliability improvements
-  - Chunking support for long-form content to prevent WebSpeech API cutoffs
-  - Automatic chunk-based resumption for interrupted playback
-  - Better handling of content exceeding browser TTS limits
 
 ### Fixed
 
 - Tab switching regression on `/my` page
-  - Resolved infinite update loop caused by circular dependency in `useCallback` hooks
-  - Tab navigation now properly updates UI when URL changes
-  - Removed `loadedTabs` from dependency arrays to prevent re-render cycles
 - Explore page data loading patterns
-  - Implemented subscribe-first, non-blocking loading model
-  - Removed all timeouts in favor of immediate subscription and progressive hydration
-  - Contacts, writings, and highlights now stream results as they arrive
-  - Nostrverse content loads in background without blocking UI
 - Text-to-speech handler cleanup
-  - Removed no-op self-assignment in rate change handler
 
 ## [0.10.4] - 2025-10-21
 
 ### Added
 
-- Web Share Target support for PWA (system-level share integration)
-  - Boris can now receive shared URLs from other apps on mobile and desktop
-  - Implements POST-based Web Share Target API per Chrome standards
-  - Service worker intercepts share requests and redirects to handler route
-  - ShareTargetHandler component auto-saves shared URLs as web bookmarks
-  - Android compatibility with URL extraction from text field when url param is missing
-  - Automatic navigation to bookmarks list after successful save
-  - Login prompt when sharing while logged out
+- Web Share Target support for PWA
 
 ### Changed
 
-- Manifest now includes `share_target` configuration for system share menu integration
+- Manifest includes `share_target` configuration for system share menu integration
 - Service worker handles POST requests to `/share-target` endpoint
 - Added `/share-target` route for processing incoming shared content
 
@@ -815,163 +461,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Content filtering setting to hide articles posted by bots
-  - New "Hide content posted by bots" checkbox in Explore settings (enabled by default)
-  - Filters articles where author's profile name or display_name contains "bot" (case-insensitive)
-  - Applies to both Explore page and Me section writings
 
 ### Fixed
 
 - Resolved all linting and type checking issues
-  - Added missing React Hook dependencies to `useMemo` and `useEffect`
-  - Wrapped loader functions in `useCallback` to prevent unnecessary re-renders
-  - Removed unused variables (`queryTime`, `startTime`, `allEvents`)
-  - All ESLint warnings and TypeScript errors now resolved
 
 ## [0.10.2] - 2025-10-20
 
 ### Added
 
 - Text-to-speech (TTS) speaker language selection mode
-  - New "Speaker language" dropdown in TTS settings (system or content)
-  - Detects content language using tinyld for accurate voice matching
-  - Falls back to system language when content detection unavailable
-  - Top 10 languages featured in dropdown for quick access
 - TTS example text section in settings
-  - Test TTS voices directly in the settings panel
-  - Uses Boris mission statement as example text
-  - Real-time speaker selection testing
 
 ### Changed
 
-- TTS language selection now uses "Speaker language" terminology
-  - Distinguishes between American English (en-US) and British English (en-GB)
-  - Improved language detection with content-aware voice selection
-  - Streamlined dropdown for better UX
+- TTS language selection uses "Speaker language" terminology
 
 ### Fixed
 
 - TTS voice detection and selection logic
-  - Proper empty catch block handling instead of silently failing
-  - Consistent use of `setting-select` class for dropdown styling
-  - Improved dropdown spacing with adequate padding-right
 
 ## [0.10.0] - 2025-01-27
 
 ### Added
 
 - Centralized bookmark loading with streaming and auto-decrypt
-  - Bookmarks now load progressively with streaming updates
-  - Auto-decrypt bookmarks as they arrive from relays
-  - Individual decrypt buttons for encrypted bookmark events
-  - Centralized bookmark controller for consistent loading across the app
 - Enhanced debug page with comprehensive diagnostics
-  - Interactive NIP-04 and NIP-44 encryption/decryption testing
-  - Live performance timing with stopwatch display
-  - Bookmark loading and decryption diagnostics
-  - Real-time bunker logs with filtering and clearing
-  - Version and git commit footer
 - Bunker (NIP-46) authentication support
-  - Support for remote signing via Nostr Connect protocol
-  - Bunker URI input with validation and error handling
-  - Automatic reconnection on app restore with proper permissions
-  - Signer suggestions in error messages (Amber, nsec.app, Nostrum)
 
 ### Changed
 
 - Improved bookmark loading performance
-  - Non-blocking, progressive bookmark updates via callback pattern
-  - Batched background hydration using EventLoader and AddressLoader
-  - Shorter timeouts for debug page bookmark loading
-  - Sequential decryption instead of concurrent to avoid queue issues
 - Enhanced bunker error messages
-  - Formatted error messages with signer suggestions
-  - Links to nos2x, Amber, nsec.app, and Nostrum signers
-  - Better error handling for missing signer extensions
 - Centralized bookmark loading architecture
-  - Single shared bookmark controller for consistent loading
-  - Unified bookmark loading with streaming and auto-decrypt
-  - Consolidated bookmark loading into single centralized function
 
 ### Fixed
 
 - NIP-46 bunker signing and decryption
-  - NostrConnectSigner properly reconnects with permissions on app restore
-  - Bunker relays added to relay pool for signing requests
-  - Proper setup of pool and relays before bunker reconnection
-  - Expose nip04/nip44 on NostrConnectAccount for bookmark decryption
-  - Cache wrapped nip04/nip44 objects instead of using getters
-  - Wait for bunker relay connections before marking signer ready
-  - Validate bunker URI (remote must differ from user pubkey)
-  - Accept remote===pubkey for Amber compatibility
 - Bookmark loading and decryption
-  - Bookmarks load and complete properly with streaming
-  - Auto-decrypt private bookmarks with NIP-04 detection
-  - Include decrypted private bookmarks in sidebar
-  - Skip background event fetching when there are too many IDs
-  - Only build bookmarks from ready events (unencrypted or decrypted)
-  - Restore Debug page decrypt display via onDecryptComplete callback
-  - Make controller onEvent non-blocking for queryEvents completion
-  - Proper timeout handling for bookmark decryption (no hanging)
-  - Smart encryption detection with consistent padlock display
-  - Sequential decryption instead of concurrent to avoid queue issues
-  - Add extraRelays to EventLoader and AddressLoader
 - TypeScript and linting errors throughout
-  - Replace empty catch blocks with warnings
-  - Fix explicit any types
-  - Add missing useEffect dependencies
-  - Resolve all linting issues in App.tsx, Debug.tsx, and async utilities
 
 ### Performance
 
 - Non-blocking NIP-46 operations
-  - Fire-and-forget NIP-46 publish for better UI responsiveness
-  - Non-blocking bookmark decryption with sequential processing
-  - Make controller onEvent non-blocking for queryEvents completion
 - Optimized bookmark loading
-  - Batched background hydration using EventLoader and AddressLoader
-  - Progressive, non-blocking bookmark loading with streaming
-  - Shorter timeouts for debug page bookmark loading
-  - Remove artificial delays from bookmark decryption
 
 ### Refactored
 
 - Centralized bookmark controller architecture
-  - Extract bookmark streaming helpers and centralize loading
-  - Consolidated bookmark loading into single function
-  - Remove deprecated bookmark service files
-  - Share bookmark controller between components
 - Debug page organization
-  - Extract VersionFooter component to eliminate duplication
-  - Structured sections with proper layout and styling
-  - Apply settings page styling structure
 - Simplified bunker implementation following applesauce patterns
-  - Clean up bunker implementation for better maintainability
-  - Import RELAYS from central config (DRY principle)
-  - Update RELAYS list with relay.nsec.app
 
 ### Documentation
 
 - Comprehensive Amber.md documentation
-  - Amethyst-style bookmarks section
-  - Bunker decrypt investigation summary
-  - Critical queue disabling requirement
-  - NIP-46 setup and troubleshooting
 
 ## [0.9.1] - 2025-10-20
 
 ### Added
 
 - Video embedding for nostr-native content
-  - Detect and embed `<video>...</video>` blocks (including nested `<source>`)
-  - Detect and embed `<img src="…(mp4|webm|ogg|mov|avi|mkv|m4v)">` tags
-  - Detect and embed bare video file URLs and platform-classified video links
 - Media display settings
-  - New "Render video links as embeds" setting (defaults to enabled)
-  - New "Full-width images" display option
-  - Dedicated "Media Display" settings section
 - Article view improvements
-  - Center images by default in reader
-  - Writings list sorted by publication date (newest first)
 
 ### Changed
 
@@ -982,8 +533,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Prevent double video player rendering when both processor and panel attempted to embed
 - Remove text artifacts and broken tags when converting markdown image/video URLs
-  - Improved URL regex and robust tag replacement
-  - Avoid injecting unknown img props from markdown renderer
 - Resolved remaining ESLint and TypeScript issues
 
 ### Performance
@@ -994,31 +543,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- User relay list integration (NIP-65) and blocked relays (NIP-51)
-  - Automatically loads user's relay list from kind 10002 events
-  - Supports blocked relay filtering from kind 10006 mute lists
-  - Integrates with existing relay pool for seamless user experience
+- User relay list integration
 - Relay list debug section in Debug component
-  - Enhanced debugging capabilities for relay list loading
-  - Detailed logging for relay query diagnostics
 
 ### Changed
 
 - Improved relay list loading performance
-  - Added streaming callback to relay list service for faster results
-  - User relay list now streams into pool immediately and finalizes after blocked relays
-  - Made relay list loading non-blocking in App.tsx
 - Enhanced relay URL handling
-  - Normalized relay URLs to match applesauce-relay internal format
-  - Removed relay.dergigi.com from default relays
-  - Use user's relay list exclusively when logged in
 
 ### Fixed
 
 - Resolved all linting issues across the codebase
 - Fixed TypeScript type issues in relayListService
-  - Replaced any types with proper NostrEvent types
-  - Improved type safety and code quality
 - Cleaned up temporary test relays from hardcoded list
 - Removed non-relay console.log statements and debug output
 
@@ -1033,91 +569,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - React Hooks violations in NostrMentionLink component
-  - Fixed useEffect dependency warnings by removing isMounted from dependencies
-  - Reverted to inline mount tracking with useRef for safer lifecycle handling
 
 ## [0.8.4] - 2024-10-20
 
 ### Added
 
 - Progressive article hydration for reads tab
-  - Articles now load titles, summaries, images, and author information progressively
-  - Implemented readsController following the same pattern as bookmarkController
-  - Uses AddressLoader for efficient batched article event retrieval
-  - Articles rehydrate as data arrives from relays without blocking initial display
-  - Event store integration for caching article events
-  - Centralized reads data fetching following DRY principles
 
 ### Fixed
 
 - Fixed React type imports in useArticleLoader
-  - Import `Dispatch` and `SetStateAction` directly from 'react' instead of using `React.` prefix
-  - Resolves ESLint no-undef errors
 
 ## [0.8.3] - 2025-01-19
 
 ### Fixed
 
-- Highlight creation now shows immediate UI feedback without page refresh
-  - Fixed streaming highlight merge logic to preserve newly created highlights
-  - Decoupled cached highlight sync from content loading to prevent unintended reloads
-  - Newly created highlights appear instantly in both reader and highlights panel
-  - Highlights remain visible while remote results stream in and merge properly
+- Highlight creation shows immediate UI feedback without page refresh
 
 ### Changed
 
 - Improved highlight creation user experience
-  - Selection clearing and synchronous rendering for immediate highlight display
-  - Better error handling for bunker permission issues with user-friendly messages
 
 ## [0.8.2] - 2025-10-19
 
 ### Added
 
 - Reading progress indicator in compact bookmark cards
-  - Shows progress bar for articles and web bookmarks with reading data
-  - Progress bar aligned with bookmark text for better visual association
-  - Color-coded progress (blue for reading, green for completed, gray for started)
 
 ### Changed
 
 - Compact cards layout optimizations for more space-efficient display
-  - Reduced vertical padding from 0.5rem to 0.25rem
-  - Reduced compact row height from 28px to 24px
-  - Reduced gap between compact cards from 0.5rem to 0.25rem
 - Reading progress bar styling for compact view
-  - Bar height reduced from 2px to 1px for more subtle appearance
-  - Left margin of 1.5rem aligns bar with bookmark text instead of appearing as separator
 
 ### Fixed
 
 - Removed borders from compact bookmarks in bookmarks sidebar
-  - Border styling from `.bookmarks-list` no longer applies to compact cards
-  - Compact cards now display as truly borderless and transparent
 
 ## [0.8.0] - 2025-10-19
 
 ### Added
 
 - Centralized reading progress controller for non-blocking reading position sync
-  - Progressive loading with caching from event store
-  - Streaming updates from relays with proper merging
-  - 2-second completion hold at 100% reading position to prevent UI jitter
-  - Configurable auto-mark-as-read at 100% reading progress
 - Reading progress indicators on blog post cards
-  - Visual progress bars on article cards in Explore and bookmarks sidebar
-  - Persistent reading position synced across devices via NIP-85
 
 ### Changed
 
-- Reading position sync now enabled by default in runtime paths
+- Reading position sync enabled by default in runtime paths
 - Improved auto-mark-as-read behavior with reliable completion detection
-- Reading progress events use proper NIP-85 specification (kind 39802)
+- Reading progress events use proper NIP-85 specification
 
 ### Fixed
 
 - Reading position saves with proper validation and event store integration
-- Profile page writings loading now fetches all writings without limits
+- Profile page writings loading fetches all writings without limits
 - Consistent reading progress calculation and event publishing
 
 ### Performance
@@ -1131,119 +635,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Profile page data preloading for instant tab switching
-  - Automatically preloads all highlights and writings when viewing a profile (`/p/` pages)
-  - Non-blocking background fetch stores all events in event store
-  - Tab switching becomes instant after initial preload
 
 ### Changed
 
-- `/my/bookmarks` tab now displays in cards view only
-  - Removed view mode toggle buttons (compact, large) from bookmarks tab
-  - Cards view provides optimal bookmark browsing experience
-  - Grouping toggle (grouped/flat) still available
+- `/my/bookmarks` tab displays in cards view only
 - Highlights sidebar filters simplified when logged out
-  - Only nostrverse filter button shown when not logged in
-  - Friends and personal highlight filters hidden when logged out
-  - Cleaner UX showing only available options
 
 ### Fixed
 
-- Profile page tabs now display cached content instantly
-  - Highlights and writings show immediately from event store cache
-  - Network fetches happen in background without blocking UI
-  - Matches Explore and Debug page non-blocking loading pattern
-  - Eliminated loading delays when switching between tabs
+- Profile page tabs display cached content instantly
 
 ### Performance
 
 - Cache-first profile loading strategy
-  - Instant display of cached highlights and writings from event store
-  - Background refresh updates data without blocking
-  - Tab switches show content immediately without loading states
 
 ## [0.7.3] - 2025-10-18
 
 ### Added
 
 - Centralized nostrverse writings controller for kind 30023 content
-  - Automatically starts at app initialization
-  - Streams nostrverse blog posts progressively to Explore page
-  - Provides non-blocking, cache-first loading strategy
 - Centralized nostrverse highlights controller
-  - Pre-loads nostrverse highlights at app start for instant toggling
-  - Streams highlights progressively to Explore page
-  - Integrated with EventStore for caching
 - Writings loading debug section on `/debug` page
-  - Diagnostics for writings controller and loading states
 
 ### Changed
 
-- Explore page now uses centralized `writingsController` for user's own writings
-  - Auto-loads user writings at login for instant availability
-  - Non-blocking fetch with progressive streaming
+- Explore page uses centralized `writingsController` for user's own writings
 - Explore page loading strategy optimized
-  - Shows skeleton placeholders instead of blocking spinners
-  - Seeds from cache, then streams and merges results progressively
-  - Keeps nostrverse fetches non-blocking
-- User's own writings now included in Explore when enabled
-  - Lazy-loads on 'mine' toggle when logged in
-  - Streams in parallel with friends/nostrverse content
+- User's own writings included in Explore when enabled
 
 ### Fixed
 
 - Explore page works correctly in logged-out mode
-  - Relies solely on centralized nostrverse controllers
-  - Controllers start even when logged out
-  - Fetches nostrverse content properly without authentication
 - Explore page no longer allows disabling all scope filters
-  - Ensures at least one filter (mine/friends/nostrverse) remains active
-  - Prevents blank content state
 - Explore page reflects default scope setting immediately
-  - No more blank lists on initial load
-  - Pre-loads and merges nostrverse from event store
 - Explore page highlights properly scoped
-  - Nostrverse highlights never block the page
-  - Shows empty state instead of spinner
-  - Streams results into store immediately
-  - Highlights are merged and loaded correctly
 - Article-specific highlights properly filtered
-  - Highlights scoped to current article on `/a/` and `/r/` routes
-  - Derives coordinate from naddr for early filtering
-  - Sidebar and content only show relevant highlights
-  - ContentPanel shows only article-specific highlights for nostr articles
 - Explore writings properly deduplicated
-  - Deduplication by replaceable event (author:d-tag) happens before visibility filtering
-  - Consistent dedupe/sort behavior across all loading scenarios
 - Debug page writings loading section added
-  - No infinite loop when loading nostrverse content
 
 ### Performance
 
 - Non-blocking explore page loading
-  - Fully non-blocking loading strategy
-  - Seeds caches then streams and merges results progressively
 - Lazy-loading for content filters
-  - Nostrverse writings lazy-load when toggled on while logged in
-  - Avoids redundant loading with guard flags
 - Streaming callbacks for progressive updates
-  - Writings stream to UI via onPost callback
-  - Posts appear instantly as they arrive from cache or network
 
 ## [0.7.2] - 2025-01-27
 
 ### Added
 
 - Cached-first loading with EventStore across the app
-  - Instant display of cached highlights and writings from local event store
-  - Progressive loading with streaming updates from relays
-  - Centralized event storage for improved performance and offline support
 - Default explore scope setting for controlling content visibility
-  - Configurable default scope for explore page content
-  - Dedicated Explore section in settings for better organization
 
 ### Changed
 
-- Highlights and writings now load from cache first, then stream from relays
+- Highlights and writings load from cache first, then stream from relays
 - Explore page shows cached content instantly before network updates
 - Article-specific highlights stored in centralized event store for faster access
 - Nostrverse content cached locally for improved performance
@@ -1266,223 +711,102 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Login with Bunker (NIP-46) authentication support
-  - Support for remote signing via Nostr Connect protocol
-  - Bunker URI input with validation and error handling
-  - Automatic reconnection on app restore with proper permissions
-  - Signer suggestions in error messages (Amber, nsec.app, Nostrum)
 - Debug page (`/debug`) for diagnostics and testing
-  - Interactive NIP-04 and NIP-44 encryption/decryption testing
-  - Live performance timing with stopwatch display
-  - Bookmark loading and decryption diagnostics
-  - Real-time bunker logs with filtering and clearing
-  - Version and git commit footer
 - Progressive bookmark loading with streaming updates
-  - Non-blocking, progressive bookmark updates via callback pattern
-  - Batched background hydration using EventLoader and AddressLoader
-  - Auto-decrypt bookmarks as they arrive from relays
-  - Individual decrypt buttons for encrypted bookmark events
-- Bookmark grouping toggle (grouped by source vs flat chronological)
-  - Toggle between grouped view and flat chronological list
-  - Amethyst-style bookmark detection and grouping
-  - Display bookmarks even when they only have IDs (content loads in background)
+- Bookmark grouping toggle
 
 ### Changed
 
 - Improved login UI with better copy and modern design
-  - Personable title and nostr-native language
-  - Highlighted 'your own highlights' in login copy
-  - Simplified button text to single words (Extension, Signer)
-  - Hide login button and user icon when logged out
-  - Hide Extension button when Bunker input is shown
-  - Auto-load bookmarks on login and page mount
 - Enhanced bunker error messages
-  - Formatted error messages with signer suggestions
-  - Links to nos2x, Amber, nsec.app, and Nostrum signers
-  - Better error handling for missing signer extensions
-  - Centered and constrained bunker input field
 - Centralized bookmark loading architecture
-  - Single shared bookmark controller for consistent loading
-  - Unified bookmark loading with streaming and auto-decrypt
-  - Consolidated bookmark loading into single centralized function
-  - Bookmarks passed as props throughout component tree
 - Renamed UI elements for clarity
-  - "Bunker" button renamed to "Signer"
-  - Hide bookmark controls when logged out
 - Settings version footer improvements
-  - Separate links for version (to GitHub release) and commit (to commit page)
-  - Proper spacing around middot separator
 
 ### Fixed
 
 - NIP-46 bunker signing and decryption
-  - NostrConnectSigner properly reconnects with permissions on app restore
-  - Bunker relays added to relay pool for signing requests
-  - Proper setup of pool and relays before bunker reconnection
-  - Expose nip04/nip44 on NostrConnectAccount for bookmark decryption
-  - Cache wrapped nip04/nip44 objects instead of using getters
-  - Wait for bunker relay connections before marking signer ready
-  - Validate bunker URI (remote must differ from user pubkey)
-  - Accept remote===pubkey for Amber compatibility
 - Bookmark loading and decryption
-  - Bookmarks load and complete properly with streaming
-  - Auto-decrypt private bookmarks with NIP-04 detection
-  - Include decrypted private bookmarks in sidebar
-  - Skip background event fetching when there are too many IDs
-  - Only build bookmarks from ready events (unencrypted or decrypted)
-  - Restore Debug page decrypt display via onDecryptComplete callback
-  - Make controller onEvent non-blocking for queryEvents completion
-  - Proper timeout handling for bookmark decryption (no hanging)
-  - Smart encryption detection with consistent padlock display
-  - Sequential decryption instead of concurrent to avoid queue issues
-  - Add extraRelays to EventLoader and AddressLoader
 - PWA cache limit increased to 3 MiB for larger bundles
 - Extension login error messages with nos2x link
 - TypeScript and linting errors throughout
-  - Replace empty catch blocks with warnings
-  - Fix explicit any types
-  - Add missing useEffect dependencies
-  - Resolve all linting issues in App.tsx, Debug.tsx, and async utilities
 
 ### Performance
 
 - Non-blocking NIP-46 operations
-  - Fire-and-forget NIP-46 publish for better UI responsiveness
-  - Non-blocking bookmark decryption with sequential processing
-  - Make controller onEvent non-blocking for queryEvents completion
 - Optimized bookmark loading
-  - Batched background hydration using EventLoader and AddressLoader
-  - Progressive, non-blocking bookmark loading with streaming
-  - Shorter timeouts for debug page bookmark loading
-  - Remove artificial delays from bookmark decryption
 
 ### Refactored
 
 - Centralized bookmark controller architecture
-  - Extract bookmark streaming helpers and centralize loading
-  - Consolidated bookmark loading into single function
-  - Remove deprecated bookmark service files
-  - Share bookmark controller between components
 - Debug page organization
-  - Extract VersionFooter component to eliminate duplication
-  - Structured sections with proper layout and styling
-  - Apply settings page styling structure
 - Simplified bunker implementation following applesauce patterns
-  - Clean up bunker implementation for better maintainability
-  - Import RELAYS from central config (DRY principle)
-  - Update RELAYS list with relay.nsec.app
 
 ### Documentation
 
 - Comprehensive Amber.md documentation
-  - Amethyst-style bookmarks section
-  - Bunker decrypt investigation summary
-  - Critical queue disabling requirement
-  - NIP-46 setup and troubleshooting
 
 ## [0.6.24] - 2025-01-16
 
 ### Fixed
 
 - TypeScript global declarations for build-time defines
-  - Added proper type declarations for `__APP_VERSION__`, `__GIT_COMMIT__`, `__GIT_BRANCH__`, `__BUILD_TIME__`, and `__GIT_COMMIT_URL__`
-  - Resolved ESLint no-undef errors for build-time injected variables
-  - Added Node.js environment hint to Vite configuration
 
 ## [0.6.23] - 2025-01-16
 
 ### Fixed
 
 - Deep-link refresh redirect issue for nostr-native articles
-  - Limited `/a/:naddr` rewrite to bot user-agents only in Vercel configuration
-  - Real browsers now hit the SPA directly, preventing redirect to root path
-  - Bot crawlers still receive proper OpenGraph metadata for social sharing
 
 ### Added
 
 - Version and git commit information in Settings footer
-  - Displays app version and short commit hash with link to GitHub
-  - Build-time metadata injection via Vite configuration
-  - Subtle footer styling with selectable text
 
 ### Changed
 
-- Article OG handler now uses proper RelayPool.request() API
-  - Aligned with applesauce RelayPool interface
-  - Removed deprecated open/close methods
-  - Fixed TypeScript linting errors
+- Article OG handler uses proper RelayPool.request() API
 
 ### Technical
 
 - Added debug logging for route state and article OG handler
-  - Gated by `?debug=1` query parameter for production testing
-  - Structured logging for troubleshooting deep-link issues
-  - Temporary debug components for validation
 
 ## [0.6.22] - 2025-10-16
 
 ### Added
 
 - Dynamic OpenGraph and Twitter Card meta tags for article deep-links
-  - Social media platforms display article title, author, cover image, and summary when sharing `/a/{naddr}` links
-  - Serverless endpoint fetches article metadata from Nostr relays (kind:30023) and author profiles (kind:0)
-  - User-agent detection serves appropriate content to crawlers vs browsers
-  - Falls back to default social preview image when articles have no cover image
 - Social preview image for homepage and article links
-  - Added `boris-social-1200.png` as default OpenGraph image (1200x630)
-  - Homepage now includes social preview image in meta tags
 
 ### Changed
 
-- Article deep-links now properly preserve URL when loading in browser
-  - Uses `history.replaceState()` to maintain correct article path
-  - Browser navigation works correctly on refresh and new tab opens
+- Article deep-links properly preserve URL when loading in browser
 
 ### Fixed
 
 - Vercel rewrite configuration for article routes
-  - Routes `/a/:naddr` to serverless OG endpoint for dynamic meta tags
-  - Regular SPA routing preserved for browser navigation
 
 ## [0.6.21] - 2025-10-16
 
 ### Added
 
-- Reading position sync across devices using Nostr Kind 30078 (NIP-78)
-  - Automatically saves and syncs reading position as you scroll
-  - Visual reading progress indicator on article cards
-  - Reading progress shown in Explore and Bookmarks sidebar
-  - Auto-scroll to last reading position setting (configurable in Settings)
-  - Reading position displayed as colored progress bar on cards
+- Reading position sync across devices using Nostr Kind 30078
 - Reading progress filters for organizing articles
-  - Filter by reading state: Unopened, Started (0-10%), Reading (11-94%), Completed (95-100% or marked as read)
-  - Filter icons colored when active (blue for most, green for completed)
-  - URL routing support for reading progress filters
-  - Reading progress filters available in Archive tab and bookmarks sidebar
 - Reads and Links tabs on `/my` page
-  - Reads tab shows nostr-native articles with reading progress
-  - Links tab shows external URLs with reading progress
-  - Both tabs populate instantly from bookmarks for fast loading
-  - Lazy loading for improved performance
 - Auto-mark as read at 100% reading progress
-  - Articles automatically marked as read when scrolled to end
-  - Marked-as-read articles treated as 100% progress
-  - Fancy checkmark animation on Mark as Read button
 - Click-to-open article navigation on highlights
-  - Clicking highlights in Explore and Me pages opens the source article
-  - Automatically scrolls to highlighted text position
 
 ### Changed
 
 - Renamed Archive to Reads with expanded functionality
 - Merged 'Completed' and 'Marked as Read' filters into one unified filter
-- Simplified filter icon colors to blue (except green for completed)
+- Simplified filter icon colors to blue
 - Started reading progress state (0-10%) uses neutral text color
 - Replace spinners with skeleton placeholders during refresh in Archive/Reads/Links tabs
 - Removed unused IEventStore import in ContentPanel
 
 ### Fixed
 
-- Reading position calculation now accurately reaches 100%
+- Reading position calculation accurately reaches 100%
 - Reading position filters work correctly in bookmarks sidebar
 - Filter out reads without timestamps or 'Untitled' items
 - Show skeleton placeholders correctly during initial tab load
@@ -1502,156 +826,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Bookmark filter buttons by content type (articles, videos, images, web links)
-  - Filter bookmarks by their content type on bookmarks sidebar
-  - Filters also available on `/my` page bookmarks tab
-  - Separate filter for external articles with link icon
-  - Multiple filters can be active simultaneously
+- Bookmark filter buttons by content type
 - Private Bookmarks section for encrypted legacy bookmarks
-  - Encrypted legacy bookmarks now grouped in separate section
-  - Better organization and clarity for different bookmark types
 
 ### Changed
 
 - Bookmark section labels improved for clarity
-  - More descriptive section headings throughout
-  - Better categorization of bookmark types
 - Bookmark filter button styling refined
-  - Reduced whitespace around bookmark filters for cleaner layout
-  - Dramatically reduced whitespace on both sidebar and `/my` page
 - Lock icon removed from individual bookmarks
-  - Encryption status now indicated by section grouping
-  - Cleaner bookmark item appearance
-- External article icon changed to link icon (`faLink`)
-  - More intuitive icon for external content
+- External article icon changed to link icon
 
 ### Fixed
 
 - Highlight button positioning and visibility
-  - Fixed to viewport for consistent placement
-  - Sticky and always visible when needed
-  - Properly positioned inside reader pane
 
 ## [0.6.19] - 2025-10-15
 
 ### Fixed
 
 - Highlights disappearing on external URLs after a few seconds
-  - Fixed `useBookmarksData` from fetching general highlights when viewing external URLs
-  - External URL highlights now managed exclusively by `useExternalUrlLoader`
-  - Removed redundant `setHighlights` call that was overwriting streamed highlights
-  - Improved error handling in `fetchHighlightsForUrl` to prevent silent failures
-  - Isolated rebroadcast errors so they don't break highlight display
-  - Added logging to help diagnose highlight fetching issues
 
 ## [0.6.18] - 2025-10-15
 
 ### Changed
 
 - Zap split labels simplified and terminology updated
-  - Removed redundant "Weight: xy" label to save space
-  - Changed "Author(s) Share" to "Author's Share" (possessive singular)
-  - Changed "Support Boris" to "Boris' Share" for consistency
-  - Weight value now shown directly in label (e.g., "Your Share: 50")
-  - Share and percentage now displayed on same line for cleaner layout
-- Zap preset buttons on desktop now expand to match slider width
-  - Added `flex: 1` to buttons for equal width distribution
-  - Buttons still wrap properly on smaller screens
-- PWA install section now always visible in settings
-  - Section shows regardless of installation or device capability status
-  - Button adapts with proper disabled states and visual feedback
-  - "Installed" state shows checkmark icon and disabled button
-  - Non-installable state shows disabled button
+- Zap preset buttons on desktop expand to match slider width
+- PWA install section always visible in settings
 
 ### Fixed
 
-- PWA install button now properly disabled when installation is not possible on device
-  - Button only enabled when browser fires `beforeinstallprompt` event
-  - Removed hardcoded testing state that always showed button as installable
-- App & Airplane Mode section now always visible regardless of PWA status
-  - Image cache and local relay settings always accessible
-  - Previously entire section was hidden if PWA not installable/installed
-  - Only PWA-specific install button is conditionally affected
+- PWA install button properly disabled when installation is not possible on device
+- App & Airplane Mode section always visible regardless of PWA status
 
 ## [0.6.17] - 2025-10-15
 
 ### Added
 
 - PWA settings illustration (`pwa.svg`) displayed on right side of section
-  - Responsive design: hidden on mobile, 30% width on desktop
-  - Visual enhancement for App & Airplane Mode section
 - Zaps illustration (`zaps.svg`) displayed on right side of Zap Splits section
-  - Matching responsive layout and styling as PWA illustration
 - Visual 50% indicators on zap split sliders
-  - Linear gradient background using highlight colors (yellow/orange) at 50% opacity
-  - Datalist tick marks at 50% for "Your Share" and "Author(s) Share" sliders
-  - Tick mark at 5 for "Support Boris" slider
 - Lightning bolt icons as slider thumbs for zap splits
-  - Replaces default circular slider handles
-  - White lightning bolt SVG embedded in slider thumb background
-  - 24px square thumb with 4px border radius
 - Offline-first description paragraph at beginning of App & Airplane Mode section
-  - Explains Boris's offline capabilities upfront
-- Settings page width constraint (900px max-width)
-  - Matches article view max-width for consistent reading experience
-  - Centered layout with proper margins
+- Settings page width constraint
 
 ### Changed
 
 - Settings section reorganization
-  - "PWA & Flight Mode" merged into single "App & Airplane Mode" section
-  - "Layout & Navigation" and "Startup & Behavior" merged into "Layout & Behavior"
-  - Section order: Theme → Reading & Display → Zap Splits → Layout & Behavior → App & Airplane Mode → Relays
-  - "Startup & Behavior" moved after "Zap Splits"
-  - "Layout & Navigation" moved below "Zap Splits"
 - PWA settings section restructure
-  - Checkboxes moved to top (image cache, local relays)
-  - Descriptive paragraphs in middle
-  - Install button at bottom
-  - Note about local relays moved before install paragraph
 - Zap split sliders styling
-  - Left side (0-50%): highlight color (yellow) at 50% opacity
-  - Right side (50-100%): friend-highlight color (orange) at 50% opacity
-  - Creates visual distinction tied to app's highlight color scheme
 - Zap split description text styling
-  - Now matches offline-first paragraph style with secondary color and smaller font size
 - Clear cache button styling
-  - Replaced `IconButton` with plain `FontAwesomeIcon` for subtler appearance
-  - No border or background, just icon with opacity
 - Font Size buttons alignment
-  - Now properly align to the right using `setting-control` wrapper
-  - Matches alignment of highlight color picker buttons
 - Default Highlight Visibility position
-  - Moved back to original position after "Paragraph Alignment"
-  - Grouped with other reading display controls
 - Spacing adjustments in App & Airplane Mode section
-  - Reduced gap between elements from 1rem → 0.5rem → 0.25rem for tighter layout
 
 ### Fixed
 
 - PWA settings paragraph wrapping
-  - Moved offline-first paragraph inside flex container to prevent extending above image
 - Font Size buttons alignment issues
-  - Properly implemented `setting-control` wrapper for right alignment
-  - Previously attempted alignment didn't work correctly
 - Slider thumb icon centering
-  - Lightning bolt icons properly centered vertically on slider
-  - Added `position: relative`, `top: 0`, `margin-top: 0` for accurate positioning
 
 ## [0.6.16] - 2025-10-15
 
 ### Changed
 
 - Replaced delete dialog popup with inline confirmation UI
-  - Shows red "Confirm?" text with trash icon when delete is clicked
-  - Clicking the red trash icon confirms deletion
-  - No more modal overlay or backdrop
-  - Click outside or reopen menu to cancel
 - Reordered Reading & Display settings for better organization
-  - Highlight Style, Paragraph Alignment, and Default Highlight Visibility moved to top
-  - Followed by Reading Font, Font Size, and color pickers
-- Setting buttons now align vertically with fixed label width (220px)
-  - Creates consistent "tab stops" for cleaner visual alignment
+- Setting buttons align vertically with fixed label width
 
 ### Fixed
 
@@ -1662,45 +904,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Paragraph alignment setting with left-aligned and justified text options
-  - Icon buttons in Reading & Display settings for switching alignment
-  - CSS variable system for applying alignment to reader content
-  - Real-time preview of alignment changes in settings
-  - Headings remain left-aligned for optimal readability
 
 ### Changed
 
 - Default paragraph alignment changed to justified for improved reading experience
-  - Applies to paragraphs, list items, divs, and blockquotes
-  - Settings stored and synced via Nostr (NIP-78)
 
 ## [0.6.14] - 2025-10-15
 
 ### Added
 
-- Support for bookmark sets (NIP-51 kind:30003)
-  - Bookmark sets now display alongside regular bookmark lists
-  - Properly handles AddressPointer bookmarks for long-form articles
+- Support for bookmark sets
 - Content type icons for bookmarks
-  - Article, video, web, and image icons to indicate bookmark content type
-  - Camera icon for image bookmarks
-  - Sticky note icon for text-only bookmarks without URLs
 - Bookmark grouping and sections
-  - Grouped sections in sidebar and `/my` reading-list
-  - Web bookmarks, default bookmarks, and legacy bookmarks in separate sections
-  - Grouping and sorting helpers for organizing bookmark sections
 - Adaptive text color for publication date over hero images
-  - Automatically detects image brightness and adjusts text color
-  - Improved contrast for better readability
 
 ### Changed
 
 - Renamed "Amethyst-style bookmarks" to "Old Bookmarks (Legacy)"
 - Hide cover images in compact view for cleaner layout
 - Support button improvements
-  - Moved to bottom-left of bookmarks bar
-  - Changed icon from lightning bolt to heart (orange color)
-  - Left-aligned support button, right-aligned view mode buttons
-- Section headings improved with better typography (removed counts)
+- Section headings improved with better typography
 - Icon changed from book to file-lines for default bookmarks
 - Use regular (outlined) icon variants for lighter, more refined appearance
 - Add bookmark button moved to web bookmarks section
@@ -1721,114 +944,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved shadow contrast without background overlay
 - Corrected async handling in adaptive color detection
 - Corrected FastAverageColor import to use named export
-- Section heading styles now properly override with `!important`
+- Section heading styles properly override with `!important`
 - Removed unused articleImage prop from CompactView
 
 ## [0.6.13] - 2025-10-15
 
 ### Added
 
-- Support for `nprofile` identifiers on `/p/` profile pages (NIP-19)
-  - Profile pages now accept both `npub` and `nprofile` identifiers
-  - Extracts pubkey from nprofile data structure
-  - Users can share profiles with relay metadata included
+- Support for `nprofile` identifiers on `/p/` profile pages
 - Gradient placeholder images for articles without cover images
-  - Blog post cards show subtle diagonal gradient using theme colors
-  - Reader view displays gradient background with newspaper icon
-  - Placeholders adapt automatically to light/dark themes
-  - Large view bookmarks use matching gradient backgrounds
 
 ### Changed
 
 - PWA install section styling in settings
-  - Heading now matches other section headings with proper styling
-  - Install button uses standard app button styling instead of custom gradient
-  - Consistent with app's design system and theme colors
 
 ### Fixed
 
 - Mobile bookmark button visibility across all pages
-  - Now visible on `/p/` (profile), `/explore`, `/my`, and `/support` pages
-  - Only hidden on settings page or when scrolling down while reading
-  - Prevents users from getting stuck without navigation options
 - Mobile highlights button behavior at page top
-  - Hidden when scrolled to the very top of the page
-  - Appears when scrolling up from below
-  - Bookmark button remains visible at top (only hides on scroll down)
-  - Separate visibility logic for each button improves UX
 
 ## [0.6.12] - 2025-10-15
 
 ### Changed
 
-- Horizontal dividers (`<hr>`) in blog posts now display with more subtle styling
-  - Reduced visual weight with 69% opacity for better readability
-  - Added increased vertical padding (2.5rem) above and below dividers
-  - Improved visual separation without disrupting reading flow
+- Horizontal dividers (`<hr>`) in blog posts display with more subtle styling
 
 ## [0.6.11] - 2025-10-15
 
 ### Added
 
 - Colored borders to blog post and highlight cards based on relationship
-  - Mine: yellow border
-  - Friends: orange border
-  - Nostrverse: purple border
-  - Visual distinction helps identify content source at a glance
 - Mobile sidebar toggle buttons on explore page
-  - Bookmark and highlights buttons now visible on explore page
-  - Improves mobile navigation UX
 
 ### Fixed
 
 - Mobile bookmarks sidebar opening and closing immediately
-  - Memoized `toggleSidebar` function to prevent unnecessary re-renders
-  - Updated route-change effect to only close sidebar on actual pathname changes
-  - Sidebar now stays open when opened on mobile PWA
 
 ## [0.6.10] - 2025-10-15
 
 ### Added
 
 - Support page (`/support`) displaying zappers with avatar grid
-  - Shows "Absolute Legends" (69420+ sats) and regular supporters (2100+ sats)
-  - Clickable supporter avatars link to profiles
-  - Bolt icon button in sidebar navigation
-  - Thank-you illustration and call-to-action
-  - Links to pricing page and Boris profile
 - Refresh button to explore page
-  - Positioned next to filter buttons
-  - Spinning animation during loading and pull-to-refresh
 - Unified event publishing and querying services
-  - `publishEvent` service for highlights and settings
-  - `queryEvents` helper with local-first fetching
-  - Centralized relay timeouts configuration
 - FEATURES.md documentation file
 - MIT License
 
 ### Changed
 
 - Explore page improvements
-  - Filter defaults to friends only (instead of all)
-  - Tabs moved below filter buttons
-  - Filter buttons positioned on the right
-  - Writings tab now uses newspaper icon
-  - Subtitle removed for cleaner layout
 - Pull-to-refresh library
-  - Replaced custom implementation with `use-pull-to-refresh`
-  - Updated HighlightsPanel to use new library
-- Loading states now show progressive loading with skeletons instead of blocking error screens
+- Loading states show progressive loading with skeletons instead of blocking error screens
 - All event fetching services migrated to unified `queryEvents` helper
-  - `nostrverseService`, `bookmarkService`, `libraryService`
-  - `exploreService`, `fetchHighlightsFromAuthors`
 - Contact streaming with extended timeout and partial results
 
 ### Fixed
 
 - All ESLint and TypeScript linting errors
-  - Removed all `eslint-disable` statements
-  - Fixed `react-hooks/exhaustive-deps` warnings
-  - Resolved all type errors
 - Explore page refresh loop and false empty-follows error
 - Zap receipt scanning with applesauce helpers and more relays
 - Support page theme colors for proper readability
@@ -1837,7 +1009,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Event publishing to use unified `publishEvent` service
 - Event fetching to use unified `queryEvents` helper
-- Image cache and bookmark components (removed unused settings parameter)
+- Image cache and bookmark components
 - Support page spacing and visual hierarchy
 
 ## [0.6.9] - 2025-10-14
@@ -1851,36 +1023,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated favicon and app icons to purple theme
-  - Replaced all 8 icon files (apple-touch-icon, favicon variants, and Android Chrome icons)
-  - New purple color scheme for better brand recognition
 
 ## [0.6.7] - 2025-10-14
 
 ### Added
 
 - Skeleton loading placeholders using `react-loading-skeleton` package
-  - Replaced loading spinners with skeleton loaders across all major components
-  - BookmarkList, Explore, Me, ContentPanel, and HighlightsPanel now use skeleton placeholders
-  - Theme-aware skeleton animations matching app color scheme
 - Nostr identifier parsing and rendering in highlight comments
-  - Support for `nostr:npub`, `nostr:nprofile`, `nostr:naddr`, `nostr:note`, `nostr:nevent`
-  - Clickable links to profiles and articles from highlight comments
-  - Shortened display format for better readability
 - Visibility filters for explore page content
-  - Toggle filters for nostrverse, friends, and own content
-  - Icon buttons with color coding matching highlight levels
-  - Filter state persists across tab switches
 
 ### Changed
 
-- Loading states now use skeleton placeholders instead of spinners for more polished UX
+- Loading states use skeleton placeholders instead of spinners for more polished UX
 - Removed incremental loading spinner from explore page refresh
-  - Pull-to-refresh indicator provides refresh state feedback
 
 ### Fixed
 
 - Type error in `HighlightItem.tsx` using `React.ReactElement` instead of `JSX.Element`
-- Me page skeleton loading now handles undefined `viewingPubkey` gracefully
+- Me page skeleton loading handles undefined `viewingPubkey` gracefully
 
 ### Documentation
 
@@ -1891,93 +1051,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Profile fetching and caching for explore page
-  - Automatically fetches kind:0 metadata for all blog post authors
-  - Stores profiles in event store for instant access across app
-  - Rebroadcasts profiles to local/all relays per user settings
-  - Fixes "Unknown" author names by proactively caching profiles
 - Rich content rendering in highlight comments
-  - URLs automatically detected and rendered as clickable links
-  - Image URLs (jpg, png, gif, webp, etc.) render as inline images
-  - Images lazy-load with responsive sizing and rounded borders
-  - Links open in new tab with security attributes
 
 ### Changed
 
 - Hide citation in highlights sidebar when viewing article
-  - Citation removed from sidebar since all highlights are from same source
-  - Citation still shown in Explore and Me pages where context is needed
-  - Reduces visual clutter and redundant information
 
 ### Fixed
 
 - Blog posts with far-future publication dates no longer appear in explore
-  - Filter excludes posts with dates more than 1 day in future
-  - Allows 1 day tolerance for clock skew between systems
-  - Prevents spam posts with unrealistic dates (e.g., "53585 years from now")
 - Layout breaks from long URLs in highlight comments
-  - Added word-wrap, overflow-wrap, and word-break CSS properties
-  - Set min-width: 0 to allow flex child to shrink properly
-  - Long URLs now wrap correctly instead of causing horizontal overflow
 - Profile fetching implementation
-  - Use eventStore.add() directly for immediate profile storage
-  - Use tap() operator to process events as they arrive
-  - Correct TypeScript types and dependency array
 
 ## [0.6.5] - 2025-10-14
 
 ### Added
 
 - Highlights tab on `/explore` page
-  - View highlights from friends and followed users
-  - Tab structure matching `/my` and profile pages
-  - Grid layout for highlights with cards
-  - Highlights shown first, writings second
-  - Clicking highlight opens source article and scrolls to position
-  - Opens highlights sidebar automatically when clicking from explore
 - Citation attribution on highlight items
-  - Shows "— Author, Article Title" for Nostr-native content
-  - Shows "— domain.com" for web URLs
-  - Resolves author profiles and article titles automatically
 - Comment icon (fa-comments) for highlights with comments
-  - Flipped horizontally for better visual alignment
-  - Colored based on highlight level (mine/friends/nostrverse)
-  - No background or extra indent for cleaner look
 - Click timestamp to open highlight in native Nostr app
-  - Uses nostr:nevent links for native app integration
 
 ### Changed
 
-- Highlight counter text color now matches article text (var(--color-text))
-  - Better readability in both light and dark modes
-  - Only forces white in overlay context (hero images)
+- Highlight counter text color matches article text
 - Highlight level colors applied to explore page highlights
-  - Yellow for own highlights
-  - Orange for friends' highlights
-  - Purple for nostrverse highlights
 - Explore page tab order: Highlights first, Writings second
-- Explore page tabs now extend full width to match content grid
+- Explore page tabs extend full width to match content grid
 
 ### Fixed
 
 - Highlight counter readability in light mode
-  - Theme-aware text color instead of hardcoded blue
-  - Consistent with reading time indicator styling
 - Scroll-to-highlight reliability in article view
-  - Added retry mechanism for asynchronous content loading
-  - Attempts to find highlight element up to 20 times over 2 seconds
 - Author attribution in highlight citations
-  - Correctly extracts author pubkey from highlight's p tag
-  - No more "Unknown" author names
 - Explore page grid layout
-  - Removed max-width constraint blocking full-width display
-  - Tabs and content now properly aligned
 
 ### Style
 
 - Replaced server icon with highlighter icon in highlight items
-- Switch from solid comment icon to outlined comments icon (fa-regular)
+- Switch from solid comment icon to outlined comments icon
 - Removed background from highlight comments for cleaner appearance
-- Removed extra left margin from comments (icon provides sufficient indent)
+- Removed extra left margin from comments
 - Comment icon colored by highlight level with no opacity
 
 ### Dependencies
@@ -1989,17 +1103,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Color theme variants for light and dark modes
-  - Sepia, Classic (white/black), Rose, Sky, Mint, and Lavender themes
-  - Color swatches shown in theme selector instead of text labels
-  - CSS variable tokens and theme classes for consistent theming
 - Playful empty state message for other users' profiles
-- Profile links now open within app instead of external portals
+- Profile links open within app instead of external portals
 
 ### Changed
 
 - Default light theme changed to sepia for better readability
 - Theme setting labels renamed from 'Colors' to 'Theme'
-- Highlight text now aligns properly with footer icons
+- Highlight text aligns properly with footer icons
 - Increased spacing between highlight cards for better visual separation
 - Increased bottom padding in highlight cards
 - Simplified Me page tab labels for cleaner UI
@@ -2013,7 +1124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Highlight contrast improved in light themes
 - Text contrast improved in dark color themes
 - Darker background for app body in dark themes
-- Reading progress indicator now uses theme colors
+- Reading progress indicator uses theme colors
 - Highlights tab readability improved in light mode with proper background
 - Empty state text color changed from red to gray for better aesthetics
 - Replaced 'any' types with proper type definitions for better type safety
@@ -2021,10 +1132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Refactored
 
 - Migrated entire codebase to semantic token system
-  - Pull-to-refresh components updated to use semantic tokens
-  - Cards, forms, and layout components migrated to semantic tokens
-  - All remaining components converted to semantic token usage
-- Removed localStorage for theme persistence, using only Nostr (NIP-78)
+- Removed localStorage for theme persistence, using only Nostr
 - Theme colors applied to body element for consistent theming
 
 ## [0.6.3] - 2025-10-14
@@ -2048,39 +1156,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Pull-to-refresh gesture on mobile for all scrollable views
-  - HighlightsPanel (right sidebar) - refresh highlights for current article
-  - Explore page - refresh blog posts from friends
-  - Me pages (all tabs) - refresh user data
-  - BookmarkList (left sidebar) - refresh bookmarks
-  - Touch-only activation using coarse pointer detection
-  - Visual indicator with rotating arrow and contextual messages
-- Three-dot menu for external URLs in reader (`/r/` path)
-  - Open in browser, Copy URL, Share URL actions
-  - Consistent with article menu functionality
+- Three-dot menu for external URLs in reader
 
 ### Changed
 
 - Bookmark refresh button moved to footer alongside view mode controls
-  - Last update time now shown in button tooltip
-  - Cleaner UI with all controls consolidated in footer
 - Unified button styles across left and right sidebars
-  - All sidebar buttons now use IconButton component for consistency
-  - Removed 73 lines of redundant CSS for old button classes
-  - Highlights panel buttons match bookmark sidebar styling
 
 ### Fixed
 
 - Reader content alignment on desktop
-  - Title, summary, metadata, and body text now properly aligned
-  - All reader elements now have consistent 2rem horizontal padding
-  - Mobile layout retains compact padding
 - Highlight text matching with multiple improvements
-  - Precise normalized-to-original character position mapping
-  - Remove existing highlight marks before applying new ones
-  - Robust validation and error handling for multi-node highlights
-  - Prevent character spacing issues in highlighted text
-  - Add text validation before applying highlights
-  - Eliminate intra-word spaces in highlighted text
 
 ## [0.6.1] - 2025-10-13
 
@@ -2097,23 +1183,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Article titles now larger and more prominent
-- Article summaries now display properly in reader header
+- Article titles larger and more prominent
+- Article summaries display properly in reader header
 - Zap splits settings UI with preset buttons and full-width sliders
-- Sidebars now extend to 100vh height
+- Sidebars extend to 100vh height
 - Blockquote styling simplified to minimal indent and italic
 - Improved zap splits settings visual design
 
 ### Fixed
 
 - Horizontal overflow from code blocks and wide content on mobile
-- Settings view now mobile-friendly with proper width constraints
+- Settings view mobile-friendly with proper width constraints
 - Long relay URLs no longer cause horizontal overflow on mobile
 - Sidebar/highlights toggle buttons hidden on settings/explore/my pages
-- Video titles now show filename instead of 'Error Loading Content'
+- Video titles show filename instead of 'Error Loading Content'
 - AddBookmarkModal z-index issue fixed using React Portal
 - Highlight matching for text spanning multiple DOM nodes/inline elements
-- Highlights now appear as single continuous element across DOM nodes
+- Highlights appear as single continuous element across DOM nodes
 - Highlights display immediately after creation with synchronous render
 - Scroll-to-highlight functionality restored after DOM updates
 - Padding gaps around sidebars removed
@@ -2124,7 +1210,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated entire color system to Tailwind v4 color palette
 - Migrated all CSS files (sidebar, highlights, cards, forms, reader, etc.) to Tailwind colors
 - Updated default highlight colors to yellow-400 for markers and yellow-300 for other contexts
-- Added comprehensive color system documentation (COLOR_SYSTEM.md)
+- Added comprehensive color system documentation
 - Cleaned up legacy.css removing unused debugging styles
 
 ## [0.6.0] - 2025-10-13
@@ -2149,8 +1235,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Reading position indicator now always visible at bottom of screen
-- Progress tracking now accurately reflects reading position
+- Reading position indicator always visible at bottom of screen
+- Progress tracking accurately reflects reading position
 - Scroll behavior consistent across desktop and mobile
 - Removed padding on mobile main pane for edge-to-edge content
 - Removed mobile content pane gap for better layout
@@ -2177,7 +1263,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reading list tab colored blue to match bookmarks icon
 - Left-aligned text in reading list elements
 - Increased spacing between mobile buttons and profile element
-- Main pane now full width when displaying videos
+- Main pane full width when displaying videos
 - Video container breaks out of reader padding for full width
 - Simplified video container layout
 
@@ -2211,7 +1297,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Reading List on `/my` now uses the same components as the bookmarks sidebar
+- Reading List on `/my` uses the same components as the bookmarks sidebar
 - Improve bookmarks sidebar visual design
 - Make article menu button more subtle by removing border
 
@@ -2266,9 +1352,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reduce margins/paddings to make highlight cards more compact
 - Tighten vertical spacing on highlight cards
 - Left-align text inside author card
-- Constrain `/my` page content width to match author card (600px)
+- Constrain `/my` page content width to match author card
 - Improve tab border styling for dark theme
-- Make relay indicator match CompactButton (same look as menu)
+- Make relay indicator match CompactButton
 - Align relay indicator within footer with symmetric spacing
 - Make header and footer full-width with borders and corners
 
@@ -2277,55 +1363,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Refactor CSS into modular structure
-  - Split 3600+ line monolithic `index.css` into organized modules
-  - Created `src/styles/` directory with base, layout, components, and utils subdirectories
-  - Each file kept under 210 lines for maintainability
-  - Preserved cascade order and selector specificity via ordered `@import` statements
-  - No functional changes to styling
 
 ### Fixed
 
-- Mobile button positioning now uses safe area insets for symmetrical layout on notched devices
+- Mobile button positioning uses safe area insets for symmetrical layout on notched devices
 
 ## [0.5.3] - 2025-10-13
 
 ### Changed
 
-- Relay status indicator is now more compact
-  - Smaller padding and font sizes on desktop
-  - Auto-collapsed on mobile (icon-only by default, tap to expand)
-  - Matches size of sidebar toggle buttons (44px touch target)
-  - Hides when scrolling down, shows when scrolling up (consistent with other mobile controls)
+- Relay status indicator is more compact
 
 ### Fixed
 
 - Invalid bookmarks without IDs no longer appear in bookmark list
-  - Previously showed as "Now" timestamp with no content
-  - Bookmarks without valid IDs are now filtered out entirely
-  - Use bookmark's original timestamp instead of always generating new ones
-- Profile icon size when logged out now matches other icon buttons in sidebar header
+- Profile icon size when logged out matches other icon buttons in sidebar header
 
 ## [0.5.2] - 2025-10-12
 
 ### Added
 
 - Three-dot menu to highlight cards for more compact UI
-  - Combines "Open on Nostr" and "Delete" actions into dropdown menu
-  - Uses horizontal ellipsis icon (⋯)
-  - Click-outside functionality to close menu
 
 ### Changed
 
 - Switch Nostr gateway from njump.me/search.dergigi.com to ants.sh
-  - Centralized gateway URLs in config file
-  - All profile and event links now use ants.sh
-  - Automatic detection of identifier type (profile vs event) for proper routing
-- Remove loading text from Explore and Me pages (spinner only)
-- "Open on Nostr" now links to the highlight event itself instead of the article
+- Remove loading text from Explore and Me pages
+- "Open on Nostr" links to the highlight event itself instead of the article
 
 ### Fixed
 
-- Gateway URL routing for ants.sh requirements (/p/ for profiles, /e/ for events)
+- Gateway URL routing for ants.sh requirements
 - Linting errors in HighlightItem component
 
 ## [0.5.1] - 2025-10-12
@@ -2333,15 +1401,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Highlight color customization to UI elements
-  - Apply user's "my highlights" color to highlight creation buttons
-  - Apply highlight group colors to highlight count indicators
-  - Apply "my highlights" color to collapsed highlights panel button
 
 ### Fixed
 
 - Highlight count indicator styling to match reading-time element
 - Brightness and border styling for highlight count indicator
-- User highlight color now applies to both marker and arrow icons
+- User highlight color applies to both marker and arrow icons
 - Highlight group color properly applied to count indicator background
 
 ### Removed
@@ -2375,11 +1440,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Performance
 
-- Local-first then remote follow-up across services (titles, bookmarks, highlights)
+- Local-first then remote follow-up across services
 - Run local and remote fetches concurrently; stream and dedupe results
 - Stream contacts and early posts from local; merge remote later
 - Relay queries use local-first with short timeouts; fallback to remote when needed
-- Stream results to UI; display cached/local immediately (articles, highlights, explore)
+- Stream results to UI; display cached/local immediately
 
 ### Documentation
 
@@ -2391,87 +1456,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Mark as read functionality for articles (NIP-25)
-  - Button at the end of each article to mark as read with 📚 emoji
-  - Creates kind:7 reactions for nostr-native articles (`/a/` paths)
-  - Creates kind:17 reactions for external websites (`/r/` paths)
-  - Button shows loading state while publishing reaction
-  - Only visible when user is logged in
-- Highlight deletion with confirmation dialog (NIP-09)
-  - Small delete button (trash icon) on highlight items
-  - Only visible for user's own highlights
-  - Confirmation dialog prevents accidental deletions
-  - Styled to match relay indicator (subtle, same size)
-  - Removes highlights from UI immediately after deletion request
+- Mark as read functionality for articles
+- Highlight deletion with confirmation dialog
 - `/my` page showing user's recent highlights
-  - Accessible by clicking profile picture in bookmark sidebar
-  - Displays all highlights created by the logged-in user
-  - Uses same rendering as Settings and Explore pages
-  - Includes highlight count in header
 - Confirmation dialog component
-  - Reusable modal with danger/warning/info variants
-  - Backdrop blur effect
-  - Mobile-responsive design
-  - Prevents accidental destructive actions
 
 ### Changed
 
-- Relay status indicator on mobile now displays in compact mode
-  - Shows only airplane icon by default (44x44px touch target)
-  - Tap to expand for full connection details
-  - Reduces screen clutter on mobile while keeping info accessible
-  - Smooth transition between compact and expanded states
-  - Desktop view remains unchanged (always shows full details)
+- Relay status indicator on mobile displays in compact mode
 
 ## [0.4.2] - 2025-10-11
 
 ### Added
 
-- NIP-19 identifier resolution in article content (NIP-19, NIP-27)
-  - Support for `nostr:npub1...`, `nostr:note1...`, `nostr:nprofile1...`, `nostr:nevent1...`, `nostr:naddr1...`
-  - Converts nostr: URIs to clickable links with human-readable labels
-  - Automatically fetches and displays article titles for `naddr` references
-  - Falls back to identifier when title fetch fails
+- NIP-19 identifier resolution in article content
 - Auto-hide mobile UI buttons on scroll down
-  - Floating bookmark/highlights buttons hide when scrolling down
-  - Buttons reappear when scrolling up for distraction-free reading
-  - Smooth opacity transitions for better UX
-- Scroll direction detection hook (`useScrollDirection`)
-  - Supports both window and element-based scroll detection
-  - Configurable threshold and enable/disable options
+- Scroll direction detection hook
 
 ### Changed
 
-- Article references (`naddr`) now link internally to `/a/{naddr}` instead of external njump.me
+- Article references (`naddr`) link internally to `/a/{naddr}` instead of external njump.me
 - Sidebar auto-closes on mobile when navigating to content via routes
-  - Handles clicking on blog posts in Explore view
-  - Complements existing sidebar auto-close for bookmarks
-- Markdown processing now async to support article title resolution
+- Markdown processing async to support article title resolution
 - Article title resolution fetches titles in parallel for better performance
 
 ### Fixed
 
-- Mobile button scroll detection now correctly monitors main pane element
-  - Previously monitored window scroll which didn't work on mobile
-  - Content scrolls within `.pane.main` div on mobile devices
+- Mobile button scroll detection correctly monitors main pane element
 - All ESLint warnings and TypeScript type errors resolved
-  - Added react-hooks plugin to ESLint configuration
-  - Fixed exhaustive-deps warnings in components
-  - Added block scoping to switch case statements
-  - Corrected type references for nostr-tools decode result
 
 ## [0.4.1] - 2025-10-10
 
 ### Fixed
 
 - Long article summaries overlapping with hero image content on mobile devices
-- Article summary now moves below hero image on mobile when longer than 150 characters
+- Article summary moves below hero image on mobile when longer than 150 characters
 - Article summary line clamp reduced from 3 to 2 lines on mobile for better space utilization
 
 ### Changed
 
-- Hero image rendering on mobile now uses zoom-to-fit approach with viewport-based sizing
-- Hero image height on mobile set to 50vh (constrained between 280px-400px)
+- Hero image rendering on mobile uses zoom-to-fit approach with viewport-based sizing
+- Hero image height on mobile set to 50vh
 - Improved image cropping with center positioning for better visual presentation
 - Optimized reader header overlay padding and title sizing on mobile
 
@@ -2480,21 +1505,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Mobile-responsive design with overlay sidebar drawer
-- Media query hooks for responsive behavior (`useIsMobile`, `useIsTablet`, `useIsCoarsePointer`)
+- Media query hooks for responsive behavior
 - Auto-collapse sidebar setting for mobile devices
 - Touch-optimized UI with 44x44px minimum touch targets
 - Safe area inset support for notched devices
 - Mobile hamburger menu and backdrop
 - Focus trap in mobile sidebar with ESC key support
 - Body scroll locking when mobile sidebar is open
-- Mobile-optimized modals (full-screen sheet style)
-- Mobile-optimized toast notifications (bottom position)
-- Dynamic viewport height support (100dvh)
+- Mobile-optimized modals
+- Mobile-optimized toast notifications
+- Dynamic viewport height support
 - Mobile highlights panel as overlay with toggle button
 
 ### Changed
 
-- Sidebar now displays as overlay drawer on mobile (≤768px)
+- Sidebar displays as overlay drawer on mobile
 - Highlights panel hidden on mobile for better content focus
 - Sidebar auto-closes when selecting content on mobile
 - Hover effects disabled on touch devices
@@ -2514,19 +1539,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Add vercel.json configuration to properly handle SPA routing on Vercel deployments (fixes 404 errors on page refresh)
+- Add vercel.json configuration to properly handle SPA routing on Vercel deployments
 
 ## [0.3.7] - 2025-10-10
 
 ### Fixed
 
-- Logout button functionality - now properly clears active account using clearActive() method
+- Logout button functionality
 
 ## [0.3.6] - 2025-10-10
 
 ### Added
 
-- Compact date format for highlights (now, 5m, 3h, 2d, 1mo, 1y)
+- Compact date format for highlights
 - Ultra-compact date format for bookmarks sidebar
 - Encode event links as nevent/naddr per NIP-19 for better client compatibility
 - Render /explore within ThreePaneLayout to keep side panels visible
@@ -2547,7 +1572,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Make connecting notification more subtle with muted blue background
 - Update Boris pubkey for zap splits to npub19802see0gnk3vjlus0dnmfdagusqrtmsxpl5yfmkwn9uvnfnqylqduhr0x
-- Update domain references to read.withboris.com (URLs, SEO metadata, and documentation)
+- Update domain references to read.withboris.com
 
 ## [0.3.5] - 2025-10-09
 
@@ -2573,14 +1598,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Service Worker for robust offline image caching
 - /explore route to discover blog posts from friends on Nostr
 - Explore button (newspaper icon) in bookmarks header
-- "Connecting" status indicator on page load (instead of immediately showing "Offline")
+- "Connecting" status indicator on page load
 - Last fetch time display with relative timestamps in bookmarks list
 
 ### Changed
 
 - Simplify image caching to use Service Worker transparently
 - Move refresh button from top bar to end of bookmarks list
-- Make explore page article cards proper links (supports CMD+click to open in new tab)
+- Make explore page article cards proper links
 - Reorganize bookmarks UI for better UX
 
 ### Fixed
@@ -2597,13 +1622,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Flight Mode with offline highlight creation and local relay support
-- Automatic offline sync - rebroadcast local events when back online
+- Automatic offline sync
 - Relay indicator icon on highlight items showing sync status
 - Click-to-rebroadcast functionality for highlights
 - Flight mode indicator (plane icon) on offline-created highlights
 - Relay rebroadcast settings for caching and propagation
 - Local relay status indicator for local-only/offline mode
-- Second local relay support (localhost:4869)
+- Second local relay support
 - Relay connection status tracking and display
 - 6th font size option for better UI scaling
 
@@ -2693,7 +1718,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Web bookmark creation (NIP-B0, kind:39701)
+- Web bookmark creation
 - Tags support for web bookmarks per NIP-B0
 - Auto-fetch title and description when URL is pasted
 - Prioritize OpenGraph tags for metadata extraction
@@ -2757,7 +1782,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Cleanup after build fixes (remove shims, update locks)
+- Cleanup after build fixes
 - Stop tracking node_modules/dist
 - Update dependencies and dedupe
 - Add .gitignore for node_modules and dist
@@ -2784,7 +1809,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Support for web bookmarks (NIP-B0, kind:39701)
+- Support for web bookmarks
 - Default highlight visibility settings
 - Proxy.nostr-relay.app relay to configuration
 - Comprehensive logging to settings service
@@ -2809,7 +1834,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimistic updates for highlight creation
 - Enable highlight creation from external URLs
 - Add routing support for external URLs
-- Add context to highlights (previous and next sentences)
+- Add context to highlights
 - Boris branding to highlight alt tag
 
 ### Fixed
@@ -2822,13 +1847,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Remove dedicated login page, handle login through main UI
-- Simplify to single RELAYS constant (DRY)
+- Simplify to single RELAYS constant
 
 ## [0.2.0] - 2025-10-05
 
 ### Added
 
-- Simple highlight creation feature (FAB style)
+- Simple highlight creation feature
 - Reset to defaults button in settings
 - Load and apply settings upon login
 
@@ -2856,7 +1881,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Display article immediately without waiting for highlights to load
 - Show highlights immediately when opening panel if already loaded
 - Prevent bookmark text from being cut off in compact view
-- Correct default highlight color for 'mine' to yellow (#ffff00)
+- Correct default highlight color for 'mine' to yellow
 
 ### Changed
 
@@ -2867,7 +1892,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Three-level highlight system (mine/friends/nostrverse)
+- Three-level highlight system
 
 ### Fixed
 
@@ -2912,7 +1937,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Show highlights for nostr articles by skipping URL filter
-- Refresh button now works without login for article highlights
+- Refresh button works without login for article highlights
 - Query highlights using both a-tag and e-tag
 
 ### Changed
@@ -2923,12 +1948,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Native support for rendering Nostr long-form articles (NIP-23)
+- Native support for rendering Nostr long-form articles
 - Display article titles for kind:30023 bookmarks
 - Enable clicking on kind:30023 articles to open in reader
 - Display article hero images in bookmark views and reader
 - Configurable highlight colors
-- Highlight style setting (marker & underline)
+- Highlight style setting
 
 ### Fixed
 
@@ -2939,7 +1964,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Integrate long-form article rendering into existing reader view
 - Extract components to keep files under 210 lines
-- Make font size and color buttons match icon button size (33px)
+- Make font size and color buttons match icon button size
 
 ## [0.1.5] - 2025-10-03
 
@@ -3043,7 +2068,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Use IconButton for all icon-only actions to enforce square sizing
-- Sort bookmarks by added_at (recently added first)
+- Sort bookmarks by added_at
 - Make kind icon square to match IconButton sizing
 - Remove colored borders and gradients; keep neutral cards
 
@@ -3055,7 +2080,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ContentPanel component to render readable HTML
 - Lightweight readability fetcher via r.jina.ai proxy
 - Markdown rendering support with react-markdown and remark-gfm
-- READ NOW button to bookmark cards
+- READ button to bookmark cards
 - Spinner to content loading state
 - FontAwesome icons for event kinds
 
@@ -3087,7 +2112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Sort individual bookmarks by timestamp (newest first)
+- Sort individual bookmarks by timestamp
 - Increase bookmark loading timeout by 2x
 - Extract helpers and event processing
 
@@ -3104,7 +2129,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Properly configure browser extension signer
-- Aggregate list(10003) + set(30001)
+- Aggregate list
 - Handle applesauce bookmark structure correctly
 - Resolve loading state stuck issue
 
@@ -3131,90 +2156,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use proper applesauce-loaders for NIP-51 bookmark fetching
 - Optimize relay usage following applesauce-relay best practices
 - Use applesauce-react event models for better profile handling
-
-[Unreleased]: https://github.com/dergigi/boris/compare/v0.10.12...HEAD
-[0.10.12]: https://github.com/dergigi/boris/compare/v0.10.11...v0.10.12
-[0.10.11]: https://github.com/dergigi/boris/compare/v0.10.10...v0.10.11
-[0.10.10]: https://github.com/dergigi/boris/compare/v0.10.9...v0.10.10
-[0.10.9]: https://github.com/dergigi/boris/compare/v0.10.8...v0.10.9
-[0.10.8]: https://github.com/dergigi/boris/compare/v0.10.7...v0.10.8
-[0.10.7]: https://github.com/dergigi/boris/compare/v0.10.6...v0.10.7
-[0.10.6]: https://github.com/dergigi/boris/compare/v0.10.5...v0.10.6
-[0.10.5]: https://github.com/dergigi/boris/compare/v0.10.4...v0.10.5
-[0.10.4]: https://github.com/dergigi/boris/compare/v0.10.3...v0.10.4
-[0.10.3]: https://github.com/dergigi/boris/compare/v0.10.2...v0.10.3
-[0.10.2]: https://github.com/dergigi/boris/compare/v0.10.1...v0.10.2
-[0.10.1]: https://github.com/dergigi/boris/compare/v0.10.0...v0.10.1
-[0.10.0]: https://github.com/dergigi/boris/compare/v0.9.1...v0.10.0
-[0.9.1]: https://github.com/dergigi/boris/compare/v0.9.0...v0.9.1
-[0.8.3]: https://github.com/dergigi/boris/compare/v0.8.2...v0.8.3
-[0.8.2]: https://github.com/dergigi/boris/compare/v0.8.0...v0.8.2
-[0.8.0]: https://github.com/dergigi/boris/compare/v0.7.4...v0.8.0
-[0.7.4]: https://github.com/dergigi/boris/compare/v0.7.3...v0.7.4
-[0.7.3]: https://github.com/dergigi/boris/compare/v0.7.2...v0.7.3
-[0.7.2]: https://github.com/dergigi/boris/compare/v0.7.0...v0.7.2
-[0.7.0]: https://github.com/dergigi/boris/compare/v0.6.24...v0.7.0
-[0.6.24]: https://github.com/dergigi/boris/compare/v0.6.23...v0.6.24
-[0.6.23]: https://github.com/dergigi/boris/compare/v0.6.22...v0.6.23
-[0.6.21]: https://github.com/dergigi/boris/compare/v0.6.20...v0.6.21
-[0.6.20]: https://github.com/dergigi/boris/compare/v0.6.19...v0.6.20
-[0.6.19]: https://github.com/dergigi/boris/compare/v0.6.18...v0.6.19
-[0.6.18]: https://github.com/dergigi/boris/compare/v0.6.17...v0.6.18
-[0.6.17]: https://github.com/dergigi/boris/compare/v0.6.16...v0.6.17
-[0.6.16]: https://github.com/dergigi/boris/compare/v0.6.15...v0.6.16
-[0.6.15]: https://github.com/dergigi/boris/compare/v0.6.14...v0.6.15
-[0.6.14]: https://github.com/dergigi/boris/compare/v0.6.13...v0.6.14
-[0.6.13]: https://github.com/dergigi/boris/compare/v0.6.12...v0.6.13
-[0.6.12]: https://github.com/dergigi/boris/compare/v0.6.11...v0.6.12
-[0.6.11]: https://github.com/dergigi/boris/compare/v0.6.10...v0.6.11
-[0.6.10]: https://github.com/dergigi/boris/compare/v0.6.9...v0.6.10
-[0.6.9]: https://github.com/dergigi/boris/compare/v0.6.8...v0.6.9
-[0.6.8]: https://github.com/dergigi/boris/compare/v0.6.7...v0.6.8
-[0.6.7]: https://github.com/dergigi/boris/compare/v0.6.6...v0.6.7
-[0.6.6]: https://github.com/dergigi/boris/compare/v0.6.5...v0.6.6
-[0.6.5]: https://github.com/dergigi/boris/compare/v0.6.4...v0.6.5
-[0.6.4]: https://github.com/dergigi/boris/compare/v0.6.3...v0.6.4
-[0.6.3]: https://github.com/dergigi/boris/compare/v0.6.2...v0.6.3
-[0.6.2]: https://github.com/dergigi/boris/compare/v0.6.1...v0.6.2
-[0.6.1]: https://github.com/dergigi/boris/compare/v0.6.0...v0.6.1
-[0.6.0]: https://github.com/dergigi/boris/compare/v0.5.7...v0.6.0
-[0.5.7]: https://github.com/dergigi/boris/compare/v0.5.6...v0.5.7
-[0.5.6]: https://github.com/dergigi/boris/compare/v0.5.5...v0.5.6
-[0.5.5]: https://github.com/dergigi/boris/compare/v0.5.4...v0.5.5
-[0.5.2]: https://github.com/dergigi/boris/compare/v0.5.1...v0.5.2
-[0.5.1]: https://github.com/dergigi/boris/compare/v0.5.0...v0.5.1
-[0.5.0]: https://github.com/dergigi/boris/compare/v0.4.3...v0.5.0
-[0.4.0]: https://github.com/dergigi/boris/compare/v0.3.8...v0.4.0
-[0.3.8]: https://github.com/dergigi/boris/compare/v0.3.7...v0.3.8
-[0.3.7]: https://github.com/dergigi/boris/compare/v0.3.6...v0.3.7
-[0.3.6]: https://github.com/dergigi/boris/compare/v0.3.5...v0.3.6
-[0.3.5]: https://github.com/dergigi/boris/compare/v0.3.4...v0.3.5
-[0.3.4]: https://github.com/dergigi/boris/compare/v0.3.3...v0.3.4
-[0.3.3]: https://github.com/dergigi/boris/compare/v0.3.2...v0.3.3
-[0.3.0]: https://github.com/dergigi/boris/compare/v0.2.10...v0.3.0
-[0.2.10]: https://github.com/dergigi/boris/compare/v0.2.9...v0.2.10
-[0.2.9]: https://github.com/dergigi/boris/compare/v0.2.8...v0.2.9
-[0.2.8]: https://github.com/dergigi/boris/compare/v0.2.7...v0.2.8
-[0.2.7]: https://github.com/dergigi/boris/compare/v0.2.6...v0.2.7
-[0.2.6]: https://github.com/dergigi/boris/compare/v0.2.5...v0.2.6
-[0.2.5]: https://github.com/dergigi/boris/compare/v0.2.4...v0.2.5
-[0.2.4]: https://github.com/dergigi/boris/compare/v0.2.3...v0.2.4
-[0.2.3]: https://github.com/dergigi/boris/compare/v0.2.2...v0.2.3
-[0.2.2]: https://github.com/dergigi/boris/compare/v0.2.1...v0.2.2
-[0.2.1]: https://github.com/dergigi/boris/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/dergigi/boris/compare/v0.1.11...v0.2.0
-[0.1.11]: https://github.com/dergigi/boris/compare/v0.1.10...v0.1.11
-[0.1.10]: https://github.com/dergigi/boris/compare/v0.1.9...v0.1.10
-[0.1.9]: https://github.com/dergigi/boris/compare/v0.1.8...v0.1.9
-[0.1.8]: https://github.com/dergigi/boris/compare/v0.1.7...v0.1.8
-[0.1.7]: https://github.com/dergigi/boris/compare/v0.1.6...v0.1.7
-[0.1.6]: https://github.com/dergigi/boris/compare/v0.1.5...v0.1.6
-[0.1.5]: https://github.com/dergigi/boris/compare/v0.1.4...v0.1.5
-[0.1.4]: https://github.com/dergigi/boris/compare/v0.1.3...v0.1.4
-[0.1.3]: https://github.com/dergigi/boris/compare/v0.1.2...v0.1.3
-[0.1.2]: https://github.com/dergigi/boris/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/dergigi/boris/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/dergigi/boris/compare/v0.0.3...v0.1.0
-[0.0.3]: https://github.com/dergigi/boris/compare/v0.0.2...v0.0.3
-[0.0.2]: https://github.com/dergigi/boris/compare/v0.0.1...v0.0.2
-[0.0.1]: https://github.com/dergigi/boris/releases/tag/v0.0.1
