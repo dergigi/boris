@@ -4,13 +4,6 @@ import { extractNaddrUris, replaceNostrUrisInMarkdownWithProfileLabels } from '.
 import { fetchArticleTitles } from '../services/articleTitleResolver'
 import { useProfileLabels } from './useProfileLabels'
 
-// Helper to add timestamps to logs
-const ts = () => {
-  const now = new Date()
-  const ms = now.getMilliseconds().toString().padStart(3, '0')
-  return `${now.toLocaleTimeString('en-US', { hour12: false })}.${ms}`
-}
-
 /**
  * Hook to convert markdown to HTML using a hidden ReactMarkdown component
  * Also processes nostr: URIs in the markdown and resolves article titles
@@ -30,11 +23,6 @@ export const useMarkdownToHTML = (
 
   // Resolve profile labels progressively as profiles load
   const profileLabels = useProfileLabels(markdown || '', relayPool)
-  
-  // Log when markdown or profile labels change (but throttle excessive logs)
-  useEffect(() => {
-    console.log(`[${ts()}] [npub-resolve] useMarkdownToHTML: markdown length:`, markdown?.length || 0, 'hasRelayPool:', !!relayPool, 'Profile labels size:', profileLabels.size)
-  }, [markdown?.length, profileLabels.size, relayPool])
 
   // Fetch article titles
   useEffect(() => {
@@ -57,8 +45,7 @@ export const useMarkdownToHTML = (
         if (!isCancelled) {
           setArticleTitles(titlesMap)
         }
-      } catch (error) {
-        console.warn('Failed to fetch article titles:', error)
+      } catch {
         if (!isCancelled) setArticleTitles(new Map())
       }
     }
@@ -80,8 +67,6 @@ export const useMarkdownToHTML = (
     let isCancelled = false
 
     const processMarkdown = () => {
-      console.log(`[${ts()}] [npub-resolve] useMarkdownToHTML: Processing markdown, length:`, markdown.length)
-      console.log(`[${ts()}] [npub-resolve] useMarkdownToHTML: Profile labels:`, profileLabels.size, 'Article titles:', articleTitles.size)
       try {
         // Replace nostr URIs with profile labels (progressive) and article titles
         const processed = replaceNostrUrisInMarkdownWithProfileLabels(
@@ -89,13 +74,11 @@ export const useMarkdownToHTML = (
           profileLabels,
           articleTitles
         )
-        console.log(`[${ts()}] [npub-resolve] useMarkdownToHTML: Processed markdown length:`, processed.length)
         
         if (isCancelled) return
         
         setProcessedMarkdown(processed)
-      } catch (err) {
-        console.error(`[${ts()}] [npub-resolve] useMarkdownToHTML: Error processing markdown:`, err)
+      } catch {
         if (!isCancelled) {
           setProcessedMarkdown(markdown) // Fallback to original
         }

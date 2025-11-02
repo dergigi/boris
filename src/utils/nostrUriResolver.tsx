@@ -4,13 +4,6 @@ import { Tokens } from 'applesauce-content/helpers'
 import { getContentPointers } from 'applesauce-factory/helpers'
 import { encodeDecodeResult } from 'applesauce-core/helpers'
 
-// Helper to add timestamps to logs
-const ts = () => {
-  const now = new Date()
-  const ms = now.getMilliseconds().toString().padStart(3, '0')
-  return `${now.toLocaleTimeString('en-US', { hour12: false })}.${ms}`
-}
-
 /**
  * Regular expression to match nostr: URIs and bare NIP-19 identifiers
  * Uses applesauce Tokens.nostrLink which includes word boundary checks
@@ -23,10 +16,8 @@ const NOSTR_URI_REGEX = Tokens.nostrLink
  * Extract all nostr URIs from text using applesauce helpers
  */
 export function extractNostrUris(text: string): string[] {
-  console.log(`[${ts()}] [npub-resolve] extractNostrUris: text length:`, text?.length || 0)
   try {
     const pointers = getContentPointers(text)
-    console.log(`[${ts()}] [npub-resolve] extractNostrUris: Found pointers:`, pointers.length)
     const result: string[] = []
     pointers.forEach(pointer => {
       try {
@@ -34,14 +25,12 @@ export function extractNostrUris(text: string): string[] {
         if (encoded) {
           result.push(encoded)
         }
-      } catch (err) {
-        console.error(`[${ts()}] [npub-resolve] extractNostrUris: Error encoding pointer:`, err, pointer)
+      } catch {
+        // Ignore encoding errors, continue processing other pointers
       }
     })
-    console.log(`[${ts()}] [npub-resolve] extractNostrUris: Extracted URIs:`, result.length)
     return result
-  } catch (err) {
-    console.error(`[${ts()}] [npub-resolve] extractNostrUris: Error:`, err)
+  } catch {
     return []
   }
 }
@@ -125,6 +114,23 @@ export function getNostrUriLabel(encoded: string): string {
     }
   } catch (error) {
     return encoded.slice(0, 16) + '...'
+  }
+}
+
+/**
+ * Get a standardized fallback display name for a pubkey when profile has no name
+ * Returns npub format: @abc1234...
+ * @param pubkey The pubkey in hex format
+ * @returns Formatted npub display string
+ */
+export function getNpubFallbackDisplay(pubkey: string): string {
+  try {
+    const npub = npubEncode(pubkey)
+    // Remove "npub1" prefix (5 chars) and show next 7 chars
+    return `@${npub.slice(5, 12)}...`
+  } catch {
+    // Fallback to shortened pubkey if encoding fails
+    return `@${pubkey.slice(0, 8)}...`
   }
 }
 
