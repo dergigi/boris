@@ -231,6 +231,20 @@ export const fetchProfiles = async (
     const { local: localRelays, remote: remoteRelays } = partitionRelays(prioritized)
 
     console.log(`[fetch-profiles] Querying ${localRelays.length} local relays and ${remoteRelays.length} remote relays`)
+    console.log(`[fetch-profiles] Active relays:`, relayUrls)
+    const hasPurplePages = relayUrls.some(url => url.includes('purplepag.es'))
+    if (!hasPurplePages) {
+      console.warn(`[fetch-profiles] purplepag.es not in active relay pool, adding it temporarily`)
+      // Add purplepag.es if it's not in the pool (it might not have connected yet)
+      const purplePagesUrl = 'wss://purplepag.es'
+      if (!relayPool.relays.has(purplePagesUrl)) {
+        relayPool.group([purplePagesUrl])
+      }
+      // Ensure it's included in the remote relays for this fetch
+      if (!remoteRelays.includes(purplePagesUrl)) {
+        remoteRelays.push(purplePagesUrl)
+      }
+    }
     let eventCount = 0
     const fetchedPubkeys = new Set<string>()
 
