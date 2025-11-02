@@ -250,6 +250,8 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
           console.error(`[${ts()}] [npub-resolve] Error fetching profiles after`, fetchDuration, 'ms:', err)
         })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // initialLabels is derived from profileData, profileLabels is state we update (would cause loops)
   }, [profileData, eventStore, relayPool])
 
   // Only log when size actually changes to reduce noise
