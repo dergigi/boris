@@ -3,6 +3,7 @@ import { Hooks } from 'applesauce-react'
 import { Helpers, IEventStore } from 'applesauce-core'
 import { getContentPointers } from 'applesauce-factory/helpers'
 import { RelayPool } from 'applesauce-relay'
+import { NostrEvent } from 'nostr-tools'
 import { fetchProfiles, loadCachedProfiles } from '../services/profileService'
 import { getNpubFallbackDisplay } from '../utils/nostrUriResolver'
 
@@ -170,81 +171,62 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     console.log(`[profile-labels] Profiles to fetch: ${pubkeysToFetch.length}`, pubkeysToFetch.map(p => p.slice(0, 16) + '...'))
     setProfileLabels(new Map(labels))
     
-    // Fetch missing profiles asynchronously
+    // Fetch missing profiles asynchronously with reactive updates
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
       const pubkeysToFetchSet = new Set(pubkeysToFetch)
+      // Create a map from pubkey to encoded identifier for quick lookup
+      const pubkeyToEncoded = new Map<string, string>()
+      profileData.forEach(({ encoded, pubkey }) => {
+        if (pubkeysToFetchSet.has(pubkey)) {
+          pubkeyToEncoded.set(pubkey, encoded)
+        }
+      })
+      
       console.log(`[profile-labels] Fetching ${pubkeysToFetch.length} profiles from relays`)
       console.log(`[profile-labels] Calling fetchProfiles with relayPool and ${pubkeysToFetch.length} pubkeys`)
-      fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch)
-        .then((fetchedProfiles) => {
-          console.log(`[profile-labels] Fetch completed, received ${fetchedProfiles.length} profiles`)
-          const updatedLabels = new Map(labels)
-          const fetchedProfilesByPubkey = new Map(fetchedProfiles.map(p => [p.pubkey, p]))
-          
-          profileData.forEach(({ encoded, pubkey }) => {
-            // Only update profiles that were in pubkeysToFetch (i.e., were being fetched)
-            // This allows us to replace fallback labels with resolved names
-            if (pubkeysToFetchSet.has(pubkey)) {
-              console.log(`[profile-labels] Processing fetched profile for ${encoded.slice(0, 20)}...`)
-              // First, try to use the profile from the returned array
-              const fetchedProfile = fetchedProfilesByPubkey.get(pubkey)
-              if (fetchedProfile) {
-                console.log(`[profile-labels] Found profile in fetch results for ${encoded.slice(0, 20)}...`)
-                try {
-                  const profileData = JSON.parse(fetchedProfile.content || '{}') as { name?: string; display_name?: string; nip05?: string }
-                  const displayName = profileData.display_name || profileData.name || profileData.nip05
-                  if (displayName) {
-                    updatedLabels.set(encoded, `@${displayName}`)
-                    console.log(`[profile-labels] Updated label for ${encoded.slice(0, 20)}... to @${displayName}`)
-                  } else {
-                    // Use fallback npub display if profile has no name
-                    const fallback = getNpubFallbackDisplay(pubkey)
-                    updatedLabels.set(encoded, fallback)
-                    console.log(`[profile-labels] Fetched profile for ${encoded.slice(0, 20)}... has no name, using fallback: ${fallback}`)
-                  }
-                } catch (error) {
-                  // Use fallback npub display if parsing fails
-                  const fallback = getNpubFallbackDisplay(pubkey)
-                  updatedLabels.set(encoded, fallback)
-                  console.warn(`[profile-labels] Error parsing fetched profile for ${encoded.slice(0, 20)}..., using fallback:`, error)
-                }
-              } else if (eventStore) {
-                console.log(`[profile-labels] Profile not in fetch results, checking eventStore for ${encoded.slice(0, 20)}...`)
-                // Fallback: check eventStore (in case fetchProfiles stored but didn't return)
-                const profileEvent = eventStore.getEvent(pubkey + ':0')
-                if (profileEvent) {
-                  console.log(`[profile-labels] Found profile in eventStore after fetch for ${encoded.slice(0, 20)}...`)
-                  try {
-                    const profileData = JSON.parse(profileEvent.content || '{}') as { name?: string; display_name?: string; nip05?: string }
-                    const displayName = profileData.display_name || profileData.name || profileData.nip05
-                    if (displayName) {
-                      updatedLabels.set(encoded, `@${displayName}`)
-                      console.log(`[profile-labels] Updated label from eventStore for ${encoded.slice(0, 20)}... to @${displayName}`)
-                    } else {
-                      // Use fallback npub display if profile has no name
-                      const fallback = getNpubFallbackDisplay(pubkey)
-                      updatedLabels.set(encoded, fallback)
-                      console.log(`[profile-labels] Profile in eventStore for ${encoded.slice(0, 20)}... has no name, using fallback: ${fallback}`)
-                    }
-                  } catch (error) {
-                    // Use fallback npub display if parsing fails
-                    const fallback = getNpubFallbackDisplay(pubkey)
-                    updatedLabels.set(encoded, fallback)
-                    console.warn(`[profile-labels] Error parsing eventStore profile for ${encoded.slice(0, 20)}..., using fallback:`, error)
-                  }
-                } else {
-                  console.log(`[profile-labels] Profile not in eventStore after fetch for ${encoded.slice(0, 20)}..., keeping fallback`)
-                }
-                // If no profile found in eventStore, keep existing fallback
-              } else {
-                console.log(`[profile-labels] No eventStore available, keeping fallback for ${encoded.slice(0, 20)}...`)
-              }
-              // If no eventStore, keep existing fallback
+      
+      // Reactive callback: update labels as profiles stream in
+      const handleProfileEvent = (event: NostrEvent) => {
+        const encoded = pubkeyToEncoded.get(event.pubkey)
+        if (!encoded) {
+          console.log(`[profile-labels] Received profile for unknown pubkey ${event.pubkey.slice(0, 16)}..., skipping`)
+          return
+        }
+        
+        console.log(`[profile-labels] Received profile event for ${encoded.slice(0, 20)}...`)
+        setProfileLabels(prevLabels => {
+          const updatedLabels = new Map(prevLabels)
+          try {
+            const profileData = JSON.parse(event.content || '{}') as { name?: string; display_name?: string; nip05?: string }
+            const displayName = profileData.display_name || profileData.name || profileData.nip05
+            if (displayName) {
+              updatedLabels.set(encoded, `@${displayName}`)
+              console.log(`[profile-labels] Updated label reactively for ${encoded.slice(0, 20)}... to @${displayName}`)
+            } else {
+              // Use fallback npub display if profile has no name
+              const fallback = getNpubFallbackDisplay(event.pubkey)
+              updatedLabels.set(encoded, fallback)
+              console.log(`[profile-labels] Profile for ${encoded.slice(0, 20)}... has no name, keeping fallback: ${fallback}`)
             }
+          } catch (error) {
+            // Use fallback npub display if parsing fails
+            const fallback = getNpubFallbackDisplay(event.pubkey)
+            updatedLabels.set(encoded, fallback)
+            console.warn(`[profile-labels] Error parsing profile for ${encoded.slice(0, 20)}..., using fallback:`, error)
+          }
+          return updatedLabels
+        })
+      }
+      
+      fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch, undefined, handleProfileEvent)
+        .then((fetchedProfiles) => {
+          console.log(`[profile-labels] Fetch completed (EOSE), received ${fetchedProfiles.length} profiles total`)
+          // Labels have already been updated reactively via handleProfileEvent
+          // Just log final state for debugging
+          setProfileLabels(prevLabels => {
+            console.log(`[profile-labels] Final labels after EOSE:`, Array.from(prevLabels.entries()).map(([enc, label]) => ({ encoded: enc.slice(0, 20) + '...', label })))
+            return prevLabels // No change needed, already updated reactively
           })
-          
-          console.log(`[profile-labels] Final labels after fetch:`, Array.from(updatedLabels.entries()).map(([enc, label]) => ({ encoded: enc.slice(0, 20) + '...', label })))
-          setProfileLabels(updatedLabels)
         })
         .catch((error) => {
           console.error(`[profile-labels] Error fetching profiles:`, error)

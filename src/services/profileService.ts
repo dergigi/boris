@@ -1,5 +1,5 @@
 import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
-import { lastValueFrom, merge, Observable, takeUntil, timer, toArray, tap } from 'rxjs'
+import { lastValueFrom, merge, Observable, toArray, tap } from 'rxjs'
 import { NostrEvent } from 'nostr-tools'
 import { IEventStore } from 'applesauce-core'
 import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
@@ -190,7 +190,8 @@ export const fetchProfiles = async (
   relayPool: RelayPool,
   eventStore: IEventStore,
   pubkeys: string[],
-  settings?: UserSettings
+  settings?: UserSettings,
+  onEvent?: (event: NostrEvent) => void
 ): Promise<NostrEvent[]> => {
   try {
     if (pubkeys.length === 0) {
@@ -269,9 +270,9 @@ export const fetchProfiles = async (
           .req(localRelays, { kinds: [0], authors: pubkeysToFetch })
           .pipe(
             onlyEvents(),
+            onEvent ? tap((event: NostrEvent) => onEvent(event)) : tap(() => {}),
             tap((event: NostrEvent) => processEvent(event)),
-            completeOnEose(),
-            takeUntil(timer(1200))
+            completeOnEose()
           )
       : new Observable<NostrEvent>((sub) => sub.complete())
 
@@ -280,9 +281,9 @@ export const fetchProfiles = async (
           .req(remoteRelays, { kinds: [0], authors: pubkeysToFetch })
           .pipe(
             onlyEvents(),
+            onEvent ? tap((event: NostrEvent) => onEvent(event)) : tap(() => {}),
             tap((event: NostrEvent) => processEvent(event)),
-            completeOnEose(),
-            takeUntil(timer(10000)) // Increased from 6000ms to 10000ms to give slow relays more time
+            completeOnEose()
           )
       : new Observable<NostrEvent>((sub) => sub.complete())
 
