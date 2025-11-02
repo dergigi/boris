@@ -83,19 +83,20 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
     if (pubkeysToFetch.length > 0 && relayPool && eventStore) {
       console.log('[npub-resolve] Fetching', pubkeysToFetch.length, 'missing profiles')
       fetchProfiles(relayPool, eventStore as unknown as IEventStore, pubkeysToFetch)
-        .then(profiles => {
-          // Rebuild labels map with fetched profiles
+        .then(() => {
+          // Re-check eventStore for all profiles (including ones we just fetched)
+          // This ensures we get profiles even if fetchProfiles didn't return them in the array
           const updatedLabels = new Map(labels)
           profileData.forEach(({ encoded, pubkey }) => {
-            if (!updatedLabels.has(encoded)) {
-              const profileEvent = profiles.find(p => p.pubkey === pubkey)
+            if (!updatedLabels.has(encoded) && eventStore) {
+              const profileEvent = eventStore.getEvent(pubkey + ':0')
               if (profileEvent) {
                 try {
                   const profileData = JSON.parse(profileEvent.content || '{}') as { name?: string; display_name?: string; nip05?: string }
                   const displayName = profileData.display_name || profileData.name || profileData.nip05
                   if (displayName) {
                     updatedLabels.set(encoded, `@${displayName}`)
-                    console.log('[npub-resolve] Fetched profile:', encoded, '->', displayName)
+                    console.log('[npub-resolve] Resolved profile:', encoded, '->', displayName)
                   }
                 } catch {
                   // ignore parse errors
@@ -103,6 +104,7 @@ export function useProfileLabels(content: string, relayPool?: RelayPool | null):
               }
             }
           })
+          console.log('[npub-resolve] After fetch, resolved:', updatedLabels.size, 'out of', profileData.length)
           setProfileLabels(updatedLabels)
         })
         .catch(err => {
