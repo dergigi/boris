@@ -1,5 +1,6 @@
 import React from 'react'
 import NostrMentionLink from './NostrMentionLink'
+import { Tokens } from 'applesauce-content/helpers'
 
 interface RichContentProps {
   content: string
@@ -19,17 +20,24 @@ const RichContent: React.FC<RichContentProps> = ({
   className = 'bookmark-content' 
 }) => {
   // Pattern to match:
-  // 1. nostr: URIs (nostr:npub1..., nostr:note1..., etc.)
-  // 2. Plain nostr identifiers (npub1..., nprofile1..., note1..., etc.)
-  // 3. http(s) URLs
-  const pattern = /(nostr:[a-z0-9]+|npub1[a-z0-9]+|nprofile1[a-z0-9]+|note1[a-z0-9]+|nevent1[a-z0-9]+|naddr1[a-z0-9]+|https?:\/\/[^\s]+)/gi
+  // 1. nostr: URIs (nostr:npub1..., nostr:note1..., etc.) using applesauce Tokens.nostrLink
+  // 2. http(s) URLs
+  const nostrPattern = Tokens.nostrLink
+  const urlPattern = /https?:\/\/[^\s]+/gi
+  const combinedPattern = new RegExp(`(${nostrPattern.source}|${urlPattern.source})`, 'gi')
   
-  const parts = content.split(pattern)
+  const parts = content.split(combinedPattern)
+  
+  // Helper to check if a string is a nostr identifier (without mutating regex state)
+  const isNostrIdentifier = (str: string): boolean => {
+    const testPattern = new RegExp(nostrPattern.source, nostrPattern.flags)
+    return testPattern.test(str)
+  }
   
   return (
     <div className={className}>
       {parts.map((part, index) => {
-        // Handle nostr: URIs
+        // Handle nostr: URIs - Tokens.nostrLink matches both formats
         if (part.startsWith('nostr:')) {
           return (
             <NostrMentionLink
@@ -39,10 +47,8 @@ const RichContent: React.FC<RichContentProps> = ({
           )
         }
         
-        // Handle plain nostr identifiers (add nostr: prefix)
-        if (
-          part.match(/^(npub1|nprofile1|note1|nevent1|naddr1)[a-z0-9]+$/i)
-        ) {
+        // Handle plain nostr identifiers (Tokens.nostrLink matches these too)
+        if (isNostrIdentifier(part)) {
           return (
             <NostrMentionLink
               key={index}

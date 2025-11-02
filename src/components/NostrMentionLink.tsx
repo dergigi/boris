@@ -1,7 +1,9 @@
 import React from 'react'
 import { nip19 } from 'nostr-tools'
 import { useEventModel } from 'applesauce-react/hooks'
-import { Models } from 'applesauce-core'
+import { Models, Helpers } from 'applesauce-core'
+
+const { getPubkeyFromDecodeResult } = Helpers
 
 interface NostrMentionLinkProps {
   nostrUri: string
@@ -20,21 +22,16 @@ const NostrMentionLink: React.FC<NostrMentionLinkProps> = ({
 }) => {
   // Decode the nostr URI first
   let decoded: ReturnType<typeof nip19.decode> | null = null
-  let pubkey: string | undefined
   
   try {
     const identifier = nostrUri.replace(/^nostr:/, '')
     decoded = nip19.decode(identifier)
-    
-    // Extract pubkey for profile fetching (works for npub and nprofile)
-    if (decoded.type === 'npub') {
-      pubkey = decoded.data
-    } else if (decoded.type === 'nprofile') {
-      pubkey = decoded.data.pubkey
-    }
   } catch (error) {
     // Decoding failed, will fallback to shortened identifier
   }
+  
+  // Extract pubkey for profile fetching using applesauce helper (works for npub and nprofile)
+  const pubkey = decoded ? getPubkeyFromDecodeResult(decoded) : undefined
   
   // Fetch profile at top level (Rules of Hooks)
   const profile = useEventModel(Models.ProfileModel, pubkey ? [pubkey] : null)

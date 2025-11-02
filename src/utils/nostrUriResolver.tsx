@@ -1,40 +1,33 @@
 import { decode, npubEncode, noteEncode } from 'nostr-tools/nip19'
 import { getNostrUrl } from '../config/nostrGateways'
+import { Tokens } from 'applesauce-content/helpers'
+import { getContentPointers } from 'applesauce-factory/helpers'
+import { encodeDecodeResult } from 'applesauce-core/helpers'
 
 /**
  * Regular expression to match nostr: URIs and bare NIP-19 identifiers
+ * Uses applesauce Tokens.nostrLink which includes word boundary checks
  * Matches: nostr:npub1..., nostr:note1..., nostr:nprofile1..., nostr:nevent1..., nostr:naddr1...
  * Also matches bare identifiers without the nostr: prefix
  */
-const NOSTR_URI_REGEX = /(?:nostr:)?((npub|note|nprofile|nevent|naddr)1[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{58,})/gi
+const NOSTR_URI_REGEX = Tokens.nostrLink
 
 /**
- * Extract all nostr URIs from text
+ * Extract all nostr URIs from text using applesauce helpers
  */
 export function extractNostrUris(text: string): string[] {
-  const matches = text.match(NOSTR_URI_REGEX)
-  if (!matches) return []
-  
-  // Extract just the NIP-19 identifier (without nostr: prefix)
-  return matches.map(match => {
-    const cleanMatch = match.replace(/^nostr:/, '')
-    return cleanMatch
-  })
+  const pointers = getContentPointers(text)
+  return pointers.map(pointer => encodeDecodeResult(pointer))
 }
 
 /**
- * Extract all naddr (article) identifiers from text
+ * Extract all naddr (article) identifiers from text using applesauce helpers
  */
 export function extractNaddrUris(text: string): string[] {
-  const allUris = extractNostrUris(text)
-  return allUris.filter(uri => {
-    try {
-      const decoded = decode(uri)
-      return decoded.type === 'naddr'
-    } catch {
-      return false
-    }
-  })
+  const pointers = getContentPointers(text)
+  return pointers
+    .filter(pointer => pointer.type === 'naddr')
+    .map(pointer => encodeDecodeResult(pointer))
 }
 
 /**
@@ -259,13 +252,51 @@ export function replaceNostrUrisInMarkdownWithTitles(
 }
 
 /**
+ * Replace nostr: URIs in markdown with proper markdown links, using resolved profile names and article titles
+ * This converts: nostr:npub1... to [@username](link) and nostr:naddr1... to [Article Title](link)
+ * Labels update progressively as profiles load
+ * @param markdown The markdown content to process
+ * @param profileLabels Map of encoded identifier -> display name (e.g., npub1... -> @username)
+ * @param articleTitles Map of naddr -> title for resolved articles
+ */
+export function replaceNostrUrisInMarkdownWithProfileLabels(
+  markdown: string,
+  profileLabels: Map<string, string> = new Map(),
+  articleTitles: Map<string, string> = new Map()
+): string {
+  return replaceNostrUrisSafely(markdown, (encoded) => {
+    const link = createNostrLink(encoded)
+    
+    // Check if we have a resolved profile name
+    if (profileLabels.has(encoded)) {
+      const displayName = profileLabels.get(encoded)!
+      return `[${displayName}](${link})`
+    }
+    
+    // For articles, use the resolved title if available
+    try {
+      const decoded = decode(encoded)
+      if (decoded.type === 'naddr' && articleTitles.has(encoded)) {
+        const title = articleTitles.get(encoded)!
+        return `[${title}](${link})`
+      }
+    } catch (error) {
+      // Ignore decode errors, fall through to default label
+    }
+    
+    // For other types or if not resolved, use default label (shortened npub format)
+    const label = getNostrUriLabel(encoded)
+    return `[${label}](${link})`
+  })
+}
+
+/**
  * Replace nostr: URIs in HTML with clickable links
  * This is used when processing HTML content directly
  */
 export function replaceNostrUrisInHTML(html: string): string {
-  return html.replace(NOSTR_URI_REGEX, (match) => {
-    // Extract just the NIP-19 identifier (without nostr: prefix)
-    const encoded = match.replace(/^nostr:/, '')
+  return html.replace(NOSTR_URI_REGEX, (_match, encoded) => {
+    // encoded is already the NIP-19 identifier without nostr: prefix (from capture group)
     const link = createNostrLink(encoded)
     const label = getNostrUriLabel(encoded)
     

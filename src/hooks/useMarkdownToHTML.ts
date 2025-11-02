@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { RelayPool } from 'applesauce-relay'
-import { extractNaddrUris, replaceNostrUrisInMarkdown, replaceNostrUrisInMarkdownWithTitles } from '../utils/nostrUriResolver'
+import { extractNaddrUris, replaceNostrUrisInMarkdownWithProfileLabels } from '../utils/nostrUriResolver'
 import { fetchArticleTitles } from '../services/articleTitleResolver'
+import { useProfileLabels } from './useProfileLabels'
 
 /**
  * Hook to convert markdown to HTML using a hidden ReactMarkdown component
@@ -18,7 +19,43 @@ export const useMarkdownToHTML = (
   const previewRef = useRef<HTMLDivElement>(null)
   const [renderedHtml, setRenderedHtml] = useState<string>('')
   const [processedMarkdown, setProcessedMarkdown] = useState<string>('')
+  const [articleTitles, setArticleTitles] = useState<Map<string, string>>(new Map())
 
+  // Resolve profile labels progressively as profiles load
+  const profileLabels = useProfileLabels(markdown || '')
+
+  // Fetch article titles
+  useEffect(() => {
+    if (!markdown || !relayPool) {
+      setArticleTitles(new Map())
+      return
+    }
+
+    let isCancelled = false
+
+    const fetchTitles = async () => {
+      const naddrs = extractNaddrUris(markdown)
+      if (naddrs.length === 0) {
+        setArticleTitles(new Map())
+        return
+      }
+
+      try {
+        const titlesMap = await fetchArticleTitles(relayPool!, naddrs)
+        if (!isCancelled) {
+          setArticleTitles(titlesMap)
+        }
+      } catch (error) {
+        console.warn('Failed to fetch article titles:', error)
+        if (!isCancelled) setArticleTitles(new Map())
+      }
+    }
+
+    fetchTitles()
+    return () => { isCancelled = true }
+  }, [markdown, relayPool])
+
+  // Process markdown with progressive profile labels and article titles
   useEffect(() => {
     // Always clear previous render immediately to avoid showing stale content while processing
     setRenderedHtml('')
@@ -30,36 +67,18 @@ export const useMarkdownToHTML = (
 
     let isCancelled = false
 
-    const processMarkdown = async () => {
-      // Extract all naddr references
-      const naddrs = extractNaddrUris(markdown)
-      
-      let processed: string
-      
-      if (naddrs.length > 0 && relayPool) {
-        // Fetch article titles for all naddrs
-        try {
-          const articleTitles = await fetchArticleTitles(relayPool, naddrs)
-          
-          if (isCancelled) return
-          
-          // Replace nostr URIs with resolved titles
-          processed = replaceNostrUrisInMarkdownWithTitles(markdown, articleTitles)
-        } catch (error) {
-          console.warn('Failed to fetch article titles:', error)
-          // Fall back to basic replacement
-          processed = replaceNostrUrisInMarkdown(markdown)
-        }
-      } else {
-        // No articles to resolve, use basic replacement
-        processed = replaceNostrUrisInMarkdown(markdown)
-      }
+    const processMarkdown = () => {
+      // Replace nostr URIs with profile labels (progressive) and article titles
+      const processed = replaceNostrUrisInMarkdownWithProfileLabels(
+        markdown,
+        profileLabels,
+        articleTitles
+      )
       
       if (isCancelled) return
       
       setProcessedMarkdown(processed)
 
-      
       const rafId = requestAnimationFrame(() => {
         if (previewRef.current && !isCancelled) {
           const html = previewRef.current.innerHTML
@@ -77,7 +96,7 @@ export const useMarkdownToHTML = (
     return () => {
       isCancelled = true
     }
-  }, [markdown, relayPool])
+  }, [markdown, profileLabels, articleTitles])
 
   return { renderedHtml, previewRef, processedMarkdown }
 }

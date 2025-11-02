@@ -1,12 +1,4 @@
-// Extract pubkeys from nprofile strings in content
 import { READING_PROGRESS } from '../config/kinds'
-
-export const extractNprofilePubkeys = (content: string): string[] => {
-  const nprofileRegex = /nprofile1[a-z0-9]+/gi
-  const matches = content.match(nprofileRegex) || []
-  const unique = new Set<string>(matches)
-  return Array.from(unique)
-}
 
 export type UrlType = 'video' | 'image' | 'youtube' | 'article'
 
