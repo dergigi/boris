@@ -64,10 +64,36 @@ export function tryMarkInTextNodes(
     let actualIndex = index
     if (useNormalized) {
       // Map normalized index back to original text
-      let normalizedIdx = 0
-      for (let i = 0; i < text.length && normalizedIdx < index; i++) {
-        if (!/\s/.test(text[i]) || (i > 0 && !/\s/.test(text[i-1]))) normalizedIdx++
-        actualIndex = i + 1
+      // Build normalized text while tracking original positions
+      let normalizedPos = 0
+      let prevWasWs = false
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i]
+        const isWs = /\s/.test(ch)
+        
+        if (isWs) {
+          // Whitespace: count only at start of whitespace sequence
+          if (!prevWasWs) {
+            if (normalizedPos === index) {
+              actualIndex = i
+              break
+            }
+            normalizedPos++
+          }
+          prevWasWs = true
+        } else {
+          // Non-whitespace: count each character
+          if (normalizedPos === index) {
+            actualIndex = i
+            break
+          }
+          normalizedPos++
+          prevWasWs = false
+        }
+      }
+      // If we didn't find exact match, use last position
+      if (normalizedPos < index) {
+        actualIndex = text.length
       }
     }
     
