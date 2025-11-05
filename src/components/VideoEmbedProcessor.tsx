@@ -1,4 +1,4 @@
-import React, { useMemo, forwardRef } from 'react'
+import { useMemo, forwardRef } from 'react'
 import ReactPlayer from 'react-player'
 import { classifyUrl } from '../utils/helpers'
 
