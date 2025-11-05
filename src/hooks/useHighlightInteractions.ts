@@ -93,26 +93,37 @@ export const useHighlightInteractions = ({
     return () => clearTimeout(timeoutId)
   }, [selectedHighlightId, contentVersion])
 
-  // Handle text selection (works for both mouse and touch)
-  const handleSelectionEnd = useCallback(() => {
-    setTimeout(() => {
-      const selection = window.getSelection()
-      if (!selection || selection.rangeCount === 0) {
-        onClearSelection?.()
-        return
-      }
+  // Shared function to check and handle text selection
+  const checkSelection = useCallback(() => {
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) {
+      onClearSelection?.()
+      return
+    }
 
-      const range = selection.getRangeAt(0)
-      const text = selection.toString().trim()
+    const range = selection.getRangeAt(0)
+    const text = selection.toString().trim()
 
-      if (text.length > 0 && contentRef.current?.contains(range.commonAncestorContainer)) {
-        onTextSelection?.(text)
-      } else {
-        onClearSelection?.()
-      }
-    }, 10)
+    if (text.length > 0 && contentRef.current?.contains(range.commonAncestorContainer)) {
+      onTextSelection?.(text)
+    } else {
+      onClearSelection?.()
+    }
   }, [onTextSelection, onClearSelection])
 
-  return { contentRef, handleSelectionEnd }
+  // Listen to selectionchange events for immediate detection (works reliably on mobile)
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      // Use requestAnimationFrame to ensure selection is checked after browser updates
+      requestAnimationFrame(checkSelection)
+    }
+
+    document.addEventListener('selectionchange', handleSelectionChange)
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange)
+    }
+  }, [checkSelection])
+
+  return { contentRef }
 }
 

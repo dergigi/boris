@@ -133,7 +133,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
     return selectedUrl || `${title || ''}:${(markdown || html || '').length}`
   }, [selectedUrl, title, markdown, html])
 
-  const { contentRef, handleSelectionEnd } = useHighlightInteractions({
+  const { contentRef } = useHighlightInteractions({
     onHighlightClick,
     selectedHighlightId,
     onTextSelection,
@@ -815,8 +815,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
                 html={finalHtml}
                 renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true}
                 className="reader-markdown"
-                onMouseUp={handleSelectionEnd}
-                onTouchEnd={handleSelectionEnd}
               />
             ) : (
               <div className="reader-markdown">
@@ -830,8 +828,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               html={finalHtml || html || ''}
               renderVideoLinksAsEmbeds={settings?.renderVideoLinksAsEmbeds === true}
               className="reader-html"
-              onMouseUp={handleSelectionEnd}
-              onTouchEnd={handleSelectionEnd}
             />
           )}
           
