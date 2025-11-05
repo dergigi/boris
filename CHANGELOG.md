@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.33] - 2025-11-05
+
+### Fixed
+
+- Mobile text selection detection for highlight button using selectionchange event
+- Normalized index mapping algorithm for whitespace handling in highlights
+
+### Changed
+
+- Allow nested mark elements for overlapping highlights
+- Remove unused React import from VideoEmbedProcessor
+
+### Performance
+
+- Optimize highlight application by collecting text nodes once instead of per highlight (O(n×m) -> O(n+m))
+- Add caching for highlighted HTML results with TTL and size limits
+
 ## [0.10.32] - 2025-11-02
 
 ### Added
