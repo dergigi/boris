@@ -6,8 +6,6 @@ interface VideoEmbedProcessorProps {
   html: string
   renderVideoLinksAsEmbeds: boolean
   className?: string
-  onMouseUp?: (e: React.MouseEvent) => void
-  onTouchEnd?: (e: React.TouchEvent) => void
 }
 
 /**
@@ -17,9 +15,7 @@ interface VideoEmbedProcessorProps {
 const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>(({
   html,
   renderVideoLinksAsEmbeds,
-  className,
-  onMouseUp,
-  onTouchEnd
+  className
 }, ref) => {
   // Process HTML and extract video URLs in a single pass to keep them in sync
   const { processedHtml, videoUrls } = useMemo(() => {
@@ -109,8 +105,6 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
         ref={ref}
         className={className}
         dangerouslySetInnerHTML={{ __html: processedHtml }}
-        onMouseUp={onMouseUp}
-        onTouchEnd={onTouchEnd}
       />
     )
   }
@@ -119,7 +113,7 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
   const parts = processedHtml.split(/(__VIDEO_EMBED_\d+__)/)
   
   return (
-    <div ref={ref} className={className} onMouseUp={onMouseUp} onTouchEnd={onTouchEnd}>
+    <div ref={ref} className={className}>
       {parts.map((part, index) => {
         const videoMatch = part.match(/^__VIDEO_EMBED_(\d+)__$/)
         if (videoMatch) {
