@@ -2,7 +2,7 @@
  * Nostr gateway URLs for viewing events and profiles on the web
  */
 
-export const NOSTR_GATEWAY = 'https://nostr.at' as const
+export const NOSTR_GATEWAY = 'https://njump.to' as const
 export const SEARCH_PORTAL = 'https://ants.sh' as const
 
 /**
@@ -24,7 +24,7 @@ export function getEventUrl(nevent: string): string {
  * Automatically detects if it's a profile (npub/nprofile) or event (note/nevent/naddr)
  */
 export function getNostrUrl(identifier: string): string {
-  // nostr.at uses simple /{identifier} format for all types
+  // njump.to uses simple /{identifier} format for all types
   return `${NOSTR_GATEWAY}/${identifier}`
 }
 
