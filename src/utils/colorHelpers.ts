@@ -15,3 +15,23 @@ export const HIGHLIGHT_COLORS = [
   { name: 'Blue', value: '#3b82f6' },    // blue-500
   { name: 'Purple', value: '#9333ea' }   // purple-600
 ]
+
+// Tailwind color palette for link colors - optimized for dark themes
+export const LINK_COLORS_DARK = [
+  { name: 'Sky Blue', value: '#38bdf8' },  // sky-400
+  { name: 'Cyan', value: '#22d3ee' },      // cyan-400
+  { name: 'Light Blue', value: '#60a5fa' }, // blue-400
+  { name: 'Indigo Light', value: '#818cf8' }, // indigo-400
+  { name: 'Blue', value: '#3b82f6' },      // blue-500
+  { name: 'Purple', value: '#9333ea' }     // purple-600
+]
+
+// Tailwind color palette for link colors - optimized for light themes
+export const LINK_COLORS_LIGHT = [
+  { name: 'Blue', value: '#3b82f6' },      // blue-500
+  { name: 'Indigo', value: '#6366f1' },     // indigo-500
+  { name: 'Purple', value: '#9333ea' },    // purple-600
+  { name: 'Sky Blue', value: '#0ea5e9' },   // sky-500 (darker for light bg)
+  { name: 'Cyan', value: '#06b6d4' },      // cyan-500 (darker for light bg)
+  { name: 'Teal', value: '#14b8a6' }       // teal-500
+]
