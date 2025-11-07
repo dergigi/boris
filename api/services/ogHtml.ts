@@ -1,4 +1,4 @@
-import type { ArticleMetadata } from './ogStore'
+import type { ArticleMetadata } from './ogStore.js'
 
 export function escapeHtml(text: string): string {
   return text

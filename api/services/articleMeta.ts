@@ -5,9 +5,9 @@ import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent, Filter } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
-import { extractProfileDisplayName } from '../../lib/profile'
-import { RELAYS } from '../../src/config/relays'
-import type { ArticleMetadata } from './ogStore'
+import { extractProfileDisplayName } from '../../lib/profile.js'
+import { RELAYS } from '../../src/config/relays.js'
+import type { ArticleMetadata } from './ogStore.js'
 
 const { getArticleTitle, getArticleImage, getArticleSummary } = Helpers
 

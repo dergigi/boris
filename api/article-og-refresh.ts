@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setArticleMeta } from './services/ogStore'
-import { fetchArticleMetadataViaRelays } from './services/articleMeta'
+import { setArticleMeta } from './services/ogStore.js'
+import { fetchArticleMetadataViaRelays } from './services/articleMeta.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Validate refresh secret
