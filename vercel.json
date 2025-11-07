@@ -2,7 +2,6 @@
   "version": 2,
   "functions": {
     "api/article-og.ts": {
-      "runtime": "nodejs18.x",
       "maxDuration": 10
     }
   },
