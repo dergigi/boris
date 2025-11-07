@@ -1,4 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import WebSocket from 'ws'
+;(globalThis as any).WebSocket ??= WebSocket as any
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
@@ -102,11 +104,11 @@ async function fetchArticleMetadata(naddr: string): Promise<ArticleMetadata | nu
         kinds: [pointer.kind],
         authors: [pointer.pubkey],
         '#d': [pointer.identifier || '']
-      }, 5000),
+      }, 7000),
       fetchEventsFromRelays(relayPool, relayUrls, {
         kinds: [0],
         authors: [pointer.pubkey]
-      }, 3000)
+      }, 5000)
     ])
 
     if (articleEvents.length === 0) {
@@ -191,18 +193,19 @@ function generateHtml(naddr: string, meta: ArticleMetadata | null): string {
     <noscript>
       <p>Redirecting to <a href="/">Boris</a>...</p>
     </noscript>
+    <script>
+      (function(){
+        try {
+          var p = '/a/${naddr}';
+          if (window.location.pathname !== p) {
+            history.replaceState(null, '', p);
+          }
+          window.location.replace('/');
+        } catch (e) {}
+      })();
+    </script>
   </body>
 </html>`
-}
-
-function isCrawler(userAgent: string | undefined): boolean {
-  if (!userAgent) return false
-  const crawlers = [
-    'bot', 'crawl', 'spider', 'slurp', 'facebook', 'twitter', 'linkedin',
-    'whatsapp', 'telegram', 'slack', 'discord', 'preview'
-  ]
-  const ua = userAgent.toLowerCase()
-  return crawlers.some(crawler => ua.includes(crawler))
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -212,50 +215,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing naddr parameter' })
   }
 
-  const userAgent = req.headers['user-agent'] as string | undefined
-  const isCrawlerRequest = isCrawler(userAgent)
-
   const debugEnabled = req.query.debug === '1' || req.headers['x-boris-debug'] === '1'
   if (debugEnabled) {
     res.setHeader('X-Boris-Debug', '1')
-  }
-
-  // If it's a regular browser (not a bot), serve HTML that loads SPA
-  // Use history.replaceState to set the URL before the SPA boots
-  if (!isCrawlerRequest) {
-    const articlePath = `/a/${naddr}`
-    // Serve a minimal HTML that sets up the URL and loads the SPA
-    const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Boris - Loading Article...</title>
-  <script>
-    // Set the URL to the article path before SPA loads
-    if (window.location.pathname !== '${articlePath}') {
-      history.replaceState(null, '', '${articlePath}');
-    }
-  </script>
-  ${debugEnabled ? `<script>console.debug('article-og', { mode: 'browser', naddr: '${naddr}', path: location.pathname, referrer: document.referrer });</script>` : ''}
-  <script>
-    // Redirect to index.html which will load the SPA
-    // The history state is already set, so SPA will see the correct URL
-    window.location.replace('/');
-  </script>
-</head>
-<body>
-  <div id="root"></div>
-</body>
-</html>`
-    
-    res.setHeader('Content-Type', 'text/html; charset=utf-8')
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-    if (debugEnabled) {
-      // Debug mode enabled
-    }
-    return res.status(200).send(html)
   }
 
   // Check cache for bots/crawlers

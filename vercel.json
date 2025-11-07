@@ -1,4 +1,10 @@
 {
+  "version": 2,
+  "functions": {
+    "api/article-og.ts": {
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
     {
       "source": "/a/:naddr",
