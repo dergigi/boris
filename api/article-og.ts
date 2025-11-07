@@ -4,6 +4,7 @@ import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent, Filter } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
+import { extractProfileDisplayName } from '../lib/profile'
 
 const { getArticleTitle, getArticleImage, getArticleSummary } = Helpers
 
@@ -28,41 +29,7 @@ type CacheEntry = {
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 const memoryCache = new Map<string, CacheEntry>()
 
-// Local fallback utilities to avoid importing from src/** in the serverless function
-function getNpubFallbackDisplay(pubkey: string): string {
-  try {
-    const npub = nip19.npubEncode(pubkey)
-    return `${npub.slice(5, 12)}...`
-  } catch {
-    return `${pubkey.slice(0, 8)}...`
-  }
-}
 
-function extractProfileDisplayName(profileEvent: NostrEvent | null | undefined): string {
-  if (!profileEvent || profileEvent.kind !== 0) {
-    return ''
-  }
-
-  try {
-    const profileData = JSON.parse(profileEvent.content || '{}') as {
-      name?: string
-      display_name?: string
-      nip05?: string
-    }
-
-    if (profileData.name) return profileData.name
-    if (profileData.display_name) return profileData.display_name
-    if (profileData.nip05) return profileData.nip05
-
-    return getNpubFallbackDisplay(profileEvent.pubkey)
-  } catch {
-    try {
-      return getNpubFallbackDisplay(profileEvent.pubkey)
-    } catch {
-      return ''
-    }
-  }
-}
 
 function escapeHtml(text: string): string {
   return text
