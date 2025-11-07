@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2025-11-07
+
+### Added
+
+- Configurable link color setting for article links
+- Basic markdown syntax test files for testing
+- Article tags and image alt text to OpenGraph metadata
+- Storage-backed OpenGraph previews with Upstash Redis
+- Always render OpenGraph meta for `/a/:naddr` routes with redirect script for browsers
+- Script to publish markdown test files to Nostr using nak
+- npm script for publishing test markdown files
+
+### Changed
+
+- Default link color changed to Sky Blue (#38bdf8)
+- Link color setting renamed to `--color-link` with dark/light theme support
+- Use single link color setting with theme-aware palette
+- Increased paragraph spacing in reader view to 1.5rem
+- Increased top margin on headlines in reader view
+- Improved link visibility in dark mode with lighter indigo-400 color
+- Default Nostr gateway changed to njump.to
+- Node runtime pinned to 22.x via package.json engines
+- Simplified OpenGraph fetch by removing timeout wrapper and background refresh
+
+### Fixed
+
+- Use sentinel query param for OpenGraph redirect to preserve `/a/:naddr` paths
+- Gate `/a/:naddr` rewrite to crawlers to prevent refresh redirect
+- Update preview link color when link color setting changes
+- Store separate link colors for dark and light themes
+- Remove unused LINK_COLORS import from ColorPicker
+- Increase relay fetch timeout from 3s to 5s for better reliability
+- Improve Redis initialization and add debugging for metadata fetch
+- Add .js extensions to ESM imports for Vercel compatibility
+- Move OpenGraph service files to api/services for Vercel compatibility
+- Resolve linting and type errors
+- Remove user-agent restriction from article OpenGraph rewrite
+- Inline profile display name helper to avoid src import in serverless
+- Move profile helpers to lib and import from API and src to fix serverless import resolution
+
+### Performance
+
+- Implement early-return article fetch with micro-wait author
+- Increase relay request timeouts (7s article, 5s profile) to improve reliability
+- Remove gateway fetch, use relays with short timeout
+
+### Refactored
+
+- Use relative path for preview link to work on localhost
+- Move link to 3rd paragraph and remove 4th paragraph from preview
+- Update preview link to use real article link instead of sample text
+- Move profile helpers to shared lib module to keep code DRY
+
+### Documentation
+
+- Remove Development section from README
+- Update source links to point to specific files
+- Add source links to basic markdown test files
+- Add footnotes explaining Bitcoin frequency notation
+- Add explanatory paragraphs to each test table
+- Add test account npub and profile link to .env.example
+- Add comprehensive documentation for publish-markdown script
+
 ## [0.10.33] - 2025-11-05
 
 ### Fixed
