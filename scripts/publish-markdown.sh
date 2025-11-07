@@ -12,7 +12,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 MARKDOWN_DIR="$PROJECT_ROOT/test/markdown"
-ENV_FILE="$SCRIPT_DIR/.env"
+ENV_FILE="$PROJECT_ROOT/.env"
 
 # Load .env file if it exists
 if [ -f "$ENV_FILE" ]; then
@@ -50,11 +50,8 @@ publish_file() {
     echo "📝 Publishing: $filename"
     echo "   Identifier: $identifier"
     
-    # Read the markdown content
-    local content=$(cat "$file_path")
-    
     # Extract title from first H1 if available, otherwise use filename
-    local title=$(echo "$content" | grep -m 1 "^# " | sed 's/^# //' || echo "$identifier")
+    local title=$(grep -m 1 "^# " "$file_path" | sed 's/^# //' || echo "$identifier")
     
     # Add relays if provided
     if [ ${#relays[@]} -gt 0 ]; then
@@ -68,12 +65,13 @@ publish_file() {
     # The "d" tag is required for replaceable events (kind 30023)
     # Using the filename (without extension) as the identifier
     # Build command array to avoid eval issues
+    # Use @filename syntax to read content from file (nak supports this)
     local cmd_args=(
         "event"
         "-k" "30023"
         "-d" "$identifier"
         "-t" "title=\"$title\""
-        "--content" "-"
+        "--content" "@$file_path"
     )
     
     # Add relays if provided
@@ -81,7 +79,7 @@ publish_file() {
         cmd_args+=("${relays[@]}")
     fi
     
-    echo "$content" | nak "${cmd_args[@]}"
+    nak "${cmd_args[@]}"
     
     if [ $? -eq 0 ]; then
         echo "✅ Successfully published: $filename"
