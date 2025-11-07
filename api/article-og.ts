@@ -68,7 +68,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : `https://read.withboris.com`
     
     const refreshUrl = `${origin}/api/article-og-refresh?naddr=${encodeURIComponent(naddr)}`
-    console.log(`Triggering background refresh for ${naddr}`)
+    console.log(`Triggering background refresh for ${naddr}`, { url: refreshUrl, hasSecret: !!secret })
     
     fetch(refreshUrl, {
       method: 'POST',
@@ -76,11 +76,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       keepalive: true
     })
       .then(async (resp) => {
-        const result = await resp.json().catch(() => ({}))
-        console.log(`Background refresh response for ${naddr}:`, { status: resp.status, result })
+        try {
+          const result = await resp.json()
+          console.log(`Background refresh response for ${naddr}:`, { status: resp.status, result })
+        } catch (e) {
+          console.log(`Background refresh response for ${naddr}:`, { status: resp.status, text: await resp.text().catch(() => 'failed to read') })
+        }
       })
       .catch((err) => {
-        console.error(`Background refresh failed for ${naddr}:`, err)
+        console.error(`Background refresh fetch failed for ${naddr}:`, err instanceof Error ? err.message : err)
       })
   }
 
