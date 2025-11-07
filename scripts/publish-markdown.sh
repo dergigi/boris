@@ -6,6 +6,15 @@
 #   ./scripts/publish-markdown.sh                    # Interactive mode
 #   ./scripts/publish-markdown.sh tables.md          # Publish specific file
 #   ./scripts/publish-markdown.sh tables.md wss://relay.example.com  # With relay
+#
+# Environment:
+#   The script reads .env from the project root directory ($PROJECT_ROOT/.env)
+#   Required: NOSTR_SECRET_KEY (your nsec, ncryptsec, or hex format key)
+#   Optional: RELAYS (space-separated list of relay URLs)
+#
+# Test account for markdown test documents:
+#   npub: npub1marky39a9qmadyuux9lr49pdhy3ddxrdwtmd9y957kye66qyu3vq7spdm2
+#   Profile: https://read.withboris.com/p/npub1marky39a9qmadyuux9lr49pdhy3ddxrdwtmd9y957kye66qyu3vq7spdm2/writings
 
 set -e
 
