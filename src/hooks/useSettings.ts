@@ -69,7 +69,7 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       root.setProperty('--highlight-color-nostrverse', settings.highlightColorNostrverse || '#9333ea')
       
       // Set link color
-      root.setProperty('--link-color', settings.linkColor || '#818cf8')
+      root.setProperty('--link-color', settings.linkColor || '#38bdf8')
       
       // Set paragraph alignment
       root.setProperty('--paragraph-alignment', settings.paragraphAlignment || 'justify')

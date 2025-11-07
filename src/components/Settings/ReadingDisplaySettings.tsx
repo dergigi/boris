@@ -113,7 +113,7 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
         <label className="setting-label">Link Color</label>
         <div className="setting-control">
           <ColorPicker
-            selectedColor={settings.linkColor || '#818cf8'}
+            selectedColor={settings.linkColor || '#38bdf8'}
             onColorChange={(color) => onUpdate({ linkColor: color })}
             colors={LINK_COLORS}
           />
@@ -191,7 +191,7 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
             fontSize: `${settings.fontSize || 21}px`,
             '--highlight-rgb': hexToRgb(settings.highlightColor || '#ffff00'),
             '--paragraph-alignment': settings.paragraphAlignment || 'justify',
-            '--link-color': settings.linkColor || '#818cf8'
+            '--link-color': settings.linkColor || '#38bdf8'
           } as React.CSSProperties}
         >
           <h3>The Quick Brown Fox</h3>
