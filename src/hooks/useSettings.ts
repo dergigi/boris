@@ -68,13 +68,11 @@ export function useSettings({ relayPool, eventStore, pubkey, accountManager }: U
       root.setProperty('--highlight-color-friends', settings.highlightColorFriends || '#f97316')
       root.setProperty('--highlight-color-nostrverse', settings.highlightColorNostrverse || '#9333ea')
       
-      // Set link colors for dark and light themes
-      // Store both values on root - CSS will use the appropriate one based on theme
-      const darkLinkColor = settings.linkColorDark || '#38bdf8'
-      const lightLinkColor = settings.linkColorLight || '#3b82f6'
-      
-      root.setProperty('--color-link-dark', darkLinkColor)
-      root.setProperty('--color-link-light', lightLinkColor)
+      // Set link color - apply to both dark and light theme variables
+      // The CSS will use the appropriate one based on the current theme
+      const linkColor = settings.linkColor || '#38bdf8'
+      root.setProperty('--color-link-dark', linkColor)
+      root.setProperty('--color-link-light', linkColor)
       
       // Set paragraph alignment
       root.setProperty('--paragraph-alignment', settings.paragraphAlignment || 'justify')

@@ -51,8 +51,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   ttsDetectContentLanguage: true,
   ttsLanguageMode: 'content',
   ttsDefaultSpeed: 2.1,
-  linkColorDark: '#38bdf8',
-  linkColorLight: '#3b82f6',
+  linkColor: '#38bdf8',
 }
 
 interface SettingsProps {
