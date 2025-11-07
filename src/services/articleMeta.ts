@@ -1,11 +1,11 @@
 import WebSocket from 'ws'
-;(globalThis as any).WebSocket ??= WebSocket as any
+;(globalThis as unknown as { WebSocket?: typeof WebSocket }).WebSocket ??= WebSocket
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent, Filter } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
-import { extractProfileDisplayName } from '../lib/profile'
+import { extractProfileDisplayName } from '../../lib/profile'
 import { RELAYS } from '../config/relays'
 import type { ArticleMetadata } from './ogStore'
 
