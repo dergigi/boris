@@ -16,15 +16,18 @@ ENV_FILE="$PROJECT_ROOT/.env"
 
 # Load .env file if it exists
 if [ -f "$ENV_FILE" ]; then
-    # Source the .env file, handling quoted values
+    # Source the .env file, handling quoted values properly
     set -a  # Automatically export all variables
-    # Use a safe method to load .env that handles quotes
+    # Use eval to properly handle quoted values (safe since we control the file)
+    # This handles both unquoted and quoted values correctly
     while IFS= read -r line || [ -n "$line" ]; do
         # Skip comments and empty lines
         [[ "$line" =~ ^[[:space:]]*# ]] && continue
         [[ -z "$line" ]] && continue
-        # Export the variable
-        export "$line"
+        # Remove leading/trailing whitespace
+        line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        # Export the variable (handles quoted values)
+        eval "export $line"
     done < "$ENV_FILE"
     set +a  # Stop automatically exporting
 fi
