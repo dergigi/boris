@@ -37,12 +37,8 @@ publish_file() {
     # Extract title from first H1 if available, otherwise use filename
     local title=$(echo "$content" | grep -m 1 "^# " | sed 's/^# //' || echo "$identifier")
     
-    # Build nak command
-    local nak_cmd="nak event -k 30023 -d \"$identifier\" -t \"title=\\\"$title\\\"\" --content -"
-    
     # Add relays if provided
     if [ ${#relays[@]} -gt 0 ]; then
-        nak_cmd="$nak_cmd ${relays[*]}"
         echo "   Relays: ${relays[*]}"
     else
         echo "   Note: No relays specified. Event will be created but not published."
@@ -52,7 +48,21 @@ publish_file() {
     # Publish as kind 30023 (NIP-23 blog post)
     # The "d" tag is required for replaceable events (kind 30023)
     # Using the filename (without extension) as the identifier
-    echo "$content" | eval "$nak_cmd"
+    # Build command array to avoid eval issues
+    local cmd_args=(
+        "event"
+        "-k" "30023"
+        "-d" "$identifier"
+        "-t" "title=\"$title\""
+        "--content" "-"
+    )
+    
+    # Add relays if provided
+    if [ ${#relays[@]} -gt 0 ]; then
+        cmd_args+=("${relays[@]}")
+    fi
+    
+    echo "$content" | nak "${cmd_args[@]}"
     
     if [ $? -eq 0 ]; then
         echo "✅ Successfully published: $filename"
