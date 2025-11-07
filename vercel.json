@@ -3,6 +3,9 @@
   "functions": {
     "api/article-og.ts": {
       "maxDuration": 10
+    },
+    "api/article-og-refresh.ts": {
+      "maxDuration": 10
     }
   },
   "rewrites": [
