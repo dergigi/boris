@@ -152,6 +152,8 @@ This one is from [Bitcoin is Time](https://read.withboris.com/a/naddr1qq8ky6t5vd
 | Caesium-133 atomic clock  | 9,192,631,770 Hz                        |
 | Bitcoin                   | 1 block (0.00000192901 Hz* to ∞ Hz**)   |
 
+\* first block (6 days)  
+\*\* timestamps between blocks can show a negative delta
 
 ## Table with Nested Formatting
 
