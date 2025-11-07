@@ -17,6 +17,12 @@ export function generateHtml(naddr: string, meta: ArticleMetadata | null): strin
   const description = meta?.summary || 'Your reading list for the Nostr world. A minimal nostr client for bookmark management with highlights.'
   const image = meta?.image?.startsWith('http') ? meta.image : `${baseUrl}${meta?.image || '/boris-social-1200.png'}`
   const author = meta?.author || 'Boris'
+  const imageAlt = meta?.imageAlt || title
+
+  // Generate article:tag meta tags
+  const articleTags = meta?.tags && meta.tags.length > 0
+    ? meta.tags.map((tag) => `    <meta property="article:tag" content="${escapeHtml(tag)}" />`).join('\n')
+    : ''
 
   return `<!doctype html>
 <html lang="en">
@@ -39,9 +45,11 @@ export function generateHtml(naddr: string, meta: ArticleMetadata | null): strin
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:image" content="${escapeHtml(image)}" />
+    <meta property="og:image:alt" content="${escapeHtml(imageAlt)}" />
     <meta property="og:site_name" content="Boris" />
-    ${meta?.published ? `<meta property="article:published_time" content="${new Date(meta.published * 1000).toISOString()}" />` : ''}
+    ${meta?.published ? `    <meta property="article:published_time" content="${new Date(meta.published * 1000).toISOString()}" />` : ''}
     <meta property="article:author" content="${escapeHtml(author)}" />
+${articleTags}
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />

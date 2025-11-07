@@ -25,6 +25,8 @@ export type ArticleMetadata = {
   image: string
   author: string
   published?: number
+  tags?: string[]
+  imageAlt?: string
 }
 
 export async function getArticleMeta(naddr: string): Promise<ArticleMetadata | null> {

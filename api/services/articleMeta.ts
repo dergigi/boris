@@ -70,6 +70,15 @@ export async function fetchArticleMetadataViaRelays(naddr: string): Promise<Arti
     const summary = getArticleSummary(article) || 'Read this article on Boris'
     const image = getArticleImage(article) || '/boris-social-1200.png'
 
+    // Extract 't' tags (topic tags) from article event
+    const tags = article.tags
+      ?.filter((tag) => tag[0] === 't' && tag[1])
+      .map((tag) => tag[1])
+      .filter((tag) => tag.length > 0) || []
+
+    // Generate image alt text (use title as fallback)
+    const imageAlt = title || 'Article cover image'
+
     let authorName = pointer.pubkey.slice(0, 8) + '...'
     if (profileEvents.length > 0) {
       const displayName = extractProfileDisplayName(profileEvents[0])
@@ -85,7 +94,9 @@ export async function fetchArticleMetadataViaRelays(naddr: string): Promise<Arti
       summary,
       image,
       author: authorName,
-      published: article.created_at
+      published: article.created_at,
+      tags: tags.length > 0 ? tags : undefined,
+      imageAlt
     }
   } catch (err) {
     console.error('Failed to fetch article metadata via relays:', err)
