@@ -98,25 +98,37 @@ export async function fetchArticleMetadataViaGateway(naddr: string): Promise<Art
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 2000)
     
-    const resp = await fetch(`https://njump.to/${naddr}`, { 
+    const url = `https://njump.to/${naddr}`
+    console.log(`Fetching from gateway: ${url}`)
+    
+    const resp = await fetch(url, { 
       redirect: 'follow',
       signal: controller.signal
     })
     clearTimeout(timeout)
     
     if (!resp.ok) {
+      console.error(`Gateway fetch failed: ${resp.status} ${resp.statusText} for ${url}`)
       return null
     }
     
     const html = await resp.text()
+    console.log(`Gateway response length: ${html.length} chars`)
     
-    const pick = (re: RegExp) => (html.match(re)?.[1] ?? '').trim()
+    const pick = (re: RegExp) => {
+      const match = html.match(re)
+      return match?.[1] ? match[1].trim() : ''
+    }
+    
     const title = pick(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) || 
                       pick(/<title[^>]*>([^<]+)<\/title>/i)
     const summary = pick(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
     const image = pick(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
     
+    console.log(`Parsed from gateway - title: ${title ? 'found' : 'missing'}, summary: ${summary ? 'found' : 'missing'}, image: ${image ? 'found' : 'missing'}`)
+    
     if (!title && !summary && !image) {
+      console.log('No OG metadata found in gateway response')
       return null
     }
     
@@ -128,6 +140,9 @@ export async function fetchArticleMetadataViaGateway(naddr: string): Promise<Art
     }
   } catch (err) {
     console.error('Failed to fetch article metadata via gateway:', err)
+    if (err instanceof Error) {
+      console.error('Error details:', err.message, err.stack)
+    }
     return null
   }
 }
