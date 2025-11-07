@@ -164,4 +164,3 @@ This table demonstrates complex nested formatting combinations within cells, inc
 | Bold and italic | ***Important*** |
 | Code and link | `[Click here](https://example.com)` |
 | Strikethrough | ~~Old price~~ |
-
