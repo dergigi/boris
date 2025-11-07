@@ -12,6 +12,22 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 MARKDOWN_DIR="$PROJECT_ROOT/test/markdown"
+ENV_FILE="$PROJECT_ROOT/.env"
+
+# Load .env file if it exists
+if [ -f "$ENV_FILE" ]; then
+    # Source the .env file, handling quoted values
+    set -a  # Automatically export all variables
+    # Use a safe method to load .env that handles quotes
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Skip comments and empty lines
+        [[ "$line" =~ ^[[:space:]]*# ]] && continue
+        [[ -z "$line" ]] && continue
+        # Export the variable
+        export "$line"
+    done < "$ENV_FILE"
+    set +a  # Stop automatically exporting
+fi
 
 # Check if nak is installed
 if ! command -v nak &> /dev/null; then
@@ -75,9 +91,16 @@ publish_file() {
 # Check for NOSTR_SECRET_KEY
 if [ -z "$NOSTR_SECRET_KEY" ]; then
     echo "⚠️  Warning: NOSTR_SECRET_KEY environment variable not set"
-    echo "   You can set it with: export NOSTR_SECRET_KEY=your_key_here"
+    echo "   Set it in .env file or with: export NOSTR_SECRET_KEY=your_key_here"
     echo "   Or use --prompt-sec flag (nak will prompt for key)"
     echo ""
+fi
+
+# Parse RELAYS from environment if set
+default_relays=()
+if [ -n "$RELAYS" ]; then
+    # Split RELAYS string into array
+    read -ra default_relays <<< "$RELAYS"
 fi
 
 # Main logic
@@ -107,13 +130,21 @@ if [ $# -eq 0 ]; then
     read -r selection
     
     echo ""
-    echo "Enter relay URLs (space-separated, or press Enter to skip):"
+    if [ ${#default_relays[@]} -gt 0 ]; then
+        echo "Enter relay URLs (space-separated, or press Enter to use defaults from .env):"
+        echo "   Defaults: ${default_relays[*]}"
+    else
+        echo "Enter relay URLs (space-separated, or press Enter to skip):"
+    fi
     read -r relay_input
     
     # Parse relay URLs
     relays=()
     if [ -n "$relay_input" ]; then
         read -ra relays <<< "$relay_input"
+    elif [ ${#default_relays[@]} -gt 0 ]; then
+        # Use defaults from .env
+        relays=("${default_relays[@]}")
     fi
     
     if [ "$selection" = "all" ]; then
@@ -138,6 +169,11 @@ else
     filename="$1"
     shift  # Remove filename, rest are relay URLs
     relays=("$@")
+    
+    # If no relays provided as arguments, use defaults from .env
+    if [ ${#relays[@]} -eq 0 ] && [ ${#default_relays[@]} -gt 0 ]; then
+        relays=("${default_relays[@]}")
+    fi
     
     # If filename doesn't end with .md, add it
     if [[ ! "$filename" =~ \.md$ ]]; then
