@@ -67,13 +67,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ? `${req.headers['x-forwarded-proto']}://${req.headers['x-forwarded-host']}`
       : `https://read.withboris.com`
     
-    fetch(`${origin}/api/article-og-refresh?naddr=${encodeURIComponent(naddr)}`, {
+    const refreshUrl = `${origin}/api/article-og-refresh?naddr=${encodeURIComponent(naddr)}`
+    console.log(`Triggering background refresh for ${naddr}`)
+    
+    fetch(refreshUrl, {
       method: 'POST',
       headers: { 'x-refresh-key': secret },
       keepalive: true
-    }).catch(() => {
-      // Ignore errors in background refresh trigger
     })
+      .then(async (resp) => {
+        const result = await resp.json().catch(() => ({}))
+        console.log(`Background refresh response for ${naddr}:`, { status: resp.status, result })
+      })
+      .catch((err) => {
+        console.error(`Background refresh failed for ${naddr}:`, err)
+      })
   }
 
   // Generate and send HTML
