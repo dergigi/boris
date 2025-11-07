@@ -29,20 +29,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!meta) {
     // Cache miss: fetch from relays (let it use its natural timeouts)
-    console.log(`Cache miss for ${naddr}, fetching from relays...`)
-    
     try {
       meta = await fetchArticleMetadataViaRelays(naddr)
       
       if (meta) {
-        console.log(`Relays found metadata for ${naddr}:`, { title: meta.title, summary: meta.summary?.substring(0, 50) })
         // Store in Redis and use it
         await setArticleMeta(naddr, meta).catch((err) => {
           console.error('Failed to cache relay metadata:', err)
         })
         cacheMaxAge = 86400
       } else {
-        console.log(`Relay fetch failed for ${naddr}, using default fallback`)
         // Relay fetch failed: use default fallback
         cacheMaxAge = 300
       }
@@ -50,8 +46,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error(`Error fetching from relays for ${naddr}:`, err)
       cacheMaxAge = 300
     }
-  } else {
-    console.log(`Cache hit for ${naddr}:`, { title: meta.title, summary: meta.summary?.substring(0, 50) })
   }
 
   // Generate and send HTML

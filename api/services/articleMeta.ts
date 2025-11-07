@@ -117,7 +117,6 @@ export async function fetchArticleMetadataViaRelays(naddr: string): Promise<Arti
     const relayUrls = pointer.relays && pointer.relays.length > 0 ? pointer.relays : RELAYS
 
     // Step A: Fetch article - return as soon as first event arrives
-    console.log(`Fetching article from relays for ${naddr}...`)
     const article = await fetchFirstEvent(relayPool, relayUrls, {
       kinds: [pointer.kind],
       authors: [pointer.pubkey],
@@ -125,11 +124,8 @@ export async function fetchArticleMetadataViaRelays(naddr: string): Promise<Arti
     }, 7000)
 
     if (!article) {
-      console.log(`No article found for ${naddr}`)
       return null
     }
-
-    console.log(`Article found for ${naddr}, extracting metadata...`)
 
     // Step B: Extract article metadata immediately
     const title = getArticleTitle(article) || 'Untitled Article'
@@ -146,22 +142,16 @@ export async function fetchArticleMetadataViaRelays(naddr: string): Promise<Arti
     const imageAlt = title || 'Article cover image'
 
     // Step C: Fetch author profile with micro-wait (connections already warm)
-    console.log(`Fetching author profile for ${pointer.pubkey.slice(0, 8)}...`)
     let authorName = await fetchAuthorProfile(relayPool, relayUrls, pointer.pubkey, 400)
-    let authorSource = 'profile'
 
     // Step D: Optional hedge - try again with slightly longer timeout if first attempt failed
     if (!authorName) {
-      console.log(`First profile fetch failed, trying hedge...`)
       authorName = await fetchAuthorProfile(relayPool, relayUrls, pointer.pubkey, 600)
-      authorSource = authorName ? 'profile-hedge' : 'fallback'
     }
 
     if (!authorName) {
       authorName = pointer.pubkey.slice(0, 8) + '...'
     }
-
-    console.log(`Author resolved via ${authorSource}: ${authorName}`)
 
     return {
       title,
