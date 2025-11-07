@@ -4,7 +4,7 @@ import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent, Filter } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
-import { extractProfileDisplayName } from '../src/utils/profileUtils'
+import { extractProfileDisplayName } from '../lib/profile'
 
 const { getArticleTitle, getArticleImage, getArticleSummary } = Helpers
 
@@ -28,6 +28,8 @@ type CacheEntry = {
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 const memoryCache = new Map<string, CacheEntry>()
+
+
 
 function escapeHtml(text: string): string {
   return text
