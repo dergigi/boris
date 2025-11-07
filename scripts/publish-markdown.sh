@@ -12,7 +12,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 MARKDOWN_DIR="$PROJECT_ROOT/test/markdown"
-ENV_FILE="$PROJECT_ROOT/.env"
+ENV_FILE="$SCRIPT_DIR/.env"
 
 # Load .env file if it exists
 if [ -f "$ENV_FILE" ]; then
