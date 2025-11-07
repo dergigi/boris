@@ -21,25 +21,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Try Redis cache first
-  let meta = await getArticleMeta(naddr)
+  let meta = await getArticleMeta(naddr).catch((err) => {
+    console.error('Failed to get article meta from Redis:', err)
+    return null
+  })
   let cacheMaxAge = 86400
 
   if (!meta) {
     // Cache miss: try gateway (fast HTTP, no WebSockets)
+    console.log(`Cache miss for ${naddr}, trying gateway...`)
     meta = await fetchArticleMetadataViaGateway(naddr)
     
     if (meta) {
+      console.log(`Gateway found metadata for ${naddr}:`, { title: meta.title, summary: meta.summary?.substring(0, 50) })
       // Gateway found metadata: store it and use it
       await setArticleMeta(naddr, meta).catch((err) => {
         console.error('Failed to cache gateway metadata:', err)
       })
       cacheMaxAge = 86400
     } else {
+      console.log(`Gateway failed for ${naddr}, using default fallback`)
       // Gateway failed: use default fallback
       cacheMaxAge = 300
     }
+  } else {
+    console.log(`Cache hit for ${naddr}:`, { title: meta.title, summary: meta.summary?.substring(0, 50) })
+  }
 
-    // Trigger background refresh (fire-and-forget)
+  // Trigger background refresh on cache miss (fire-and-forget)
+  if (!meta) {
     const secret = process.env.OG_REFRESH_SECRET || ''
     const origin = req.headers['x-forwarded-proto'] && req.headers['x-forwarded-host']
       ? `${req.headers['x-forwarded-proto']}://${req.headers['x-forwarded-host']}`
