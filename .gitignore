@@ -13,3 +13,5 @@ applesauce
 primal-web-app
 Amber
 
+.env
+scripts/.env

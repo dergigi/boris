@@ -170,6 +170,49 @@
 .reader-html pre { background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 1rem 0; font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace; }
 .reader-html code { background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: 4px; padding: 0.15rem 0.4rem; font-size: 0.9em; font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace; }
 .reader-html pre code { background: transparent; border: none; padding: 0; display: block; }
+/* Tables - subtle styling that matches the app theme */
+.reader-markdown table, .reader-html table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+.reader-markdown thead, .reader-html thead {
+  background: var(--color-bg-elevated);
+}
+.reader-markdown th, .reader-html th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text);
+  border-bottom: 2px solid var(--color-border);
+  font-size: 0.95em;
+}
+.reader-markdown td, .reader-html td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text);
+  vertical-align: top;
+}
+.reader-markdown tbody tr:last-child td, .reader-html tbody tr:last-child td {
+  border-bottom: none;
+}
+/* Subtle row striping for better readability */
+.reader-markdown tbody tr:nth-child(even), .reader-html tbody tr:nth-child(even) {
+  background: var(--color-bg-subtle);
+}
+/* Table alignment support */
+.reader-markdown th[align="center"], .reader-html th[align="center"],
+.reader-markdown td[align="center"], .reader-html td[align="center"] {
+  text-align: center;
+}
+.reader-markdown th[align="right"], .reader-html th[align="right"],
+.reader-markdown td[align="right"], .reader-html td[align="right"] {
+  text-align: right;
+}
 /* Mobile: prevent code blocks from causing horizontal overflow */
 @media (max-width: 768px) {
   .reader-markdown pre, .reader-html pre {
@@ -190,6 +233,12 @@
     display: block;
     max-width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Reduce padding on mobile for better fit */
+  .reader-markdown table td, .reader-html table td,
+  .reader-markdown table th, .reader-html table th {
+    padding: 0.5rem 0.75rem;
   }
   
   .reader-markdown img, .reader-html img {
