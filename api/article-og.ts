@@ -32,10 +32,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log(`Cache miss for ${naddr}, fetching from relays...`)
     
     try {
-      // Fetch with 3 second timeout
+      // Fetch with 5 second timeout (relays can be slow)
       const relayPromise = fetchArticleMetadataViaRelays(naddr)
       const timeoutPromise = new Promise<null>((resolve) => {
-        setTimeout(() => resolve(null), 3000)
+        setTimeout(() => resolve(null), 5000)
       })
       
       meta = await Promise.race([relayPromise, timeoutPromise])
