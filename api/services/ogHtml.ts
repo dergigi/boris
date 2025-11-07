@@ -60,7 +60,7 @@ ${articleTags}
   </head>
   <body>
     <noscript>
-      <p>Redirecting to <a href="/">Boris</a>...</p>
+      <p>Redirecting to <a href="/a/${naddr}">Boris</a>...</p>
     </noscript>
     <script>
       (function(){
@@ -69,7 +69,8 @@ ${articleTags}
           if (window.location.pathname !== p) {
             history.replaceState(null, '', p);
           }
-          window.location.replace('/');
+          var sep = window.location.search ? '&' : '?';
+          window.location.replace(p + sep + '_spa=1');
         } catch (e) {}
       })();
     </script>

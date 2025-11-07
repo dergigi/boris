@@ -755,6 +755,16 @@ function App() {
     }
   }, [showToast])
 
+  // Strip _spa query parameter from URL after SPA loads
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (url.searchParams.has('_spa')) {
+      url.searchParams.delete('_spa')
+      const path = url.pathname + (url.search ? url.search : '') + url.hash
+      window.history.replaceState(null, '', path)
+    }
+  }, [])
+
   if (!eventStore || !accountManager || !relayPool) {
     return (
       <div className="loading">

@@ -11,21 +11,14 @@
   "rewrites": [
     {
       "source": "/a/:naddr",
-      "destination": "/api/article-og?naddr=:naddr",
+      "destination": "/index.html",
       "has": [
-        { "type": "query", "key": "og", "value": "1" }
+        { "type": "query", "key": "_spa", "value": "1" }
       ]
     },
     {
       "source": "/a/:naddr",
-      "destination": "/api/article-og?naddr=:naddr",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": ".*(bot|Bot|BOT|crawler|Crawler|CRAWLER|spider|Spider|facebookexternalhit|Slackbot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Googlebot|bingbot|YandexBot|Baiduspider).*"
-        }
-      ]
+      "destination": "/api/article-og?naddr=:naddr"
     },
     {
       "source": "/(.*)",
