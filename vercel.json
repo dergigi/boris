@@ -11,7 +11,21 @@
   "rewrites": [
     {
       "source": "/a/:naddr",
-      "destination": "/api/article-og?naddr=:naddr"
+      "destination": "/api/article-og?naddr=:naddr",
+      "has": [
+        { "type": "query", "key": "og", "value": "1" }
+      ]
+    },
+    {
+      "source": "/a/:naddr",
+      "destination": "/api/article-og?naddr=:naddr",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(bot|Bot|BOT|crawler|Crawler|CRAWLER|spider|Spider|facebookexternalhit|Slackbot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Discordbot|Googlebot|bingbot|YandexBot|Baiduspider).*"
+        }
+      ]
     },
     {
       "source": "/(.*)",

@@ -79,6 +79,18 @@ If you bookmark something on nostr, Boris will show it in the bookmarks bar. If 
 - If something looks empty, try opening another article and coming back — network data can arrive in bursts.
 - Not every article has highlights yet; they grow as the community reads.
 
+## Development
+
+### Testing Open Graph Previews
+
+To manually test the Open Graph HTML preview for an article, append `?og=1` to any `/a/:naddr` URL:
+
+```text
+https://read.withboris.com/a/<naddr>?og=1
+```
+
+This bypasses the normal SPA routing and serves the OG preview HTML directly, useful for verifying social media preview cards.
+
 ## License
 
 MIT
