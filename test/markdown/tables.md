@@ -74,6 +74,24 @@ This file contains various markdown table examples to test table parsing and ren
 | 1    | Alice | 95    | 95%        |
 | 2    | Bob   | 87    | 87%        |
 | 3    | Charlie | 82  | 82%        |
+| 4    | David | 78    | 78%        |
+| 5    | Emma  | 75    | 75%        |
+| 6    | Frank | 72    | 72%        |
+| 7    | Grace | 70    | 70%        |
+| 8    | Henry | 68    | 68%        |
+| 9    | Ivy   | 65    | 65%        |
+| 10   | Jack  | 63    | 63%        |
+| 11   | Kate  | 60    | 60%        |
+| 12   | Liam  | 58    | 58%        |
+| 13   | Mia   | 55    | 55%        |
+| 14   | Noah  | 53    | 53%        |
+| 15   | Olivia | 50   | 50%        |
+| 16   | Paul  | 48    | 48%        |
+| 17   | Quinn | 45    | 45%        |
+| 18   | Ryan  | 43    | 43%        |
+| 19   | Sarah | 40    | 40%        |
+| 20   | Tom   | 38    | 38%        |
+| 21   | Uma   | 35    | 35%        |
 
 ## Table with Special Characters
 
