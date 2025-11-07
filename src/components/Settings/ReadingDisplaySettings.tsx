@@ -208,8 +208,9 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
             fontSize: `${settings.fontSize || 21}px`,
             '--highlight-rgb': hexToRgb(settings.highlightColor || '#ffff00'),
             '--paragraph-alignment': settings.paragraphAlignment || 'justify',
-            '--color-link-dark': settings.linkColorDark || '#38bdf8',
-            '--color-link-light': settings.linkColorLight || '#3b82f6'
+            '--color-link': isDark 
+              ? (settings.linkColorDark || '#38bdf8')
+              : (settings.linkColorLight || '#3b82f6')
           } as React.CSSProperties}
         >
           <h3>The Quick Brown Fox</h3>
