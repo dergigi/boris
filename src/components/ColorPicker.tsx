@@ -1,5 +1,5 @@
 import React from 'react'
-import { HIGHLIGHT_COLORS, LINK_COLORS } from '../utils/colorHelpers'
+import { HIGHLIGHT_COLORS } from '../utils/colorHelpers'
 
 interface ColorPickerProps {
   selectedColor: string
