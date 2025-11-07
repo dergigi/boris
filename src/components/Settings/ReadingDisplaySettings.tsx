@@ -20,7 +20,17 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
   const isDark = currentTheme === 'dark' || 
     (currentTheme === 'system' && (typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)').matches : true))
   const linkColors = isDark ? LINK_COLORS_DARK : LINK_COLORS_LIGHT
-  const defaultLinkColor = isDark ? '#38bdf8' : '#3b82f6'
+  const currentLinkColor = isDark 
+    ? (settings.linkColorDark || '#38bdf8')
+    : (settings.linkColorLight || '#3b82f6')
+  
+  const handleLinkColorChange = (color: string) => {
+    if (isDark) {
+      onUpdate({ linkColorDark: color })
+    } else {
+      onUpdate({ linkColorLight: color })
+    }
+  }
 
   return (
     <div className="settings-section">
@@ -120,8 +130,8 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
         <label className="setting-label">Link Color</label>
         <div className="setting-control">
           <ColorPicker
-            selectedColor={settings.linkColor || defaultLinkColor}
-            onColorChange={(color) => onUpdate({ linkColor: color })}
+            selectedColor={currentLinkColor}
+            onColorChange={handleLinkColorChange}
             colors={linkColors}
           />
         </div>
@@ -198,8 +208,8 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
             fontSize: `${settings.fontSize || 21}px`,
             '--highlight-rgb': hexToRgb(settings.highlightColor || '#ffff00'),
             '--paragraph-alignment': settings.paragraphAlignment || 'justify',
-            '--color-link-dark': settings.linkColor || (isDark ? '#38bdf8' : '#3b82f6'),
-            '--color-link-light': settings.linkColor || (isDark ? '#38bdf8' : '#3b82f6')
+            '--color-link-dark': settings.linkColorDark || '#38bdf8',
+            '--color-link-light': settings.linkColorLight || '#3b82f6'
           } as React.CSSProperties}
         >
           <h3>The Quick Brown Fox</h3>
