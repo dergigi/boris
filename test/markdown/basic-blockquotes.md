@@ -211,3 +211,7 @@ Blockquotes can contain a mix of different content types.
 
 >This might not render correctly in some processors.
 
+---
+
+**Source:** [test/markdown](https://github.com/dergigi/boris/tree/master/test/markdown)
+

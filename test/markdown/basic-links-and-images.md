@@ -211,3 +211,7 @@ Encode opening parenthesis as `%28` and closing parenthesis as `%29`.
 
 ❌ [Incorrect link](https://example.com/page(with)parentheses.html)
 
+---
+
+**Source:** [test/markdown](https://github.com/dergigi/boris/tree/master/test/markdown)
+

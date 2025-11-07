@@ -188,3 +188,7 @@ You cannot nest emphasis of the same type, but you can combine different types.
 
 *???*
 
+---
+
+**Source:** [test/markdown](https://github.com/dergigi/boris/tree/master/test/markdown)
+

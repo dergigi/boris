@@ -213,3 +213,7 @@ Here's how to escape an asterisk: \*
 
 Here's how to escape an underscore: \_
 
+---
+
+**Source:** [test/markdown](https://github.com/dergigi/boris/tree/master/test/markdown)
+
