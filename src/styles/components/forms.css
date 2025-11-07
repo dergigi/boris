@@ -44,7 +44,7 @@
   text-align: var(--paragraph-alignment, justify);
 }
 .preview-content a {
-  color: var(--link-color, #38bdf8);
+  color: var(--color-link);
   text-decoration: none;
 }
 .preview-content a:hover {

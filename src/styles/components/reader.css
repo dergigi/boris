@@ -160,7 +160,7 @@
   opacity: 0.69;
   margin: 2.5rem 0;
 }
-.reader-markdown a { color: var(--link-color, #38bdf8); text-decoration: none; }
+.reader-markdown a { color: var(--color-link); text-decoration: none; }
 .reader-markdown a:hover { text-decoration: underline; }
 .reader-markdown code { background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: 4px; padding: 0.15rem 0.4rem; font-size: 0.9em; font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace; }
 .reader-markdown pre { background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 1rem 0; line-height: 1.5; font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace; }

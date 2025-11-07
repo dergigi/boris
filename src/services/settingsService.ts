@@ -74,8 +74,9 @@ export interface UserSettings {
   ttsLanguageMode?: 'system' | 'content' | string // default: 'content', can also be language code like 'en', 'es', etc.
   // Text-to-Speech settings
   ttsDefaultSpeed?: number // default: 2.1
-  // Link color for article content
-  linkColor?: string // default: #38bdf8 (sky-400)
+  // Link color for article content (theme-specific)
+  linkColorDark?: string // default: #38bdf8 (sky-400)
+  linkColorLight?: string // default: #3b82f6 (blue-500)
 }
 
 /**

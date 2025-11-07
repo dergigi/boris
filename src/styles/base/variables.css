@@ -57,6 +57,7 @@
   --color-text-muted: #71717a;   /* zinc-500 */
   --color-primary: #6366f1;      /* indigo-500 */
   --color-primary-hover: #4f46e5; /* indigo-600 */
+  --color-link: var(--color-link-dark, #38bdf8); /* sky-400 */
 }
 
 /* Light theme */
@@ -73,6 +74,7 @@
   --color-text-muted: #6b7280;   /* gray-500 */
   --color-primary: #4f46e5;      /* indigo-600 */
   --color-primary-hover: #4338ca; /* indigo-700 */
+  --color-link: var(--color-link-light, #3b82f6); /* blue-500 */
   
   /* Highlight colors for light theme - use same Tailwind colors */
   --highlight-color-mine: #fde047;      /* yellow-300 */
@@ -97,6 +99,7 @@
     --color-text-muted: #71717a;
     --color-primary: #6366f1;
     --color-primary-hover: #4f46e5;
+    --color-link: var(--color-link-dark, #38bdf8);
   }
 }
 
@@ -112,6 +115,7 @@
     --color-text-muted: #6b7280;
     --color-primary: #4f46e5;
     --color-primary-hover: #4338ca;
+    --color-link: var(--color-link-light, #3b82f6);
     
     /* Standard highlight colors */
     --highlight-color-mine: #fde047;
