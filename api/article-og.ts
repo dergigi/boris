@@ -1,4 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import WebSocket from 'ws'
+;(globalThis as any).WebSocket ??= WebSocket as any
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
