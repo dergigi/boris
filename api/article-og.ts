@@ -28,17 +28,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let cacheMaxAge = 86400
 
   if (!meta) {
-    // Cache miss: try relays with short timeout
+    // Cache miss: fetch from relays (let it use its natural timeouts)
     console.log(`Cache miss for ${naddr}, fetching from relays...`)
     
     try {
-      // Fetch with 5 second timeout (relays can be slow)
-      const relayPromise = fetchArticleMetadataViaRelays(naddr)
-      const timeoutPromise = new Promise<null>((resolve) => {
-        setTimeout(() => resolve(null), 5000)
-      })
-      
-      meta = await Promise.race([relayPromise, timeoutPromise])
+      meta = await fetchArticleMetadataViaRelays(naddr)
       
       if (meta) {
         console.log(`Relays found metadata for ${naddr}:`, { title: meta.title, summary: meta.summary?.substring(0, 50) })
@@ -48,8 +42,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
         cacheMaxAge = 86400
       } else {
-        console.log(`Relay fetch timeout/failed for ${naddr}, using default fallback`)
-        // Relay fetch failed or timed out: use default fallback
+        console.log(`Relay fetch failed for ${naddr}, using default fallback`)
+        // Relay fetch failed: use default fallback
         cacheMaxAge = 300
       }
     } catch (err) {
@@ -58,34 +52,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   } else {
     console.log(`Cache hit for ${naddr}:`, { title: meta.title, summary: meta.summary?.substring(0, 50) })
-  }
-
-  // Trigger background refresh on cache miss (fire-and-forget)
-  if (!meta) {
-    const secret = process.env.OG_REFRESH_SECRET || ''
-    const origin = req.headers['x-forwarded-proto'] && req.headers['x-forwarded-host']
-      ? `${req.headers['x-forwarded-proto']}://${req.headers['x-forwarded-host']}`
-      : `https://read.withboris.com`
-    
-    const refreshUrl = `${origin}/api/article-og-refresh?naddr=${encodeURIComponent(naddr)}`
-    console.log(`Triggering background refresh for ${naddr}`, { url: refreshUrl, hasSecret: !!secret })
-    
-    fetch(refreshUrl, {
-      method: 'POST',
-      headers: { 'x-refresh-key': secret },
-      keepalive: true
-    })
-      .then(async (resp) => {
-        try {
-          const result = await resp.json()
-          console.log(`Background refresh response for ${naddr}:`, { status: resp.status, result })
-        } catch (e) {
-          console.log(`Background refresh response for ${naddr}:`, { status: resp.status, text: await resp.text().catch(() => 'failed to read') })
-        }
-      })
-      .catch((err) => {
-        console.error(`Background refresh fetch failed for ${naddr}:`, err instanceof Error ? err.message : err)
-      })
   }
 
   // Generate and send HTML
