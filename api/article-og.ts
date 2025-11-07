@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getArticleMeta, setArticleMeta } from '../src/services/ogStore'
-import { fetchArticleMetadataViaGateway } from '../src/services/articleMeta'
-import { generateHtml } from '../src/services/ogHtml'
+import { getArticleMeta, setArticleMeta } from './services/ogStore'
+import { fetchArticleMetadataViaGateway } from './services/articleMeta'
+import { generateHtml } from './services/ogHtml'
 
 function setCacheHeaders(res: VercelResponse, maxAge: number = 86400): void {
   res.setHeader('Cache-Control', `public, max-age=${maxAge}, s-maxage=604800`)

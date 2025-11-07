@@ -6,7 +6,7 @@ import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent, Filter } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
 import { extractProfileDisplayName } from '../../lib/profile'
-import { RELAYS } from '../config/relays'
+import { RELAYS } from '../../src/config/relays'
 import type { ArticleMetadata } from './ogStore'
 
 const { getArticleTitle, getArticleImage, getArticleSummary } = Helpers

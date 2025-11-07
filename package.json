@@ -107,11 +107,7 @@
     },
     "overrides": [
       {
-        "files": [
-          "api/**/*.ts",
-          "src/services/ogStore.ts",
-          "src/services/articleMeta.ts"
-        ],
+        "files": ["api/**/*.ts"],
         "env": {
           "node": true,
           "browser": false
