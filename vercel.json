@@ -1,4 +1,10 @@
 {
+  "functions": {
+    "api/article-og.ts": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
     {
       "source": "/a/:naddr",
