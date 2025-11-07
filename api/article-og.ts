@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getArticleMeta, setArticleMeta } from './services/ogStore.js'
-import { fetchArticleMetadataViaGateway } from './services/articleMeta.js'
+import { fetchArticleMetadataViaRelays } from './services/articleMeta.js'
 import { generateHtml } from './services/ogHtml.js'
 
 function setCacheHeaders(res: VercelResponse, maxAge: number = 86400): void {
@@ -28,20 +28,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let cacheMaxAge = 86400
 
   if (!meta) {
-    // Cache miss: try gateway (fast HTTP, no WebSockets)
-    console.log(`Cache miss for ${naddr}, trying gateway...`)
-    meta = await fetchArticleMetadataViaGateway(naddr)
+    // Cache miss: try relays with short timeout
+    console.log(`Cache miss for ${naddr}, fetching from relays...`)
     
-    if (meta) {
-      console.log(`Gateway found metadata for ${naddr}:`, { title: meta.title, summary: meta.summary?.substring(0, 50) })
-      // Gateway found metadata: store it and use it
-      await setArticleMeta(naddr, meta).catch((err) => {
-        console.error('Failed to cache gateway metadata:', err)
+    try {
+      // Fetch with 3 second timeout
+      const relayPromise = fetchArticleMetadataViaRelays(naddr)
+      const timeoutPromise = new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), 3000)
       })
-      cacheMaxAge = 86400
-    } else {
-      console.log(`Gateway failed for ${naddr}, using default fallback`)
-      // Gateway failed: use default fallback
+      
+      meta = await Promise.race([relayPromise, timeoutPromise])
+      
+      if (meta) {
+        console.log(`Relays found metadata for ${naddr}:`, { title: meta.title, summary: meta.summary?.substring(0, 50) })
+        // Store in Redis and use it
+        await setArticleMeta(naddr, meta).catch((err) => {
+          console.error('Failed to cache relay metadata:', err)
+        })
+        cacheMaxAge = 86400
+      } else {
+        console.log(`Relay fetch timeout/failed for ${naddr}, using default fallback`)
+        // Relay fetch failed or timed out: use default fallback
+        cacheMaxAge = 300
+      }
+    } catch (err) {
+      console.error(`Error fetching from relays for ${naddr}:`, err)
       cacheMaxAge = 300
     }
   } else {
