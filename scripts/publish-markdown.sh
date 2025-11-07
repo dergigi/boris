@@ -79,7 +79,7 @@ publish_file() {
         "event"
         "-k" "30023"
         "-d" "$identifier"
-        "-t" "title=\"$title\""
+        "-t" "title=$title"
         "--content" "@$file_path"
     )
     
