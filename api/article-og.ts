@@ -104,11 +104,11 @@ async function fetchArticleMetadata(naddr: string): Promise<ArticleMetadata | nu
         kinds: [pointer.kind],
         authors: [pointer.pubkey],
         '#d': [pointer.identifier || '']
-      }, 5000),
+      }, 7000),
       fetchEventsFromRelays(relayPool, relayUrls, {
         kinds: [0],
         authors: [pointer.pubkey]
-      }, 3000)
+      }, 5000)
     ])
 
     if (articleEvents.length === 0) {
