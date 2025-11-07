@@ -2,9 +2,6 @@
 
 # Script to publish markdown files from test/markdown/ to Nostr using nak
 # Usage: 
-#   npm run publish:markdown                         # Interactive mode
-#   npm run publish:markdown -- tables.md             # Publish specific file
-#   npm run publish:markdown -- tables.md wss://relay.example.com  # With relay
 #   ./scripts/publish-markdown.sh [filename] [relay1] [relay2] ...
 #   ./scripts/publish-markdown.sh                    # Interactive mode
 #   ./scripts/publish-markdown.sh tables.md          # Publish specific file
@@ -15,7 +12,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 MARKDOWN_DIR="$PROJECT_ROOT/test/markdown"
-ENV_FILE="$PROJECT_ROOT/.env"
+ENV_FILE="$SCRIPT_DIR/.env"
 
 # Load .env file if it exists
 if [ -f "$ENV_FILE" ]; then
