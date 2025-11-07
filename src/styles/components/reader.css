@@ -115,8 +115,8 @@
   margin-bottom: 0.5rem; 
   color: var(--color-text);
 }
-.reader-markdown p { margin: 1rem 0; }
-.reader-html p { margin: 1rem 0; }
+.reader-markdown p { margin: 1.5rem 0; }
+.reader-html p { margin: 1.5rem 0; }
 .reader-html div, .reader-html span, .reader-html li, .reader-html td, .reader-html th { font-size: 1em !important; }
 /* Lists */
 .reader-markdown ul, .reader-html ul {
