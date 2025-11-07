@@ -140,6 +140,19 @@ This is a minimal table with only one column. It tests how table styling handles
 | Second |
 | Third |
 
+## A Table from a Real Article
+
+This one is from [Bitcoin is Time](https://read.withboris.com/a/naddr1qq8ky6t5vdhkjm3dd9ej6arfd4jsygrwg6zz9hahfftnsup23q3mnv5pdz46hpj4l2ktdpfu6rhpthhwjvpsgqqqw4rsdan6ej) which broke and is the reason why this document exists.
+
+| Clock                     | Tick Frequency                          |
+| --------------------------|-----------------------------------------|
+| Grandfather's clock       | ~0.5 Hz                                 |
+| Metronome                 | ~0.67 Hz to ~4.67 Hz                    |
+| Quartz watch              | 32768 Hz                                |
+| Caesium-133 atomic clock  | 9,192,631,770 Hz                        |
+| Bitcoin                   | 1 block (0.00000192901 Hz* to ∞ Hz**)   |
+
+
 ## Table with Nested Formatting
 
 This table demonstrates complex nested formatting combinations within cells, including bold and italic text together, code blocks containing links, and strikethrough text. It tests that multiple formatting types can coexist properly within table cells.
