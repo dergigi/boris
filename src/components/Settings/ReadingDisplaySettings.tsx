@@ -5,7 +5,7 @@ import IconButton from '../IconButton'
 import ColorPicker from '../ColorPicker'
 import FontSelector from '../FontSelector'
 import { getFontFamily } from '../../utils/fontLoader'
-import { hexToRgb } from '../../utils/colorHelpers'
+import { hexToRgb, LINK_COLORS } from '../../utils/colorHelpers'
 
 interface ReadingDisplaySettingsProps {
   settings: UserSettings
@@ -110,6 +110,17 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
       </div>
 
       <div className="setting-group setting-inline">
+        <label className="setting-label">Link Color</label>
+        <div className="setting-control">
+          <ColorPicker
+            selectedColor={settings.linkColor || '#818cf8'}
+            onColorChange={(color) => onUpdate({ linkColor: color })}
+            colors={LINK_COLORS}
+          />
+        </div>
+      </div>
+
+      <div className="setting-group setting-inline">
         <label className="setting-label">Font Size</label>
         <div className="setting-control">
           <div className="setting-buttons">
@@ -179,14 +190,15 @@ const ReadingDisplaySettings: React.FC<ReadingDisplaySettingsProps> = ({ setting
             fontFamily: previewFontFamily,
             fontSize: `${settings.fontSize || 21}px`,
             '--highlight-rgb': hexToRgb(settings.highlightColor || '#ffff00'),
-            '--paragraph-alignment': settings.paragraphAlignment || 'justify'
+            '--paragraph-alignment': settings.paragraphAlignment || 'justify',
+            '--link-color': settings.linkColor || '#818cf8'
           } as React.CSSProperties}
         >
           <h3>The Quick Brown Fox</h3>
           <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <span className={settings.showHighlights !== false && settings.defaultHighlightVisibilityMine !== false ? `content-highlight-${settings.highlightStyle || 'marker'} level-mine` : ""}>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</span> Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
           <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. <span className={settings.showHighlights !== false && settings.defaultHighlightVisibilityFriends !== false ? `content-highlight-${settings.highlightStyle || 'marker'} level-friends` : ""}>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</span> Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
           <p>Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. <span className={settings.showHighlights !== false && settings.defaultHighlightVisibilityNostrverse !== false ? `content-highlight-${settings.highlightStyle || 'marker'} level-nostrverse` : ""}>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</span> Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.</p>
-          <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
+          <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. <a href="#">This is a sample link</a> to demonstrate the link color.</p>
         </div>
       </div>
     </div>

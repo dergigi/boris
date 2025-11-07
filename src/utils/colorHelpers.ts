@@ -15,3 +15,13 @@ export const HIGHLIGHT_COLORS = [
   { name: 'Blue', value: '#3b82f6' },    // blue-500
   { name: 'Purple', value: '#9333ea' }   // purple-600
 ]
+
+// Tailwind color palette for link colors
+export const LINK_COLORS = [
+  { name: 'Sky Blue', value: '#38bdf8' },  // sky-400
+  { name: 'Cyan', value: '#22d3ee' },      // cyan-400
+  { name: 'Blue', value: '#3b82f6' },      // blue-500
+  { name: 'Light Blue', value: '#60a5fa' }, // blue-400
+  { name: 'Indigo Light', value: '#818cf8' }, // indigo-400
+  { name: 'Purple', value: '#9333ea' }     // purple-600
+]
