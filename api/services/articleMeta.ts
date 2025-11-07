@@ -37,6 +37,73 @@ async function fetchEventsFromRelays(
   return events.sort((a, b) => b.created_at - a.created_at)
 }
 
+async function fetchFirstEvent(
+  relayPool: RelayPool,
+  relayUrls: string[],
+  filter: Filter,
+  timeoutMs: number
+): Promise<NostrEvent | null> {
+  return new Promise<NostrEvent | null>((resolve) => {
+    let resolved = false
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true
+        resolve(null)
+      }
+    }, timeoutMs)
+
+    const subscription = relayPool.request(relayUrls, filter).subscribe({
+      next: (event) => {
+        if (!resolved) {
+          resolved = true
+          clearTimeout(timeout)
+          subscription.unsubscribe()
+          resolve(event)
+        }
+      },
+      error: () => {
+        if (!resolved) {
+          resolved = true
+          clearTimeout(timeout)
+          resolve(null)
+        }
+      },
+      complete: () => {
+        if (!resolved) {
+          resolved = true
+          clearTimeout(timeout)
+          resolve(null)
+        }
+      }
+    })
+  })
+}
+
+async function fetchAuthorProfile(
+  relayPool: RelayPool,
+  relayUrls: string[],
+  pubkey: string,
+  timeoutMs: number
+): Promise<string | null> {
+  const profileEvents = await fetchEventsFromRelays(relayPool, relayUrls, {
+    kinds: [0],
+    authors: [pubkey]
+  }, timeoutMs)
+
+  if (profileEvents.length === 0) {
+    return null
+  }
+
+  const displayName = extractProfileDisplayName(profileEvents[0])
+  if (displayName && !displayName.startsWith('@')) {
+    return displayName
+  } else if (displayName) {
+    return displayName.substring(1)
+  }
+
+  return null
+}
+
 export async function fetchArticleMetadataViaRelays(naddr: string): Promise<ArticleMetadata | null> {
   const relayPool = new RelayPool()
   
@@ -49,23 +116,22 @@ export async function fetchArticleMetadataViaRelays(naddr: string): Promise<Arti
     const pointer = decoded.data as AddressPointer
     const relayUrls = pointer.relays && pointer.relays.length > 0 ? pointer.relays : RELAYS
 
-    const [articleEvents, profileEvents] = await Promise.all([
-      fetchEventsFromRelays(relayPool, relayUrls, {
-        kinds: [pointer.kind],
-        authors: [pointer.pubkey],
-        '#d': [pointer.identifier || '']
-      }, 7000),
-      fetchEventsFromRelays(relayPool, relayUrls, {
-        kinds: [0],
-        authors: [pointer.pubkey]
-      }, 5000)
-    ])
+    // Step A: Fetch article - return as soon as first event arrives
+    console.log(`Fetching article from relays for ${naddr}...`)
+    const article = await fetchFirstEvent(relayPool, relayUrls, {
+      kinds: [pointer.kind],
+      authors: [pointer.pubkey],
+      '#d': [pointer.identifier || '']
+    }, 7000)
 
-    if (articleEvents.length === 0) {
+    if (!article) {
+      console.log(`No article found for ${naddr}`)
       return null
     }
 
-    const article = articleEvents[0]
+    console.log(`Article found for ${naddr}, extracting metadata...`)
+
+    // Step B: Extract article metadata immediately
     const title = getArticleTitle(article) || 'Untitled Article'
     const summary = getArticleSummary(article) || 'Read this article on Boris'
     const image = getArticleImage(article) || '/boris-social-1200.png'
@@ -79,15 +145,23 @@ export async function fetchArticleMetadataViaRelays(naddr: string): Promise<Arti
     // Generate image alt text (use title as fallback)
     const imageAlt = title || 'Article cover image'
 
-    let authorName = pointer.pubkey.slice(0, 8) + '...'
-    if (profileEvents.length > 0) {
-      const displayName = extractProfileDisplayName(profileEvents[0])
-      if (displayName && !displayName.startsWith('@')) {
-        authorName = displayName
-      } else if (displayName) {
-        authorName = displayName.substring(1)
-      }
+    // Step C: Fetch author profile with micro-wait (connections already warm)
+    console.log(`Fetching author profile for ${pointer.pubkey.slice(0, 8)}...`)
+    let authorName = await fetchAuthorProfile(relayPool, relayUrls, pointer.pubkey, 400)
+    let authorSource = 'profile'
+
+    // Step D: Optional hedge - try again with slightly longer timeout if first attempt failed
+    if (!authorName) {
+      console.log(`First profile fetch failed, trying hedge...`)
+      authorName = await fetchAuthorProfile(relayPool, relayUrls, pointer.pubkey, 600)
+      authorSource = authorName ? 'profile-hedge' : 'fallback'
     }
+
+    if (!authorName) {
+      authorName = pointer.pubkey.slice(0, 8) + '...'
+    }
+
+    console.log(`Author resolved via ${authorSource}: ${authorName}`)
 
     return {
       title,
