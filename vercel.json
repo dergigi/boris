@@ -11,6 +11,13 @@
   "rewrites": [
     {
       "source": "/a/:naddr",
+      "destination": "/index.html",
+      "has": [
+        { "type": "query", "key": "_spa", "value": "1" }
+      ]
+    },
+    {
+      "source": "/a/:naddr",
       "destination": "/api/article-og?naddr=:naddr"
     },
     {
