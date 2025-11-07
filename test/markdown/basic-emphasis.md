@@ -190,5 +190,5 @@ You cannot nest emphasis of the same type, but you can combine different types.
 
 ---
 
-**Source:** [test/markdown](https://github.com/dergigi/boris/tree/master/test/markdown)
+**Source:** [basic-emphasis.md](https://github.com/dergigi/boris/tree/master/test/markdown/basic-emphasis.md)
 

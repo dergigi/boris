@@ -245,5 +245,5 @@ This tests how lists handle a larger number of items.
 
 ---
 
-**Source:** [test/markdown](https://github.com/dergigi/boris/tree/master/test/markdown)
+**Source:** [basic-lists.md](https://github.com/dergigi/boris/tree/master/test/markdown/basic-lists.md)
 

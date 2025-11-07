@@ -136,5 +136,5 @@ Multiple headings of the same or different levels can appear consecutively.
 
 ---
 
-**Source:** [test/markdown](https://github.com/dergigi/boris/tree/master/test/markdown)
+**Source:** [basic-headings.md](https://github.com/dergigi/boris/tree/master/test/markdown/basic-headings.md)
 

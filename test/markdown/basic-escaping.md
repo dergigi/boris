@@ -215,5 +215,5 @@ Here's how to escape an underscore: \_
 
 ---
 
-**Source:** [test/markdown](https://github.com/dergigi/boris/tree/master/test/markdown)
+**Source:** [basic-escaping.md](https://github.com/dergigi/boris/tree/master/test/markdown/basic-escaping.md)
 

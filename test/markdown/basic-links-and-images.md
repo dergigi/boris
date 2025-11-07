@@ -213,5 +213,5 @@ Encode opening parenthesis as `%28` and closing parenthesis as `%29`.
 
 ---
 
-**Source:** [test/markdown](https://github.com/dergigi/boris/tree/master/test/markdown)
+**Source:** [basic-links-and-images.md](https://github.com/dergigi/boris/tree/master/test/markdown/basic-links-and-images.md)
 

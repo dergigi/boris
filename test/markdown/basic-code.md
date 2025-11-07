@@ -306,5 +306,5 @@ This code block is not closed properly
 
 ---
 
-**Source:** [test/markdown](https://github.com/dergigi/boris/tree/master/test/markdown)
+**Source:** [basic-code.md](https://github.com/dergigi/boris/tree/master/test/markdown/basic-code.md)
 

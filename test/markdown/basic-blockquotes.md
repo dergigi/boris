@@ -213,5 +213,5 @@ Blockquotes can contain a mix of different content types.
 
 ---
 
-**Source:** [test/markdown](https://github.com/dergigi/boris/tree/master/test/markdown)
+**Source:** [basic-blockquotes.md](https://github.com/dergigi/boris/tree/master/test/markdown/basic-blockquotes.md)
 
