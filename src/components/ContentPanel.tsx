@@ -12,6 +12,8 @@ import { nip19 } from 'nostr-tools'
 import { getNostrUrl, getSearchUrl } from '../config/nostrGateways'
 import { RelayPool } from 'applesauce-relay'
 import { getActiveRelayUrls } from '../services/relayManager'
+import { isContentRelay } from '../config/relays'
+import { isLocalRelay } from '../utils/helpers'
 import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'
 import { Highlight } from '../types/highlights'
@@ -432,9 +434,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
 
     const dTag = currentArticle.tags.find(t => t[0] === 'd')?.[1] || ''
     const activeRelays = relayPool ? getActiveRelayUrls(relayPool) : []
-    const relayHints = activeRelays.filter(r => 
-      !r.includes('localhost') && !r.includes('127.0.0.1')
-    ).slice(0, 3)
+    const relayHints = activeRelays
+      .filter(url => !isLocalRelay(url))
+      .filter(url => isContentRelay(url))
+      .slice(0, 3)
 
     const naddr = nip19.naddrEncode({
       kind: 30023,

@@ -10,6 +10,7 @@ import { Hooks } from 'applesauce-react'
 import { onSyncStateChange, isEventSyncing, isEventOfflineCreated } from '../services/offlineSyncService'
 import { areAllRelaysLocal, isLocalRelay } from '../utils/helpers'
 import { getActiveRelayUrls } from '../services/relayManager'
+import { isContentRelay } from '../config/relays'
 import { nip19 } from 'nostr-tools'
 import { formatDateCompact } from '../utils/bookmarkUtils'
 import { createDeletionRequest } from '../services/deletionService'
@@ -224,11 +225,23 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   
   const getHighlightLinks = () => {
     // Encode the highlight event itself (kind 9802) as a nevent
-    // Get non-local relays for the hint
+    // Prefer relays we actually published to or saw the event on
+    const publishedRelays = highlight.publishedRelays || []
+    const seenOnRelays = highlight.seenOnRelays || []
+    
+    // Use published relays if available, else seen relays, else fall back to active relays
+    const baseRelays = publishedRelays.length > 0
+      ? publishedRelays
+      : (seenOnRelays.length > 0 ? seenOnRelays : [])
+    
     const activeRelays = relayPool ? getActiveRelayUrls(relayPool) : []
-    const relayHints = activeRelays.filter(r => 
-      !r.includes('localhost') && !r.includes('127.0.0.1')
-    ).slice(0, 3) // Include up to 3 relay hints
+    const candidates = baseRelays.length > 0 ? baseRelays : activeRelays
+    
+    // Filter to content-capable remote relays
+    const relayHints = candidates
+      .filter(url => !isLocalRelay(url))
+      .filter(url => isContentRelay(url))
+      .slice(0, 3) // Include up to 3 relay hints
     
     const nevent = nip19.neventEncode({
       id: highlight.id,
