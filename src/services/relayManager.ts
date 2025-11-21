@@ -1,6 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { prioritizeLocalRelays } from '../utils/helpers'
-import { getLocalRelays, getDefaultRelays } from '../config/relays'
+import { getLocalRelays } from '../config/relays'
 
 /**
  * Local relays that are always included
