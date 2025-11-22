@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faHighlighter, faTrash, faEllipsisH, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faHighlighter, faTrash, faEllipsisH, faMobileAlt, faUser } from '@fortawesome/free-solid-svg-icons'
 import { faComments } from '@fortawesome/free-regular-svg-icons'
 import { Highlight } from '../types/highlights'
 import { useEventModel } from 'applesauce-react/hooks'
@@ -180,14 +180,9 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     }
   }, [showMenu, showDeleteConfirm])
   
-  const handleItemClick = () => {
-    // If onHighlightClick is provided, use it (legacy behavior)
-    if (onHighlightClick) {
-      onHighlightClick(highlight.id)
-      return
-    }
-    
-    // Otherwise, navigate to the article that this highlight references
+  // Navigate to the article that this highlight references and scroll to the highlight
+  const navigateToArticle = () => {
+    // Always try to navigate if we have a reference - quote button should always work
     if (highlight.eventReference) {
       // Parse the event reference - it can be an event ID or article coordinate (kind:pubkey:identifier)
       const parts = highlight.eventReference.split(':')
@@ -210,9 +205,14 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
               openHighlights: true 
             } 
           })
+          return
         }
       }
-    } else if (highlight.urlReference) {
+      // If eventReference is just an event ID (not a coordinate), we can't navigate to it
+      // as we don't have enough info to construct the article URL
+    }
+    
+    if (highlight.urlReference) {
       // Navigate to external URL with highlight ID to trigger scroll
       navigate(`/r/${encodeURIComponent(highlight.urlReference)}`, {
         state: {
@@ -220,7 +220,23 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
           openHighlights: true
         }
       })
+      return
     }
+    
+    // If we get here, there's no valid reference to navigate to
+    // This shouldn't happen for valid highlights, but we'll log it for debugging
+    console.warn('Cannot navigate to article: highlight has no valid eventReference or urlReference', highlight.id)
+  }
+  
+  const handleItemClick = () => {
+    // If onHighlightClick is provided, use it (legacy behavior)
+    if (onHighlightClick) {
+      onHighlightClick(highlight.id)
+      return
+    }
+    
+    // Otherwise, navigate to the article that this highlight references
+    navigateToArticle()
   }
   
   const getHighlightLinks = () => {
@@ -460,6 +476,39 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     handleConfirmDelete()
   }
   
+  // Navigate to author's profile
+  const navigateToProfile = (tab?: 'highlights' | 'writings') => {
+    try {
+      const npub = nip19.npubEncode(highlight.pubkey)
+      const path = tab === 'writings' ? `/p/${npub}/writings` : `/p/${npub}`
+      navigate(path)
+    } catch (err) {
+      console.error('Failed to encode npub for profile navigation:', err)
+    }
+  }
+  
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigateToProfile()
+  }
+  
+  const handleMenuViewProfile = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(false)
+    navigateToProfile()
+  }
+  
+  const handleMenuGoToQuote = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(false)
+
+    if (onHighlightClick) {
+      onHighlightClick(highlight.id)
+    } else {
+      navigateToArticle()
+    }
+  }
+  
   return (
     <>
     <div 
@@ -509,14 +558,36 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       <CompactButton
         className="highlight-quote-button"
         icon={faQuoteLeft}
-        title="Quote"
-        onClick={(e) => e.stopPropagation()}
+        title="Go to quote in article"
+        onClick={(e) => {
+          e.stopPropagation()
+          e.preventDefault()
+
+          if (onHighlightClick) {
+            onHighlightClick(highlight.id)
+          } else {
+            navigateToArticle()
+          }
+        }}
       />
       
       {/* relay indicator lives in footer for consistent padding/alignment */}
       
       <div className="highlight-content">
-        <blockquote className="highlight-text">
+        <blockquote 
+          className="highlight-text"
+          onClick={(e) => {
+            e.stopPropagation()
+
+            if (onHighlightClick) {
+              onHighlightClick(highlight.id)
+            } else {
+              navigateToArticle()
+            }
+          }}
+          style={{ cursor: 'pointer' }}
+          title="Go to quote in article"
+        >
           {highlight.content}
         </blockquote>
         
@@ -550,9 +621,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
               />
             )}
             
-            <span className="highlight-author">
+            <CompactButton
+              className="highlight-author"
+              onClick={handleAuthorClick}
+              title="View profile"
+            >
               {getUserDisplayName()}
-            </span>
+            </CompactButton>
           </div>
           
           <div className="highlight-menu-wrapper" ref={menuRef}>
@@ -591,6 +666,20 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
             
             {showMenu && (
               <div className="highlight-menu">
+                <button
+                  className="highlight-menu-item"
+                  onClick={handleMenuGoToQuote}
+                >
+                  <FontAwesomeIcon icon={faQuoteLeft} />
+                  <span>Go to quote</span>
+                </button>
+                <button
+                  className="highlight-menu-item"
+                  onClick={handleMenuViewProfile}
+                >
+                  <FontAwesomeIcon icon={faUser} />
+                  <span>View profile</span>
+                </button>
                 <button
                   className="highlight-menu-item"
                   onClick={handleOpenPortal}

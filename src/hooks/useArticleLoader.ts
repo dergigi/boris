@@ -22,6 +22,12 @@ interface PreviewData {
   published?: number
 }
 
+interface NavigationState {
+  previewData?: PreviewData
+  articleCoordinate?: string
+  eventId?: string
+}
+
 interface UseArticleLoaderProps {
   naddr: string | undefined
   relayPool: RelayPool | null
@@ -63,8 +69,11 @@ export function useArticleLoader({
   // Track in-flight request to prevent stale updates from previous naddr
   const currentRequestIdRef = useRef(0)
   
-  // Extract preview data from navigation state (from blog post cards)
-  const previewData = (location.state as { previewData?: PreviewData })?.previewData
+  // Extract navigation state (from blog post cards)
+  const navState = (location.state as NavigationState | null) || {}
+  const previewData = navState.previewData
+  const navArticleCoordinate = navState.articleCoordinate
+  const navEventId = navState.eventId
   
   // Track the current article title for document title
   const [currentTitle, setCurrentTitle] = useState<string | undefined>()
@@ -82,6 +91,179 @@ export function useArticleLoader({
     // Clear readerContent immediately to prevent showing stale content from previous article
     // This ensures images from previous articles don't flash briefly
     setReaderContent(undefined)
+    
+    // FIRST: Check navigation state for article coordinate/eventId (from Explore)
+    // This allows immediate hydration when coming from Explore without refetching
+    let foundInNavState = false
+    if (eventStore && (navArticleCoordinate || navEventId)) {
+      try {
+        let storedEvent: NostrEvent | undefined
+        
+        // Try coordinate first (most reliable for replaceable events)
+        if (navArticleCoordinate) {
+          storedEvent = eventStore.getEvent?.(navArticleCoordinate) as NostrEvent | undefined
+        }
+        
+        // Fallback to eventId if coordinate lookup failed
+        if (!storedEvent && navEventId) {
+          // Note: eventStore.getEvent might not support eventId lookup directly
+          // We'll decode naddr to get coordinate as fallback
+          try {
+            const decoded = nip19.decode(naddr)
+            if (decoded.type === 'naddr') {
+              const pointer = decoded.data as AddressPointer
+              const coordinate = `${pointer.kind}:${pointer.pubkey}:${pointer.identifier}`
+              storedEvent = eventStore.getEvent?.(coordinate) as NostrEvent | undefined
+            }
+          } catch {
+            // Ignore decode errors
+          }
+        }
+        
+        if (storedEvent) {
+          foundInNavState = true
+          const title = Helpers.getArticleTitle(storedEvent) || previewData?.title || 'Untitled Article'
+          setCurrentTitle(title)
+          const image = Helpers.getArticleImage(storedEvent) || previewData?.image
+          const summary = Helpers.getArticleSummary(storedEvent) || previewData?.summary
+          const published = Helpers.getArticlePublished(storedEvent) || previewData?.published
+          setReaderContent({
+            title,
+            markdown: storedEvent.content,
+            image,
+            summary,
+            published,
+            url: `nostr:${naddr}`
+          })
+          const dTag = storedEvent.tags.find(t => t[0] === 'd')?.[1] || ''
+          const articleCoordinate = `${storedEvent.kind}:${storedEvent.pubkey}:${dTag}`
+          setCurrentArticleCoordinate(articleCoordinate)
+          setCurrentArticleEventId(storedEvent.id)
+          setCurrentArticle?.(storedEvent)
+          setReaderLoading(false)
+          setSelectedUrl(`nostr:${naddr}`)
+          setIsCollapsed(true)
+          
+          // Preload image if available
+          if (image) {
+            preloadImage(image)
+          }
+          
+          // Fetch highlights in background if relayPool is available
+          if (relayPool) {
+            const coord = dTag ? `${storedEvent.kind}:${storedEvent.pubkey}:${dTag}` : undefined
+            const eventId = storedEvent.id
+            
+            if (coord && eventId) {
+              setHighlightsLoading(true)
+              fetchHighlightsForArticle(
+                relayPool,
+                coord,
+                eventId,
+                (highlight) => {
+                  if (!mountedRef.current) return
+                  setHighlights((prev: Highlight[]) => {
+                    if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
+                    const next = [highlight, ...prev]
+                    return next.sort((a, b) => b.created_at - a.created_at)
+                  })
+                },
+                settings,
+                false,
+                eventStore || undefined
+              ).then(() => {
+                if (mountedRef.current) {
+                  setHighlightsLoading(false)
+                }
+              }).catch(() => {
+                if (mountedRef.current) {
+                  setHighlightsLoading(false)
+                }
+              })
+            }
+          }
+          
+          // Start background query to check for newer replaceable version
+          // but don't block UI - we already have content
+          if (relayPool) {
+            const backgroundRequestId = ++currentRequestIdRef.current
+            const originalCreatedAt = storedEvent.created_at
+            
+            // Fire and forget background fetch
+            ;(async () => {
+              try {
+                const decoded = nip19.decode(naddr)
+                if (decoded.type !== 'naddr') return
+                const pointer = decoded.data as AddressPointer
+                const filter = {
+                  kinds: [pointer.kind],
+                  authors: [pointer.pubkey],
+                  '#d': [pointer.identifier]
+                }
+                
+                await queryEvents(relayPool, filter, {
+                  onEvent: (evt) => {
+                    if (!mountedRef.current || currentRequestIdRef.current !== backgroundRequestId) return
+                    
+                    // Store in event store
+                    try {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      eventStore?.add?.(evt as unknown as any)
+                    } catch {
+                      // Ignore store errors
+                    }
+                    
+                    // Only update if this is a newer version than what we loaded
+                    if (evt.created_at > originalCreatedAt) {
+                      const title = Helpers.getArticleTitle(evt) || 'Untitled Article'
+                      const image = Helpers.getArticleImage(evt)
+                      const summary = Helpers.getArticleSummary(evt)
+                      const published = Helpers.getArticlePublished(evt)
+                      
+                      setCurrentTitle(title)
+                      setReaderContent({
+                        title,
+                        markdown: evt.content,
+                        image,
+                        summary,
+                        published,
+                        url: `nostr:${naddr}`
+                      })
+                      const dTag = evt.tags.find(t => t[0] === 'd')?.[1] || ''
+                      const articleCoordinate = `${evt.kind}:${evt.pubkey}:${dTag}`
+                      setCurrentArticleCoordinate(articleCoordinate)
+                      setCurrentArticleEventId(evt.id)
+                      setCurrentArticle?.(evt)
+                      
+                      // Update cache
+                      const articleContent = {
+                        title,
+                        markdown: evt.content,
+                        image,
+                        summary,
+                        published,
+                        author: evt.pubkey,
+                        event: evt
+                      }
+                      saveToCache(naddr, articleContent, settings)
+                    }
+                  }
+                })
+              } catch (err) {
+                // Silently ignore background fetch errors - we already have content
+                console.warn('[article-loader] Background fetch failed:', err)
+              }
+            })()
+          }
+          
+          // Return early - we have content from navigation state
+          return
+        }
+      } catch (err) {
+        // If navigation state lookup fails, fall through to cache/EventStore
+        console.warn('[article-loader] Navigation state lookup failed:', err)
+      }
+    }
     
     // Synchronously check cache sources BEFORE checking relayPool
     // This prevents showing loading skeletons when content is immediately available
@@ -173,7 +355,7 @@ export function useArticleLoader({
     
     // Check EventStore synchronously (also doesn't need relayPool)
     let foundInEventStore = false
-    if (eventStore && !foundInCache) {
+    if (eventStore && !foundInCache && !foundInNavState) {
       try {
         // Decode naddr to get the coordinate
         const decoded = nip19.decode(naddr)
@@ -251,7 +433,7 @@ export function useArticleLoader({
     }
     
     // Only return early if we have no content AND no relayPool to fetch from
-    if (!relayPool && !foundInCache && !foundInEventStore) {
+    if (!relayPool && !foundInCache && !foundInEventStore && !foundInNavState) {
       setReaderLoading(true)
       setReaderContent(undefined)
       return
