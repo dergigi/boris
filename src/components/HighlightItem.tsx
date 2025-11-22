@@ -501,7 +501,12 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   const handleMenuGoToQuote = (e: React.MouseEvent) => {
     e.stopPropagation()
     setShowMenu(false)
-    navigateToArticle()
+
+    if (onHighlightClick) {
+      onHighlightClick(highlight.id)
+    } else {
+      navigateToArticle()
+    }
   }
   
   return (
@@ -557,7 +562,12 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         onClick={(e) => {
           e.stopPropagation()
           e.preventDefault()
-          navigateToArticle()
+
+          if (onHighlightClick) {
+            onHighlightClick(highlight.id)
+          } else {
+            navigateToArticle()
+          }
         }}
       />
       
@@ -568,7 +578,12 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
           className="highlight-text"
           onClick={(e) => {
             e.stopPropagation()
-            navigateToArticle()
+
+            if (onHighlightClick) {
+              onHighlightClick(highlight.id)
+            } else {
+              navigateToArticle()
+            }
           }}
           style={{ cursor: 'pointer' }}
           title="Go to quote in article"
