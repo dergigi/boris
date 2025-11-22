@@ -9,6 +9,7 @@ import { HighlightItem } from './HighlightItem'
 import { BlogPostPreview } from '../services/exploreService'
 import { KINDS } from '../config/kinds'
 import AuthorCard from './AuthorCard'
+import CompactButton from './CompactButton'
 import BlogPostCard from './BlogPostCard'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { useStoreTimeline } from '../hooks/useStoreTimeline'
@@ -20,7 +21,7 @@ import { Hooks } from 'applesauce-react'
 import { readingProgressController } from '../services/readingProgressController'
 import { writingsController } from '../services/writingsController'
 import { highlightsController } from '../services/highlightsController'
-import { getProfileUrl, getNostrUrl } from '../config/nostrGateways'
+import { getProfileUrl } from '../config/nostrGateways'
 
 interface ProfileProps {
   relayPool: RelayPool
@@ -302,48 +303,48 @@ const Profile: React.FC<ProfileProps> = ({
       />
       <div className="explore-header">
         <div className="profile-header-wrapper">
-          <AuthorCard authorPubkey={pubkey} clickable={false} />
-          <div className="profile-menu-wrapper" ref={profileMenuRef}>
-            <button
-              className="profile-menu-btn"
-              onClick={handleMenuToggle}
-              title="More options"
-              aria-label="Profile menu"
-            >
-              <FontAwesomeIcon icon={faEllipsisH} />
-            </button>
-            {showProfileMenu && (
-              <div className="profile-menu">
-                <button
-                  className="profile-menu-item"
-                  onClick={handleCopyProfileLink}
-                >
-                  <FontAwesomeIcon icon={faCopy} />
-                  <span>Copy Link</span>
-                </button>
-                <button
-                  className="profile-menu-item"
-                  onClick={handleShareProfile}
-                >
-                  <FontAwesomeIcon icon={faShare} />
-                  <span>Share</span>
-                </button>
-                <button
-                  className="profile-menu-item"
-                  onClick={handleOpenPortal}
-                >
-                  <FontAwesomeIcon icon={faExternalLinkAlt} />
-                  <span>Open with njump</span>
-                </button>
-                <button
-                  className="profile-menu-item"
-                  onClick={handleOpenNative}
-                >
-                  <FontAwesomeIcon icon={faMobileAlt} />
-                  <span>Open with Native App</span>
-                </button>
-              </div>
-            )}
+          <div className="profile-card-with-menu">
+            <AuthorCard authorPubkey={pubkey} clickable={false} />
+            <div className="profile-card-menu-wrapper" ref={profileMenuRef}>
+              <CompactButton
+                icon={faEllipsisH}
+                onClick={handleMenuToggle}
+                title="More options"
+                ariaLabel="Profile menu"
+              />
+              {showProfileMenu && (
+                <div className="profile-card-menu">
+                  <button
+                    className="profile-card-menu-item"
+                    onClick={handleCopyProfileLink}
+                  >
+                    <FontAwesomeIcon icon={faCopy} />
+                    <span>Copy Link</span>
+                  </button>
+                  <button
+                    className="profile-card-menu-item"
+                    onClick={handleShareProfile}
+                  >
+                    <FontAwesomeIcon icon={faShare} />
+                    <span>Share</span>
+                  </button>
+                  <button
+                    className="profile-card-menu-item"
+                    onClick={handleOpenPortal}
+                  >
+                    <FontAwesomeIcon icon={faExternalLinkAlt} />
+                    <span>Open with njump</span>
+                  </button>
+                  <button
+                    className="profile-card-menu-item"
+                    onClick={handleOpenNative}
+                  >
+                    <FontAwesomeIcon icon={faMobileAlt} />
+                    <span>Open with Native App</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
