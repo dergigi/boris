@@ -10,6 +10,83 @@
 .author-card-name { font-size: 1rem; font-weight: 600; color: var(--color-text); margin-bottom: 0.5rem; text-align: left; }
 .author-card-bio { font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; text-align: left; }
 
+/* Profile header wrapper for menu positioning */
+.profile-header-wrapper {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Profile menu */
+.profile-menu-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 0.5rem;
+}
+
+.profile-menu-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+}
+
+.profile-menu-btn:hover {
+  color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.profile-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  min-width: 180px;
+  overflow: hidden;
+}
+
+.profile-menu-item {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.profile-menu-item:hover {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--color-text);
+}
+
+.profile-menu-item svg {
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
 @media (max-width: 768px) {
   .author-card-container { 
     padding: 1.5rem 1rem; 
@@ -26,5 +103,17 @@
   .author-card-avatar svg { font-size: 2rem; }
   .author-card-name { font-size: 0.95rem; }
   .author-card-bio { font-size: 0.85rem; -webkit-line-clamp: 2; }
+  
+  .profile-header-wrapper {
+    padding: 0 1rem;
+  }
+  
+  .profile-menu-wrapper {
+    margin-top: 0.25rem;
+  }
+  
+  .profile-menu-btn {
+    padding: 0.5rem;
+  }
 }
 
