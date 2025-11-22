@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2025-11-22
+
+### Added
+
+- Three-dot menu to profile view
+- Clickable quote text in highlights to navigate to article
+- Profile navigation from highlight author cards
+- Improved relay hint selection to exclude non-content relays
+
+### Fixed
+
+- Profile header horizontal padding matches tabs width
+- Profile menu positioning inside card
+- Highlight quote button navigation reliability
+- Highlight menu cutoff when only one highlight
+- Article loading reuses Explore article events for immediate display
+- Removed unused variables and imports
+
+### Refactored
+
+- Unified relay configuration with typed registry
+- Improved relay hint selection and relay management
+
 ## [0.11.0] - 2025-11-07
 
 ### Added
