@@ -180,14 +180,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     }
   }, [showMenu, showDeleteConfirm])
   
-  const handleItemClick = () => {
-    // If onHighlightClick is provided, use it (legacy behavior)
-    if (onHighlightClick) {
-      onHighlightClick(highlight.id)
-      return
-    }
-    
-    // Otherwise, navigate to the article that this highlight references
+  // Navigate to the article that this highlight references and scroll to the highlight
+  const navigateToArticle = () => {
     if (highlight.eventReference) {
       // Parse the event reference - it can be an event ID or article coordinate (kind:pubkey:identifier)
       const parts = highlight.eventReference.split(':')
@@ -221,6 +215,17 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         }
       })
     }
+  }
+  
+  const handleItemClick = () => {
+    // If onHighlightClick is provided, use it (legacy behavior)
+    if (onHighlightClick) {
+      onHighlightClick(highlight.id)
+      return
+    }
+    
+    // Otherwise, navigate to the article that this highlight references
+    navigateToArticle()
   }
   
   const getHighlightLinks = () => {
@@ -482,6 +487,12 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     navigateToProfile()
   }
   
+  const handleMenuGoToQuote = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(false)
+    navigateToArticle()
+  }
+  
   return (
     <>
     <div 
@@ -531,14 +542,25 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       <CompactButton
         className="highlight-quote-button"
         icon={faQuoteLeft}
-        title="Quote"
-        onClick={(e) => e.stopPropagation()}
+        title="Go to quote in article"
+        onClick={(e) => {
+          e.stopPropagation()
+          navigateToArticle()
+        }}
       />
       
       {/* relay indicator lives in footer for consistent padding/alignment */}
       
       <div className="highlight-content">
-        <blockquote className="highlight-text">
+        <blockquote 
+          className="highlight-text"
+          onClick={(e) => {
+            e.stopPropagation()
+            navigateToArticle()
+          }}
+          style={{ cursor: 'pointer' }}
+          title="Go to quote in article"
+        >
           {highlight.content}
         </blockquote>
         
@@ -617,6 +639,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
             
             {showMenu && (
               <div className="highlight-menu">
+                <button
+                  className="highlight-menu-item"
+                  onClick={handleMenuGoToQuote}
+                >
+                  <FontAwesomeIcon icon={faQuoteLeft} />
+                  <span>Go to quote</span>
+                </button>
                 <button
                   className="highlight-menu-item"
                   onClick={handleMenuViewProfile}
