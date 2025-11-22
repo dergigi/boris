@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHighlighter, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { faHighlighter, faPenToSquare, faEllipsisH, faCopy, faShare, faExternalLinkAlt, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
 import { IEventStore } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
 import { nip19 } from 'nostr-tools'
@@ -9,6 +9,7 @@ import { HighlightItem } from './HighlightItem'
 import { BlogPostPreview } from '../services/exploreService'
 import { KINDS } from '../config/kinds'
 import AuthorCard from './AuthorCard'
+import CompactButton from './CompactButton'
 import BlogPostCard from './BlogPostCard'
 import { BlogPostSkeleton, HighlightSkeleton } from './Skeletons'
 import { useStoreTimeline } from '../hooks/useStoreTimeline'
@@ -20,6 +21,7 @@ import { Hooks } from 'applesauce-react'
 import { readingProgressController } from '../services/readingProgressController'
 import { writingsController } from '../services/writingsController'
 import { highlightsController } from '../services/highlightsController'
+import { getProfileUrl } from '../config/nostrGateways'
 
 interface ProfileProps {
   relayPool: RelayPool
@@ -38,6 +40,8 @@ const Profile: React.FC<ProfileProps> = ({
   const activeAccount = Hooks.useActiveAccount()
   const [activeTab, setActiveTab] = useState<'highlights' | 'writings'>(propActiveTab || 'highlights')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
   
   // Reading progress state (naddr -> progress 0-1)
   const [readingProgressMap, setReadingProgressMap] = useState<Map<string, number>>(new Map())
@@ -168,6 +172,68 @@ const Profile: React.FC<ProfileProps> = ({
   const npub = nip19.npubEncode(pubkey)
   const showSkeletons = cachedHighlights.length === 0 && sortedWritings.length === 0
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false)
+      }
+    }
+
+    if (showProfileMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showProfileMenu])
+
+  // Profile menu handlers
+  const handleMenuToggle = () => {
+    setShowProfileMenu(!showProfileMenu)
+  }
+
+  const handleCopyProfileLink = async () => {
+    try {
+      const borisUrl = `${window.location.origin}/p/${npub}`
+      await navigator.clipboard.writeText(borisUrl)
+      setShowProfileMenu(false)
+    } catch (e) {
+      console.warn('Copy failed', e)
+    }
+  }
+
+  const handleShareProfile = async () => {
+    try {
+      const borisUrl = `${window.location.origin}/p/${npub}`
+      if ((navigator as { share?: (d: { title?: string; url?: string }) => Promise<void> }).share) {
+        await (navigator as { share: (d: { title?: string; url?: string }) => Promise<void> }).share({ 
+          title: 'Profile', 
+          url: borisUrl 
+        })
+      } else {
+        await navigator.clipboard.writeText(borisUrl)
+      }
+    } catch (e) {
+      console.warn('Share failed', e)
+    } finally {
+      setShowProfileMenu(false)
+    }
+  }
+
+  const handleOpenPortal = () => {
+    const portalUrl = getProfileUrl(npub)
+    window.open(portalUrl, '_blank', 'noopener,noreferrer')
+    setShowProfileMenu(false)
+  }
+
+  const handleOpenNative = () => {
+    const nativeUrl = `nostr:${npub}`
+    window.location.href = nativeUrl
+    setShowProfileMenu(false)
+  }
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'highlights':
@@ -236,7 +302,51 @@ const Profile: React.FC<ProfileProps> = ({
         pullPosition={pullPosition}
       />
       <div className="explore-header">
-        <AuthorCard authorPubkey={pubkey} clickable={false} />
+        <div className="profile-header-wrapper">
+          <div className="profile-card-with-menu">
+            <AuthorCard authorPubkey={pubkey} clickable={false} />
+            <div className="profile-card-menu-wrapper" ref={profileMenuRef}>
+              <CompactButton
+                icon={faEllipsisH}
+                onClick={handleMenuToggle}
+                title="More options"
+                ariaLabel="Profile menu"
+              />
+              {showProfileMenu && (
+                <div className="profile-card-menu">
+                  <button
+                    className="profile-card-menu-item"
+                    onClick={handleCopyProfileLink}
+                  >
+                    <FontAwesomeIcon icon={faCopy} />
+                    <span>Copy Link</span>
+                  </button>
+                  <button
+                    className="profile-card-menu-item"
+                    onClick={handleShareProfile}
+                  >
+                    <FontAwesomeIcon icon={faShare} />
+                    <span>Share</span>
+                  </button>
+                  <button
+                    className="profile-card-menu-item"
+                    onClick={handleOpenPortal}
+                  >
+                    <FontAwesomeIcon icon={faExternalLinkAlt} />
+                    <span>Open with njump</span>
+                  </button>
+                  <button
+                    className="profile-card-menu-item"
+                    onClick={handleOpenNative}
+                  >
+                    <FontAwesomeIcon icon={faMobileAlt} />
+                    <span>Open with Native App</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
         
         <div className="me-tabs">
           <button

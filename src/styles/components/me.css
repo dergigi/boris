@@ -73,7 +73,8 @@
 
 /* Align highlight list width with profile card width on /my */
 .me-highlights-list { padding-left: 0; padding-right: 0; }
-.explore-header .author-card { max-width: 600px; margin: 0 auto; width: 100%; }
+.explore-header .profile-header-wrapper { max-width: 600px; margin: 0 auto; width: 100%; }
+.explore-header .author-card { max-width: none; margin: 0; width: auto; flex: 1; }
 
 /* Hide tab labels on mobile to save space */
 @media (max-width: 768px) {
