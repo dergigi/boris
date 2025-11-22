@@ -4,7 +4,7 @@ import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
 import { Helpers } from 'applesauce-core'
-import { RELAYS } from '../config/relays'
+import { getContentRelays, getFallbackContentRelays, isContentRelay } from '../config/relays'
 import { prioritizeLocalRelays, partitionRelays, createParallelReqStreams } from '../utils/helpers'
 import { merge, toArray as rxToArray } from 'rxjs'
 import { UserSettings } from './settingsService'
@@ -138,13 +138,6 @@ export async function fetchArticleByNaddr(
 
     const pointer = decoded.data as AddressPointer
 
-    // Define relays to query - use union of relay hints from naddr and configured relays
-    // This avoids failures when naddr contains stale/unreachable relay hints
-    const hintedRelays = (pointer.relays && pointer.relays.length > 0) ? pointer.relays : []
-    const baseRelays = Array.from(new Set<string>([...hintedRelays, ...RELAYS]))
-    const orderedRelays = prioritizeLocalRelays(baseRelays)
-    const { local: localRelays, remote: remoteRelays } = partitionRelays(orderedRelays)
-
     // Fetch the article event
     const filter = {
       kinds: [pointer.kind],
@@ -152,24 +145,45 @@ export async function fetchArticleByNaddr(
       '#d': [pointer.identifier]
     }
 
-    // Parallel local+remote, stream immediate, collect up to first from each
-    const { local$, remote$ } = createParallelReqStreams(relayPool, localRelays, remoteRelays, filter, 1200, 6000)
-    const collected = await lastValueFrom(merge(local$.pipe(take(1)), remote$.pipe(take(1))).pipe(rxToArray()))
-    let events = collected as NostrEvent[]
+    let events: NostrEvent[] = []
 
-    // Fallback: if nothing found, try a second round against a set of reliable public relays
+    // Build unified relay set: hints + configured content relays
+    // Filter hinted relays to only content-capable relays
+    const hintedRelays = (pointer.relays && pointer.relays.length > 0)
+      ? pointer.relays.filter(isContentRelay)
+      : []
+    
+    // Get configured content relays
+    const contentRelays = getContentRelays()
+    
+    // Union of hinted and configured relays (deduplicated)
+    const unifiedRelays = Array.from(new Set([...hintedRelays, ...contentRelays]))
+    
+    if (unifiedRelays.length > 0) {
+      const orderedUnified = prioritizeLocalRelays(unifiedRelays)
+      const { local: localUnified, remote: remoteUnified } = partitionRelays(orderedUnified)
+      
+      const { local$, remote$ } = createParallelReqStreams(
+        relayPool,
+        localUnified,
+        remoteUnified,
+        filter,
+        1200,
+        6000
+      )
+      const collected = await lastValueFrom(
+        merge(local$.pipe(take(1)), remote$.pipe(take(1))).pipe(rxToArray())
+      )
+      events = collected as NostrEvent[]
+    }
+
+    // Last resort: try fallback content relays (most reliable public relays)
     if (events.length === 0) {
-      const reliableRelays = Array.from(new Set<string>([
-        'wss://relay.nostr.band',
-        'wss://relay.primal.net',
-        'wss://relay.damus.io',
-        'wss://nos.lol',
-        ...remoteRelays // keep any configured remote relays
-      ]))
+      const fallbackRelays = getFallbackContentRelays()
       const { remote$: fallback$ } = createParallelReqStreams(
         relayPool,
-        [], // no local
-        reliableRelays,
+        [], // no local for fallback
+        fallbackRelays,
         filter,
         1500,
         12000

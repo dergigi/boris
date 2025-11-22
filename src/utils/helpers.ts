@@ -40,6 +40,24 @@ export const classifyUrl = (url: string | undefined): UrlClassification => {
 }
 
 /**
+ * Normalizes a relay URL to match what applesauce-relay stores internally
+ * Adds trailing slash for URLs without a path
+ */
+export function normalizeRelayUrl(url: string): string {
+  try {
+    const parsed = new URL(url)
+    // If the pathname is empty or just "/", ensure it ends with "/"
+    if (parsed.pathname === '' || parsed.pathname === '/') {
+      return url.endsWith('/') ? url : url + '/'
+    }
+    return url
+  } catch {
+    // If URL parsing fails, return as-is
+    return url
+  }
+}
+
+/**
  * Checks if a relay URL is a local relay (localhost or 127.0.0.1)
  */
 export const isLocalRelay = (relayUrl: string): boolean => {

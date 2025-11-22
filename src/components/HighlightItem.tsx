@@ -10,6 +10,7 @@ import { Hooks } from 'applesauce-react'
 import { onSyncStateChange, isEventSyncing, isEventOfflineCreated } from '../services/offlineSyncService'
 import { areAllRelaysLocal, isLocalRelay } from '../utils/helpers'
 import { getActiveRelayUrls } from '../services/relayManager'
+import { isContentRelay, getContentRelays, getFallbackContentRelays } from '../config/relays'
 import { nip19 } from 'nostr-tools'
 import { formatDateCompact } from '../utils/bookmarkUtils'
 import { createDeletionRequest } from '../services/deletionService'
@@ -224,11 +225,36 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   
   const getHighlightLinks = () => {
     // Encode the highlight event itself (kind 9802) as a nevent
-    // Get non-local relays for the hint
-    const activeRelays = relayPool ? getActiveRelayUrls(relayPool) : []
-    const relayHints = activeRelays.filter(r => 
-      !r.includes('localhost') && !r.includes('127.0.0.1')
-    ).slice(0, 3) // Include up to 3 relay hints
+    // Relay hint selection priority:
+    // 1. Published relays (where we successfully published the event)
+    // 2. Seen relays (where we observed the event)
+    // 3. Configured content relays (deterministic fallback)
+    // All candidates are deduplicated, filtered to content-capable remote relays, and limited to 3
+    
+    const publishedRelays = highlight.publishedRelays || []
+    const seenOnRelays = highlight.seenOnRelays || []
+    
+    // Determine base candidates: prefer published, then seen, then configured relays
+    let candidates: string[]
+    if (publishedRelays.length > 0) {
+      // Prefer published relays, but include seen relays as backup
+      candidates = Array.from(new Set([...publishedRelays, ...seenOnRelays]))
+        .sort((a, b) => a.localeCompare(b))
+    } else if (seenOnRelays.length > 0) {
+      candidates = seenOnRelays
+    } else {
+      // Fallback to deterministic configured content relays
+      const contentRelays = getContentRelays()
+      const fallbackRelays = getFallbackContentRelays()
+      candidates = Array.from(new Set([...contentRelays, ...fallbackRelays]))
+    }
+    
+    // Filter to content-capable remote relays (exclude local and non-content relays)
+    // Then take up to 3 for relay hints
+    const relayHints = candidates
+      .filter(url => !isLocalRelay(url))
+      .filter(url => isContentRelay(url))
+      .slice(0, 3)
     
     const nevent = nip19.neventEncode({
       id: highlight.id,
