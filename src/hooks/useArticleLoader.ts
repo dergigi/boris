@@ -201,7 +201,7 @@ export function useArticleLoader({
                   '#d': [pointer.identifier]
                 }
                 
-                const events = await queryEvents(relayPool, filter, {
+                await queryEvents(relayPool, filter, {
                   onEvent: (evt) => {
                     if (!mountedRef.current || currentRequestIdRef.current !== backgroundRequestId) return
                     
