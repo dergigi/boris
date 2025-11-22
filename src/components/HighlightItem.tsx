@@ -182,6 +182,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   
   // Navigate to the article that this highlight references and scroll to the highlight
   const navigateToArticle = () => {
+    // Always try to navigate if we have a reference - quote button should always work
     if (highlight.eventReference) {
       // Parse the event reference - it can be an event ID or article coordinate (kind:pubkey:identifier)
       const parts = highlight.eventReference.split(':')
@@ -204,9 +205,14 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
               openHighlights: true 
             } 
           })
+          return
         }
       }
-    } else if (highlight.urlReference) {
+      // If eventReference is just an event ID (not a coordinate), we can't navigate to it
+      // as we don't have enough info to construct the article URL
+    }
+    
+    if (highlight.urlReference) {
       // Navigate to external URL with highlight ID to trigger scroll
       navigate(`/r/${encodeURIComponent(highlight.urlReference)}`, {
         state: {
@@ -214,7 +220,12 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
           openHighlights: true
         }
       })
+      return
     }
+    
+    // If we get here, there's no valid reference to navigate to
+    // This shouldn't happen for valid highlights, but we'll log it for debugging
+    console.warn('Cannot navigate to article: highlight has no valid eventReference or urlReference', highlight.id)
   }
   
   const handleItemClick = () => {
@@ -545,6 +556,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
         title="Go to quote in article"
         onClick={(e) => {
           e.stopPropagation()
+          e.preventDefault()
           navigateToArticle()
         }}
       />
