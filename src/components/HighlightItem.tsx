@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faHighlighter, faTrash, faEllipsisH, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faExternalLinkAlt, faPlane, faSpinner, faHighlighter, faTrash, faEllipsisH, faMobileAlt, faUser } from '@fortawesome/free-solid-svg-icons'
 import { faComments } from '@fortawesome/free-regular-svg-icons'
 import { Highlight } from '../types/highlights'
 import { useEventModel } from 'applesauce-react/hooks'
@@ -460,6 +460,28 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     handleConfirmDelete()
   }
   
+  // Navigate to author's profile
+  const navigateToProfile = (tab?: 'highlights' | 'writings') => {
+    try {
+      const npub = nip19.npubEncode(highlight.pubkey)
+      const path = tab === 'writings' ? `/p/${npub}/writings` : `/p/${npub}`
+      navigate(path)
+    } catch (err) {
+      console.error('Failed to encode npub for profile navigation:', err)
+    }
+  }
+  
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigateToProfile()
+  }
+  
+  const handleMenuViewProfile = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(false)
+    navigateToProfile()
+  }
+  
   return (
     <>
     <div 
@@ -550,9 +572,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
               />
             )}
             
-            <span className="highlight-author">
+            <CompactButton
+              className="highlight-author"
+              onClick={handleAuthorClick}
+              title="View profile"
+            >
               {getUserDisplayName()}
-            </span>
+            </CompactButton>
           </div>
           
           <div className="highlight-menu-wrapper" ref={menuRef}>
@@ -591,6 +617,13 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
             
             {showMenu && (
               <div className="highlight-menu">
+                <button
+                  className="highlight-menu-item"
+                  onClick={handleMenuViewProfile}
+                >
+                  <FontAwesomeIcon icon={faUser} />
+                  <span>View profile</span>
+                </button>
                 <button
                   className="highlight-menu-item"
                   onClick={handleOpenPortal}
