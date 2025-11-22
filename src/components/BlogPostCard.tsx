@@ -53,6 +53,10 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
     // Reading progress display
   }
 
+  // Build article coordinate for navigation state (kind:pubkey:dTag)
+  const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
+  const articleCoordinate = dTag ? `${post.event.kind}:${post.author}:${dTag}` : undefined
+
   return (
     <Link 
       to={href}
@@ -62,7 +66,9 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, href, level, readingP
           image: post.image,
           summary: post.summary,
           published: post.published
-        }
+        },
+        articleCoordinate,
+        eventId: post.event.id
       }}
       className={`blog-post-card ${level ? `level-${level}` : ''}`}
       style={{ textDecoration: 'none', color: 'inherit' }}
