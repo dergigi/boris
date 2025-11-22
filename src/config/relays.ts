@@ -1,3 +1,5 @@
+import { normalizeRelayUrl } from '../utils/helpers'
+
 /**
  * Centralized relay configuration
  * Single set of relays used throughout the application
@@ -92,6 +94,8 @@ export const NON_CONTENT_RELAYS = getNonContentRelays()
  * Returns true for relays that are reasonable for posts/highlights
  */
 export function isContentRelay(url: string): boolean {
-  return !getNonContentRelays().includes(url)
+  const normalized = normalizeRelayUrl(url)
+  const nonContentRelays = getNonContentRelays().map(normalizeRelayUrl)
+  return !nonContentRelays.includes(normalized)
 }
 

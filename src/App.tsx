@@ -576,6 +576,31 @@ function App() {
               }
             })
       
+      // Helper to update keep-alive subscription based on current active relays
+      const updateKeepAlive = (relayUrls?: string[]) => {
+        const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
+        if (poolWithSub._keepAliveSubscription) {
+          poolWithSub._keepAliveSubscription.unsubscribe()
+        }
+        const targetRelays = relayUrls || getActiveRelayUrls(pool)
+        const newKeepAliveSub = pool.subscription(targetRelays, { kinds: [0], limit: 0 }).subscribe({
+          next: () => {},
+          error: () => {}
+        })
+        poolWithSub._keepAliveSubscription = newKeepAliveSub
+      }
+
+      // Helper to update address loader based on current active relays
+      const updateAddressLoader = (relayUrls?: string[]) => {
+        const targetRelays = relayUrls || getActiveRelayUrls(pool)
+        const addressLoader = createAddressLoader(pool, {
+          eventStore: store,
+          lookupRelays: targetRelays
+        })
+        store.addressableLoader = addressLoader
+        store.replaceableLoader = addressLoader
+      }
+
       // Handle user relay list and blocked relays when account changes
       const userRelaysSub = accounts.active$.subscribe((account) => {
         if (account) {
@@ -603,20 +628,6 @@ function App() {
 
           // Apply initial set immediately
           applyRelaySetToPool(pool, initialRelays)
-
-          // Prepare keep-alive helper
-          const updateKeepAlive = () => {
-            const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
-            if (poolWithSub._keepAliveSubscription) {
-              poolWithSub._keepAliveSubscription.unsubscribe()
-            }
-            const activeRelays = getActiveRelayUrls(pool)
-            const newKeepAliveSub = pool.subscription(activeRelays, { kinds: [0], limit: 0 }).subscribe({
-              next: () => {},
-              error: () => {}
-            })
-            poolWithSub._keepAliveSubscription = newKeepAliveSub
-          }
 
           // Begin loading blocked relays in background
           const blockedPromise = loadBlockedRelays(pool, pubkey)
@@ -649,43 +660,16 @@ function App() {
             applyRelaySetToPool(pool, finalRelays)
             
             updateKeepAlive()
-            
-            // Update address loader with new relays
-            const activeRelays = getActiveRelayUrls(pool)
-            const addressLoader = createAddressLoader(pool, {
-              eventStore: store,
-              lookupRelays: activeRelays
-            })
-            store.addressableLoader = addressLoader
-            store.replaceableLoader = addressLoader
+            updateAddressLoader()
           }).catch((error) => {
             console.error('[relay-init] Failed to load user relay list (continuing with initial set):', error)
             // Continue with initial relay set on error - no need to change anything
           })
         } else {
           // User logged out - reset to hardcoded relays
-          
           applyRelaySetToPool(pool, RELAYS)
-          
-          
-          // Update keep-alive subscription
-          const poolWithSub = pool as unknown as { _keepAliveSubscription?: { unsubscribe: () => void } }
-          if (poolWithSub._keepAliveSubscription) {
-            poolWithSub._keepAliveSubscription.unsubscribe()
-          }
-          const newKeepAliveSub = pool.subscription(RELAYS, { kinds: [0], limit: 0 }).subscribe({
-            next: () => {},
-            error: () => {}
-          })
-          poolWithSub._keepAliveSubscription = newKeepAliveSub
-          
-          // Reset address loader
-          const addressLoader = createAddressLoader(pool, {
-            eventStore: store,
-            lookupRelays: RELAYS
-          })
-          store.addressableLoader = addressLoader
-          store.replaceableLoader = addressLoader
+          updateKeepAlive(RELAYS)
+          updateAddressLoader(RELAYS)
         }
       })
       

@@ -1,6 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
-import { prioritizeLocalRelays } from '../utils/helpers'
-import { getLocalRelays } from '../config/relays'
+import { prioritizeLocalRelays, normalizeRelayUrl } from '../utils/helpers'
+import { getLocalRelays, getFallbackContentRelays } from '../config/relays'
 
 /**
  * Local relays that are always included
@@ -9,10 +9,9 @@ export const ALWAYS_LOCAL_RELAYS = getLocalRelays()
 
 /**
  * Hardcoded relays that are always included (minimal reliable set)
+ * Derived from RELAY_CONFIGS fallback relays
  */
-export const HARDCODED_RELAYS = [
-  'wss://relay.nostr.band'
-]
+export const HARDCODED_RELAYS = getFallbackContentRelays()
 
 /**
  * Gets active relay URLs from the relay pool
@@ -20,24 +19,6 @@ export const HARDCODED_RELAYS = [
 export function getActiveRelayUrls(relayPool: RelayPool): string[] {
   const urls = Array.from(relayPool.relays.keys())
   return prioritizeLocalRelays(urls)
-}
-
-/**
- * Normalizes a relay URL to match what applesauce-relay stores internally
- * Adds trailing slash for URLs without a path
- */
-export function normalizeRelayUrl(url: string): string {
-  try {
-    const parsed = new URL(url)
-    // If the pathname is empty or just "/", ensure it ends with "/"
-    if (parsed.pathname === '' || parsed.pathname === '/') {
-      return url.endsWith('/') ? url : url + '/'
-    }
-    return url
-  } catch {
-    // If URL parsing fails, return as-is
-    return url
-  }
 }
 
 export interface RelaySetChangeSummary {

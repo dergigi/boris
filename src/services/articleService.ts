@@ -147,40 +147,26 @@ export async function fetchArticleByNaddr(
 
     let events: NostrEvent[] = []
 
-    // First, try relay hints from naddr (primary source)
-    // Filter to only content relays to avoid using auth/signer relays
+    // Build unified relay set: hints + configured content relays
+    // Filter hinted relays to only content-capable relays
     const hintedRelays = (pointer.relays && pointer.relays.length > 0)
       ? pointer.relays.filter(isContentRelay)
       : []
     
-    if (hintedRelays.length > 0) {
-      const orderedHintedRelays = prioritizeLocalRelays(hintedRelays)
-      const { local: localHinted, remote: remoteHinted } = partitionRelays(orderedHintedRelays)
+    // Get configured content relays
+    const contentRelays = getContentRelays()
+    
+    // Union of hinted and configured relays (deduplicated)
+    const unifiedRelays = Array.from(new Set([...hintedRelays, ...contentRelays]))
+    
+    if (unifiedRelays.length > 0) {
+      const orderedUnified = prioritizeLocalRelays(unifiedRelays)
+      const { local: localUnified, remote: remoteUnified } = partitionRelays(orderedUnified)
       
       const { local$, remote$ } = createParallelReqStreams(
         relayPool,
-        localHinted,
-        remoteHinted,
-        filter,
-        1200,
-        6000
-      )
-      const collected = await lastValueFrom(
-        merge(local$.pipe(take(1)), remote$.pipe(take(1))).pipe(rxToArray())
-      )
-      events = collected as NostrEvent[]
-    }
-
-    // Fallback: if no hints or nothing found from hints, try default content relays
-    if (events.length === 0) {
-      const defaultContentRelays = getContentRelays()
-      const orderedDefault = prioritizeLocalRelays(defaultContentRelays)
-      const { local: localDefault, remote: remoteDefault } = partitionRelays(orderedDefault)
-      
-      const { local$, remote$ } = createParallelReqStreams(
-        relayPool,
-        localDefault,
-        remoteDefault,
+        localUnified,
+        remoteUnified,
         filter,
         1200,
         6000

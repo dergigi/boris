@@ -1,6 +1,7 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { queryEvents } from './dataFetch'
+import { normalizeRelayUrl } from '../utils/helpers'
 
 export interface UserRelayInfo {
   url: string
@@ -144,35 +145,55 @@ export function computeRelaySet(params: {
     alwaysIncludeLocal
   } = params
 
+  // Normalize all URLs for consistent comparison and deduplication
+  const normalizedBlocked = new Set(blocked.map(normalizeRelayUrl))
+  const normalizedLocal = new Set(alwaysIncludeLocal.map(normalizeRelayUrl))
+  
   const relaySet = new Set<string>()
-  const blockedSet = new Set(blocked)
+  const normalizedRelaySet = new Set<string>()
 
-  // Helper to check if relay should be included
-  const shouldInclude = (url: string): boolean => {
+  // Helper to check if relay should be included (using normalized URLs)
+  const shouldInclude = (normalizedUrl: string): boolean => {
     // Always include local relays
-    if (alwaysIncludeLocal.includes(url)) return true
+    if (normalizedLocal.has(normalizedUrl)) return true
     // Otherwise check if blocked
-    return !blockedSet.has(url)
+    return !normalizedBlocked.has(normalizedUrl)
   }
 
-  // Add hardcoded relays
+  // Add hardcoded relays (normalized)
   for (const url of hardcoded) {
-    if (shouldInclude(url)) relaySet.add(url)
+    const normalized = normalizeRelayUrl(url)
+    if (shouldInclude(normalized) && !normalizedRelaySet.has(normalized)) {
+      normalizedRelaySet.add(normalized)
+      relaySet.add(url) // Keep original URL for output
+    }
   }
 
-  // Add bunker relays
+  // Add bunker relays (normalized)
   for (const url of bunker) {
-    if (shouldInclude(url)) relaySet.add(url)
+    const normalized = normalizeRelayUrl(url)
+    if (shouldInclude(normalized) && !normalizedRelaySet.has(normalized)) {
+      normalizedRelaySet.add(normalized)
+      relaySet.add(url) // Keep original URL for output
+    }
   }
 
-  // Add user relays (treating 'both' and 'read' as applicable for queries)
+  // Add user relays (normalized)
   for (const relay of userList) {
-    if (shouldInclude(relay.url)) relaySet.add(relay.url)
+    const normalized = normalizeRelayUrl(relay.url)
+    if (shouldInclude(normalized) && !normalizedRelaySet.has(normalized)) {
+      normalizedRelaySet.add(normalized)
+      relaySet.add(relay.url) // Keep original URL for output
+    }
   }
 
-  // Always ensure local relays are present
+  // Always ensure local relays are present (normalized check)
   for (const url of alwaysIncludeLocal) {
-    relaySet.add(url)
+    const normalized = normalizeRelayUrl(url)
+    if (!normalizedRelaySet.has(normalized)) {
+      normalizedRelaySet.add(normalized)
+      relaySet.add(url) // Keep original URL for output
+    }
   }
 
   return Array.from(relaySet)
