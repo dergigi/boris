@@ -17,6 +17,12 @@
   padding: 2rem 1rem 0;
 }
 
+/* Remove horizontal padding when inside explore-header to match tabs width */
+.explore-header .profile-header-wrapper {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .profile-card-with-menu {
   position: relative;
   max-width: 600px;
