@@ -149,7 +149,40 @@
 .highlight-item.level-nostrverse .highlight-quote-icon { color: var(--highlight-color-nostrverse, #9333ea); }
 
 .highlight-content { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; padding: 2.25rem 0.75rem 2.5rem; }
-.highlight-text { margin: 0; padding: 0 0 0 1.25rem; font-style: italic; color: var(--color-text); line-height: 1.6; border-left: none; font-size: 0.95rem; }
+.highlight-text {
+  margin: 0;
+  padding: 0 0 0 1.25rem;
+  font-style: italic;
+  color: var(--color-text);
+  line-height: 1.6;
+  border-left: none;
+  font-size: 0.95rem;
+  /* Aggressive wrapping for long words/URLs inside highlights */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+.highlight-core {
+  background: color-mix(in srgb, var(--highlight-color, #fde047) 35%, transparent);
+  padding: 0 0.1em;
+  border-radius: 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.highlight-item.level-mine .highlight-core {
+  background: color-mix(in srgb, var(--highlight-color-mine, #fde047) 40%, transparent);
+}
+.highlight-item.level-friends .highlight-core {
+  background: color-mix(in srgb, var(--highlight-color-friends, #f97316) 35%, transparent);
+}
+.highlight-item.level-nostrverse .highlight-core {
+  background: color-mix(in srgb, var(--highlight-color-nostrverse, #9333ea) 35%, transparent);
+}
+.highlight-context-prefix {
+  display: block;
+  margin-bottom: 0.35rem;
+}
 .highlight-citation { margin-left: 1.25rem; font-size: 0.8rem; color: var(--color-text-secondary); font-style: normal; padding-top: 0.25rem; }
 .highlight-comment { margin-top: 0.5rem; padding: 0.75rem; border-radius: 4px; font-size: 0.875rem; color: var(--color-text); line-height: 1.5; display: flex; gap: 0.5rem; align-items: flex-start; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; min-width: 0; }
 .highlight-comment-icon { flex-shrink: 0; margin-top: 0.125rem; }

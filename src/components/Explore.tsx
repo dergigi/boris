@@ -595,7 +595,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       case 'highlights':
         if (showSkeletons) {
           return (
-            <div className="explore-grid">
+            <div className="explore-grid single-column">
               {Array.from({ length: 8 }).map((_, i) => (
                 <HighlightSkeleton key={i} />
               ))}
@@ -607,7 +607,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
             <span>No highlights to show for the selected scope.</span>
           </div>
         ) : (
-          <div className="explore-grid">
+          <div className="explore-grid single-column">
             {classifiedHighlights.map((highlight) => (
               <HighlightItem
                 key={highlight.id}
