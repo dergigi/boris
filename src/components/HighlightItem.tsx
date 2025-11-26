@@ -509,6 +509,38 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
     }
   }
   
+  const renderHighlightText = () => {
+    const { content, context } = highlight
+    
+    if (context && context.length > 0) {
+      const index = context.indexOf(content)
+      
+      if (index >= 0) {
+        const before = context.slice(0, index)
+        const after = context.slice(index + content.length)
+        
+        return (
+          <>
+            {before}
+            <span className="highlight-core">{content}</span>
+            {after}
+          </>
+        )
+      }
+      
+      // Fallback: show context and the core highlight separately
+      return (
+        <>
+          <span className="highlight-context-prefix">{context}</span>
+          <br />
+          <span className="highlight-core">{content}</span>
+        </>
+      )
+    }
+    
+    return <span className="highlight-core">{content}</span>
+  }
+  
   return (
     <>
     <div 
@@ -588,7 +620,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
           style={{ cursor: 'pointer' }}
           title="Go to quote in article"
         >
-          {highlight.content}
+          {renderHighlightText()}
         </blockquote>
         
         {showCitation && (
