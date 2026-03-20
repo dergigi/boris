@@ -9,52 +9,52 @@ function setCacheHeaders(res: VercelResponse, maxAge: number = 86400): void {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const naddr = (req.query.naddr as string | undefined)?.trim()
-  
-  if (!naddr) {
-    return res.status(400).json({ error: 'Missing naddr parameter' })
-  }
+  try {
+    const naddr = (req.query.naddr as string | undefined)?.trim()
 
-  const debugEnabled = req.query.debug === '1' || req.headers['x-boris-debug'] === '1'
-  if (debugEnabled) {
-    res.setHeader('X-Boris-Debug', '1')
-  }
+    if (!naddr) {
+      return res.status(400).json({ error: 'Missing naddr parameter' })
+    }
 
-  // Try Redis cache first
-  let meta = await getArticleMeta(naddr).catch((err) => {
-    console.error('Failed to get article meta from Redis:', err)
-    return null
-  })
-  let cacheMaxAge = 86400
+    const debugEnabled = req.query.debug === '1' || req.headers['x-boris-debug'] === '1'
+    if (debugEnabled) {
+      res.setHeader('X-Boris-Debug', '1')
+    }
 
-  if (!meta) {
-    // Cache miss: fetch from relays (let it use its natural timeouts)
-    try {
-      meta = await fetchArticleMetadataViaRelays(naddr)
-      
-      if (meta) {
-        // Store in Redis and use it
-        await setArticleMeta(naddr, meta).catch((err) => {
-          console.error('Failed to cache relay metadata:', err)
-        })
-        cacheMaxAge = 86400
-      } else {
-        // Relay fetch failed: use default fallback
+    let meta = await getArticleMeta(naddr).catch((err) => {
+      console.error('Failed to get article meta from Redis:', err)
+      return null
+    })
+    let cacheMaxAge = 86400
+
+    if (!meta) {
+      try {
+        meta = await fetchArticleMetadataViaRelays(naddr)
+
+        if (meta) {
+          await setArticleMeta(naddr, meta).catch((err) => {
+            console.error('Failed to cache relay metadata:', err)
+          })
+          cacheMaxAge = 86400
+        } else {
+          cacheMaxAge = 300
+        }
+      } catch (err) {
+        console.error(`Error fetching from relays for ${naddr}:`, err)
         cacheMaxAge = 300
       }
-    } catch (err) {
-      console.error(`Error fetching from relays for ${naddr}:`, err)
-      cacheMaxAge = 300
     }
-  }
 
-  // Generate and send HTML
-  const html = generateHtml(naddr, meta)
-  setCacheHeaders(res, cacheMaxAge)
-  
-  if (debugEnabled) {
-    // Debug mode enabled
+    const html = generateHtml(naddr, meta)
+    setCacheHeaders(res, cacheMaxAge)
+    return res.status(200).send(html)
+  } catch (err) {
+    console.error('Unhandled error in article-og handler:', err)
+    const fallbackHtml = generateHtml(
+      (req.query.naddr as string) || '',
+      null
+    )
+    setCacheHeaders(res, 60)
+    return res.status(200).send(fallbackHtml)
   }
-  
-  return res.status(200).send(html)
 }
