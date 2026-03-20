@@ -11,9 +11,10 @@ import type { ArticleMetadata } from './ogStore.js'
 
 const { getArticleTitle, getArticleImage, getArticleSummary } = Helpers
 
-const SERVERLESS_RELAYS = RELAYS.filter(
-  (url) => !url.includes('localhost') && !url.includes('127.0.0.1')
-)
+const isNotLocalhostRelay = (url: string): boolean =>
+  !url.includes('localhost') && !url.includes('127.0.0.1')
+
+const SERVERLESS_RELAYS = RELAYS.filter(isNotLocalhostRelay)
 
 function destroyPool(pool: RelayPool): void {
   for (const relay of pool.relays.values()) {
@@ -124,9 +125,7 @@ export async function fetchArticleMetadataViaRelays(naddr: string): Promise<Arti
     }
 
     const pointer = decoded.data as AddressPointer
-    const pointerRelays = pointer.relays?.filter(
-      (url) => !url.includes('localhost') && !url.includes('127.0.0.1')
-    )
+    const pointerRelays = pointer.relays?.filter(isNotLocalhostRelay)
     const relayUrls = pointerRelays && pointerRelays.length > 0 ? pointerRelays : SERVERLESS_RELAYS
 
     const article = await fetchFirstEvent(relayPool, relayUrls, {

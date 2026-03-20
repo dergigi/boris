@@ -35,7 +35,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           await setArticleMeta(naddr, meta).catch((err) => {
             console.error('Failed to cache relay metadata:', err)
           })
-          cacheMaxAge = 86400
         } else {
           cacheMaxAge = 300
         }
