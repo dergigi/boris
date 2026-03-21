@@ -11,6 +11,11 @@ import type { ArticleMetadata } from './ogStore.js'
 
 const { getArticleTitle, getArticleImage, getArticleSummary } = Helpers
 
+const isNotLocalhostRelay = (url: string): boolean =>
+  !url.includes('localhost') && !url.includes('127.0.0.1')
+
+const SERVERLESS_RELAYS = RELAYS.filter(isNotLocalhostRelay)
+
 async function fetchEventsFromRelays(
   relayPool: RelayPool,
   relayUrls: string[],
@@ -22,11 +27,15 @@ async function fetchEventsFromRelays(
   await new Promise<void>((resolve) => {
     const timeout = setTimeout(() => resolve(), timeoutMs)
 
-    relayPool.request(relayUrls, filter).subscribe({
+    const subscription = relayPool.request(relayUrls, filter).subscribe({
       next: (event) => {
         events.push(event)
       },
-      error: () => resolve(),
+      error: () => {
+        clearTimeout(timeout)
+        subscription?.unsubscribe()
+        resolve()
+      },
       complete: () => {
         clearTimeout(timeout)
         resolve()
@@ -106,7 +115,7 @@ async function fetchAuthorProfile(
 
 export async function fetchArticleMetadataViaRelays(naddr: string): Promise<ArticleMetadata | null> {
   const relayPool = new RelayPool()
-  
+
   try {
     const decoded = nip19.decode(naddr)
     if (decoded.type !== 'naddr') {
@@ -114,9 +123,9 @@ export async function fetchArticleMetadataViaRelays(naddr: string): Promise<Arti
     }
 
     const pointer = decoded.data as AddressPointer
-    const relayUrls = pointer.relays && pointer.relays.length > 0 ? pointer.relays : RELAYS
+    const pointerRelays = pointer.relays?.filter(isNotLocalhostRelay)
+    const relayUrls = pointerRelays && pointerRelays.length > 0 ? pointerRelays : SERVERLESS_RELAYS
 
-    // Step A: Fetch article - return as soon as first event arrives
     const article = await fetchFirstEvent(relayPool, relayUrls, {
       kinds: [pointer.kind],
       authors: [pointer.pubkey],
@@ -127,24 +136,19 @@ export async function fetchArticleMetadataViaRelays(naddr: string): Promise<Arti
       return null
     }
 
-    // Step B: Extract article metadata immediately
     const title = getArticleTitle(article) || 'Untitled Article'
     const summary = getArticleSummary(article) || 'Read this article on Boris'
     const image = getArticleImage(article) || '/boris-social-1200.png'
 
-    // Extract 't' tags (topic tags) from article event
     const tags = article.tags
       ?.filter((tag) => tag[0] === 't' && tag[1])
       .map((tag) => tag[1])
       .filter((tag) => tag.length > 0) || []
 
-    // Generate image alt text (use title as fallback)
     const imageAlt = title || 'Article cover image'
 
-    // Step C: Fetch author profile with micro-wait (connections already warm)
     let authorName = await fetchAuthorProfile(relayPool, relayUrls, pointer.pubkey, 400)
 
-    // Step D: Optional hedge - try again with slightly longer timeout if first attempt failed
     if (!authorName) {
       authorName = await fetchAuthorProfile(relayPool, relayUrls, pointer.pubkey, 600)
     }
