@@ -9,9 +9,9 @@ function setCacheHeaders(res: VercelResponse, maxAge: number = 86400): void {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  try {
-    const naddr = (req.query.naddr as string | undefined)?.trim()
+  const naddr = (req.query.naddr as string | undefined)?.trim()
 
+  try {
     if (!naddr) {
       return res.status(400).json({ error: 'Missing naddr parameter' })
     }
@@ -50,7 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err) {
     console.error('Unhandled error in article-og handler:', err)
     const fallbackHtml = generateHtml(
-      (req.query.naddr as string) || '',
+      naddr || '',
       null
     )
     setCacheHeaders(res, 60)

@@ -16,12 +16,6 @@ const isNotLocalhostRelay = (url: string): boolean =>
 
 const SERVERLESS_RELAYS = RELAYS.filter(isNotLocalhostRelay)
 
-function destroyPool(pool: RelayPool): void {
-  for (const relay of pool.relays.values()) {
-    relay.close()
-  }
-}
-
 async function fetchEventsFromRelays(
   relayPool: RelayPool,
   relayUrls: string[],
@@ -33,11 +27,15 @@ async function fetchEventsFromRelays(
   await new Promise<void>((resolve) => {
     const timeout = setTimeout(() => resolve(), timeoutMs)
 
-    relayPool.request(relayUrls, filter).subscribe({
+    const subscription = relayPool.request(relayUrls, filter).subscribe({
       next: (event) => {
         events.push(event)
       },
-      error: () => resolve(),
+      error: () => {
+        clearTimeout(timeout)
+        subscription?.unsubscribe()
+        resolve()
+      },
       complete: () => {
         clearTimeout(timeout)
         resolve()
@@ -116,7 +114,7 @@ async function fetchAuthorProfile(
 }
 
 export async function fetchArticleMetadataViaRelays(naddr: string): Promise<ArticleMetadata | null> {
-  const relayPool = new RelayPool({ keepAlive: 0 })
+  const relayPool = new RelayPool()
 
   try {
     const decoded = nip19.decode(naddr)
@@ -171,8 +169,6 @@ export async function fetchArticleMetadataViaRelays(naddr: string): Promise<Arti
   } catch (err) {
     console.error('Failed to fetch article metadata via relays:', err)
     return null
-  } finally {
-    destroyPool(relayPool)
   }
 }
 
