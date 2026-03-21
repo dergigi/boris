@@ -1,7 +1,6 @@
 import React from 'react'
 import NostrMentionLink from './NostrMentionLink'
-// Regex to match nostr: URIs and bare bech32 identifiers (npub1, note1, nevent1, nprofile1, naddr1, etc.)
-const nostrLinkPattern = /\b(?:nostr:)?(?:npub1|note1|nevent1|nprofile1|naddr1|nsec1|nrelay1)[a-z0-9]+\b/gi
+import { nostrLinkPattern } from '../utils/nostrPatterns'
 
 // Helper to add timestamps to error logs
 const ts = () => {

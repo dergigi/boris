@@ -114,6 +114,7 @@ export async function collectBookmarksFromEvents(
   allTags: string[][]
 }> {
   const publicItemsAll: IndividualBookmark[] = []
+  const privateItemsAll: IndividualBookmark[] = []
   let newestCreatedAt = 0
   let latestContent = ''
   let allTags: string[][] = []
@@ -188,7 +189,7 @@ export async function collectBookmarksFromEvents(
       // Check for already-unlocked hidden bookmarks
       const priv = getHiddenBookmarks(evt)
       if (priv) {
-        publicItemsAll.push(
+        privateItemsAll.push(
           ...processApplesauceBookmarks(priv, activeAccount, true, evt.created_at).map(i => ({
             ...i,
             sourceKind: evt.kind,
@@ -203,7 +204,6 @@ export async function collectBookmarksFromEvents(
   }
 
   // Decrypt events sequentially
-  const privateItemsAll: IndividualBookmark[] = []
   if (decryptJobs.length > 0 && signerCandidate) {
     for (const job of decryptJobs) {
       const privateItems = await decryptEvent(job.evt, activeAccount, signerCandidate, job.metadata)
