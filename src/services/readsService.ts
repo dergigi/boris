@@ -1,5 +1,5 @@
 import { RelayPool } from 'applesauce-relay'
-import { Helpers } from 'applesauce-core'
+import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
 import { Bookmark } from '../types/bookmarks'
 import { fetchReadArticles } from './libraryService'
 import { queryEvents } from './dataFetch'
@@ -10,8 +10,6 @@ import { AddressPointer } from 'nostr-tools/nip19'
 import { processReadingProgress, processMarkedAsRead, filterValidItems, sortByReadingActivity } from './readingDataProcessor'
 import { mergeReadItem } from '../utils/readItemMerge'
 import type { ReadItem } from './readsController'
-
-const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 // Re-export ReadItem from readsController for consistency
 export type { ReadItem } from './readsController'

@@ -1,5 +1,5 @@
 import { IEventStore, mapEventsToStore } from 'applesauce-core'
-import { EventFactory } from 'applesauce-factory'
+import { EventFactory } from 'applesauce-core/event-factory'
 import { RelayPool, onlyEvents } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { firstValueFrom } from 'rxjs'

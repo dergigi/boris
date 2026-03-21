@@ -33,9 +33,6 @@ import { nostrverseWritingsController } from '../services/nostrverseWritingsCont
 import { readingProgressController } from '../services/readingProgressController'
 import { contactsController } from '../services/contactsController'
 
-// Accessors from Helpers (currently unused here)
-// const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
-
 interface ExploreProps {
   relayPool: RelayPool
   eventStore: IEventStore

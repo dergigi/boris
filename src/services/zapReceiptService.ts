@@ -1,7 +1,7 @@
 import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
 import { lastValueFrom, merge, Observable, takeUntil, timer, toArray } from 'rxjs'
 import { NostrEvent } from 'nostr-tools'
-import { isValidZap, getZapSender, getZapAmount } from 'applesauce-core/helpers'
+import { isValidZap, getZapSender, getZapAmount } from 'applesauce-common/helpers'
 import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 import { BORIS_PUBKEY } from './highlightCreationService'
 import { RELAYS } from '../config/relays'

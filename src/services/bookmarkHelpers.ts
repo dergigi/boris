@@ -1,9 +1,7 @@
 import { getParsedContent } from 'applesauce-content/text'
-import { Helpers } from 'applesauce-core'
+import { getArticleTitle } from 'applesauce-common/helpers'
 import { ActiveAccount, IndividualBookmark, ParsedContent } from '../types/bookmarks'
 import type { NostrEvent } from './bookmarkEvents'
-
-const { getArticleTitle } = Helpers
 
 // Global symbol for caching hidden bookmark content on events
 export const BookmarkHiddenSymbol = Symbol.for('bookmark-hidden')

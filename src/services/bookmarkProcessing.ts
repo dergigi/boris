@@ -1,4 +1,5 @@
 import { Helpers } from 'applesauce-core'
+import { getHiddenBookmarks, getBookmarks, parseBookmarkTags } from 'applesauce-common/helpers'
 import {
   ActiveAccount,
   IndividualBookmark
@@ -62,7 +63,7 @@ async function decryptEvent(
       if (decryptedContent) {
         try {
           const hiddenTags = JSON.parse(decryptedContent) as string[][]
-          const manualPrivate = Helpers.parseBookmarkTags(hiddenTags)
+          const manualPrivate = parseBookmarkTags(hiddenTags)
           privateItems.push(
             ...processApplesauceBookmarks(manualPrivate, activeAccount, true, evt.created_at).map(i => ({
               ...i,
@@ -81,7 +82,7 @@ async function decryptEvent(
       }
     }
 
-    const priv = Helpers.getHiddenBookmarks(evt)
+    const priv = getHiddenBookmarks(evt)
     if (priv) {
       privateItems.push(
         ...processApplesauceBookmarks(priv, activeAccount, true, evt.created_at).map(i => ({
@@ -157,7 +158,7 @@ export async function collectBookmarksFromEvents(
       continue
     }
 
-    const pub = Helpers.getPublicBookmarks(evt)
+    const pub = getBookmarks(evt)
     const processedPub = processApplesauceBookmarks(pub, activeAccount, false, evt.created_at)
     
     
@@ -185,7 +186,7 @@ export async function collectBookmarksFromEvents(
       decryptJobs.push({ evt, metadata })
     } else {
       // Check for already-unlocked hidden bookmarks
-      const priv = Helpers.getHiddenBookmarks(evt)
+      const priv = getHiddenBookmarks(evt)
       if (priv) {
         publicItemsAll.push(
           ...processApplesauceBookmarks(priv, activeAccount, true, evt.created_at).map(i => ({

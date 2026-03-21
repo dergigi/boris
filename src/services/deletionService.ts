@@ -1,4 +1,4 @@
-import { EventFactory } from 'applesauce-factory'
+import { EventFactory } from 'applesauce-core/event-factory'
 import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'

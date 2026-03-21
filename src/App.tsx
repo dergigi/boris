@@ -10,7 +10,7 @@ import { RelayPool } from 'applesauce-relay'
 import { NostrConnectSigner } from 'applesauce-signers'
 import type { NostrEvent } from 'nostr-tools'
 import { getDefaultBunkerPermissions } from './services/nostrConnect'
-import { createAddressLoader } from 'applesauce-loaders/loaders'
+import { createEventLoaderForStore } from 'applesauce-loaders/loaders'
 import Debug from './components/Debug'
 import Bookmarks from './components/Bookmarks'
 import RouteDebug from './components/RouteDebug'
@@ -590,15 +590,12 @@ function App() {
         poolWithSub._keepAliveSubscription = newKeepAliveSub
       }
 
-      // Helper to update address loader based on current active relays
+      // Helper to update event loader based on current active relays
       const updateAddressLoader = (relayUrls?: string[]) => {
         const targetRelays = relayUrls || getActiveRelayUrls(pool)
-        const addressLoader = createAddressLoader(pool, {
-          eventStore: store,
+        createEventLoaderForStore(store, pool, {
           lookupRelays: targetRelays
         })
-        store.addressableLoader = addressLoader
-        store.replaceableLoader = addressLoader
       }
 
       // Handle user relay list and blocked relays when account changes
@@ -684,13 +681,10 @@ function App() {
       // Store subscription for cleanup
       ;(pool as unknown as { _keepAliveSubscription: typeof keepAliveSub })._keepAliveSubscription = keepAliveSub
       
-      // Attach address/replaceable loaders so ProfileModel can fetch profiles
-      const addressLoader = createAddressLoader(pool, {
-        eventStore: store,
+      // Attach unified event loader so ProfileModel can fetch profiles
+      createEventLoaderForStore(store, pool, {
         lookupRelays: RELAYS
       })
-      store.addressableLoader = addressLoader
-      store.replaceableLoader = addressLoader
 
       setEventStore(store)
       setAccountManager(accounts)

@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { Hooks } from 'applesauce-react'
 import { Helpers, IEventStore } from 'applesauce-core'
-import { getContentPointers } from 'applesauce-factory/helpers'
+import { getContentPointers } from 'applesauce-core/helpers'
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { fetchProfiles, loadCachedProfiles } from '../services/profileService'

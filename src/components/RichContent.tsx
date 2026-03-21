@@ -1,6 +1,7 @@
 import React from 'react'
 import NostrMentionLink from './NostrMentionLink'
-import { Tokens } from 'applesauce-content/helpers'
+// Regex to match nostr: URIs and bare bech32 identifiers (npub1, note1, nevent1, nprofile1, naddr1, etc.)
+const nostrLinkPattern = /(?:nostr:)?(?:npub1|note1|nevent1|nprofile1|naddr1|nsec1|nrelay1)[a-z0-9]+/gi
 
 // Helper to add timestamps to error logs
 const ts = () => {
@@ -30,7 +31,7 @@ const RichContent: React.FC<RichContentProps> = ({
     // Pattern to match:
     // 1. nostr: URIs (nostr:npub1..., nostr:note1..., etc.) using applesauce Tokens.nostrLink
     // 2. http(s) URLs
-    const nostrPattern = Tokens.nostrLink
+    const nostrPattern = nostrLinkPattern
     const urlPattern = /https?:\/\/[^\s]+/gi
     const combinedPattern = new RegExp(`(${nostrPattern.source}|${urlPattern.source})`, 'gi')
     

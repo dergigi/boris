@@ -156,7 +156,7 @@ export default defineConfig({
     mainFields: ['module', 'jsnext:main', 'jsnext', 'main']
   },
   optimizeDeps: {
-    include: ['applesauce-core', 'applesauce-factory', 'applesauce-relay', 'applesauce-react', 'applesauce-accounts', 'applesauce-signers'],
+    include: ['applesauce-core', 'applesauce-common', 'applesauce-relay', 'applesauce-react', 'applesauce-accounts', 'applesauce-signers'],
     esbuildOptions: {
       resolveExtensions: ['.js', '.ts', '.tsx', '.json']
     }
@@ -173,7 +173,7 @@ export default defineConfig({
     }
   },
   ssr: {
-    noExternal: ['applesauce-core', 'applesauce-factory', 'applesauce-relay', 'applesauce-accounts', 'applesauce-signers']
+    noExternal: ['applesauce-core', 'applesauce-common', 'applesauce-relay', 'applesauce-accounts', 'applesauce-signers']
   }
 })
 

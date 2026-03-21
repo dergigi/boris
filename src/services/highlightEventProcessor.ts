@@ -1,5 +1,5 @@
 import { NostrEvent } from 'nostr-tools'
-import { Helpers } from 'applesauce-core'
+import { getHighlightAttributions, getHighlightComment, getHighlightContext, getHighlightSourceAddressPointer, getHighlightSourceEventPointer, getHighlightSourceUrl, getHighlightText } from 'applesauce-common/helpers'
 import { Highlight } from '../types/highlights'
 
 // Extended event type with highlight metadata
@@ -10,16 +10,6 @@ interface HighlightEvent extends NostrEvent {
     isSyncing?: boolean
   }
 }
-
-const {
-  getHighlightText,
-  getHighlightContext,
-  getHighlightComment,
-  getHighlightSourceEventPointer,
-  getHighlightSourceAddressPointer,
-  getHighlightSourceUrl,
-  getHighlightAttributions
-} = Helpers
 
 const METADATA_CACHE_KEY = 'highlightMetadataCache'
 

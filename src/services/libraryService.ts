@@ -1,12 +1,10 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
-import { Helpers } from 'applesauce-core'
+import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
 import { KINDS } from '../config/kinds'
 import { ARCHIVE_EMOJI } from './reactionService'
 import { BlogPostPreview } from './exploreService'
 import { queryEvents } from './dataFetch'
-
-const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 export interface ReadArticle {
   id: string

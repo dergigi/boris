@@ -1,7 +1,8 @@
 import { decode, npubEncode, noteEncode } from 'nostr-tools/nip19'
 import { getNostrUrl } from '../config/nostrGateways'
-import { Tokens } from 'applesauce-content/helpers'
-import { getContentPointers } from 'applesauce-factory/helpers'
+// Regex to match nostr: URIs and bare bech32 identifiers
+const nostrLinkToken = /(?:nostr:)?(?:npub1|note1|nevent1|nprofile1|naddr1|nsec1|nrelay1)[a-z0-9]+/gi
+import { getContentPointers } from 'applesauce-core/helpers'
 import { encodeDecodeResult } from 'applesauce-core/helpers'
 import { Helpers } from 'applesauce-core'
 
@@ -9,11 +10,11 @@ const { getPubkeyFromDecodeResult } = Helpers
 
 /**
  * Regular expression to match nostr: URIs and bare NIP-19 identifiers
- * Uses applesauce Tokens.nostrLink which includes word boundary checks
+ * Uses nostr bech32 pattern which includes word boundary checks
  * Matches: nostr:npub1..., nostr:note1..., nostr:nprofile1..., nostr:nevent1..., nostr:naddr1...
  * Also matches bare identifiers without the nostr: prefix
  */
-const NOSTR_URI_REGEX = Tokens.nostrLink
+const NOSTR_URI_REGEX = nostrLinkToken
 
 /**
  * Extract all nostr URIs from text using applesauce helpers
