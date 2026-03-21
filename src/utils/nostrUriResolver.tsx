@@ -227,8 +227,7 @@ function replaceNostrUrisSafely(
   
   // Replace nostr URIs, but skip those inside link URLs
   // Also check if nostr URI is part of any URL pattern (http/https URLs)
-  // Callback params: (match, encoded, type, offset, string)
-  const result = markdown.replace(NOSTR_URI_REGEX, (match, encoded, _type, offset, fullString) => {
+  const result = markdown.replace(NOSTR_URI_REGEX, (match, encoded, offset: number, fullString: string) => {
     const matchEnd = offset + match.length
     
     // Check if this match is inside a markdown link URL
