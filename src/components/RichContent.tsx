@@ -2,6 +2,11 @@ import React from 'react'
 import NostrMentionLink from './NostrMentionLink'
 import { nostrLinkPattern } from '../utils/nostrPatterns'
 
+// Pre-compiled patterns (static, no need to recreate per render)
+const urlPattern = /https?:\/\/[^\s]+/gi
+const combinedPattern = new RegExp(`(${nostrLinkPattern.source}|${urlPattern.source})`, 'gi')
+const nostrTestPattern = new RegExp(nostrLinkPattern.source, nostrLinkPattern.flags)
+
 // Helper to add timestamps to error logs
 const ts = () => {
   const now = new Date()
@@ -27,19 +32,11 @@ const RichContent: React.FC<RichContentProps> = ({
   className = 'bookmark-content' 
 }) => {
   try {
-    // Pattern to match:
-    // 1. nostr: URIs (nostr:npub1..., nostr:note1..., etc.)
-    // 2. http(s) URLs
-    const nostrPattern = nostrLinkPattern
-    const urlPattern = /https?:\/\/[^\s]+/gi
-    const combinedPattern = new RegExp(`(${nostrPattern.source}|${urlPattern.source})`, 'gi')
-    
     const parts = content.split(combinedPattern)
   
-    // Helper to check if a string is a nostr identifier (without mutating regex state)
     const isNostrIdentifier = (str: string): boolean => {
-      const testPattern = new RegExp(nostrPattern.source, nostrPattern.flags)
-      return testPattern.test(str)
+      nostrTestPattern.lastIndex = 0
+      return nostrTestPattern.test(str)
     }
     
     return (

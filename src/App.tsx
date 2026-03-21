@@ -591,10 +591,12 @@ function App() {
       }
 
       // Helper to update event loader based on current active relays
-      const updateAddressLoader = (relayUrls?: string[]) => {
+      const updateEventLoader = (relayUrls?: string[]) => {
         const targetRelays = relayUrls || getActiveRelayUrls(pool)
         createEventLoaderForStore(store, pool, {
-          lookupRelays: targetRelays
+          lookupRelays: targetRelays,
+          bufferTime: 200,
+          followRelayHints: true
         })
       }
 
@@ -657,7 +659,7 @@ function App() {
             applyRelaySetToPool(pool, finalRelays)
             
             updateKeepAlive()
-            updateAddressLoader()
+            updateEventLoader()
           }).catch((error) => {
             console.error('[relay-init] Failed to load user relay list (continuing with initial set):', error)
             // Continue with initial relay set on error - no need to change anything
@@ -666,7 +668,7 @@ function App() {
           // User logged out - reset to hardcoded relays
           applyRelaySetToPool(pool, RELAYS)
           updateKeepAlive(RELAYS)
-          updateAddressLoader(RELAYS)
+          updateEventLoader(RELAYS)
         }
       })
       
@@ -683,7 +685,9 @@ function App() {
       
       // Attach unified event loader so ProfileModel can fetch profiles
       createEventLoaderForStore(store, pool, {
-        lookupRelays: RELAYS
+        lookupRelays: RELAYS,
+        bufferTime: 200,
+        followRelayHints: true
       })
 
       setEventStore(store)
