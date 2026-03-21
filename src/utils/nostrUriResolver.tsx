@@ -1,7 +1,7 @@
 import { decode, npubEncode, noteEncode } from 'nostr-tools/nip19'
 import { getNostrUrl } from '../config/nostrGateways'
-import { Tokens } from 'applesauce-content/helpers'
-import { getContentPointers } from 'applesauce-factory/helpers'
+import { nostrLinkPattern } from './nostrPatterns'
+import { getContentPointers } from 'applesauce-core/helpers'
 import { encodeDecodeResult } from 'applesauce-core/helpers'
 import { Helpers } from 'applesauce-core'
 
@@ -9,11 +9,11 @@ const { getPubkeyFromDecodeResult } = Helpers
 
 /**
  * Regular expression to match nostr: URIs and bare NIP-19 identifiers
- * Uses applesauce Tokens.nostrLink which includes word boundary checks
+ * Uses bech32 pattern with word boundary checks
  * Matches: nostr:npub1..., nostr:note1..., nostr:nprofile1..., nostr:nevent1..., nostr:naddr1...
  * Also matches bare identifiers without the nostr: prefix
  */
-const NOSTR_URI_REGEX = Tokens.nostrLink
+const NOSTR_URI_REGEX = nostrLinkPattern
 
 /**
  * Extract all nostr URIs from text using applesauce helpers
@@ -227,8 +227,7 @@ function replaceNostrUrisSafely(
   
   // Replace nostr URIs, but skip those inside link URLs
   // Also check if nostr URI is part of any URL pattern (http/https URLs)
-  // Callback params: (match, encoded, type, offset, string)
-  const result = markdown.replace(NOSTR_URI_REGEX, (match, encoded, _type, offset, fullString) => {
+  const result = markdown.replace(NOSTR_URI_REGEX, (match, encoded, offset: number, fullString: string) => {
     const matchEnd = offset + match.length
     
     // Check if this match is inside a markdown link URL

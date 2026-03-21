@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useObservableMemo } from 'applesauce-react/hooks'
+import { use$ } from 'applesauce-react/hooks'
 import { startWith } from 'rxjs'
 import type { IEventStore } from 'applesauce-core'
 import type { Filter, NostrEvent } from 'nostr-tools'
@@ -20,7 +20,7 @@ export function useStoreTimeline<T>(
   mapEvent: (event: NostrEvent) => T,
   deps: unknown[] = []
 ): T[] {
-  const events = useObservableMemo(
+  const events = use$(
     () => eventStore ? eventStore.timeline(filter).pipe(startWith([])) : undefined,
     [eventStore, ...deps]
   )

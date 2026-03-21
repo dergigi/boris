@@ -3,14 +3,12 @@ import { lastValueFrom, take } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
-import { Helpers } from 'applesauce-core'
+import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
 import { getContentRelays, getFallbackContentRelays, isContentRelay } from '../config/relays'
 import { prioritizeLocalRelays, partitionRelays, createParallelReqStreams } from '../utils/helpers'
 import { merge, toArray as rxToArray } from 'rxjs'
 import { UserSettings } from './settingsService'
 import { rebroadcastEvents } from './rebroadcastService'
-
-const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 export interface ArticleContent {
   title: string

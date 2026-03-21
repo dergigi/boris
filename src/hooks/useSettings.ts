@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { IEventStore } from 'applesauce-core'
 import { RelayPool } from 'applesauce-relay'
-import { EventFactory } from 'applesauce-factory'
+import { EventFactory } from 'applesauce-core/event-factory'
 import { AccountManager } from 'applesauce-accounts'
 import { UserSettings, saveSettings, watchSettings, startSettingsStream } from '../services/settingsService'
 import { loadFont, getFontFamily } from '../utils/fontLoader'

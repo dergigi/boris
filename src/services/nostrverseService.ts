@@ -1,13 +1,12 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
-import { Helpers, IEventStore } from 'applesauce-core'
+import { IEventStore } from 'applesauce-core'
+import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
 import { BlogPostPreview } from './exploreService'
 import { Highlight } from '../types/highlights'
 import { eventToHighlight, dedupeHighlights, sortHighlights } from './highlightEventProcessor'
 import { queryEvents } from './dataFetch'
 import { cacheArticleEvent } from './articleService'
-
-const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 /**
  * Fetches public blog posts (kind:30023) from the nostrverse (not filtered by author)

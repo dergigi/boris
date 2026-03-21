@@ -1,11 +1,10 @@
 import { RelayPool } from 'applesauce-relay'
-import { IEventStore, Helpers } from 'applesauce-core'
+import { IEventStore } from 'applesauce-core'
+import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
 import { NostrEvent } from 'nostr-tools'
 import { KINDS } from '../config/kinds'
 import { queryEvents } from './dataFetch'
 import { BlogPostPreview } from './exploreService'
-
-const { getArticleTitle, getArticleSummary, getArticleImage, getArticlePublished } = Helpers
 
 type WritingsCallback = (posts: BlogPostPreview[]) => void
 type LoadingCallback = (loading: boolean) => void

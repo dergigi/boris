@@ -1,11 +1,10 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
-import { Helpers, IEventStore } from 'applesauce-core'
+import { IEventStore } from 'applesauce-core'
+import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
 import { cacheArticleEvent } from './articleService'
-
-const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 export interface BlogPostPreview {
   event: NostrEvent

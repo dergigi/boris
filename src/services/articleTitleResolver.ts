@@ -2,12 +2,10 @@ import { RelayPool } from 'applesauce-relay'
 import { lastValueFrom, take } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
-import { Helpers } from 'applesauce-core'
+import { getArticleTitle } from 'applesauce-common/helpers'
 import { RELAYS } from '../config/relays'
 import { prioritizeLocalRelays, partitionRelays, createParallelReqStreams } from '../utils/helpers'
 import { merge, toArray as rxToArray } from 'rxjs'
-
-const { getArticleTitle } = Helpers
 
 /**
  * Fetch article title for a single naddr

@@ -1,8 +1,6 @@
 import { NostrEvent } from 'nostr-tools'
-import { Helpers } from 'applesauce-core'
+import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
 import { BlogPostPreview } from '../services/exploreService'
-
-const { getArticleTitle, getArticleImage, getArticlePublished, getArticleSummary } = Helpers
 
 export const toBlogPostPreview = (event: NostrEvent): BlogPostPreview => ({
   event,

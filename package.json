@@ -22,13 +22,13 @@
     "@treeee/youtube-caption-extractor": "^1.5.5",
     "@upstash/redis": "^1.35.6",
     "@vercel/node": "^5.3.26",
-    "applesauce-accounts": "^4.0.0",
-    "applesauce-content": "^4.0.0",
-    "applesauce-core": "^4.0.0",
-    "applesauce-factory": "^4.0.0",
-    "applesauce-loaders": "^4.0.0",
-    "applesauce-react": "^4.0.0",
-    "applesauce-relay": "^4.0.0",
+    "applesauce-accounts": "^5.1.0",
+    "applesauce-common": "^5.1.0",
+    "applesauce-content": "^5.0.0",
+    "applesauce-core": "^5.1.0",
+    "applesauce-loaders": "^5.1.0",
+    "applesauce-react": "^5.1.0",
+    "applesauce-relay": "^5.1.0",
     "date-fns": "^4.1.0",
     "fast-average-color": "^9.5.0",
     "fetch-opengraph": "^1.0.36",
@@ -107,7 +107,9 @@
     },
     "overrides": [
       {
-        "files": ["api/**/*.ts"],
+        "files": [
+          "api/**/*.ts"
+        ],
         "env": {
           "node": true,
           "browser": false

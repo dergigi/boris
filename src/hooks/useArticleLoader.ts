@@ -4,7 +4,7 @@ import { RelayPool } from 'applesauce-relay'
 import type { IEventStore } from 'applesauce-core'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
-import { Helpers } from 'applesauce-core'
+import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
 import { queryEvents } from '../services/dataFetch'
 import { fetchArticleByNaddr, getFromCache, saveToCache } from '../services/articleService'
 import { fetchHighlightsForArticle } from '../services/highlightService'
@@ -122,11 +122,11 @@ export function useArticleLoader({
         
         if (storedEvent) {
           foundInNavState = true
-          const title = Helpers.getArticleTitle(storedEvent) || previewData?.title || 'Untitled Article'
+          const title = getArticleTitle(storedEvent) || previewData?.title || 'Untitled Article'
           setCurrentTitle(title)
-          const image = Helpers.getArticleImage(storedEvent) || previewData?.image
-          const summary = Helpers.getArticleSummary(storedEvent) || previewData?.summary
-          const published = Helpers.getArticlePublished(storedEvent) || previewData?.published
+          const image = getArticleImage(storedEvent) || previewData?.image
+          const summary = getArticleSummary(storedEvent) || previewData?.summary
+          const published = getArticlePublished(storedEvent) || previewData?.published
           setReaderContent({
             title,
             markdown: storedEvent.content,
@@ -215,10 +215,10 @@ export function useArticleLoader({
                     
                     // Only update if this is a newer version than what we loaded
                     if (evt.created_at > originalCreatedAt) {
-                      const title = Helpers.getArticleTitle(evt) || 'Untitled Article'
-                      const image = Helpers.getArticleImage(evt)
-                      const summary = Helpers.getArticleSummary(evt)
-                      const published = Helpers.getArticlePublished(evt)
+                      const title = getArticleTitle(evt) || 'Untitled Article'
+                      const image = getArticleImage(evt)
+                      const summary = getArticleSummary(evt)
+                      const published = getArticlePublished(evt)
                       
                       setCurrentTitle(title)
                       setReaderContent({
@@ -365,11 +365,11 @@ export function useArticleLoader({
           const storedEvent = eventStore.getEvent?.(coordinate)
           if (storedEvent) {
             foundInEventStore = true
-            const title = Helpers.getArticleTitle(storedEvent) || 'Untitled Article'
+            const title = getArticleTitle(storedEvent) || 'Untitled Article'
             setCurrentTitle(title)
-            const image = Helpers.getArticleImage(storedEvent)
-            const summary = Helpers.getArticleSummary(storedEvent)
-            const published = Helpers.getArticlePublished(storedEvent)
+            const image = getArticleImage(storedEvent)
+            const summary = getArticleSummary(storedEvent)
+            const published = getArticlePublished(storedEvent)
             setReaderContent({
               title,
               markdown: storedEvent.content,
@@ -526,10 +526,10 @@ export function useArticleLoader({
             // Emit immediately on first event
             if (!firstEmitted) {
               firstEmitted = true
-              const title = Helpers.getArticleTitle(evt) || 'Untitled Article'
-              const image = Helpers.getArticleImage(evt)
-              const summary = Helpers.getArticleSummary(evt)
-              const published = Helpers.getArticlePublished(evt)
+              const title = getArticleTitle(evt) || 'Untitled Article'
+              const image = getArticleImage(evt)
+              const summary = getArticleSummary(evt)
+              const published = getArticlePublished(evt)
               
               setCurrentTitle(title)
               setReaderContent({
@@ -575,10 +575,10 @@ export function useArticleLoader({
         // Finalize with newest version if it's newer than what we first rendered
         const finalEvent = (events.sort((a, b) => b.created_at - a.created_at)[0]) || latestEvent
         if (finalEvent) {
-          const title = Helpers.getArticleTitle(finalEvent) || 'Untitled Article'
-          const image = Helpers.getArticleImage(finalEvent)
-          const summary = Helpers.getArticleSummary(finalEvent)
-          const published = Helpers.getArticlePublished(finalEvent)
+          const title = getArticleTitle(finalEvent) || 'Untitled Article'
+          const image = getArticleImage(finalEvent)
+          const summary = getArticleSummary(finalEvent)
+          const published = getArticlePublished(finalEvent)
           
           setCurrentTitle(title)
           setReaderContent({

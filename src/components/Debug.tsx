@@ -7,6 +7,7 @@ import { Accounts } from 'applesauce-accounts'
 import { NostrConnectSigner } from 'applesauce-signers'
 import { RelayPool } from 'applesauce-relay'
 import { Helpers, IEventStore } from 'applesauce-core'
+import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
 import { nip19 } from 'nostr-tools'
 import { getDefaultBunkerPermissions } from '../services/nostrConnect'
 import { DebugBus, type DebugLogEntry } from '../utils/debugBus'
@@ -682,9 +683,6 @@ const Debug: React.FC<DebugProps> = ({
       const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
       
       const { queryEvents } = await import('../services/dataFetch')
-      const { Helpers } = await import('applesauce-core')
-      const { getArticleTitle, getArticleSummary, getArticleImage, getArticlePublished } = Helpers
-      
       const uniqueEvents = new Map<string, NostrEvent>()
       await queryEvents(relayPool, { kinds: [30023], limit: 50 }, {
         relayUrls,

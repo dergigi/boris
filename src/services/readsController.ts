@@ -1,5 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
-import { Helpers, IEventStore } from 'applesauce-core'
+import { IEventStore } from 'applesauce-core'
+import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import { NostrEvent } from 'nostr-tools'
 import { nip19 } from 'nostr-tools'
@@ -8,8 +9,6 @@ import { KINDS } from '../config/kinds'
 import { RELAYS } from '../config/relays'
 import { readingProgressController } from './readingProgressController'
 import { archiveController } from './archiveController'
-
-const { getArticleTitle, getArticleSummary, getArticleImage, getArticlePublished } = Helpers
 
 export interface ReadItem {
   id: string // naddr coordinate

@@ -38,7 +38,7 @@ import { faBooks } from '../icons/customIcons'
 import { shouldTrackReadingProgress } from '../utils/helpers'
 import { useReadingPosition } from '../hooks/useReadingPosition'
 import { ReadingProgressIndicator } from './ReadingProgressIndicator'
-import { EventFactory } from 'applesauce-factory'
+import { EventFactory } from 'applesauce-core/event-factory'
 import { Hooks } from 'applesauce-react'
 import { 
   generateArticleIdentifier, 
