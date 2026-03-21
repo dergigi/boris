@@ -1,7 +1,7 @@
 import React from 'react'
 import NostrMentionLink from './NostrMentionLink'
 // Regex to match nostr: URIs and bare bech32 identifiers (npub1, note1, nevent1, nprofile1, naddr1, etc.)
-const nostrLinkPattern = /(?:nostr:)?(?:npub1|note1|nevent1|nprofile1|naddr1|nsec1|nrelay1)[a-z0-9]+/gi
+const nostrLinkPattern = /\b(?:nostr:)?(?:npub1|note1|nevent1|nprofile1|naddr1|nsec1|nrelay1)[a-z0-9]+\b/gi
 
 // Helper to add timestamps to error logs
 const ts = () => {
@@ -29,7 +29,7 @@ const RichContent: React.FC<RichContentProps> = ({
 }) => {
   try {
     // Pattern to match:
-    // 1. nostr: URIs (nostr:npub1..., nostr:note1..., etc.) using applesauce Tokens.nostrLink
+    // 1. nostr: URIs (nostr:npub1..., nostr:note1..., etc.)
     // 2. http(s) URLs
     const nostrPattern = nostrLinkPattern
     const urlPattern = /https?:\/\/[^\s]+/gi
@@ -51,7 +51,7 @@ const RichContent: React.FC<RichContentProps> = ({
           return null
         }
         
-        // Handle nostr: URIs - Tokens.nostrLink matches both formats
+        // Handle nostr: URIs
         if (part.startsWith('nostr:')) {
           return (
             <NostrMentionLink
@@ -61,7 +61,7 @@ const RichContent: React.FC<RichContentProps> = ({
           )
         }
         
-        // Handle plain nostr identifiers (Tokens.nostrLink matches these too)
+        // Handle plain nostr identifiers
         if (isNostrIdentifier(part)) {
           return (
             <NostrMentionLink
