@@ -1,6 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
-import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
+import { toBlogPostPreview } from '../utils/toBlogPostPreview'
 import { NostrEvent } from 'nostr-tools'
 import { KINDS } from '../config/kinds'
 import { queryEvents } from './dataFetch'
@@ -69,17 +69,10 @@ class WritingsController {
   }
 
   /**
-   * Convert NostrEvent to BlogPostPreview using applesauce Helpers
+   * Convert NostrEvent to BlogPostPreview
    */
   private toPreview(event: NostrEvent): BlogPostPreview {
-    return {
-      event,
-      title: getArticleTitle(event) || 'Untitled',
-      summary: getArticleSummary(event),
-      image: getArticleImage(event),
-      published: getArticlePublished(event),
-      author: event.pubkey
-    }
+    return toBlogPostPreview(event)
   }
 
   /**

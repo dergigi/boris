@@ -1,7 +1,7 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { IEventStore } from 'applesauce-core'
-import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
+import { toBlogPostPreview } from '../utils/toBlogPostPreview'
 import { BlogPostPreview } from './exploreService'
 import { Highlight } from '../types/highlights'
 import { eventToHighlight, dedupeHighlights, sortHighlights } from './highlightEventProcessor'
@@ -47,15 +47,7 @@ export const fetchNostrverseBlogPosts = async (
 
             // Stream post immediately if callback provided
             if (onPost) {
-              const post: BlogPostPreview = {
-                event,
-                title: getArticleTitle(event) || 'Untitled',
-                summary: getArticleSummary(event),
-                image: getArticleImage(event),
-                published: getArticlePublished(event),
-                author: event.pubkey
-              }
-              onPost(post)
+              onPost(toBlogPostPreview(event))
             }
             
             // Cache article content in localStorage for offline access
@@ -68,14 +60,7 @@ export const fetchNostrverseBlogPosts = async (
     
     // Convert to blog post previews and sort by published date (most recent first)
     const blogPosts: BlogPostPreview[] = Array.from(uniqueEvents.values())
-      .map(event => ({
-        event,
-        title: getArticleTitle(event) || 'Untitled',
-        summary: getArticleSummary(event),
-        image: getArticleImage(event),
-        published: getArticlePublished(event),
-        author: event.pubkey
-      }))
+      .map(toBlogPostPreview)
       .sort((a, b) => {
         const timeA = a.published || a.event.created_at
         const timeB = b.published || b.event.created_at

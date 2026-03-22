@@ -1,7 +1,7 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
 import { IEventStore } from 'applesauce-core'
-import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
+import { toBlogPostPreview } from '../utils/toBlogPostPreview'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
 import { cacheArticleEvent } from './articleService'
@@ -65,15 +65,7 @@ export const fetchBlogPostsFromAuthors = async (
             uniqueEvents.set(key, event)
             // Emit as we incorporate
             if (onPost) {
-              const post: BlogPostPreview = {
-                event,
-                title: getArticleTitle(event) || 'Untitled',
-                summary: getArticleSummary(event),
-                image: getArticleImage(event),
-                published: getArticlePublished(event),
-                author: event.pubkey
-              }
-              onPost(post)
+              onPost(toBlogPostPreview(event))
             }
             
             // Cache article content in localStorage for offline access
@@ -91,14 +83,7 @@ export const fetchBlogPostsFromAuthors = async (
     // Convert to blog post previews and sort by published date (most recent first)
     const blogPosts: BlogPostPreview[] = Array.from(uniqueEvents.values())
       .map(event => {
-        const post: BlogPostPreview = {
-          event,
-          title: getArticleTitle(event) || 'Untitled',
-          summary: getArticleSummary(event),
-          image: getArticleImage(event),
-          published: getArticlePublished(event),
-          author: event.pubkey
-        }
+        const post = toBlogPostPreview(event)
         if (onPost) onPost(post)
         return post
       })

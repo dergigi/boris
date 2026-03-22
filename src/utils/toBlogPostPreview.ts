@@ -11,3 +11,17 @@ export const toBlogPostPreview = (event: NostrEvent): BlogPostPreview => ({
   author: event.pubkey
 })
 
+/**
+ * Extract article metadata from a NostrEvent.
+ * Useful for enriching existing objects or building ArticleContent.
+ */
+export function getArticleMeta(event: NostrEvent) {
+  return {
+    title: getArticleTitle(event) || 'Untitled',
+    summary: getArticleSummary(event),
+    image: getArticleImage(event),
+    published: getArticlePublished(event),
+    author: event.pubkey
+  }
+}
+
