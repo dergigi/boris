@@ -71,8 +71,10 @@ export function cacheArticleEvent(event: NostrEvent, settings?: UserSettings): v
       identifier: dTag
     })
     
+    const meta = getArticleMeta(event)
     const articleContent: ArticleContent = {
-      ...getArticleMeta(event),
+      ...meta,
+      title: meta.title || 'Untitled Article',
       markdown: event.content,
       event
     }
@@ -201,6 +203,7 @@ export async function fetchArticleByNaddr(
 
     const content: ArticleContent = {
       ...meta,
+      title: meta.title || 'Untitled Article',
       markdown: article.content,
       event: article
     }

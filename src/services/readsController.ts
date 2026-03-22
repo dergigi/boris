@@ -138,7 +138,8 @@ class ReadsController {
           if (item) {
             // Enrich the item with article data
             item.event = event
-            Object.assign(item, getArticleMeta(event))
+            const meta = getArticleMeta(event)
+            Object.assign(item, { ...meta, title: meta.title || 'Untitled' })
             
             // Store in event store if available
             if (this.eventStore) {

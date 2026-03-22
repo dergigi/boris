@@ -138,7 +138,8 @@ export async function fetchAllReads(
           const item = readsMap.get(coordinate) || readsMap.get(event.id)
           if (item) {
             item.event = event
-            Object.assign(item, getArticleMeta(event))
+            const meta = getArticleMeta(event)
+            Object.assign(item, { ...meta, title: meta.title || 'Untitled' })
             if (onItem) emitItem(item)
           }
         }

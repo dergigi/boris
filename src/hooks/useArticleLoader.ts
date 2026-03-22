@@ -214,7 +214,7 @@ export function useArticleLoader({
                     // Only update if this is a newer version than what we loaded
                     if (evt.created_at > originalCreatedAt) {
                       const meta = getArticleMeta(evt)
-                      setCurrentTitle(meta.title)
+                      setCurrentTitle(meta.title || 'Untitled Article')
                       setReaderContent({
                         ...meta,
                         markdown: evt.content,
@@ -227,7 +227,7 @@ export function useArticleLoader({
                       setCurrentArticle?.(evt)
                       
                       // Update cache
-                      saveToCache(naddr, { ...meta, markdown: evt.content, event: evt }, settings)
+                      saveToCache(naddr, { ...meta, title: meta.title || 'Untitled Article', markdown: evt.content, event: evt }, settings)
                     }
                   }
                 })
@@ -348,7 +348,7 @@ export function useArticleLoader({
           if (storedEvent) {
             foundInEventStore = true
             const meta = getArticleMeta(storedEvent)
-            setCurrentTitle(meta.title)
+            setCurrentTitle(meta.title || 'Untitled Article')
             setReaderContent({
               ...meta,
               markdown: storedEvent.content,
@@ -503,7 +503,7 @@ export function useArticleLoader({
             if (!firstEmitted) {
               firstEmitted = true
               const meta = getArticleMeta(evt)
-              setCurrentTitle(meta.title)
+              setCurrentTitle(meta.title || 'Untitled Article')
               setReaderContent({
                 ...meta,
                 markdown: evt.content,
@@ -519,7 +519,7 @@ export function useArticleLoader({
               // Save to cache immediately when we get the first event
               // Don't wait for queryEvents to complete in case it hangs
               const articleContent = {
-                ...meta,
+                ...meta, title: meta.title || 'Untitled Article',
                 markdown: evt.content,
                 event: evt
               }
@@ -541,7 +541,7 @@ export function useArticleLoader({
         const finalEvent = (events.sort((a, b) => b.created_at - a.created_at)[0]) || latestEvent
         if (finalEvent) {
           const meta = getArticleMeta(finalEvent)
-          setCurrentTitle(meta.title)
+          setCurrentTitle(meta.title || 'Untitled Article')
           setReaderContent({
             ...meta,
             markdown: finalEvent.content,
@@ -558,7 +558,7 @@ export function useArticleLoader({
           // Only save if this is a different/newer event than what we first rendered
           // Note: We already saved from first event, so only save if this is different
           if (!firstEmitted) {
-            saveToCache(naddr, { ...meta, markdown: finalEvent.content, event: finalEvent })
+            saveToCache(naddr, { ...meta, title: meta.title || 'Untitled Article', markdown: finalEvent.content, event: finalEvent })
           }
         } else {
           // As a last resort, fall back to the legacy helper (which includes cache)
