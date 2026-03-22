@@ -5,6 +5,11 @@ import type { IEventStore } from 'applesauce-core'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { getArticleMeta } from '../utils/toBlogPostPreview'
+
+/** Build reader content from article metadata, applying title fallback */
+function toReaderContent(meta: ReturnType<typeof getArticleMeta>, markdown: string, url: string) {
+  return { ...meta, title: meta.title || 'Untitled Article', markdown, url }
+}
 import { queryEvents } from '../services/dataFetch'
 import { fetchArticleByNaddr, getFromCache, saveToCache } from '../services/articleService'
 import { fetchHighlightsForArticle } from '../services/highlightService'
@@ -215,11 +220,7 @@ export function useArticleLoader({
                     if (evt.created_at > originalCreatedAt) {
                       const meta = getArticleMeta(evt)
                       setCurrentTitle(meta.title || 'Untitled Article')
-                      setReaderContent({
-                        ...meta,
-                        markdown: evt.content,
-                        url: `nostr:${naddr}`
-                      })
+                      setReaderContent(toReaderContent(meta, evt.content, `nostr:${naddr}`))
                       const dTag = evt.tags.find(t => t[0] === 'd')?.[1] || ''
                       const articleCoordinate = `${evt.kind}:${evt.pubkey}:${dTag}`
                       setCurrentArticleCoordinate(articleCoordinate)
@@ -349,11 +350,7 @@ export function useArticleLoader({
             foundInEventStore = true
             const meta = getArticleMeta(storedEvent)
             setCurrentTitle(meta.title || 'Untitled Article')
-            setReaderContent({
-              ...meta,
-              markdown: storedEvent.content,
-              url: `nostr:${naddr}`
-            })
+            setReaderContent(toReaderContent(meta, storedEvent.content, `nostr:${naddr}`))
             const dTag = storedEvent.tags.find(t => t[0] === 'd')?.[1] || ''
             const articleCoordinate = `${storedEvent.kind}:${storedEvent.pubkey}:${dTag}`
             setCurrentArticleCoordinate(articleCoordinate)
@@ -504,11 +501,7 @@ export function useArticleLoader({
               firstEmitted = true
               const meta = getArticleMeta(evt)
               setCurrentTitle(meta.title || 'Untitled Article')
-              setReaderContent({
-                ...meta,
-                markdown: evt.content,
-                url: `nostr:${naddr}`
-              })
+              setReaderContent(toReaderContent(meta, evt.content, `nostr:${naddr}`))
               const dTag = evt.tags.find(t => t[0] === 'd')?.[1] || ''
               const articleCoordinate = `${evt.kind}:${evt.pubkey}:${dTag}`
               setCurrentArticleCoordinate(articleCoordinate)
@@ -542,11 +535,7 @@ export function useArticleLoader({
         if (finalEvent) {
           const meta = getArticleMeta(finalEvent)
           setCurrentTitle(meta.title || 'Untitled Article')
-          setReaderContent({
-            ...meta,
-            markdown: finalEvent.content,
-            url: `nostr:${naddr}`
-          })
+          setReaderContent(toReaderContent(meta, finalEvent.content, `nostr:${naddr}`))
 
           const dTag = finalEvent.tags.find(t => t[0] === 'd')?.[1] || ''
           const articleCoordinate = `${finalEvent.kind}:${finalEvent.pubkey}:${dTag}`
