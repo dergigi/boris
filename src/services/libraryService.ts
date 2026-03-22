@@ -1,6 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { NostrEvent } from 'nostr-tools'
-import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
+import { toBlogPostPreview } from '../utils/toBlogPostPreview'
 import { KINDS } from '../config/kinds'
 import { ARCHIVE_EMOJI } from './reactionService'
 import { BlogPostPreview } from './exploreService'
@@ -124,14 +124,7 @@ export async function fetchReadArticlesWithData(
     })
 
     // Convert to BlogPostPreview format
-    const blogPosts: BlogPostPreview[] = Array.from(uniqueArticleEvents.values()).map(event => ({
-      event,
-      title: getArticleTitle(event) || 'Untitled Article',
-      summary: getArticleSummary(event),
-      image: getArticleImage(event),
-      published: getArticlePublished(event),
-      author: event.pubkey
-    }))
+    const blogPosts: BlogPostPreview[] = Array.from(uniqueArticleEvents.values()).map(toBlogPostPreview)
 
     // Sort by when they were marked as read (most recent first)
     const articlesMap = new Map(nostrArticles.map(a => [a.eventId, a]))

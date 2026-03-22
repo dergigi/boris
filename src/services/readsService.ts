@@ -1,5 +1,5 @@
 import { RelayPool } from 'applesauce-relay'
-import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
+import { getArticleMeta } from '../utils/toBlogPostPreview'
 import { Bookmark } from '../types/bookmarks'
 import { fetchReadArticles } from './libraryService'
 import { queryEvents } from './dataFetch'
@@ -138,11 +138,8 @@ export async function fetchAllReads(
           const item = readsMap.get(coordinate) || readsMap.get(event.id)
           if (item) {
             item.event = event
-            item.title = getArticleTitle(event) || 'Untitled'
-            item.summary = getArticleSummary(event)
-            item.image = getArticleImage(event)
-            item.published = getArticlePublished(event)
-            item.author = event.pubkey
+            const meta = getArticleMeta(event)
+            Object.assign(item, { ...meta, title: meta.title || 'Untitled' })
             if (onItem) emitItem(item)
           }
         }

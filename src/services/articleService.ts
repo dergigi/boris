@@ -3,7 +3,7 @@ import { lastValueFrom, take } from 'rxjs'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
 import { NostrEvent } from 'nostr-tools'
-import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
+import { getArticleMeta } from '../utils/toBlogPostPreview'
 import { getContentRelays, getFallbackContentRelays, isContentRelay } from '../config/relays'
 import { prioritizeLocalRelays, partitionRelays, createParallelReqStreams } from '../utils/helpers'
 import { merge, toArray as rxToArray } from 'rxjs'
@@ -71,13 +71,11 @@ export function cacheArticleEvent(event: NostrEvent, settings?: UserSettings): v
       identifier: dTag
     })
     
+    const meta = getArticleMeta(event)
     const articleContent: ArticleContent = {
-      title: getArticleTitle(event) || 'Untitled Article',
+      ...meta,
+      title: meta.title || 'Untitled Article',
       markdown: event.content,
-      image: getArticleImage(event),
-      published: getArticlePublished(event),
-      summary: getArticleSummary(event),
-      author: event.pubkey,
       event
     }
     
@@ -201,18 +199,12 @@ export async function fetchArticleByNaddr(
     // Rebroadcast article to local/all relays based on settings
     await rebroadcastEvents([article], relayPool, settings)
 
-    const title = getArticleTitle(article) || 'Untitled Article'
-    const image = getArticleImage(article)
-    const published = getArticlePublished(article)
-    const summary = getArticleSummary(article)
+    const meta = getArticleMeta(article)
 
     const content: ArticleContent = {
-      title,
+      ...meta,
+      title: meta.title || 'Untitled Article',
       markdown: article.content,
-      image,
-      published,
-      summary,
-      author: article.pubkey,
       event: article
     }
 

@@ -1,6 +1,6 @@
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
-import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
+import { getArticleMeta } from '../utils/toBlogPostPreview'
 import { createAddressLoader } from 'applesauce-loaders/loaders'
 import { NostrEvent } from 'nostr-tools'
 import { nip19 } from 'nostr-tools'
@@ -138,11 +138,8 @@ class ReadsController {
           if (item) {
             // Enrich the item with article data
             item.event = event
-            item.title = getArticleTitle(event) || 'Untitled'
-            item.summary = getArticleSummary(event)
-            item.image = getArticleImage(event)
-            item.published = getArticlePublished(event)
-            item.author = event.pubkey
+            const meta = getArticleMeta(event)
+            Object.assign(item, { ...meta, title: meta.title || 'Untitled' })
             
             // Store in event store if available
             if (this.eventStore) {

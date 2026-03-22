@@ -4,7 +4,12 @@ import { RelayPool } from 'applesauce-relay'
 import type { IEventStore } from 'applesauce-core'
 import { nip19 } from 'nostr-tools'
 import { AddressPointer } from 'nostr-tools/nip19'
-import { getArticleImage, getArticlePublished, getArticleSummary, getArticleTitle } from 'applesauce-common/helpers'
+import { getArticleMeta } from '../utils/toBlogPostPreview'
+
+/** Build reader content from article metadata, applying title fallback */
+function toReaderContent(meta: ReturnType<typeof getArticleMeta>, markdown: string, url: string) {
+  return { ...meta, title: meta.title || 'Untitled Article', markdown, url }
+}
 import { queryEvents } from '../services/dataFetch'
 import { fetchArticleByNaddr, getFromCache, saveToCache } from '../services/articleService'
 import { fetchHighlightsForArticle } from '../services/highlightService'
@@ -122,17 +127,15 @@ export function useArticleLoader({
         
         if (storedEvent) {
           foundInNavState = true
-          const title = getArticleTitle(storedEvent) || previewData?.title || 'Untitled Article'
+          const meta = getArticleMeta(storedEvent)
+          const title = meta.title || previewData?.title || 'Untitled Article'
           setCurrentTitle(title)
-          const image = getArticleImage(storedEvent) || previewData?.image
-          const summary = getArticleSummary(storedEvent) || previewData?.summary
-          const published = getArticlePublished(storedEvent) || previewData?.published
           setReaderContent({
             title,
             markdown: storedEvent.content,
-            image,
-            summary,
-            published,
+            image: meta.image || previewData?.image,
+            summary: meta.summary || previewData?.summary,
+            published: meta.published || previewData?.published,
             url: `nostr:${naddr}`
           })
           const dTag = storedEvent.tags.find(t => t[0] === 'd')?.[1] || ''
@@ -145,8 +148,8 @@ export function useArticleLoader({
           setIsCollapsed(true)
           
           // Preload image if available
-          if (image) {
-            preloadImage(image)
+          if (meta.image || previewData?.image) {
+            preloadImage((meta.image || previewData?.image)!)
           }
           
           // Fetch highlights in background if relayPool is available
@@ -215,20 +218,9 @@ export function useArticleLoader({
                     
                     // Only update if this is a newer version than what we loaded
                     if (evt.created_at > originalCreatedAt) {
-                      const title = getArticleTitle(evt) || 'Untitled Article'
-                      const image = getArticleImage(evt)
-                      const summary = getArticleSummary(evt)
-                      const published = getArticlePublished(evt)
-                      
-                      setCurrentTitle(title)
-                      setReaderContent({
-                        title,
-                        markdown: evt.content,
-                        image,
-                        summary,
-                        published,
-                        url: `nostr:${naddr}`
-                      })
+                      const meta = getArticleMeta(evt)
+                      setCurrentTitle(meta.title || 'Untitled Article')
+                      setReaderContent(toReaderContent(meta, evt.content, `nostr:${naddr}`))
                       const dTag = evt.tags.find(t => t[0] === 'd')?.[1] || ''
                       const articleCoordinate = `${evt.kind}:${evt.pubkey}:${dTag}`
                       setCurrentArticleCoordinate(articleCoordinate)
@@ -236,16 +228,7 @@ export function useArticleLoader({
                       setCurrentArticle?.(evt)
                       
                       // Update cache
-                      const articleContent = {
-                        title,
-                        markdown: evt.content,
-                        image,
-                        summary,
-                        published,
-                        author: evt.pubkey,
-                        event: evt
-                      }
-                      saveToCache(naddr, articleContent, settings)
+                      saveToCache(naddr, { ...meta, title: meta.title || 'Untitled Article', markdown: evt.content, event: evt }, settings)
                     }
                   }
                 })
@@ -365,19 +348,9 @@ export function useArticleLoader({
           const storedEvent = eventStore.getEvent?.(coordinate)
           if (storedEvent) {
             foundInEventStore = true
-            const title = getArticleTitle(storedEvent) || 'Untitled Article'
-            setCurrentTitle(title)
-            const image = getArticleImage(storedEvent)
-            const summary = getArticleSummary(storedEvent)
-            const published = getArticlePublished(storedEvent)
-            setReaderContent({
-              title,
-              markdown: storedEvent.content,
-              image,
-              summary,
-              published,
-              url: `nostr:${naddr}`
-            })
+            const meta = getArticleMeta(storedEvent)
+            setCurrentTitle(meta.title || 'Untitled Article')
+            setReaderContent(toReaderContent(meta, storedEvent.content, `nostr:${naddr}`))
             const dTag = storedEvent.tags.find(t => t[0] === 'd')?.[1] || ''
             const articleCoordinate = `${storedEvent.kind}:${storedEvent.pubkey}:${dTag}`
             setCurrentArticleCoordinate(articleCoordinate)
@@ -526,20 +499,9 @@ export function useArticleLoader({
             // Emit immediately on first event
             if (!firstEmitted) {
               firstEmitted = true
-              const title = getArticleTitle(evt) || 'Untitled Article'
-              const image = getArticleImage(evt)
-              const summary = getArticleSummary(evt)
-              const published = getArticlePublished(evt)
-              
-              setCurrentTitle(title)
-              setReaderContent({
-                title,
-                markdown: evt.content,
-                image,
-                summary,
-                published,
-                url: `nostr:${naddr}`
-              })
+              const meta = getArticleMeta(evt)
+              setCurrentTitle(meta.title || 'Untitled Article')
+              setReaderContent(toReaderContent(meta, evt.content, `nostr:${naddr}`))
               const dTag = evt.tags.find(t => t[0] === 'd')?.[1] || ''
               const articleCoordinate = `${evt.kind}:${evt.pubkey}:${dTag}`
               setCurrentArticleCoordinate(articleCoordinate)
@@ -550,19 +512,15 @@ export function useArticleLoader({
               // Save to cache immediately when we get the first event
               // Don't wait for queryEvents to complete in case it hangs
               const articleContent = {
-                title,
+                ...meta, title: meta.title || 'Untitled Article',
                 markdown: evt.content,
-                image,
-                summary,
-                published,
-                author: evt.pubkey,
                 event: evt
               }
               saveToCache(naddr, articleContent, settings)
               
               // Preload image to ensure it's cached by Service Worker
-              if (image) {
-                preloadImage(image)
+              if (meta.image) {
+                preloadImage(meta.image)
               }
             }
           }
@@ -575,20 +533,9 @@ export function useArticleLoader({
         // Finalize with newest version if it's newer than what we first rendered
         const finalEvent = (events.sort((a, b) => b.created_at - a.created_at)[0]) || latestEvent
         if (finalEvent) {
-          const title = getArticleTitle(finalEvent) || 'Untitled Article'
-          const image = getArticleImage(finalEvent)
-          const summary = getArticleSummary(finalEvent)
-          const published = getArticlePublished(finalEvent)
-          
-          setCurrentTitle(title)
-          setReaderContent({
-            title,
-            markdown: finalEvent.content,
-            image,
-            summary,
-            published,
-            url: `nostr:${naddr}`
-          })
+          const meta = getArticleMeta(finalEvent)
+          setCurrentTitle(meta.title || 'Untitled Article')
+          setReaderContent(toReaderContent(meta, finalEvent.content, `nostr:${naddr}`))
 
           const dTag = finalEvent.tags.find(t => t[0] === 'd')?.[1] || ''
           const articleCoordinate = `${finalEvent.kind}:${finalEvent.pubkey}:${dTag}`
@@ -600,17 +547,7 @@ export function useArticleLoader({
           // Only save if this is a different/newer event than what we first rendered
           // Note: We already saved from first event, so only save if this is different
           if (!firstEmitted) {
-            // First event wasn't emitted, so save now
-            const articleContent = {
-              title,
-              markdown: finalEvent.content,
-              image,
-              summary,
-              published,
-              author: finalEvent.pubkey,
-              event: finalEvent
-            }
-            saveToCache(naddr, articleContent)
+            saveToCache(naddr, { ...meta, title: meta.title || 'Untitled Article', markdown: finalEvent.content, event: finalEvent })
           }
         } else {
           // As a last resort, fall back to the legacy helper (which includes cache)
