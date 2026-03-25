@@ -23,9 +23,6 @@ import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { classifyHighlights } from '../utils/highlightClassification'
 import { HighlightVisibility } from './HighlightsPanel'
-// import { KINDS } from '../config/kinds'
-// import { eventToHighlight } from '../services/highlightEventProcessor'
-// import { useStoreTimeline } from '../hooks/useStoreTimeline'
 import { dedupeHighlightsById, dedupeWritingsByReplaceable } from '../utils/dedupe'
 import { writingsController } from '../services/writingsController'
 import { nostrverseWritingsController } from '../services/nostrverseWritingsController'
@@ -61,22 +58,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   
   // Reading progress state (naddr -> progress 0-1)
   const [readingProgressMap, setReadingProgressMap] = useState<Map<string, number>>(new Map())
-  
-  // Load cached content from event store (instant display)
-  // const cachedHighlights = useStoreTimeline(eventStore, { kinds: [KINDS.Highlights] }, eventToHighlight, [])
-  
-  // const toBlogPostPreview = useCallback((event: NostrEvent): BlogPostPreview => ({
-  //   event,
-  //   title: getArticleTitle(event) || 'Untitled',
-  //   summary: getArticleSummary(event),
-  //   image: getArticleImage(event),
-  //   published: getArticlePublished(event),
-  //   author: event.pubkey
-  // }), [])
-  
-  // const cachedWritings = useStoreTimeline(eventStore, { kinds: [30023] }, toBlogPostPreview, [])
-
-  
   
   // Visibility filters - load from localStorage first, fallback to settings
   const [visibility, setVisibility] = useState<HighlightVisibility>(() => {
