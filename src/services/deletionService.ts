@@ -3,7 +3,7 @@ import 'applesauce-common/blueprints/delete'
 import { RelayPool } from 'applesauce-relay'
 import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'
-import { RELAYS } from '../config/relays'
+import { getActiveRelayUrls } from './relayManager'
 
 /**
  * Creates a kind:5 event deletion request (NIP-09) using applesauce DeleteBlueprint.
@@ -27,7 +27,7 @@ export async function createDeletionRequest(
   const draft = await factory.delete([eventId], reason)
   const signed = await factory.sign(draft)
 
-  await relayPool.publish(RELAYS, signed)
+  await relayPool.publish(getActiveRelayUrls(relayPool), signed)
 
   return signed
 }
