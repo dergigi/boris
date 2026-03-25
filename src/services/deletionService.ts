@@ -40,13 +40,17 @@ export async function createDeletionRequest(
     ? activeRelays
     : activeRelays.filter(isLocalRelay)
 
-  const isLocalOnly = areAllRelaysLocal(expectedSuccessRelays)
+  const isOfflineOnly =
+    expectedSuccessRelays.length === 0 ||
+    areAllRelaysLocal(expectedSuccessRelays)
 
-  if (isLocalOnly) {
+  if (isOfflineOnly) {
     markEventAsOfflineCreated(signed.id)
   }
 
-  await relayPool.publish(activeRelays, signed)
+  if (activeRelays.length > 0) {
+    await relayPool.publish(activeRelays, signed)
+  }
 
   return signed
 }
