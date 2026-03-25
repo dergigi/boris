@@ -458,6 +458,11 @@ class BookmarkController {
             // Add/update event
             this.currentEvents.set(key, evt)
             
+            // Add to event store so persistEncryptedContent can restore cached decrypted content
+            if (this.externalEventStore) {
+              this.externalEventStore.add(evt)
+            }
+            
             // Emit raw event for Debug UI
             this.emitRawEvent(evt)
             
