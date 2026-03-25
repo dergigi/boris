@@ -25,6 +25,7 @@ import { loadUserRelayList, loadBlockedRelays, computeRelaySet } from './service
 import { applyRelaySetToPool, getActiveRelayUrls, ALWAYS_LOCAL_RELAYS, HARDCODED_RELAYS } from './services/relayManager'
 import { Bookmark } from './types/bookmarks'
 import { bookmarkController } from './services/bookmarkController'
+import { startEncryptedContentCache, clearEncryptedContentCache } from './services/encryptedContentCache'
 import { contactsController } from './services/contactsController'
 import { highlightsController } from './services/highlightsController'
 import { writingsController } from './services/writingsController'
@@ -156,6 +157,7 @@ function AppRoutes({
     highlightsController.reset() // Clear highlights via controller
     readingProgressController.reset() // Clear reading progress via controller
     archiveController.reset() // Clear archive state
+    clearEncryptedContentCache() // Clear cached decrypted content
     showToast('Logged out successfully')
   }
 
@@ -390,6 +392,10 @@ function App() {
     const initializeApp = async () => {
       // Initialize event store, account manager, and relay pool
       const store = new EventStore({ deleteManager: new DeleteManager() })
+      
+      // Cache decrypted content so hidden bookmarks don't need re-decryption on every load
+      const stopEncryptedContentCache = startEncryptedContentCache(store)
+      
       const accounts = new AccountManager()
       
       // Disable request queueing globally - makes all operations instant
@@ -697,6 +703,7 @@ function App() {
       
       // Cleanup function
       return () => {
+        stopEncryptedContentCache()
         accountsSub.unsubscribe()
         activeSub.unsubscribe()
         bunkerReconnectSub.unsubscribe()
