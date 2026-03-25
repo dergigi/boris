@@ -333,6 +333,10 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           setBlogPosts(prev => dedupeWritingsByReplaceable([...prev, ...nostrversePosts]).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at)))
         }).catch((err) => {
           console.warn('[Explore] Failed to fetch nostrverse blog posts:', err)
+          if (!hasHydratedRef.current) {
+            hasHydratedRef.current = true
+            setLoading(false)
+          }
         })
       }
       } catch (err) {
@@ -374,6 +378,10 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       })
     }).catch((err) => {
       console.warn('[Explore] Failed to fetch blog posts from followed authors:', err)
+      if (!hasHydratedRef.current) {
+        hasHydratedRef.current = true
+        setLoading(false)
+      }
     })
 
     fetchHighlightsFromAuthors(relayPool, contactsArray, (highlight) => {
@@ -391,6 +399,10 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       })
     }).catch((err) => {
       console.warn('[Explore] Failed to fetch highlights from followed authors:', err)
+      if (!hasHydratedRef.current) {
+        hasHydratedRef.current = true
+        setLoading(false)
+      }
     })
   }, [relayPool, followedPubkeys, eventStore, settings, activeAccount])
 
@@ -437,6 +449,10 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       })
     }).catch((err) => {
       console.warn('[Explore] Failed to lazy-load nostrverse blog posts:', err)
+      if (!hasHydratedRef.current) {
+        hasHydratedRef.current = true
+        setLoading(false)
+      }
     })
 
     fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
@@ -444,6 +460,10 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         setHighlights(prev => dedupeHighlightsById([...prev, ...nostriverseHighlights]).sort((a, b) => b.created_at - a.created_at))
       }).catch((err) => {
         console.warn('[Explore] Failed to lazy-load nostrverse highlights:', err)
+        if (!hasHydratedRef.current) {
+          hasHydratedRef.current = true
+          setLoading(false)
+        }
       })
   }, [activeAccount, relayPool, visibility.nostrverse, hasLoadedNostrverse, eventStore])
 
@@ -459,6 +479,10 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
       })
       .catch((err) => {
         console.warn('[Explore] Failed to fetch nostrverse highlights on toggle:', err)
+        if (!hasHydratedRef.current) {
+          hasHydratedRef.current = true
+          setLoading(false)
+        }
       })
   }, [visibility.nostrverse, activeAccount, relayPool, eventStore, hasLoadedNostrverseHighlights])
 
