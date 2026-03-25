@@ -1,4 +1,4 @@
-import { ReadItem } from '../services/readsService'
+import { ReadItem } from '../services/readsController'
 
 /**
  * Merges a ReadItem into a state map, returning whether the state changed.

@@ -1,4 +1,4 @@
-import { ReadItem } from '../services/readsService'
+import { ReadItem } from '../services/readsController'
 import { ReadingProgressFilterType } from '../components/ReadingProgressFilters'
 import { Highlight } from '../types/highlights'
 import { nip19 } from 'nostr-tools'
