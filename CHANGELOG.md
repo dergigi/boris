@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-03-25
+
+### Added
+
+- Highlight context and colored highlight text rendering
+- Fathom analytics integration
+- Multi-column layout for explore writings
+
+### Changed
+
+- Upgraded applesauce SDK from v4 to v5
+- Adopted applesauce `DeleteBlueprint` for NIP-09 deletion requests
+- Deletion requests now publish to user's active relays instead of hardcoded relay list
+- Deletions are queued for offline sync when remote relays are unavailable
+- Consolidated article-to-preview mapping via shared `toReaderContent` helper
+- Single-column layout on explore, aligned with reader width
+
+### Fixed
+
+- Silent `.catch(() => {})` blocks in Explore and Support now log warnings
+- Loading skeletons no longer get stuck when fetches fail before first streamed event
+- Serverless function crashes from lingering WebSocket connections
+- Array query params and `s-maxage` alignment with failure TTLs in article-og handler
+- Nostr bech32 regex capture group and stale comments cleanup
+- More aggressive highlight text wrapping
+
 ## [0.11.1] - 2025-11-22
 
 ### Added
