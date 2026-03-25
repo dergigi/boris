@@ -12,7 +12,6 @@ import { useNavigate } from 'react-router-dom'
 import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
 import { fetchHighlightsFromAuthors } from '../services/highlightService'
 import { fetchProfiles } from '../services/profileService'
-import { fetchNostrverseBlogPosts, fetchNostrverseHighlights } from '../services/nostrverseService'
 import { nostrverseHighlightsController } from '../services/nostrverseHighlightsController'
 import { highlightsController } from '../services/highlightsController'
 import { Highlight } from '../types/highlights'
@@ -53,7 +52,7 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [hasLoadedNostrverse, setHasLoadedNostrverse] = useState(false)
   const [hasLoadedMine, setHasLoadedMine] = useState(false)
-  const [hasLoadedNostrverseHighlights, setHasLoadedNostrverseHighlights] = useState(false)
+
   const hasHydratedRef = useRef(false)
   
   // Get myHighlights directly from controller
@@ -153,6 +152,10 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         for (const h of incoming) byId.set(h.id, h)
         return Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
       })
+      if (incoming.length > 0 && !hasHydratedRef.current) {
+        hasHydratedRef.current = true
+        setLoading(false)
+      }
     }
     // seed immediately
     apply(nostrverseHighlightsController.getHighlights())
@@ -178,6 +181,10 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         }
         return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
       })
+      if (incoming.length > 0 && !hasHydratedRef.current) {
+        hasHydratedRef.current = true
+        setLoading(false)
+      }
     }
     apply(nostrverseWritingsController.getWritings())
     const unsub = nostrverseWritingsController.onWritings(apply)
@@ -270,7 +277,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         console.warn('Failed to save explore scope to localStorage:', err)
       }
       setHasLoadedNostrverse(true) // logged out path loads nostrverse immediately
-      setHasLoadedNostrverseHighlights(true)
     } else {
       // When logged in, use settings defaults immediately
       const defaultVisibility = {
@@ -285,7 +291,6 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         console.warn('Failed to save explore scope to localStorage:', err)
       }
       setHasLoadedNostrverse(false)
-      setHasLoadedNostrverseHighlights(false)
     }
   }, [activeAccount, settings?.defaultExploreScopeNostrverse, settings?.defaultExploreScopeFriends, settings?.defaultExploreScopeMine])
 
@@ -310,42 +315,28 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
 
     setLoading(true)
 
-    try {
-      // Prepare parallel fetches
-      const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
+    // Trigger nostrverse controllers (they stream results via subscriptions above)
+    if (!activeAccount || visibility.nostrverse) {
+      const force = refreshTrigger > 0
+      nostrverseWritingsController.start({ relayPool, eventStore, force }).catch((err) => {
+        console.warn('[Explore] Failed to start nostrverse writings controller:', err)
+      })
+      nostrverseHighlightsController.start({ relayPool, eventStore, force }).catch((err) => {
+        console.warn('[Explore] Failed to start nostrverse highlights controller:', err)
+      })
+    }
 
-      // Nostrverse writings: subscribe-style via onPost; hydrate on first post
-      if (!activeAccount || (activeAccount && visibility.nostrverse)) {
-        fetchNostrverseBlogPosts(
-          relayPool,
-          relayUrls,
-          50,
-          eventStore || undefined,
-          (post) => {
-            setBlogPosts(prev => {
-              const merged = dedupeWritingsByReplaceable([...prev, post])
-              if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
-              return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-            })
-            if (!hasHydratedRef.current) { hasHydratedRef.current = true; setLoading(false) }
-          }
-        ).then((nostrversePosts) => {
-          setBlogPosts(prev => dedupeWritingsByReplaceable([...prev, ...nostrversePosts]).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at)))
-        }).catch((err) => {
-          console.warn('[Explore] Failed to fetch nostrverse blog posts:', err)
-          if (!hasHydratedRef.current) {
-            hasHydratedRef.current = true
-            setLoading(false)
-          }
-        })
-      }
-      } catch (err) {
-        console.error('Failed to load data:', err)
-        // No blocking error - user can pull-to-refresh
-      } finally {
-        // loading is already turned off after seeding
-      }
-  }, [relayPool, activeAccount, eventStore, visibility.nostrverse])
+    // Loading is turned off when first data arrives via controller subscriptions
+    if (!hasHydratedRef.current) {
+      // Set a fallback timeout to clear loading state
+      setTimeout(() => {
+        if (!hasHydratedRef.current) {
+          hasHydratedRef.current = true
+          setLoading(false)
+        }
+      }, 5000)
+    }
+  }, [relayPool, activeAccount, eventStore, visibility.nostrverse, refreshTrigger])
 
   useEffect(() => {
     loadData()
@@ -406,85 +397,18 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     })
   }, [relayPool, followedPubkeys, eventStore, settings, activeAccount])
 
-  // Lazy-load nostrverse writings when user toggles it on (logged in)
+  // Lazy-load nostrverse content when user toggles it on (logged in)
   useEffect(() => {
     if (!activeAccount || !relayPool || !visibility.nostrverse || hasLoadedNostrverse) return
-    const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
     setHasLoadedNostrverse(true)
-    fetchNostrverseBlogPosts(
-      relayPool,
-      relayUrls,
-      50,
-      eventStore || undefined,
-      (post) => {
-        setBlogPosts(prev => {
-          const dTag = post.event.tags.find(t => t[0] === 'd')?.[1] || ''
-          const key = `${post.author}:${dTag}`
-          const existingIndex = prev.findIndex(p => {
-            const pDTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-            return `${p.author}:${pDTag}` === key
-          })
-          if (existingIndex >= 0) {
-            const existing = prev[existingIndex]
-            if (post.event.created_at <= existing.event.created_at) return prev
-            const next = [...prev]
-            next[existingIndex] = post
-            return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-          }
-          const next = [...prev, post]
-          return next.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-        })
-      }
-    ).then((finalPosts) => {
-      // Ensure final deduped list
-      setBlogPosts(prev => {
-        const byKey = new Map<string, BlogPostPreview>()
-        for (const p of [...prev, ...finalPosts]) {
-          const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-          const key = `${p.author}:${dTag}`
-          const existing = byKey.get(key)
-          if (!existing || p.event.created_at > existing.event.created_at) byKey.set(key, p)
-        }
-        return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-      })
-    }).catch((err) => {
-      console.warn('[Explore] Failed to lazy-load nostrverse blog posts:', err)
-      if (!hasHydratedRef.current) {
-        hasHydratedRef.current = true
-        setLoading(false)
-      }
+    // Controllers stream results via subscriptions above
+    nostrverseWritingsController.start({ relayPool, eventStore }).catch((err) => {
+      console.warn('[Explore] Failed to lazy-load nostrverse writings:', err)
     })
-
-    fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
-      .then((nostriverseHighlights) => {
-        setHighlights(prev => dedupeHighlightsById([...prev, ...nostriverseHighlights]).sort((a, b) => b.created_at - a.created_at))
-      }).catch((err) => {
-        console.warn('[Explore] Failed to lazy-load nostrverse highlights:', err)
-        if (!hasHydratedRef.current) {
-          hasHydratedRef.current = true
-          setLoading(false)
-        }
-      })
+    nostrverseHighlightsController.start({ relayPool, eventStore }).catch((err) => {
+      console.warn('[Explore] Failed to lazy-load nostrverse highlights:', err)
+    })
   }, [activeAccount, relayPool, visibility.nostrverse, hasLoadedNostrverse, eventStore])
-
-  // Lazy-load nostrverse highlights when user toggles it on (logged in)
-  useEffect(() => {
-    if (!activeAccount || !relayPool || !visibility.nostrverse || hasLoadedNostrverseHighlights) return
-    setHasLoadedNostrverseHighlights(true)
-    fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
-      .then((hl) => {
-        if (hl && hl.length > 0) {
-          setHighlights(prev => dedupeHighlightsById([...prev, ...hl]).sort((a, b) => b.created_at - a.created_at))
-        }
-      })
-      .catch((err) => {
-        console.warn('[Explore] Failed to fetch nostrverse highlights on toggle:', err)
-        if (!hasHydratedRef.current) {
-          hasHydratedRef.current = true
-          setLoading(false)
-        }
-      })
-  }, [visibility.nostrverse, activeAccount, relayPool, eventStore, hasLoadedNostrverseHighlights])
 
   // Lazy-load my writings when user toggles "mine" on (logged in)
   // No direct fetch here; writingsController streams my posts centrally

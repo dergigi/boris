@@ -5,6 +5,7 @@ import { NostrEvent } from 'nostr-tools'
 import { KINDS } from '../config/kinds'
 import { queryEvents } from './dataFetch'
 import { BlogPostPreview } from './exploreService'
+import { cacheArticleEvent } from './articleService'
 
 type WritingsCallback = (posts: BlogPostPreview[]) => void
 type LoadingCallback = (loading: boolean) => void
@@ -110,6 +111,7 @@ class NostrverseWritingsController {
             seenIds.add(evt.id)
 
             eventStore.add(evt)
+            cacheArticleEvent(evt)
 
             const dTag = evt.tags.find(t => t[0] === 'd')?.[1] || ''
             const key = `${evt.pubkey}:${dTag}`
