@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { EventStoreProvider, AccountsProvider, Hooks } from 'applesauce-react'
 import { EventStore } from 'applesauce-core'
+import { DeleteManager } from 'applesauce-core/event-store'
 import { AccountManager, Accounts } from 'applesauce-accounts'
 import { registerCommonAccountTypes } from 'applesauce-accounts/accounts'
 import { RelayPool } from 'applesauce-relay'
@@ -388,7 +389,7 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       // Initialize event store, account manager, and relay pool
-      const store = new EventStore()
+      const store = new EventStore({ deleteManager: new DeleteManager() })
       const accounts = new AccountManager()
       
       // Disable request queueing globally - makes all operations instant
