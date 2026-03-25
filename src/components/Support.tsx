@@ -33,7 +33,9 @@ const Support: React.FC<SupportProps> = ({ relayPool, eventStore, settings }) =>
         if (zappers.length > 0) {
           const pubkeys = zappers.map(z => z.pubkey)
           // Fetch profiles in background without blocking
-          fetchProfiles(relayPool, eventStore, pubkeys, settings).catch(() => {})
+          fetchProfiles(relayPool, eventStore, pubkeys, settings).catch((err) => {
+            console.warn('[Support] Failed to fetch supporter profiles:', err)
+          })
         }
         
         setSupporters(zappers)

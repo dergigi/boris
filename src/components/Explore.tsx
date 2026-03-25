@@ -139,7 +139,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   // Ensure contacts controller is started for the active account (non-blocking)
   useEffect(() => {
     if (relayPool && activeAccount?.pubkey) {
-      contactsController.start({ relayPool, pubkey: activeAccount.pubkey }).catch(() => {})
+      contactsController.start({ relayPool, pubkey: activeAccount.pubkey }).catch((err) => {
+        console.warn('[Explore] Failed to start contacts controller:', err)
+      })
     }
   }, [relayPool, activeAccount?.pubkey])
 
@@ -329,7 +331,13 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           }
         ).then((nostrversePosts) => {
           setBlogPosts(prev => dedupeWritingsByReplaceable([...prev, ...nostrversePosts]).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at)))
-        }).catch(() => {})
+        }).catch((err) => {
+          console.warn('[Explore] Failed to fetch nostrverse blog posts:', err)
+          if (!hasHydratedRef.current) {
+            hasHydratedRef.current = true
+            setLoading(false)
+          }
+        })
       }
       } catch (err) {
         console.error('Failed to load data:', err)
@@ -356,7 +364,9 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
         // Pre-cache profiles in background
         const authorPubkeys = Array.from(new Set(merged.map(p => p.author)))
-        fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch(() => {})
+        fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch((err) => {
+          console.warn('[Explore] Failed to fetch author profiles:', err)
+        })
         return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
       })
       if (!hasHydratedRef.current) { hasHydratedRef.current = true; setLoading(false) }
@@ -366,7 +376,13 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
         return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
       })
-    }).catch(() => {})
+    }).catch((err) => {
+      console.warn('[Explore] Failed to fetch blog posts from followed authors:', err)
+      if (!hasHydratedRef.current) {
+        hasHydratedRef.current = true
+        setLoading(false)
+      }
+    })
 
     fetchHighlightsFromAuthors(relayPool, contactsArray, (highlight) => {
       setHighlights(prev => {
@@ -381,7 +397,13 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         if (activeAccount) setCachedHighlights(activeAccount.pubkey, merged)
         return merged.sort((a, b) => b.created_at - a.created_at)
       })
-    }).catch(() => {})
+    }).catch((err) => {
+      console.warn('[Explore] Failed to fetch highlights from followed authors:', err)
+      if (!hasHydratedRef.current) {
+        hasHydratedRef.current = true
+        setLoading(false)
+      }
+    })
   }, [relayPool, followedPubkeys, eventStore, settings, activeAccount])
 
   // Lazy-load nostrverse writings when user toggles it on (logged in)
@@ -425,12 +447,24 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
         }
         return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
       })
-    }).catch(() => {})
+    }).catch((err) => {
+      console.warn('[Explore] Failed to lazy-load nostrverse blog posts:', err)
+      if (!hasHydratedRef.current) {
+        hasHydratedRef.current = true
+        setLoading(false)
+      }
+    })
 
     fetchNostrverseHighlights(relayPool, 100, eventStore || undefined)
       .then((nostriverseHighlights) => {
         setHighlights(prev => dedupeHighlightsById([...prev, ...nostriverseHighlights]).sort((a, b) => b.created_at - a.created_at))
-      }).catch(() => {})
+      }).catch((err) => {
+        console.warn('[Explore] Failed to lazy-load nostrverse highlights:', err)
+        if (!hasHydratedRef.current) {
+          hasHydratedRef.current = true
+          setLoading(false)
+        }
+      })
   }, [activeAccount, relayPool, visibility.nostrverse, hasLoadedNostrverse, eventStore])
 
   // Lazy-load nostrverse highlights when user toggles it on (logged in)
@@ -443,7 +477,13 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
           setHighlights(prev => dedupeHighlightsById([...prev, ...hl]).sort((a, b) => b.created_at - a.created_at))
         }
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.warn('[Explore] Failed to fetch nostrverse highlights on toggle:', err)
+        if (!hasHydratedRef.current) {
+          hasHydratedRef.current = true
+          setLoading(false)
+        }
+      })
   }, [visibility.nostrverse, activeAccount, relayPool, eventStore, hasLoadedNostrverseHighlights])
 
   // Lazy-load my writings when user toggles "mine" on (logged in)
