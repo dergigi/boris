@@ -25,7 +25,7 @@ import { loadUserRelayList, loadBlockedRelays, computeRelaySet } from './service
 import { applyRelaySetToPool, getActiveRelayUrls, ALWAYS_LOCAL_RELAYS, HARDCODED_RELAYS } from './services/relayManager'
 import { Bookmark } from './types/bookmarks'
 import { bookmarkController } from './services/bookmarkController'
-import { startEncryptedContentCache } from './services/encryptedContentCache'
+import { startEncryptedContentCache, clearEncryptedContentCache } from './services/encryptedContentCache'
 import { contactsController } from './services/contactsController'
 import { highlightsController } from './services/highlightsController'
 import { writingsController } from './services/writingsController'
@@ -157,6 +157,7 @@ function AppRoutes({
     highlightsController.reset() // Clear highlights via controller
     readingProgressController.reset() // Clear reading progress via controller
     archiveController.reset() // Clear archive state
+    clearEncryptedContentCache() // Clear cached decrypted content
     showToast('Logged out successfully')
   }
 
