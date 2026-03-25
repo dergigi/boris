@@ -3,6 +3,7 @@ import { IAccount } from 'applesauce-accounts'
 import { NostrEvent } from 'nostr-tools'
 import { lastValueFrom, takeUntil, timer, toArray } from 'rxjs'
 import { EventFactory } from 'applesauce-core/event-factory'
+import 'applesauce-common/blueprints/delete'
 import { getActiveRelayUrls } from './relayManager'
 
 const ARCHIVE_EMOJI = '📚'
@@ -114,12 +115,7 @@ export async function deleteReaction(
   relayPool: RelayPool
 ): Promise<NostrEvent> {
   const factory = new EventFactory({ signer: account })
-  const draft = await factory.create(async () => ({
-    kind: 5, // Deletion per NIP-09
-    content: 'unarchive',
-    tags: [['e', reactionEventId]],
-    created_at: Math.floor(Date.now() / 1000)
-  }))
+  const draft = await factory.delete([reactionEventId], 'unarchive')
   const signed = await factory.sign(draft)
   await relayPool.publish(getActiveRelayUrls(relayPool), signed)
   return signed
