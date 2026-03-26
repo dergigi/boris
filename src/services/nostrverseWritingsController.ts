@@ -97,6 +97,23 @@ class NostrverseWritingsController {
       const seenIds = new Set<string>()
       const uniqueByReplaceable = new Map<string, BlogPostPreview>()
 
+      // Shared helper: dedupe first, then cache only if accepted
+      const upsertPost = (evt: NostrEvent, emit: boolean): void => {
+        const dTag = evt.tags.find(t => t[0] === 'd')?.[1] || ''
+        const key = `${evt.pubkey}:${dTag}`
+        const existing = uniqueByReplaceable.get(key)
+        if (!existing || evt.created_at > existing.event.created_at) {
+          const preview = toPreview(evt)
+          uniqueByReplaceable.set(key, preview)
+          cacheArticleEvent(evt)
+          if (emit) {
+            const sorted = sortPosts(Array.from(uniqueByReplaceable.values()))
+            this.currentPosts = sorted
+            this.emitWritings(sorted)
+          }
+        }
+      }
+
       const lastSyncedAt = force ? null : this.getLastSyncedAt()
       const filter: { kinds: number[]; since?: number } = { kinds: [KINDS.BlogPost] }
       if (lastSyncedAt) filter.since = lastSyncedAt
@@ -111,18 +128,7 @@ class NostrverseWritingsController {
             seenIds.add(evt.id)
 
             eventStore.add(evt)
-            cacheArticleEvent(evt)
-
-            const dTag = evt.tags.find(t => t[0] === 'd')?.[1] || ''
-            const key = `${evt.pubkey}:${dTag}`
-            const preview = toPreview(evt)
-            const existing = uniqueByReplaceable.get(key)
-            if (!existing || evt.created_at > existing.event.created_at) {
-              uniqueByReplaceable.set(key, preview)
-              const sorted = sortPosts(Array.from(uniqueByReplaceable.values()))
-              this.currentPosts = sorted
-              this.emitWritings(sorted)
-            }
+            upsertPost(evt, true)
           }
         }
       )
@@ -132,12 +138,7 @@ class NostrverseWritingsController {
       events.forEach(evt => eventStore.add(evt))
 
       events.forEach(evt => {
-        const dTag = evt.tags.find(t => t[0] === 'd')?.[1] || ''
-        const key = `${evt.pubkey}:${dTag}`
-        const existing = uniqueByReplaceable.get(key)
-        if (!existing || evt.created_at > existing.event.created_at) {
-          uniqueByReplaceable.set(key, toPreview(evt))
-        }
+        upsertPost(evt, false)
       })
 
       const sorted = sortPosts(Array.from(uniqueByReplaceable.values()))
