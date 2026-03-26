@@ -13,8 +13,13 @@ export const useExploreVisibility = (
       const saved = localStorage.getItem('exploreScopeVisibility')
       if (saved) {
         const parsed = JSON.parse(saved)
-        // Validate that at least one scope is enabled
-        if (parsed.nostrverse || parsed.friends || parsed.mine) {
+        // Validate all required properties are booleans
+        if (
+          typeof parsed.nostrverse === 'boolean' &&
+          typeof parsed.friends === 'boolean' &&
+          typeof parsed.mine === 'boolean' &&
+          (parsed.nostrverse || parsed.friends || parsed.mine)
+        ) {
           return parsed
         }
       }

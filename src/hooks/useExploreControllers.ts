@@ -28,6 +28,8 @@ export const useExploreControllers = (
 
   // Subscribe to highlights controller
   useEffect(() => {
+    const seed = highlightsController.getHighlights()
+    if (seed) setMyHighlights(seed)
     const unsubHighlights = highlightsController.onHighlights(setMyHighlights)
     return () => {
       unsubHighlights()
@@ -74,19 +76,8 @@ export const useExploreControllers = (
   useEffect(() => {
     const apply = (incoming: BlogPostPreview[]) => {
       setBlogPosts(prev => {
-        const byKey = new Map<string, BlogPostPreview>()
-        for (const p of prev) {
-          const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-          const key = `${p.author}:${dTag}`
-          byKey.set(key, p)
-        }
-        for (const p of incoming) {
-          const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-          const key = `${p.author}:${dTag}`
-          const existing = byKey.get(key)
-          if (!existing || p.event.created_at > existing.event.created_at) byKey.set(key, p)
-        }
-        return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
+        const merged = dedupeWritingsByReplaceable([...prev, ...incoming])
+        return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
       })
       if (incoming.length > 0 && !hasHydratedRef.current) {
         hasHydratedRef.current = true
@@ -155,6 +146,8 @@ export const useExploreControllers = (
       eventStore,
       pubkey: activeAccount.pubkey,
       force: refreshTrigger > 0
+    }).catch((err) => {
+      console.warn('[Explore] Failed to start reading progress controller:', err)
     })
   }, [activeAccount?.pubkey, relayPool, eventStore, refreshTrigger])
 

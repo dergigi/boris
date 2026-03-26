@@ -26,7 +26,6 @@ export const useExploreData = (
   refreshTrigger: number
 ) => {
   const [hasLoadedNostrverse, setHasLoadedNostrverse] = useState(false)
-  const [hasLoadedMine, setHasLoadedMine] = useState(false)
 
   // Subscribe to onLoading from both controllers (Issue 2)
   useEffect(() => {
@@ -78,20 +77,21 @@ export const useExploreData = (
 
   useEffect(() => {
     loadData()
-  }, [loadData, refreshTrigger])
+  }, [loadData])
 
   // Kick off friends fetches reactively when contacts arrive
   useEffect(() => {
     if (!relayPool) return
     if (followedPubkeys.size === 0) return
+    let cancelled = false
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
     const contactsArray = Array.from(followedPubkeys)
 
     fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls, (post) => {
+      if (cancelled) return
       setBlogPosts(prev => {
         const merged = dedupeWritingsByReplaceable([...prev, post])
         if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
-        // Pre-cache profiles in background
         const authorPubkeys = Array.from(new Set(merged.map(p => p.author)))
         fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch((err) => {
           console.warn('[Explore] Failed to fetch author profiles:', err)
@@ -100,6 +100,7 @@ export const useExploreData = (
       })
       if (!hasHydratedRef.current) { hasHydratedRef.current = true; setLoading(false) }
     }, 100, eventStore).then((friendsPosts) => {
+      if (cancelled) return
       setBlogPosts(prev => {
         const merged = dedupeWritingsByReplaceable([...prev, ...friendsPosts])
         if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
@@ -107,13 +108,14 @@ export const useExploreData = (
       })
     }).catch((err) => {
       console.warn('[Explore] Failed to fetch blog posts from followed authors:', err)
-      if (!hasHydratedRef.current) {
+      if (!cancelled && !hasHydratedRef.current) {
         hasHydratedRef.current = true
         setLoading(false)
       }
     })
 
     fetchHighlightsFromAuthors(relayPool, contactsArray, (highlight) => {
+      if (cancelled) return
       setHighlights(prev => {
         const merged = dedupeHighlightsById([...prev, highlight])
         if (activeAccount) setCachedHighlights(activeAccount.pubkey, merged)
@@ -121,6 +123,7 @@ export const useExploreData = (
       })
       if (!hasHydratedRef.current) { hasHydratedRef.current = true; setLoading(false) }
     }, eventStore || undefined).then((friendsHighlights) => {
+      if (cancelled) return
       setHighlights(prev => {
         const merged = dedupeHighlightsById([...prev, ...friendsHighlights])
         if (activeAccount) setCachedHighlights(activeAccount.pubkey, merged)
@@ -128,11 +131,13 @@ export const useExploreData = (
       })
     }).catch((err) => {
       console.warn('[Explore] Failed to fetch highlights from followed authors:', err)
-      if (!hasHydratedRef.current) {
+      if (!cancelled && !hasHydratedRef.current) {
         hasHydratedRef.current = true
         setLoading(false)
       }
     })
+
+    return () => { cancelled = true }
   }, [relayPool, followedPubkeys, eventStore, settings, activeAccount, setBlogPosts, setHighlights, hasHydratedRef, setLoading])
 
   // Lazy-load nostrverse content when user toggles it on (logged in)
@@ -147,12 +152,6 @@ export const useExploreData = (
       console.warn('[Explore] Failed to lazy-load nostrverse highlights:', err)
     })
   }, [activeAccount, relayPool, visibility.nostrverse, hasLoadedNostrverse, eventStore])
-
-  // Lazy-load my writings when user toggles "mine" on (logged in)
-  useEffect(() => {
-    if (!activeAccount || !visibility.mine || hasLoadedMine) return
-    setHasLoadedMine(true)
-  }, [visibility.mine, activeAccount, hasLoadedMine])
 
   return {
     hasLoadedNostrverse,
