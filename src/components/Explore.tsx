@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPersonHiking, faNewspaper, faHighlighter, faUser, faUserGroup, faNetworkWired, faArrowsRotate } from '@fortawesome/free-solid-svg-icons'
 import IconButton from './IconButton'
@@ -8,26 +8,17 @@ import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { nip19 } from 'nostr-tools'
 import { useNavigate } from 'react-router-dom'
-// Contacts are managed via controller subscription
-import { fetchBlogPostsFromAuthors, BlogPostPreview } from '../services/exploreService'
-import { fetchHighlightsFromAuthors } from '../services/highlightService'
-import { fetchProfiles } from '../services/profileService'
-import { nostrverseHighlightsController } from '../services/nostrverseHighlightsController'
-import { highlightsController } from '../services/highlightsController'
-import { Highlight } from '../types/highlights'
+import { BlogPostPreview } from '../services/exploreService'
 import { UserSettings } from '../services/settingsService'
 import BlogPostCard from './BlogPostCard'
 import { HighlightItem } from './HighlightItem'
-import { getCachedPosts, setCachedPosts, getCachedHighlights, setCachedHighlights } from '../services/exploreCache'
 import { usePullToRefresh } from 'use-pull-to-refresh'
 import RefreshIndicator from './RefreshIndicator'
 import { classifyHighlights } from '../utils/highlightClassification'
-import { HighlightVisibility } from './HighlightsPanel'
-import { dedupeHighlightsById, dedupeWritingsByReplaceable } from '../utils/dedupe'
-import { writingsController } from '../services/writingsController'
-import { nostrverseWritingsController } from '../services/nostrverseWritingsController'
-import { readingProgressController } from '../services/readingProgressController'
-import { contactsController } from '../services/contactsController'
+import { dedupeWritingsByReplaceable } from '../utils/dedupe'
+import { useExploreVisibility } from '../hooks/useExploreVisibility'
+import { useExploreControllers } from '../hooks/useExploreControllers'
+import { useExploreData } from '../hooks/useExploreData'
 
 interface ExploreProps {
   relayPool: RelayPool
@@ -42,238 +33,35 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
   const activeAccount = Hooks.useActiveAccount()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>(propActiveTab || 'highlights')
-  const [blogPosts, setBlogPosts] = useState<BlogPostPreview[]>([])
-  const [highlights, setHighlights] = useState<Highlight[]>([])
-  const [followedPubkeys, setFollowedPubkeys] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const [hasLoadedNostrverse, setHasLoadedNostrverse] = useState(false)
-  const [hasLoadedMine, setHasLoadedMine] = useState(false)
 
-  const hasHydratedRef = useRef(false)
+  // Use custom hooks
+  const { visibility, toggleScope } = useExploreVisibility(activeAccount, settings)
   
-  // Get myHighlights directly from controller
-  const [/* myHighlights */, setMyHighlights] = useState<Highlight[]>([])
-  // Remove unused loading state to avoid warnings
-  
-  // Reading progress state (naddr -> progress 0-1)
-  const [readingProgressMap, setReadingProgressMap] = useState<Map<string, number>>(new Map())
-  
-  // Visibility filters - load from localStorage first, fallback to settings
-  const [visibility, setVisibility] = useState<HighlightVisibility>(() => {
-    // Try to load from localStorage first
-    try {
-      const saved = localStorage.getItem('exploreScopeVisibility')
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        // Validate that at least one scope is enabled
-        if (parsed.nostrverse || parsed.friends || parsed.mine) {
-          return parsed
-        }
-      }
-    } catch (err) {
-      console.warn('Failed to load explore scope from localStorage:', err)
-    }
-    
-    // Fallback to settings or defaults
-    return {
-      nostrverse: activeAccount ? (settings?.defaultExploreScopeNostrverse ?? false) : true,
-      friends: settings?.defaultExploreScopeFriends ?? true,
-      mine: settings?.defaultExploreScopeMine ?? false
-    }
-  })
+  const {
+    blogPosts,
+    setBlogPosts,
+    highlights,
+    setHighlights,
+    followedPubkeys,
+    readingProgressMap,
+    hasHydratedRef
+  } = useExploreControllers(relayPool, eventStore, activeAccount, refreshTrigger, setLoading)
 
-  // Ensure at least one scope remains active
-  const toggleScope = useCallback((key: 'nostrverse' | 'friends' | 'mine') => {
-    setVisibility(prev => {
-      const next = { ...prev, [key]: !prev[key] }
-      if (!next.nostrverse && !next.friends && !next.mine) {
-        return prev // ignore toggle that would disable all scopes
-      }
-      // Persist to localStorage
-      try {
-        localStorage.setItem('exploreScopeVisibility', JSON.stringify(next))
-      } catch (err) {
-        console.warn('Failed to save explore scope to localStorage:', err)
-      }
-      return next
-    })
-  }, [])
-
-  // Subscribe to highlights controller
-  useEffect(() => {
-    const unsubHighlights = highlightsController.onHighlights(setMyHighlights)
-    return () => {
-      unsubHighlights()
-    }
-  }, [])
-
-  // Subscribe to contacts stream and mirror into local state
-  useEffect(() => {
-    const unsubscribe = contactsController.onContacts((contacts) => {
-      setFollowedPubkeys(new Set(contacts))
-    })
-    return () => unsubscribe()
-  }, [])
-
-  // Ensure contacts controller is started for the active account (non-blocking)
-  useEffect(() => {
-    if (relayPool && activeAccount?.pubkey) {
-      contactsController.start({ relayPool, pubkey: activeAccount.pubkey }).catch((err) => {
-        console.warn('[Explore] Failed to start contacts controller:', err)
-      })
-    }
-  }, [relayPool, activeAccount?.pubkey])
-
-  // Subscribe to nostrverse highlights controller for global stream
-  useEffect(() => {
-    const apply = (incoming: Highlight[]) => {
-      setHighlights(prev => {
-        const byId = new Map(prev.map(h => [h.id, h]))
-        for (const h of incoming) byId.set(h.id, h)
-        return Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
-      })
-      if (incoming.length > 0 && !hasHydratedRef.current) {
-        hasHydratedRef.current = true
-        setLoading(false)
-      }
-    }
-    // seed immediately
-    apply(nostrverseHighlightsController.getHighlights())
-    const unsub = nostrverseHighlightsController.onHighlights(apply)
-    return () => unsub()
-  }, [])
-
-  // Subscribe to nostrverse writings controller for global stream
-  useEffect(() => {
-    const apply = (incoming: BlogPostPreview[]) => {
-      setBlogPosts(prev => {
-        const byKey = new Map<string, BlogPostPreview>()
-        for (const p of prev) {
-          const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-          const key = `${p.author}:${dTag}`
-          byKey.set(key, p)
-        }
-        for (const p of incoming) {
-          const dTag = p.event.tags.find(t => t[0] === 'd')?.[1] || ''
-          const key = `${p.author}:${dTag}`
-          const existing = byKey.get(key)
-          if (!existing || p.event.created_at > existing.event.created_at) byKey.set(key, p)
-        }
-        return Array.from(byKey.values()).sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-      })
-      if (incoming.length > 0 && !hasHydratedRef.current) {
-        hasHydratedRef.current = true
-        setLoading(false)
-      }
-    }
-    apply(nostrverseWritingsController.getWritings())
-    const unsub = nostrverseWritingsController.onWritings(apply)
-    return () => unsub()
-  }, [])
-
-  // Subscribe to writings controller for "mine" posts and seed immediately
-  useEffect(() => {
-    // Seed from controller's current state
-    const seed = writingsController.getWritings()
-    if (seed.length > 0) {
-      setBlogPosts(prev => {
-        const merged = dedupeWritingsByReplaceable([...prev, ...seed])
-        return merged.sort((a, b) => {
-          const timeA = a.published || a.event.created_at
-          const timeB = b.published || b.event.created_at
-          return timeB - timeA
-        })
-      })
-    }
-
-    // Stream updates
-    const unsub = writingsController.onWritings((posts) => {
-      setBlogPosts(prev => {
-        const merged = dedupeWritingsByReplaceable([...prev, ...posts])
-        return merged.sort((a, b) => {
-          const timeA = a.published || a.event.created_at
-          const timeB = b.published || b.event.created_at
-          return timeB - timeA
-        })
-      })
-    })
-
-    return () => unsub()
-  }, [])
-  
-  // Subscribe to reading progress controller
-  useEffect(() => {
-    // Get initial state immediately
-    const initialMap = readingProgressController.getProgressMap()
-    setReadingProgressMap(initialMap)
-    
-    // Subscribe to updates
-    const unsubProgress = readingProgressController.onProgress((newMap) => {
-      setReadingProgressMap(newMap)
-    })
-    
-    return () => {
-      unsubProgress()
-    }
-  }, [])
-  
-  // Load reading progress data when logged in
-  useEffect(() => {
-    if (!activeAccount?.pubkey) {
-      return
-    }
-    
-    readingProgressController.start({
-      relayPool,
-      eventStore,
-      pubkey: activeAccount.pubkey,
-      force: refreshTrigger > 0
-    })
-  }, [activeAccount?.pubkey, relayPool, eventStore, refreshTrigger])
-
-  // Update visibility when settings/login state changes
-  useEffect(() => {
-    // Check if user has a saved preference
-    const hasSavedPreference = (() => {
-      try {
-        return localStorage.getItem('exploreScopeVisibility') !== null
-      } catch {
-        return false
-      }
-    })()
-    
-    // Only reset to defaults if no saved preference exists
-    if (hasSavedPreference) {
-      return
-    }
-    
-    if (!activeAccount) {
-      // When logged out, show nostrverse by default
-      const defaultVisibility = { nostrverse: true, friends: false, mine: false }
-      setVisibility(defaultVisibility)
-      try {
-        localStorage.setItem('exploreScopeVisibility', JSON.stringify(defaultVisibility))
-      } catch (err) {
-        console.warn('Failed to save explore scope to localStorage:', err)
-      }
-      setHasLoadedNostrverse(true) // logged out path loads nostrverse immediately
-    } else {
-      // When logged in, use settings defaults immediately
-      const defaultVisibility = {
-        nostrverse: settings?.defaultExploreScopeNostrverse ?? false,
-        friends: settings?.defaultExploreScopeFriends ?? true,
-        mine: settings?.defaultExploreScopeMine ?? false
-      }
-      setVisibility(defaultVisibility)
-      try {
-        localStorage.setItem('exploreScopeVisibility', JSON.stringify(defaultVisibility))
-      } catch (err) {
-        console.warn('Failed to save explore scope to localStorage:', err)
-      }
-      setHasLoadedNostrverse(false)
-    }
-  }, [activeAccount, settings?.defaultExploreScopeNostrverse, settings?.defaultExploreScopeFriends, settings?.defaultExploreScopeMine])
+  useExploreData(
+    relayPool,
+    eventStore,
+    activeAccount,
+    visibility,
+    followedPubkeys,
+    setBlogPosts,
+    setHighlights,
+    hasHydratedRef,
+    setLoading,
+    settings,
+    refreshTrigger
+  )
 
   // Update local state when prop changes
   useEffect(() => {
@@ -282,126 +70,11 @@ const Explore: React.FC<ExploreProps> = ({ relayPool, eventStore, settings, acti
     }
   }, [propActiveTab])
 
-  // Load initial data and refresh on triggers
-  const loadData = useCallback(() => {
-    if (!relayPool) return
-
-    // Seed from cache for instant UI
-    if (activeAccount) {
-      const cachedPosts = getCachedPosts(activeAccount.pubkey)
-      if (cachedPosts && cachedPosts.length > 0) setBlogPosts(cachedPosts)
-      const cached = getCachedHighlights(activeAccount.pubkey)
-      if (cached && cached.length > 0) setHighlights(cached)
-    }
-
-    setLoading(true)
-
-    // Trigger nostrverse controllers (they stream results via subscriptions above)
-    if (!activeAccount || visibility.nostrverse) {
-      const force = refreshTrigger > 0
-      nostrverseWritingsController.start({ relayPool, eventStore, force }).catch((err) => {
-        console.warn('[Explore] Failed to start nostrverse writings controller:', err)
-      })
-      nostrverseHighlightsController.start({ relayPool, eventStore, force }).catch((err) => {
-        console.warn('[Explore] Failed to start nostrverse highlights controller:', err)
-      })
-    }
-
-    // Loading is turned off when first data arrives via controller subscriptions
-    if (!hasHydratedRef.current) {
-      // Set a fallback timeout to clear loading state
-      setTimeout(() => {
-        if (!hasHydratedRef.current) {
-          hasHydratedRef.current = true
-          setLoading(false)
-        }
-      }, 5000)
-    }
-  }, [relayPool, activeAccount, eventStore, visibility.nostrverse, refreshTrigger])
-
-  useEffect(() => {
-    loadData()
-  }, [loadData, refreshTrigger])
-
-  // Kick off friends fetches reactively when contacts arrive
-  useEffect(() => {
-    if (!relayPool) return
-    if (followedPubkeys.size === 0) return
-    const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
-    const contactsArray = Array.from(followedPubkeys)
-
-    fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls, (post) => {
-      setBlogPosts(prev => {
-        const merged = dedupeWritingsByReplaceable([...prev, post])
-        if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
-        // Pre-cache profiles in background
-        const authorPubkeys = Array.from(new Set(merged.map(p => p.author)))
-        fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch((err) => {
-          console.warn('[Explore] Failed to fetch author profiles:', err)
-        })
-        return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-      })
-      if (!hasHydratedRef.current) { hasHydratedRef.current = true; setLoading(false) }
-    }, 100, eventStore).then((friendsPosts) => {
-      setBlogPosts(prev => {
-        const merged = dedupeWritingsByReplaceable([...prev, ...friendsPosts])
-        if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
-        return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
-      })
-    }).catch((err) => {
-      console.warn('[Explore] Failed to fetch blog posts from followed authors:', err)
-      if (!hasHydratedRef.current) {
-        hasHydratedRef.current = true
-        setLoading(false)
-      }
-    })
-
-    fetchHighlightsFromAuthors(relayPool, contactsArray, (highlight) => {
-      setHighlights(prev => {
-        const merged = dedupeHighlightsById([...prev, highlight])
-        if (activeAccount) setCachedHighlights(activeAccount.pubkey, merged)
-        return merged.sort((a, b) => b.created_at - a.created_at)
-      })
-      if (!hasHydratedRef.current) { hasHydratedRef.current = true; setLoading(false) }
-    }, eventStore || undefined).then((friendsHighlights) => {
-      setHighlights(prev => {
-        const merged = dedupeHighlightsById([...prev, ...friendsHighlights])
-        if (activeAccount) setCachedHighlights(activeAccount.pubkey, merged)
-        return merged.sort((a, b) => b.created_at - a.created_at)
-      })
-    }).catch((err) => {
-      console.warn('[Explore] Failed to fetch highlights from followed authors:', err)
-      if (!hasHydratedRef.current) {
-        hasHydratedRef.current = true
-        setLoading(false)
-      }
-    })
-  }, [relayPool, followedPubkeys, eventStore, settings, activeAccount])
-
-  // Lazy-load nostrverse content when user toggles it on (logged in)
-  useEffect(() => {
-    if (!activeAccount || !relayPool || !visibility.nostrverse || hasLoadedNostrverse) return
-    setHasLoadedNostrverse(true)
-    // Controllers stream results via subscriptions above
-    nostrverseWritingsController.start({ relayPool, eventStore }).catch((err) => {
-      console.warn('[Explore] Failed to lazy-load nostrverse writings:', err)
-    })
-    nostrverseHighlightsController.start({ relayPool, eventStore }).catch((err) => {
-      console.warn('[Explore] Failed to lazy-load nostrverse highlights:', err)
-    })
-  }, [activeAccount, relayPool, visibility.nostrverse, hasLoadedNostrverse, eventStore])
-
-  // Lazy-load my writings when user toggles "mine" on (logged in)
-  // No direct fetch here; writingsController streams my posts centrally
-  useEffect(() => {
-    if (!activeAccount || !visibility.mine || hasLoadedMine) return
-    setHasLoadedMine(true)
-  }, [visibility.mine, activeAccount, hasLoadedMine])
-
   // Pull-to-refresh
   const { isRefreshing, pullPosition } = usePullToRefresh({
     onRefresh: () => {
       setRefreshTrigger(prev => prev + 1)
+      setLoading(true)
     },
     maximumPullLength: 240,
     refreshThreshold: 80,
