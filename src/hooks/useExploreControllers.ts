@@ -37,12 +37,20 @@ export const useExploreControllers = (
   }, [])
 
   // Subscribe to contacts stream and mirror into local state
+  // Reset when account changes or is removed
   useEffect(() => {
+    if (!activeAccount?.pubkey) {
+      setFollowedPubkeys(new Set())
+      return
+    }
     const unsubscribe = contactsController.onContacts((contacts) => {
       setFollowedPubkeys(new Set(contacts))
     })
-    return () => unsubscribe()
-  }, [])
+    return () => {
+      unsubscribe()
+      setFollowedPubkeys(new Set())
+    }
+  }, [activeAccount?.pubkey])
 
   // Ensure contacts controller is started for the active account (non-blocking)
   useEffect(() => {

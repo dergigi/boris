@@ -49,31 +49,37 @@ export const useExploreData = (
     }
   }, [hasHydratedRef, setLoading])
 
-  // Load initial data and refresh on triggers
+  // Seed cache once on mount (only when state is empty)
+  useEffect(() => {
+    if (!activeAccount) return
+    setBlogPosts(prev => {
+      if (prev.length > 0) return prev
+      const cachedPosts = getCachedPosts(activeAccount.pubkey)
+      return cachedPosts && cachedPosts.length > 0 ? cachedPosts : prev
+    })
+    setHighlights(prev => {
+      if (prev.length > 0) return prev
+      const cached = getCachedHighlights(activeAccount.pubkey)
+      return cached && cached.length > 0 ? cached : prev
+    })
+  }, [activeAccount, setBlogPosts, setHighlights])
+
+  // Start nostrverse controllers (single entry point)
   const loadData = useCallback(() => {
     if (!relayPool) return
+    if (activeAccount && !visibility.nostrverse) return
 
-    // Seed from cache for instant UI
-    if (activeAccount) {
-      const cachedPosts = getCachedPosts(activeAccount.pubkey)
-      if (cachedPosts && cachedPosts.length > 0) setBlogPosts(cachedPosts)
-      const cached = getCachedHighlights(activeAccount.pubkey)
-      if (cached && cached.length > 0) setHighlights(cached)
-    }
-
+    hasHydratedRef.current = false
     setLoading(true)
 
-    // Trigger nostrverse controllers (they stream results via subscriptions)
-    if (!activeAccount || visibility.nostrverse) {
-      const force = refreshTrigger > 0
-      nostrverseWritingsController.start({ relayPool, eventStore, force }).catch((err) => {
-        console.warn('[Explore] Failed to start nostrverse writings controller:', err)
-      })
-      nostrverseHighlightsController.start({ relayPool, eventStore, force }).catch((err) => {
-        console.warn('[Explore] Failed to start nostrverse highlights controller:', err)
-      })
-    }
-  }, [relayPool, activeAccount, eventStore, visibility.nostrverse, refreshTrigger, setBlogPosts, setHighlights, setLoading])
+    const force = refreshTrigger > 0
+    nostrverseWritingsController.start({ relayPool, eventStore, force }).catch((err) => {
+      console.warn('[Explore] Failed to start nostrverse writings controller:', err)
+    })
+    nostrverseHighlightsController.start({ relayPool, eventStore, force }).catch((err) => {
+      console.warn('[Explore] Failed to start nostrverse highlights controller:', err)
+    })
+  }, [relayPool, activeAccount, eventStore, visibility.nostrverse, refreshTrigger, hasHydratedRef, setLoading])
 
   useEffect(() => {
     loadData()
@@ -86,26 +92,31 @@ export const useExploreData = (
     let cancelled = false
     const relayUrls = Array.from(relayPool.relays.values()).map(relay => relay.url)
     const contactsArray = Array.from(followedPubkeys)
+    const newAuthorPubkeys = new Set<string>()
 
     fetchBlogPostsFromAuthors(relayPool, contactsArray, relayUrls, (post) => {
       if (cancelled) return
+      newAuthorPubkeys.add(post.author)
       setBlogPosts(prev => {
         const merged = dedupeWritingsByReplaceable([...prev, post])
         if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
-        const authorPubkeys = Array.from(new Set(merged.map(p => p.author)))
-        fetchProfiles(relayPool, eventStore, authorPubkeys, settings).catch((err) => {
-          console.warn('[Explore] Failed to fetch author profiles:', err)
-        })
         return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
       })
       if (!hasHydratedRef.current) { hasHydratedRef.current = true; setLoading(false) }
     }, 100, eventStore).then((friendsPosts) => {
       if (cancelled) return
+      friendsPosts.forEach(p => newAuthorPubkeys.add(p.author))
       setBlogPosts(prev => {
         const merged = dedupeWritingsByReplaceable([...prev, ...friendsPosts])
         if (activeAccount) setCachedPosts(activeAccount.pubkey, merged)
         return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
       })
+      // Batch fetch profiles for all discovered authors
+      if (newAuthorPubkeys.size > 0) {
+        fetchProfiles(relayPool, eventStore, Array.from(newAuthorPubkeys), settings).catch((err) => {
+          console.warn('[Explore] Failed to fetch author profiles:', err)
+        })
+      }
     }).catch((err) => {
       console.warn('[Explore] Failed to fetch blog posts from followed authors:', err)
       if (!cancelled && !hasHydratedRef.current) {
@@ -140,18 +151,12 @@ export const useExploreData = (
     return () => { cancelled = true }
   }, [relayPool, followedPubkeys, eventStore, settings, activeAccount, setBlogPosts, setHighlights, hasHydratedRef, setLoading])
 
-  // Lazy-load nostrverse content when user toggles it on (logged in)
+  // Track whether nostrverse has been loaded at least once
   useEffect(() => {
     if (!activeAccount || !relayPool || !visibility.nostrverse || hasLoadedNostrverse) return
     setHasLoadedNostrverse(true)
-    // Controllers stream results via subscriptions
-    nostrverseWritingsController.start({ relayPool, eventStore }).catch((err) => {
-      console.warn('[Explore] Failed to lazy-load nostrverse writings:', err)
-    })
-    nostrverseHighlightsController.start({ relayPool, eventStore }).catch((err) => {
-      console.warn('[Explore] Failed to lazy-load nostrverse highlights:', err)
-    })
-  }, [activeAccount, relayPool, visibility.nostrverse, hasLoadedNostrverse, eventStore])
+    // loadData already handles the start; this just tracks the flag
+  }, [activeAccount, relayPool, visibility.nostrverse, hasLoadedNostrverse])
 
   return {
     hasLoadedNostrverse,
