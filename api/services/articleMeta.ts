@@ -5,6 +5,17 @@ const DEFAULT_SUMMARY = 'Read this article on Boris'
 const DEFAULT_IMAGE = '/boris-social-1200.png'
 const DEFAULT_AUTHOR = 'Boris'
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function metaPattern(attribute: 'name' | 'property', value: string): RegExp {
+  return new RegExp(
+    `<meta(?=[^>]*\\b${attribute}=["']${escapeRegExp(value)}["'])(?=[^>]*\\bcontent=["']([^"']+)["'])[^>]*>`,
+    'i'
+  )
+}
+
 function pickMeta(html: string, patterns: RegExp[]): string {
   for (const pattern of patterns) {
     const match = html.match(pattern)
@@ -39,25 +50,25 @@ export async function fetchArticleMetadataViaGateway(naddr: string): Promise<Art
       const html = await resp.text()
 
       const title = pickMeta(html, [
-        /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i,
-        /<meta[^>]+name=["']twitter:title["'][^>]+content=["']([^"']+)["']/i,
+        metaPattern('property', 'og:title'),
+        metaPattern('name', 'twitter:title'),
         /<title[^>]*>([^<]+)<\/title>/i
       ])
 
       const summary = pickMeta(html, [
-        /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i,
-        /<meta[^>]+name=["']twitter:description["'][^>]+content=["']([^"']+)["']/i,
-        /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i
+        metaPattern('property', 'og:description'),
+        metaPattern('name', 'twitter:description'),
+        metaPattern('name', 'description')
       ])
 
       const image = pickMeta(html, [
-        /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i,
-        /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i
+        metaPattern('property', 'og:image'),
+        metaPattern('name', 'twitter:image')
       ])
 
       const author = pickMeta(html, [
-        /<meta[^>]+property=["']article:author["'][^>]+content=["']([^"']+)["']/i,
-        /<meta[^>]+name=["']author["'][^>]+content=["']([^"']+)["']/i
+        metaPattern('property', 'article:author'),
+        metaPattern('name', 'author')
       ])
 
       if (!title && !summary && !image) {
