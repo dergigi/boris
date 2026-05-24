@@ -1,4 +1,4 @@
-import type { ArticleMetadata } from './ogStore.js'
+import type { ArticleMetadata } from './articleMetadata.js'
 
 const DEFAULT_TITLE = 'Read on Boris'
 const DEFAULT_SUMMARY = 'Read this article on Boris'
@@ -27,7 +27,7 @@ function pickMeta(html: string, patterns: RegExp[]): string {
   return ''
 }
 
-export async function fetchArticleMetadataViaGateway(naddr: string): Promise<ArticleMetadata | null> {
+export async function fetchArticleMetadata(naddr: string): Promise<ArticleMetadata | null> {
   try {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 4000)
@@ -89,8 +89,4 @@ export async function fetchArticleMetadataViaGateway(naddr: string): Promise<Art
     console.error('Failed to fetch article metadata via gateway:', err)
     return null
   }
-}
-
-export async function fetchArticleMetadataViaRelays(naddr: string): Promise<ArticleMetadata | null> {
-  return fetchArticleMetadataViaGateway(naddr)
 }

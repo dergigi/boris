@@ -1,4 +1,4 @@
-import type { ArticleMetadata } from './ogStore.js'
+import type { ArticleMetadata } from './articleMetadata.js'
 
 export function escapeHtml(text: string): string {
   return text
@@ -77,4 +77,3 @@ ${articleTags}
   </body>
 </html>`
 }
-
