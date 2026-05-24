@@ -43,16 +43,20 @@ function decodeHtmlEntities(text: string): string {
 
     if (normalized.startsWith('#x')) {
       const codePoint = Number.parseInt(normalized.slice(2), 16)
-      return Number.isNaN(codePoint) ? entity : String.fromCodePoint(codePoint)
+      return isValidCodePoint(codePoint) ? String.fromCodePoint(codePoint) : entity
     }
 
     if (normalized.startsWith('#')) {
       const codePoint = Number.parseInt(normalized.slice(1), 10)
-      return Number.isNaN(codePoint) ? entity : String.fromCodePoint(codePoint)
+      return isValidCodePoint(codePoint) ? String.fromCodePoint(codePoint) : entity
     }
 
     return namedEntities[normalized] || entity
   })
+}
+
+function isValidCodePoint(codePoint: number): boolean {
+  return Number.isFinite(codePoint) && codePoint >= 0 && codePoint <= 0x10ffff
 }
 
 function stripHtml(html: string): string {
@@ -107,21 +111,51 @@ function pickArticleBodySummary(html: string, title: string): string {
   return clampSummary(summary)
 }
 
-function pickArticleAuthor(html: string, siteName: string): string {
-  const authorName = html.match(/<span(?=[^>]*\bitemprop=["']name["'])[^>]*>([\s\S]*?)<\/span>/i)
-  if (authorName?.[1]) {
-    return stripHtml(authorName[1])
+function pickNameInMarkup(markup: string): string {
+  const name = markup.match(/<span(?=[^>]*\bitemprop=["']name["'])[^>]*>([\s\S]*?)<\/span>/i)
+  if (name?.[1]) {
+    return stripHtml(name[1])
   }
 
-  const alternateName = html.match(/<span(?=[^>]*\bitemprop=["']alternateName["'])[^>]*>([\s\S]*?)<\/span>/i)
+  const alternateName = markup.match(/<span(?=[^>]*\bitemprop=["']alternateName["'])[^>]*>([\s\S]*?)<\/span>/i)
   if (alternateName?.[1]) {
     return stripHtml(alternateName[1])
   }
 
+  return ''
+}
+
+function cleanSiteName(siteName: string): string {
   return stripHtml(siteName)
     .replace(/\s*\([^)]*\)\s*on Nostr$/i, '')
     .replace(/\s+on Nostr$/i, '')
     .trim()
+}
+
+function pickArticleAuthor(html: string, siteName: string, metaAuthor: string): string {
+  const authorHeader = html.match(/<header(?=[^>]*\bitemprop=["']author["'])[^>]*>([\s\S]*?)<\/header>/i)?.[1]
+  const authorName = authorHeader ? pickNameInMarkup(authorHeader) : ''
+  if (authorName) {
+    return authorName
+  }
+
+  const relAuthor = html.match(/<a(?=[^>]*\brel=["']author["'])[^>]*>([\s\S]*?)<\/a>/i)?.[1]
+  const relAuthorName = relAuthor ? pickNameInMarkup(relAuthor) || stripHtml(relAuthor) : ''
+  if (relAuthorName) {
+    return relAuthorName
+  }
+
+  const authorFromMeta = stripHtml(metaAuthor)
+  if (authorFromMeta) {
+    return authorFromMeta
+  }
+
+  const authorFromSiteName = cleanSiteName(siteName)
+  if (authorFromSiteName) {
+    return authorFromSiteName
+  }
+
+  return pickNameInMarkup(html)
 }
 
 export async function fetchArticleMetadata(naddr: string): Promise<ArticleMetadata | null> {
@@ -171,7 +205,7 @@ export async function fetchArticleMetadata(naddr: string): Promise<ArticleMetada
         metaPattern('name', 'author')
       ])
       const siteName = pickMeta(html, [metaPattern('property', 'og:site_name')])
-      const author = pickArticleAuthor(html, siteName) || stripHtml(metaAuthor)
+      const author = pickArticleAuthor(html, siteName, metaAuthor)
 
       if (!title && !summary && !image) {
         console.log(`No OG metadata found via gateway for ${naddr}`)
