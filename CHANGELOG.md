@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-05-24
+
+### Added
+
+- Cache decrypted content for hidden bookmarks
+
+### Removed
+
+- Defunct Upstash-backed OpenGraph preview cache and refresh flow
+
+### Fixed
+
+- Clear encrypted content cache on logout
+- Article OpenGraph serverless crashes
+- Gateway metadata parsing when `content` and `property`/`name` attribute order is reversed
+- Article OpenGraph titles and descriptions now derive from article content with hardened entity and author parsing
+
 ## [0.12.0] - 2026-03-25
 
 ### Added
