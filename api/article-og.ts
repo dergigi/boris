@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getArticleMeta, setArticleMeta } from './services/ogStore.js'
-import { fetchArticleMetadataViaRelays } from './services/articleMeta.js'
+import { fetchArticleMetadata } from './services/articleMeta.js'
 import { generateHtml } from './services/ogHtml.js'
 
 function setCacheHeaders(
@@ -30,28 +29,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.setHeader('X-Boris-Debug', '1')
     }
 
-    let meta = await getArticleMeta(naddr).catch((err) => {
-      console.error('Failed to get article meta from Redis:', err)
-      return null
-    })
-    let cacheMaxAge = 86400
-
-    if (!meta) {
-      try {
-        meta = await fetchArticleMetadataViaRelays(naddr)
-
-        if (meta) {
-          await setArticleMeta(naddr, meta).catch((err) => {
-            console.error('Failed to cache relay metadata:', err)
-          })
-        } else {
-          cacheMaxAge = 300
-        }
-      } catch (err) {
-        console.error(`Error fetching from relays for ${naddr}:`, err)
-        cacheMaxAge = 300
-      }
-    }
+    const meta = await fetchArticleMetadata(naddr)
+    const cacheMaxAge = meta ? 86400 : 300
 
     const html = generateHtml(naddr, meta)
     const sharedCacheMaxAge = meta ? 604800 : cacheMaxAge
