@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-06-12
+
+### Changed
+
+- Refactored Explore into dedicated visibility, controller, and data hooks
+- Consolidated Explore loading around controllers and local-first hydration
+
+### Fixed
+
+- Explore loading now clears correctly on the first streamed result, including empty results
+- Explore cached posts, highlights, and reading progress now reset correctly on logout and account switches
+- Gateway article metadata parsing now handles `content` attributes before `name` or `property` and preserves quotes inside meta values
+
+### Removed
+
+- Legacy `nostrverseService` and `readsService` Explore data paths
+
 ## [0.12.1] - 2026-05-24
 
 ### Added
