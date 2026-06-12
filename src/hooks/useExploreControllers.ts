@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type Dispatch, type SetStateAction } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { BlogPostPreview } from '../services/exploreService'
@@ -16,7 +16,7 @@ export const useExploreControllers = (
   eventStore: IEventStore,
   activeAccount: { pubkey: string } | undefined,
   refreshTrigger: number,
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>
+  setLoading: Dispatch<SetStateAction<boolean>>
 ) => {
   const [blogPosts, setBlogPosts] = useState<BlogPostPreview[]>([])
   const [highlights, setHighlights] = useState<Highlight[]>([])
@@ -25,6 +25,7 @@ export const useExploreControllers = (
   const [readingProgressMap, setReadingProgressMap] = useState<Map<string, number>>(new Map())
   
   const hasHydratedRef = useRef(false)
+  const lastReadingProgressPubkeyRef = useRef<string | null>(null)
 
   // Subscribe to highlights controller
   useEffect(() => {
@@ -69,7 +70,7 @@ export const useExploreControllers = (
         for (const h of incoming) byId.set(h.id, h)
         return Array.from(byId.values()).sort((a, b) => b.created_at - a.created_at)
       })
-      if (incoming.length > 0 && !hasHydratedRef.current) {
+      if (!hasHydratedRef.current) {
         hasHydratedRef.current = true
         setLoading(false)
       }
@@ -78,7 +79,7 @@ export const useExploreControllers = (
     apply(nostrverseHighlightsController.getHighlights())
     const unsub = nostrverseHighlightsController.onHighlights(apply)
     return () => unsub()
-  }, [])
+  }, [setLoading])
 
   // Subscribe to nostrverse writings controller for global stream
   useEffect(() => {
@@ -87,7 +88,7 @@ export const useExploreControllers = (
         const merged = dedupeWritingsByReplaceable([...prev, ...incoming])
         return merged.sort((a, b) => (b.published || b.event.created_at) - (a.published || a.event.created_at))
       })
-      if (incoming.length > 0 && !hasHydratedRef.current) {
+      if (!hasHydratedRef.current) {
         hasHydratedRef.current = true
         setLoading(false)
       }
@@ -95,7 +96,7 @@ export const useExploreControllers = (
     apply(nostrverseWritingsController.getWritings())
     const unsub = nostrverseWritingsController.onWritings(apply)
     return () => unsub()
-  }, [])
+  }, [setLoading])
 
   // Subscribe to writings controller for "mine" posts and seed immediately
   useEffect(() => {
@@ -145,14 +146,30 @@ export const useExploreControllers = (
   
   // Load reading progress data when logged in
   useEffect(() => {
-    if (!activeAccount?.pubkey) {
+    const pubkey = activeAccount?.pubkey ?? null
+
+    if (!pubkey) {
+      lastReadingProgressPubkeyRef.current = null
+      readingProgressController.reset()
+      setReadingProgressMap(new Map())
       return
+    }
+
+    if (lastReadingProgressPubkeyRef.current !== pubkey) {
+      lastReadingProgressPubkeyRef.current = pubkey
+
+      if (readingProgressController.isLoadedFor(pubkey)) {
+        setReadingProgressMap(readingProgressController.getProgressMap())
+      } else {
+        readingProgressController.reset()
+        setReadingProgressMap(new Map())
+      }
     }
     
     readingProgressController.start({
       relayPool,
       eventStore,
-      pubkey: activeAccount.pubkey,
+      pubkey,
       force: refreshTrigger > 0
     }).catch((err) => {
       console.warn('[Explore] Failed to start reading progress controller:', err)

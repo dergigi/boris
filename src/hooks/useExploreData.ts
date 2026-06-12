@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from 'react'
 import { RelayPool } from 'applesauce-relay'
 import { IEventStore } from 'applesauce-core'
 import { BlogPostPreview, fetchBlogPostsFromAuthors } from '../services/exploreService'
@@ -18,14 +18,15 @@ export const useExploreData = (
   activeAccount: { pubkey: string } | undefined,
   visibility: HighlightVisibility,
   followedPubkeys: Set<string>,
-  setBlogPosts: React.Dispatch<React.SetStateAction<BlogPostPreview[]>>,
-  setHighlights: React.Dispatch<React.SetStateAction<Highlight[]>>,
-  hasHydratedRef: React.MutableRefObject<boolean>,
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  setBlogPosts: Dispatch<SetStateAction<BlogPostPreview[]>>,
+  setHighlights: Dispatch<SetStateAction<Highlight[]>>,
+  hasHydratedRef: MutableRefObject<boolean>,
+  setLoading: Dispatch<SetStateAction<boolean>>,
   settings: UserSettings | undefined,
   refreshTrigger: number
 ) => {
   const [hasLoadedNostrverse, setHasLoadedNostrverse] = useState(false)
+  const lastCachedAccountPubkeyRef = useRef<string | null>()
 
   // Subscribe to onLoading from both controllers (Issue 2)
   useEffect(() => {
@@ -49,20 +50,30 @@ export const useExploreData = (
     }
   }, [hasHydratedRef, setLoading])
 
-  // Seed cache once on mount (only when state is empty)
+  // Seed cache for the active account without reintroducing stale data from another account
   useEffect(() => {
-    if (!activeAccount) return
+    const pubkey = activeAccount?.pubkey ?? null
+    const previousPubkey = lastCachedAccountPubkeyRef.current
+    lastCachedAccountPubkeyRef.current = pubkey
+
+    if (!pubkey) return
+
+    const didSwitchAccounts = previousPubkey !== undefined && previousPubkey !== pubkey
+    const cachedPosts = getCachedPosts(pubkey)
+    const cachedHighlights = getCachedHighlights(pubkey)
+
     setBlogPosts(prev => {
-      if (prev.length > 0) return prev
-      const cachedPosts = getCachedPosts(activeAccount.pubkey)
+      if (!didSwitchAccounts && prev.length > 0) return prev
+      if (didSwitchAccounts && (!cachedPosts || cachedPosts.length === 0)) return []
       return cachedPosts && cachedPosts.length > 0 ? cachedPosts : prev
     })
+
     setHighlights(prev => {
-      if (prev.length > 0) return prev
-      const cached = getCachedHighlights(activeAccount.pubkey)
-      return cached && cached.length > 0 ? cached : prev
+      if (!didSwitchAccounts && prev.length > 0) return prev
+      if (didSwitchAccounts && (!cachedHighlights || cachedHighlights.length === 0)) return []
+      return cachedHighlights && cachedHighlights.length > 0 ? cachedHighlights : prev
     })
-  }, [activeAccount, setBlogPosts, setHighlights])
+  }, [activeAccount?.pubkey, setBlogPosts, setHighlights])
 
   // Start nostrverse controllers (single entry point)
   const loadData = useCallback(() => {
