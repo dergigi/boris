@@ -1,5 +1,5 @@
 import { fetch as fetchOpenGraph } from 'fetch-opengraph'
-import { ReadItem } from './readsService'
+import { ReadItem } from './readsController'
 
 // Cache for OpenGraph data to avoid repeated requests
 const ogCache = new Map<string, Record<string, unknown>>()

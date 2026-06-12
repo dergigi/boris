@@ -1,5 +1,5 @@
 import { Bookmark } from '../types/bookmarks'
-import { ReadItem } from '../services/readsService'
+import { ReadItem } from '../services/readsController'
 import { classifyBookmarkType } from './bookmarkTypeClassifier'
 import { KINDS } from '../config/kinds'
 import { nip19 } from 'nostr-tools'

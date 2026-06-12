@@ -12,7 +12,7 @@ function escapeRegExp(value: string): string {
 
 function metaPattern(attribute: 'name' | 'property', value: string): RegExp {
   return new RegExp(
-    `<meta(?=[^>]*\\b${attribute}=["']${escapeRegExp(value)}["'])(?=[^>]*\\bcontent=["']([^"']+)["'])[^>]*>`,
+    `<meta(?=[^>]*\\b${attribute}=["']${escapeRegExp(value)}["'])(?=[^>]*\\bcontent=(["'])(?<content>[\\s\\S]*?)\\1)[^>]*>`,
     'i'
   )
 }
@@ -20,8 +20,9 @@ function metaPattern(attribute: 'name' | 'property', value: string): RegExp {
 function pickMeta(html: string, patterns: RegExp[]): string {
   for (const pattern of patterns) {
     const match = html.match(pattern)
-    if (match?.[1]) {
-      return match[1].trim()
+    const value = match?.groups?.content || match?.[1]
+    if (value) {
+      return value.trim()
     }
   }
 

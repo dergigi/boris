@@ -3,7 +3,7 @@ import { fetchReadArticles } from './libraryService'
 import { queryEvents } from './dataFetch'
 import { RELAYS } from '../config/relays'
 import { KINDS } from '../config/kinds'
-import { ReadItem } from './readsService'
+import { ReadItem } from './readsController'
 import { processReadingProgress, processMarkedAsRead, filterValidItems, sortByReadingActivity } from './readingDataProcessor'
 import { mergeReadItem } from '../utils/readItemMerge'
 

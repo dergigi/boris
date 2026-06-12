@@ -1,5 +1,5 @@
 import { NostrEvent, nip19 } from 'nostr-tools'
-import { ReadItem } from './readsService'
+import { ReadItem } from './readsController'
 import { fallbackTitleFromUrl } from '../utils/readItemMerge'
 import { KINDS } from '../config/kinds'
 

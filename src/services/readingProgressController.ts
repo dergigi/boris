@@ -4,7 +4,7 @@ import { NostrEvent } from 'nostr-tools'
 import { queryEvents } from './dataFetch'
 import { KINDS } from '../config/kinds'
 import { processReadingProgress } from './readingDataProcessor'
-import { ReadItem } from './readsService'
+import { ReadItem } from './readsController'
 import { ARCHIVE_EMOJI } from './reactionService'
 import { nip19 } from 'nostr-tools'
 
