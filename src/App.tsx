@@ -34,9 +34,6 @@ import { nostrverseHighlightsController } from './services/nostrverseHighlightsC
 import { nostrverseWritingsController } from './services/nostrverseWritingsController'
 import { archiveController } from './services/archiveController'
 
-const DEFAULT_ARTICLE = import.meta.env.VITE_DEFAULT_ARTICLE_NADDR || 
-  'naddr1qvzqqqr4gupzqmjxss3dld622uu8q25gywum9qtg4w4cv4064jmg20xsac2aam5nqqxnzd3cxqmrzv3exgmr2wfesgsmew'
-
 // AppRoutes component that has access to hooks
 function AppRoutes({ 
   relayPool, 
@@ -375,7 +372,7 @@ function AppRoutes({
           />
         } 
       />
-      <Route path="/" element={<Navigate to={`/a/${DEFAULT_ARTICLE}`} replace />} />
+      <Route path="/" element={<Navigate to="/explore" replace />} />
     </Routes>
   )
 }
