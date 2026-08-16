@@ -7,6 +7,7 @@ Boris turns your Nostr bookmarks into a calm, fast, and focused reading experien
 ## Live
 
 - App: [https://read.withboris.com/](https://read.withboris.com/)
+- Android: [Zapstore](https://zapstore.dev/apps/naddr1qqgk7un89ejx2un8d9nkjtnzdaexjucprpmhxue69uhhyetvv9uju7npwpehgmmjv5hxgetkqgsxu35yyt0mwjjh8pcz4zprhxegz69t4wr9t74vk6zne58wzh0waycrqsqqqlstkpszdr)
 
 ## The Vision
 
