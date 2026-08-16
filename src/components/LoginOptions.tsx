@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPuzzlePiece, faShieldHalved, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { faPuzzlePiece, faShieldHalved, faCircleInfo, faMobileScreenButton, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { Hooks } from 'applesauce-react'
 import { Accounts } from 'applesauce-accounts'
 import { NostrConnectSigner } from 'applesauce-signers'
 import { getDefaultBunkerPermissions } from '../services/nostrConnect'
+
+const ZAPSTORE_ANDROID_URL = 'https://zapstore.dev/apps/naddr1qqgk7un89ejx2un8d9nkjtnzdaexjucprpmhxue69uhhyetvv9uju7npwpehgmmjv5hxgetkqgsxu35yyt0mwjjh8pcz4zprhxegz69t4wr9t74vk6zne58wzh0waycrqsqqqlstkpszdr'
 
 const LoginOptions: React.FC = () => {
   const accountManager = Hooks.useAccountManager()
@@ -126,6 +128,22 @@ const LoginOptions: React.FC = () => {
         <p className="login-description">
           <mark className="login-highlight">Connect your npub</mark> to see your bookmarks, explore long-form articles, and create <mark className="login-highlight">your own highlights.</mark>
         </p>
+
+        <div className="login-android-callout">
+          <div className="login-android-copy">
+            <FontAwesomeIcon icon={faMobileScreenButton} />
+            <span>Native Android app now available.</span>
+          </div>
+          <a
+            href={ZAPSTORE_ANDROID_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="login-android-link"
+          >
+            <span>Get it on Zapstore</span>
+            <FontAwesomeIcon icon={faUpRightFromSquare} />
+          </a>
+        </div>
         
         <div className="login-buttons">
           {!showBunkerInput && (
@@ -206,4 +224,3 @@ const LoginOptions: React.FC = () => {
 }
 
 export default LoginOptions
-
