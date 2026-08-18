@@ -5,6 +5,21 @@ const DEFAULT_SUMMARY = 'Read this article on Boris'
 const DEFAULT_IMAGE = '/boris-social-1200.png'
 const DEFAULT_AUTHOR = 'Boris'
 const SUMMARY_MAX_LENGTH = 220
+const GATEWAY_REQUEST_TIMEOUT_MS = 4500
+const GATEWAY_BASE_URLS = [
+  'https://njump.me',
+  'https://nostr.com',
+  'https://nostr.at',
+  'https://nostr.eu',
+  'https://nostr.ae'
+] as const
+
+class NoMetadataError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'NoMetadataError'
+  }
+}
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -159,71 +174,97 @@ function pickArticleAuthor(html: string, siteName: string, metaAuthor: string): 
   return pickNameInMarkup(html)
 }
 
+function extractArticleMetadata(html: string): ArticleMetadata | null {
+  const metaTitle = pickMeta(html, [
+    metaPattern('property', 'og:title'),
+    metaPattern('name', 'twitter:title'),
+    /<title[^>]*>([^<]+)<\/title>/i
+  ])
+
+  const title = pickArticleHeadline(html) || cleanTitle(metaTitle)
+  const metaSummary = pickMeta(html, [
+    metaPattern('property', 'og:description'),
+    metaPattern('name', 'twitter:description'),
+    metaPattern('name', 'description')
+  ])
+  const articleSummary = pickArticleBodySummary(html, title)
+  const summary = articleSummary || clampSummary(stripHtml(metaSummary))
+
+  const image = pickMeta(html, [
+    metaPattern('property', 'og:image'),
+    metaPattern('name', 'twitter:image')
+  ])
+
+  const metaAuthor = pickMeta(html, [
+    metaPattern('property', 'article:author'),
+    metaPattern('name', 'author')
+  ])
+  const siteName = pickMeta(html, [metaPattern('property', 'og:site_name')])
+  const author = pickArticleAuthor(html, siteName, metaAuthor)
+
+  if (!title && !summary && !image) {
+    return null
+  }
+
+  return {
+    title: title || DEFAULT_TITLE,
+    summary: summary || DEFAULT_SUMMARY,
+    image: image || DEFAULT_IMAGE,
+    author: author || DEFAULT_AUTHOR
+  }
+}
+
+async function fetchGatewayHtml(gatewayBaseUrl: string, naddr: string): Promise<string> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), GATEWAY_REQUEST_TIMEOUT_MS)
+
+  try {
+    const url = `${gatewayBaseUrl}/${encodeURIComponent(naddr)}`
+    const resp = await fetch(url, {
+      redirect: 'follow',
+      signal: controller.signal,
+      headers: {
+        'user-agent': 'Boris OG fetcher'
+      }
+    })
+
+    if (!resp.ok) {
+      throw new Error(`Gateway fetch failed: ${resp.status} ${resp.statusText} for ${url}`)
+    }
+
+    return await resp.text()
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+async function fetchArticleMetadataFromGateway(gatewayBaseUrl: string, naddr: string): Promise<ArticleMetadata> {
+  const html = await fetchGatewayHtml(gatewayBaseUrl, naddr)
+  const metadata = extractArticleMetadata(html)
+
+  if (!metadata) {
+    throw new NoMetadataError(`No OG metadata found via ${gatewayBaseUrl} for ${naddr}`)
+  }
+
+  return metadata
+}
+
+function isNoMetadataError(error: unknown): boolean {
+  return error instanceof NoMetadataError
+}
+
 export async function fetchArticleMetadata(naddr: string): Promise<ArticleMetadata | null> {
   try {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 4000)
-
-    try {
-      const url = `https://njump.to/${encodeURIComponent(naddr)}`
-      const resp = await fetch(url, {
-        redirect: 'follow',
-        signal: controller.signal,
-        headers: {
-          'user-agent': 'Boris OG fetcher'
-        }
-      })
-
-      if (!resp.ok) {
-        console.error(`Gateway fetch failed: ${resp.status} ${resp.statusText} for ${url}`)
-        return null
-      }
-
-      const html = await resp.text()
-
-      const metaTitle = pickMeta(html, [
-        metaPattern('property', 'og:title'),
-        metaPattern('name', 'twitter:title'),
-        /<title[^>]*>([^<]+)<\/title>/i
-      ])
-
-      const title = pickArticleHeadline(html) || cleanTitle(metaTitle)
-      const metaSummary = pickMeta(html, [
-        metaPattern('property', 'og:description'),
-        metaPattern('name', 'twitter:description'),
-        metaPattern('name', 'description')
-      ])
-      const articleSummary = pickArticleBodySummary(html, title)
-      const summary = articleSummary || clampSummary(stripHtml(metaSummary))
-
-      const image = pickMeta(html, [
-        metaPattern('property', 'og:image'),
-        metaPattern('name', 'twitter:image')
-      ])
-
-      const metaAuthor = pickMeta(html, [
-        metaPattern('property', 'article:author'),
-        metaPattern('name', 'author')
-      ])
-      const siteName = pickMeta(html, [metaPattern('property', 'og:site_name')])
-      const author = pickArticleAuthor(html, siteName, metaAuthor)
-
-      if (!title && !summary && !image) {
-        console.log(`No OG metadata found via gateway for ${naddr}`)
-        return null
-      }
-
-      return {
-        title: title || DEFAULT_TITLE,
-        summary: summary || DEFAULT_SUMMARY,
-        image: image || DEFAULT_IMAGE,
-        author: author || DEFAULT_AUTHOR
-      }
-    } finally {
-      clearTimeout(timeout)
-    }
+    return await Promise.any(
+      GATEWAY_BASE_URLS.map((gatewayBaseUrl) => fetchArticleMetadataFromGateway(gatewayBaseUrl, naddr))
+    )
   } catch (err) {
-    console.error('Failed to fetch article metadata via gateway:', err)
-    return null
+    if (err instanceof AggregateError && err.errors.length > 0 && err.errors.every(isNoMetadataError)) {
+      console.log(`No OG metadata found across gateways for ${naddr}`)
+      return null
+    }
+
+    console.error('Failed to fetch article metadata via gateways:', err)
+    throw err
   }
 }

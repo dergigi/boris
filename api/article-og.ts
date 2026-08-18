@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const meta = await fetchArticleMetadata(naddr)
-    const cacheMaxAge = meta ? 86400 : 300
+    const cacheMaxAge = meta ? 86400 : 60
 
     const html = generateHtml(naddr, meta)
     const sharedCacheMaxAge = meta ? 604800 : cacheMaxAge
