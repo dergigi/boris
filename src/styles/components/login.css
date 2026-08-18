@@ -35,6 +35,59 @@
   font-weight: 500;
 }
 
+.login-android-callout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.login-android-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.login-android-copy svg {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.login-android-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: var(--min-touch-target);
+  padding: 0.75rem 1rem;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.login-android-link:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-subtle);
+  background: var(--color-border);
+}
+
+.login-android-link svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+}
+
 .login-buttons {
   display: flex;
   flex-direction: column;
@@ -258,4 +311,3 @@
     width: 100%;
   }
 }
-
