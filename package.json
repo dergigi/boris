@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "test": "node --experimental-strip-types --test test/xThreadService.test.ts",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "publish:test:markdown": "./scripts/publish-markdown.sh"
