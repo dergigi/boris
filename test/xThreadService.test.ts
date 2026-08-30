@@ -44,6 +44,36 @@ test('accepts x.com and twitter.com status URLs only', () => {
   assert.equal(xStatusId('https://example.com/status/789'), null)
 })
 
+test('prefers readable X Article blocks over thread text', () => {
+  const payload = JSON.stringify({
+    status: {
+      id: '300',
+      text: 'Article preview text',
+      author: { id: 'author-3', name: 'Writer', screen_name: 'writer' },
+      article: {
+        title: 'Long-form article',
+        content: {
+          blocks: [
+            { type: 'unstyled', text: 'The article body.' },
+            { type: 'unstyled', text: 'A second paragraph.' }
+          ]
+        }
+      }
+    },
+    thread: [{
+      id: '301',
+      text: 'This thread text should not win.',
+      author: { id: 'author-3' },
+      replying_to: { status: '300' }
+    }]
+  })
+
+  const content = parseFxTwitterThreadPayload(payload, 'https://x.com/writer/status/300')
+
+  assert.equal(content?.title, 'Long-form article')
+  assert.equal(content?.markdown, 'The article body.\n\nA second paragraph.')
+})
+
 test('rejects malformed payloads without a readable focal status', () => {
   assert.equal(parseFxTwitterThreadPayload('{"status":null}', 'https://x.com/example/status/1'), null)
 })
