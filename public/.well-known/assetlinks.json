@@ -1,0 +1,11 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "org.dergigi.boris",
+    "sha256_cert_fingerprints": [
+      "78:FA:DA:D1:6E:D2:62:51:51:BE:59:C4:AD:9B:8A:B2:4A:96:E9:E4:E4:54:75:1F:40:62:3F:A1:49:C2:78:CD",
+      "2C:7B:AF:1B:4E:9D:B3:95:D5:4D:81:4C:8B:22:CA:EF:7D:27:02:04:65:4E:40:51:79:0F:65:4E:4D:73:C9:8C"
+    ]
+  }
+}]
