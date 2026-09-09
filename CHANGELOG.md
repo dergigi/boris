@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `/.well-known/assetlinks.json` so the Android app can open `read.withboris.com` links
+
 ## [0.12.3] - 2026-06-18
 
 ### Changed
