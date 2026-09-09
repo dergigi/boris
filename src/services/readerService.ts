@@ -1,5 +1,6 @@
 // Lightweight readability-style fetcher using r.jina.ai proxy
 // Returns simplified HTML for a given URL. This avoids CORS and heavy deps.
+import { fetchXThreadContent, xStatusId } from './xThreadService'
 
 export interface ReadableContent {
   url: string
@@ -72,6 +73,20 @@ export async function fetchReadableContent(
     if (cached) return cached
   }
 
+  // X/Twitter status pages need their reply graph, not just the focal page.
+  // Keep Jina as the generic fallback when the public thread endpoint fails.
+  if (xStatusId(targetUrl)) {
+    try {
+      const thread = await fetchXThreadContent(targetUrl)
+      if (thread) {
+        saveToCache(targetUrl, thread)
+        return thread
+      }
+    } catch {
+      // Fall through to the generic readable-content proxy.
+    }
+  }
+
   const proxyUrl = toProxyUrl(targetUrl)
   const res = await fetch(proxyUrl)
   if (!res.ok) {
@@ -108,6 +123,5 @@ export async function fetchReadableContent(
   saveToCache(targetUrl, content)
   return content
 }
-
 
 
