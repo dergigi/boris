@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "module": "ESNext", "moduleResolution": "bundler",
+    "strict": true, "skipLibCheck": true, "noEmit": true, "esModuleInterop": true,
+    "types": ["node"]
+  },
+  "include": ["api/reader.ts", "lib/fetchArticlePage.ts", "lib/extractArticle.ts", "lib/readerHandler.ts"]
+}

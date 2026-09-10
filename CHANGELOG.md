@@ -7,9 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.4] - 2026-09-10
+
 ### Added
 
 - `/.well-known/assetlinks.json` so the Android app can open `read.withboris.com` links
+- First-party article extraction using Mozilla Readability, available in development and production
+- Reader regression tests, server type checking, and automated CI checks on Node 22
+
+### Fixed
+
+- Hanging relay queries caused by discarding end-of-stored-events messages before checking them
+- Article reloads triggered by highlight updates and stale content updates after navigation
+- Inactive article loaders clearing the current reader and newer article versions missing from the cache
+- Unbounded background article caching exhausting storage needed for offline reading
+- Offline app-shell reloads, cross-origin image caching, and outdated service-worker registration
+- Unsafe HTML rendering and missing extraction error, retry, and original-page controls
+
+### Changed
+
+- Bound source-page requests with timeouts, redirect and size limits, and public-address validation
+- Preserve validated saved web articles for use when the source website is unavailable
+
+### Removed
+
+- Jina dependency for ordinary web article extraction
 
 ## [0.12.3] - 2026-06-18
 

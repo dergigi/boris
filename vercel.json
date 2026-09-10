@@ -3,6 +3,9 @@
   "functions": {
     "api/article-og.ts": {
       "maxDuration": 10
+    },
+    "api/reader.ts": {
+      "maxDuration": 20
     }
   },
   "rewrites": [
@@ -10,7 +13,11 @@
       "source": "/a/:naddr",
       "destination": "/index.html",
       "has": [
-        { "type": "query", "key": "_spa", "value": "1" }
+        {
+          "type": "query",
+          "key": "_spa",
+          "value": "1"
+        }
       ]
     },
     {
@@ -18,7 +25,7 @@
       "destination": "/api/article-og?naddr=:naddr"
     },
     {
-      "source": "/((?!\\.well-known/).*)",
+      "source": "/((?!api/|\\.well-known/).*)",
       "destination": "/index.html"
     }
   ]

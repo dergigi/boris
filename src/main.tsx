@@ -12,37 +12,14 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swPath = '/sw.js'
     
-    // Check if already registered/active first
-    navigator.serviceWorker.getRegistrations().then(async (registrations) => {
-      if (registrations.length > 0) {
-        return registrations[0]
-      }
-      
-      // Not registered yet, try to register
-      // In dev mode, use the dev Service Worker for testing
+    const register = async () => {
       if (import.meta.env.DEV) {
-        const devSwPath = '/sw-dev.js'
-        try {
-          // Check if dev SW exists
-          const response = await fetch(devSwPath)
-          const contentType = response.headers.get('content-type') || ''
-          const isJavaScript = contentType.includes('javascript') || contentType.includes('application/javascript')
-          
-          if (response.ok && isJavaScript) {
-            return await navigator.serviceWorker.register(devSwPath, { scope: '/' })
-          } else {
-            console.warn('[sw-registration] Development Service Worker not available')
-            return null
-          }
-        } catch (err) {
-          console.warn('[sw-registration] Could not load development Service Worker:', err)
-          return null
-        }
-      } else {
-        // In production, just register directly
-        return await navigator.serviceWorker.register(swPath)
+        return navigator.serviceWorker.register('/dev-sw.js?dev-sw', { type: 'module', scope: '/' })
       }
-    })
+      // Register on every load so old/dev workers migrate to the current script.
+      return navigator.serviceWorker.register(swPath)
+    }
+    register()
       .then(registration => {
         if (!registration) return
         
@@ -56,7 +33,7 @@ if ('serviceWorker' in navigator) {
         // Check for updates periodically (production only)
         if (import.meta.env.PROD) {
           setInterval(() => {
-            registration.update()
+            registration.update().catch(error => console.warn('[sw-registration] Update check failed:', error))
           }, 60 * 60 * 1000) // Check every hour
         }
         
