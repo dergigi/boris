@@ -124,9 +124,11 @@
   }
 }
 
+/* Explicit palettes must not leak into system mode, which carries both
+   variant classes and selects the active palette through media queries. */
 /* Dark Color Theme Variants */
 /* Midnight (default) - current zinc palette */
-:root.dark-midnight {
+:root.theme-dark.dark-midnight {
   --color-bg: #18181b;           /* zinc-900 */
   --color-bg-elevated: #27272a;  /* zinc-800 */
   --color-bg-subtle: #0f0f11;    /* darker than zinc-900 */
@@ -138,7 +140,7 @@
 }
 
 /* Black - true black for OLED */
-:root.dark-black {
+:root.theme-dark.dark-black {
   --color-bg: #000000;           /* true black */
   --color-bg-elevated: #0a0a0a;  /* very dark gray */
   --color-bg-subtle: #000000;    /* true black for body */
@@ -150,7 +152,7 @@
 }
 
 /* Charcoal - warmer, softer dark */
-:root.dark-charcoal {
+:root.theme-dark.dark-charcoal {
   --color-bg: #1c1c1e;           /* warmer dark */
   --color-bg-elevated: #2c2c2e;
   --color-bg-subtle: #16161a;    /* darker charcoal */
@@ -163,12 +165,15 @@
 
 /* Light Color Theme Variants */
 /* Paper White (default) - pure white */
-:root.light-paper-white {
+:root.theme-light.light-paper-white {
   --color-bg: #ffffff;           /* white */
   --color-bg-elevated: #f5f5f5;  /* gray-100 */
   --color-bg-subtle: #fafafa;    /* gray-50 */
   --color-border: #e5e7eb;       /* gray-200 */
   --color-border-subtle: #d1d5db; /* gray-300 */
+  --color-text: #111827;
+  --color-text-secondary: #374151;
+  --color-text-muted: #6b7280;
   
   /* Standard highlight colors */
   --highlight-color-mine: #fde047;
@@ -177,7 +182,7 @@
 }
 
 /* Sepia - warm, reading-friendly */
-:root.light-sepia {
+:root.theme-light.light-sepia {
   --color-bg: #f4f1ea;           /* warm beige */
   --color-bg-elevated: #ebe6db;  /* darker beige */
   --color-bg-subtle: #f9f6f0;    /* lighter beige */
@@ -194,7 +199,7 @@
 }
 
 /* Ivory - soft, creamy */
-:root.light-ivory {
+:root.theme-light.light-ivory {
   --color-bg: #fffff0;           /* ivory */
   --color-bg-elevated: #faf8f0;  /* cream */
   --color-bg-subtle: #fefef8;
@@ -253,6 +258,9 @@
     --color-bg-subtle: #fafafa;
     --color-border: #e5e7eb;
     --color-border-subtle: #d1d5db;
+    --color-text: #111827;
+    --color-text-secondary: #374151;
+    --color-text-muted: #6b7280;
     
     --highlight-color-mine: #fde047;
     --highlight-color-friends: #f97316;

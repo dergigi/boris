@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.5] - 2026-09-10
+
+### Fixed
+
+- Nearly white article and highlight text on light backgrounds when using System theme with Paper White
+- Dark and light palette overrides leaking into the inactive system color scheme
+
 ## [0.12.4] - 2026-09-10
 
 ### Added
