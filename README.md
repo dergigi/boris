@@ -73,13 +73,21 @@ If you bookmark something on nostr, Boris will show it in the bookmarks bar. If 
 ## Privacy and data
 
 - Boris doesn’t ask for an email or create a new account — it connects to your existing Nostr identity.
-- Your bookmarks and highlights live on Nostr. Boris reads from the network and renders everything locally in your browser.
+- Your bookmarks and highlights live on Nostr. Boris reads Nostr data from the network. For ordinary web articles, the Boris server fetches the source page and extracts it locally using Mozilla Readability; the browser renders and caches the result. Article URLs are not sent to an external extraction service.
 
 ## Troubleshooting
 
-- If something looks empty, try opening another article and coming back — network data can arrive in bursts.
+- If an article fails to load, use “Try again” or open the original page. Some websites require login or browser JavaScript.
 - Not every article has highlights yet; they grow as the community reads.
 
 ## License
 
 MIT
+
+## Development
+
+Use Node 22 (`nvm use`), then run `npm ci` and `npm run dev`. The local app includes the first-party `/api/reader` endpoint; no extraction API key is needed.
+
+Run `npm test`, `npm run lint`, and `npm run build` before submitting changes. `npm run preview` serves the production build together with the reader endpoint for local verification. Vercel deploys the endpoint from `api/reader.ts`; a static-only host needs an equivalent API deployment.
+
+See [the repair audit](docs/webapp-repair-audit.md) for confirmed failures, fixes, validation, and remaining GitHub/Android parity work.

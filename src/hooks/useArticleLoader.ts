@@ -65,7 +65,6 @@ export function useArticleLoader({
   settings
 }: UseArticleLoaderProps) {
   const location = useLocation()
-  const mountedRef = useRef(true)
   // Hold latest settings without retriggering effect
   const settingsRef = useRef<UserSettings | undefined>(settings)
   useEffect(() => {
@@ -85,17 +84,22 @@ export function useArticleLoader({
   useDocumentTitle({ title: currentTitle })
   
   useEffect(() => {
-    mountedRef.current = true
+    let cancelled = false
+    const requestId = ++currentRequestIdRef.current
+    const isCurrent = () => !cancelled && currentRequestIdRef.current === requestId
+    const controller = new AbortController()
+    const cleanup = () => { cancelled = true; controller.abort() }
     
     // First check: naddr is required
-    if (!naddr) {
-      setReaderContent(undefined)
-      return
-    }
+    if (!naddr) return cleanup
     
     // Clear readerContent immediately to prevent showing stale content from previous article
     // This ensures images from previous articles don't flash briefly
     setReaderContent(undefined)
+    setHighlights([])
+    setHighlightsLoading(false)
+    setCurrentArticleCoordinate(undefined)
+    setCurrentArticleEventId(undefined)
     
     // FIRST: Check navigation state for article coordinate/eventId (from Explore)
     // This allows immediate hydration when coming from Explore without refetching
@@ -164,7 +168,7 @@ export function useArticleLoader({
                 coord,
                 eventId,
                 (highlight) => {
-                  if (!mountedRef.current) return
+                  if (!isCurrent()) return
                   setHighlights((prev: Highlight[]) => {
                     if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
                     const next = [highlight, ...prev]
@@ -175,11 +179,11 @@ export function useArticleLoader({
                 false,
                 eventStore || undefined
               ).then(() => {
-                if (mountedRef.current) {
+                if (isCurrent()) {
                   setHighlightsLoading(false)
                 }
               }).catch(() => {
-                if (mountedRef.current) {
+                if (isCurrent()) {
                   setHighlightsLoading(false)
                 }
               })
@@ -189,8 +193,8 @@ export function useArticleLoader({
           // Start background query to check for newer replaceable version
           // but don't block UI - we already have content
           if (relayPool) {
-            const backgroundRequestId = ++currentRequestIdRef.current
-            const originalCreatedAt = storedEvent.created_at
+            const backgroundRequestId = requestId
+            let originalCreatedAt = storedEvent.created_at
             
             // Fire and forget background fetch
             ;(async () => {
@@ -205,8 +209,9 @@ export function useArticleLoader({
                 }
                 
                 await queryEvents(relayPool, filter, {
+          signal: controller.signal,
                   onEvent: (evt) => {
-                    if (!mountedRef.current || currentRequestIdRef.current !== backgroundRequestId) return
+                    if (!isCurrent() || currentRequestIdRef.current !== backgroundRequestId) return
                     
                     // Store in event store
                     try {
@@ -218,6 +223,7 @@ export function useArticleLoader({
                     
                     // Only update if this is a newer version than what we loaded
                     if (evt.created_at > originalCreatedAt) {
+                      originalCreatedAt = evt.created_at
                       const meta = getArticleMeta(evt)
                       setCurrentTitle(meta.title || 'Untitled Article')
                       setReaderContent(toReaderContent(meta, evt.content, `nostr:${naddr}`))
@@ -240,7 +246,7 @@ export function useArticleLoader({
           }
           
           // Return early - we have content from navigation state
-          return
+          return cleanup
         }
       } catch (err) {
         // If navigation state lookup fails, fall through to cache/EventStore
@@ -294,7 +300,7 @@ export function useArticleLoader({
         
         // Fetch highlights in background (don't block UI)
         // Only fetch highlights if relayPool is available
-        if (mountedRef.current && relayPool) {
+        if (isCurrent() && relayPool) {
           const dTag = cachedArticle.event.tags.find((t: string[]) => t[0] === 'd')?.[1] || ''
           const coord = dTag ? `${cachedArticle.event.kind}:${cachedArticle.author}:${dTag}` : undefined
           const eventId = cachedArticle.event.id
@@ -306,7 +312,7 @@ export function useArticleLoader({
               coord,
               eventId,
               (highlight) => {
-                if (!mountedRef.current) return
+                if (!isCurrent()) return
                 setHighlights((prev: Highlight[]) => {
                   if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
                   const next = [highlight, ...prev]
@@ -317,11 +323,11 @@ export function useArticleLoader({
               false,
               eventStore || undefined
             ).then(() => {
-              if (mountedRef.current) {
+              if (isCurrent()) {
                 setHighlightsLoading(false)
               }
             }).catch(() => {
-              if (mountedRef.current) {
+              if (isCurrent()) {
                 setHighlightsLoading(false)
               }
             })
@@ -329,7 +335,7 @@ export function useArticleLoader({
         }
         
         // Return early - we have cached content, no need to query relays
-        return
+        return cleanup
       }
     } catch (err) {
       // If cache check fails, fall through to async loading
@@ -372,7 +378,7 @@ export function useArticleLoader({
                   coord,
                   eventId,
                   (highlight) => {
-                    if (!mountedRef.current) return
+                    if (!isCurrent()) return
                     setHighlights((prev: Highlight[]) => {
                       if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
                       const next = [highlight, ...prev]
@@ -383,11 +389,11 @@ export function useArticleLoader({
                   false,
                   eventStore || undefined
                 ).then(() => {
-                  if (mountedRef.current) {
+                  if (isCurrent()) {
                     setHighlightsLoading(false)
                   }
                 }).catch(() => {
-                  if (mountedRef.current) {
+                  if (isCurrent()) {
                     setHighlightsLoading(false)
                   }
                 })
@@ -396,7 +402,7 @@ export function useArticleLoader({
             
             // Return early - we have EventStore content, no need to query relays yet
             // But we might want to fetch from relays in background if relayPool becomes available
-            return
+            return cleanup
           }
         }
       } catch (err) {
@@ -409,18 +415,17 @@ export function useArticleLoader({
     if (!relayPool && !foundInCache && !foundInEventStore && !foundInNavState) {
       setReaderLoading(true)
       setReaderContent(undefined)
-      return
+      return cleanup
     }
     
     // If we have relayPool, proceed with async loading
     if (!relayPool) {
-      return
+      return cleanup
     }
     
     const loadArticle = async () => {
-      const requestId = ++currentRequestIdRef.current
       
-      if (!mountedRef.current) {
+      if (!isCurrent()) {
         return
       }
       
@@ -473,10 +478,11 @@ export function useArticleLoader({
         let firstEmitted = false
         let latestEvent: NostrEvent | null = null
 
-        // Stream local-first via queryEvents; rely on EOSE (no timeouts)
+        // Stream local-first; queryEvents bounds stalled relays.
         const events = await queryEvents(relayPool, filter, {
+          signal: controller.signal,
           onEvent: (evt) => {
-            if (!mountedRef.current) {
+            if (!isCurrent()) {
               return
             }
             if (currentRequestIdRef.current !== requestId) {
@@ -526,7 +532,7 @@ export function useArticleLoader({
           }
         })
 
-        if (!mountedRef.current || currentRequestIdRef.current !== requestId) {
+        if (!isCurrent() || currentRequestIdRef.current !== requestId) {
           return
         }
 
@@ -543,16 +549,12 @@ export function useArticleLoader({
           setCurrentArticleEventId(finalEvent.id)
           setCurrentArticle?.(finalEvent)
           
-          // Save to cache for future loads (if we haven't already saved from first event)
-          // Only save if this is a different/newer event than what we first rendered
-          // Note: We already saved from first event, so only save if this is different
-          if (!firstEmitted) {
-            saveToCache(naddr, { ...meta, title: meta.title || 'Untitled Article', markdown: finalEvent.content, event: finalEvent })
-          }
+          // Persist the newest version, including updates after the first event.
+          saveToCache(naddr, { ...meta, title: meta.title || 'Untitled Article', markdown: finalEvent.content, event: finalEvent }, settingsRef.current)
         } else {
           // As a last resort, fall back to the legacy helper (which includes cache)
           const article = await fetchArticleByNaddr(relayPool, naddr, false, settingsRef.current)
-          if (!mountedRef.current || currentRequestIdRef.current !== requestId) return
+          if (!isCurrent() || currentRequestIdRef.current !== requestId) return
           setCurrentTitle(article.title)
           setReaderContent({
             title: article.title,
@@ -562,6 +564,7 @@ export function useArticleLoader({
             published: article.published,
             url: `nostr:${naddr}`
           })
+          latestEvent = article.event
           const dTag = article.event.tags.find(t => t[0] === 'd')?.[1] || ''
           const articleCoordinate = `${article.event.kind}:${article.author}:${dTag}`
           setCurrentArticleCoordinate(articleCoordinate)
@@ -569,9 +572,11 @@ export function useArticleLoader({
           setCurrentArticle?.(article.event)
         }
 
+        setReaderLoading(false)
+
         // Fetch highlights after content is shown
         try {
-          if (!mountedRef.current) return
+          if (!isCurrent()) return
           
           const le = latestEvent as NostrEvent | null
           const dTag = le ? (le.tags.find((t: string[]) => t[0] === 'd')?.[1] || '') : ''
@@ -592,7 +597,7 @@ export function useArticleLoader({
               coord,
               eventId,
               (highlight) => {
-                if (!mountedRef.current) return
+                if (!isCurrent()) return
                 if (currentRequestIdRef.current !== requestId) return
                 setHighlights((prev: Highlight[]) => {
                   if (prev.some((h: Highlight) => h.id === highlight.id)) return prev
@@ -612,16 +617,16 @@ export function useArticleLoader({
         } catch (err) {
           console.error('Failed to fetch highlights:', err)
         } finally {
-          if (mountedRef.current && currentRequestIdRef.current === requestId) {
+          if (isCurrent() && currentRequestIdRef.current === requestId) {
             setHighlightsLoading(false)
           }
         }
       } catch (err) {
         console.error('Failed to load article:', err)
-        if (mountedRef.current && currentRequestIdRef.current === requestId) {
+        if (isCurrent() && currentRequestIdRef.current === requestId) {
           setReaderContent({
             title: 'Error Loading Article',
-            html: `<p>Failed to load article: ${err instanceof Error ? err.message : 'Unknown error'}</p>`,
+            error: err instanceof Error ? err.message : 'Unable to load this article.',
             url: `nostr:${naddr}`
           })
           setReaderLoading(false)
@@ -631,9 +636,7 @@ export function useArticleLoader({
     
     loadArticle()
     
-    return () => {
-      mountedRef.current = false
-    }
+    return cleanup
     // Include relayPool in dependencies so effect re-runs when it becomes available
     // This fixes the race condition where articles don't load on direct navigation
     // We guard against unnecessary re-renders by checking cache/EventStore first

@@ -1,10 +1,12 @@
 import { RelayPool, completeOnEose, onlyEvents } from 'applesauce-relay'
-import { Observable, merge, toArray, tap, lastValueFrom } from 'rxjs'
+import { Observable, merge, toArray, tap, lastValueFrom, takeUntil, timer, catchError, EMPTY } from 'rxjs'
 import { NostrEvent } from 'nostr-tools'
 import { Filter } from 'nostr-tools/filter'
 import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 
 export interface QueryOptions {
+  signal?: AbortSignal
+  timeoutMs?: number
   relayUrls?: string[]
   onEvent?: (event: NostrEvent) => void
 }
@@ -12,13 +14,19 @@ export interface QueryOptions {
 /**
  * Unified local-first query helper with optional streaming callback.
  * Returns all collected events (deduped by id) after both streams complete (EOSE).
- * Trusts relay EOSE signals - no artificial timeouts.
+ * Bounds stalled relay queries and retains events from healthy relays.
  */
 export async function queryEvents(
   relayPool: RelayPool,
   filter: Filter,
   options: QueryOptions = {}
 ): Promise<NostrEvent[]> {
+  if (options.signal?.aborted) return []
+  const aborted$ = new Observable<void>(subscriber => {
+    const abort = () => subscriber.next()
+    options.signal?.addEventListener('abort', abort, { once: true })
+    return () => options.signal?.removeEventListener('abort', abort)
+  })
   const {
     relayUrls,
     onEvent
@@ -35,9 +43,12 @@ export async function queryEvents(
     ? relayPool
         .req(localRelays, filter)
         .pipe(
+          takeUntil(aborted$),
+          completeOnEose(),
           onlyEvents(),
           onEvent ? tap((e: NostrEvent) => onEvent(e)) : tap(() => {}),
-          completeOnEose()
+          takeUntil(timer(options.timeoutMs ?? 10_000)),
+          catchError(() => EMPTY)
         ) as unknown as Observable<NostrEvent>
     : new Observable<NostrEvent>((sub) => sub.complete())
 
@@ -45,9 +56,12 @@ export async function queryEvents(
     ? relayPool
         .req(remoteRelays, filter)
         .pipe(
+          takeUntil(aborted$),
+          completeOnEose(),
           onlyEvents(),
           onEvent ? tap((e: NostrEvent) => onEvent(e)) : tap(() => {}),
-          completeOnEose()
+          takeUntil(timer(options.timeoutMs ?? 10_000)),
+          catchError(() => EMPTY)
         ) as unknown as Observable<NostrEvent>
     : new Observable<NostrEvent>((sub) => sub.complete())
 

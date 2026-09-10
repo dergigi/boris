@@ -1,3 +1,4 @@
+import { saveArticleCache } from './articleCacheStorage'
 import { RelayPool } from 'applesauce-relay'
 import { lastValueFrom, take } from 'rxjs'
 import { nip19 } from 'nostr-tools'
@@ -98,7 +99,7 @@ export function saveToCache(naddr: string, content: ArticleContent, settings?: U
       content,
       timestamp: Date.now()
     }
-    localStorage.setItem(cacheKey, JSON.stringify(cached))
+    saveArticleCache(cacheKey, JSON.stringify(cached))
   } catch (err) {
     // Silently fail - don't block the UI if caching fails
     // Handles quota exceeded, invalid data, and other errors gracefully

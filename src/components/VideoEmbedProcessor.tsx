@@ -1,5 +1,6 @@
 import { useMemo, forwardRef } from 'react'
 import ReactPlayer from 'react-player'
+import DOMPurify from 'dompurify'
 import { classifyUrl } from '../utils/helpers'
 
 interface VideoEmbedProcessorProps {
@@ -17,6 +18,8 @@ const VideoEmbedProcessor = forwardRef<HTMLDivElement, VideoEmbedProcessorProps>
   renderVideoLinksAsEmbeds,
   className
 }, ref) => {
+  html = useMemo(() => DOMPurify.sanitize(html, { USE_PROFILES: { html: true } }), [html])
+
   // Process HTML and extract video URLs in a single pass to keep them in sync
   const { processedHtml, videoUrls } = useMemo(() => {
     if (!renderVideoLinksAsEmbeds || !html) {

@@ -401,7 +401,9 @@ const ThreePaneLayout: React.FC<ThreePaneLayoutProps> = (props) => {
             }
             
             return (
-              <ContentPanel 
+              <ContentPanel
+                error={props.readerContent?.error}
+                stale={props.readerContent?.stale}
                 loading={props.readerLoading}
                 title={props.readerContent?.title}
                 html={props.readerContent?.html}

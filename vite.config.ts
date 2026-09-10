@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { readFileSync } from 'node:fs'
 import { execSync } from 'node:child_process'
+import { readerHandler } from './lib/readerHandler'
 
 function getGitMetadata() {
   const envSha = process.env.VERCEL_GIT_COMMIT_SHA || ''
@@ -98,6 +99,21 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    {
+      name: 'boris-reader-api',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url?.split('?')[0] === '/api/reader') void readerHandler(req, res)
+          else next()
+        })
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url?.split('?')[0] === '/api/reader') void readerHandler(req, res)
+          else next()
+        })
+      },
+    },
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',

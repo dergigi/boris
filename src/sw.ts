@@ -2,7 +2,7 @@
 /* eslint-env worker */
 /* global ServiceWorkerGlobalScope, ExtendableMessageEvent, FetchEvent */
 import { clientsClaim } from 'workbox-core'
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
+import { precacheAndRoute, cleanupOutdatedCaches, matchPrecache } from 'workbox-precaching'
 import { registerRoute, NavigationRoute } from 'workbox-routing'
 import { StaleWhileRevalidate } from 'workbox-strategies'
 import { ExpirationPlugin } from 'workbox-expiration'
@@ -43,11 +43,6 @@ registerRoute(
       new CacheableResponsePlugin({
         statuses: [0, 200],
       }),
-      {
-        cacheWillUpdate: async ({ response }) => {
-          return response.ok ? response : null
-        }
-      }
     ],
   })
 )
@@ -83,17 +78,19 @@ const navigationRoute = new NavigationRoute(
   async ({ request }) => {
     try {
       // Try to fetch from network first
-      const response = await fetch(request)
+      const response = await fetch(request, { signal: AbortSignal.timeout(4000) })
+      if (!response.ok) throw new Error('Navigation failed')
       return response
     } catch (error) {
       // If offline, serve the cached app shell
-      const cache = await caches.match('/index.html')
+      const cache = await matchPrecache('/index.html')
       if (cache) {
         return cache
       }
       throw error
     }
-  }
+  },
+  { denylist: [/^\/api\//, /^\/\.well-known\//] }
 )
 
 registerRoute(navigationRoute)

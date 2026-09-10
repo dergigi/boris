@@ -125,11 +125,11 @@ export function createParallelReqStreams(
   remoteTimeoutMs = 6000
 ): { local$: Observable<unknown>; remote$: Observable<unknown> } {
   const local$ = (localRelays.length > 0)
-    ? relayPool.req(localRelays, filter).pipe(onlyEvents(), completeOnEose(), takeUntil(timer(localTimeoutMs)))
+    ? relayPool.req(localRelays, filter).pipe(completeOnEose(), onlyEvents(), takeUntil(timer(localTimeoutMs)))
     : new Observable<unknown>((sub) => { sub.complete() })
 
   const remote$ = (remoteRelays.length > 0)
-    ? relayPool.req(remoteRelays, filter).pipe(onlyEvents(), completeOnEose(), takeUntil(timer(remoteTimeoutMs)))
+    ? relayPool.req(remoteRelays, filter).pipe(completeOnEose(), onlyEvents(), takeUntil(timer(remoteTimeoutMs)))
     : new Observable<unknown>((sub) => { sub.complete() })
 
   return { local$, remote$ }
