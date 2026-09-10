@@ -50,3 +50,12 @@ it('exposes errors as text and ends the loading state', async () => {
   await waitFor(() => expect(cb.setReaderLoading).toHaveBeenLastCalledWith(false))
   expect(cb.setReaderContent).toHaveBeenLastCalledWith(expect.objectContaining({ error: '<img onerror="bad()">' }))
 })
+it('clears highlight loading when the relay pool disappears', async () => {
+  const cb = callbacks()
+  vi.mocked(fetchReadableContent).mockResolvedValue({ url: 'https://example.com', html: '<p>Hello</p>' })
+  vi.mocked(fetchHighlightsForUrl).mockImplementation(() => new Promise(() => {}))
+  const hook = renderHook(({ relayPool }: { relayPool: RelayPool | null }) => useExternalUrlLoader({ ...cb, url: 'https://example.com', relayPool }), { initialProps: { relayPool: {} as RelayPool | null } })
+  expect(cb.setHighlightsLoading).toHaveBeenLastCalledWith(true)
+  hook.rerender({ relayPool: null })
+  expect(cb.setHighlightsLoading).toHaveBeenLastCalledWith(false)
+})

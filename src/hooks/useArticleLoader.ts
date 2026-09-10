@@ -87,7 +87,8 @@ export function useArticleLoader({
     let cancelled = false
     const requestId = ++currentRequestIdRef.current
     const isCurrent = () => !cancelled && currentRequestIdRef.current === requestId
-    const cleanup = () => { cancelled = true }
+    const controller = new AbortController()
+    const cleanup = () => { cancelled = true; controller.abort() }
     
     // First check: naddr is required
     if (!naddr) return cleanup
@@ -208,6 +209,7 @@ export function useArticleLoader({
                 }
                 
                 await queryEvents(relayPool, filter, {
+          signal: controller.signal,
                   onEvent: (evt) => {
                     if (!isCurrent() || currentRequestIdRef.current !== backgroundRequestId) return
                     
@@ -478,6 +480,7 @@ export function useArticleLoader({
 
         // Stream local-first; queryEvents bounds stalled relays.
         const events = await queryEvents(relayPool, filter, {
+          signal: controller.signal,
           onEvent: (evt) => {
             if (!isCurrent()) {
               return

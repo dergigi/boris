@@ -88,7 +88,11 @@ export function useExternalUrlLoader({
 
   // Highlights load independently; a slow/offline relay never blocks web articles.
   useEffect(() => {
-    if (!url || !relayPool) return
+    if (!url) return
+    if (!relayPool) {
+      callbacks.current.setHighlightsLoading(false)
+      return
+    }
     let cancelled = false
     const cb = callbacks.current
     cb.setHighlightsLoading(true)

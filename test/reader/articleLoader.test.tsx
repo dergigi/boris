@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
 import { renderHook, cleanup, act } from '@testing-library/react'
 import { beforeEach, afterEach, it, expect, vi } from 'vitest'
+import { nip19 } from 'nostr-tools'
+import { queryEvents } from '../../src/services/dataFetch'
 import type { RelayPool } from 'applesauce-relay'
 import type { Highlight } from '../../src/types/highlights'
 import { useArticleLoader } from '../../src/hooks/useArticleLoader'
 import { getFromCache } from '../../src/services/articleService'
 import { fetchHighlightsForArticle } from '../../src/services/highlightService'
+vi.mock('../../src/services/dataFetch', () => ({ queryEvents: vi.fn() }))
 vi.mock('react-router-dom', () => ({ useLocation: () => ({ state: null }) }))
 vi.mock('../../src/services/articleService', () => ({ getFromCache: vi.fn(), saveToCache: vi.fn(), fetchArticleByNaddr: vi.fn() }))
 vi.mock('../../src/services/highlightService', () => ({ fetchHighlightsForArticle: vi.fn() }))
@@ -33,4 +36,17 @@ it('ignores highlights from the previous cached article after switching', async 
   expect(cb.setHighlights).not.toHaveBeenCalled()
   await act(async () => pending[1]({ id: 'new-highlight' } as Highlight))
   expect(cb.setHighlights).toHaveBeenCalledTimes(1)
+})
+
+it('aborts the active relay query when navigating to another article', () => {
+  const cb = callbacks()
+  vi.mocked(getFromCache).mockReturnValue(null)
+  vi.mocked(queryEvents).mockImplementation(() => new Promise(() => {}))
+  const pool = {} as RelayPool
+  const address = (identifier: string) => nip19.naddrEncode({ kind: 30023, pubkey: '0'.repeat(64), identifier })
+  const hook = renderHook(({ naddr }) => useArticleLoader({ ...cb, naddr, relayPool: pool }), { initialProps: { naddr: address('old') } })
+  const signal = vi.mocked(queryEvents).mock.calls[0][2]?.signal
+  expect(signal?.aborted).toBe(false)
+  hook.rerender({ naddr: address('new') })
+  expect(signal?.aborted).toBe(true)
 })

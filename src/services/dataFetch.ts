@@ -5,6 +5,7 @@ import { Filter } from 'nostr-tools/filter'
 import { prioritizeLocalRelays, partitionRelays } from '../utils/helpers'
 
 export interface QueryOptions {
+  signal?: AbortSignal
   timeoutMs?: number
   relayUrls?: string[]
   onEvent?: (event: NostrEvent) => void
@@ -20,6 +21,12 @@ export async function queryEvents(
   filter: Filter,
   options: QueryOptions = {}
 ): Promise<NostrEvent[]> {
+  if (options.signal?.aborted) return []
+  const aborted$ = new Observable<void>(subscriber => {
+    const abort = () => subscriber.next()
+    options.signal?.addEventListener('abort', abort, { once: true })
+    return () => options.signal?.removeEventListener('abort', abort)
+  })
   const {
     relayUrls,
     onEvent
@@ -36,6 +43,7 @@ export async function queryEvents(
     ? relayPool
         .req(localRelays, filter)
         .pipe(
+          takeUntil(aborted$),
           completeOnEose(),
           onlyEvents(),
           onEvent ? tap((e: NostrEvent) => onEvent(e)) : tap(() => {}),
@@ -48,6 +56,7 @@ export async function queryEvents(
     ? relayPool
         .req(remoteRelays, filter)
         .pipe(
+          takeUntil(aborted$),
           completeOnEose(),
           onlyEvents(),
           onEvent ? tap((e: NostrEvent) => onEvent(e)) : tap(() => {}),

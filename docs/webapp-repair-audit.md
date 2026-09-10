@@ -23,7 +23,7 @@ The reader endpoint accepts only public HTTP(S) pages on standard ports. It vali
 
 ## Validation
 
-- All 57 regression tests pass on Node 22. Tests cover extraction/sanitization, relative images and links, compressed/non-UTF8 responses, redirects, private IP/DNS targets, size limits, malformed responses, cache failures, timeout completion, and both external and cached Nostr navigation races.
+- All 62 regression tests pass on Node 22. Tests cover extraction/sanitization, relative images and links, compressed/non-UTF8 responses, redirects, private IP/DNS targets, size limits, malformed responses, cache failures, timeout completion, and both external and cached Nostr navigation races.
 - TypeScript checks cover the client and the new reader server code; production build and ESLint checks pass.
 - Chrome smoke tests cover the Explore homepage, a complete directly fetched article, and the error/retry/original-link state, without uncaught browser exceptions. The production build makes one extraction request and successfully reloads the complete article with networking disabled, after background relay data has populated the bounded cache.
 - The development smoke test extracted Paul Graham's “How to Do Great Work” (over 67,000 characters of rendered text). `example.com` correctly reports no readable article; a loopback target is rejected.
@@ -48,3 +48,9 @@ The reader endpoint accepts only public HTTP(S) pages on standard ports. It vali
 5. Address the existing dependency audit backlog and large client bundle separately. A clean initial install reported 40 audit findings; no broad forced upgrades were applied in this repair pass.
 
 Direct server fetching cannot extract content that requires browser JavaScript, login, a paywall, or passing a site challenge. These cases now have a visible failure and an original-page link. Serving only the static `dist` directory is insufficient: deploy the reader API alongside it, or use `npm run preview` locally.
+
+## Release review decisions
+
+The v0.12.4 review added immediate cancellation of active article relay queries, clearing the highlight spinner when the relay pool disappears, and support for schemeless hostnames with standard ports. The bounded relay deadline is intentional: removing it would restore indefinite waiting on relays that never send EOSE.
+
+External article images/media still load directly in the browser, as before this release. Browser-side resource restrictions or a validated media proxy remain a separate hardening task; the server-side source fetch validates and pins its destination.

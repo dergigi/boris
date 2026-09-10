@@ -46,3 +46,7 @@ it('bounds stalled requests', async () => {
   await vi.advanceTimersByTimeAsync(20_000)
   await result
 })
+it('accepts schemeless standard ports and rejects nonstandard ports', () => {
+  expect(normalizeReaderUrl('example.com:443/path')).toBe('https://example.com/path')
+  expect(() => normalizeReaderUrl('example.com:8080/path')).toThrow()
+})

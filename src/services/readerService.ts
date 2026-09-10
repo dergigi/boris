@@ -18,8 +18,9 @@ const CACHE_PREFIX = 'reader_cache_v2_'
 
 export function normalizeReaderUrl(input: string): string {
   const value = input.trim()
-  const url = new URL(/^[a-z][a-z\d+.-]*:/i.test(value) ? value : `https://${value}`)
-  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) {
+  const hasHostPort = /^(?:\[[^\]]+\]|[^/:]+\.[^/:]+):\d+(?:[/?#]|$)/.test(value)
+  const url = new URL(!hasHostPort && /^[a-z][a-z\d+.-]*:/i.test(value) ? value : `https://${value}`)
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || (url.port && !['80', '443'].includes(url.port))) {
     throw new Error('Enter a public HTTP or HTTPS URL.')
   }
   url.hash = ''
